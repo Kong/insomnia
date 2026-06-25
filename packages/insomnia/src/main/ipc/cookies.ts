@@ -53,7 +53,7 @@ const getCookiesForUrl = (cookies: Cookie[], url: string): Cookie[] => {
   }
 };
 
-const addSetCookiesToToughCookieJar = ({
+export const addSetCookiesToToughCookieJar = ({
   setCookieStrings,
   currentUrl,
   cookieJar,
@@ -83,7 +83,7 @@ const addSetCookiesToToughCookieJar = ({
     }
 
     return {
-      cookies: cookieJarWithDefaults.getCookiesSync(currentUrl).map(c => c.toJSON() as Cookie),
+      cookies: cookieJarWithDefaults.serializeSync().cookies as Cookie[],
       rejectedCookies,
     };
   } catch (error) {
