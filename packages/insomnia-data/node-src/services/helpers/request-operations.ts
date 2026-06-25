@@ -15,11 +15,13 @@ export function findRequestByParentId(
     grpcRequestService.findByParentId(parentId),
     webSocketRequestService.findByParentId(parentId),
     socketIORequestService.findByParentId(parentId),
-  ]).then(([requests, grpcRequests, webSocketRequests, socketIORequests]) => [
+    mcpRequestService.findByParentId(parentId),
+  ]).then(([requests, grpcRequests, webSocketRequests, socketIORequests, mcpRequests]) => [
     ...requests,
     ...grpcRequests,
     ...webSocketRequests,
     ...socketIORequests,
+    ...mcpRequests,
   ]);
 }
 

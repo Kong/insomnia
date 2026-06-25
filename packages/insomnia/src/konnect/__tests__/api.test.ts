@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchAllControlPlanes, fetchAllServices, fetchRoutesForService, validatePat } from '../api';
-
-vi.mock('../../common/constants', () => ({
-  getKonnectApiBaseURL: () => 'https://global.api.konghq.com',
-}));
+import {
+  fetchAllControlPlanes,
+  fetchAllServices,
+  fetchKonnectOrganizationId,
+  fetchRoutesForService,
+  validatePat,
+} from '../api';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -130,12 +132,12 @@ describe('fetchAllControlPlanes', () => {
     );
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
     expect(pages).toHaveLength(1);
-    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, proxy_urls: null })));
+    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, region: 'us', proxy_urls: null })));
   });
 
   it('yields multiple pages when total > PAGE_SIZE', async () => {
@@ -161,13 +163,13 @@ describe('fetchAllControlPlanes', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
     expect(pages).toHaveLength(2);
     expect(pages[0]).toHaveLength(100);
-    expect(pages[1]).toEqual(page2Data.map(cp => ({ ...cp, proxy_urls: null })));
+    expect(pages[1]).toEqual(page2Data.map(cp => ({ ...cp, region: 'us', proxy_urls: null })));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toContain('page[number]=1');
     expect(fetchMock.mock.calls[1][0]).toContain('page[number]=2');
@@ -176,7 +178,7 @@ describe('fetchAllControlPlanes', () => {
   it('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 500 })));
 
-    const gen = fetchAllControlPlanes('faketoken');
+    const gen = fetchAllControlPlanes('faketoken', 'us');
     await expect(gen.next()).rejects.toThrow('Konnect API error 500 fetching control planes');
   });
 
@@ -197,11 +199,11 @@ describe('fetchAllControlPlanes', () => {
     );
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
-    expect(pages[0][0]).toEqual({ ...rawCp, proxy_urls: null });
+    expect(pages[0][0]).toEqual({ ...rawCp, region: 'us', proxy_urls: null });
   });
 
   it('yields empty data when total is 0', async () => {
@@ -211,12 +213,25 @@ describe('fetchAllControlPlanes', () => {
     );
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
     expect(pages).toHaveLength(1);
     expect(pages[0]).toEqual([]);
+  });
+
+  it.each(['us', 'eu', 'au', 'me'] as const)('uses the %s regional base URL', async region => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ data: [], meta: { page: { total: 0, size: 100, number: 1 } } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    for await (const _ of fetchAllControlPlanes('faketoken', region)) {
+      // drain
+    }
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(`https://${region}.api.konghq.com/v2/control-planes`);
   });
 });
 
@@ -529,7 +544,7 @@ describe('retry on 429', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const pages: any[][] = [];
-    const gen = fetchAllControlPlanes('faketoken');
+    const gen = fetchAllControlPlanes('faketoken', 'us');
 
     const iterPromise = (async () => {
       for await (const page of gen) {
@@ -541,7 +556,62 @@ describe('retry on 429', () => {
     await iterPromise;
 
     expect(pages).toHaveLength(1);
-    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, proxy_urls: null })));
+    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, region: 'us', proxy_urls: null })));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ─── fetchKonnectOrganizationId ───────────────────────────────────────────────
+
+describe('fetchKonnectOrganizationId', () => {
+  it('returns the organization id on a 200 response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 'org-abc-123' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchKonnectOrganizationId('good-token');
+
+    expect(result).toBe('org-abc-123');
+    expect(fetchMock.mock.calls[0][0]).toContain('/v3/organizations/me');
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer good-token');
+  });
+
+  it('returns undefined on a non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 403 })));
+
+    const result = await fetchKonnectOrganizationId('bad-token');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('returns undefined when fetch throws', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network failure')));
+
+    const result = await fetchKonnectOrganizationId('any-token');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('returns undefined when the response body has no id field', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({})));
+
+    const result = await fetchKonnectOrganizationId('good-token');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('retries on 429 and returns the org id after success', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rateLimitResponse())
+      .mockResolvedValueOnce(jsonResponse({ id: 'org-retried' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = fetchKonnectOrganizationId('good-token');
+    await drainRetryTimers();
+
+    const result = await promise;
+
+    expect(result).toBe('org-retried');
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

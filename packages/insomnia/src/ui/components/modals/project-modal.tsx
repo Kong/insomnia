@@ -58,11 +58,11 @@ export const ProjectModal = ({
             if (!open) requestClose();
           }}
           isDismissable={false}
-          className="fixed top-0 right-0 bottom-0 left-0 z-10 flex items-start justify-center bg-black/30 pt-[200px]"
+          className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
         >
           <Modal
             ref={modalRef}
-            className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)"
+            className="flex h-max max-h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)"
           >
             <Dialog
               aria-label="Create or update dialog"

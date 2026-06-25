@@ -129,6 +129,7 @@ export interface Settings {
   fontVariantLigatures: boolean;
   forceVerticalLayout: boolean;
   hasKonnectPat: boolean;
+  konnectOrganizationId: string | null;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;

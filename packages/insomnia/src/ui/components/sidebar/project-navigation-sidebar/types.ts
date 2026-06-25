@@ -36,6 +36,9 @@ export interface WorkspaceFlatItem extends BaseFlatItem<Workspace> {
   kind: 'workspace';
   // parent project
   project: ProjectWithPresence;
+  // sync flags from the workspace meta, used to show the uncommitted/unpushed changes indicator
+  hasUncommittedChanges?: boolean;
+  hasUnpushedChanges?: boolean;
 }
 
 // Unsynced workspace in cloud sync project
