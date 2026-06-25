@@ -2462,7 +2462,10 @@ export const discardChangesAction = async ({
 
     await GitVCS.discardChanges(files);
 
-    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Discarding an untracked, never-committed workspace deletes its YAML from disk.
+    // Remove the orphaned workspace from the DB instead of resurrecting it, otherwise
+    // the discarded change reappears immediately.
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id, { removeLocalOnlyOrphans: true });
 
     await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
