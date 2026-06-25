@@ -39,9 +39,9 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Collection 1');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('collection_1');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('git-dropdown').click();
     await expect.soft(page.getByRole('menuitemradio', { name: 'Commit' })).toBeVisible();
@@ -79,9 +79,9 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('collection 1');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('collection_1');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
     await insomnia.navigationSidebar.selectProject(GIT_PROJECT_NAME);
@@ -113,9 +113,9 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Push Test Collection');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('push_test_collection');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('push_test_collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
     await page.getByTestId('git-dropdown').click();
@@ -164,9 +164,9 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Discard Test Collection');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('discard_test_collection');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('discard_test_collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
 
