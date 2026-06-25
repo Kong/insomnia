@@ -18,6 +18,7 @@ import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { isPermissionAllowed } from '~/main/permission-policy';
 import { initRuntime } from '~/runtimes';
 import { nodeRuntime } from '~/runtimes/runtime.node';
 
@@ -120,6 +121,10 @@ app.on('ready', async () => {
     electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
   };
   disableSpellcheckerDownload();
+
+  // Default-deny web-API permissions; only allow-listed ones are granted (see permission-policy.ts).
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => callback(isPermissionAllowed(permission)));
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(permission));
 
   if (isDevelopment()) {
     try {
