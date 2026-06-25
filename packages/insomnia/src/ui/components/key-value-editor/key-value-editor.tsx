@@ -283,7 +283,7 @@ export const KeyValueEditor: FC<Props> = ({
           onPress={() => {
             const id = generateId('pair');
             pendingFocusLastRowId = id;
-            upsertPair(pairsListItems, { id, name: '', value: '', description: '', disabled: false });
+            upsertPair({ id, name: '', value: '', description: '', disabled: false });
           }}
         >
           <Icon icon="plus" /> Add
@@ -450,7 +450,6 @@ export const KeyValueEditor: FC<Props> = ({
             const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
             const isOnlyTextAllowed = !allowFile && !allowMultiline;
             const isBlank = pair.id === blankId;
-            const isLastPair = pair.id === pairsListItems[pairsListItems.length - 1]?.id;
 
             let valueEditor = (
               <OneLineEditor

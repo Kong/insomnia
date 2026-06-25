@@ -76,7 +76,7 @@ export const EnvironmentKVEditor = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(data)],
   );
-  const blankNameEditorRef = useRef<OneLineEditorHandle>(null);
+  const blankNameEditorRef = useRef<OneLineEditorHandle | null>(null);
   // The id for the trailing blank row is derived from the persisted pairs (rather than
   // held in state) so it only changes when the data actually changes. This keeps it in
   // sync with the async data updates - if it flipped eagerly the row the user just typed
@@ -310,12 +310,14 @@ export const EnvironmentKVEditor = ({
         )}
         <div className={`${cellCommonStyle} relative flex h-full w-[30%] grow pl-1`}>
           <OneLineEditor
-            ref={isBlank ? blankNameEditorRef : undefined}
             ref={el => {
               if (el) {
                 nameEditorRefs.current.set(id, el);
               } else {
                 nameEditorRefs.current.delete(id);
+              }
+              if (isBlank) {
+                blankNameEditorRef.current = el;
               }
             }}
             id={`environment-kv-editor-name-${id}`}
