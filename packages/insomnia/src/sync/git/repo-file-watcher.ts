@@ -313,7 +313,7 @@ class RepoFileWatcher {
    * Also detects workspace YAML files that were removed from disk (e.g. deleted
    * on the remote) and removes the corresponding workspaces from the DB.
    */
-  async importAllFiles(): Promise<void> {
+  async importAllFiles(options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
     if (this.stopped) {
       return;
     }
@@ -329,7 +329,7 @@ class RepoFileWatcher {
     }
 
     // Detect deleted files: workspaces in DB whose YAML is no longer on disk.
-    this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles));
+    this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles, options.removeLocalOnlyOrphans));
 
     await this.queue.waitUntilDone();
   }
@@ -863,11 +863,23 @@ class RepoFileWatcher {
   }
 
   /**
-   * Remove workspaces from the DB whose YAML file no longer exists on disk.
-   * Handles the case where a workspace was deleted on the remote and the user
-   * pulls / checks out a branch that doesn't contain it.
+   * Reconcile DB workspaces whose YAML file is not present on disk.
+   *
+   *  • Previously-synced workspace (has `gitFileLastSyncTime`): the YAML was
+   *    deleted on the remote / is absent from the checked-out branch — remove
+   *    the workspace from the DB.
+   *  • Never-synced workspace (no `gitFileLastSyncTime`): this is local-only
+   *    content (e.g. created before a repo was connected, or not yet committed).
+   *    It is NOT an orphan — write it to disk so it is preserved and can be
+   *    committed. Without this, connecting an empty repo to a project that
+   *    already has local data would silently delete that data.
+   *
+   * `removeLocalOnlyOrphans` overrides the preservation above: when the missing
+   * file is the result of an explicit user action (e.g. discarding an untracked,
+   * never-committed workspace), the workspace should be removed rather than
+   * resurrected back to disk.
    */
-  private async removeOrphanedWorkspaces(currentDiskFiles: string[]): Promise<void> {
+  private async removeOrphanedWorkspaces(currentDiskFiles: string[], removeLocalOnlyOrphans = false): Promise<void> {
     const diskFileSet = new Set(currentDiskFiles.map(f => path.normalize(f)));
     const entries = await this.getWorkspacesWithMeta();
     for (const { workspace, meta } of entries) {
@@ -876,11 +888,59 @@ class RepoFileWatcher {
       }
 
       const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
-      if (!diskFileSet.has(absPath)) {
-        // Workspace YAML no longer on disk — remove from DB
-        console.log('[repo-file-watcher] Removing orphaned workspace:', workspace._id);
-        await this.removeWorkspaceWithDescendants(workspace);
+      if (diskFileSet.has(absPath)) {
+        continue;
       }
+
+      if (!meta.gitFileLastSyncTime && !removeLocalOnlyOrphans) {
+        // Local-only content never synced to git — preserve it instead of deleting.
+        await this.flushWorkspaceToDisk(workspace, absPath);
+        continue;
+      }
+
+      // Workspace YAML no longer on disk — remove from DB
+      console.log('[repo-file-watcher] Removing orphaned workspace:', workspace._id);
+      await this.removeWorkspaceWithDescendants(workspace);
+    }
+  }
+
+  /**
+   * Write a workspace's current DB state to its on-disk YAML file and record
+   * tracking state so the FS→DB import skips the echo. Used to preserve
+   * local-only workspaces (never synced to git) that are not yet on disk.
+   */
+  private async flushWorkspaceToDisk(workspace: Workspace, absPath: string): Promise<void> {
+    // Path-traversal guard
+    const rel = path.relative(this.repoDir, absPath);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      return;
+    }
+
+    try {
+      const yamlContent = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+      if (!yamlContent?.trim()) {
+        return;
+      }
+
+      await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
+      await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+
+      const normalised = path.normalize(absPath);
+      this.lastWrittenHash.set(normalised, contentHash(yamlContent));
+      const stat = await fs.promises.stat(absPath);
+      this.lastSyncMtime.set(normalised, stat.mtimeMs);
+      this.lastKnownGitFilePath.set(workspace._id, normalised);
+
+      console.log(
+        '[repo-file-watcher] Preserved local-only workspace on disk:',
+        workspace._id,
+        this.toPosixRelPath(absPath),
+      );
+    } catch (err) {
+      console.warn('[repo-file-watcher] Could not preserve local-only workspace on disk:', workspace._id, err);
     }
   }
 
@@ -1060,12 +1120,12 @@ export class RepoFileWatcherRegistry {
    * Call after bulk git operations (clone, pull, merge, checkout) so the DB
    * reflects the new disk state. Content-hash dedup makes repeated calls cheap.
    */
-  importAllFiles(repoId: string): Promise<void> {
+  importAllFiles(repoId: string, options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
     const watcher = this.watchers.get(repoId);
     if (!watcher) {
       return Promise.resolve();
     }
-    return watcher.importAllFiles();
+    return watcher.importAllFiles(options);
   }
 
   /**
