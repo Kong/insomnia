@@ -8,7 +8,7 @@ import { Gemini } from '~/ui/components/settings/llms/gemini';
 import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
 import { Url } from '~/ui/components/settings/llms/url';
-import { AI_FEATURE_STATUS_CHANGED_EVENT, useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 
 export const AISettings = () => {
   const { features } = useOrganizationPermissions();
@@ -56,9 +56,9 @@ export const AISettings = () => {
 
   const toggleAIFeature = useCallback(async (feature: AIFeatureNames, enabled: boolean) => {
     setAIFeatures(prev => ({ ...prev, [feature]: enabled }));
+    // Main broadcasts an `llm.changed` event after the write, which consumers
+    // (e.g. the spec view Generate dropdown) listen for to re-read the status.
     await window.main.llm.setAIFeatureEnabled(feature, enabled);
-    // Notify consumers (e.g. the spec view Generate dropdown) to re-read the status.
-    window.dispatchEvent(new Event(AI_FEATURE_STATUS_CHANGED_EVENT));
   }, []);
 
   const saveLLMSettings = useCallback(
@@ -66,11 +66,11 @@ export const AISettings = () => {
       await window.main.llm.updateBackendConfig(backend, extras);
 
       if (setCurrent) {
+        // Activating an LLM can enable AI features that require an active LLM;
+        // main broadcasts `llm.changed` so consumers re-read the status.
         await window.main.llm.setActiveBackend(backend);
         const newCurrentConfig = await window.main.llm.getCurrentConfig();
         setCurrentLLM(newCurrentConfig);
-        // Activating an LLM can enable AI features that require an active LLM.
-        window.dispatchEvent(new Event(AI_FEATURE_STATUS_CHANGED_EVENT));
       }
 
       const updatedConfigs = await window.main.llm.getAllConfigurations();

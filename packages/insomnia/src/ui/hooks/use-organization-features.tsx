@@ -51,10 +51,6 @@ interface AIFeatureStatus {
   isMCPWithAIEnabled: boolean;
 }
 
-// Dispatched whenever the user-level AI feature toggles or active LLM change so
-// that any mounted `useAIFeatureStatus` consumer re-reads the latest values.
-export const AI_FEATURE_STATUS_CHANGED_EVENT = 'ai-feature-status-changed';
-
 export function useAIFeatureStatus(): AIFeatureStatus {
   const { features } = useOrganizationPermissions();
   const [generateMockServersWithAIEnabledByUser, setGenerateMockServersWithAIEnabledByUser] = useState(false);
@@ -79,12 +75,13 @@ export function useAIFeatureStatus(): AIFeatureStatus {
     loadFeatureStatus();
   }, [loadFeatureStatus]);
 
-  // Re-read the status when the user changes AI settings in preferences, since
-  // those values live in the main process and this hook would otherwise keep a
-  // stale snapshot taken at mount time.
+  // Re-read the status when the AI settings change in the main process (the
+  // source of truth), since this hook would otherwise keep a stale snapshot
+  // taken at mount time. Main broadcasts to every window, so all consumers stay
+  // consistent regardless of which window performed the change.
   useEffect(() => {
-    window.addEventListener(AI_FEATURE_STATUS_CHANGED_EVENT, loadFeatureStatus);
-    return () => window.removeEventListener(AI_FEATURE_STATUS_CHANGED_EVENT, loadFeatureStatus);
+    const unsubscribe = window.main.on('llm.changed', loadFeatureStatus);
+    return unsubscribe;
   }, [loadFeatureStatus]);
 
   const generateMockServersWithAIAllowedByOrg = features.aiMockServers ? features.aiMockServers.enabled : true;
