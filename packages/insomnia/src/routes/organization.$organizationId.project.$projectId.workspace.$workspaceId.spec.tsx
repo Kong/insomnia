@@ -667,35 +667,6 @@ const Component = ({ params }: Route.ComponentProps) => {
         {parsedSpec?.openapi ? `OpenAPI ${parsedSpec.openapi}` : ''}
       </span>
       <span className="flex-1" />
-      <TooltipTrigger delay={0}>
-        <ToggleButton
-          aria-label="Toggle preview"
-          data-testid="preview-toggle"
-          isSelected={isSpecPaneOpen}
-          className="flex shrink-0 items-center justify-center rounded-md border border-solid border-(--hl-md) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-          onChange={value => {
-            setIsSpecPaneOpen(value);
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.designerPreviewToggled,
-              properties: {
-                status: !value ? 'open' : 'collapsed',
-              },
-            });
-          }}
-        >
-          {({ isSelected }) => (
-            <span className="flex h-5 items-center">
-              <Icon icon={isSelected ? 'eye-slash' : 'eye'} />
-            </span>
-          )}
-        </ToggleButton>
-        <Tooltip
-          offset={8}
-          className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-sm text-(--color-font) shadow-lg"
-        >
-          {isSpecPaneOpen ? 'Hide docs preview' : 'Show docs preview'}
-        </Tooltip>
-      </TooltipTrigger>
       <MenuTrigger>
         <Button
           aria-label="Generate"
@@ -769,6 +740,35 @@ const Component = ({ params }: Route.ComponentProps) => {
           </div>
         </Popover>
       </MenuTrigger>
+      <TooltipTrigger delay={0}>
+        <ToggleButton
+          aria-label="Toggle preview"
+          data-testid="preview-toggle"
+          isSelected={isSpecPaneOpen}
+          className="flex shrink-0 items-center justify-center rounded-md border border-solid border-(--hl-md) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+          onChange={value => {
+            setIsSpecPaneOpen(value);
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.designerPreviewToggled,
+              properties: {
+                status: !value ? 'open' : 'collapsed',
+              },
+            });
+          }}
+        >
+          {({ isSelected }) => (
+            <span className="flex h-5 w-5 items-center justify-center">
+              <Icon icon={isSelected ? 'eye-slash' : 'eye'} fixedWidth />
+            </span>
+          )}
+        </ToggleButton>
+        <Tooltip
+          offset={8}
+          className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-sm text-(--color-font) shadow-lg"
+        >
+          {isSpecPaneOpen ? 'Hide docs preview' : 'Show docs preview'}
+        </Tooltip>
+      </TooltipTrigger>
     </div>
   ) : null;
 
