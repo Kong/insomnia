@@ -24,7 +24,7 @@ export const MockResponseExtractor = () => {
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const isLocalProject = !activeProject?.remoteId;
   const { currentPlan } = useOrganizationLoaderData()!;
-  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isEnterprise = currentPlan?.type?.includes('enterprise');
 
   // In a local project, users are not allowed to create a cloud mock server, only enterprise users can create a self-hosted mock server.
   // In a local project, users without enterprise plan can't create cloud mock server route from a request response
