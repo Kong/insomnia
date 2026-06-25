@@ -338,16 +338,21 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     // lets callers resync after an external change (sync pull, etc.) without
     // remounting via a volatile `key`, which would otherwise blur the editor and
     // drop undo history mid-edit. In-progress typing (focused) is never clobbered.
+    //
+    // Gated on `uniquenessKey`: it marks the editors we deliberately moved off
+    // volatile-key remounting onto stable-key + in-place updates (URL bar,
+    // key-value rows). Other OneLineEditor instances keep their original
+    // uncontrolled-after-mount behaviour, so this stays an opt-in.
     useEffect(() => {
       const cm = codeMirror.current;
-      if (cm && !cm.hasFocus() && (defaultValue || '') !== cm.getValue()) {
+      if (cm && uniquenessKey !== undefined && !cm.hasFocus() && (defaultValue || '') !== cm.getValue()) {
         const cursor = cm.getCursor();
         cm.setValue(defaultValue || '');
         cm.setCursor(cursor);
         // value baseline changed externally, so the old history no longer applies
         cm.clearHistory();
       }
-    }, [defaultValue]);
+    }, [defaultValue, uniquenessKey]);
 
     useEffect(() => {
       // Prevent these things if we're type === "password"
