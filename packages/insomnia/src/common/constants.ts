@@ -203,12 +203,14 @@ export const METHOD_PATCH = 'PATCH';
 export const METHOD_DELETE = 'DELETE';
 export const METHOD_OPTIONS = 'OPTIONS';
 export const METHOD_HEAD = 'HEAD';
+export const METHOD_QUERY = 'QUERY';
 export const HTTP_METHODS = [
   METHOD_GET,
   METHOD_POST,
   METHOD_PUT,
   METHOD_PATCH,
   METHOD_DELETE,
+  METHOD_QUERY,
   METHOD_OPTIONS,
   METHOD_HEAD,
 ];
