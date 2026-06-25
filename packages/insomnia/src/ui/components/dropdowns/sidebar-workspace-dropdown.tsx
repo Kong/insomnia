@@ -1,4 +1,4 @@
-import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import {
   exportGlobalEnvironmentToFile,
   exportMcpClientToFile,
@@ -72,7 +72,7 @@ interface ActionItem {
 interface ActionSection {
   name: string;
   id: string;
-  icon: IconProp;
+  icon: IconName;
   items: ActionItem[];
 }
 
@@ -104,7 +104,8 @@ export const SidebarWorkspaceDropdown = ({
 
   const workspaceName = workspace.name;
   const projectName = project.name || getProductName();
-  const isCollection = workspace.scope === 'collection';
+  const isCollection = models.workspace.isCollection(workspace);
+  const isDesign = models.workspace.isDesign(workspace);
   const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const createRequest = (requestType: CreateRequestType) => {
@@ -124,106 +125,109 @@ export const SidebarWorkspaceDropdown = ({
     );
   };
 
-  const createSections: ActionSection[] = isCollection
-    ? [
-        {
-          name: 'Create',
-          id: 'create',
-          icon: 'plus',
-          items: [
-            {
-              id: 'New Folder',
-              name: 'New Folder',
-              icon: 'folder',
-              action: () =>
-                showModal(PromptModal, {
-                  title: 'New Folder',
-                  defaultValue: 'My Folder',
-                  submitName: 'Create',
-                  label: 'Name',
-                  selectText: true,
-                  onComplete: (name: string) =>
-                    newRequestGroupFetcher.submit({
-                      organizationId,
-                      projectId,
-                      workspaceId,
-                      parentId: workspaceId,
-                      name,
-                    }),
-                }),
-            },
-            {
-              id: 'HTTP',
-              name: 'HTTP Request',
-              icon: 'plus-circle',
-              action: () => createRequest('HTTP'),
-            },
-            {
-              id: 'Event Stream',
-              name: 'Event Stream Request (SSE)',
-              icon: 'plus-circle',
-              action: () => createRequest('Event Stream'),
-            },
-            {
-              id: 'GraphQL Request',
-              name: 'GraphQL Request',
-              icon: 'plus-circle',
-              action: () => createRequest('GraphQL'),
-            },
-            {
-              id: 'gRPC Request',
-              name: 'gRPC Request',
-              icon: 'plus-circle',
-              action: () => createRequest('gRPC'),
-            },
-            {
-              id: 'WebSocket Request',
-              name: 'WebSocket Request',
-              icon: 'plus-circle',
-              action: () => createRequest('WebSocket'),
-            },
-            {
-              id: 'Socket.IO Request',
-              name: 'Socket.IO Request',
-              icon: 'plus-circle',
-              action: () => createRequest('SocketIO'),
-            },
-          ],
-        },
-        {
-          name: 'Import',
-          id: 'import-create',
-          icon: 'file-import',
-          items: [
-            {
-              id: 'From Curl',
-              name: 'From Curl',
-              icon: 'terminal',
-              action: () => setPasteCurlModalOpen(true),
-            },
-            {
-              id: 'from-file',
-              name: 'From File',
-              icon: 'file-import',
-              action: () => setIsImportModalOpen(true),
-            },
-          ],
-        },
-        {
-          name: 'Run',
-          id: 'run',
-          icon: 'circle-play',
-          items: [
-            {
-              id: 'RunCollection',
-              name: 'Run Collection',
-              icon: 'circle-play',
-              action: () => openInNewTab(true),
-            },
-          ],
-        },
-      ]
-    : [];
+  const createSection: ActionSection = {
+    name: 'Create',
+    id: 'create',
+    icon: 'plus',
+    items: [
+      {
+        id: 'New Folder',
+        name: 'New Folder',
+        icon: 'folder',
+        action: () =>
+          showModal(PromptModal, {
+            title: 'New Folder',
+            defaultValue: 'My Folder',
+            submitName: 'Create',
+            label: 'Name',
+            selectText: true,
+            onComplete: (name: string) =>
+              newRequestGroupFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                parentId: workspaceId,
+                name,
+              }),
+          }),
+      },
+      {
+        id: 'HTTP',
+        name: 'HTTP Request',
+        icon: 'plus-circle',
+        action: () => createRequest('HTTP'),
+      },
+      {
+        id: 'Event Stream',
+        name: 'Event Stream Request (SSE)',
+        icon: 'plus-circle',
+        action: () => createRequest('Event Stream'),
+      },
+      {
+        id: 'GraphQL Request',
+        name: 'GraphQL Request',
+        icon: 'plus-circle',
+        action: () => createRequest('GraphQL'),
+      },
+      {
+        id: 'gRPC Request',
+        name: 'gRPC Request',
+        icon: 'plus-circle',
+        action: () => createRequest('gRPC'),
+      },
+      {
+        id: 'WebSocket Request',
+        name: 'WebSocket Request',
+        icon: 'plus-circle',
+        action: () => createRequest('WebSocket'),
+      },
+      {
+        id: 'Socket.IO Request',
+        name: 'Socket.IO Request',
+        icon: 'plus-circle',
+        action: () => createRequest('SocketIO'),
+      },
+    ],
+  };
+
+  const importSection: ActionSection = {
+    name: 'Import',
+    id: 'import-create',
+    icon: 'file-import',
+    items: [
+      {
+        id: 'From Curl',
+        name: 'From Curl',
+        icon: 'terminal',
+        action: () => setPasteCurlModalOpen(true),
+      },
+      {
+        id: 'from-file',
+        name: 'From File',
+        icon: 'file-import',
+        action: () => setIsImportModalOpen(true),
+      },
+    ],
+  };
+
+  const runSection: ActionSection = {
+    name: 'Run',
+    id: 'run',
+    icon: 'circle-play',
+    items: [
+      {
+        id: 'RunCollection',
+        name: 'Run Collection',
+        icon: 'circle-play',
+        action: () => openInNewTab(true),
+      },
+    ],
+  };
+
+  const createSections: ActionSection[] = [
+    ...(isCollection ? [createSection, importSection] : []),
+    ...(isCollection || isDesign ? [runSection] : []),
+  ];
 
   const actionSection: ActionSection = {
     name: 'Actions',
