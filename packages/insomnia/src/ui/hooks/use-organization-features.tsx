@@ -75,6 +75,15 @@ export function useAIFeatureStatus(): AIFeatureStatus {
     loadFeatureStatus();
   }, [loadFeatureStatus]);
 
+  // Re-read the status when the AI settings change in the main process (the
+  // source of truth), since this hook would otherwise keep a stale snapshot
+  // taken at mount time. Main broadcasts to every window, so all consumers stay
+  // consistent regardless of which window performed the change.
+  useEffect(() => {
+    const unsubscribe = window.main.on('llm.changed', loadFeatureStatus);
+    return unsubscribe;
+  }, [loadFeatureStatus]);
+
   const generateMockServersWithAIAllowedByOrg = features.aiMockServers ? features.aiMockServers.enabled : true;
   const generateCommitMessagesWithAIAllowedByOrg = features.aiCommitMessages ? features.aiCommitMessages.enabled : true;
   const mcpClientWithAIAllowedByOrg = features.aiMcpClient ? features.aiMcpClient.enabled : true;
