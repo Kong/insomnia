@@ -377,6 +377,7 @@ const ProjectNavigationSidebarInner = (
   }, [organizationId, cloudSyncProjectIdsKey]);
 
   const syncKonnectProjectsAndNotify = async (konnectOrganizationId?: string | null) => {
+    setLastSyncResult(null);
     const isFirstSync = lastSyncedAt == null;
     const result = await startSync(
       organizationId,
