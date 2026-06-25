@@ -1,4 +1,4 @@
-import React, { type FC, Fragment, useCallback, useMemo, useState } from 'react';
+import React, { type FC, Fragment, useCallback, useMemo, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -14,7 +14,7 @@ import {
 } from 'react-aria-components';
 
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
-import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { FileInputButton } from '../base/file-input-button';
@@ -63,6 +63,11 @@ interface Props {
   readOnlyDisabledByName?: Record<string, boolean>;
   onReadOnlyDisabledChange?: (name: string, disabled: boolean) => void;
   onDescriptionToggle?: () => void;
+  // When true, a blank placeholder row is always rendered at the end of the list.
+  // The blank row is purely visual - it is not persisted (so it never shows up in
+  // diffs) until the user starts typing in it, at which point it is committed and a
+  // fresh blank row takes its place.
+  alwaysShowBlankRow?: boolean;
 }
 
 export const KeyValueEditor: FC<Props> = ({
@@ -80,28 +85,52 @@ export const KeyValueEditor: FC<Props> = ({
   readOnlyDisabledByName,
   onReadOnlyDisabledChange,
   onDescriptionToggle,
+  alwaysShowBlankRow,
 }) => {
   const [showDescription, setShowDescription] = useState(
     pairs.some(p => p.description && p.description.trim() !== '') || false,
   );
-  let pairsListItems = useMemo(
-    () =>
-      pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()],
+  // The persisted pairs (everything that lives in the data model and shows up in diffs).
+  const persistedItems = useMemo(
+    () => pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })),
     // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(pairs)],
   );
+  const blankNameEditorRef = useRef<OneLineEditorHandle>(null);
+  // The id for the trailing blank row is derived from the persisted pairs (rather than
+  // held in state) so it only changes when the data actually changes. This keeps it in
+  // sync with the async data updates - if it flipped eagerly the row the user just typed
+  // into would briefly belong to no list and flicker.
+  const blankId = useMemo(() => {
+    let n = 0;
+    while (persistedItems.some(item => item.id === `pair-blank-${n}`)) {
+      n++;
+    }
+    return `pair-blank-${n}`;
+  }, [persistedItems]);
+  const blankPair = useMemo<Pair>(
+    () => ({ id: blankId, name: '', value: '', description: '', disabled: false }),
+    [blankId],
+  );
+  // Render a trailing blank row when asked, or when there is nothing else to show.
+  const pairsListItems = useMemo(
+    () => (alwaysShowBlankRow || persistedItems.length === 0 ? [...persistedItems, blankPair] : persistedItems),
+    [alwaysShowBlankRow, persistedItems, blankPair],
+  );
   const initialReadOnlyItems = readOnlyPairs?.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) || [];
 
   const upsertPair = useCallback(
-    function upsertPair(pairsListItems: Pair[], pair: Pair) {
-      if (pairsListItems.find(item => item.id === pair.id)) {
-        onChange(pairsListItems.map(item => (item.id === pair.id ? pair : item)));
-      } else {
-        onChange([...pairsListItems, pair]);
-      }
+    function upsertPair(pair: Pair) {
+      const exists = pairsListItems.some(item => item.id === pair.id);
+      const next = exists ? pairsListItems.map(item => (item.id === pair.id ? pair : item)) : [...pairsListItems, pair];
+      // Never persist the trailing blank row while it is still empty, so it stays out of
+      // diffs until the user actually starts filling it in.
+      onChange(
+        next.filter(item => item.id !== blankId || item.name || item.value || item.description || item.fileName),
+      );
     },
-    [onChange],
+    [pairsListItems, blankId, onChange],
   );
 
   const repositionInArray = (allItems: Pair[], itemsToMove: string[], targetIndex: number) => {
@@ -117,13 +146,13 @@ export const KeyValueEditor: FC<Props> = ({
     getItems: keys =>
       [...keys].map(key => ({ 'text/plain': `${pairsListItems.find(item => item.id === key.toString())?.id}` })),
     onReorder(e) {
-      onChange(
-        repositionInArray(
-          pairsListItems,
-          [...e.keys].map(key => key.toString()),
-          pairsListItems.findIndex(item => item.id === e.target.key.toString()),
-        ),
-      );
+      const movedKeys = [...e.keys].map(key => key.toString());
+      // The blank row is not a real pair, so it can't be reordered.
+      if (movedKeys.includes(blankId)) {
+        return;
+      }
+      const targetIndex = persistedItems.findIndex(item => item.id === e.target.key.toString());
+      onChange(repositionInArray(persistedItems, movedKeys, targetIndex === -1 ? persistedItems.length : targetIndex));
     },
     renderDragPreview(items) {
       const pair = pairsListItems.find(item => item.id === items[0]['text/plain']) || createEmptyPair();
@@ -246,15 +275,14 @@ export const KeyValueEditor: FC<Props> = ({
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => {
             const id = generateId('pair');
-            upsertPair(pairsListItems, { id, name: '', value: '', description: '', disabled: false });
+            upsertPair({ id, name: '', value: '', description: '', disabled: false });
           }}
         >
           <Icon icon="plus" /> Add
         </Button>
         <PromptButton
-          disabled={pairsListItems.length === 0}
+          disabled={persistedItems.length === 0}
           onClick={() => {
-            pairsListItems = [createEmptyPair()];
             onChange([]);
           }}
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -384,13 +412,28 @@ export const KeyValueEditor: FC<Props> = ({
           }}
         </ListBox>
       )}
-      <div onKeyDownCapture={onKeyDownOuter} className="relative flex w-full flex-col overflow-hidden">
+      <div
+        onKeyDownCapture={onKeyDownOuter}
+        // Clicking anywhere on the blank row drops the cursor into its name editor so the
+        // user can immediately start typing, unless they clicked directly on an editor or
+        // control.
+        onClick={event => {
+          const target = event.target as HTMLElement;
+          if (target.closest('.editor--single-line') || target.closest('button')) {
+            return;
+          }
+          if ((target.closest('[data-key]') as HTMLElement | null)?.dataset.key === blankId) {
+            blankNameEditorRef.current?.focusEnd();
+          }
+        }}
+        className="relative flex w-full flex-col overflow-hidden"
+      >
         <ListBox
           aria-label="Key-value pairs"
           selectionMode="none"
           className="relative flex w-full flex-1 flex-col overflow-y-auto pt-1"
           dragAndDropHooks={dragAndDropHooks}
-          dependencies={[upsertPair, showDescription]}
+          dependencies={[upsertPair, showDescription, blankId]}
           items={pairsListItems}
         >
           {pair => {
@@ -398,6 +441,7 @@ export const KeyValueEditor: FC<Props> = ({
             const isMultiline = pair.type === 'text' && pair.multiline;
             const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
             const isOnlyTextAllowed = !allowFile && !allowMultiline;
+            const isBlank = pair.id === blankId;
 
             let valueEditor = (
               <OneLineEditor
@@ -407,7 +451,7 @@ export const KeyValueEditor: FC<Props> = ({
                 defaultValue={pair.value}
                 readOnly={pair.disabled || isDisabled}
                 getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
-                onChange={value => upsertPair(pairsListItems, { ...pair, value })}
+                onChange={value => upsertPair({ ...pair, value })}
               />
             );
 
@@ -419,7 +463,7 @@ export const KeyValueEditor: FC<Props> = ({
                   disabled={pair.disabled || isDisabled}
                   className="flex h-full w-full flex-1 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   path={pair.fileName || ''}
-                  onChange={fileName => upsertPair(pairsListItems, { ...pair, fileName })}
+                  onChange={fileName => upsertPair({ ...pair, fileName })}
                 />
               );
             }
@@ -435,8 +479,8 @@ export const KeyValueEditor: FC<Props> = ({
                       title: `Edit ${pair.name}`,
                       defaultValue: pair.value,
                       mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
-                      onChange: (value: string) => upsertPair(pairsListItems, { ...pair, value }),
-                      onModeChange: (mode: string) => upsertPair(pairsListItems, { ...pair, multiline: mode }),
+                      onChange: (value: string) => upsertPair({ ...pair, value }),
+                      onModeChange: (mode: string) => upsertPair({ ...pair, multiline: mode }),
                     })
                   }
                 >
@@ -464,12 +508,13 @@ export const KeyValueEditor: FC<Props> = ({
               >
                 <div
                   slot="drag"
-                  className="flex w-5 shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-(--hl-sm)"
+                  className={`flex w-5 shrink-0 items-center justify-center p-2 focus-visible:bg-(--hl-sm) ${isBlank ? 'invisible' : 'cursor-grab'}`}
                 >
                   <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
                 </div>
                 <div onKeyDownCapture={onKeyDownInner}>
                   <OneLineEditor
+                    ref={isBlank ? blankNameEditorRef : undefined}
                     id={'key-value-editor__name' + pair.id}
                     key={'key-value-editor__name' + pair.id + pair.disabled}
                     placeholder={namePlaceholder || 'Name'}
@@ -477,7 +522,7 @@ export const KeyValueEditor: FC<Props> = ({
                     readOnly={pair.disabled || isDisabled}
                     getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
                     onChange={name => {
-                      upsertPair(pairsListItems, { ...pair, name });
+                      upsertPair({ ...pair, name });
                     }}
                   />
                 </div>
@@ -490,7 +535,7 @@ export const KeyValueEditor: FC<Props> = ({
                       placeholder={descriptionPlaceholder || 'Description'}
                       defaultValue={pair.description || ''}
                       readOnly={pair.disabled || isDisabled}
-                      onChange={description => upsertPair(pairsListItems, { ...pair, description })}
+                      onChange={description => upsertPair({ ...pair, description })}
                     />
                   </div>
                 )}
@@ -514,7 +559,7 @@ export const KeyValueEditor: FC<Props> = ({
                               id: 'text',
                               name: 'Text',
                               textValue: 'Text',
-                              onAction: () => upsertPair(pairsListItems, { ...pair, type: 'text', multiline: false }),
+                              onAction: () => upsertPair({ ...pair, type: 'text', multiline: false }),
                             },
                             ...(allowMultiline
                               ? [
@@ -522,8 +567,7 @@ export const KeyValueEditor: FC<Props> = ({
                                     id: 'multiline-text',
                                     name: 'Multiline text',
                                     textValue: 'Multiline text',
-                                    onAction: () =>
-                                      upsertPair(pairsListItems, { ...pair, type: 'text', multiline: true }),
+                                    onAction: () => upsertPair({ ...pair, type: 'text', multiline: true }),
                                   },
                                 ]
                               : []),
@@ -533,7 +577,7 @@ export const KeyValueEditor: FC<Props> = ({
                                     id: 'file',
                                     name: 'File',
                                     textValue: 'File',
-                                    onAction: () => upsertPair(pairsListItems, { ...pair, type: 'file' }),
+                                    onAction: () => upsertPair({ ...pair, type: 'file' }),
                                   },
                                 ]
                               : []),
@@ -556,25 +600,19 @@ export const KeyValueEditor: FC<Props> = ({
                   )}
                   <ToggleButton
                     className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-                    onChange={isSelected => upsertPair(pairsListItems, { ...pair, disabled: !isSelected })}
+                    onChange={isSelected => upsertPair({ ...pair, disabled: !isSelected })}
                     isSelected={!pair.disabled}
-                    isDisabled={isDisabled}
+                    isDisabled={isDisabled || isBlank}
                   >
                     <Icon icon={pair.disabled ? 'square' : 'check-square'} />
                   </ToggleButton>
                   <PromptButton
-                    disabled={pair.id === 'pair-empty' || isDisabled}
+                    disabled={isBlank || isDisabled}
                     className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                     confirmMessage=""
                     doneMessage=""
                     onClick={() => {
-                      if (pairsListItems.find(item => item.id === pair.id)) {
-                        pairsListItems = pairsListItems.filter(item => item.id !== pair.id);
-                        if (pairsListItems.length === 0) {
-                          pairsListItems.push(createEmptyPair());
-                        }
-                        onChange(pairsListItems);
-                      }
+                      onChange(persistedItems.filter(item => item.id !== pair.id));
                     }}
                   >
                     <Icon icon="trash-can" />
