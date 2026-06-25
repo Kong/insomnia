@@ -5,8 +5,17 @@ import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 export async function downloadResponseBody(
   activeRequest: { name: string } | null | undefined,
-  activeResponse: { contentType: string; bodyBuffer?: Uint8Array | null } | null | undefined,
+  activeResponse:
+    | {
+        contentType: string;
+        bodyBuffer?: Uint8Array | null;
+        bodyPath?: string;
+        bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__';
+      }
+    | null
+    | undefined,
   prettify: boolean,
+  getBodyBuffer?: () => Promise<Uint8Array | null>,
 ) {
   if (!activeResponse || !activeRequest) {
     console.warn('Nothing to download');
@@ -24,12 +33,30 @@ export async function downloadResponseBody(
   if (canceled) {
     return;
   }
-  if (prettify && contentType.includes('json')) {
-    await window.main.writeFile({
-      path: outputPath,
-      content: jsonPrettify(bodyBufferToUtf8(activeResponse.bodyBuffer)) || '',
+  let bodyBuffer = activeResponse.bodyBuffer ?? null;
+
+  if (!bodyBuffer && !prettify && activeResponse.bodyPath) {
+    await window.main.writeResponseBodyToFile({
+      sourcePath: activeResponse.bodyPath,
+      destinationPath: outputPath,
+      bodyCompression: activeResponse.bodyCompression === 'zip' ? 'zip' : null,
     });
     return;
   }
-  await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer ?? new Uint8Array(0) });
+
+  if (!bodyBuffer && getBodyBuffer) {
+    const diskBodyBuffer = await getBodyBuffer();
+    if (diskBodyBuffer) {
+      bodyBuffer = diskBodyBuffer;
+    }
+  }
+
+  if (prettify && contentType.includes('json')) {
+    await window.main.writeFile({
+      path: outputPath,
+      content: jsonPrettify(bodyBufferToUtf8(bodyBuffer)) || '',
+    });
+    return;
+  }
+  await window.main.writeFile({ path: outputPath, content: bodyBuffer ?? new Uint8Array(0) });
 }

@@ -68,7 +68,18 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
   const handleDownloadResponseBody = useCallback(
-    (prettify: boolean) => downloadResponseBody(activeRequest, activeResponse, prettify),
+    (prettify: boolean) =>
+      downloadResponseBody(
+        activeRequest,
+        activeResponse,
+        prettify,
+        activeResponse
+          ? async () => {
+              const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
+              return typeof bodyBuffer === 'string' ? null : bodyBuffer;
+            }
+          : undefined,
+      ),
     [activeRequest, activeResponse],
   );
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);

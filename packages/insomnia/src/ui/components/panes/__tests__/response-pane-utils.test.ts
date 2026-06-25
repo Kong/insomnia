@@ -3,12 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { downloadResponseBody } from '../response-pane-utils';
 
 const mockWriteFile = vi.fn();
+const mockWriteResponseBodyToFile = vi.fn();
 const mockShowSaveDialog = vi.fn();
 
 beforeEach(() => {
   vi.stubGlobal('window', {
     dialog: { showSaveDialog: mockShowSaveDialog },
-    main: { writeFile: mockWriteFile },
+    main: { writeFile: mockWriteFile, writeResponseBodyToFile: mockWriteResponseBodyToFile },
   });
 });
 
@@ -78,6 +79,23 @@ describe('downloadResponseBody', () => {
       expect(content).toContain('"b": 2');
       expect(content).toContain('"a": 1');
     });
+
+    it('reads the response body before prettifying when it is not stored in memory', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
+      const getBodyBuffer = vi.fn().mockResolvedValue(new TextEncoder().encode('{"b":2,"a":1}'));
+
+      await downloadResponseBody(
+        { name: 'My Request' },
+        { contentType: 'application/json', bodyBuffer: null },
+        true,
+        getBodyBuffer,
+      );
+
+      expect(getBodyBuffer).toHaveBeenCalledOnce();
+      expect(mockWriteFile).toHaveBeenCalledOnce();
+      expect(mockWriteFile.mock.calls[0][0].content).toContain('"b": 2');
+      expect(mockWriteFile.mock.calls[0][0].content).toContain('"a": 1');
+    });
   });
 
   describe('raw-bytes branch (default)', () => {
@@ -93,6 +111,7 @@ describe('downloadResponseBody', () => {
       expect(path).toBe('/tmp/out.png');
       expect(content).toBeInstanceOf(Uint8Array);
       expect(content).toEqual(binaryData);
+      expect(mockWriteResponseBodyToFile).not.toHaveBeenCalled();
     });
 
     it('writes raw bytes when prettify is true but the content-type is not JSON', async () => {
@@ -105,6 +124,7 @@ describe('downloadResponseBody', () => {
       const { content } = mockWriteFile.mock.calls[0][0];
       expect(content).toBeInstanceOf(Uint8Array);
       expect(content).toEqual(textData);
+      expect(mockWriteResponseBodyToFile).not.toHaveBeenCalled();
     });
 
     it('writes empty bytes when bodyBuffer is null', async () => {
@@ -120,6 +140,48 @@ describe('downloadResponseBody', () => {
       const { content } = mockWriteFile.mock.calls[0][0];
       expect(content).toBeInstanceOf(Uint8Array);
       expect(content.length).toBe(0);
+      expect(mockWriteResponseBodyToFile).not.toHaveBeenCalled();
+    });
+
+    it('copies the response body file when bodyBuffer is null and bodyPath is available', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.bin' });
+
+      await downloadResponseBody(
+        { name: 'My Request' },
+        {
+          contentType: 'application/octet-stream',
+          bodyBuffer: null,
+          bodyPath: '/tmp/responses/abc.response',
+          bodyCompression: 'zip',
+        },
+        false,
+      );
+
+      expect(mockWriteResponseBodyToFile).toHaveBeenCalledOnce();
+      expect(mockWriteResponseBodyToFile).toHaveBeenCalledWith({
+        sourcePath: '/tmp/responses/abc.response',
+        destinationPath: '/tmp/out.bin',
+        bodyCompression: 'zip',
+      });
+      expect(mockWriteFile).not.toHaveBeenCalled();
+    });
+
+    it('reads the response body when it is not stored in memory', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.bin' });
+      const fileBody = new TextEncoder().encode('body from disk');
+      const getBodyBuffer = vi.fn().mockResolvedValue(fileBody);
+
+      await downloadResponseBody(
+        { name: 'My Request' },
+        { contentType: 'application/octet-stream', bodyBuffer: null },
+        false,
+        getBodyBuffer,
+      );
+
+      expect(getBodyBuffer).toHaveBeenCalledOnce();
+      expect(mockWriteFile).toHaveBeenCalledOnce();
+      expect(mockWriteFile.mock.calls[0][0].content).toEqual(fileBody);
+      expect(mockWriteResponseBodyToFile).not.toHaveBeenCalled();
     });
   });
 });
