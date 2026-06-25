@@ -269,6 +269,63 @@ First commit!
         'Push rejected with errors: ["refs/heads/master pre-receive hook declined"].\n\nGo to View > Toggle DevTools > Console for more information.',
       );
     });
+
+    it('sets up upstream tracking for the current branch on a successful push', async () => {
+      // @ts-expect-error -- mockReturnValue is not typed
+      git.push.mockReturnValue({ ok: true });
+
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: 'test-push-tracking',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const branch = await GitVCS.getCurrentBranch();
+
+      // Tracking config should not exist before the first push (git.init() leaves no upstream).
+      expect(await GitVCS.getBranchTrackingRemote()).toBeNull();
+
+      await GitVCS.push();
+
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: `branch.${branch}.remote` })).toBe('origin');
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: `branch.${branch}.merge` })).toBe(
+        `refs/heads/${branch}`,
+      );
+    });
+
+    it('does not clobber an existing non-origin upstream on push', async () => {
+      // @ts-expect-error -- mockReturnValue is not typed
+      git.push.mockReturnValue({ ok: true });
+
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: 'test-push-no-clobber',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Fares', email: 'fares@example.com' });
+
+      const branch = await GitVCS.getCurrentBranch();
+      await git.setConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: `branch.${branch}.remote`, value: 'upstream' });
+
+      await GitVCS.push();
+
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: `branch.${branch}.remote` })).toBe(
+        'upstream',
+      );
+    });
   });
 
   describe('undoPendingChanges()', () => {

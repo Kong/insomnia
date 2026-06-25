@@ -1230,6 +1230,22 @@ export class GitVCS {
     // NOTE: Response can be ok and have errors so we check this in the end to make sure we throw an error if there are any.
     if (response.ok) {
       console.log('[git] Push successful');
+      // Set up upstream tracking for the current branch. When linking to an empty repo,
+      // init() never configures tracking, so a later native git pull via CLI fails with "no tracking information".
+      // The push just created origin/<branch>, so this is the point where tracking becomes valid.
+      // We only write when tracking is missing - so steady-state pushes do no config writes, an existing
+      // user-set upstream is never clobbered, and already-linked repos self-heal on their next push.
+      try {
+        const branch = await this.getCurrentBranch();
+        const trackingRemote = await this.getBranchTrackingRemote(branch);
+        if (!trackingRemote) {
+          await git.setConfig({ ...this._baseOpts, path: `branch.${branch}.remote`, value: 'origin' });
+          await git.setConfig({ ...this._baseOpts, path: `branch.${branch}.merge`, value: `refs/heads/${branch}` });
+        }
+      } catch (err) {
+        console.log('[git] Failed to set upstream tracking after push', err);
+      }
+
       return;
     }
 
