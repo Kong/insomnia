@@ -305,7 +305,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         <div className="flex flex-1 items-center p-1">
           <OneLineEditor
             id="request-url-bar"
-            key={uniquenessKey}
+            // Remount on request switch or environment change (switch/edit) so nunjucks
+            // previews refresh. Excludes the response id / sync versions that churn on
+            // send and local edits, which used to remount and blur the editor mid-edit.
+            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}`}
+            // Stable across that remount, so undo history is restored from the cache.
+            uniquenessKey={uniquenessKey}
             ref={inputRef}
             type="text"
             getAutocompleteConstants={handleAutocompleteUrls}
