@@ -289,7 +289,8 @@ export type RendererOnChannels =
   | 'hide-oauth-authorization-modal'
   | 'mcp-auth-confirmation'
   | 'git.db-synced'
-  | 'git.file-problems-changed';
+  | 'git.file-problems-changed'
+  | 'llm.changed';
 
 export const ipcMainOn = (
   channel: MainOnChannels,
