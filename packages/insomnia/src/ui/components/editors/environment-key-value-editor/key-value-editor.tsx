@@ -98,7 +98,7 @@ export const EnvironmentKVEditor = ({
   const codeModalRef = useRef<CodePromptModalHandle>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
   const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({});
-  const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
+  const symmetricKey = useMemo(() => (vaultKey === '' ? {} : base64decode(vaultKey, true)), [vaultKey]);
 
   const secretPairsKey = useMemo(
     () =>
@@ -107,8 +107,6 @@ export const EnvironmentKVEditor = ({
       ),
     [kvPairs],
   );
-
-  const symmetricKeyString = useMemo(() => JSON.stringify(symmetricKey), [symmetricKey]);
 
   useEffect(() => {
     const secretPairs = kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET);
@@ -132,7 +130,7 @@ export const EnvironmentKVEditor = ({
     return () => {
       cancelled = true;
     };
-  }, [secretPairsKey, symmetricKeyString, kvPairs]);
+  }, [secretPairsKey, symmetricKey, kvPairs]);
 
   const commonItemTypes = [
     {
