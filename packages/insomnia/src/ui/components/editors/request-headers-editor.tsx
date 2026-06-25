@@ -123,6 +123,7 @@ export const RequestHeadersEditor: FC<Props> = ({
 
   return (
     <KeyValueEditor
+      alwaysShowBlankRow
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"

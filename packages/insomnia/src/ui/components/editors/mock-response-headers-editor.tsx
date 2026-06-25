@@ -87,6 +87,7 @@ export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur 
 
   return (
     <KeyValueEditor
+      alwaysShowBlankRow
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
