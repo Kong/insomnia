@@ -27,7 +27,7 @@ import type {
 import * as templatingUtils from '~/common/templating/utils';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/inherit';
 import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
@@ -87,7 +87,11 @@ export async function buildRenderContext({
   }
 
   if (subEnvironment) {
-    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(
+      subEnvironment.data,
+      subEnvironment.dataPropertyOrder ?? null,
+      JSON_ORDER_SEPARATOR,
+    );
     envObjects.push(ordered);
   }
 

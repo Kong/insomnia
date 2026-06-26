@@ -10,7 +10,11 @@ import { scrollElementIntoView } from '~/ui/utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
-import { TAB_CONTEXT_MENU_COMMAND } from './tab-list';
+
+export const enum TAB_CONTEXT_MENU_COMMAND {
+  CLOSE_ALL = 'Close All',
+  CLOSE_OTHERS = 'Close Other Tabs',
+}
 
 export type TabType =
   | 'request'

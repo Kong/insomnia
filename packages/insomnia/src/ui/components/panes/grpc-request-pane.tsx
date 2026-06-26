@@ -20,7 +20,7 @@ import { database as db } from '../../../common/database';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
-import { getOrInheritHeaders } from '../../../network/network';
+import { getOrInheritHeaders } from '../../../network/inherit';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';

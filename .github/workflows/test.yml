@@ -114,26 +114,25 @@ jobs:
               const diff = prCount - baseCount;
               const diffPercent = baseCount > 0 ? ((diff / baseCount) * 100).toFixed(2) : '0.00';
 
-              let status = '✅ PASSED';
-              let statusEmoji = '✅';
-
-              if (diff > 0) {
-                status = '⚠️ WARNING';
-                statusEmoji = '⚠️';
-              } else if (diff === 0) {
-                status = '✅ NO CHANGE';
-                statusEmoji = '✅';
-              } else {
-                status = '✨ IMPROVED';
-                statusEmoji = '✨';
-              }
-
               // Find new and removed circular references
               const prCycleStrings = new Set(prCircularRefs.map(cycle => cycle.join(' -> ')));
               const baseCycleStrings = new Set(baseCircularRefs.map(cycle => cycle.join(' -> ')));
 
               const newCycles = Array.from(prCycleStrings).filter(cycle => !baseCycleStrings.has(cycle)).sort();
               const removedCycles = Array.from(baseCycleStrings).filter(cycle => !prCycleStrings.has(cycle)).sort();
+
+              // The check is gated on new cycles: any newly introduced cycle fails the build,
+              // even if the net count is unchanged (one removed, one added).
+              let status = '✅ NO CHANGE';
+              let statusEmoji = '✅';
+
+              if (newCycles.length > 0) {
+                status = '❌ FAILED';
+                statusEmoji = '❌';
+              } else if (removedCycles.length > 0) {
+                status = '✨ IMPROVED';
+                statusEmoji = '✨';
+              }
 
               return `# ${statusEmoji} Circular References Report
 
@@ -192,11 +191,11 @@ jobs:
             ## Analysis
 
             ${
-              diff > 0
-                ? `⚠️ **Warning:** This PR introduces ${diff} new circular ${diff === 1 ? 'reference' : 'references'}. Consider refactoring to avoid adding circular dependencies.`
-                : diff < 0
-                ? `✨ **Great Job!** This PR removes ${Math.abs(diff)} circular ${Math.abs(diff) === 1 ? 'reference' : 'references'}. Keep up the good work!`
-                : `✅ **No Change:** This PR does not introduce or remove any circular references.`
+              newCycles.length > 0
+                ? `❌ **Failed:** This PR introduces ${newCycles.length} new circular ${newCycles.length === 1 ? 'reference' : 'references'}. This check is required — please refactor to remove the new ${newCycles.length === 1 ? 'cycle' : 'cycles'} listed above before merging.`
+                : removedCycles.length > 0
+                ? `✨ **Great Job!** This PR removes ${removedCycles.length} circular ${removedCycles.length === 1 ? 'reference' : 'references'}. Keep up the good work!`
+                : `✅ **No Change:** This PR does not introduce any new circular references.`
             }
 
             ---
@@ -221,7 +220,6 @@ jobs:
               console.log(`Base: Found ${baseCount} circular references`);
 
               // Generate report
-              const diff = prCount - baseCount;
               const markdownContent = generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch);
 
               // Post PR comment
@@ -261,13 +259,21 @@ jobs:
                 }
               }
 
-              // Log results but don't fail the build
-              if (diff > 0) {
-                console.log(`⚠️ Warning: This PR introduces ${diff} new circular ${diff === 1 ? 'reference' : 'references'}. Base: ${baseCount}, PR: ${prCount}`);
-              } else if (diff < 0) {
-                console.log(`✨ Great! This PR removes ${Math.abs(diff)} circular ${Math.abs(diff) === 1 ? 'reference' : 'references'}!`);
+              // Gate: fail the check when this PR introduces any new circular reference,
+              // even if the net count is unchanged (one removed and a different one added).
+              const prCycleStrings = new Set(prCircularRefs.map(cycle => cycle.join(' -> ')));
+              const baseCycleStrings = new Set(baseCircularRefs.map(cycle => cycle.join(' -> ')));
+              const newCycles = Array.from(prCycleStrings).filter(cycle => !baseCycleStrings.has(cycle)).sort();
+              const removedCycles = Array.from(baseCycleStrings).filter(cycle => !prCycleStrings.has(cycle));
+
+              if (newCycles.length > 0) {
+                core.setFailed(
+                  `This PR introduces ${newCycles.length} new circular ${newCycles.length === 1 ? 'reference' : 'references'} (base: ${baseCount}, PR: ${prCount}):\n${newCycles.join('\n')}`
+                );
+              } else if (removedCycles.length > 0) {
+                console.log(`✨ Great! This PR removes ${removedCycles.length} circular ${removedCycles.length === 1 ? 'reference' : 'references'}!`);
               } else {
-                console.log(`✅ No change in circular references (${prCount})`);
+                console.log(`✅ No new circular references (${prCount})`);
               }
 
             } catch (error) {

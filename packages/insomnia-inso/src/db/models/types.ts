@@ -1,5 +1,5 @@
 // Simplified and extracted from insomnia/src/models/*
-import type { Database } from '../types';
+import type { CaCertificate, ClientCertificate, CloudProviderCredential, CookieJar, Settings } from 'insomnia-data';
 
 export interface BaseModel {
   _id: string;
@@ -57,3 +57,19 @@ export type InsomniaRequest = BaseModel & {
   body: string;
   metaSortKey: number;
 };
+
+export interface Database {
+  ApiSpec: ApiSpec[];
+  Environment: Environment[];
+  Request: BaseModel[];
+  RequestGroup: BaseModel[];
+  Workspace: Workspace[];
+  WorkspaceMeta: WorkspaceMeta[];
+  UnitTestSuite: UnitTestSuite[];
+  UnitTest: UnitTest[];
+  ClientCertificate: ClientCertificate[];
+  CaCertificate: CaCertificate[];
+  CookieJar: CookieJar[];
+  CloudCredential: CloudProviderCredential[];
+  Settings: Settings[];
+}

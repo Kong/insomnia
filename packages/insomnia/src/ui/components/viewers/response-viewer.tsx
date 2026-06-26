@@ -12,6 +12,7 @@ import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
 import { ResponseMultipartViewer } from './response-multipart-viewer';
 import { ResponsePDFViewer } from './response-pdf-viewer';
+import type { ResponseViewerProps } from './response-viewer.types';
 import { ResponseWebView } from './response-web-view';
 
 const CHARSET_ALIASES: Record<string, string> = {
@@ -51,24 +52,6 @@ export function xmlDecode(input: string) {
     (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => ESCAPED_CHARACTERS_MAP[item],
   );
 }
-export interface ResponseViewerProps {
-  bytes: number;
-  contentType: string;
-  disableHtmlPreviewJs: boolean;
-  disablePreviewLinks: boolean;
-  download: (...args: any[]) => any;
-  editorFontSize: number;
-  filter: string;
-  filterHistory: string[];
-  bodyBuffer?: Uint8Array;
-  getBody?: (...args: any[]) => Promise<Uint8Array | string>;
-  previewMode: string;
-  responseId: string;
-  url: string;
-  updateFilter?: (filter: string) => void;
-  error?: string | null;
-}
-
 export const ResponseViewer = ({
   bytes,
   bodyBuffer,
@@ -335,6 +318,7 @@ export const ResponseViewer = ({
         key={responseId}
         responseId={responseId}
         url={url}
+        ResponseViewerComponent={ResponseViewer}
       />
     );
   }

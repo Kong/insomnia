@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { ipcMain } from 'electron';
 
-import { getMainWindow } from './window-utils';
+import { getMainWindow } from './main-window-registry';
 
 const promptPendingRequests = new Map<string, (value: string | null) => void>();
 

@@ -1,8 +1,17 @@
-import type { CookieJar, Request, RequestAuthentication, RequestGroup, RequestHeader, RequestParameter, SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import type {
+  CookieJar,
+  Request,
+  RequestAuthentication,
+  RequestGroup,
+  RequestHeader,
+  RequestParameter,
+  SocketIORequest,
+  WebSocketRequest,
+} from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/inherit';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from './try-interpolate';
 
 const { applyPathParametersToUrl } = models.request;

@@ -12,7 +12,7 @@ import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
-import { ResponseViewer } from './response-viewer';
+import type { ResponseViewerProps } from './response-viewer.types';
 
 interface Props {
   download: (...args: any[]) => any;
@@ -25,6 +25,9 @@ interface Props {
   filterHistory: string[];
   editorFontSize: number;
   url: string;
+  // Injected to avoid a circular import: ResponseViewer renders this viewer for
+  // multipart bodies, and this viewer renders ResponseViewer for each part.
+  ResponseViewerComponent: FC<ResponseViewerProps>;
 }
 
 export const ResponseMultipartViewer: FC<Props> = ({
@@ -38,6 +41,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
   url,
   bodyBuffer,
   contentType,
+  ResponseViewerComponent,
 }) => {
   const [parts, setParts] = useState<Part[]>([]);
   const [selectedPart, setSelectedPart] = useState<Part>();
@@ -189,7 +193,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
         </Dropdown>
       </div>
       <div className="tall wide">
-        <ResponseViewer
+        <ResponseViewerComponent
           bytes={selectedPart.bytes || 0}
           contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
           disableHtmlPreviewJs={disableHtmlPreviewJs}
