@@ -33,6 +33,24 @@ const userPluginTag: TemplateTag = {
   },
 };
 
+describe('worker tag argument resolution', () => {
+  beforeEach(() => {
+    reload();
+    mockFetch.mockReset();
+    mockFetch.mockImplementation(async (path: any) => {
+      if (path === 'plugin.getBundlePluginTemplateTags' || path === 'plugin.getUserPluginTemplateTags') {
+        return [];
+      }
+      return;
+    });
+  });
+
+  it('resolves a _.variable argument to its value rather than the literal reference', async () => {
+    const result = await render("{% jsonpath _.body, '$.id' %}", { context: { body: '{"id":"vaporeon"}' } });
+    expect(result).toBe('vaporeon');
+  });
+});
+
 describe('worker getLiquid plugin tag registration', () => {
   beforeEach(() => {
     reload();
