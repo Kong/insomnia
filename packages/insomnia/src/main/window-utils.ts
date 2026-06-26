@@ -306,14 +306,21 @@ export function createWindow(): ElectronBrowserWindow {
     label: `${MNEMONIC_SYM}Edit`,
     submenu: [
       {
+        // Route through the renderer (see editor-undo.ts) instead of role: 'undo'
+        // so a single app-level handler reconciles CodeMirror's history with the
+        // native undo stack; role: 'undo' only drove the latter.
         label: `${MNEMONIC_SYM}Undo`,
         accelerator: 'CmdOrCtrl+Z',
-        role: 'undo',
+        click: () => {
+          BrowserWindow.getFocusedWindow()?.webContents.send('edit:undo');
+        },
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
         accelerator: 'Shift+CmdOrCtrl+Z',
-        role: 'redo',
+        click: () => {
+          BrowserWindow.getFocusedWindow()?.webContents.send('edit:redo');
+        },
       },
       {
         type: 'separator',

@@ -5,8 +5,14 @@ import * as themes from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import * as templating from '~/ui/templating/renderer-safe';
 
+import { dispatchEditorUndo } from './components/.client/codemirror/editor-undo';
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
+
+// Edit-menu Undo/Redo route here so one handler reconciles CodeMirror's history
+// with the native undo stack based on what's focused (see editor-undo.ts).
+window.main.on('edit:undo', () => dispatchEditorUndo('undo'));
+window.main.on('edit:redo', () => dispatchEditorUndo('redo'));
 
 window.main.on('toggle-preferences', () => {
   showModal(SettingsModal);
