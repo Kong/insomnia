@@ -18,7 +18,7 @@ import {
 import { checkNestedKeys, ensureKeyIsValid } from '~/common/utils/environment-utils';
 import { base64decode } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
-import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { generateId } from '../../../../common/misc';
 import { PromptButton } from '../../base/prompt-button';
@@ -69,16 +69,36 @@ export const EnvironmentKVEditor = ({
   textOnly = false,
   disabled = false,
 }: EditorProps) => {
-  const kvPairs: EnvironmentKvPairData[] = useMemo(
-    () => (data.length > 0 ? [...data] : [createNewPair()]),
+  // The persisted pairs (everything that lives in the data model and shows up in diffs).
+  const persistedPairs: EnvironmentKvPairData[] = useMemo(
+    () => [...data],
     // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(data)],
   );
+  const blankNameEditorRef = useRef<OneLineEditorHandle>(null);
+  // The id for the trailing blank row is derived from the persisted pairs (rather than
+  // held in state) so it only changes when the data actually changes. This keeps it in
+  // sync with the async data updates - if it flipped eagerly the row the user just typed
+  // into would briefly belong to no list and flicker.
+  const blankId = useMemo(() => {
+    let n = 0;
+    while (persistedPairs.some(p => p.id === `envPair-blank-${n}`)) {
+      n++;
+    }
+    return `envPair-blank-${n}`;
+  }, [persistedPairs]);
+  const blankPair: EnvironmentKvPairData = useMemo(
+    () => ({ id: blankId, name: '', value: '', type: EnvironmentKvPairDataType.STRING, enabled: true }),
+    [blankId],
+  );
+  // The blank row is purely visual - it is not persisted (so it never shows up in
+  // diffs) until the user starts typing in it.
+  const kvPairs: EnvironmentKvPairData[] = useMemo(() => [...persistedPairs, blankPair], [persistedPairs, blankPair]);
   const codeModalRef = useRef<CodePromptModalHandle>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
   const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({});
-  const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
+  const symmetricKey = useMemo(() => (vaultKey === '' ? {} : base64decode(vaultKey, true)), [vaultKey]);
 
   const secretPairsKey = useMemo(
     () =>
@@ -87,8 +107,6 @@ export const EnvironmentKVEditor = ({
       ),
     [kvPairs],
   );
-
-  const symmetricKeyString = useMemo(() => JSON.stringify(symmetricKey), [symmetricKey]);
 
   useEffect(() => {
     const secretPairs = kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET);
@@ -112,7 +130,7 @@ export const EnvironmentKVEditor = ({
     return () => {
       cancelled = true;
     };
-  }, [secretPairsKey, symmetricKeyString, kvPairs]);
+  }, [secretPairsKey, symmetricKey, kvPairs]);
 
   const commonItemTypes = [
     {
@@ -131,20 +149,24 @@ export const EnvironmentKVEditor = ({
   const kvPairItemTypes = isPrivate && !!vaultKey ? commonItemTypes.concat(secretItemType) : commonItemTypes;
 
   const repositionInArray = (moveItems: string[], targetIndex: number) => {
-    const removed = kvPairs.filter(pair => pair.id !== moveItems[0]);
-    const itemToMove = kvPairs.find(pair => pair.id === moveItems[0]);
+    const removed = persistedPairs.filter(pair => pair.id !== moveItems[0]);
+    const itemToMove = persistedPairs.find(pair => pair.id === moveItems[0]);
     if (itemToMove) {
       return [...removed.slice(0, targetIndex), itemToMove, ...removed.slice(targetIndex)];
     }
-    return kvPairs;
+    return persistedPairs;
   };
 
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
     onReorder(e) {
       const moveItems = [...e.keys].map(key => key.toString());
-      const targetIndex = kvPairs.findIndex(pair => pair.id === e.target.key.toString());
-      onChange(repositionInArray(moveItems, targetIndex));
+      // The blank row is not a real pair, so it can't be reordered.
+      if (moveItems.includes(blankId)) {
+        return;
+      }
+      const targetIndex = persistedPairs.findIndex(pair => pair.id === e.target.key.toString());
+      onChange(repositionInArray(moveItems, targetIndex === -1 ? persistedPairs.length : targetIndex));
     },
     renderDragPreview(items) {
       const pair = kvPairs.find(pair => pair.id === items[0]['text/plain']) || createNewPair();
@@ -173,18 +195,30 @@ export const EnvironmentKVEditor = ({
     changedPropertyName: K,
     newValue: EnvironmentKvPairData[K],
   ) => {
-    const changedItemIdx = kvPairs.findIndex(p => p.id === id);
+    // Editing the blank row commits it as a real pair. A fresh blank row appears on the
+    // next render once the persisted data updates (blankId is derived from it).
+    if (id === blankId) {
+      const newPair: EnvironmentKvPairData = { ...blankPair, enabled: true, [changedPropertyName]: newValue };
+      if (newValue === EnvironmentKvPairDataType.JSON && newPair.value.trim() === '') {
+        newPair.value = JSON.stringify({});
+      }
+      onChange([...persistedPairs, newPair]);
+      return;
+    }
+    // Mutate the persisted working copy in place so sequential calls (e.g. the secret
+    // type switch, which changes value then type) accumulate onto the same item.
+    const changedItemIdx = persistedPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
-      const changedItem = kvPairs[changedItemIdx];
+      const changedItem = persistedPairs[changedItemIdx];
       // enable item since user modifies the item unless manual disable it
       changedItem['enabled'] = true;
       changedItem[changedPropertyName] = newValue;
-      // update value to emptfy object json string when switch to json type and current value is empty string
+      // update value to empty object json string when switch to json type and current value is empty string
       if (newValue === EnvironmentKvPairDataType.JSON && changedItem.value.trim() === '') {
         changedItem.value = JSON.stringify({});
       }
     }
-    onChange(kvPairs);
+    onChange(persistedPairs);
   };
 
   const handleItemTypeChange = async (id: string, newType: EnvironmentKvPairDataType) => {
@@ -231,14 +265,14 @@ export const EnvironmentKVEditor = ({
 
   const handleAddItem = (id?: string) => {
     const newPair = createNewPair();
-    const insertIdx = id ? kvPairs.findIndex(d => d.id === id) : kvPairs.length - 1;
-    kvPairs.splice(insertIdx === -1 ? 0 : insertIdx + 1, 0, newPair);
-    onChange(kvPairs);
+    const insertIdx = id ? persistedPairs.findIndex(d => d.id === id) : persistedPairs.length - 1;
+    const next = [...persistedPairs];
+    next.splice(insertIdx === -1 ? next.length : insertIdx + 1, 0, newPair);
+    onChange(next);
   };
 
   const handleDeleteItem = (id: string) => {
-    const filteredPairs = kvPairs.filter(d => d.id !== id);
-    onChange(filteredPairs);
+    onChange(persistedPairs.filter(d => d.id !== id));
   };
 
   const checkValidJSONString = (input: string) => {
@@ -252,6 +286,7 @@ export const EnvironmentKVEditor = ({
 
   const renderPairItem = (kvPair: EnvironmentKvPairData) => {
     const { id, name, value, type, enabled = false } = kvPair;
+    const isBlank = id === blankId;
     const itemIndex = kvPairs.findIndex(pair => pair.id === id);
     const itemError = kvPairError.find(p => p.id === id);
     const hasItemWithSameNameAfter =
@@ -265,11 +300,12 @@ export const EnvironmentKVEditor = ({
             className={`${cellCommonStyle} flex w-6 shrink-0 items-center justify-end border-r-0 border-l`}
             style={{ padding: 0 }}
           >
-            <Icon icon="grip-vertical" className="mr-1 cursor-grab" />
+            <Icon icon="grip-vertical" className={`mr-1 ${isBlank ? 'invisible' : 'cursor-grab'}`} />
           </div>
         )}
         <div className={`${cellCommonStyle} relative flex h-full w-[30%] grow pl-1`}>
           <OneLineEditor
+            ref={isBlank ? blankNameEditorRef : undefined}
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
             defaultValue={name}
@@ -434,7 +470,21 @@ export const EnvironmentKVEditor = ({
   };
 
   return (
-    <div className="flex h-full min-w-max flex-col overflow-hidden">
+    <div
+      className="flex h-full min-w-max flex-col overflow-hidden"
+      // Clicking anywhere on the blank row drops the cursor into its name editor so the
+      // user can immediately start typing, unless they clicked directly on an editor or
+      // control.
+      onClick={event => {
+        const target = event.target as HTMLElement;
+        if (target.closest('.editor--single-line') || target.closest('button')) {
+          return;
+        }
+        if ((target.closest('[data-key]') as HTMLElement | null)?.dataset.key === blankId) {
+          blankNameEditorRef.current?.focusEnd();
+        }
+      }}
+    >
       <Toolbar className="content-box z-10 flex h-(--line-height-sm) shrink-0 bg-(--color-bg) text-(--font-size-sm)">
         <Button
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -447,7 +497,7 @@ export const EnvironmentKVEditor = ({
           <Icon icon="plus" /> Add
         </Button>
         <PromptButton
-          disabled={disabled || kvPairs.length === 0}
+          disabled={disabled || persistedPairs.length === 0}
           onClick={() => {
             onChange([]);
           }}
@@ -462,7 +512,7 @@ export const EnvironmentKVEditor = ({
         aria-label="Environment Key Value Pair"
         selectionMode="none"
         dragAndDropHooks={dragAndDropHooks}
-        dependencies={[kvPairError, data, symmetricKey]}
+        dependencies={[kvPairError, data, symmetricKey, blankId]}
         className="h-full w-full overflow-y-auto p-(--padding-sm)"
         items={kvPairs}
       >

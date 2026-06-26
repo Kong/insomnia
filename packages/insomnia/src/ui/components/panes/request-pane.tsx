@@ -104,7 +104,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
             key={requestId}
-            uniquenessKey={uniqueKey}
+            // Stable cache key for the URL bar editor's undo history (survives remounts).
+            uniquenessKey={`request-url-bar::${requestId}`}
             handleAutocompleteUrls={() =>
               services.helpers.queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)
             }

@@ -123,13 +123,12 @@ export const getInitialEntry = async () => {
       const organizations = JSON.parse(
         localStorage.getItem(`${user.accountId}:organizations`) || '[]',
       ) as Organization[];
-      const personalOrganization = models.organization.findPersonalOrganization(organizations, user.accountId);
-      // If the personal org is not found in local storage go fetch from org index loader
-      if (!personalOrganization) {
+      // If no organizations are in local storage, go fetch from org index loader
+      if (organizations.length === 0) {
         return href('/organization');
       }
 
-      let organizationId = personalOrganization.id;
+      let organizationId = organizations[0].id;
 
       // Check if the user has a last visited organization
       try {

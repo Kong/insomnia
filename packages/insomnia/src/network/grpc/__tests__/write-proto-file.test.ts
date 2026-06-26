@@ -166,6 +166,107 @@ describe('writeProtoFile', () => {
       expect(writeFileSpy).toHaveBeenCalledWith(expectedFullPath.nested, pfNested.protoText);
     });
 
+    it('strips path traversal from proto file name and writes inside temp dir', async () => {
+      // Arrange
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
+        parentId: w._id,
+        name: 'dirName',
+      });
+      const pf = await services.protoFile.create({
+        parentId: pd._id,
+        name: '../../escape.proto',
+        protoText: 'text',
+      });
+      const tmpDirPath = path.join('.', 'foo', 'bar', 'baz');
+
+      _configureSpies(tmpDirPath, false);
+
+      // Act
+      const result = await writeProtoFile(pf);
+      // Assert — traversal stripped, file written inside temp dir
+      const tempRoot = path.join(tmpDirPath, 'insomnia-grpc', `${pd._id}.${pd.modified}`, pd.name);
+      const expectedFullPath = path.join(tempRoot, 'escape.proto');
+      expect(result.filePath).toEqual('escape.proto');
+      expect(writeFileSpy).toHaveBeenCalledWith(expectedFullPath, pf.protoText);
+    });
+
+    it('strips path traversal from proto directory name and writes inside temp dir', async () => {
+      // Arrange
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
+        parentId: w._id,
+        name: '../../traversal',
+      });
+      const pf = await services.protoFile.create({
+        parentId: pd._id,
+        name: 'hello.proto',
+        protoText: 'text',
+      });
+      const tmpDirPath = path.join('.', 'foo', 'bar', 'baz');
+
+      _configureSpies(tmpDirPath, false);
+
+      // Act
+      const result = await writeProtoFile(pf);
+      // Assert — directory traversal stripped, content written inside temp dir
+      const tempBase = path.join(tmpDirPath, 'insomnia-grpc', `${pd._id}.${pd.modified}`);
+      const expectedRootDir = path.join(tempBase, 'traversal');
+      expect(result.dirs).toContain(expectedRootDir);
+      const writtenPath = writeFileSpy.mock.calls[0][0] as string;
+      expect(writtenPath.startsWith(tempBase)).toBe(true);
+    });
+
+    it('strips path separator from proto file name and writes inside temp dir', async () => {
+      // Arrange
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
+        parentId: w._id,
+        name: 'dirName',
+      });
+      const pf = await services.protoFile.create({
+        parentId: pd._id,
+        name: 'sub/escape.proto',
+        protoText: 'text',
+      });
+      const tmpDirPath = path.join('.', 'foo', 'bar', 'baz');
+
+      _configureSpies(tmpDirPath, false);
+
+      // Act
+      const result = await writeProtoFile(pf);
+      // Assert — separator stripped, file written inside temp dir
+      const tempRoot = path.join(tmpDirPath, 'insomnia-grpc', `${pd._id}.${pd.modified}`, pd.name);
+      expect(result.filePath).toEqual('escape.proto');
+      expect(writeFileSpy).toHaveBeenCalledWith(path.join(tempRoot, 'escape.proto'), pf.protoText);
+    });
+
+    it('writes file when directory name is exactly ".."', async () => {
+      // Arrange
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
+        parentId: w._id,
+        name: '..',
+      });
+      const pf = await services.protoFile.create({
+        parentId: pd._id,
+        name: 'hello.proto',
+        protoText: 'text',
+      });
+      const tmpDirPath = path.join('.', 'foo', 'bar', 'baz');
+
+      _configureSpies(tmpDirPath, false);
+
+      // Act — must not throw; ".." gets replaced with "_" and write proceeds
+      const result = await writeProtoFile(pf);
+      const tempBase = path.join(tmpDirPath, 'insomnia-grpc', `${pd._id}.${pd.modified}`);
+      const expectedRootDir = path.join(tempBase, '_');
+      expect(result.dirs).toContain(expectedRootDir);
+      expect(writeFileSpy).toHaveBeenCalled();
+      const writtenPath = writeFileSpy.mock.calls[0][0] as string;
+      expect(writtenPath.startsWith(tempBase)).toBe(true);
+    });
+
     it('should not write file if it already exists', async () => {
       // Arrange
       const w = await services.workspace.create();

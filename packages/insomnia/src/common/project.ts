@@ -98,8 +98,13 @@ export const checkSingleProjectSyncStatus = async (projectId: string) => {
   return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
 };
 
+const isNotSyncProject = (project: Project) =>
+  models.project.isLocalProject(project) && !models.project.isGitProject(project);
+
 export const checkAllProjectSyncStatus = async (projects: Project[]) => {
-  const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
+  const taskList = projects.map(project =>
+    isNotSyncProject(project) ? Promise.resolve(false) : checkSingleProjectSyncStatus(project._id),
+  );
   const res = await Promise.all(taskList);
   const obj: Record<string, boolean> = {};
   projects.forEach((project, index) => {

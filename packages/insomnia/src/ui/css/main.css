@@ -1164,8 +1164,9 @@ button {
 }
 .surprise,
 .http-method-GQL,
-.http-method-GET {
-  color: var(--color-surprise-font) !important;
+.http-method-GET,
+.http-method-QUERY {
+  color: var(--color-surprise) !important;
 }
 .boring {
   color: var(--color-font) !important;
@@ -1211,7 +1212,8 @@ button {
   color: var(--color-font-info) !important;
 }
 .bg-surprise,
-.bg-http-method-GET {
+.bg-http-method-GET,
+.bg-http-method-QUERY {
   background: var(--color-surprise) !important;
   text-shadow: 0 0 0.05em var(--color-surprise);
   color: var(--color-font-surprise) !important;

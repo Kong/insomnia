@@ -91,6 +91,7 @@ export const Row: FC<Props> = ({
         >
           <OneLineEditor
             id={'key-value-editor__name' + pair.id}
+            uniquenessKey={'key-value-editor__name' + pair.id}
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
@@ -132,6 +133,7 @@ export const Row: FC<Props> = ({
           ) : (
             <OneLineEditor
               id={'key-value-editor__value' + pair.id}
+              uniquenessKey={'key-value-editor__value' + pair.id}
               onBlur={onBlur}
               type="text"
               readOnly={readOnly}
@@ -150,6 +152,7 @@ export const Row: FC<Props> = ({
           >
             <OneLineEditor
               id={'key-value-editor__description' + pair.id}
+              uniquenessKey={'key-value-editor__description' + pair.id}
               readOnly={readOnly}
               placeholder={descriptionPlaceholder || 'Description'}
               defaultValue={pair.description || ''}

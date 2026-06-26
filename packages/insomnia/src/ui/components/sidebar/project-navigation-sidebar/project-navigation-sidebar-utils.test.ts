@@ -129,6 +129,31 @@ describe('getWorkspacesByProjectIds', () => {
     expect(result.get('proj_has_ws')).toHaveLength(1);
     expect(result.get('proj_no_ws')).toEqual([]);
   });
+
+  it('attaches uncommitted/unpushed git sync flags from the workspace meta', async () => {
+    await services.workspace.create({ _id: 'wrk_dirty', name: 'Dirty', parentId: 'proj_1', scope: 'collection' });
+    await services.workspace.create({ _id: 'wrk_ahead', name: 'Ahead', parentId: 'proj_1', scope: 'design' });
+    await services.workspace.create({ _id: 'wrk_clean', name: 'Clean', parentId: 'proj_1', scope: 'collection' });
+    await services.workspaceMeta.create({ parentId: 'wrk_dirty', hasUncommittedChanges: true });
+    await services.workspaceMeta.create({ parentId: 'wrk_ahead', hasUnpushedChanges: true });
+    await services.workspaceMeta.create({ parentId: 'wrk_clean' });
+
+    const workspaces = (await getWorkspacesByProjectIds(['proj_1'])).get('proj_1')!;
+    const byId = new Map(workspaces.map(w => [w._id, w]));
+
+    expect(byId.get('wrk_dirty')).toMatchObject({ hasUncommittedChanges: true, hasUnpushedChanges: false });
+    expect(byId.get('wrk_ahead')).toMatchObject({ hasUncommittedChanges: false, hasUnpushedChanges: true });
+    expect(byId.get('wrk_clean')).toMatchObject({ hasUncommittedChanges: false, hasUnpushedChanges: false });
+  });
+
+  it('leaves sync flags undefined for workspaces without a meta', async () => {
+    await services.workspace.create({ _id: 'wrk_no_meta', name: 'No Meta', parentId: 'proj_1', scope: 'collection' });
+
+    const workspace = (await getWorkspacesByProjectIds(['proj_1'])).get('proj_1')![0];
+
+    expect(workspace.hasUncommittedChanges).toBeUndefined();
+    expect(workspace.hasUnpushedChanges).toBeUndefined();
+  });
 });
 
 describe('getAllRequestsAndMetaByWorkspace', () => {

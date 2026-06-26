@@ -24,6 +24,7 @@ import {
 import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
+import { parseDeepLinkUrl as parseImportDeepLinkUrl, resolveImportDeepLink } from '~/common/import-deep-link';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
@@ -82,37 +83,9 @@ const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ reque
     console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
   }
 };
-const sanitizeUrlAndExtractOrigin = (url: string) => {
-  try {
-    const parsed = new URL(url);
-    return parsed.origin;
-  } catch {
-    return '';
-  }
-};
 export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
 
-// Shared URL-parsing utility used by both useAuthDeepLinkHandler and Root's
-// full deep-link handler to avoid duplicating the try/catch and dev-protocol
-// normalisation logic.
-const parseDeepLinkUrl = (url: string) => {
-  // Get the url without params
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(url);
-  } catch {
-    console.log('[deep-link] Invalid args, expected insomnia://x/y/z', url);
-    return;
-  }
-  let urlWithoutParams = url.slice(0, Math.max(0, url.indexOf('?'))) || url;
-  const params = Object.fromEntries(parsedUrl.searchParams);
-
-  // Change protocol for dev redirects to match switch case
-  if (isDevelopment()) {
-    urlWithoutParams = urlWithoutParams.replace('insomniadev://', 'insomnia://');
-  }
-  return { urlWithoutParams, params };
-};
+const parseDeepLinkUrl = (url: string) => parseImportDeepLinkUrl(url, isDevelopment());
 
 // Handles the auth/logout deep-link (insomnia://app/auth/login) independently
 // of the Root component so that it continues to work even when Root is replaced
@@ -450,38 +423,17 @@ const Root = () => {
         }
         trackImportEvent(AnalyticsEvent.importStarted, { source: 'import-url' });
 
-        if (params.uri) {
-          return setImportObject({
-            type: 'uri',
-            defaultValue: params.uri,
-            origin: sanitizeUrlAndExtractOrigin(params.origin),
-            endpoint: params.endpoint,
-            operationId: params.operationId,
-            autoScan: true,
-            startedAt: Date.now(),
-          });
+        const resource = resolveImportDeepLink(params);
+        if (!resource) {
+          return;
         }
-        if (params.mcp) {
-          return setImportObject({
-            type: 'mcp',
-            defaultValue: params.mcp,
-            origin: sanitizeUrlAndExtractOrigin(params.origin),
-            autoScan: true,
-            startedAt: Date.now(),
-          });
-        }
-        if (params.curl) {
-          const { isValid } = await validateCurl(params.curl);
-          return setImportObject({
-            type: 'curl',
-            defaultValue: params.curl,
-            origin: sanitizeUrlAndExtractOrigin(params.origin),
-            endpoint: params.endpoint,
-            operationId: params.operationId,
-            autoScan: isValid,
-            startedAt: Date.now(),
-          });
-        }
+        // Only cURL gates auto-scan on async validation
+        const autoScan = resource.type === 'curl' ? (await validateCurl(resource.defaultValue)).isValid : true;
+        return setImportObject({
+          ...resource,
+          autoScan,
+          startedAt: Date.now(),
+        });
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
         if (!params.name || params.name.trim() === '') {

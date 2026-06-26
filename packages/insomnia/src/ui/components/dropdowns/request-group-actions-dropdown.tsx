@@ -199,6 +199,27 @@ export const RequestGroupActionsDropdown = ({
       icon: 'plus',
       items: [
         {
+          id: 'New Folder',
+          name: 'New Folder',
+          icon: 'folder',
+          action: () =>
+            showModal(PromptModal, {
+              title: 'New Folder',
+              defaultValue: 'My Folder',
+              submitName: 'Create',
+              label: 'Name',
+              selectText: true,
+              onComplete: name =>
+                newRequestGroupFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  parentId: requestGroup._id,
+                  name,
+                }),
+            }),
+        },
+        {
           id: 'HTTP',
           name: 'HTTP Request',
           icon: 'plus-circle',
@@ -257,27 +278,6 @@ export const RequestGroupActionsDropdown = ({
             createRequest({
               requestType: 'SocketIO',
               parentId: requestGroup._id,
-            }),
-        },
-        {
-          id: 'New Folder',
-          name: 'New Folder',
-          icon: 'folder',
-          action: () =>
-            showModal(PromptModal, {
-              title: 'New Folder',
-              defaultValue: 'My Folder',
-              submitName: 'Create',
-              label: 'Name',
-              selectText: true,
-              onComplete: name =>
-                newRequestGroupFetcher.submit({
-                  organizationId,
-                  projectId,
-                  workspaceId,
-                  parentId: requestGroup._id,
-                  name,
-                }),
             }),
         },
       ],

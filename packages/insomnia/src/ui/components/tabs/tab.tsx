@@ -46,6 +46,7 @@ const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
   GQL: 'text-(--color-font-success) bg-[rgba(var(--color-success-rgb),0.5)]',
   HEAD: 'text-(--color-font-info) bg-[rgba(var(--color-info-rgb),0.5)]',
   OPTIONS: 'text-(--color-font-info) bg-[rgba(var(--color-info-rgb),0.5)]',
+  QUERY: 'text-(--color-font-surprise) bg-[rgba(var(--color-surprise-rgb),0.5)]',
   DELETE: 'text-(--color-font-danger) bg-[rgba(var(--color-danger-rgb),0.5)]',
   PUT: 'text-(--color-font-warning) bg-[rgba(var(--color-warning-rgb),0.5)]',
   PATCH: 'text-(--color-font-notice) bg-[rgba(var(--color-notice-rgb),0.5)]',

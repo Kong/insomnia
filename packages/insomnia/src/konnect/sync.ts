@@ -8,6 +8,7 @@ import {
   fetchAllControlPlanes,
   fetchAllServices,
   fetchRoutesForService,
+  getActiveRegions,
   type KonnectControlPlane,
   type KonnectRoute,
   type KonnectService,
@@ -17,7 +18,6 @@ import { getKonnectDeploymentType } from './transform';
 import {
   buildRequestName,
   deriveProxyVarDefaults,
-  extractRegionFromEndpoint,
   KONNECT_PROXY_VAR_NAMES,
   konnectHeadersChanged,
   mergeHeaders,
@@ -48,6 +48,7 @@ export interface SyncResult {
   services: SyncCounts;
   routes: SyncCounts;
   skippedRoutes: SkippedRoute[];
+  skippedRegions: string[];
   durationMs: number;
   error?: string;
 }
@@ -582,6 +583,7 @@ interface ControlPlaneSyncAccumulators {
   serviceCounts: SyncCounts;
   routeCounts: SyncCounts;
   skippedRoutes: SkippedRoute[];
+  skippedRegions: string[];
 }
 
 interface SyncContext {
@@ -600,7 +602,7 @@ async function syncControlPlane(
 ): Promise<void> {
   const { pat, organizationId, existingProjectsByKonnectId, signal, onProgress } = syncCtx;
   acc.controlPlaneCounts.total++;
-  const region = extractRegionFromEndpoint(controlPlane.config.control_plane_endpoint);
+  const region = controlPlane.region;
 
   // Upsert project for this control plane
   let project = existingProjectsByKonnectId.get(controlPlane.id);
@@ -608,12 +610,14 @@ async function syncControlPlane(
     if (
       project.name !== controlPlane.name ||
       project.konnectClusterType !== controlPlane.config.cluster_type ||
-      getKonnectDeploymentType(controlPlane) !== project.konnectDeploymentType
+      getKonnectDeploymentType(controlPlane) !== project.konnectDeploymentType ||
+      project.konnectRegion !== controlPlane.region
     ) {
       project = await insoservices.project.update(project, {
         name: controlPlane.name,
         konnectClusterType: controlPlane.config.cluster_type,
         konnectDeploymentType: getKonnectDeploymentType(controlPlane),
+        konnectRegion: controlPlane.region,
       });
       acc.controlPlaneCounts.updated++;
     }
@@ -624,6 +628,7 @@ async function syncControlPlane(
       konnectControlPlaneId: controlPlane.id,
       konnectClusterType: controlPlane.config.cluster_type,
       konnectDeploymentType: getKonnectDeploymentType(controlPlane),
+      konnectRegion: controlPlane.region,
     });
     existingProjectsByKonnectId.set(controlPlane.id, project);
     acc.controlPlaneCounts.created++;
@@ -691,6 +696,7 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
     serviceCounts: zeroCounts(),
     routeCounts: zeroCounts(),
     skippedRoutes: [],
+    skippedRegions: [],
   };
 
   try {
@@ -705,16 +711,32 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
     const incomingControlPlaneIds = new Set<string>();
     const syncCtx: SyncContext = { pat, organizationId, existingProjectsByKonnectId, signal, onProgress };
 
-    for await (const controlPlanePage of fetchAllControlPlanes(pat, signal)) {
-      for (const controlPlane of controlPlanePage) {
-        incomingControlPlaneIds.add(controlPlane.id);
-        await syncControlPlane(controlPlane, syncCtx, acc);
+    for (const region of getActiveRegions()) {
+      try {
+        for await (const controlPlanePage of fetchAllControlPlanes(pat, region, signal)) {
+          for (const controlPlane of controlPlanePage) {
+            incomingControlPlaneIds.add(controlPlane.id);
+            await syncControlPlane(controlPlane, syncCtx, acc);
+          }
+        }
+      } catch (err) {
+        if (signal?.aborted) {
+          throw err;
+        }
+        const errMessage = err instanceof Error ? err.message : String(err);
+        if (region === 'sg' && errMessage.includes('403')) {
+          continue;
+        }
+        acc.skippedRegions.push(`${region}: ${errMessage}`);
       }
     }
 
-    // Delete stale projects (Control Planes removed from Konnect)
+    // Delete stale projects, but skip any whose region failed to fetch —
+    // incomingControlPlaneIds is incomplete for those regions so we would
+    // risk deleting projects whose CPs simply weren't returned.
+    const failedRegions = new Set(acc.skippedRegions.map(entry => entry.split(':')[0]));
     for (const [controlPlaneId, project] of existingProjectsByKonnectId) {
-      if (!incomingControlPlaneIds.has(controlPlaneId)) {
+      if (!incomingControlPlaneIds.has(controlPlaneId) && !failedRegions.has(project.konnectRegion ?? '')) {
         await insoservices.project.remove(project);
         acc.controlPlaneCounts.deleted++;
       }
@@ -728,6 +750,7 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
       services: acc.serviceCounts,
       routes: acc.routeCounts,
       skippedRoutes: acc.skippedRoutes,
+      skippedRegions: acc.skippedRegions,
       durationMs,
     };
   } catch (err) {
@@ -740,6 +763,7 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
       services: acc.serviceCounts,
       routes: acc.routeCounts,
       skippedRoutes: acc.skippedRoutes,
+      skippedRegions: acc.skippedRegions,
       durationMs,
       error: errorMessage,
     };

@@ -1004,6 +1004,71 @@ describe('VCS', () => {
     });
   });
 
+  describe('_storeBackendProject()', () => {
+    let driver: MemoryDriver;
+    let vcs: VCS;
+    let backendProject: BackendProject;
+
+    beforeEach(() => {
+      driver = new MemoryDriver();
+      vcs = new VCS(driver);
+      backendProject = projectBuilder.reset().build();
+    });
+
+    it('writes backend project metadata when missing', async () => {
+      const setItemSpy = vi.spyOn(driver, 'setItem');
+
+      await vcs._storeBackendProject(backendProject);
+
+      expect(setItemSpy).toHaveBeenCalledTimes(1);
+      expect(setItemSpy).toHaveBeenCalledWith(
+        `/projects/${backendProject.id}/meta.json`,
+        expect.any(Buffer),
+      );
+      expect(await vcs._getBackendProjectById(backendProject.id)).toEqual(backendProject);
+    });
+
+    it('skips identical backend project metadata writes', async () => {
+      const setItemSpy = vi.spyOn(driver, 'setItem');
+
+      await vcs._storeBackendProject(backendProject);
+      setItemSpy.mockClear();
+
+      await vcs._storeBackendProject(backendProject);
+
+      expect(setItemSpy).not.toHaveBeenCalled();
+    });
+
+    it('writes changed backend project metadata', async () => {
+      const setItemSpy = vi.spyOn(driver, 'setItem');
+      const updatedProject = {
+        ...backendProject,
+        name: `${backendProject.name} Updated`,
+      };
+
+      await vcs._storeBackendProject(backendProject);
+      setItemSpy.mockClear();
+
+      await vcs._storeBackendProject(updatedProject);
+
+      expect(setItemSpy).toHaveBeenCalledTimes(1);
+      expect(await vcs._getBackendProjectById(backendProject.id)).toEqual(updatedProject);
+    });
+
+    it('writes backend project metadata when existing meta.json is corrupted', async () => {
+      await driver.setItem(`/projects/${backendProject.id}/meta.json`, Buffer.from('{', 'utf8'));
+      const setItemSpy = vi.spyOn(driver, 'setItem');
+
+      await vcs._storeBackendProject(backendProject);
+
+      expect(setItemSpy).toHaveBeenCalledTimes(1);
+      expect(setItemSpy).toHaveBeenCalledWith(
+        `/projects/${backendProject.id}/meta.json`,
+        expect.any(Buffer),
+      );
+    });
+  });
+
   it('validate branch names', async () => {
     expect(VCS.validateBranchName('branchA')).toEqual('');
     expect(VCS.validateBranchName('feat/branch-A')).toEqual('');

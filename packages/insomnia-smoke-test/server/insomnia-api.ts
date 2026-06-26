@@ -70,7 +70,7 @@ const organizations = [
     },
     metadata: {
       organizationType: 'team',
-      ownerAccountId: 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
+      ownerAccountId: 'acct_other-team-owner',
     },
   },
   // User B personal organization — required by cloud-sync multi-user smoke

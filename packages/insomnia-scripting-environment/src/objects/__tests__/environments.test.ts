@@ -119,3 +119,10 @@ describe('test Variables object', () => {
     expect(variables.get('value')).toEqual('folder1ValueOverride');
   });
 });
+
+describe('Environment serialization', () => {
+  it('serializes its key-values when logged instead of an empty Map', () => {
+    const environment = new Environment('Base Environment', { user_id: 'abc', count: 1 });
+    expect(JSON.stringify(environment)).toEqual(JSON.stringify({ user_id: 'abc', count: 1 }));
+  });
+});
