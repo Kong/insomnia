@@ -25,7 +25,6 @@ import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organiza
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
-import { fuzzyMatch } from '../../../common/misc';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { PromptButton } from '../base/prompt-button';
@@ -79,6 +78,8 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
   const handleFilterChange = async (value: string) => {
     setFilter(value);
+    setPage(0);
+
     const renderedCookies: Cookie[] = [];
 
     for (const cookie of activeCookieJar?.cookies || []) {
@@ -94,15 +95,12 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       return;
     }
 
-    const filteredCookies: Cookie[] = [];
+    const query = value.toLowerCase();
+    const cookieStrings = await Promise.all(
+      renderedCookies.map(cookie => window.main.cookies.toString(cookie).catch(() => '')),
+    );
 
-    renderedCookies.forEach(cookie => {
-      if (fuzzyMatch(value, JSON.stringify(cookie), { splitSpace: true })) {
-        filteredCookies.push(cookie);
-      }
-    });
-
-    setFilteredCookies(chunkArray(filteredCookies));
+    setFilteredCookies(chunkArray(renderedCookies.filter((_, i) => cookieStrings[i].toLowerCase().includes(query))));
   };
 
   const handleCookieDelete = (cookieId: string) => {
