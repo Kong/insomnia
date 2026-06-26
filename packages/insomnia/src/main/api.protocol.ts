@@ -7,6 +7,7 @@ import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
 
 import { getApiBaseURL } from '../common/constants';
+import { withContentSecurityPolicy } from './content-security-policy';
 import { parseResolvedProxy, setDefaultProtocol, shouldBypassProxyForHost } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
 
@@ -136,10 +137,22 @@ export async function registerInsomniaProtocols() {
       const url = new URL(request.url);
       if (url.hostname === 'insomnia-app.local') {
         const rootDir = path.resolve(__dirname, 'client');
-        const filePath = path.join(rootDir, url.pathname.startsWith('/assets') ? url.pathname : 'index.html');
+        const isAsset = url.pathname.startsWith('/assets');
+        const filePath = path.join(rootDir, isAsset ? url.pathname : 'index.html');
         console.log(`Loading index for: ${url.pathname} from: ${filePath}`);
 
-        return await net.fetch(`file://${filePath}`, { bypassCustomProtocolHandlers: true });
+        const response = await net.fetch(`file://${filePath}`, { bypassCustomProtocolHandlers: true });
+
+        // Apply the report-only CSP to the top-level document (index.html) only.
+        // Subresources inherit the document's policy. See ./content-security-policy.
+        if (!isAsset) {
+          return new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: withContentSecurityPolicy(response.headers),
+          });
+        }
+        return response;
       }
 
       // Allow Google Fonts to bypass the custom https protocol handler.
