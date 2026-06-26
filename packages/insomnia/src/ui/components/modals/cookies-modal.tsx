@@ -23,6 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { fuzzyMatch } from '../../../common/misc';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -414,6 +415,7 @@ interface CookieModifyModalProps {
 const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: CookieModifyModalProps) => {
   const [editCookie, setEditCookie] = useState<Cookie>(cookie);
   const [rawValue, setRawValue] = useState('');
+  const isLightTheme = useIsLightTheme();
 
   useEffect(() => {
     window.main.cookies
@@ -515,7 +517,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                             <input
                               type="datetime-local"
                               defaultValue={localDateTime}
-                              className="calendar-invert"
+                              style={{ colorScheme: isLightTheme ? 'light' : 'dark' }}
                               onChange={event => setEditCookie({ ...editCookie, expires: event.target.value })}
                             />
                           </label>
