@@ -150,7 +150,7 @@ test.describe('Check vault used in environment', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('normal');
     await page.getByRole('button', { name: 'Send' }).click();
 
-    await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
+    await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('bar').click();
     await page.getByText('world').click();
 
