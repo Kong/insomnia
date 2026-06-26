@@ -41,6 +41,7 @@ import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
+import { registerPermissionHandlers } from './main/session-security';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
@@ -118,6 +119,10 @@ app.on('ready', async () => {
     electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
   };
   disableSpellcheckerDownload();
+
+  // Deny-by-default permission handling for remote content (Electron security
+  // checklist item 5). See ./main/session-security.
+  registerPermissionHandlers(electron.session.defaultSession);
 
   if (isDevelopment()) {
     try {
