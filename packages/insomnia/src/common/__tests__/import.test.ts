@@ -1,13 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { EnvironmentKvPairDataType, EnvironmentType, services } from 'insomnia-data';
+import type { McpRequest } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models, services } from 'insomnia-data';
 import { describe, expect, it, vi } from 'vitest';
 import { parse } from 'yaml';
 
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
-import { getInsomniaV5DataExport, tryImportV5Data } from '../insomnia-v5';
+import { getInsomniaV5DataExport, mcpUrlToInsomniaV5Yaml, tryImportV5Data } from '../insomnia-v5';
 import { generateId } from '../misc';
 
 describe('pathPatternMatches', () => {
@@ -723,5 +724,27 @@ describe('export/import round-trip is deterministic', () => {
       transportType: 'streamable-http',
       headers: [{ name: 'User-Agent', value: 'insomnia' }],
     });
+  });
+});
+
+describe('MCP run deep-link import', () => {
+  const mcpUrl = 'https://mcp.deepwiki.com/mcp';
+
+  it('imports an MCP url into an MCP workspace and exposes its client', async () => {
+    const project = await services.project.create();
+    const scanResult = await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+
+    expect(scanResult[0].errors).toEqual([]);
+    expect(scanResult[0].mcpRequests).toHaveLength(1);
+    expect(scanResult[0].requests).toHaveLength(0);
+
+    const workspaces = await importUtil.importResourcesToProject({ projectId: project._id });
+    expect(workspaces).toHaveLength(1);
+    expect(workspaces[0].scope).toBe('mcp');
+
+    const requests = await services.helpers.findRequestByParentId(workspaces[0]._id);
+    expect(requests).toHaveLength(1);
+    expect(models.mcpRequest.isMcpRequest(requests[0])).toBe(true);
+    expect((requests[0] as McpRequest).url).toBe(mcpUrl);
   });
 });

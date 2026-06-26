@@ -119,7 +119,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
-      // allow reading the file as the caCert is chosen by user
+
+      invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
@@ -530,7 +531,7 @@ async function waitForStreamToFinish(stream: Readable | Writable) {
 }
 const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
   const isUrlEncodedForm = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
+  const expectsBody = ['POST', 'PUT', 'PATCH', 'QUERY'].includes(method.toUpperCase());
   const hasMimetypeAndUpdateMethod = typeof body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();

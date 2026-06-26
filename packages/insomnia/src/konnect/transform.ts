@@ -52,32 +52,6 @@ export function sanitizeRoute(route: KonnectRoute): KonnectRoute {
   };
 }
 
-// ─── Region extraction ────────────────────────────────────────────────────────
-
-/**
- * Derives the Konnect region string from a control plane endpoint URL.
- * e.g. "https://abc123.us.cp0.konghq.com" → "us"
- * e.g. "https://abc123.eu.cp.konghq.com" → "eu"
- * e.g. "https://abc123.sg.cp.konghq.com" → "sg"
- * Falls back to "us" for unrecognised or malformed values.
- */
-export function extractRegionFromEndpoint(endpoint: string): string {
-  try {
-    const hostname = new URL(endpoint).hostname;
-    const parts = hostname.split('.');
-    // Pattern: <id>.<region>.cp[N].konghq.com  (e.g. cp0, cp, cp1)
-    if (parts.length >= 4 && parts[parts.length - 2] === 'konghq' && parts[parts.length - 1] === 'com') {
-      if (/^cp\d*$/.test(parts[parts.length - 3])) {
-        return parts[parts.length - 4];
-      }
-      console.warn(`[konnect] Unexpected endpoint hostname format, defaulting region to "us": ${hostname}`);
-    }
-  } catch {
-    console.warn(`[konnect] Malformed control_plane_endpoint, defaulting region to "us": ${endpoint}`);
-  }
-  return 'us';
-}
-
 // ─── Proxy environment variables ─────────────────────────────────────────────
 
 /**

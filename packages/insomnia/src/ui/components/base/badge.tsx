@@ -6,9 +6,10 @@ export interface BadgeProps {
   color: keyof typeof ThemeEnum;
   icon?: IconId;
   label: string;
+  style?: React.CSSProperties;
 }
 
-export const Badge: FC<BadgeProps> = ({ color, icon, label }) => {
+export const Badge: FC<BadgeProps> = ({ color, icon, label, style }) => {
   return (
     <span
       style={{
@@ -23,6 +24,7 @@ export const Badge: FC<BadgeProps> = ({ color, icon, label }) => {
         top: '-1px',
         color: `rgb(var(--color-${color}-rgb))`,
         borderColor: `rgb(var(--color-${color}-rgb))`,
+        ...style,
       }}
     >
       {icon && <SvgIcon icon={icon} />}

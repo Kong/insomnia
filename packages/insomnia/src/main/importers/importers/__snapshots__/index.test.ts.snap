@@ -439,7 +439,12 @@ exports[`Fixtures > Import curl > simple-url-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "Accept-Encoding",
+          "value": "deflate, gzip",
+        },
+      ],
       "method": "GET",
       "name": "https://www.google.com",
       "parameters": [],

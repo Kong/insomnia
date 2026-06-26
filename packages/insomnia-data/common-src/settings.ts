@@ -130,6 +130,7 @@ export interface Settings {
   forceVerticalLayout: boolean;
   hasKonnectPat: boolean;
   hideFirstRequestPane: boolean;
+  konnectOrganizationId: string | null;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;

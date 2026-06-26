@@ -524,6 +524,7 @@ const env: Window['env'] = {
   INSOMNIA_MOCK_API_URL: process.env.INSOMNIA_MOCK_API_URL,
   INSOMNIA_AI_URL: process.env.INSOMNIA_AI_URL,
   KONNECT_API_URL: process.env.KONNECT_API_URL,
+  KONNECT_API_REGIONS: process.env.KONNECT_API_REGIONS,
   INSOMNIA_APP_WEBSITE_URL: process.env.INSOMNIA_APP_WEBSITE_URL,
   // GitHub API URL overrides for GitHub Enterprise targets
   INSOMNIA_GITHUB_REST_API_URL: process.env.INSOMNIA_GITHUB_REST_API_URL,

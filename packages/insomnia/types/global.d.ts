@@ -27,6 +27,7 @@ type RendererEnv = {
   INSOMNIA_MOCK_API_URL: string | undefined;
   INSOMNIA_AI_URL: string | undefined;
   KONNECT_API_URL: string | undefined;
+  KONNECT_API_REGIONS: string | undefined;
   INSOMNIA_APP_WEBSITE_URL: string | undefined;
   INSOMNIA_GITHUB_REST_API_URL: string | undefined;
   INSOMNIA_GITHUB_API_URL: string | undefined;

@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { app } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { services } from 'insomnia-data';
 
 import { LLM_BACKENDS } from '~/common/constants';
@@ -152,18 +152,36 @@ export interface LLMConfigServiceAPI {
   setAIFeatureEnabled: typeof setAIFeatureEnabled;
 }
 
+// Notify every renderer that the LLM config or AI feature flags changed so that
+// any mounted consumer (e.g. `useAIFeatureStatus`) re-reads the latest values.
+// Main owns the data, so it also owns the change signal — this keeps every
+// window consistent instead of only the one that performed the mutation.
+const broadcastLLMChanged = () => {
+  for (const w of BrowserWindow.getAllWindows()) {
+    w.webContents.send('llm.changed');
+  }
+};
+
 export const registerLLMConfigServiceAPI = () => {
   ipcMainHandle('llm.getActiveBackend', async () => getActiveBackend());
-  ipcMainHandle('llm.setActiveBackend', async (_, backend: LLMBackend) => setActiveBackend(backend));
-  ipcMainHandle('llm.clearActiveBackend', async () => clearActiveBackend());
+  ipcMainHandle('llm.setActiveBackend', async (_, backend: LLMBackend) => {
+    await setActiveBackend(backend);
+    broadcastLLMChanged();
+  });
+  ipcMainHandle('llm.clearActiveBackend', async () => {
+    await clearActiveBackend();
+    broadcastLLMChanged();
+  });
   ipcMainHandle('llm.getBackendConfig', async (_, backend: LLMBackend) => getBackendConfig(backend));
-  ipcMainHandle('llm.updateBackendConfig', async (_, backend: LLMBackend, config: Partial<LLMConfig>) =>
-    updateBackendConfig(backend, config),
-  );
+  ipcMainHandle('llm.updateBackendConfig', async (_, backend: LLMBackend, config: Partial<LLMConfig>) => {
+    await updateBackendConfig(backend, config);
+    broadcastLLMChanged();
+  });
   ipcMainHandle('llm.getAllConfigurations', async () => getAllConfigurations());
   ipcMainHandle('llm.getCurrentConfig', async () => getCurrentConfig());
   ipcMainHandle('llm.getAIFeatureEnabled', async (_, feature: AIFeatureNames) => getAIFeatureEnabled(feature));
-  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: AIFeatureNames, enabled: boolean) =>
-    setAIFeatureEnabled(feature, enabled),
-  );
+  ipcMainHandle('llm.setAIFeatureEnabled', async (_, feature: AIFeatureNames, enabled: boolean) => {
+    await setAIFeatureEnabled(feature, enabled);
+    broadcastLLMChanged();
+  });
 };

@@ -52,6 +52,7 @@ export function init(): BaseSettings {
     forceVerticalLayout,
     hasKonnectPat: false,
     hideFirstRequestPane: false,
+    konnectOrganizationId: null,
     hotKeyRegistry: newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',

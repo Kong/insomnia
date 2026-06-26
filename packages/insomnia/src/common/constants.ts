@@ -118,7 +118,14 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
-export const getKonnectApiBaseURL = () => env.KONNECT_API_URL || 'https://global.api.konghq.com';
+export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
+export const getKonnectApiRegions = (): string[] => {
+  const regions = (env.KONNECT_API_REGIONS ?? '')
+    .split(',')
+    .map((r: string) => r.trim())
+    .filter(Boolean);
+  return regions.length > 0 ? regions : ['us', 'eu', 'au', 'in', 'sg'];
+};
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
@@ -196,12 +203,14 @@ export const METHOD_PATCH = 'PATCH';
 export const METHOD_DELETE = 'DELETE';
 export const METHOD_OPTIONS = 'OPTIONS';
 export const METHOD_HEAD = 'HEAD';
+export const METHOD_QUERY = 'QUERY';
 export const HTTP_METHODS = [
   METHOD_GET,
   METHOD_POST,
   METHOD_PUT,
   METHOD_PATCH,
   METHOD_DELETE,
+  METHOD_QUERY,
   METHOD_OPTIONS,
   METHOD_HEAD,
 ];

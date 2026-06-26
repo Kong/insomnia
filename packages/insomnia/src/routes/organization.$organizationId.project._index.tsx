@@ -23,29 +23,21 @@ export interface ProjectIndexLoaderData {
 }
 
 const shouldAutoCreateInitialProject = async ({
-  organizationId,
   accountId,
 }: {
-  organizationId: string;
   accountId: string | null | undefined;
 }) => {
   if (!accountId) {
     return false;
   }
 
-  try {
-    const organization = await services.organization.get(organizationId);
-    if (!organization || !models.organization.isPersonalOrganization(organization)) {
-      return false;
-    }
-  } catch (error) {
-    console.log('[organizations] Failed to load Organizations', error);
-    return false;
-  }
+  const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
+  const legacyFirstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
 
-  const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
-
-  return !window.localStorage.getItem(firstPersonalOrgLandingKey);
+  return (
+    !window.localStorage.getItem(firstAccountLandingKey) &&
+    !window.localStorage.getItem(legacyFirstPersonalOrgLandingKey)
+  );
 };
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
@@ -66,15 +58,15 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     return redirect(`/organization/${organizationId}/project/${projects[0]._id}`);
   }
 
-  let isFirstPersonalOrgLanding = false;
+  let isFirstAccountLanding = false;
 
   try {
-    isFirstPersonalOrgLanding = await shouldAutoCreateInitialProject({ organizationId, accountId });
+    isFirstAccountLanding = await shouldAutoCreateInitialProject({ accountId });
   } catch (error) {
-    console.warn('[project] Failed to evaluate first personal org landing state', error);
+    console.warn('[project] Failed to evaluate first account landing state', error);
   }
 
-  if (isFirstPersonalOrgLanding) {
+  if (isFirstAccountLanding) {
     try {
       const project = await services.project.create({
         name: 'Drafts',

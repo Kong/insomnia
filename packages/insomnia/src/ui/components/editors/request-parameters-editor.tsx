@@ -84,6 +84,7 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
 
   return (
     <KeyValueEditor
+      alwaysShowBlankRow
       allowMultiline
       namePlaceholder="name"
       valuePlaceholder="value"
