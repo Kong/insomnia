@@ -246,6 +246,33 @@ export function createWindow(): ElectronBrowserWindow {
     return { action: 'deny' };
   });
 
+  // Enforce safe webview preferences from the main process. The renderer supplies
+  // a `webpreferences` string with user-controlled settings (javascript on/off,
+  // disableDialogs) but we must not let it enable node integration or inject a
+  // preload script. We parse the renderer string for the one pref we trust
+  // (javascript) and rebuild the object ourselves so nothing unexpected survives.
+  mainBrowserWindow.webContents.on('will-attach-webview', (_event, webPreferences, params) => {
+    // Strip any preload the renderer might have set.
+    delete (webPreferences as Electron.WebPreferences & { preload?: string; preloadURL?: string }).preload;
+    delete (webPreferences as Electron.WebPreferences & { preload?: string; preloadURL?: string }).preloadURL;
+
+    // Parse the renderer-supplied webpreferences string for the javascript pref.
+    // Everything else is ignored — security-critical flags are pinned here.
+    let javascriptEnabled = true;
+    for (const part of (params.webpreferences ?? '').split(',')) {
+      const [key, val] = part.trim().split('=');
+      if (key === 'javascript') {
+        javascriptEnabled = val !== 'no' && val !== 'false' && val !== '0';
+      }
+    }
+
+    webPreferences.nodeIntegration = false;
+    webPreferences.nodeIntegrationInSubFrames = false;
+    webPreferences.allowRunningInsecureContent = false;
+    webPreferences.javascript = javascriptEnabled;
+    webPreferences.disableDialogs = true;
+  });
+
   // Load the html of the app.
   const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
 
