@@ -259,10 +259,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             <SyncBar />
           </div>
         </Panel>
-        <PanelResizeHandle
-          className="relative z-10 h-full w-px bg-(--hl-md)"
-          hitAreaMargins={{ coarse: 15, fine: 15 }}
-        />
+        <PanelResizeHandle className="relative z-10 h-full w-px bg-(--hl-md)" />
         <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
           <GitFileIssuesProvider value={gitFileIssues}>
             <Outlet
