@@ -1,5 +1,5 @@
 import type { Organization } from 'insomnia-api';
-import { models, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
