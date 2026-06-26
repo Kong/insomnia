@@ -9,6 +9,12 @@ describe('response-web-view', () => {
     );
   });
 
+  it('escapes HTML-significant characters in the injected base href', () => {
+    expect(getResponsePreviewHtml('<head></head>', 'https://example.com/"><script>alert(1)</script>')).toBe(
+      '<head><base href="https://example.com/&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"></head>',
+    );
+  });
+
   it('keeps scripts disabled when HTML preview JS is turned off', () => {
     expect(getResponsePreviewSandbox(true)).toBe('');
   });

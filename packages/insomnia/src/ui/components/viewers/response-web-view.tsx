@@ -6,7 +6,13 @@ interface Props {
   disableHtmlPreviewJs: boolean;
 }
 
-export const getResponsePreviewHtml = (body: string, url: string) => body.replace('<head>', `<head><base href="${url}">`);
+const escapeHtmlAttribute = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/"/g, '&quot;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;');
+
+export const getResponsePreviewHtml = (body: string, url: string) => body.replace('<head>', `<head><base href="${escapeHtmlAttribute(url)}">`);
 
 export const getResponsePreviewSandbox = (disableHtmlPreviewJs: boolean) =>
   disableHtmlPreviewJs ? '' : 'allow-scripts';
