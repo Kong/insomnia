@@ -300,7 +300,7 @@ First commit!
       );
     });
 
-    it('does not clobber an existing non-origin upstream on push', async () => {
+    it('does not clobber an existing fully-configured upstream on push', async () => {
       // @ts-expect-error -- mockReturnValue is not typed
       git.push.mockReturnValue({ ok: true });
 
@@ -319,11 +319,20 @@ First commit!
 
       const branch = await GitVCS.getCurrentBranch();
       await git.setConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: `branch.${branch}.remote`, value: 'upstream' });
+      await git.setConfig({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        path: `branch.${branch}.merge`,
+        value: 'refs/heads/custom',
+      });
 
       await GitVCS.push();
 
       expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: `branch.${branch}.remote` })).toBe(
         'upstream',
+      );
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: `branch.${branch}.merge` })).toBe(
+        'refs/heads/custom',
       );
     });
   });
