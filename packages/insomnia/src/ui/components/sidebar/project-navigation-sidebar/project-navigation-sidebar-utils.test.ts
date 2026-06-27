@@ -410,6 +410,17 @@ describe('flattenCollectionChildren', () => {
 
     expect(childIds).toEqual(['req_first', 'req_mid', 'req_last']);
   });
+
+  it('de-duplicates documents sharing the same _id', () => {
+    const data: AllRequestsAndMetaInWorkspace = {
+      allRequests: [mkReq('req_dup', WS), mkReq('req_dup', WS), mkReq('req_unique', WS)],
+      allRequestMetas: [],
+      requestGroupMetas: [],
+    };
+    const ids = flattenCollectionChildren(WS, false, data).map(c => c.doc._id);
+
+    expect(ids.sort()).toEqual(['req_dup', 'req_unique']);
+  });
 });
 
 // ── filterCollection ───────────────────────────────────────────────────────
