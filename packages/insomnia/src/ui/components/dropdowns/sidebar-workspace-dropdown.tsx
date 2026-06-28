@@ -1,4 +1,4 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import {
   exportGlobalEnvironmentToFile,
   exportMcpClientToFile,
@@ -47,6 +47,7 @@ import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
+import { createRequestOrFolderActionItems } from './actions/create-actions';
 
 interface Props {
   workspace: Workspace;
@@ -61,7 +62,7 @@ interface Props {
 interface ActionItem {
   id: string;
   name: string;
-  icon: IconName;
+  icon: IconProp;
   hint?: PlatformKeyCombinations;
   action: () => void;
   className?: string;
@@ -129,65 +130,26 @@ export const SidebarWorkspaceDropdown = ({
     name: 'Create',
     id: 'create',
     icon: 'plus',
-    items: [
-      {
-        id: 'New Folder',
-        name: 'New Folder',
-        icon: 'folder',
-        action: () =>
-          showModal(PromptModal, {
-            title: 'New Folder',
-            defaultValue: 'My Folder',
-            submitName: 'Create',
-            label: 'Name',
-            selectText: true,
-            onComplete: (name: string) =>
-              newRequestGroupFetcher.submit({
-                organizationId,
-                projectId,
-                workspaceId,
-                parentId: workspaceId,
-                name,
-              }),
-          }),
-      },
-      {
-        id: 'HTTP',
-        name: 'HTTP Request',
-        icon: 'plus-circle',
-        action: () => createRequest('HTTP'),
-      },
-      {
-        id: 'Event Stream',
-        name: 'Event Stream Request (SSE)',
-        icon: 'plus-circle',
-        action: () => createRequest('Event Stream'),
-      },
-      {
-        id: 'GraphQL Request',
-        name: 'GraphQL Request',
-        icon: 'plus-circle',
-        action: () => createRequest('GraphQL'),
-      },
-      {
-        id: 'gRPC Request',
-        name: 'gRPC Request',
-        icon: 'plus-circle',
-        action: () => createRequest('gRPC'),
-      },
-      {
-        id: 'WebSocket Request',
-        name: 'WebSocket Request',
-        icon: 'plus-circle',
-        action: () => createRequest('WebSocket'),
-      },
-      {
-        id: 'Socket.IO Request',
-        name: 'Socket.IO Request',
-        icon: 'plus-circle',
-        action: () => createRequest('SocketIO'),
-      },
-    ],
+    items: createRequestOrFolderActionItems({
+      createRequest,
+      createFolder: () =>
+        showModal(PromptModal, {
+          title: 'New Folder',
+          defaultValue: 'My Folder',
+          submitName: 'Create',
+          label: 'Name',
+          selectText: true,
+          onComplete: (name: string) =>
+            newRequestGroupFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              parentId: workspaceId,
+              name,
+            }),
+        }),
+      folderFirst: false,
+    }),
   };
 
   const importSection: ActionSection = {

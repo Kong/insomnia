@@ -24,6 +24,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_focusUrl: 'Focus URL',
   request_showGenerateCodeEditor: 'Generate Code',
   sidebar_focusFilter: 'Filter Sidebar',
+  sidebar_showCreateDropdown: 'Show Sidebar Create Menu',
   sidebar_toggle: 'Toggle Sidebar',
   response_focus: 'Focus Response',
   showCookiesEditor: 'Edit Cookies',
@@ -117,6 +118,10 @@ const defaultRegistry: HotKeyRegistry = {
   sidebar_focusFilter: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.f.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.f.keyCode }],
+  },
+  sidebar_showCreateDropdown: {
+    macKeys: [{ meta: true, keyCode: keyboardKeys.n.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.n.keyCode }],
   },
   sidebar_toggle: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.backslash.keyCode }],
