@@ -1,9 +1,10 @@
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import React, { type FC, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 
+import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
@@ -23,7 +24,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   // Best effort to parse the binary data as a string
   try {
     if ('data' in event && typeof event.data === 'object' && 'data' in event.data && Array.isArray(event.data.data)) {
-      raw = Buffer.from(event.data.data).toString();
+      raw = utf8StringFromBytes(new Uint8Array(event.data.data));
     }
   } catch (err) {
     console.error('Failed to parse event data to string, defaulting to JSON.stringify', err);

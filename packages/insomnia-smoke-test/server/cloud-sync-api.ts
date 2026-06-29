@@ -1,10 +1,10 @@
+import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 
 import type { Application } from 'express';
 import { json } from 'express';
 import type { FieldNode, OperationDefinitionNode } from 'graphql';
 import { parse } from 'graphql';
-import forge from 'node-forge';
 
 export interface AESMessage {
   iv: string;
@@ -13,33 +13,33 @@ export interface AESMessage {
   ad: string;
 }
 
-// copy from packages/insomnia/src/account/crypt.ts
-export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, additionalData = ''): AESMessage {
-  const _b64UrlToHex = (s: string) => {
-    const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-    // Node.js compatible base64 decoding using Buffer
-    const decoded = Buffer.from(b64, 'base64').toString('binary');
-    return forge.util.bytesToHex(decoded);
-  };
-  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
-  const key = forge.util.hexToBytes(rawKey);
-  const iv = forge.random.getBytesSync(12);
-  const cipher = forge.cipher.createCipher('AES-GCM', key);
-  cipher.start({
-    additionalData,
-    iv,
-    tagLength: 128,
+function jwkToKeyBuf(jwkOrKey: string | JsonWebKey): Buffer {
+  return typeof jwkOrKey === 'string' ? Buffer.from(jwkOrKey, 'hex') : Buffer.from(jwkOrKey.k || '', 'base64url');
+}
+
+export function decryptAESBuffer(jwkOrKey: string | JsonWebKey, msg: AESMessage): Buffer {
+  const decipher = crypto.createDecipheriv('aes-256-gcm', jwkToKeyBuf(jwkOrKey), Buffer.from(msg.iv, 'hex'), {
+    authTagLength: 16,
   });
-  // @ts-expect-error -- TSCONVERSION needs to be converted to string
-  cipher.update(forge.util.createBuffer(buff));
-  cipher.finish();
+  decipher.setAuthTag(Buffer.from(msg.t, 'hex'));
+  if (msg.ad) {
+    decipher.setAAD(Buffer.from(msg.ad, 'hex'));
+  }
+  return Buffer.concat([decipher.update(Buffer.from(msg.d, 'hex')), decipher.final()]);
+}
+
+export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, additionalData = ''): AESMessage {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', jwkToKeyBuf(jwkOrKey), iv);
+  if (additionalData) {
+    cipher.setAAD(Buffer.from(additionalData, 'binary'));
+  }
+  const d = Buffer.concat([cipher.update(buff), cipher.final()]);
   return {
-    iv: forge.util.bytesToHex(iv),
-    // @ts-expect-error -- TSCONVERSION needs to be converted to string
-    t: forge.util.bytesToHex(cipher.mode.tag),
-    ad: forge.util.bytesToHex(additionalData),
-    // @ts-expect-error -- TSCONVERSION needs to be converted to string
-    d: forge.util.bytesToHex(cipher.output),
+    iv: iv.toString('hex'),
+    t: cipher.getAuthTag().toString('hex'),
+    ad: additionalData ? Buffer.from(additionalData, 'binary').toString('hex') : '',
+    d: d.toString('hex'),
   };
 }
 
@@ -66,18 +66,28 @@ const cloudSyncProject = [
     id: 'proj_5145140e072d4007a30bfa6630ddae70',
     name: 'Collection Project',
     rootDocumentId: 'wrk_a7132f924ba7451594ba64ec411c9e13',
+    teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae71',
     name: 'Environment Project',
     rootDocumentId: 'wrk_2068a8dfd6914c369073686bb92737ae',
+    teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae72',
     name: 'MCP Project',
     rootDocumentId: 'wrk_efab8e758b97459bab2659d8fdcf8627',
+    teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
+    teams,
+  },
+  {
+    id: 'proj_5145140e072d4007a30bfa6630ddae73',
+    name: 'Design Project',
+    rootDocumentId: 'wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4',
+    teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
 ];
@@ -107,7 +117,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My Collection R1',
         },
         {
-          blob: 'c50bc39ab29bb892df65bdbc97f23af84b9d1067',
+          blob: '1b7fe31ec583c8a42fedc0e86a103b94076e77c4',
           key: 'env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c',
           name: 'Base Environment',
         },
@@ -131,7 +141,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My Collection R1',
         },
         {
-          blob: 'c50bc39ab29bb892df65bdbc97f23af84b9d1067',
+          blob: '1b7fe31ec583c8a42fedc0e86a103b94076e77c4',
           key: 'env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c',
           name: 'Base Environment',
         },
@@ -158,7 +168,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My Environment',
         },
         {
-          blob: 'bf6064229bdaeec3bf597329c640ca2a11fd4d72',
+          blob: '7024cbb27bb92821c17c0b27de612a0b1a8c082c',
           key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
           name: 'Base Environment',
         },
@@ -180,7 +190,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My MCP Client',
         },
         {
-          blob: 'ee4579d33d3e25e3244ead2dca8c7b6e2e4f8dcf',
+          blob: 'fed20333ca44d6d4aae729f210ce371ed31392a3',
           key: 'env_0c042933878b85facb6c4e673b0166b256f37ad0',
           name: 'Base Environment',
         },
@@ -204,7 +214,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My MCP Client',
         },
         {
-          blob: 'ee4579d33d3e25e3244ead2dca8c7b6e2e4f8dcf',
+          blob: 'fed20333ca44d6d4aae729f210ce371ed31392a3',
           key: 'env_0c042933878b85facb6c4e673b0166b256f37ad0',
           name: 'Base Environment',
         },
@@ -212,6 +222,28 @@ const projectSnapshots: Record<string, any[]> = {
           blob: '379b74a13b742b573c16dda3ed38abde8cfdb0c3',
           key: 'mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0',
           name: 'MCP request',
+        },
+      ],
+    },
+  ],
+  // design project snapshots
+  proj_5145140e072d4007a30bfa6630ddae73: [
+    {
+      ...commonSnapshotProps,
+      created: '2026-01-22T06:20:00.759Z',
+      id: '2ce4bced4220de84704bee82b6174890ba4a89f0',
+      name: 'Initial Snapshot',
+      parent: '0000000000000000000000000000000000000000',
+      state: [
+        {
+          blob: '75bdac19931bd37e2853464f7a26ecbb79bc4fca',
+          key: 'wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4',
+          name: 'Design Project',
+        },
+        {
+          blob: '52aa4f92c8e47e955f0c3fcc2fd38d41710450ad',
+          key: 'spc_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b5',
+          name: 'Design Project.yaml',
         },
       ],
     },
@@ -231,7 +263,7 @@ const environmentProjectNewCommitSnapshot = [
         name: 'My Environment',
       },
       {
-        blob: 'bf6064229bdaeec3bf597329c640ca2a11fd4d72',
+        blob: '7024cbb27bb92821c17c0b27de612a0b1a8c082c',
         key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
         name: 'Base Environment',
       },
@@ -250,7 +282,7 @@ const environmentProjectNewCommitSnapshot = [
         name: 'My Environment',
       },
       {
-        blob: '966ed58bb00e1031ddd69afc171c34cbfde2b307',
+        blob: '8928646f281ac14f6410aa29fa60b7060f6529d0',
         key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
         name: 'Base Environment',
       },
@@ -263,8 +295,8 @@ const rawBlobs: Record<string, string> = {
   // request collection blobs
   'be076c5943e0d32b05efbbf215b4f9d2bb894a9c':
     '{"_id":"wrk_a7132f924ba7451594ba64ec411c9e13","created":1769407477819,"description":"","name":"My Collection R1","parentId":null,"scope":"collection","type":"Workspace"}',
-  'c50bc39ab29bb892df65bdbc97f23af84b9d1067':
-    '{"_id":"env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c","color":null,"created":1769407477820,"data":{},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"metaSortKey":1769407477820,"name":"Base Environment","parentId":"wrk_a7132f924ba7451594ba64ec411c9e13","type":"Environment"}',
+  '1b7fe31ec583c8a42fedc0e86a103b94076e77c4':
+    '{"_id":"env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c","color":null,"created":1769407477820,"data":{},"environmentType":"kv","isPrivate":false,"metaSortKey":1769407477820,"name":"Base Environment","parentId":"wrk_a7132f924ba7451594ba64ec411c9e13","type":"Environment"}',
   'd78e5942f5508063ea484bb4b497f0ed446309c9':
     '{"_id":"req_d11697e0652742e691374e380cdcd2b2","authentication":{},"body":{},"created":1769407553323,"description":"","headers":[{"name":"Content-Type","value":"application/json"},{"description":"","disabled":false,"name":"User-Agent","value":"insomnia/12.3.0"}],"isPrivate":false,"metaSortKey":-1769407553323,"method":"GET","name":"New Request","parameters":[],"parentId":"wrk_a7132f924ba7451594ba64ec411c9e13","pathParameters":[],"settingDisableRenderRequestBody":false,"settingEncodeUrl":true,"settingFollowRedirects":"global","settingRebuildPath":true,"settingSendCookies":true,"settingStoreCookies":true,"type":"Request","url":""}',
   '1f8a8cd1da88d9abb4bfc1d6e662716d41705ace':
@@ -272,24 +304,30 @@ const rawBlobs: Record<string, string> = {
   // environment blobs
   '2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e':
     '{"_id":"wrk_2068a8dfd6914c369073686bb92737ae","created":1769408109261,"description":"","name":"My Environment","parentId":null,"scope":"environment","type":"Workspace"}',
-  'bf6064229bdaeec3bf597329c640ca2a11fd4d72':
-    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
-  '966ed58bb00e1031ddd69afc171c34cbfde2b307':
-    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{"foo":"bar"},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"kvPairData":[{"enabled":true,"id":"envPair_6691b0028e104e499f8c4acf0a1a9e6a","name":"foo","type":"str","value":"bar"}],"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
+  '7024cbb27bb92821c17c0b27de612a0b1a8c082c':
+    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{},"environmentType":"kv","isPrivate":false,"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
+  '8928646f281ac14f6410aa29fa60b7060f6529d0':
+    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{"foo":"bar"},"environmentType":"kv","isPrivate":false,"kvPairData":[{"enabled":true,"id":"envPair_6691b0028e104e499f8c4acf0a1a9e6a","name":"foo","type":"str","value":"bar"}],"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
   // mcp blobs
   'a8252b458e8a1b5f3c214e5e7f944887a142ae72':
     '{"_id":"wrk_efab8e758b97459bab2659d8fdcf8627","created":1769408435321,"description":"","name":"My MCP Client","parentId":null,"scope":"mcp","type":"Workspace"}',
-  'ee4579d33d3e25e3244ead2dca8c7b6e2e4f8dcf':
-    '{"_id":"env_0c042933878b85facb6c4e673b0166b256f37ad0","color":null,"created":1769408435351,"data":{},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"metaSortKey":1769408435351,"name":"Base Environment","parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","type":"Environment"}',
+  'fed20333ca44d6d4aae729f210ce371ed31392a3':
+    '{"_id":"env_0c042933878b85facb6c4e673b0166b256f37ad0","color":null,"created":1769408435351,"data":{},"environmentType":"kv","isPrivate":false,"metaSortKey":1769408435351,"name":"Base Environment","parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","type":"Environment"}',
   '2f6a337993dcbcc164187f74e4278ca22c0ea065':
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":""}',
   '379b74a13b742b573c16dda3ed38abde8cfdb0c3':
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":"http://localhost:4010/mcp"}',
+  // design project blobs
+  '75bdac19931bd37e2853464f7a26ecbb79bc4fca':
+    '{"_id":"wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4","created":1769408700000,"description":"","name":"Design Project","parentId":null,"scope":"design","type":"Workspace"}',
+  '52aa4f92c8e47e955f0c3fcc2fd38d41710450ad':
+    '{"_id":"spc_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b5","contents":"openapi: 3.0.0\\ninfo:\\n  title: Petstore\\n  version: 1.0.0\\npaths: {}","created":1769408700001,"fileName":"Design Project.yaml","parentId":"wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4","type":"ApiSpec"}',
 };
 const defaultBranches = [{ name: 'master' }, { name: 'develop' }];
 let deletedProjectIds: string[] = [];
 let cloudSyncApiEnabled = false;
 let remoteHasNewCommit = false;
+let multiUserMode = false;
 
 const resetCloudSyncTestState = () => {
   Object.keys(newSnapshots).forEach(projectId => {
@@ -300,6 +338,7 @@ const resetCloudSyncTestState = () => {
   });
   deletedProjectIds = [];
   remoteHasNewCommit = false;
+  multiUserMode = false;
 };
 
 const getSnapshotsForProject = (projectId: string) => {
@@ -309,6 +348,41 @@ const getSnapshotsForProject = (projectId: string) => {
     return environmentProjectNewCommitSnapshot;
   }
   return [...originalSnapshots, ...addedSnapshots];
+};
+
+// Empty payloads matching the live API responses
+const emptyQueryData: Record<string, unknown> = {
+  projects: [],
+  project: null,
+  branches: [],
+  branch: null,
+  snapshots: [],
+  blobs: [],
+  blobsMissing: { missing: [] },
+  projectKey: null,
+  teamMemberKeys: { memberKeys: [] },
+};
+const emptyMutationData: Record<string, unknown> = {
+  projectArchive: true,
+  branchRemove: true,
+  snapshotsCreate: [],
+  blobsCreate: { count: 0 },
+  projectCreate: null,
+};
+
+const disabledCloudSyncResponse = (query?: string) => {
+  if (!query) {
+    return { data: {} };
+  }
+  try {
+    const operation = parse(query).definitions[0] as OperationDefinitionNode;
+    const operationName = (operation.selectionSet.selections[0] as FieldNode).name.value;
+    const table = operation.operation === 'mutation' ? emptyMutationData : emptyQueryData;
+    const value = operationName in table ? table[operationName] : null;
+    return { data: { [operationName]: value } };
+  } catch {
+    return { data: {} };
+  }
 };
 
 export default function setup(app: Application) {
@@ -335,12 +409,19 @@ export default function setup(app: Application) {
     return res.status(200).send();
   });
 
+  app.post('/__test-config/cloud-sync/team-members', json(), (req, res) => {
+    const { multi = false } = req.body ?? {};
+    multiUserMode = !!multi;
+    return res.status(200).send();
+  });
+
   // handling response for all graphql requests
   app.post('/graphql', json(), (req, res) => {
+    const { query, variables } = req.body ?? {};
+
     if (!cloudSyncApiEnabled) {
-      return res.status(200).send();
+      return res.status(200).json(disabledCloudSyncResponse(query));
     }
-    const { query, variables } = req.body;
 
     try {
       // Parse the GraphQL query using the graphql package
@@ -495,12 +576,23 @@ export default function setup(app: Application) {
           }
 
           case 'teamMemberKeys': {
-            return res.status(200).json({
-              data: {
-                teamMemberKeys: {
-                  memberKeys: [
+            const memberKeys = [
+              {
+                accountId: 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
+                publicKey: JSON.stringify({
+                  alg: 'RSA-OAEP-256',
+                  e: 'AQAB',
+                  ext: true,
+                  key_ops: ['encrypt'],
+                  kty: 'RSA',
+                  n: 'pTQVaUaiqggIldSKm6ib6eFRLLoGj9W-2O4gTbiorR-2b8-ZmKUwQ0F-jgYX71AjYaFn5VjOHOHSP6byNAjN7WzJ6A_Z3tytNraLoZfwK8KdfflOCZiZzQeD3nO8BNgh_zEgCHStU61b6N6bSpCKjbyPkmZcOkJfsz0LJMAxrXvFB-I42WYA2vJKReTJKXeYx4d6L_XGNIoYtmGZit8FldT4AucfQUXgdlKvr4_OZmt6hgjwt_Pjcu-_jO7m589mMWMebfUhjte3Lp1jps0MqTOvgRb0FQf5eoBHnL01OZjvFPDKeqlvoz7II9wFNHIKzSvgAKnyemh6DiyPuIukyQ',
+                }),
+                autoLinked: false,
+              },
+              ...(multiUserMode
+                ? [
                     {
-                      accountId: 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
+                      accountId: 'acct_74b577e6b59d43a5a607f84b4f73e3df',
                       publicKey: JSON.stringify({
                         alg: 'RSA-OAEP-256',
                         e: 'AQAB',
@@ -511,8 +603,12 @@ export default function setup(app: Application) {
                       }),
                       autoLinked: false,
                     },
-                  ],
-                },
+                  ]
+                : []),
+            ];
+            return res.status(200).json({
+              data: {
+                teamMemberKeys: { memberKeys },
               },
             });
           }
@@ -567,7 +663,14 @@ export default function setup(app: Application) {
           case 'blobsCreate': {
             const blobs = variables.blobs || [];
             blobs.forEach((blob: { id: string; content: string }) => {
-              newBlobs[blob.id] = blob.content;
+              try {
+                const aesMsg: AESMessage = JSON.parse(blob.content);
+                const decryptedBuf = decryptAESBuffer(symmetricKey, aesMsg);
+                newBlobs[blob.id] = zlib.gunzipSync(decryptedBuf).toString('utf8');
+              } catch (e) {
+                console.error('[mock] blobsCreate: decrypt failed for blob', blob.id, e);
+                newBlobs[blob.id] = blob.content;
+              }
             });
             return res.status(200).json({
               data: {

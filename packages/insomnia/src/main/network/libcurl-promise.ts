@@ -1,7 +1,5 @@
 // NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
-import { invariant } from '../../utils/invariant';
-invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
@@ -19,9 +17,10 @@ import {
 } from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
 import electron from 'electron';
+import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { ClientCertificate, RequestHeader, ResponseHeader } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
@@ -66,12 +65,6 @@ interface SettingsUsedHere {
   httpsProxy: string;
   noProxy: string;
   dataFolders: string[];
-}
-
-export interface ResponseTimelineEntry {
-  name: keyof typeof CurlInfoDebug;
-  timestamp: number;
-  value: string;
 }
 
 export interface CurlRequestOutput {
@@ -126,7 +119,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
-      // allow reading the file as the caCert is chosen by user
+
+      invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
@@ -537,7 +531,7 @@ async function waitForStreamToFinish(stream: Readable | Writable) {
 }
 const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
   const isUrlEncodedForm = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
+  const expectsBody = ['POST', 'PUT', 'PATCH', 'QUERY'].includes(method.toUpperCase());
   const hasMimetypeAndUpdateMethod = typeof body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();

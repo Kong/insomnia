@@ -1,10 +1,10 @@
+import { models, services } from 'insomnia-data';
+import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from 'insomnia-data/common';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
-import { models, services } from '~/insomnia-data';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 
-import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -36,7 +36,10 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+    const data = await window.main.exportHarCurrentRequest({
+      requestId: activeRequest._id,
+      responseId: activeResponse._id,
+    });
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({
@@ -80,7 +83,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (filePath && activeResponse.bodyBuffer) {
       await window.main.writeFile({
         path: filePath,
-        content: headers + '\n' + activeResponse.bodyBuffer.toString('utf8') || '',
+        content: headers + '\n' + bodyBufferToUtf8(activeResponse.bodyBuffer) || '',
       });
     }
   }, [activeRequest, activeResponse]);

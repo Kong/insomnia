@@ -1,12 +1,10 @@
-import * as protoLoader from '@grpc/proto-loader';
+import { models, type ProtoDirectory, type ProtoFile, services } from 'insomnia-data';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
-import type { ProtoDirectory, ProtoFile } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -49,13 +47,7 @@ const tryToSelectFolderPath = async () => {
 };
 const isProtofileValid = async (filePath: string) => {
   try {
-    await protoLoader.load(filePath, {
-      keepCase: true,
-      longs: String,
-      enums: String,
-      defaults: true,
-      oneofs: true,
-    });
+    await window.main.grpc.validateProtoFile(filePath);
     return true;
   } catch (error) {
     showError({

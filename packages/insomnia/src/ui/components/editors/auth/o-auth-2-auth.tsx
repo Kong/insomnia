@@ -1,7 +1,7 @@
+import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentication } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentication } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import {

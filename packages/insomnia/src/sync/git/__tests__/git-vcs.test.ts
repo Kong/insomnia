@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import * as git from 'isomorphic-git';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, MergeConflictError } from '../git-vcs';
 import { MemClient } from '../mem-client';

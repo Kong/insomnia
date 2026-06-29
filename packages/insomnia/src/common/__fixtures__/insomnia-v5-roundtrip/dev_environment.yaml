@@ -1,0 +1,19 @@
+type: environment.insomnia.rest/5.0
+schema_version: "5.1"
+name: Dev Environment
+meta:
+  id: wrk_dafaad8e1d184b94918ec2438823437a
+  created: 1778268301603
+  modified: 1778268301603
+  description: ""
+environments:
+  name: Dev
+  meta:
+    id: env_82094b5b696655da532214cd1b6ca31215ea29b7
+    created: 1778268301614
+    modified: 1779815579930
+    isPrivate: false
+  data:
+    base_url: http://localhost:8000
+    auth_token: e1015e6d-039b-42dd-b038-31068702935d
+    inherited_value: from_global_env

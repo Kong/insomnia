@@ -24,7 +24,7 @@ const externalModules = new Map<string, object>([
   ['xml2js', xml2js],
 ]);
 
-// wraps `target` with a Proxy restricting access to dangerious methods within the accepted modules. 
+// wraps `target` with a Proxy restricting access to dangerious methods within the accepted modules.
 const blockMethods = (target: object, blocked: string[], label: string): object =>
   new Proxy(target, {
     get(t, prop) {
@@ -38,11 +38,11 @@ const blockMethods = (target: object, blocked: string[], label: string): object 
 
 export const requireInterceptor = (moduleName: string): any => {
   if (moduleName === 'timers') {
-    // Block setImmediate 
+    // Block setImmediate
     return blockMethods(require('node:timers'), ['setImmediate'], 'timers');
   } else if (moduleName === 'buffer') {
     // Block unsafe allocation methods to prevent heap memory disclosure.
-    //  Buffer.allocUnsafe(n) / Buffer.allocUnsafeSlow(n) return a buffer backed by uninitialized memory. 
+    //  Buffer.allocUnsafe(n) / Buffer.allocUnsafeSlow(n) return a buffer backed by uninitialized memory.
     const bufferModule = require('node:buffer');
     return {
       ...bufferModule,
@@ -53,7 +53,6 @@ export const requireInterceptor = (moduleName: string): any => {
     //  util.inherits(ctor, superCtor) — directly manipulates the prototype chain (
     //  util.debuglog(section) — conditionally writes to stderr based on the NODE_DEBUG environment variable
     return blockMethods(require('node:util'), ['inherits', 'debuglog'], 'util');
-    
   } else if (
     [
       // node.js modules

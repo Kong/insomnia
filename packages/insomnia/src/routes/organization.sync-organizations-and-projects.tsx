@@ -1,11 +1,11 @@
 import type { Organization } from 'insomnia-api';
+import type { Project } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import type { Project } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
-import { invariant } from '~/utils/invariant';
-import { AsyncTask, createFetcherSubmitHook } from '~/utils/router';
+import { AsyncTask, createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.sync-organizations-and-projects';
 
@@ -23,7 +23,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       projectId,
       asyncTaskList = [],
     } = (await request.json()) as SyncOrgsAndProjectsActionRequest;
-    const { id: sessionId, accountId } = await services.userSession.getOrCreate();
+    const { id: sessionId, accountId } = await services.userSession.get();
 
     const taskPromiseList = [];
     if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {
@@ -34,12 +34,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
       const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-      invariant(organizations, 'Failed to fetch organizations.');
-      const personalOrganization = models.organization.findPersonalOrganization(organizations, accountId);
-      invariant(personalOrganization, 'personalOrganization is required');
-      invariant(personalOrganization.id, 'personalOrganizationId is required');
+      invariant(organizations.length, 'Failed to fetch organizations.');
       invariant(sessionId, 'sessionId is required');
-      taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
+      // TODO: when migrating to /v3/users/me/spaces, target the owned space with total_members === 1
+      // so legacy orphan local projects land in the user's solo space rather than a shared owned space.
+      taskPromiseList.push(migrateProjectsUnderOrganization(organizations[0].id, sessionId));
     }
 
     if (asyncTaskList.includes(AsyncTask.SyncProjects)) {

@@ -1,6 +1,7 @@
 import clone from 'clone';
 import { isValid } from 'date-fns';
-import React, { useState } from 'react';
+import type { Cookie, CookieJar } from 'insomnia-data';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -18,15 +19,12 @@ import {
   TextField,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
-import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { Cookie, CookieJar } from '~/insomnia-data';
 import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 
-import { cookieToString } from '../../../common/cookies';
-import { fuzzyMatch } from '../../../common/misc';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { PromptButton } from '../base/prompt-button';
@@ -80,6 +78,8 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
   const handleFilterChange = async (value: string) => {
     setFilter(value);
+    setPage(0);
+
     const renderedCookies: Cookie[] = [];
 
     for (const cookie of activeCookieJar?.cookies || []) {
@@ -95,15 +95,12 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       return;
     }
 
-    const filteredCookies: Cookie[] = [];
+    const query = value.toLowerCase();
+    const cookieStrings = await Promise.all(
+      renderedCookies.map(cookie => window.main.cookies.toString(cookie).catch(() => '')),
+    );
 
-    renderedCookies.forEach(cookie => {
-      if (fuzzyMatch(value, JSON.stringify(cookie), { splitSpace: true })) {
-        filteredCookies.push(cookie);
-      }
-    });
-
-    setFilteredCookies(chunkArray(filteredCookies));
+    setFilteredCookies(chunkArray(renderedCookies.filter((_, i) => cookieStrings[i].toLowerCase().includes(query))));
   };
 
   const handleCookieDelete = (cookieId: string) => {
@@ -167,10 +164,10 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       isDismissable={true}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-(--color-bg) py-[100px]"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-black/30 py-[100px]"
     >
-      <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
-        <Dialog className="relative outline-hidden">
+      <Modal className="max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
+        <Dialog className="relative outline-hidden" aria-label="Cookies Modal">
           {({ close }) => (
             <>
               {activeCookieJar && (
@@ -269,13 +266,27 @@ export interface CookieListProps {
 
 const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps) => {
   const [cookieToEdit, setCookieToEdit] = useState<Cookie | null>(null);
+  const [cookieStrings, setCookieStrings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(
+      cookies.map(async cookie => ({ id: cookie.id, str: await window.main.cookies.toString(cookie).catch(() => '') })),
+    ).then(results => {
+      if (!cancelled) {
+        setCookieStrings(Object.fromEntries(results.map(({ id, str }) => [id, str])));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [cookies]);
 
   return (
     <>
       <ListBox aria-label="Cookies list" className="flex min-h-[200px] w-full flex-col">
         {cookies.map((cookie, index) => {
-          const cookieJSON = ToughCookie.fromJSON(cookie);
-          const cookieString = cookieJSON ? cookieToString(cookieJSON) : '';
+          const cookieString = cookieStrings[cookie.id] || '';
 
           if (cookie.expires && !isValid(new Date(cookie.expires))) {
             cookie.expires = null;
@@ -401,23 +412,19 @@ interface CookieModifyModalProps {
 
 const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: CookieModifyModalProps) => {
   const [editCookie, setEditCookie] = useState<Cookie>(cookie);
+  const [rawValue, setRawValue] = useState('');
+  const isLightTheme = useIsLightTheme();
+
+  useEffect(() => {
+    window.main.cookies
+      .toString(cookie)
+      .then(str => setRawValue(str))
+      .catch(() => setRawValue(''));
+  }, [cookie]);
 
   let localDateTime: string;
   if (editCookie && editCookie.expires && isValid(new Date(editCookie.expires))) {
     localDateTime = new Date(editCookie.expires).toISOString().slice(0, 16);
-  }
-
-  let rawDefaultValue;
-  if (!editCookie) {
-    rawDefaultValue = '';
-  } else {
-    try {
-      const c = ToughCookie.fromJSON(JSON.stringify(editCookie));
-      rawDefaultValue = c ? cookieToString(c) : '';
-    } catch (err) {
-      console.warn('Failed to parse cookie string', err);
-      rawDefaultValue = '';
-    }
   }
 
   return (
@@ -508,7 +515,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                             <input
                               type="datetime-local"
                               defaultValue={localDateTime}
-                              className="calendar-invert"
+                              style={{ colorScheme: isLightTheme ? 'light' : 'dark' }}
                               onChange={event => setEditCookie({ ...editCookie, expires: event.target.value })}
                             />
                           </label>
@@ -554,10 +561,12 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                             Raw Cookie String
                             <input
                               type="text"
-                              onChange={event => {
+                              value={rawValue}
+                              onChange={async event => {
+                                const str = event.target.value;
+                                setRawValue(str);
                                 try {
-                                  // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-                                  const parsed = ToughCookie.parse(event.target.value, { loose: true })?.toJSON();
+                                  const parsed = await window.main.cookies.parse(str);
                                   if (parsed) {
                                     // Make sure cookie has an id and keep its host-only-flag
                                     parsed.id = editCookie.id;
@@ -565,11 +574,9 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                                     setEditCookie(parsed as Cookie);
                                   }
                                 } catch (err) {
-                                  console.warn(`Failed to parse cookie string "${event.target.value}"`, err);
-                                  return;
+                                  console.warn(`Failed to parse cookie string "${str}"`, err);
                                 }
                               }}
-                              defaultValue={rawDefaultValue}
                             />
                           </label>
                         </div>

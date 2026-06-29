@@ -1,6 +1,6 @@
+import type { MockServer } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
-import type { MockServer } from '../../models/mock-server';
 import {
   FLEXIBLE_URL_REGEX,
   getContentTypeName,

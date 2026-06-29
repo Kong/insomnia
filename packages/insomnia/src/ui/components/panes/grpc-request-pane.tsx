@@ -1,13 +1,19 @@
+import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { RenderError } from '~/common/templating/render-error';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { getGrpcConnectionErrorDetails } from '~/ui/utils/grpc';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { database as db } from '../../../common/database';
@@ -22,10 +28,6 @@ import {
   type GrpcRequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { RenderError } from '../../../templating/render-error';
-import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
-import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -66,7 +68,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const { requestMessages, running, methods } = grpcState;
   const editorRef = useRef<CodeEditorHandle>(null);
   const gitVersion = useGitVCSVersion();
-  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const { projectId, workspaceId, requestId } = useParams() as {
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
   const patchRequest = useRequestPatcher();
   const { updateTabById } = useInsomniaTabContext();
 
@@ -117,6 +123,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const renderedWithCertificates = {
         ...rendered,
         rejectUnauthorized: settings.validateSSL,
+        disableUserAgentHeader: activeRequest.disableUserAgentHeader,
         ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
           ? {
               clientCert: clientCert,
@@ -160,6 +167,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
 
         updateTabById?.(requestId, { temporary: false });
 
+        recordProjectRecentRequest({
+          projectId,
+          requestId,
+          workspaceId,
+        });
+
         window.main.grpc.start({
           request,
           rejectUnauthorized: settings.validateSSL,
@@ -183,6 +196,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   : undefined,
               }
             : {}),
+        });
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.requestExecuted,
+          properties: { request_type: 'gRPC' },
         });
         setGrpcState({
           ...grpcState,
@@ -319,6 +336,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     rendered = {
                       ...rendered,
                       rejectUnauthorized: settings.validateSSL,
+                      disableUserAgentHeader: activeRequest.disableUserAgentHeader,
                       ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
                         ? {
                             clientCert: clientCert,

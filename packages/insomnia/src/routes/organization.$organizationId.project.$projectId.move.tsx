@@ -1,8 +1,8 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.move';
 
@@ -14,7 +14,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   invariant(typeof organizationId === 'string', 'Organization ID is required');
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
   await services.project.update(project, {

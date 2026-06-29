@@ -1,11 +1,11 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { GitCredentials, GitRepository } from 'insomnia-data';
 import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { Banner } from '~/basic-components/banner';
 import { Icon } from '~/basic-components/icon';
-import type { GitCredentials, GitRepository } from '~/insomnia-data';
 import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,

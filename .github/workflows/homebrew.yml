@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        uses: Homebrew/actions/setup-homebrew@6eaeff80e7e5c43087c0e5eb5aa82120399e9c91 # master
         with:
           test-bot: false
 
@@ -39,7 +39,7 @@ jobs:
         run: brew tap homebrew/homebrew-cask --force
 
       - name: Configure Git user
-        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        uses: Homebrew/actions/git-user-config@6eaeff80e7e5c43087c0e5eb5aa82120399e9c91 # master
         with:
           username: 'insomnia-infra'
 
@@ -49,17 +49,17 @@ jobs:
       # Update Homebrew's Inso(mnia) formulae
       # https://github.com/Homebrew/actions/tree/master/bump-formulae
       - name: Bump Inso (Beta) Formula
-        uses: Homebrew/actions/bump-packages@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        uses: Homebrew/actions/bump-packages@6eaeff80e7e5c43087c0e5eb5aa82120399e9c91 # master
         with:
           token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
           casks: inso@beta
       - name: Bump Inso Formula
-        uses: Homebrew/actions/bump-packages@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        uses: Homebrew/actions/bump-packages@6eaeff80e7e5c43087c0e5eb5aa82120399e9c91 # master
         with:
           token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
           casks: inso
       - name: Bump Insomnia Formula
-        uses: Homebrew/actions/bump-packages@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        uses: Homebrew/actions/bump-packages@6eaeff80e7e5c43087c0e5eb5aa82120399e9c91 # master
         with:
           token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
           # Bump only these formulae if outdated

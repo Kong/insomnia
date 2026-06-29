@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('Setup external vault and used in request', async ({ app, page }) => {
+test('Setup external vault and used in request', async ({ app, page, insomnia }) => {
   // import request collection and replace the template tag file path with the actual fixture file path
   const text = (await loadFixture('template-tag-collection.yaml')).replace(
     '__TEMPLATE_TAG_FILE_PATH',
@@ -65,9 +65,14 @@ test('Setup external vault and used in request', async ({ app, page }) => {
 
   // close the settings
   await page.locator('.app').press('Escape');
+  // dismiss any remaining modal overlay before interacting with the sidebar
+  await page
+    .locator('[data-close-modal="true"]')
+    .click()
+    .catch(() => {});
 
   // used in request
-  await page.getByLabel('Request Collection').getByTestId('External Vault Tag').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');
   await page.getByText('Body', { exact: true }).click();
   const externalVaultTestCases = {
     aws: {
@@ -110,13 +115,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);
   await expect.soft(responsePane).toContainText(externalVaultTestCases.gcp.expectedResult);
   await expect.soft(responsePane).toContainText(externalVaultTestCases.hashicorp.expectedResult);
-  // enable elevated access and execute again in renderer process
-  await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Plugins' }).click();
-  await page.getByText('Allow elevated access for plugins').click();
-  // close the settings
-  await page.locator('.app').press('Escape');
-  // send request and execute the tags in renderer process
+  // send request again to verify vault tags work via render-adapter worker
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);

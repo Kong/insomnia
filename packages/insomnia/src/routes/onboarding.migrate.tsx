@@ -1,11 +1,11 @@
 import { Button, Heading, Radio, RadioGroup } from 'react-aria-components';
 import { href, redirect, useFetcher } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
 import { shouldMigrateProjectUnderOrganization } from '~/sync/vcs/migrate-projects-into-organization';
 import { Icon } from '~/ui/components/icon';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/onboarding.migrate';
 

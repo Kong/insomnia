@@ -1,15 +1,15 @@
 import { createTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
+import type { Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
-import type { Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.new';
 
@@ -53,7 +53,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
 };
 
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
-  const user = await services.userSession.getOrCreate();
+  const user = await services.userSession.get();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
@@ -146,6 +146,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     properties: {
       storage: newProjectData.storageType,
       git_provider,
+      project_id: newProjectId,
     },
   });
 

@@ -2,8 +2,8 @@ import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import electron from 'electron';
+import { services } from 'insomnia-data';
 
-import { services } from '~/insomnia-data';
 import { getUpdateUrl } from '~/main/updates';
 
 import { version } from '../../package.json';

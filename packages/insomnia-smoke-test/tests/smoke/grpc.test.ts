@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can send gRPC requests with reflection', async ({ app, page }) => {
+test('can send gRPC requests with reflection', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
@@ -18,7 +18,7 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByLabel('Request Collection').getByTestId('UnaryWithOutProtoFile').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('UnaryWithOutProtoFile');
   await page.getByTestId('button-server-reflection').click();
 
   await page.getByRole('button', { name: 'Select Method' }).click();

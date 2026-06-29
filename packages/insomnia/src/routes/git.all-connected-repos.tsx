@@ -1,13 +1,13 @@
 import type { Organization } from 'insomnia-api';
+import type { Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import type { Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 export async function clientLoader() {
-  const { accountId } = await services.userSession.getOrCreate();
+  const { accountId } = await services.userSession.get();
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const allProjects = (
     await Promise.all(

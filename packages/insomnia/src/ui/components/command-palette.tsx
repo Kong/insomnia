@@ -1,3 +1,5 @@
+import { models } from 'insomnia-data';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
 import React, { memo, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import {
@@ -21,8 +23,6 @@ import {
 import { useNavigate, useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -327,6 +327,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                 POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                 HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                 OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                 DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                 PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                 PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
@@ -429,6 +430,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                 POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                 HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                 OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                 DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                 PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                 PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',

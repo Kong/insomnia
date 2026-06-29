@@ -1,3 +1,10 @@
+import type {
+  ResponseTimelineEntry,
+  RunnerResultPerRequest,
+  RunnerTestResult,
+  UserUploadEnvironment,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -22,11 +29,9 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
-import type { RunnerResultPerRequest, RunnerTestResult, UserUploadEnvironment } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
+import { invariant } from '~/common/utils/invariant';
 import type { TimingStep } from '~/main/network/request-timing';
-import { cancelRequestById } from '~/network/cancellation';
+import { cancelRequestById } from '~/network/cancellation.renderer';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -52,8 +57,7 @@ import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
-import { moveAfter, moveBefore } from '~/utils';
-import { invariant } from '~/utils/invariant';
+import { moveAfter, moveBefore } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 

@@ -13,13 +13,11 @@
  * - Legacy migration support
  *
  */
+import fs from 'node:fs';
 import path from 'node:path';
 
-import { app } from 'electron/main';
+import { app, BrowserWindow } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type PromiseFsClient } from 'isomorphic-git';
-import YAML, { parse } from 'yaml';
-
 import type {
   BaseModel,
   GitProject,
@@ -28,8 +26,12 @@ import type {
   Workspace,
   WorkspaceMeta,
   WorkspaceScope,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
+import YAML, { parse } from 'yaml';
+
+import { invariant } from '~/common/utils/invariant';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -61,11 +63,10 @@ import GitVCS, {
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
-import { createElectronNotifier, RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
+import { RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
-import { invariant } from '../utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 
@@ -79,6 +80,21 @@ initializeGitRemoteProviders();
  * does not appear on top of the interactive resolver.
  */
 const suppressedConflictRepos = new Set<string>();
+
+function createElectronNotifier(): WatcherNotifier {
+  return {
+    onDbSynced: () => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.db-synced');
+      }
+    },
+    onProblemsChanged: payload => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.file-problems-changed', payload);
+      }
+    },
+  };
+}
 
 const _electronNotifier = createElectronNotifier();
 const conflictFilteringNotifier: WatcherNotifier = {
@@ -216,7 +232,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   }
 
   invariant(projectId, 'Project ID is required');
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
   invariant(models.project.isConnectedGitProject(project), 'Project is not linked to a git repository');
   const repoId = models.project.getEffectiveRepoId(project);
@@ -290,7 +306,7 @@ export async function getProjectGitFileIssues({
   workspaceId,
   gitRepositoryId,
 }: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   if (!project || !models.project.isConnectedGitProject(project)) {
     return [];
   }
@@ -1157,7 +1173,7 @@ export const cloneGitRepoAction = async ({
 
       async function getProject() {
         if (cloneIntoProjectId) {
-          const project = await services.project.getById(cloneIntoProjectId);
+          const project = await services.project.get(cloneIntoProjectId);
           invariant(project, 'Project not found');
 
           await services.project.update(project, {
@@ -1219,6 +1235,16 @@ export const cloneGitRepoAction = async ({
         process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
         `version-control/git/${gitRepository._id}`,
       );
+
+      // If the project already has a ruleset in the DB (e.g. cloud → git migration),
+      // write it to disk now so its mtime is newer than the cloned file. This ensures
+      // the cloud ruleset is preserved and it shows up as a diff in the commit modal rather than being silently replaced by the repo's file.
+      const existingRuleset = await services.projectLintRuleset.getByParentId(project._id);
+      if (existingRuleset) {
+        const rulesetPath = path.join(cloneBaseDir, '.spectral.yaml');
+        await fs.promises.writeFile(rulesetPath, existingRuleset.rulesetContent, 'utf8');
+      }
+
       await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
 
       const updateRepository = await services.gitRepository.getById(gitRepository._id);
@@ -1242,7 +1268,7 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    const project = await services.project.getById(projectId);
+    const project = await services.project.get(projectId);
     invariant(project, 'Project not found');
 
     trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
@@ -1359,7 +1385,7 @@ export const cloneGitRepoAction = async ({
       const existingWorkspace = await services.workspace.getById(workspace._id);
 
       if (existingWorkspace) {
-        const project = await services.project.getById(existingWorkspace.parentId);
+        const project = await services.project.get(existingWorkspace.parentId);
         if (!project) {
           return {
             errors: [
@@ -1469,7 +1495,7 @@ export const updateGitRepoAction = async ({
       const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
       gitRepositoryId = workspaceMeta?.gitRepositoryId;
     } else if (projectId) {
-      const project = await services.project.getById(projectId);
+      const project = await services.project.get(projectId);
       invariant(project, 'Project not found');
       gitRepositoryId = project.gitRepositoryId;
     }
@@ -1497,7 +1523,7 @@ export const updateGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
       });
     } else if (projectId) {
-      const project = await services.project.getById(projectId);
+      const project = await services.project.get(projectId);
       invariant(project, 'Project not found');
       await services.project.update(project, {
         gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
@@ -1557,7 +1583,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
       gitRepositoryId: null,
     });
   } else if (projectId) {
-    const project = await services.project.getById(projectId);
+    const project = await services.project.get(projectId);
     invariant(project, 'Project not found');
     await services.project.update(project, {
       gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
@@ -2436,7 +2462,10 @@ export const discardChangesAction = async ({
 
     await GitVCS.discardChanges(files);
 
-    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Discarding an untracked, never-committed workspace deletes its YAML from disk.
+    // Remove the orphaned workspace from the DB instead of resurrecting it, otherwise
+    // the discarded change reappears immediately.
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id, { removeLocalOnlyOrphans: true });
 
     await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
@@ -2679,7 +2708,7 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
 
   if (project && models.project.isEmptyGitProject(project)) {
     return {
@@ -2893,7 +2922,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   const logs: string[] = [];
   const failedProjects: { id: string; name: string }[] = [];
 
-  const allProjects = await services.project.all();
+  const allProjects = await services.project.list();
   const gitProjects = allProjects.filter((p): p is GitProject => models.project.isConnectedGitProject(p));
 
   if (gitProjects.length === 0) return { logs, failedProjects, totalProjects: 0 };
@@ -2947,7 +2976,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     failedProjects.map(async ({ id, name }) => {
       logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
       try {
-        const project = await services.project.getById(id);
+        const project = await services.project.get(id);
         if (!project || !models.project.isConnectedGitProject(project)) {
           logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
           return;

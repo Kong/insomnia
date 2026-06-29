@@ -58,6 +58,7 @@ export const start = async () => {
     path.join(buildFolder, 'main/mcp-generate-sampling-response.mjs'),
   );
   await copyFiles('../src/hidden-window.html', path.join(buildFolder, 'hidden-window.html'));
+  await copyFiles('../src/plugin-window.html', path.join(buildFolder, 'plugin-window.html'));
 
   console.log('[build] Complete!');
 };

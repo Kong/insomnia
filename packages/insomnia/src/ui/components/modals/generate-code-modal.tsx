@@ -1,12 +1,11 @@
-import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import type { Request } from 'insomnia-data';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import type { Request } from '~/insomnia-data';
+import type { HTTPSnippetClient, HTTPSnippetTarget } from '~/types/code-snippet';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import { exportHarWithRequest } from '../../../common/har';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -65,11 +64,13 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const [snippet, setSnippet] = useState<string>('');
 
+  useEffect(() => {
+    editorRef.current?.setValue(snippet);
+  }, [snippet]);
+
   const generateCode = useCallback(
     async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-      const { HTTPSnippet, availableTargets } = await import('httpsnippet');
-
-      const targets = availableTargets();
+      const targets = (await window.main.getCodeSnippetTargets()) as HTTPSnippetTarget[];
       const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
       const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
 
@@ -87,11 +88,18 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       const addContentLength = Boolean(
         (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
       );
-      const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
+      const har = await window.main.exportHarWithRequest({
+        requestId: request._id,
+        environmentId: props.environmentId,
+        addContentLength,
+      });
       if (har) {
-        const snippet = new HTTPSnippet(har);
-        const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
-        setSnippet(cmd);
+        const cmd = await window.main.generateCodeSnippet({
+          har,
+          target: targetOrFallback.key,
+          client: clientOrFallback.key,
+        });
+        setSnippet(cmd as string);
       }
 
       window.main.trackAnalyticsEvent({
@@ -189,7 +197,6 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
             id="generate-code-modal-content"
             placeholder="Generating code snippet..."
             className="border-top"
-            key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}
             ref={editorRef}
             defaultValue={snippet}

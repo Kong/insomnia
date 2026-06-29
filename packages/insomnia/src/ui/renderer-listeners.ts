@@ -1,9 +1,10 @@
-import { services } from '~/insomnia-data';
-import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
+import { services } from 'insomnia-data';
 
-import * as plugins from '../plugins';
-import * as themes from '../plugins/misc';
-import * as templating from '../templating';
+import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
+import * as themes from '~/ui/plugins/misc';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import * as templating from '~/ui/templating/renderer-safe';
+
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
 
@@ -25,4 +26,24 @@ window.main.on('toggle-preferences-shortcuts', () => {
 
 window.main.on('show-toast', (_, options: { content: RAToastContent; options?: { timeout?: number } }) => {
   showToast(options.content, options.options);
+});
+
+window.main.on('plugins.uiAlert', (_, options: Record<string, any>) => {
+  window.showAlert?.(options);
+});
+
+window.main.on('plugins.uiDialog', (_, options: Record<string, any>) => {
+  window.showWrapper?.(options);
+});
+
+window.main.on('ui.prompt', (_, id: string, options: Record<string, any>) => {
+  window.showPrompt?.({
+    ...options,
+    onComplete: (value: string) => {
+      window.main.notifyPromptResult(id, value);
+    },
+    onHide: () => {
+      window.main.notifyPromptResult(id, null);
+    },
+  });
 });

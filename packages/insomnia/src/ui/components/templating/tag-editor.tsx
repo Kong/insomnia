@@ -1,23 +1,21 @@
 import classnames from 'classnames';
 import clone from 'clone';
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
+import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
+import * as templateUtils from '~/common/templating/utils';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import * as templating from '~/ui/templating/renderer-safe';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
-import * as plugins from '../../../plugins';
-import * as pluginStore from '../../../plugins/context/store';
-import * as templating from '../../../templating';
-import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
-import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
@@ -271,12 +269,12 @@ export const TagEditor: FC<Props> = props => {
         </Link>
       </div>
     ) : (
-      <textarea className="danger" value={error || 'Error'} readOnly rows={5} />
+      <textarea aria-label="Live Preview" className="danger" value={error || 'Error'} readOnly rows={5} />
     );
   } else if (rendering) {
-    previewElement = <textarea value="rendering..." readOnly rows={5} />;
+    previewElement = <textarea aria-label="Live Preview" value="rendering..." readOnly rows={5} />;
   } else {
-    previewElement = <textarea value={finalPreview || 'error'} readOnly rows={5} />;
+    previewElement = <textarea aria-label="Live Preview" value={finalPreview || 'error'} readOnly rows={5} />;
   }
 
   return (
@@ -569,13 +567,14 @@ export const TagEditor: FC<Props> = props => {
                   className="btn btn--clicky btn--largest"
                   type="button"
                   onClick={async () => {
-                    const pluginTemplateTags = await plugins.getTemplateTags();
-                    const templateTags = [...pluginTemplateTags, ...localTemplateTags] as plugins.TemplateTag[];
-                    const activeTemplateTag = templateTags.find(({ templateTag }) => {
-                      return templateTag.name === state.activeTagData?.name;
-                    });
-                    if (activeTemplateTag) {
-                      await action.run(pluginStore.init(activeTemplateTag.plugin));
+                    const bridgeTags = await plugins.getTemplateTags();
+                    const bridgeTag = bridgeTags.find(t => t.templateTag.name === state.activeTagData?.name);
+                    if (bridgeTag) {
+                      await plugins.runTemplateTagAction({
+                        pluginName: bridgeTag.pluginName,
+                        tagName: bridgeTag.templateTag.name as string,
+                        actionName: action.name,
+                      });
                     }
                     update(state.tagDefinitions, state.activeTagDefinition, state.activeTagData, true);
                   }}

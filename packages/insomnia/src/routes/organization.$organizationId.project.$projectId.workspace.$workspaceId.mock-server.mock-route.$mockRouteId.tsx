@@ -1,5 +1,7 @@
 import type * as Har from 'har-format';
 import { isApiError, upsertMockbin } from 'insomnia-api';
+import type { MockRoute, MockServer, Request, RequestHeader, Response } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router';
@@ -16,9 +18,8 @@ import {
   RESPONSE_CODE_REASONS,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
-import { getResponseCookiesFromHeaders } from '~/common/har';
-import type { MockRoute, MockServer, Request, RequestHeader, Response } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
+import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
@@ -33,7 +34,6 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
@@ -66,7 +66,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
       const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
-      activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+      activeResponse.bodyBuffer = typeof buffer === 'string' ? undefined : buffer;
     }
   }
   return {
@@ -85,9 +85,8 @@ const mockContentTypes = [
 ];
 export const isInMockContentTypeList = (contentType: string): boolean =>
   Boolean(contentType && mockContentTypes.includes(contentType));
-
 // mockbin expect a HAR response structure
-export const mockRouteToHar = ({
+export const mockRouteToHar = async ({
   statusCode,
   statusText,
   mimeType,
@@ -99,16 +98,16 @@ export const mockRouteToHar = ({
   mimeType: string;
   headersArray: RequestHeader[];
   body: string;
-}): Har.Response => {
+}): Promise<Har.Response> => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
   return {
     status: +statusCode,
     statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
     httpVersion: 'HTTP/1.1',
     headers: validHeaders,
-    cookies: getResponseCookiesFromHeaders(validHeaders),
+    cookies: await window.main.cookies.getResponseCookiesFromHeaders(validHeaders),
     content: {
-      size: Buffer.byteLength(body),
+      size: utf8ByteLength(body),
       mimeType,
       text: body,
       compression: 0,
@@ -168,7 +167,7 @@ export const MockRouteRoute = () => {
         organizationId,
         sessionId: userSession.id,
         method: mockRoute.method,
-        data: mockRouteToHar({
+        data: await mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
           headersArray: mockRoute.headers,

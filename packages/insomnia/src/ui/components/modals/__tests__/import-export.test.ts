@@ -1,12 +1,25 @@
-import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/main/har';
+import { database as db, services } from 'insomnia-data';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { database as db, services } from '~/insomnia-data';
+vi.mock('~/runtimes', () => ({
+  getRuntime: () => ({
+    network: {
+      getTimelinePath: () => Promise.resolve(''),
+      appendToTimelineOnError: () => Promise.resolve(),
+      appendTimelineLines: () => Promise.resolve(),
+      getAuthHeader: () => Promise.resolve(),
+      executeCurlRequest: () => Promise.resolve({}),
+      runScript: () => Promise.resolve({}),
+      applyRequestHooks: (request: any) => Promise.resolve(request),
+      applyResponseHooks: (response: any) => Promise.resolve(response),
+    },
+  }),
+}));
 
 // @vitest-environment jsdom
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
-    await services.project.all();
     await services.settings.getOrCreate();
   });
 

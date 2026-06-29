@@ -1,18 +1,18 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { getSyncItems, remoteCompareCache, vcsEventProperties } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { getSyncItems, remoteCompareCache, reparentSyncDelta, vcsEventProperties } from '~/ui/sync-utils';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.pull';
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
@@ -29,7 +29,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       properties: vcsEventProperties('remote', 'pull'),
     });
     // This is to synchronize the local database with the branch changes
-    await database.batchModifyDocs(delta);
+    await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
     delete remoteCompareCache[workspaceId];
 
     return {

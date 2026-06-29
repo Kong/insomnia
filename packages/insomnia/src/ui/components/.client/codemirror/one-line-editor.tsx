@@ -3,18 +3,24 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import type { KeyCombination } from 'insomnia-data/common';
+import { isMac } from 'insomnia-data/common';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import { isMac } from '~/common/platform';
-import type { KeyCombination } from '~/common/settings';
-import { getTemplateTags } from '~/plugins';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
+import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
-import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
-import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
@@ -22,6 +28,25 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import { getTagDefinitions } from '~/ui/templating/renderer-safe';
+
+import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
+
+// Replace the editor's entire value while PRESERVING undo/redo history and the
+// cursor. Unlike cm.setValue(), which clears history, replaceRange records the
+// change as a normal, undoable edit. No-ops when the value is unchanged so we
+// don't push empty history entries or move the cursor needlessly.
+const replaceValuePreservingHistory = (cm: CodeMirror.EditorFromTextArea, value: string) => {
+  if (cm.getValue() === value) {
+    return;
+  }
+  const cursor = cm.getCursor();
+  const lastLine = cm.lastLine();
+  cm.replaceRange(value, { line: 0, ch: 0 }, { line: lastLine, ch: cm.getLine(lastLine).length });
+  cm.setCursor(cursor);
+};
 
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -35,6 +60,8 @@ export interface OneLineEditorProps {
   onPaste?: (text: string) => void;
   onBlur?: (e: FocusEvent) => void;
   eventListeners?: EditorEventListener<keyof EditorEventMap>[];
+  // NOTE: stable key for caching/restoring undo history across remounts
+  uniquenessKey?: string;
 }
 
 export interface EditorEventListener<T extends keyof EditorEventMap> {
@@ -60,11 +87,15 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       onPaste,
       onBlur,
       eventListeners,
+      uniquenessKey,
     },
     ref,
   ) => {
+    const editorContainerRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+    // We need to track editor version in order to re-apply some effects when the editor is re-initialized.
+    const [editorVersion, setEditorVersion] = useState(0);
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
@@ -77,7 +108,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [settings.enableKeyMapForInlineTextEditors, settings.editorKeyMap, readOnly]);
 
     const initEditor = useCallback(() => {
-      if (!textAreaRef.current) {
+      if (!textAreaRef.current || codeMirror.current || !editorContainerRef.current?.offsetWidth) {
         return;
       }
 
@@ -219,7 +250,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       codeMirror.current?.setValue(defaultValue || '');
       // Clear history so we can't undo the initial set
       codeMirror.current?.clearHistory();
-      // Setup nunjucks listeners
+      // Restore undo/redo history saved before the previous unmount so undo
+      // survives remounts (the value is re-seeded from defaultValue above, which
+      // matches the persisted model value, so the restored history stays consistent)
+      const cachedState = uniquenessKey ? getCachedEditorState(uniquenessKey) : undefined;
+      if (cachedState?.history) {
+        codeMirror.current?.setHistory(cachedState.history);
+      }
+      // Setup Liquid template listeners
       if (handleRender && !settings.nunjucksPowerUserMode) {
         codeMirror.current?.enableNunjucksTags(
           handleRender,
@@ -228,8 +266,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
-      // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      setEditorVersion(version => version + 1);
     }, [
       defaultValue,
       getAutocompleteConstants,
@@ -244,21 +281,38 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       getKeyMap,
       settings.hotKeyRegistry,
       settings.nunjucksPowerUserMode,
-      settings.pluginsAllowElevatedAccess,
       settings.showVariableSourceAndValue,
       eventListeners,
       id,
+      uniquenessKey,
     ]);
+
+    const persistState = useCallback(() => {
+      if (uniquenessKey && codeMirror.current) {
+        setCachedEditorState(uniquenessKey, { history: codeMirror.current.getHistory() });
+      }
+    }, [uniquenessKey]);
 
     const cleanUpEditor = useCallback(() => {
       codeMirror.current?.toTextArea();
       codeMirror.current?.closeHintDropdown();
       codeMirror.current = null;
     }, []);
-    reactUse.useMount(() => {
-      initEditor();
+
+    useLayoutEffect(() => {
+      if (editorContainerRef.current?.offsetWidth) {
+        initEditor();
+      }
+    }, [initEditor]);
+
+    useResizeObserver(editorContainerRef, ({ width }) => {
+      if (width && width > 0) {
+        initEditor();
+      }
     });
+
     reactUse.useUnmount(() => {
+      persistState();
       cleanUpEditor();
     });
 
@@ -279,6 +333,27 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }
     }, [readOnly, getKeyMap]);
 
+    // Re-seed the editor when the external value changes, but ONLY while the user
+    // isn't actively editing (not focused) and the value actually differs. This
+    // lets callers resync after an external change (sync pull, etc.) without
+    // remounting via a volatile `key`, which would otherwise blur the editor and
+    // drop undo history mid-edit. In-progress typing (focused) is never clobbered.
+    //
+    // Gated on `uniquenessKey`: it marks the editors we deliberately moved off
+    // volatile-key remounting onto stable-key + in-place updates (URL bar,
+    // key-value rows). Other OneLineEditor instances keep their original
+    // uncontrolled-after-mount behaviour, so this stays an opt-in.
+    useEffect(() => {
+      const cm = codeMirror.current;
+      if (cm && uniquenessKey !== undefined && !cm.hasFocus() && (defaultValue || '') !== cm.getValue()) {
+        const cursor = cm.getCursor();
+        cm.setValue(defaultValue || '');
+        cm.setCursor(cursor);
+        // value baseline changed externally, so the old history no longer applies
+        cm.clearHistory();
+      }
+    }, [defaultValue, uniquenessKey]);
+
     useEffect(() => {
       // Prevent these things if we're type === "password"
       const preventDefault = (_: CodeMirror.Editor, event: Event) =>
@@ -292,7 +367,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         codeMirror.current?.off('cut', preventDefault);
         codeMirror.current?.off('dragstart', preventDefault);
       };
-    }, [type]);
+    }, [editorVersion, type]);
 
     useEffect(() => {
       const fn = misc.debounce((doc: CodeMirror.Editor) => {
@@ -302,7 +377,17 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }, DEBOUNCE_MILLIS);
       codeMirror.current?.on('changes', fn);
       return () => codeMirror.current?.off('changes', fn);
-    }, [onChange]);
+    }, [editorVersion, onChange]);
+
+    useEffect(() => {
+      const flushOnBlur = (doc: CodeMirror.Editor) => {
+        if (onChange) {
+          onChange(doc.getValue() || '');
+        }
+      };
+      codeMirror.current?.on('blur', flushOnBlur);
+      return () => codeMirror.current?.off('blur', flushOnBlur);
+    }, [editorVersion, onChange]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(
@@ -358,9 +443,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         },
         setValue: (value: string) => {
           if (codeMirror.current) {
-            const cursor = codeMirror.current.getCursor();
-            codeMirror.current.setValue(value);
-            codeMirror.current.setCursor(cursor);
+            replaceValuePreservingHistory(codeMirror.current, value);
           }
         },
       }),
@@ -380,18 +463,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             return;
           }
           event.preventDefault();
-          const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
-            // Skip unsupported objects like functions in template tag to send in IPC
-            // eslint-disable-next-line unicorn/prefer-structured-clone
-            templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
-          }));
+          const pluginTemplateTags = await plugins.getTemplateTags();
           const target = event.target as HTMLElement;
-          // right click on nunjucks tag
+          // right click on Liquid template tag
           if (target?.classList?.contains('nunjucks-tag')) {
             const { clientX, clientY } = event;
             const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
             if (nunjucksTag) {
-              // show context menu for nunjucks tag
+              // show context menu for Liquid template tag
               window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
             }
           } else {
@@ -399,7 +478,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           }
         }}
       >
-        <div className="editor__container input editor--single-line">
+        <div ref={editorContainerRef} className="editor__container input editor--single-line">
           <textarea
             id={id}
             ref={textAreaRef}

@@ -1,6 +1,5 @@
+import type { Cookie } from 'insomnia-data';
 import { Cookie as ToughCookie, CookieJar, type CookieJSON } from 'tough-cookie';
-
-import type { Cookie } from '~/insomnia-data';
 
 /**
  * Get a list of cookie objects from a request.jar()
@@ -9,7 +8,7 @@ export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
   return new Promise(resolve => {
     cookieJar.store.getAllCookies((err, cookies) => {
       if (err) {
-        console.warn('Failed to get cookies form jar', err);
+        console.warn('Failed to get cookies from jar', err);
         resolve([]);
       } else {
         // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance

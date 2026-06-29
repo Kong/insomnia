@@ -1,10 +1,11 @@
+import type { Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import type { Project, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
 
@@ -19,6 +20,8 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
       await (localOnly
         ? window.main.sync.removeBackendProjectsForRoot(workspace._id)
         : window.main.sync.archiveProject());
+      // Emit cloud sync file change event when cloud sync workspace is deleted to refresh the remote projects list cache
+      uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
     } catch (err) {
       return {
         error:
@@ -60,7 +63,7 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
   const formData = await request.formData();
 

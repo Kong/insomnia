@@ -1,0 +1,1298 @@
+type: spec.insomnia.rest/5.0
+schema_version: "5.1"
+name: Flights
+meta:
+  id: wrk_aab4a6a7a3d1409cac2a6e5a8a1ddc7d
+  created: 1778266774011
+  modified: 1778266774011
+  description: ""
+collection:
+  - name: airports
+    meta:
+      id: fld_0e5467398ea849d1af43767632f55ddc
+      created: 1778267676045
+      modified: 1778273505588
+      sortKey: -1778267676045
+      description: Airports served by Insomnia Airlines.
+    children:
+      - url: "{{ _.base_url }}/airports"
+        name: List airports.
+        meta:
+          id: req_ec678ccaa5b34b47a2ef5128ee88e845
+          created: 1778267676045
+          modified: 1778273484219
+          isPrivate: false
+          description: Returns the airports served by Insomnia Airlines, optionally
+            filtered by country.
+          sortKey: -1778267676045
+        method: GET
+        parameters:
+          - name: country
+            value: string
+            disabled: true
+          - name: limit
+            value: "2"
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/airports/:iataCode"
+        name: Remove an airport.
+        meta:
+          id: req_0449c024a8354107b738c66cbc676e23
+          created: 1778267676046
+          modified: 1778267676046
+          isPrivate: false
+          description: Removes an airport from the network. Fails if active routes still
+            reference it.
+          sortKey: -1778267676046
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/airports/:iataCode"
+        name: Get airport by IATA code.
+        meta:
+          id: req_1f1091e67b38436e8223a8e35a6bacf1
+          created: 1778267676046
+          modified: 1778267676046
+          isPrivate: false
+          description: Returns details for a single airport.
+          sortKey: -1778267676046
+        method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has iataCode field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('iataCode');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/airports/:iataCode"
+        name: Update an airport.
+        meta:
+          id: req_aad8cc9c3e5f41e2bc2b635b21e86929
+          created: 1778267676046
+          modified: 1778267676046
+          isPrivate: false
+          description: Replaces the stored details for an airport.
+          sortKey: -1778267676046
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "iataCode": "YUL",
+              "name": "Montréal–Trudeau International Airport",
+              "city": "Montréal",
+              "country": "CA",
+              "timezone": "America/Montreal"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/airports"
+        name: Add an airport.
+        meta:
+          id: req_ba5048ee5a0248d18f1b27cd82ecc6c9
+          created: 1778267676046
+          modified: 1778267676046
+          isPrivate: false
+          description: Registers a new airport in the Insomnia Airlines network.
+          sortKey: -1778267676046
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "iataCode": "YUL",
+              "name": "Montréal–Trudeau International Airport",
+              "city": "Montréal",
+              "country": "CA",
+              "timezone": "America/Montreal"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: >-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+
+            insomnia.test('Created airport has all required fields', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.all.keys('iataCode', 'name', 'city', 'country', 'timezone');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: flights
+    meta:
+      id: fld_0f6df53267ad419ba33cb266808c9852
+      created: 1778267676045
+      modified: 1778267676045
+      sortKey: -1778267676045
+      description: Specific scheduled flight instances on a given date.
+    children:
+      - url: "{{ _.base_url }}/flights"
+        name: List flights.
+        meta:
+          id: req_4afdb49a01db4bba814efb7a8b08074c
+          created: 1778267676048
+          modified: 1778267676048
+          isPrivate: false
+          description: >-
+            Returns scheduled flight instances. Filters allow narrowing by date,
+
+            origin, destination, or current status (e.g. to find today's
+            departures
+
+            from `YYZ`).
+          sortKey: -1778267676048
+        method: GET
+        parameters:
+          - name: origin
+            value: string
+            disabled: true
+          - name: destination
+            value: string
+            disabled: true
+          - name: departureDate
+            value: string
+            disabled: true
+          - name: status
+            value: string
+            disabled: true
+          - name: limit
+            value: "50"
+            disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/flights"
+        name: Schedule a flight.
+        meta:
+          id: req_5fc48468b40b423eb342c88ab2b873c3
+          created: 1778267676048
+          modified: 1778267676048
+          isPrivate: false
+          description: Schedules a new flight instance against an existing route and
+            aircraft.
+          sortKey: -1778267676048
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "flightNumber": "IA918",
+              "departureDate": "2026-05-12",
+              "routeId": "string",
+              "aircraftTailNumber": "C-GZZZ",
+              "scheduledDeparture": "2026-05-12T22:00:00Z",
+              "scheduledArrival": "2026-05-13T05:45:00Z",
+              "gate": "B14"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has flightNumber field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('flightNumber');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/flights/:flightNumber"
+        name: Get flight by number and date.
+        meta:
+          id: req_b1b750dcb985458e8b34104e3e73f545
+          created: 1778267676048
+          modified: 1778267676048
+          isPrivate: false
+          description: Returns the scheduled flight instance for the given flight number
+            on the given departure date.
+          sortKey: -1778267676048
+        method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has flightNumber field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('flightNumber');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/flights/:flightNumber"
+        name: Update flight fields.
+        meta:
+          id: req_2247ed9e534c45ddac219030423b52f9
+          created: 1778267676049
+          modified: 1778267676049
+          isPrivate: false
+          description: >-
+            Partially updates a flight — typically used to change status (e.g.
+            to
+
+            `BOARDING`, `DEPARTED`, `CANCELLED`), reassign a gate, or adjust the
+
+            scheduled departure time.
+          sortKey: -1778267676049
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "scheduledDeparture": "2026-05-08T19:14:36.042Z",
+              "scheduledArrival": "2026-05-08T19:14:36.042Z",
+              "aircraftTailNumber": "string",
+              "gate": "string",
+              "status": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/flights/:flightNumber"
+        name: Cancel a flight.
+        meta:
+          id: req_b9a0a1ab1cec47e5b3b3d4b7af233f7a
+          created: 1778267676049
+          modified: 1778267676049
+          isPrivate: false
+          description: Cancels a scheduled flight instance. Soft-deletes by setting status
+            to `CANCELLED`.
+          sortKey: -1778267676049
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: routes
+    meta:
+      id: fld_78432cf4c48f413383f228efc660c5cc
+      created: 1778267676045
+      modified: 1778513252317
+      sortKey: -1778267676045
+      description: Published city-pairs the airline operates between.
+    children:
+      - url: "{{ _.base_url }}/routes"
+        name: List published routes.
+        meta:
+          id: req_2bc5fbd433f34d229c483193c3f38a24
+          created: 1778267676047
+          modified: 1778267676047
+          isPrivate: false
+          description: >-
+            Returns the city-pairs that Insomnia Airlines publishes. Network
+            connectivity
+
+            is intentionally not total — only a subset of all possible
+            origin–destination
+
+            pairs across the 10 served airports are operated.
+          sortKey: -1778267676047
+        method: GET
+        parameters:
+          - name: origin
+            value: string
+            disabled: true
+          - name: destination
+            value: string
+            disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an array', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.a('array');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/routes"
+        name: Publish a route.
+        meta:
+          id: req_7e5dfef36f7d465eb003bf927ff0cfaf
+          created: 1778267676047
+          modified: 1778267676047
+          isPrivate: false
+          description: Adds a new origin–destination city-pair to the published network.
+          sortKey: -1778267676047
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "origin": "YVR",
+              "destination": "ORD",
+              "distanceNauticalMiles": 1605,
+              "blockTimeMinutes": 245
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 201', () => {
+              insomnia.expect(insomnia.response.status).to.eql(201);
+            });
+            insomnia.test('Response body has origin and destination', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('origin');
+              insomnia.expect(body).to.have.property('destination');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/routes/:routeId"
+        name: Withdraw a route.
+        meta:
+          id: req_2e356bc0d5aa48a0ad5a51b75b19eb87
+          created: 1778267676048
+          modified: 1778267676048
+          isPrivate: false
+          description: Removes a route from the published network. Fails if future flights
+            still reference it.
+          sortKey: -1778267676048
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/routes/:routeId"
+        name: Get route by ID.
+        meta:
+          id: req_764395347d804acf8ea4ab4ee60c067e
+          created: 1778267676048
+          modified: 1778268733363
+          isPrivate: false
+          description: Returns details for a single published route.
+          sortKey: -1778267676048
+        method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body has id field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('id');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
+    created: 1778266774014
+    modified: 1778513252316
+environments:
+  name: Base Environment
+  meta:
+    id: env_89cd5087041dfdbd9c564a8d9fb03a789ef5abd5
+    created: 1778266774013
+    modified: 1778513252317
+    isPrivate: false
+spec:
+  contents:
+    openapi: 3.0.4
+    info:
+      title: Insomnia Airlines — Flights & Airports API
+      description: |-
+        REST API for **Insomnia Airlines**, covering the airline's airport
+        network, published routes, and scheduled flight instances.
+
+        Insomnia Airlines operates two aircraft types — the **Airbus A320**
+        (narrow-body) and **Boeing 787** (wide-body) — and serves 10 major
+        North American airports: YYZ, YUL, YVR, SEA, SFO, ORD, IAH, IAD, BOS,
+        and FLL. The network has reasonable but not total connectivity, so not
+        every origin–destination pair is served; the served city-pairs are
+        exposed via the `/routes` resource.
+
+        The fleet (individual airframes, maintenance state, etc.) is managed by
+        the Operations team and is **not** in scope for this API — see the
+        Operations collection. Bookings and baggage also live in their own
+        specs.
+      version: 1.0.0
+      contact:
+        name: Insomnia Airlines API Team
+        email: api@insomnia-airlines.example
+      license:
+        name: Apache 2.0
+        url: https://www.apache.org/licenses/LICENSE-2.0.html
+    servers:
+      - url: https://2110842ae3.us.serverless.gateways.konggateway.com
+        description: Kong Gateway
+      - url: https://insomnia-airlines-api.onrender.com
+        description: Production
+      - url: http://localhost:8000
+        description: Local dev
+    tags:
+      - name: airports
+        description: Airports served by Insomnia Airlines.
+      - name: routes
+        description: Published city-pairs the airline operates between.
+      - name: flights
+        description: Specific scheduled flight instances on a given date.
+    paths:
+      /airports:
+        get:
+          tags:
+            - airports
+          summary: List airports.
+          description: Returns the airports served by Insomnia Airlines, optionally
+            filtered by country.
+          operationId: listAirports
+          parameters:
+            - name: country
+              in: query
+              description: ISO 3166-1 alpha-2 country code (e.g. `US`, `CA`).
+              required: false
+              schema:
+                type: string
+                minLength: 2
+                maxLength: 2
+            - name: limit
+              in: query
+              description: Maximum number of airports to return.
+              required: false
+              schema:
+                type: integer
+                format: int32
+                minimum: 1
+                maximum: 100
+                default: 50
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Airport"
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        post:
+          tags:
+            - airports
+          summary: Add an airport.
+          description: Registers a new airport in the Insomnia Airlines network.
+          operationId: createAirport
+          requestBody:
+            description: Airport to add.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/AirportInput"
+          responses:
+            "201":
+              description: Airport created.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Airport"
+            "400":
+              description: Invalid airport payload.
+            "409":
+              description: An airport with that IATA code already exists.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /airports/{iataCode}:
+        parameters:
+          - name: iataCode
+            in: path
+            description: 3-letter IATA airport code (e.g. `YYZ`).
+            required: true
+            schema:
+              type: string
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+        get:
+          tags:
+            - airports
+          summary: Get airport by IATA code.
+          description: Returns details for a single airport.
+          operationId: getAirportByIata
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Airport"
+            "404":
+              description: Airport not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        put:
+          tags:
+            - airports
+          summary: Update an airport.
+          description: Replaces the stored details for an airport.
+          operationId: updateAirport
+          requestBody:
+            description: Updated airport details.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/AirportInput"
+          responses:
+            "200":
+              description: Airport updated.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Airport"
+            "400":
+              description: Invalid payload.
+            "404":
+              description: Airport not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        delete:
+          tags:
+            - airports
+          summary: Remove an airport.
+          description: Removes an airport from the network. Fails if active routes still
+            reference it.
+          operationId: deleteAirport
+          responses:
+            "204":
+              description: Airport deleted.
+            "404":
+              description: Airport not found.
+            "409":
+              description: Airport is referenced by one or more active routes.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /routes:
+        get:
+          tags:
+            - routes
+          summary: List published routes.
+          description: >-
+            Returns the city-pairs that Insomnia Airlines publishes. Network
+            connectivity
+
+            is intentionally not total — only a subset of all possible
+            origin–destination
+
+            pairs across the 10 served airports are operated.
+          operationId: listRoutes
+          parameters:
+            - name: origin
+              in: query
+              description: Filter by origin airport IATA code.
+              required: false
+              schema:
+                type: string
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+            - name: destination
+              in: query
+              description: Filter by destination airport IATA code.
+              required: false
+              schema:
+                type: string
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Route"
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        post:
+          tags:
+            - routes
+          summary: Publish a route.
+          description: Adds a new origin–destination city-pair to the published network.
+          operationId: createRoute
+          requestBody:
+            description: Route to publish.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/RouteInput"
+          responses:
+            "201":
+              description: Route published.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Route"
+            "400":
+              description: Invalid route payload (e.g. unknown airport, identical origin and
+                destination).
+            "409":
+              description: Route already exists for that origin–destination pair.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /routes/{routeId}:
+        parameters:
+          - name: routeId
+            in: path
+            description: Route identifier.
+            required: true
+            schema:
+              type: string
+              format: uuid
+        get:
+          tags:
+            - routes
+          summary: Get route by ID.
+          description: Returns details for a single published route.
+          operationId: getRouteById
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Route"
+            "404":
+              description: Route not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        delete:
+          tags:
+            - routes
+          summary: Withdraw a route.
+          description: Removes a route from the published network. Fails if future flights
+            still reference it.
+          operationId: deleteRoute
+          responses:
+            "204":
+              description: Route withdrawn.
+            "404":
+              description: Route not found.
+            "409":
+              description: Route is referenced by future flights.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /flights:
+        get:
+          tags:
+            - flights
+          summary: List flights.
+          description: >-
+            Returns scheduled flight instances. Filters allow narrowing by date,
+
+            origin, destination, or current status (e.g. to find today's
+            departures
+
+            from `YYZ`).
+          operationId: listFlights
+          parameters:
+            - name: origin
+              in: query
+              description: Origin airport IATA code.
+              required: false
+              schema:
+                type: string
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+            - name: destination
+              in: query
+              description: Destination airport IATA code.
+              required: false
+              schema:
+                type: string
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+            - name: departureDate
+              in: query
+              description: Local departure date at the origin (ISO 8601 `YYYY-MM-DD`).
+              required: false
+              schema:
+                type: string
+                format: date
+            - name: status
+              in: query
+              description: Filter by flight status.
+              required: false
+              schema:
+                $ref: "#/components/schemas/FlightStatus"
+            - name: limit
+              in: query
+              description: Maximum number of flights to return.
+              required: false
+              schema:
+                type: integer
+                format: int32
+                minimum: 1
+                maximum: 200
+                default: 50
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Flight"
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        post:
+          tags:
+            - flights
+          summary: Schedule a flight.
+          description: Schedules a new flight instance against an existing route and
+            aircraft.
+          operationId: scheduleFlight
+          requestBody:
+            description: Flight to schedule.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/FlightInput"
+          responses:
+            "201":
+              description: Flight scheduled.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Flight"
+            "400":
+              description: Invalid flight payload (e.g. unknown route or aircraft, scheduling
+                conflict).
+            "409":
+              description: Flight number already in use for that departure date.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /flights/{flightNumber}:
+        parameters:
+          - name: flightNumber
+            in: path
+            description: Insomnia Airlines flight number (e.g. `IA123`).
+            required: true
+            schema:
+              type: string
+              pattern: ^IA[0-9]{1,4}$
+          - name: departureDate
+            in: query
+            description: >-
+              Local departure date at the origin (ISO 8601 `YYYY-MM-DD`).
+              Required to
+
+              disambiguate when the same flight number recurs on multiple days.
+            required: true
+            schema:
+              type: string
+              format: date
+        get:
+          tags:
+            - flights
+          summary: Get flight by number and date.
+          description: Returns the scheduled flight instance for the given flight number
+            on the given departure date.
+          operationId: getFlight
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Flight"
+            "404":
+              description: Flight not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        patch:
+          tags:
+            - flights
+          summary: Update flight fields.
+          description: >-
+            Partially updates a flight — typically used to change status (e.g.
+            to
+
+            `BOARDING`, `DEPARTED`, `CANCELLED`), reassign a gate, or adjust the
+
+            scheduled departure time.
+          operationId: patchFlight
+          requestBody:
+            description: Fields to update.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/FlightPatch"
+          responses:
+            "200":
+              description: Flight updated.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Flight"
+            "400":
+              description: Invalid patch payload.
+            "404":
+              description: Flight not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        delete:
+          tags:
+            - flights
+          summary: Cancel a flight.
+          description: Cancels a scheduled flight instance. Soft-deletes by setting status
+            to `CANCELLED`.
+          operationId: cancelFlight
+          responses:
+            "204":
+              description: Flight cancelled.
+            "404":
+              description: Flight not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+    components:
+      schemas:
+        Airport:
+          type: object
+          required:
+            - iataCode
+            - name
+            - city
+            - country
+            - timezone
+          properties:
+            iataCode:
+              type: string
+              description: 3-letter IATA airport code.
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: YYZ
+            name:
+              type: string
+              description: Full airport name.
+              example: Toronto Pearson International Airport
+            city:
+              type: string
+              example: Toronto
+            country:
+              type: string
+              description: ISO 3166-1 alpha-2 country code.
+              minLength: 2
+              maxLength: 2
+              example: CA
+            timezone:
+              type: string
+              description: IANA timezone name.
+              example: America/Toronto
+        AirportInput:
+          type: object
+          required:
+            - iataCode
+            - name
+            - city
+            - country
+            - timezone
+          properties:
+            iataCode:
+              type: string
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: YUL
+            name:
+              type: string
+              example: Montréal–Trudeau International Airport
+            city:
+              type: string
+              example: Montréal
+            country:
+              type: string
+              minLength: 2
+              maxLength: 2
+              example: CA
+            timezone:
+              type: string
+              example: America/Montreal
+        Route:
+          type: object
+          required:
+            - id
+            - origin
+            - destination
+            - blockTimeMinutes
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 3f2504e0-4f89-11d3-9a0c-0305e82c3301
+            origin:
+              type: string
+              description: Origin airport IATA code.
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: YYZ
+            destination:
+              type: string
+              description: Destination airport IATA code.
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: SFO
+            distanceNauticalMiles:
+              type: integer
+              format: int32
+              description: Great-circle distance between origin and destination, in nautical
+                miles.
+              minimum: 1
+              example: 1850
+            blockTimeMinutes:
+              type: integer
+              format: int32
+              description: Scheduled gate-to-gate block time, in minutes.
+              minimum: 1
+              example: 305
+        RouteInput:
+          type: object
+          required:
+            - origin
+            - destination
+            - blockTimeMinutes
+          properties:
+            origin:
+              type: string
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: YVR
+            destination:
+              type: string
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: ORD
+            distanceNauticalMiles:
+              type: integer
+              format: int32
+              minimum: 1
+              example: 1605
+            blockTimeMinutes:
+              type: integer
+              format: int32
+              minimum: 1
+              example: 245
+        FlightStatus:
+          type: string
+          description: Current status of a scheduled flight instance.
+          enum:
+            - SCHEDULED
+            - BOARDING
+            - DEPARTED
+            - ARRIVED
+            - DELAYED
+            - CANCELLED
+        Flight:
+          type: object
+          required:
+            - flightNumber
+            - departureDate
+            - routeId
+            - aircraftTailNumber
+            - scheduledDeparture
+            - scheduledArrival
+            - status
+          properties:
+            flightNumber:
+              type: string
+              description: Insomnia Airlines flight number.
+              pattern: ^IA[0-9]{1,4}$
+              example: IA204
+            departureDate:
+              type: string
+              format: date
+              description: Local departure date at the origin.
+              example: 2026-05-12
+            routeId:
+              type: string
+              format: uuid
+              description: Route this flight operates.
+            aircraftTailNumber:
+              type: string
+              description: Tail number of the aircraft assigned to this flight. The airframe
+                itself is managed by the Operations API.
+              example: C-FINS
+            scheduledDeparture:
+              type: string
+              format: date-time
+              description: Scheduled departure time, in UTC.
+              example: 2026-05-12T13:30:00Z
+            scheduledArrival:
+              type: string
+              format: date-time
+              description: Scheduled arrival time, in UTC.
+              example: 2026-05-12T18:35:00Z
+            gate:
+              type: string
+              description: Departure gate at the origin airport.
+              example: D32
+            status:
+              $ref: "#/components/schemas/FlightStatus"
+        FlightInput:
+          type: object
+          required:
+            - flightNumber
+            - departureDate
+            - routeId
+            - aircraftTailNumber
+            - scheduledDeparture
+            - scheduledArrival
+          properties:
+            flightNumber:
+              type: string
+              pattern: ^IA[0-9]{1,4}$
+              example: IA918
+            departureDate:
+              type: string
+              format: date
+              example: 2026-05-12
+            routeId:
+              type: string
+              format: uuid
+            aircraftTailNumber:
+              type: string
+              example: C-GZZZ
+            scheduledDeparture:
+              type: string
+              format: date-time
+              example: 2026-05-12T22:00:00Z
+            scheduledArrival:
+              type: string
+              format: date-time
+              example: 2026-05-13T05:45:00Z
+            gate:
+              type: string
+              example: B14
+        FlightPatch:
+          type: object
+          description: Partial update payload for a flight. Any field omitted is left
+            unchanged.
+          properties:
+            scheduledDeparture:
+              type: string
+              format: date-time
+            scheduledArrival:
+              type: string
+              format: date-time
+            aircraftTailNumber:
+              type: string
+            gate:
+              type: string
+            status:
+              $ref: "#/components/schemas/FlightStatus"
+        Error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code.
+              example: AIRPORT_NOT_FOUND
+            message:
+              type: string
+              description: Human-readable explanation.
+              example: No airport with IATA code 'XYZ' exists.
+  meta:
+    id: spc_55c0f7a247dc42909d58a498e1e136ae
+    created: 1778266774013
+    modified: 1778267217292

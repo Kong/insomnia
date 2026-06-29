@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, href } from 'react-router';
 
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 import { createVaultKey } from '~/ui/vault-key.client';
-import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction(_args: ActionFunctionArgs) {
   return createVaultKey('reset');

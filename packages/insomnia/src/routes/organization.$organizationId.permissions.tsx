@@ -1,8 +1,8 @@
 import { type Billing, type FeatureList, getOrganizationFeatures, type Organization } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router';
 
-import { models, services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';
 
@@ -26,7 +26,7 @@ export const fallbackBilling = Object.freeze<Billing>({
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId } = params;
-  const { id: sessionId, accountId } = await services.userSession.getOrCreate();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (models.organization.isScratchpadOrganizationId(organizationId)) {
     return {

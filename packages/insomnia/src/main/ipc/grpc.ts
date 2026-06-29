@@ -27,14 +27,14 @@ import type {
 import * as protoLoader from '@grpc/proto-loader';
 import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
+import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
-import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 
 import { version } from '../../../package.json';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
-import { writeProtoFile } from '../../network/grpc/write-proto-file';
-import { invariant } from '../../utils/invariant';
+import { writeProtoFile } from '../../network/grpc/write-proto-file.node';
 import { mockRequestMethods } from './automock';
 import { ipcMainHandle, ipcMainOn } from './electron';
 
@@ -62,6 +62,7 @@ export interface gRPCBridgeAPI {
   loadMethodsFromReflection: typeof loadMethodsFromReflection;
   closeAll: typeof closeAll;
   writeProtoFile: (protoFileId: string) => Promise<{ filePath: string; dirs: string[] }>;
+  validateProtoFile: (filePath: string) => Promise<void>;
 }
 
 const grpcOptions = {
@@ -83,6 +84,10 @@ export const writeProtoFileById = async (protoFileId: string): Promise<{ filePat
   return result;
 };
 
+export const validateProtoFileByPath = async (filePath: string): Promise<void> => {
+  await protoLoader.load(filePath, grpcOptions);
+};
+
 export function registergRPCHandlers() {
   ipcMainOn('grpc.start', start);
   ipcMainOn('grpc.sendMessage', sendMessage);
@@ -92,6 +97,7 @@ export function registergRPCHandlers() {
   ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
   ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
   ipcMainHandle('grpc.writeProtoFile', (_, protoFileId: string) => writeProtoFileById(protoFileId));
+  ipcMainHandle('grpc.validateProtoFile', (_, filePath: string) => validateProtoFileByPath(filePath));
 }
 
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
@@ -121,7 +127,10 @@ interface MethodDefs {
   example?: Record<string, any>;
 }
 
-const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
+const getMethodsFromReflectionServer = async (
+  reflectionApi: GrpcRequest['reflectionApi'],
+  disableUserAgentHeader: boolean,
+): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
   const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
     { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
@@ -164,7 +173,7 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
   });
   const client = createPromiseClient(FileDescriptorSetService, transport);
   const headers: HeadersInit = {
-    'User-Agent': `insomnia/${version}`,
+    ...(disableUserAgentHeader ? {} : { 'User-Agent': `insomnia/${version}` }),
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
@@ -214,12 +223,13 @@ const getMethodsFromReflection = async (
   metadata: GrpcRequestHeader[],
   rejectUnauthorized: boolean,
   reflectionApi: GrpcRequest['reflectionApi'],
+  disableUserAgentHeader: boolean,
   clientCert?: string,
   clientKey?: string,
   caCertificate?: string,
 ): Promise<MethodDefs[]> => {
   if (reflectionApi.enabled) {
-    return getMethodsFromReflectionServer(reflectionApi);
+    return getMethodsFromReflectionServer(reflectionApi, disableUserAgentHeader);
   }
   const { url, path } = parseGrpcUrl(host);
   const client = new grpcReflection.Client(
@@ -267,6 +277,7 @@ export const loadMethodsFromReflection = async (options: {
   metadata: GrpcRequestHeader[];
   rejectUnauthorized: boolean;
   reflectionApi: GrpcRequest['reflectionApi'];
+  disableUserAgentHeader?: boolean;
   clientCert?: string;
   clientKey?: string;
   caCertificate?: string;
@@ -277,6 +288,7 @@ export const loadMethodsFromReflection = async (options: {
     options.metadata,
     options.rejectUnauthorized,
     options.reflectionApi,
+    options.disableUserAgentHeader ?? false,
     options.clientCert,
     options.clientKey,
     options.caCertificate,
@@ -325,6 +337,7 @@ export const getSelectedMethod = async (
     request.metadata,
     settings.validateSSL,
     request.reflectionApi,
+    request.disableUserAgentHeader ?? false,
     ipcParams.clientCert,
     ipcParams.clientKey,
     ipcParams.caCertificate,

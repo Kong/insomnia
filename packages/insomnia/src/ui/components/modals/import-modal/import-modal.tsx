@@ -1,12 +1,13 @@
 import classNames from 'classnames';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { models } from 'insomnia-data';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
-import { models } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -20,7 +21,6 @@ import {
   type ImportSourceType,
   type ScanResult,
 } from '../../../../common/import';
-import { invariant } from '../../../../utils/invariant';
 import {
   AnalyticsEvent,
   importAttributionKey,
@@ -391,9 +391,10 @@ export const ImportModal: FC<ImportModalProps> = ({
               importFetcher.submit({
                 organizationId,
                 projectId: targetProjectId,
-                workspaceId: hasApiSpecScanResult
-                  ? undefined
-                  : selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
+                workspaceId:
+                  hasApiSpecScanResult || newProjectName
+                    ? undefined
+                    : selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
                 endpoint: from.endpoint,
                 operationId: from.operationId,
                 skipImportIfDuplicate: autoScan,

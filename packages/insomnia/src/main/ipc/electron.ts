@@ -1,5 +1,9 @@
 import { mkdirSync } from 'node:fs';
 
+declare global {
+  var __PLAYWRIGHT_OPEN_DIALOG_QUEUE__: { filePaths: string[]; canceled: boolean }[] | undefined;
+}
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -8,28 +12,34 @@ import type {
   SaveDialogOptions,
 } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
+import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
+
+import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '~/common/templating/types';
+import type { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import { invariant } from '~/common/utils/invariant';
 
 import { fnOrString } from '../../common/misc';
-import {
-  type NunjucksParsedTagArg,
-  type NunjucksTagContextMenuAction,
-  type PluginTemplateTag,
-} from '../../templating/types';
-import type { extractNunjucksTagFromCoords } from '../../templating/utils';
-import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
+  | 'run-tests'
   | 'authorizeUserInDefaultBrowser'
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateCodeSnippet'
+  | 'getCodeSnippetTargets'
+  | 'exportHarWithRequest'
+  | 'exportHarRequest'
+  | 'exportHarCurrentRequest'
+  | 'exportRequestsHAR'
+  | 'exportWorkspacesHAR'
   | 'generateMockRouteDataFromSpec'
   | 'generateCommitsFromDiff'
   | 'generateMcpSamplingResponse'
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
+  | 'createPlugin'
   | 'curlRequest'
   | 'database.caCertificate.create'
   | 'services.invoke'
@@ -84,11 +94,13 @@ export type HandleChannels =
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'grpc.writeProtoFile'
+  | 'grpc.validateProtoFile'
   | 'initializeWorkspaceBackendProject'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
   | 'lintSpec'
+  | 'bundleSpectralRuleset'
   | 'llm.clearActiveBackend'
   | 'llm.getActiveBackend'
   | 'llm.getAIFeatureEnabled'
@@ -120,6 +132,25 @@ export type HandleChannels =
   | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'plugins.applyRequestHooks'
+  | 'plugins.applyResponseHooks'
+  | 'plugins.executeAction'
+  | 'plugins.executePluginMainAction'
+  | 'plugins.getActivePlugins'
+  | 'plugins.getBridgeMetrics'
+  | 'plugins.getBundlePlugins'
+  | 'plugins.getDocumentActions'
+  | 'plugins.getPlugins'
+  | 'plugins.getRequestActions'
+  | 'plugins.getRequestGroupActions'
+  | 'plugins.getTemplateTags'
+  | 'plugins.getThemes'
+  | 'plugins.getWorkspaceActions'
+  | 'plugins.hasRequestHooks'
+  | 'plugins.hasResponseHooks'
+  | 'plugins.reloadPlugins'
+  | 'plugins.runTemplateTagAction'
+  | 'plugins.uiPrompt'
   | 'openPath'
   | 'parseImport'
   | 'readCurlResponse'
@@ -147,8 +178,29 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
+  | 'timeline.appendToFile'
+  | 'timeline.getPath'
   | 'writeFile'
-  | 'writeResponseBodyToFile';
+  | 'deleteCompiledRuleset'
+  | 'refreshCompiledRuleset'
+  | 'writeResponseBodyToFile'
+  | 'vault.encryptSecretValue'
+  | 'vault.decryptSecretValue'
+  | 'crypt.encryptRSAWithJWK'
+  | 'crypt.decryptRSAWithJWK'
+  | 'crypt.encryptAESBuffer'
+  | 'crypt.encryptAES'
+  | 'crypt.decryptAES'
+  | 'crypt.decryptAESToBuffer'
+  | 'crypt.generateAES256Key'
+  | 'sealedbox.keyPair'
+  | 'sealedbox.open'
+  | 'cookies.fromJSON'
+  | 'cookies.parse'
+  | 'cookies.toString'
+  | 'cookies.getCookiesForUrl'
+  | 'cookies.addSetCookies'
+  | 'cookies.getResponseCookiesFromHeaders';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -157,6 +209,7 @@ export const ipcMainHandle = (
 export type MainOnChannels =
   | 'addExecutionStep'
   | 'analytics.setOrganizationId'
+  | 'applyUpdateAndRestart'
   | 'cancelCurlRequest'
   | 'clear'
   | 'completeExecutionStep'
@@ -164,6 +217,7 @@ export type MainOnChannels =
   | 'curl.closeAll'
   | 'getAppPath'
   | 'getPath'
+  | 'getUpdateStatus'
   | 'grpc.cancel'
   | 'grpc.closeAll'
   | 'grpc.commit'
@@ -179,6 +233,8 @@ export type MainOnChannels =
   | 'path.resolve'
   | 'readText'
   | 'restart'
+  | 'plugins.invokeResult'
+  | 'plugins.windowReady'
   | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
   | 'show-nunjucks-context-menu'
@@ -202,11 +258,15 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
+  | 'ui.promptResult'
   | 'writeText';
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
   | 'db.changes'
+  | 'plugins.uiAlert'
+  | 'plugins.uiDialog'
+  | 'ui.prompt'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
@@ -224,11 +284,13 @@ export type RendererOnChannels =
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
+  | 'update-status-changed'
   | 'show-oauth-authorization-modal'
   | 'hide-oauth-authorization-modal'
   | 'mcp-auth-confirmation'
   | 'git.db-synced'
-  | 'git.file-problems-changed';
+  | 'git.file-problems-changed'
+  | 'llm.changed';
 
 export const ipcMainOn = (
   channel: MainOnChannels,
@@ -239,6 +301,15 @@ export const ipcMainOnce = (
   channel: OnceChannels,
   listener: (event: IpcMainEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.once(channel, listener);
+
+interface ContextMenuTag {
+  templateTag: {
+    name: string;
+    displayName: string | (() => string);
+    args?: NunjucksParsedTagArg[];
+    needsEnterprisePlan?: boolean;
+  };
+}
 
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   if (arg.defaultValue === undefined) {
@@ -258,11 +329,11 @@ export function registerElectronHandlers() {
       options: {
         key: string;
         nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords>;
-        pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+        pluginTemplateTags?: { templateTag: Record<string, unknown> }[];
       },
     ) => {
       const { key, nunjucksTag, pluginTemplateTags = [] } = options;
-      const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
+      const sendLiquidTagContextMsg = (type: NunjucksTagContextMenuAction) => {
         event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
       };
       try {
@@ -270,7 +341,7 @@ export function registerElectronHandlers() {
           ? [
               {
                 label: 'Edit',
-                click: () => sendNunjuckTagContextMsg('edit'),
+                click: () => sendLiquidTagContextMsg('edit'),
               },
               {
                 label: 'Copy',
@@ -282,12 +353,12 @@ export function registerElectronHandlers() {
                 label: 'Cut',
                 click: () => {
                   clipboard.writeText(nunjucksTag.template);
-                  sendNunjuckTagContextMsg('delete');
+                  sendLiquidTagContextMsg('delete');
                 },
               },
               {
                 label: 'Delete',
-                click: () => sendNunjuckTagContextMsg('delete'),
+                click: () => sendLiquidTagContextMsg('delete'),
               },
               { type: 'separator' },
             ]
@@ -303,7 +374,9 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = [...localTemplateTags, ...pluginTemplateTags]
+        const localTemplate: MenuItemConstructorOptions[] = (
+          [...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[]
+        )
           // sort alphabetically
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {
@@ -330,7 +403,7 @@ export function registerElectronHandlers() {
                     submenu: actions?.options?.map(action => ({
                       label: fnOrString(action.displayName),
                       click: () => {
-                        const additionalTagFields = additionalArgs.length
+                        const additionalTagFields = additionalArgs?.length
                           ? ', ' + additionalArgs.map(getTemplateValue).join(', ')
                           : '';
                         const displayName = action.displayName;
@@ -365,6 +438,14 @@ export function registerElectronHandlers() {
     });
   });
   ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
+    // Playwright test hook: consume queued responses set via `electronApp.evaluate`
+    // instead of opening the native dialog. See packages/insomnia-smoke-test.
+    if (process.env.PLAYWRIGHT === 'true') {
+      const queue = globalThis.__PLAYWRIGHT_OPEN_DIALOG_QUEUE__;
+      if (queue && queue.length > 0) {
+        return queue.shift();
+      }
+    }
     const { filePaths, canceled } = await dialog.showOpenDialog(options);
     return { filePaths, canceled };
   });

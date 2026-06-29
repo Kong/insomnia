@@ -1,8 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "description":
-      "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
+    "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
     "version": "1.0.0",
     "title": "Swagger Petstore",
     "termsOfService": "http://swagger.io/terms/",
@@ -153,8 +152,7 @@
       "get": {
         "tags": ["pet"],
         "summary": "Finds Pets by tags",
-        "description":
-          "Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
+        "description": "Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
         "operationId": "findPetsByTags",
         "produces": ["application/xml", "application/json"],
         "parameters": [
@@ -417,8 +415,7 @@
       "get": {
         "tags": ["store"],
         "summary": "Find purchase order by ID",
-        "description":
-          "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
+        "description": "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
         "operationId": "getOrderById",
         "produces": ["application/xml", "application/json"],
         "parameters": [
@@ -451,8 +448,7 @@
       "delete": {
         "tags": ["store"],
         "summary": "Delete purchase order by ID",
-        "description":
-          "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
+        "description": "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
         "operationId": "deleteOrder",
         "produces": ["application/xml", "application/json"],
         "parameters": [

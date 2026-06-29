@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('after-response script features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('all', async ({ page, app }) => {
+  test('all', async ({ page, app, insomnia }) => {
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
@@ -14,7 +14,7 @@ test.describe('after-response script features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
     // import collection with after-response scripts
     const text = await loadFixture('after-response-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -26,7 +26,7 @@ test.describe('after-response script features tests', () => {
 
     // set transient var
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.getByLabel('Request Collection').getByTestId('transient var').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('transient var');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -41,13 +41,14 @@ test.describe('after-response script features tests', () => {
     await expect.soft(rows.first()).toContainText('PASS');
 
     // post: insomnia.test and insomnia.expect can work together
-    await page.getByLabel('Request Collection').getByTestId('tests with expect and test').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('tests with expect and test');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByRole('button', { name: 'Cancel Request' })).toBeHidden({ timeout: 45_000 });
 
     // verify
-    await page.getByRole('tab', { name: 'Tests' }).click();
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Tests' }).click();
 
     const responsePane = page.getByTestId('response-pane');
     await expect.soft(responsePane).toContainText('PASS');
@@ -71,7 +72,7 @@ test.describe('after-response script features tests', () => {
 
     // environment and baseEnvironment can be persisted
     const statusTag1 = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.getByLabel('Request Collection').getByTestId('persist environments').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('persist environments');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -97,10 +98,10 @@ test.describe('after-response script features tests', () => {
 
     // globals and baseGlobals can be persisted
     await page.locator('body').click();
-    await page.getByLabel('Request Collection').getByTestId('persist global environment').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('persist global environment');
     // activate global sub environment
     await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a global environment').click();
+    await page.getByPlaceholder('Choose a project environment').click();
     await page.getByRole('option', { name: 'Script Environment' }).click();
     await page.getByRole('option', { name: 'Sub Script Env' }).click();
     await page.locator('body').click();
@@ -119,7 +120,7 @@ test.describe('after-response script features tests', () => {
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
     await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage global environment').click();
+    await page.getByLabel('Manage project environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
     let globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     let globalSubRows = await globalSubEditor.allInnerTexts();

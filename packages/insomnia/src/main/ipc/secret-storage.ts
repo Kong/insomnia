@@ -19,7 +19,7 @@ export function registerSecretStorageHandlers() {
   ipcMainHandle('secretStorage.decryptString', (_, raw) => decryptString(raw));
 }
 
-const setSecret = async (key: string, secret: string) => {
+export const setSecret = async (key: string, secret: string) => {
   try {
     const secretStorage = getElectronStorage();
     const encrypted = encryptString(secret);
@@ -30,7 +30,7 @@ const setSecret = async (key: string, secret: string) => {
   }
 };
 
-const getSecret = async (key: string) => {
+export const getSecret = async (key: string) => {
   try {
     const secretStorage = getElectronStorage();
     const encrypted = secretStorage.getItem(key, '');
@@ -41,7 +41,7 @@ const getSecret = async (key: string) => {
   }
 };
 
-const deleteSecret = async (key: string) => {
+export const deleteSecret = async (key: string) => {
   try {
     const secretStorage = getElectronStorage();
     secretStorage.deleteItem(key);
@@ -51,14 +51,14 @@ const deleteSecret = async (key: string) => {
   }
 };
 
-const encryptString = (raw: string) => {
+export const encryptString = (raw: string) => {
   if (safeStorage.isEncryptionAvailable()) {
     return safeStorage.encryptString(raw).toString('hex');
   }
   return raw;
 };
 
-const decryptString = (cipherText: string) => {
+export const decryptString = (cipherText: string) => {
   const buffer = Buffer.from(cipherText, 'hex');
   if (safeStorage.isEncryptionAvailable()) {
     try {

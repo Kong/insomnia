@@ -15,20 +15,27 @@ import {
   screen,
   shell,
 } from 'electron';
+import { isLinux, isMac } from 'insomnia-data/common';
+
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import { isLinux, isMac } from '../common/platform';
-import { invariant } from '../utils/invariant';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
+import { createPluginWindow, destroyPluginWindow } from './plugin-window';
+import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
+export function getMainWindow(): ElectronBrowserWindow | null {
+  return browserWindows.get('Insomnia') ?? null;
+}
 let hiddenWindowIsBusy = false;
 interface Bounds {
   height?: number;
@@ -198,12 +205,11 @@ export function createWindow(): ElectronBrowserWindow {
     webPreferences: {
       preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
-      nodeIntegration: true,
-      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
       webviewTag: true,
-      // TODO: enable context isolation
-      contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
+      // Security-critical flags (nodeIntegration/contextIsolation). Pinned by window-security.test.ts.
+      // Spread last so nothing below can override them. Do not weaken — see ./window-security.
+      ...MAIN_WINDOW_SECURITY,
     },
   });
   browserWindows.set('Insomnia', mainBrowserWindow);
@@ -267,6 +273,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: () => {
+          trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
           mainBrowserWindow.webContents?.send('toggle-preferences');
         },
       },
@@ -785,5 +792,12 @@ export function createWindowsAndReturnMain() {
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }
+  // Create the plugin window after the main window finishes its initial load so
+  // that Playwright's firstWindow() always returns the main app window. Creating
+  // it on did-finish-load still parses the 12 MB bundle well before any user
+  // plugin call would occur.
+  mainWindow.webContents.once('did-finish-load', () => createPluginWindow());
   return mainWindow;
 }
+
+export { destroyPluginWindow };

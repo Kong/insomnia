@@ -3,7 +3,7 @@ import type { RJSFSchema, UiSchema } from '@rjsf/utils/lib/types.js';
 import { useRef, useState } from 'react';
 import { Button, Toolbar } from 'react-aria-components';
 
-import type { MultiTurnMessage } from '~/plugins/types';
+import type { MultiTurnMessage } from '~/common/plugins/types';
 import { useAIGenerateActionFetcher } from '~/routes/ai.mcp-generate-sampling-response';
 import { Icon } from '~/ui/components/icon';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';

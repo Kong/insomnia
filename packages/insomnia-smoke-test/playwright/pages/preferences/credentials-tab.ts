@@ -31,8 +31,6 @@ export class PreferencesCredentialsTab extends BasePage {
     await this.page.getByRole('textbox', { name: 'Username' }).fill('username');
     await this.page.getByRole('textbox', { name: 'Git Access Token' }).click();
     await this.page.getByRole('textbox', { name: 'Git Access Token' }).fill('accesstoken');
-    await this.page.getByRole('textbox', { name: 'Repository base URL' }).click();
-    await this.page.getByRole('textbox', { name: 'Repository base URL' }).fill('http://localhost:4010/git/');
     await this.page.getByRole('button', { name: 'Save Credential' }).click();
   }
 }

@@ -1,17 +1,17 @@
+import type { ApiSpec, GitRepository, MockServer, Project, WorkspaceMeta } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
 import { database } from '~/common/database';
 import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
+import type { InsomniaFile } from '~/common/project';
 import { descendingNumberSort } from '~/common/sorting';
-import type { ApiSpec, GitRepository, MockServer, Project, WorkspaceMeta } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.list-workspaces';
-import { type InsomniaFile } from './organization.$organizationId.project.$projectId._index';
 
 async function getAllLocalFiles({ projectId }: { projectId: string }) {
   const projectWorkspaces = await services.workspace.findByParentId(projectId);
@@ -113,7 +113,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, `Project was not found ${projectId}`);
   const organizationProjects =
     (await database.find<Project>(models.project.type, {

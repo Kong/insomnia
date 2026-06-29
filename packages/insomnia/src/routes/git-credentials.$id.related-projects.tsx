@@ -1,7 +1,7 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git-credentials.$id.related-projects';
 
@@ -12,7 +12,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const gitRepositoryIds = relatedGitRepositories.map(repo => repo._id);
 
-  const relatedProjects = await services.project.getAllByGitRepositoryIds(gitRepositoryIds);
+  const relatedProjects = await services.project.list({ gitRepositoryIds });
 
   return {
     projects: relatedProjects,

@@ -1,6 +1,5 @@
 import type * as Har from 'har-format';
-
-import type { RequestAuthentication } from '~/insomnia-data';
+import type { RequestAuthentication } from 'insomnia-data';
 
 export interface Comment {
   comment?: string;

@@ -1,7 +1,7 @@
+import { models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { models, services } from '~/insomnia-data';
 import { getMainVCS } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -14,16 +14,16 @@ vi.mock('~/common/organization-storage-rules', () => ({
   fetchAndCacheOrganizationStorageRule: vi.fn(),
 }));
 
-vi.mock('~/insomnia-data', () => ({
+vi.mock('insomnia-data', () => ({
   services: {
     workspace: {
       getById: vi.fn(),
     },
     project: {
-      getById: vi.fn(),
+      get: vi.fn(),
     },
     userSession: {
-      getOrCreate: vi.fn(),
+      get: vi.fn(),
     },
     workspaceMeta: {
       getOrCreateByParentId: vi.fn(),
@@ -68,8 +68,8 @@ describe('sync-initialization', () => {
     vi.clearAllMocks();
 
     vi.mocked(services.workspace.getById).mockResolvedValue(workspace);
-    vi.mocked(services.project.getById).mockResolvedValue(project);
-    vi.mocked(services.userSession.getOrCreate).mockResolvedValue({ id: 'sess_123' } as any);
+    vi.mocked(services.project.get).mockResolvedValue(project);
+    vi.mocked(services.userSession.get).mockResolvedValue({ id: 'sess_123' } as any);
     vi.mocked(services.workspaceMeta.getOrCreateByParentId).mockResolvedValue({ gitRepositoryId: null } as any);
     vi.mocked(services.environment.getOrCreateForParentId).mockResolvedValue({} as any);
     vi.mocked(services.cookieJar.getOrCreateForParentId).mockResolvedValue({} as any);
@@ -83,7 +83,7 @@ describe('sync-initialization', () => {
   });
 
   it('returns early when initializing a workspace backend project without a session', async () => {
-    vi.mocked(services.userSession.getOrCreate).mockResolvedValue({ id: null } as any);
+    vi.mocked(services.userSession.get).mockResolvedValue({ id: null } as any);
 
     await initializeWorkspaceBackendProject({ workspaceId: workspace._id });
 

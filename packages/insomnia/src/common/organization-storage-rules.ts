@@ -1,7 +1,7 @@
 import { getOrganizationStorageRule, type StorageRules } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 
-import { models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/common/utils/invariant';
 
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
 
@@ -34,7 +34,7 @@ export async function fetchAndCacheOrganizationStorageRule(
     }
   }
 
-  const { id: sessionId } = await services.userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.get();
 
   return await getOrganizationStorageRule({
     organizationId,

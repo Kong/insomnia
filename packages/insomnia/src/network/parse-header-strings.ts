@@ -1,5 +1,6 @@
 import aws4 from 'aws4';
 import clone from 'clone';
+import type { RequestAuthentication } from 'insomnia-data';
 
 import { CONTENT_TYPE_FORM_DATA } from '~/common/constants';
 import {
@@ -10,7 +11,6 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
 } from '~/common/misc';
-import type { RequestAuthentication } from '~/insomnia-data';
 
 import { DEFAULT_BOUNDARY } from './multipart-constants';
 

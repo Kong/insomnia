@@ -16,15 +16,18 @@ import {
   typeFromAST,
 } from 'graphql';
 import type { Maybe } from 'graphql-language-service';
+import type { Request } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import * as reactUse from 'react-use';
 
-import type { Request } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
@@ -37,8 +40,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../../../network/network';
-import { invariant } from '../../../../utils/invariant';
-import { jsonPrettify } from '../../../../utils/prettify/json';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
@@ -186,7 +187,7 @@ const fetchGraphQLSchemaForRequest = async ({
     }
     const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     if (bodyBuffer) {
-      const { data, errors } = JSON.parse(bodyBuffer.toString());
+      const { data, errors } = JSON.parse(bodyBufferToUtf8(bodyBuffer));
       if (errors?.length) {
         return { schemaFetchError: errors[0] };
       }

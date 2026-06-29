@@ -1,22 +1,25 @@
-import type { logType } from 'consola';
-import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
+import type { ConsolaOptions, LogObject, LogType } from 'consola';
+import { createConsola } from 'consola';
 
-type LogsByType = Partial<Record<logType, string[]>>;
+import { FancyReporter } from './reporters/fancy-reporter';
 
-type ModifiedConsola = ReturnType<typeof consola.create> & { __getLogs: () => LogsByType };
+type LogsByType = Partial<Record<LogType, string[]>>;
 
-const consolaLogger = consola.create({
-  reporters: [
-    new FancyReporter({
-      formatOptions: {
-        // @ts-expect-error something is wrong here, ultimately these types come from https://nodejs.org/api/util.html#util_util_inspect_object_options and `date` doesn't appear to be one of the options.
-        date: false,
-      },
-    }),
-  ],
+type ModifiedConsola = ReturnType<typeof createConsola> & { __getLogs: () => LogsByType };
+
+const consolaLogger = createConsola({
+  formatOptions: {
+    date: false,
+  },
+  reporters: [new FancyReporter()],
 });
 
 (consolaLogger as ModifiedConsola).__getLogs = () => ({});
 
 export const logger = consolaLogger as ModifiedConsola;
-export { LogLevel, BasicReporter };
+
+export class BasicReporter {
+  log(logObj: LogObject, _ctx: { options: ConsolaOptions }) {
+    process.stdout.write(logObj.args.join(' ') + '\n');
+  }
+}

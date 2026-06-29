@@ -1,3 +1,4 @@
+import type { AuthTypeOAuth1 } from 'insomnia-data';
 import React, { type FC } from 'react';
 
 import {
@@ -7,7 +8,6 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '~/common/constants';
-import type { AuthTypeOAuth1 } from '~/insomnia-data';
 
 import {
   type RequestLoaderData,

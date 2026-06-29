@@ -1,6 +1,8 @@
-import { appendFile } from 'node:fs/promises';
+import fs from 'node:fs';
 
 import * as _ from 'es-toolkit/compat';
+
+import { invariant } from '~/common/utils/invariant';
 
 import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
 import {
@@ -12,7 +14,6 @@ import {
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
 import { requireInterceptor } from './scripting/require-interceptor';
-import { invariant } from './utils/invariant';
 
 export const runScript = async ({
   script,
@@ -67,7 +68,7 @@ export const runScript = async ({
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await appendFile(context.timelinePath, scriptConsole.dumpLogs());
+  await fs.promises.appendFile(context.timelinePath, scriptConsole.dumpLogs());
 
   // console.log('mutatedInsomniaObject', mutatedContextObject);
   // console.log('context', context);

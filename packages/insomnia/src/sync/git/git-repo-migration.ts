@@ -28,8 +28,8 @@ import path from 'node:path';
 
 export type MigrationLogger = (level: 'info' | 'warn' | 'error', message: string) => void;
 
-import type { GitRepository, Workspace, WorkspaceMeta } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { GitRepository, Workspace, WorkspaceMeta } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import { CURRENT_MIGRATION_VERSION } from './git-migration-version';

@@ -1,7 +1,7 @@
+import { models } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import {
   fallbackBilling,
   fallbackFeatures,
@@ -73,6 +73,15 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 
   useEffect(() => {
     loadFeatureStatus();
+  }, [loadFeatureStatus]);
+
+  // Re-read the status when the AI settings change in the main process (the
+  // source of truth), since this hook would otherwise keep a stale snapshot
+  // taken at mount time. Main broadcasts to every window, so all consumers stay
+  // consistent regardless of which window performed the change.
+  useEffect(() => {
+    const unsubscribe = window.main.on('llm.changed', loadFeatureStatus);
+    return unsubscribe;
   }, [loadFeatureStatus]);
 
   const generateMockServersWithAIAllowedByOrg = features.aiMockServers ? features.aiMockServers.enabled : true;

@@ -5,8 +5,8 @@ import type {
   RequestBodyParameter,
   RequestPathParameter,
   Settings,
-} from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models } from 'insomnia-data';
 
 import { type AuthOptions, type AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import type { CertificateOptions } from './certificates';

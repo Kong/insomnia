@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-import type { NunjucksParsedTag } from '../../../../templating/types';
+import type { NunjucksParsedTag } from '~/common/templating/types';
+
 import { HelpTooltip } from '../../help-tooltip';
 import type { AzureSecretConfig } from './types';
 

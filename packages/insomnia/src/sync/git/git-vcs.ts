@@ -2,11 +2,11 @@ import path from 'node:path';
 
 import type { Change } from 'diff';
 import { diffLines } from 'diff';
+import type { GitAuthor, GitRemoteConfig } from 'insomnia-data';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import type { GitAuthor, GitRemoteConfig } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
@@ -474,8 +474,15 @@ export class GitVCS {
             return null;
           }
         } else {
-          // If the path is a file with an extension different than yaml we don't want to check it
-          if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
+          // We want to inspect the repo root '.', directories (so the walk keeps
+          // recursing into them), and yaml files. Skip files with a non-yaml
+          // extension and dotfiles such as .gitignore/.DS_Store (whose extension
+          // is empty) — but keep yaml dotfiles like .spectral.yaml.
+          const ext = path.extname(filepath).toLowerCase();
+          const base = path.basename(filepath);
+          const isYamlFile = ext === '.yaml';
+          const isDotfile = base !== '.' && base.startsWith('.');
+          if (!isYamlFile && (ext || isDotfile)) {
             return null;
           }
         }
@@ -631,8 +638,15 @@ export class GitVCS {
             return null;
           }
         } else {
-          // If the path is a file with an extension different than yaml we don't want to check it
-          if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
+          // We want to inspect the repo root '.', directories (so the walk keeps
+          // recursing into them), and yaml files. Skip files with a non-yaml
+          // extension and dotfiles such as .gitignore/.DS_Store (whose extension
+          // is empty) — but keep yaml dotfiles like .spectral.yaml.
+          const ext = path.extname(filepath).toLowerCase();
+          const base = path.basename(filepath);
+          const isYamlFile = ext === '.yaml';
+          const isDotfile = base !== '.' && base.startsWith('.');
+          if (!isYamlFile && (ext || isDotfile)) {
             return null;
           }
         }

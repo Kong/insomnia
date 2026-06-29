@@ -1,6 +1,4 @@
 import type { Organization } from 'insomnia-api';
-
-import { fuzzyMatch } from '~/common/misc';
 import type {
   Environment,
   GrpcRequest,
@@ -9,10 +7,12 @@ import type {
   RequestGroup,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+} from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
+
+import { fuzzyMatch } from '~/common/misc';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/commands';
 
@@ -38,7 +38,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     );
   };
 
-  const { accountId } = await services.userSession.getOrCreate();
+  const { accountId } = await services.userSession.get();
 
   const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 

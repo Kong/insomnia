@@ -175,7 +175,7 @@ test.describe('Export', () => {
     const exportFilePath = path.join(tempDir, 'Collection-A-workspace-page-dropdown-export.yaml');
 
     try {
-      await insomnia.workspacePage.exportWorkspaceFromDropdown(exportFilePath, 'yaml');
+      await insomnia.workspacePage.exportWorkspaceFromDropdown('Collection A', exportFilePath, 'yaml');
       await waitForExportFiles(tempDir, 1);
       const exportedContent = readExportedFile(exportFilePath);
       const comparison = compareWithFixture(exportedContent, fixtureFile);
@@ -225,7 +225,7 @@ test.describe('Export', () => {
     const exportFilePath = path.join(tempDir, 'Collection-A-workspace-page-dropdown-export.har');
 
     try {
-      await insomnia.workspacePage.exportWorkspaceFromDropdown(exportFilePath, 'har');
+      await insomnia.workspacePage.exportWorkspaceFromDropdown('Collection A', exportFilePath, 'har');
       await waitForExportFiles(tempDir, 1);
       const exportedContent = readExportedFile(exportFilePath);
       const har = JSON.parse(exportedContent);

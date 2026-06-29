@@ -1,7 +1,7 @@
+import type { RequestHeader } from 'insomnia-data';
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import type { RequestHeader } from '~/insomnia-data';
 import {
   useMockRouteLoaderData,
   useMockRoutePatcher,
@@ -87,6 +87,7 @@ export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur 
 
   return (
     <KeyValueEditor
+      alwaysShowBlankRow
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"

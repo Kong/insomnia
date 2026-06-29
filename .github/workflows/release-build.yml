@@ -1,9 +1,6 @@
 name: Release Build
 
 on:
-  push:
-    branches:
-      - 'release/**'
   workflow_dispatch:
 
 permissions: {}
@@ -15,6 +12,7 @@ concurrency:
 jobs:
   # shared kong github action for security checking
   generate-sbom-and-upload-assets:
+    if: startsWith(github.ref_name, 'release/')
     runs-on: ubuntu-24.04
     permissions:
       contents: read # Required for actions/checkout
@@ -34,6 +32,7 @@ jobs:
           dir: .
           upload-sbom-release-assets: false
   build-and-upload-release-artifacts:
+    if: startsWith(github.ref_name, 'release/')
     timeout-minutes: 45
     runs-on: ${{ matrix.os }}
     permissions:
@@ -128,7 +127,7 @@ jobs:
       # smctl will be used in the next step for signing
       - name: Setup Software Trust Manager
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
         env:
@@ -168,7 +167,7 @@ jobs:
       # this installs smctl as well
       - name: Code-sign unpacked .exe (Windows only)
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
@@ -237,8 +236,7 @@ jobs:
 
       - name: Package inso
         run: |
-          echo "Replacing electron binary with node binary"
-          node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+          npm run install-libcurl-node
           npm run build:production -w insomnia-inso
           npm run package -w insomnia-inso
         env:
@@ -246,7 +244,7 @@ jobs:
 
       - name: Code-sign inso exe (Windows only)
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
@@ -277,30 +275,39 @@ jobs:
 
       - name: Notarize Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
-        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2.0.2
-        with:
-          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
-          primary-bundle-id: com.insomnia.inso
-          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-          appstore-connect-team-id: FX44YY62GV
-          verbose: true
+        env:
+          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+        run: |
+          xcrun notarytool submit \
+            "./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id FX44YY62GV \
+            --verbose \
+            --wait
 
       - name: Staple Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
-        uses: BoundfoxStudios/action-xcode-staple@1e2200b448c6ed4dd44b963ff17d3e340fc6b064 # v1
-        with:
-          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+        run: |
+          xcrun stapler staple \
+            "./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg"
 
       - name: Notarize Inso CLI binary (macOS only)
         if: runner.os == 'macOS'
-        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2.0.2
-        with:
-          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso
-          primary-bundle-id: com.insomnia.inso-binary
-          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-          appstore-connect-team-id: FX44YY62GV
+        env:
+          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+        # notarytool requires the binary to be packaged in a zip, dmg, or pkg.
+        run: |
+          BIN_PATH="./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso"
+          ZIP_PATH="$(mktemp -d)/inso.zip"
+          ditto -c -k --keepParent "$BIN_PATH" "$ZIP_PATH"
+          xcrun notarytool submit "$ZIP_PATH" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id FX44YY62GV \
+            --wait
 
       - name: Create Inso zip/tar/gz artifacts
         run: npm run artifacts -w insomnia-inso
@@ -360,24 +367,29 @@ jobs:
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
+    if: startsWith(github.ref_name, 'release/')
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-24.04
     permissions:
+      contents: read
       pull-requests: write
     steps:
+      - name: Checkout branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - name: Get release version
         id: release_version
         shell: bash
         run: |
-          echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
-        env:
-          BRANCH: ${{ github.ref_name }}
+          echo "version=$(jq .version packages/insomnia/package.json -rj)" >> $GITHUB_OUTPUT
+          echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
       - name: update-pull-request
-        uses: kt3k/update-pr-description@fef8b17c6648e0daa550d2ed6b5cf140d282574e # v2.0.0
-        with:
-          pr_body: |
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_BODY: |
             # WARNING: <ins>Do not merge</ins> this PR. Use the "Publish" workflow.
 
             ## Publish workflow:
@@ -402,7 +414,7 @@ jobs:
             You can update the changelog.md in this branch, run git log to get the latest changes:
 
             ```bash
-            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="${{ steps.release_version.outputs.branch }}"
             ```
             </details>
 
@@ -423,5 +435,10 @@ jobs:
             git push
             ```
             </details>
-          destination_branch: develop
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --repo "$REPO" --base develop --head "$GITHUB_REF_NAME" --state open --json number -q '.[0].number')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found from $GITHUB_REF_NAME into develop; skipping body update."
+            exit 0
+          fi
+          gh pr edit "$PR_NUMBER" --repo "$REPO" --body "$PR_BODY"

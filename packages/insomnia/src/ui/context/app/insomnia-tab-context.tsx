@@ -1,8 +1,8 @@
+import { models } from 'insomnia-data';
 import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { models } from '~/insomnia-data';
 import type { BaseTab } from '~/ui/components/tabs/tab';
 import type { OrganizationTabs } from '~/ui/components/tabs/tab-list';
 import uiEventBus from '~/ui/event-bus';

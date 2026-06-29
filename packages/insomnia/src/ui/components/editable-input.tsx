@@ -20,7 +20,14 @@ export const EditableInput = ({
   onSubmit: (value: string) => void;
 }) => {
   const [isEditable, setIsEditable] = useState(editable);
+  // This state is used to keep track of the value while submitting when parent component value is not updated
+  const [pendingValue, setPendingValue] = useState<string | null>(null);
   const editableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // set pending value to null if parent value is changed
+    setPendingValue(null);
+  }, [value]);
 
   useEffect(() => {
     setIsEditable(editable);
@@ -61,16 +68,17 @@ export const EditableInput = ({
     <>
       <div
         ref={editableRef}
-        className={`items-center justify-center truncate rounded-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) ${isEditable ? 'hidden' : ''} ${className || 'px-2'} `}
+        className={`items-center justify-center truncate rounded-xs ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) ${isEditable ? 'hidden' : ''} ${className || 'px-2'} `}
         onDoubleClick={onDoubleClick}
         data-editable
         aria-label={ariaLabel}
       >
-        <span className="truncate">{value}</span>
+        <span className="truncate">{pendingValue ?? value}</span>
       </div>
       {isEditable && (
         <FocusScope contain restoreFocus autoFocus>
           <Input
+            ref={el => el?.select()}
             className={`truncate ${className || 'px-2'}`}
             name={name}
             aria-label={ariaLabel}
@@ -79,6 +87,7 @@ export const EditableInput = ({
               const value = e.currentTarget.value;
               if (e.key === 'Enter') {
                 e.stopPropagation();
+                setPendingValue(value);
                 onSubmit(value);
                 setIsEditable(false);
                 onEditableChange?.(false);
@@ -92,6 +101,7 @@ export const EditableInput = ({
             }}
             onBlur={e => {
               const value = e.currentTarget.value;
+              setPendingValue(value);
               onSubmit(value);
               setIsEditable(false);
               onEditableChange?.(false);

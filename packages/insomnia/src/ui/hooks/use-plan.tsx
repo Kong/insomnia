@@ -1,7 +1,7 @@
 import { type PersonalPlanType } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import { useParams } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 

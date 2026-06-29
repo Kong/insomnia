@@ -7,11 +7,6 @@ import electron, { BrowserWindow } from 'electron';
 import { MessageType, parseMessage } from 'graphql-ws';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { v4 as uuidV4 } from 'uuid';
-import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
-
-import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { database } from '~/common/database';
 import type {
   BaseWebSocketRequest,
   CookieJar,
@@ -19,9 +14,20 @@ import type {
   RequestAuthentication,
   RequestHeader,
   WebSocketResponse,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { v4 as uuidV4 } from 'uuid';
+import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { database } from '~/common/database';
+import type { RenderedRequest } from '~/common/templating/types';
+import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
+import { invariant } from '~/common/utils/invariant';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
+
+import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
@@ -29,11 +35,6 @@ import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
-import type { RenderedRequest } from '../../templating/types';
-import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
-import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
@@ -84,6 +85,15 @@ const timelineFileStreams = new Map<string, fs.WriteStream>();
 const getEventNotificationChannel = (responseId: string) =>
   `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 
+const sendToOpenWindows = (channel: string, ...args: unknown[]) => {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue;
+    }
+    window.webContents.send(channel, ...args);
+  }
+};
+
 const writeEventLogAndNotify = ({
   requestId,
   data,
@@ -94,17 +104,17 @@ const writeEventLogAndNotify = ({
   clearRequestIdMap?: boolean;
 }) => {
   eventLogFileStreams.get(requestId)?.write(data, () => {
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (!resId) {
+      return;
+    }
+
     // notify all renderers of new event has been received
-    for (const window of BrowserWindow.getAllWindows()) {
-      const resId = requestIdToResponseIdMap.get(requestId);
-      if (resId) {
-        const notifyChannel = getEventNotificationChannel(resId);
-        notifyChannel && window.webContents.send(notifyChannel);
-        if (clearRequestIdMap) {
-          // clean up maps after last event has been written to file
-          requestIdToResponseIdMap.delete(requestId);
-        }
-      }
+    const notifyChannel = getEventNotificationChannel(resId);
+    sendToOpenWindows(notifyChannel);
+    if (clearRequestIdMap) {
+      // clean up maps after last event has been written to file
+      requestIdToResponseIdMap.delete(requestId);
     }
   });
 };
@@ -137,6 +147,7 @@ interface OpenWebSocketRequestOptions {
   cookieJar: CookieJar;
   initialPayload?: string;
   isGraphqlSubscriptionRequest?: boolean;
+  suppressUserAgent?: boolean;
 }
 const openWebSocketConnection = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -220,9 +231,13 @@ const openWebSocketConnection = async (
       }
     }
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
     const settings = await services.settings.get();
     const start = performance.now();
 
@@ -397,9 +412,7 @@ const openWebSocketConnection = async (
         ?.write(
           JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
 
       if (options.initialPayload) {
         sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
@@ -435,9 +448,7 @@ const openWebSocketConnection = async (
 
       const message = `Closing connection with code ${code}`;
       deleteRequestMaps(request._id, message, closeEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
     });
 
     ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
@@ -453,9 +464,7 @@ const openWebSocketConnection = async (
       };
 
       deleteRequestMaps(request._id, message, errorEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
       if (error.code) {
         createErrorResponse(
           responseId,

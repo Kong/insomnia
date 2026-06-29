@@ -3,9 +3,8 @@ import crypto from 'node:crypto';
 import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
 import { AnalyticsEvent, InsomniaAnalytics } from 'insomnia-analytics';
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
-
-import { services } from '~/insomnia-data';
 
 import {
   getApiBaseURL,
@@ -63,7 +62,7 @@ export async function trackAnalyticsEvent(event: AnalyticsEvent, properties?: Re
     return;
   }
   const settings = await services.settings.getOrCreate();
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
@@ -105,7 +104,7 @@ export async function trackPageView(name: string) {
     return;
   }
   const settings = await services.settings.getOrCreate();
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }

@@ -1,18 +1,18 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
   const apiSpec = await services.apiSpec.getByParentId(workspaceId);
@@ -22,19 +22,16 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   invariant(workspace, 'Workspace not found');
 
-  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
-
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = models.project.isConnectedGitProject(project)
-    ? models.project.getEffectiveRepoId(project)
-    : workspaceMeta?.gitRepositoryId;
+  const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
+  const rulesetContent = projectLintRuleset?.rulesetContent ?? '';
 
-  const rulesetPath = gitRepositoryId
-    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
-    : '';
-
-  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  const { diagnostics, error } = await window.main.lintSpec({
+    documentContent: apiSpec.contents,
+    projectId,
+    rulesetContent,
+  });
   if (error) {
     throw error;
   }

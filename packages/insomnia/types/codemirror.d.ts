@@ -4,7 +4,7 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { GraphQLSchema } from 'graphql';
 
-import type { Settings } from '~/insomnia-data';
+import type { Settings } from 'insomnia-data';
 
 import { HandleRender } from '../src/common/render';
 import { NunjucksParsedTag } from '../src/templating/utils';

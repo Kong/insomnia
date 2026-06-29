@@ -1,10 +1,20 @@
-import { expect } from '@playwright/test';
+import { type ElectronApplication, expect } from '@playwright/test';
 
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
+const findWindowByTitle = async (app: ElectronApplication, title: string) => {
+  for (const window of await app.windows()) {
+    if ((await window.title().catch(() => '')) === title) {
+      return window;
+    }
+  }
+
+  throw new Error(`Window with title "${title}" not found`);
+};
+
 test.describe('test hidden window handling', () => {
-  test('can cancel pre-request script', async ({ app, page }) => {
+  test('can cancel pre-request script', async ({ app, page, insomnia }) => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
     const text = await loadFixture('pre-request-collection.yaml');
@@ -15,13 +25,13 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-    await page.getByTestId('workspace-context-dropdown').click();
+    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('Pre-request Scripts');
     await page.getByRole('menuitemradio', { name: 'Export' }).click();
     await page.getByRole('button', { name: 'Export' }).click();
     await page.getByText('Which format would you like to export as?').click();
     await page.locator('.app').press('Escape');
 
-    await page.getByLabel('Request Collection').getByTestId('Long running task').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Long running task');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     await page.getByRole('button', { name: 'Cancel Request' }).click();
@@ -42,7 +52,7 @@ test.describe('test hidden window handling', () => {
     await page.getByText('200 OK').click();
   });
 
-  test('handle hidden browser window getting closed', async ({ app, page }) => {
+  test('handle hidden browser window getting closed', async ({ app, page, insomnia }) => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
     const text = await loadFixture('pre-request-collection.yaml');
@@ -57,15 +67,14 @@ test.describe('test hidden window handling', () => {
     await page.getByLabel('Request timeout (ms)').fill('1000');
     await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
-    await page.getByLabel('Request Collection').getByTestId('Long running task - post').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Long running task - post');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
     await page.getByText('Executing script timeout').click();
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByRole('tab', { name: 'Preview' }).click();
 
-    const windows = await app.windows();
-    const hiddenWindow = windows[1];
+    const hiddenWindow = await findWindowByTitle(app, 'Hidden Browser Window');
     hiddenWindow.close();
 
     await page.getByTestId('settings-button').click();
@@ -79,7 +88,7 @@ test.describe('test hidden window handling', () => {
     await expect.soft(statusTag).toContainText('200 OK');
   });
 
-  test('window should be restarted if it hangs', async ({ app, page }) => {
+  test('window should be restarted if it hangs', async ({ app, page, insomnia }) => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
     // load collection
@@ -97,14 +106,14 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     // send the request with infinite loop script
-    await page.getByLabel('Request Collection').getByTestId('infinite loop').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('infinite loop');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
     // await page.getByText('Timeout: Hidden browser window is not responding').click();
 
     await page.getByText('Executing script timeout').click();
 
     // send the another script with normal script
-    await page.getByLabel('Request Collection').getByTestId('simple log').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('simple log');
 
     const codeMirror = page.getByTestId('OneLineEditor').first().locator('.CodeMirror');
     await expect

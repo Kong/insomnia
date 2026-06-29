@@ -1,13 +1,24 @@
-import type { MockServer } from '~/insomnia-data';
+import type { MockServer } from 'insomnia-data';
+import {
+  CONTENT_TYPE_FORM_URLENCODED,
+  CONTENT_TYPE_GRAPHQL,
+  CONTENT_TYPE_JSON,
+  isLinux,
+  isMac,
+  isWindows,
+  METHOD_GET,
+  platform,
+} from 'insomnia-data/common';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import { isLinux, isMac, isWindows, platform } from './platform';
 
-// Vite is filtering out process.env variables that are not prefixed with VITE_.
+// In the renderer (nodeIntegration disabled) env vars come from the preload via window.env.
+// In the inso CLI and main process, fall back to process.env.
 const ENV = 'env';
 
-const env = process[ENV];
+// eslint-disable-next-line no-restricted-globals -- isomorphic: guarded by `typeof window`. Renderer reads env from the preload (`window.env`); main process, UtilityProcess and the inso CLI fall back to process.env.
+const env = typeof window !== 'undefined' && window.env ? window.env : process[ENV];
 
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
@@ -25,14 +36,13 @@ export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
 export const getInsomniaVaultSrpSecret = () => env.INSOMNIA_VAULT_SRP_SECRET;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
-export const getAppDefaultTheme = () => appConfig.theme;
-export const getAppDefaultLightTheme = () => appConfig.lightTheme;
-export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
+// Must specify full `process.env.INSOMNIA_ENV` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppEnvironment = () => env.INSOMNIA_ENV || process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
+export const allowUpdatesInDev = () => Boolean(env.ALLOW_UPDATES_IN_DEV);
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
@@ -40,14 +50,8 @@ export const getCioWriteKey = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
 export const getCioSiteId = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
-export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
-
-export const getBrowserUserAgent = () =>
-  encodeURIComponent(
-    String(window.navigator.userAgent)
-      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
-  ).replace('%2C', ',');
+// Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
 
 export function updatesSupported() {
   // Updates are not supported on Linux
@@ -56,12 +60,14 @@ export function updatesSupported() {
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows && process.env['PORTABLE_EXECUTABLE_DIR']) {
+  if (isWindows && env.PORTABLE_EXECUTABLE_DIR) {
     return false;
   }
 
   return true;
 }
+
+export type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'readyToRestart';
 
 export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
 
@@ -112,8 +118,14 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
-export const getKonnectApiBaseURL = () => env.KONNECT_API_URL || 'https://global.api.konghq.com';
-export const isKonnectSyncEnabled = () => !!env.KONNECT_SYNC_ENABLED;
+export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
+export const getKonnectApiRegions = (): string[] => {
+  const regions = (env.KONNECT_API_REGIONS ?? '')
+    .split(',')
+    .map((r: string) => r.trim())
+    .filter(Boolean);
+  return regions.length > 0 ? regions : ['us', 'eu', 'au', 'in', 'sg'];
+};
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
@@ -184,19 +196,21 @@ export const isValidActivity = (activity: string): activity is GlobalActivity =>
 };
 
 // HTTP Methods
-export const METHOD_GET = 'GET';
+export { METHOD_GET };
 export const METHOD_POST = 'POST';
 export const METHOD_PUT = 'PUT';
 export const METHOD_PATCH = 'PATCH';
 export const METHOD_DELETE = 'DELETE';
 export const METHOD_OPTIONS = 'OPTIONS';
 export const METHOD_HEAD = 'HEAD';
+export const METHOD_QUERY = 'QUERY';
 export const HTTP_METHODS = [
   METHOD_GET,
   METHOD_POST,
   METHOD_PUT,
   METHOD_PATCH,
   METHOD_DELETE,
+  METHOD_QUERY,
   METHOD_OPTIONS,
   METHOD_HEAD,
 ];
@@ -204,28 +218,15 @@ export const HTTP_METHODS = [
 // Additional methods
 export const METHOD_GRPC = 'GRPC';
 
-// Preview Modes
-export const PREVIEW_MODE_FRIENDLY = 'friendly';
-export const PREVIEW_MODE_SOURCE = 'source';
-export const PREVIEW_MODE_RAW = 'raw';
-const previewModeMap = {
-  [PREVIEW_MODE_FRIENDLY]: ['Preview', 'Visual Preview'],
-  [PREVIEW_MODE_SOURCE]: ['Source', 'Source Code'],
-  [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data'],
-};
-export const PREVIEW_MODES = Object.keys(previewModeMap) as (keyof typeof previewModeMap)[];
-
 // Content Types
-export const CONTENT_TYPE_JSON = 'application/json';
+export { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON } from 'insomnia-data/common';
 export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'application/yaml';
 export const CONTENT_TYPE_EVENT_STREAM = 'text/event-stream';
 export const CONTENT_TYPE_EDN = 'application/edn';
-export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
-export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
 export const contentTypesMap: Record<string, string[]> = {
   [CONTENT_TYPE_EDN]: ['EDN', 'EDN'],
@@ -364,14 +365,6 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
   'modified-desc': 'Last Modified',
 };
 
-export type PreviewMode = 'friendly' | 'source' | 'raw';
-
-export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
-  if (previewMode in previewModeMap) {
-    return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
-  }
-  return '';
-}
 export function getMimeTypeFromContentType(contentType: string) {
   // Check if the Content-Type header is provided
   if (!contentType) {
@@ -397,15 +390,6 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   }
 
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
-}
-
-export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {
-  if (!Array.isArray(headers)) {
-    return null;
-  }
-
-  const header = headers.find(({ name }) => name.toLowerCase() === 'content-type');
-  return header ? header.value : defaultValue;
 }
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status

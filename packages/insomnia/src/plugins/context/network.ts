@@ -1,7 +1,7 @@
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { Request, ResponseHeader } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {
@@ -11,24 +11,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
-import type { PluginTemplateTagContext } from '../../templating/types';
-
-type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
-  Partial<Pick<Request, 'body' | 'authentication'>>;
-export interface NodeCurlRequestOptions {
-  request: NodeCurlRequestType;
-  caCertficatePath?: string;
-}
-export interface NodeCurlResponseType {
-  body: string;
-  code: number;
-  reason: string;
-  status: string;
-  responseTime: number;
-  headers: ResponseHeader[];
-  json: () => any;
-  ok?: boolean;
-}
 
 export function init(): {
   network: PluginTemplateTagContext['network'];
@@ -76,11 +58,10 @@ export function init(): {
         const settings = await services.settings.get();
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
-        const curlRequest =
-          process.type === 'renderer' || process.type === 'worker'
-            ? window.main.curlRequest
-            : // when exeucted in Inso;
-              (await import('../../main/network/libcurl-promise')).curlRequest;
+        const curlRequest = __IS_RENDERER__
+          ? window.main.curlRequest
+          : // when exeucted in Inso;
+            (await import('../../main/network/libcurl-promise')).curlRequest;
         const response = await curlRequest({
           requestId: `no-sideEffects-request-${requestId}`,
           req: {

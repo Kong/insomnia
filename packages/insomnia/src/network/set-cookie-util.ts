@@ -1,4 +1,4 @@
-import type { Cookie } from '~/insomnia-data';
+import type { Cookie } from 'insomnia-data';
 
 import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 

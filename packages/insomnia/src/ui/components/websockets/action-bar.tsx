@@ -1,16 +1,16 @@
+import type { SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
-import type { SocketIORequest, WebSocketRequest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
+import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
@@ -59,20 +59,10 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     );
 
     const generateConnectParams = useCallback(async () => {
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
-
-      const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
-      const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+      const rendered = await renderRealtimeConnectPayload({
         request,
         environmentId,
-        payload: {
-          url: request.url,
-          headers: request.headers,
-          authentication: request.authentication,
-          parameters: request.parameters.filter(p => !p.disabled),
-          workspaceCookieJar,
-        },
+        workspaceId,
       });
       if (request.type === 'WebSocketRequest' && rendered) {
         return {
@@ -118,8 +108,15 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         return;
       }
       const connectParams = await generateConnectParams();
-      connectParams && connect(connectParams);
-    }, [connect, generateConnectParams, isOpen, request._id, request.type, updateTabById]);
+      if (connectParams) {
+        recordProjectRecentRequest({
+          projectId,
+          requestId: request._id,
+          workspaceId,
+        });
+        connect(connectParams);
+      }
+    }, [connect, generateConnectParams, isOpen, projectId, request._id, request.type, updateTabById, workspaceId]);
 
     const setUrl = useCallback(
       (url: string) => {

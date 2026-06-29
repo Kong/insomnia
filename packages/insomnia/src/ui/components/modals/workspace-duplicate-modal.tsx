@@ -1,16 +1,15 @@
+import type { BaseModel, Project, Workspace } from 'insomnia-data';
+import { database, models } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { href, useParams } from 'react-router';
+import { href, useNavigate, useParams } from 'react-router';
 
-import type { BaseModel, Project, Workspace } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 
-import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
-import { strings } from '../../../common/strings';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -32,6 +31,8 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
   const [projectOptions, setProjectOptions] = useState<BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [newWorkspaceName, setNewWorkspaceName] = useState(workspace.name);
+  const navigate = useNavigate();
+
   useEffect(() => {
     (async () => {
       const organizationProjects = await database.find<Project>(models.project.type, {
@@ -47,6 +48,27 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
   useEffect(() => {
     modalRef.current?.show();
   }, []);
+
+  useEffect(() => {
+    const fetcherResult = fetcher.data;
+    if (
+      fetcherResult &&
+      !('error' in fetcherResult) &&
+      fetcherResult.workspaceId &&
+      fetcherResult.projectId &&
+      fetcherResult.organizationId &&
+      fetcherResult.workspaceScope
+    ) {
+      navigate(
+        `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
+          organizationId: fetcherResult.organizationId,
+          projectId: fetcherResult.projectId,
+          workspaceId: fetcherResult.workspaceId,
+        })}/${models.workspace.scopeToActivity(fetcherResult.workspaceScope)}`,
+      );
+      onHide();
+    }
+  }, [fetcher.data, navigate, onHide]);
 
   const isBtnDisabled = fetcher.state !== 'idle' || !selectedProjectId || !newWorkspaceName;
 
