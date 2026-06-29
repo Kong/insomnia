@@ -923,6 +923,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               icon={expandedLintMessageCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'}
               className="h-2.5 w-2.5"
             />
+            ({item.occurrences.length})
             <Icon
               className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
               icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
