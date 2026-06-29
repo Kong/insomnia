@@ -628,10 +628,10 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
-        label: 'Stop/start plugin browser window ',
+        label: 'Stop/start hidden browser window ',
         click: () => {
-          const pluginWindow = getPluginWindow();
-          pluginWindow ? destroyPluginWindow() : createPluginWindow();
+          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
+          hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
         },
       },
       {
@@ -643,10 +643,10 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
-        label: 'Stop/start hidden browser window ',
+        label: 'Stop/start plugin browser window ',
         click: () => {
-          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
-          hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
+          const pluginWindow = getPluginWindow();
+          pluginWindow ? destroyPluginWindow() : createPluginWindow();
         },
       },
       {
