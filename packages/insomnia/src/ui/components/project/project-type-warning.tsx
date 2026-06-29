@@ -7,7 +7,6 @@ import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
-import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import type { ProjectType } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
@@ -22,14 +21,10 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
   const showStorageRestrictionMessage =
     !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
   const organizationData = useOrganizationLoaderData();
-  const { userSession } = useRootLoaderData()!;
   const { organizationId } = useParams() as { organizationId: string };
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
   // TODO: extract to a hook later
-  const isUserOwner =
-    organization &&
-    userSession.accountId &&
-    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const isUserOwner = Boolean(organization?.is_owner);
   return (
     <>
       {storageType === 'git' &&

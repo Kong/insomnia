@@ -3,12 +3,10 @@ import {
   type Collaborator,
   deleteOrganizationMember,
   type FeatureList,
-  getOrganizationDetail,
   getOrganizationFeatures,
   getOrganizationMemberRoles,
   getOrganizationRoles,
   getOrgUserPermissions,
-  type Organization,
   type Permission,
   revokeInvitation,
   type Role,
@@ -32,6 +30,7 @@ import { useParams, useSearchParams } from 'react-router';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import { invariant } from '~/common/utils/invariant';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
 import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
 import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
@@ -598,14 +597,15 @@ export const InviteModalContainer: FC<{
 }> = ({ isOpen, setIsOpen }) => {
   const [loadingOrgInfo, setLoadingOrgInfo] = useState(true);
   const { organizationId } = useParams();
+  const organizationData = useOrganizationLoaderData();
+  const currentOrg = organizationData?.organizations.find(o => o.id === organizationId);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
   const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<Organization | null>(null);
 
-  const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
+  const isCurrentUserOrganizationOwner = Boolean(currentOrg?.is_owner);
 
   async function getBaseInfo(organizationId: string) {
     const sessionId = await getCurrentSessionId();
@@ -622,10 +622,6 @@ export const InviteModalContainer: FC<{
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
-      getOrganizationDetail({
-        organizationId,
-        sessionId,
-      }).then(setCurrentOrgInfo),
     ]);
   }
 
@@ -708,11 +704,6 @@ export async function getCurrentUserRoleInOrg(organizationId: string): Promise<R
   }).catch(() => {
     throw new Error('Failed to fetch member roles');
   });
-}
-
-export interface OrganizationBranding {
-  logo_url: string;
-  colors: string[];
 }
 
 async function unlinkTeam(organizationId: string, collaboratorId: string) {

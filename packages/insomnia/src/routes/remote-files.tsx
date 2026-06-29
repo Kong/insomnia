@@ -33,7 +33,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   try {
     const remoteFiles = await getUserFiles({ sessionId });
 
-    const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
 
     const allRemoteFilesOrganizationIds = remoteFiles.map(file => file.organizationId);
     const allRemoteFilesProjectIds = remoteFiles.map(file => file.teamProjectId);
@@ -58,7 +58,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
           : '',
         name: file.name,
         item: { ...file, teamProjectLocalId: parentProject?._id || '', scope: 'unsynced' as const },
-        organizationName: organizations.find(org => org.id === file.organizationId)?.display_name || '',
+        organizationName: organizations.find(org => org.id === file.organizationId)?.name || '',
         projectName: parentProject?.name || '',
       };
     });
