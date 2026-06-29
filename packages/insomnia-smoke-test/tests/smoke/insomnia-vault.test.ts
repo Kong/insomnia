@@ -150,6 +150,7 @@ test.describe('Check vault used in environment', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('normal');
     await page.getByRole('button', { name: 'Send' }).click();
 
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
     await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
     await page.getByText('bar').click();
     await page.getByText('world').click();
@@ -177,6 +178,7 @@ test.describe('Check vault used in environment', () => {
     // Wait for tab appear
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-array-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('password').click();
     await page.getByText('bar').click();
@@ -194,6 +196,7 @@ test.describe('Check vault used in environment', () => {
     });
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
 
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('secv2').click();
