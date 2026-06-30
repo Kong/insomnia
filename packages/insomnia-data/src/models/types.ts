@@ -23,6 +23,7 @@ export type {
   ProviderEmail,
   CustomGitCredentialV2,
   BaseGitCredentialsV2,
+  NativeGitCredential,
 } from './git-credentials';
 export type {
   GitRepository,

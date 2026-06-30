@@ -366,6 +366,13 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
  * @param gitRepositoryId - The Git repository ID
  * @returns File system client configured for the appropriate context
  */
+function getGitBaseDir(gitRepositoryId: string): string {
+  return path.join(
+    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+    `version-control/git/${gitRepositoryId}`,
+  );
+}
+
 async function getGitFSClient({
   projectId,
   workspaceId,
@@ -376,10 +383,7 @@ async function getGitFSClient({
   gitRepositoryId: string;
 }) {
   // Base directory where Git data is stored
-  const baseDir = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}`,
-  );
+  const baseDir = getGitBaseDir(gitRepositoryId);
 
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
@@ -513,10 +517,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
-    const baseDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-      `version-control/git/${gitRepository._id}`,
-    );
+    const baseDir = getGitBaseDir(gitRepository._id);
 
     const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
@@ -551,6 +552,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         directory: GIT_CLONE_DIR,
         fs: fsClient,
         gitDirectory: GIT_INTERNAL_DIR,
+        repoPath: baseDir,
       });
 
       await services.gitRepository.update(gitRepository, {
@@ -565,6 +567,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         gitDirectory: GIT_INTERNAL_DIR,
         credentialsId,
         legacyDiff: Boolean(workspaceId),
+        repoPath: baseDir,
       });
 
       // GitVCS.init() opens the local repo without a network call, so explicitly
@@ -1196,6 +1199,7 @@ export const cloneGitRepoAction = async ({
       const project = await getProject();
 
       const fsClient = await getGitFSClient({ projectId: project._id, gitRepositoryId: gitRepository._id });
+      const repoBaseDir = getGitBaseDir(gitRepository._id);
 
       if (gitRepository.needsFullClone) {
         await GitVCS.initFromClone({
@@ -1206,6 +1210,7 @@ export const cloneGitRepoAction = async ({
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
           ref,
+          repoPath: repoBaseDir,
         });
 
         await services.gitRepository.update(gitRepository, {
@@ -1219,6 +1224,7 @@ export const cloneGitRepoAction = async ({
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
           credentialsId: gitRepository.credentialsId,
+          repoPath: repoBaseDir,
         });
       }
 
@@ -1231,10 +1237,7 @@ export const cloneGitRepoAction = async ({
       }
 
       // Start watcher — it automatically imports all YAML files during creation
-      const cloneBaseDir = path.join(
-        process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-        `version-control/git/${gitRepository._id}`,
-      );
+      const cloneBaseDir = getGitBaseDir(gitRepository._id);
 
       // If the project already has a ruleset in the DB (e.g. cloud → git migration),
       // write it to disk now so its mtime is newer than the cloned file. This ensures
@@ -1417,6 +1420,7 @@ export const cloneGitRepoAction = async ({
         workspaceId,
         gitRepositoryId: gitRepository._id,
       });
+      const wsRepoBaseDir = getGitBaseDir(gitRepository._id);
 
       // Configure basic info
       if (gitRepository.needsFullClone) {
@@ -1427,6 +1431,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: routableFS,
           gitDirectory: GIT_INTERNAL_DIR,
+          repoPath: wsRepoBaseDir,
         });
 
         await services.gitRepository.update(gitRepository, {
@@ -1441,6 +1446,7 @@ export const cloneGitRepoAction = async ({
           gitDirectory: GIT_INTERNAL_DIR,
           credentialsId: gitRepository.credentialsId,
           legacyDiff: true,
+          repoPath: wsRepoBaseDir,
         });
       }
 
@@ -1539,6 +1545,7 @@ export const updateGitRepoAction = async ({
       credentialsId: credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
+      repoPath: getGitBaseDir(gitRepository._id),
     });
 
     await GitVCS.setAuthor();
@@ -2881,7 +2888,7 @@ async function getGitProviderEmails({ credentialsId }: { credentialsId: string }
 
     const emails = await provider.fetchUserEmails(credentials);
 
-    if (credentials.credentials) {
+    if (credentials.provider !== 'native' && credentials.credentials) {
       await services.gitCredentials.update(credentials, {
         credentials: {
           ...credentials.credentials,

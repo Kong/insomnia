@@ -395,7 +395,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Prepare auth callback for isomorphic-git
    * Converts GitHub OAuth token to format expected by isomorphic-git
    */
-  authCallback(credential: GitCredentials): GitAuth {
+  authCallback(credential: GitCredentials, _url?: string, _repoPath?: string): GitAuth {
     if (!isGitCredentialsV2(credential) || credential.provider !== 'github') {
       throw new Error('Invalid credential type for GitHub provider');
     }
