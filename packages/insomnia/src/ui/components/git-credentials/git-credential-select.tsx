@@ -17,7 +17,7 @@ interface Props {
 /**
  * Picker for the Git credentials associated with a repository. Defaults to the
  * native (system git) credentials, which require no remote configuration. Used
- * by the "Open existing folder" flow.
+ * by the "Open local folder" flow.
  */
 export const GitCredentialSelect: FC<Props> = ({
   credentials,

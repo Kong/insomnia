@@ -203,7 +203,7 @@ export const ProjectCreateForm: FC<Props> = ({
                     }`}
                   >
                     <Icon icon={mode === 'clone' ? 'cloud-arrow-down' : 'folder-open'} />
-                    {mode === 'clone' ? 'Clone from URL' : 'Open existing folder'}
+                    {mode === 'clone' ? 'Clone from Remote' : 'Open local folder'}
                   </Button>
                 ))}
               </div>

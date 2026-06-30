@@ -161,7 +161,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: 'Create new Project' }).click();
     await this.setProjectName(name);
     await this.selectStorageType('git');
-    await this.page.getByRole('button', { name: 'Open existing folder' }).click();
+    await this.page.getByRole('button', { name: 'Open local folder' }).click();
     await this.page.getByRole('button', { name: 'Choose folder' }).click();
     await this.page.getByRole('button', { name: 'Open', exact: true }).click();
     // Confirm the "Do you trust this folder?" dialog before the folder is opened/initialized.
