@@ -3388,6 +3388,42 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   return { logs, failedProjects, totalProjects: migratedCount };
 }
 
+/**
+ * Look up whether a folder is already adopted by an existing Git project. Used
+ * by the project creation form to warn the user at folder-pick time (before they
+ * try to open it) and to offer opening the existing project instead.
+ */
+export const checkGitRepoDirectoryAction = async ({
+  directory,
+}: {
+  directory: string;
+}): Promise<{ project: { _id: string; name: string; organizationId: string } | null }> => {
+  try {
+    if (!directory || !path.isAbsolute(directory)) {
+      return { project: null };
+    }
+    const resolvedDirectory = path.resolve(directory);
+    const existing = await services.gitRepository.getByDirectory(resolvedDirectory);
+    if (!existing) {
+      return { project: null };
+    }
+
+    const projects = await database.find<GitProject>('Project', {});
+    const project = projects.find(
+      p => models.project.isConnectedGitProject(p) && models.project.getEffectiveRepoId(p) === existing._id,
+    );
+    if (!project) {
+      return { project: null };
+    }
+
+    return {
+      project: { _id: project._id, name: project.name, organizationId: project.parentId },
+    };
+  } catch {
+    return { project: null };
+  }
+};
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -3398,6 +3434,7 @@ export interface GitServiceAPI {
   initGitRepoClone: typeof initGitRepoCloneAction;
   cloneGitRepo: typeof cloneGitRepoAction;
   openGitRepo: typeof openGitRepoAction;
+  checkGitRepoDirectory: typeof checkGitRepoDirectoryAction;
   cleanupGitRepoStorage: typeof cleanupGitRepoStorageAction;
   relocateGitRepo: typeof relocateGitRepoAction;
   updateGitRepo: typeof updateGitRepoAction;
@@ -3465,6 +3502,9 @@ export const registerGitServiceAPI = () => {
     cloneGitRepoAction(options),
   );
   ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) => openGitRepoAction(options));
+  ipcMainHandle('git.checkGitRepoDirectory', (_, options: Parameters<typeof checkGitRepoDirectoryAction>[0]) =>
+    checkGitRepoDirectoryAction(options),
+  );
   ipcMainHandle('git.cleanupGitRepoStorage', (_, options: Parameters<typeof cleanupGitRepoStorageAction>[0]) =>
     cleanupGitRepoStorageAction(options),
   );

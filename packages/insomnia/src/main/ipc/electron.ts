@@ -79,6 +79,7 @@ export type HandleChannels =
   | 'git.migrateLegacyInsomniaFolderToFile'
   | 'git.multipleCommitToGitRepo'
   | 'git.openGitRepo'
+  | 'git.checkGitRepoDirectory'
   | 'git.pullFromGitRemote'
   | 'git.relocateGitRepo'
   | 'git.pushToGitRemote'

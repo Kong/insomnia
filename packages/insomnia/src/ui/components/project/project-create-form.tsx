@@ -3,7 +3,7 @@ import type { GitCredentials } from 'insomnia-data';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
@@ -43,6 +43,7 @@ export const ProjectCreateForm: FC<Props> = ({
   onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
+  const navigate = useNavigate();
 
   const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
@@ -59,6 +60,13 @@ export const ProjectCreateForm: FC<Props> = ({
   // Git projects can either clone from a URL or adopt an existing local folder.
   const [gitMode, setGitMode] = useState<'clone' | 'open'>('clone');
   const [openExistingDir, setOpenExistingDir] = useState('');
+  // Set when the picked folder is already adopted by another project; blocks
+  // continuing and offers to open that project instead.
+  const [existingFolderProject, setExistingFolderProject] = useState<{
+    _id: string;
+    name: string;
+    organizationId: string;
+  } | null>(null);
 
   // Local repositories default to the native (system git) credentials, which
   // are always present as a seeded singleton and need no remote configuration.
@@ -115,6 +123,11 @@ export const ProjectCreateForm: FC<Props> = ({
       return;
     }
 
+    // Never adopt a folder that's already owned by another project.
+    if (isGitOpen && existingFolderProject) {
+      return;
+    }
+
     // Opening an arbitrary local folder pulls in whatever it contains, so ask
     // the user to confirm they trust it first.
     if (isGitOpen && openExistingDir && !(await confirmOpenFolderTrust(openExistingDir))) {
@@ -149,6 +162,10 @@ export const ProjectCreateForm: FC<Props> = ({
       return;
     }
     setOpenExistingDir(filePath);
+    // Check for an existing project right after picking, so the warning shows
+    // before the user tries to open the folder.
+    const { project } = await window.main.git.checkGitRepoDirectory({ directory: filePath });
+    setExistingFolderProject(project);
   };
 
   // Credentials are only required for the clone flow; opening a folder needs none.
@@ -249,6 +266,25 @@ export const ProjectCreateForm: FC<Props> = ({
                       Choose folder…
                     </Button>
                   </div>
+                  {existingFolderProject && (
+                    <div className="flex flex-col gap-1 text-sm text-(--color-danger)">
+                      <span>
+                        A project ("{existingFolderProject.name}") is already connected to this folder. Please select
+                        another folder, or open the existing project.
+                      </span>
+                      <Button
+                        onPress={() => {
+                          navigate(
+                            `/organization/${existingFolderProject.organizationId}/project/${existingFolderProject._id}`,
+                          );
+                          onCancel?.();
+                        }}
+                        className="self-start underline"
+                      >
+                        Open project
+                      </Button>
+                    </div>
+                  )}
                   <GitCredentialSelect
                     credentials={credentials}
                     providers={providers}
@@ -287,7 +323,11 @@ export const ProjectCreateForm: FC<Props> = ({
             {storageType !== 'git' || projectData.connectRepositoryLater || isGitOpen ? (
               <Button
                 onPress={onUpsertProject}
-                isDisabled={!storageType || newProjectFetcher.state !== 'idle' || (isGitOpen && !openExistingDir)}
+                isDisabled={
+                  !storageType ||
+                  newProjectFetcher.state !== 'idle' ||
+                  (isGitOpen && (!openExistingDir || !!existingFolderProject))
+                }
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}

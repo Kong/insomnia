@@ -16,8 +16,8 @@ interface Props {
 export const MiddleTruncate: FC<Props> = ({ value, className }) => {
   const sep = value.includes('\\') ? '\\' : '/';
   const idx = value.lastIndexOf(sep);
-  const head = idx >= 0 ? value.slice(0, idx + 1) : '';
-  const tail = idx >= 0 ? value.slice(idx + 1) : value;
+  const head = idx !== -1 ? value.slice(0, idx + 1) : '';
+  const tail = idx !== -1 ? value.slice(idx + 1) : value;
 
   return (
     <div title={value} className={twMerge('flex min-w-0 items-center', className)}>
