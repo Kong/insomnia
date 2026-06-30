@@ -369,8 +369,8 @@ export const createConfiguredCurlInstance = ({
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : '';
-    debugTimeline.push({ value: `Using proxy: ${proxy}`, name: 'Text', timestamp: Date.now() });
     if (proxy) {
+      debugTimeline.push({ value: `Using proxy: ${proxy}`, name: 'Text', timestamp: Date.now() });
       curl.setOpt(Curl.option.PROXY, proxy);
       curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
     }

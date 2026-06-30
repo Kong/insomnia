@@ -1,13 +1,11 @@
 import classnames from 'classnames';
-import type { Project } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Label, ProgressBar } from 'react-aria-components';
 import { useNavigate, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { database } from '~/common/database';
 import type { ScanResult } from '~/common/import';
 import { importScannedResources } from '~/routes/import.resources';
 import { scanImportResources } from '~/routes/import.scan';
@@ -536,11 +534,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
       }
 
       // Only necessary if skipExisting is true
-      const existingProjects = skipExisting
-        ? await database.find<Project>(models.project.type, {
-            parentId: organizationId,
-          })
-        : [];
+      const existingProjects = skipExisting ? await services.project.listByOrganizationIds(organizationId) : [];
 
       // Load projects from the root folder
       const projectItems: ProjectImportItem[] = (await rootFolder.getProjectFolders()).map((projectFolder, i) => ({

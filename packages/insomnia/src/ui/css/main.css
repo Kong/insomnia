@@ -1869,9 +1869,6 @@ html {
 .changelog hr {
   margin: var(--padding-lg) 0 !important;
 }
-.calendar-invert::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
 .graphql-editor {
   position: relative;
   display: grid;

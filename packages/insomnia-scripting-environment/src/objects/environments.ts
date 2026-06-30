@@ -142,6 +142,10 @@ export class Environment {
   toObject = () => {
     return Object.fromEntries(this.kvs.entries());
   };
+
+  toJSON() {
+    return this.toObject();
+  }
 }
 
 /** @ignore */

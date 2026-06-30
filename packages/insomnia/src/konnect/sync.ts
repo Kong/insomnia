@@ -702,7 +702,7 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
   try {
     // Load all existing Konnect projects up front to avoid per Control Plane queries
     const existingProjects = (
-      await db.find<Project>(models.project.type, {
+      await insoservices.project.list({
         parentId: organizationId,
         konnectControlPlaneId: { $ne: null },
       })
