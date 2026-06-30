@@ -62,6 +62,7 @@ export interface RunnerContextForRequest {
   requestName: string;
   requestUrl: string;
   statusCode: number;
+  statusMessage: string;
   duration: number; // millisecond
   size: number;
   results: RequestTestResult[];
@@ -294,6 +295,10 @@ export const sendActionImplementation = async (options: {
       return acc + (cur.duration || 0);
     }, 0);
     testResultCollector.responseId = response._id;
+    testResultCollector.requestUrl = renderedRequest.url || testResultCollector.requestUrl;
+    testResultCollector.statusCode = baseResponsePatch.statusCode || 0;
+    testResultCollector.statusMessage = baseResponsePatch.statusMessage || '';
+    testResultCollector.size = baseResponsePatch.bytesRead || 0;
   }
   const responsePatch = postMutatedContext
     ? {

@@ -50,6 +50,12 @@ test.describe('runner features tests', () => {
     expect.soft(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
   };
 
+  const selectRunnerRequest = async (page: Page, name: string) => {
+    const row = page.locator(`.runner-request-list-${name}`);
+    await row.waitFor({ state: 'visible' });
+    await row.locator('label[slot="selection"]').click();
+  };
+
   test('run collection runner', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       actionName: 'Run Collection',
@@ -93,6 +99,49 @@ test.describe('runner features tests', () => {
     ];
 
     await verifyResultRows(page, 6, 1, 8, expectedTestOrder);
+  });
+
+  test('shows live progress and cancels an in-progress run', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    await selectRunnerRequest(page, 'delaySkip');
+    await selectRunnerRequest(page, 'fastAfterSkip');
+
+    await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+    await expect.soft(page.getByRole('button', { name: 'Cancel all' })).toBeVisible();
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).toContainText('RUNNING');
+    await expect.soft(page.getByTestId('runner-live-item-fastAfterSkip')).toContainText('PENDING');
+
+    // the templated URL is resolved (like the request view's preview) while the request runs
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).toContainText('127.0.0.1:4010/delay/seconds/10');
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).not.toContainText('{{');
+
+    await page.getByRole('button', { name: 'Cancel all' }).click();
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).toContainText('CANCELED', { timeout: 8000 });
+  });
+
+  test('skips the in-flight request and continues to the next', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    await selectRunnerRequest(page, 'delaySkip');
+    await selectRunnerRequest(page, 'fastAfterSkip');
+
+    await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+    const delayCard = page.getByTestId('runner-live-item-delaySkip');
+    await expect.soft(delayCard).toContainText('RUNNING');
+    await delayCard.getByRole('button', { name: 'Skip' }).click();
+
+    // the fast request lands well under the 10s delay, proving the slow one was actually aborted
+    await expect.soft(page.getByText('fastAfterSkip-post-check')).toBeVisible({ timeout: 8000 });
+    await expect.soft(page.getByText('delaySkip-post-check')).toBeHidden();
   });
 
   test('run collection runner with data upload', async ({ page, insomnia }) => {
