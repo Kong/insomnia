@@ -8,6 +8,7 @@ import { useParams } from 'react-router';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';
+import { MiddleTruncate } from '~/ui/components/base/middle-truncate';
 import { GitCredentialSelect } from '~/ui/components/git-credentials/git-credential-select';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
@@ -226,21 +227,28 @@ export const ProjectCreateForm: FC<Props> = ({
               ) : (
                 <div className="flex flex-col gap-2 px-0.5">
                   <Label className="text-sm text-(--color-font)">Folder</Label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-sm text-(--color-font)">
-                      {openExistingDir || 'No folder selected'}
-                    </div>
-                    <Button
-                      onPress={onChooseExistingFolder}
-                      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-1 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-                    >
-                      Choose folder…
-                    </Button>
-                  </div>
                   <p className="text-xs text-(--hl-lg)">
                     Insomnia will open this folder as a Git project. If it isn't a git repository yet, one will be
                     initialized.
                   </p>
+                  <div className="flex items-center gap-2">
+                    {openExistingDir ? (
+                      <MiddleTruncate
+                        value={openExistingDir}
+                        className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
+                      />
+                    ) : (
+                      <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
+                        No folder selected
+                      </div>
+                    )}
+                    <Button
+                      onPress={onChooseExistingFolder}
+                      className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+                    >
+                      Choose folder…
+                    </Button>
+                  </div>
                   <GitCredentialSelect
                     credentials={credentials}
                     providers={providers}
