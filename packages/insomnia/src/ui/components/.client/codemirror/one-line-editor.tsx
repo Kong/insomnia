@@ -323,8 +323,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         // An enclosing React Aria ListBox (params/headers/environment grids) restores DOM focus to
         // the row right after we focus the editor, and a single deferred focus loses that race on
         // slower/headless machines. So we re-assert focus across a short window, re-grabbing only when
-        // focus was bounced to a non-editable element (the row) — never when the user moved to another
-        // field — until the editor holds focus or the window elapses.
+        // focus was bounced to a non-interactive element (the row) — never when the user deliberately
+        // moved to another control (e.g. Tab from the URL bar to Send) — until the editor holds focus
+        // or the window elapses.
         const deadline = Date.now() + 500;
         const ensureFocus = () => {
           const cm = codeMirror.current;
@@ -333,9 +334,25 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           }
           if (!cm.hasFocus()) {
             const active = document.activeElement as HTMLElement | null;
-            const userMovedToAnotherField =
-              !!active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
-            if (userMovedToAnotherField) {
+            // The row React Aria bounces focus to is a non-interactive container (role="row"/"option");
+            // anything genuinely interactive (a field, button, link, menu item, etc.) means the user
+            // moved on purpose, so we must not steal focus back.
+            const role = active?.getAttribute('role');
+            const userMovedToAnotherControl =
+              !!active &&
+              (active.tagName === 'INPUT' ||
+                active.tagName === 'TEXTAREA' ||
+                active.tagName === 'SELECT' ||
+                active.tagName === 'BUTTON' ||
+                active.tagName === 'A' ||
+                active.isContentEditable ||
+                role === 'button' ||
+                role === 'link' ||
+                role === 'menuitem' ||
+                role === 'menuitemradio' ||
+                role === 'checkbox' ||
+                role === 'tab');
+            if (userMovedToAnotherControl) {
               return;
             }
             cm.focus();

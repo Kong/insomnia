@@ -78,6 +78,52 @@ test.describe('Focus and keyboard navigation', () => {
     await expect.soft(page.getByRole('dialog').getByRole('textbox', { name: 'Name' })).toBeFocused();
   });
 
+  test('tabbing onto the params grid focuses the Name cell', async ({ page }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    await page.getByRole('tab', { name: 'Params' }).click();
+    // Move focus onto the params grid the way Tab would: React Aria lands focus on a row, which the
+    // editor forwards into the trailing blank row's Name editor so the user can start typing a new pair.
+    await page.getByRole('listbox', { name: 'Key-value pairs' }).getByRole('option').first().focus();
+
+    await expect.soft(page.locator(focusedEditorWithChild('key-value-editor__name'))).toHaveCount(1);
+  });
+
+  test('Tab from the URL bar moves focus to Send', async ({ page, insomnia }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+    await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
+
+    // Fresh request focuses the URL bar; Tab should advance to the Send button. (The URL autofocus
+    // re-grab loop must not yank focus back when Tab lands on the Send button.)
+    await expect.soft(page.locator(focusedEditorWithChild('request-url-bar'))).toHaveCount(1);
+    await page.keyboard.press('Tab');
+    await expect.soft(page.getByRole('button', { name: 'Send', exact: true })).toBeFocused();
+  });
+
+  test('Tab reaches the request tabs and they show a keyboard focus ring', async ({ page, insomnia }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
+    await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
+    await expect.soft(page.locator(focusedEditorWithChild('request-url-bar'))).toHaveCount(1);
+
+    // Tab order out of the URL bar: Send -> send dropdown -> request tablist (Params).
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+
+    const paramsTab = page.getByRole('tab', { name: 'Params' });
+    await expect.soft(paramsTab).toBeFocused();
+    // React Aria marks keyboard focus with data-focus-visible, which drives the visible focus ring.
+    await expect.soft(paramsTab).toHaveAttribute('data-focus-visible', 'true');
+
+    // Arrow keys move between the request tabs.
+    await page.keyboard.press('ArrowRight');
+    await expect.soft(page.getByRole('tab', { name: 'Body' })).toBeFocused();
+  });
+
   test.describe('with an imported collection', () => {
     test.beforeEach(async ({ app, page }) => {
       const text = await loadFixture('simple.yaml');
@@ -119,6 +165,24 @@ test.describe('Focus and keyboard navigation', () => {
 
       // Navigating to the new request auto-expands its ancestor folder, proving it was created inside.
       await expect.soft(page.getByLabel('Collapse test folder')).toBeVisible();
+    });
+
+    test('request settings dialog focuses the Name field', async ({ page, insomnia }) => {
+      await insomnia.navigationSidebar.selectRequestDropdownOption({
+        actionName: 'Settings',
+        requestName: 'example http',
+      });
+
+      await expect.soft(page.getByRole('dialog').getByRole('textbox', { name: 'Name' })).toBeFocused();
+    });
+
+    test('folder settings dialog focuses the Name field', async ({ page, insomnia }) => {
+      await insomnia.navigationSidebar.selectRequestGroupDropdownOption({
+        actionName: 'Settings',
+        requestGroupName: 'test folder',
+      });
+
+      await expect.soft(page.getByRole('dialog').getByRole('textbox', { name: 'Name' })).toBeFocused();
     });
   });
 });

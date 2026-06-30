@@ -513,6 +513,23 @@ export const KeyValueEditor: FC<Props> = ({
                 textValue={pair.name + '-' + pair.value}
                 style={{ opacity: pair.disabled ? '0.4' : '1' }}
                 className={`relative grid h-(--line-height-sm) shrink-0 gap-2 bg-(--color-bg) px-2 outline-hidden ${showDescription ? 'grid-cols-[max-content_1fr_1fr_1fr_max-content]' : 'grid-cols-[max-content_1fr_1fr_max-content]'}`}
+                onFocus={event => {
+                  if (isDisabled) {
+                    return;
+                  }
+                  // Only react when the row element itself takes focus, never an inner editor/control.
+                  if (event.target !== event.currentTarget) {
+                    return;
+                  }
+                  const listbox = event.currentTarget.closest('[role="listbox"]');
+                  const enteredFromOutside = !listbox?.contains(event.relatedTarget as Node | null);
+                  // Tabbing onto the grid (focus entering from outside) or landing on the trailing blank
+                  // row drops the cursor into the blank row's Name editor so the user can start typing a
+                  // new pair immediately. Arrow-key navigation between existing rows is left untouched.
+                  if (enteredFromOutside || isBlank) {
+                    blankNameEditorRef.current?.focusEnd();
+                  }
+                }}
               >
                 <div
                   slot="drag"
