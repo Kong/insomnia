@@ -48,7 +48,7 @@ export const GitCredentialSelect: FC<Props> = ({
               {selectedProvider?.iconName && <Icon icon={selectedProvider.iconName} className="size-4" />}
               <span>{selectedProvider?.displayName}</span>
               <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-              <span className="truncate">{selected.author.name}</span>
+              <span className="truncate">{selected.author?.name}</span>
             </Fragment>
           ) : (
             'No credentials (set later)'
@@ -78,7 +78,7 @@ export const GitCredentialSelect: FC<Props> = ({
                 {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
                 <span>{provider?.displayName}</span>
                 <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-                <span className="truncate">{item.author.name}</span>
+                <span className="truncate">{item.author?.name}</span>
               </ListBoxItem>
             );
           })}
