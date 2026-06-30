@@ -159,8 +159,8 @@ export const GitRepoForm: FC<Props> = ({
             }}
             defaultSelectedKey={credentials?.[0]?._id}
           >
-            <Label className="mb-2 px-0.5 pt-0 text-sm">Authorized as</Label>
-            <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+            <Label className="mb-1 pt-0 text-sm">Authorized as</Label>
+            <Button className="flex h-(--line-height-xs) w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
               <SelectValue<GitCredentials> className="flex items-center justify-center gap-2 truncate">
                 {({ selectedItem }) => {
                   if (selectedItem) {
@@ -255,8 +255,8 @@ export const GitRepoForm: FC<Props> = ({
                 }));
               }}
             >
-              <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
-              <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+              <Label className="mb-1 pt-0 text-sm">Author Email</Label>
+              <Button className="flex h-(--line-height-xs) w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
                 <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
                   {({ selectedItem }) => {
                     if (selectedItem) {
@@ -342,7 +342,7 @@ export const GitRepoForm: FC<Props> = ({
           <div className={isCredentialInvalid ? 'hidden' : 'flex flex-col gap-2 px-0.5'}>
             <Label className="text-sm text-(--color-font)">Clone location</Label>
             <div className="flex items-center gap-2">
-              <div className="flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-sm text-(--color-font)">
+              <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
                 {projectData.cloneParentDir
                   ? window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))
                   : 'Managed by Insomnia (default location)'}
@@ -364,7 +364,7 @@ export const GitRepoForm: FC<Props> = ({
                   setLastCloneParentDir(filePath);
                   setProjectData(prev => ({ ...prev, cloneParentDir: filePath }));
                 }}
-                className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-1 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+                className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
               >
                 Choose folder…
               </Button>
@@ -372,7 +372,7 @@ export const GitRepoForm: FC<Props> = ({
                 <Button
                   type="button"
                   onPress={() => setProjectData(prev => ({ ...prev, cloneParentDir: undefined }))}
-                  className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-1 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+                  className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
                 >
                   Use default
                 </Button>
