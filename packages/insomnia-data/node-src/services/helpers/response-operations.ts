@@ -95,8 +95,12 @@ export const readCurlResponse = async (options: { bodyPath?: string; bodyCompres
 export async function getResponseTimeline(response: Response, showBody?: boolean): Promise<ResponseTimelineEntry[]> {
   const { timelinePath, bodyPath } = response;
 
+  const errorEntry: ResponseTimelineEntry[] = response.error
+    ? [{ name: 'Text', timestamp: Date.now(), value: response.error }]
+    : [];
+
   if (!timelinePath) {
-    return [];
+    return errorEntry;
   }
 
   try {
@@ -113,11 +117,11 @@ export async function getResponseTimeline(response: Response, showBody?: boolean
           },
         ]
       : [];
-    const output = [...timeline, ...body];
+    const output = [...timeline, ...body, ...errorEntry];
     return output;
   } catch (err) {
     console.warn('Failed to read response body', err.message);
-    return [];
+    return errorEntry;
   }
 }
 
