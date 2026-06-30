@@ -21,6 +21,7 @@ import type { GitProviderOption } from '~/sync/git/providers/types';
 import { ensureGitRepoUrlSuffix } from '~/sync/git/url-utils';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
+import { MiddleTruncate } from '~/ui/components/base/middle-truncate';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
 import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
@@ -342,11 +343,16 @@ export const GitRepoForm: FC<Props> = ({
           <div className={isCredentialInvalid ? 'hidden' : 'flex flex-col gap-2 px-0.5'}>
             <Label className="text-sm text-(--color-font)">Clone location</Label>
             <div className="flex items-center gap-2">
-              <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
-                {projectData.cloneParentDir
-                  ? window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))
-                  : 'Managed by Insomnia (default location)'}
-              </div>
+              {projectData.cloneParentDir ? (
+                <MiddleTruncate
+                  value={window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))}
+                  className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
+                />
+              ) : (
+                <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
+                  Managed by Insomnia (default location)
+                </div>
+              )}
               <Button
                 type="button"
                 onPress={async () => {

@@ -13,7 +13,7 @@ import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { deriveRepoName, type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
+import { deriveRepoName, getLastCloneParentDir, type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
@@ -68,6 +68,9 @@ export const ProjectCreateForm: FC<Props> = ({
     uri: '',
     credentialsId: undefined,
     connectRepositoryLater: false,
+    // Default to the folder the user last cloned into so repeated clones land in
+    // the same place without re-picking.
+    cloneParentDir: getLastCloneParentDir() || undefined,
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
