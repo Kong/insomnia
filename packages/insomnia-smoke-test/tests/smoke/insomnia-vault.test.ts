@@ -127,6 +127,11 @@ test.describe('Check vault used in environment', () => {
     // Delay the click to let debounce finish
     await secondRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
+    // ensure the secret value has been persisted before navigating away, otherwise
+    // the request below pops a "1 environment variable is missing" modal for vault.hello
+    await expect.soft(secondRow.locator('.fa-eye-slash')).toBeVisible();
+    await secondRow.locator('.fa-eye-slash').click();
+    await expect.soft(secondRow.getByTestId('OneLineEditor').nth(1)).toContainText('world');
 
     // go back
     await page.getByTestId('workspace-breadcrumb-level-0').click();

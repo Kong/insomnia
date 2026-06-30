@@ -339,7 +339,7 @@ export function transformToSdkProxyOptions(
     protocol: 'http',
   };
 
-  if (proxyHost !== '') {
+  if (enabledProxy && proxyHost !== '') {
     try {
       const sanitizedProxy = proxyHost.includes('://') ? proxyHost : `${protocol}//${proxyHost}`;
       const sanitizedProxyUrlOptions = new URL(sanitizedProxy);
