@@ -24,7 +24,7 @@ test.describe('Git repositories in user-chosen folders', () => {
 
       await insomnia.projectPage.openGitProjectFromFolder('Opened Folder Project', folder);
 
-      // `git init` must have run inside the chosen folder (decision OQ2).
+      // `git init` must have run inside the chosen folder.
       await expect.poll(() => fs.existsSync(path.join(folder, '.git')), { timeout: 30_000 }).toBe(true);
 
       // The project landed — no error banner.
@@ -43,7 +43,7 @@ test.describe('Git repositories in user-chosen folders', () => {
       // Back to the project dashboard, then try to adopt the same folder again.
       await insomnia.projectPage.openGitProjectFromFolder('Second Adoption', folder);
 
-      // The hard-block surfaces an error mentioning the already-connected folder (OQ5).
+      // The hard-block surfaces an error mentioning the already-connected folder.
       await expect.soft(page.getByText(/already connected to this folder/i)).toBeVisible();
     } finally {
       fs.rmSync(folder, { recursive: true, force: true });

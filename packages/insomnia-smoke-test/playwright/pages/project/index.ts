@@ -164,6 +164,8 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: 'Open existing folder' }).click();
     await this.page.getByRole('button', { name: 'Choose folder' }).click();
     await this.page.getByRole('button', { name: 'Open', exact: true }).click();
+    // Confirm the "Do you trust this folder?" dialog before the folder is opened/initialized.
+    await this.page.getByRole('button', { name: 'Open folder' }).click();
   }
 
   /**
@@ -178,10 +180,12 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
     await this.page.getByText('Git Sync').click();
-    await this.page.getByRole('button', { name: 'Access Token author Git' }).click();
+    await this.page.getByRole('button', { name: 'Git Credentials Authorized as' }).click();
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
-    await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('git-server.git');
+    // Use the reachable git test server URL so remote branches can be listed.
+    // deriveRepoName() still yields "git-server" from this URL.
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');
     await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
     await this.page.getByRole('option', { name: 'master' }).click();
     // Pick the custom clone destination before scanning.

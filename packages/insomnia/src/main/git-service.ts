@@ -577,7 +577,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     // its drive unmounted) BEFORE creating the FS client — `fsClient` auto-creates
     // its base dir, which would silently resurrect a deleted folder as empty and
     // let the watcher wipe the database. We surface an "unavailable" state and let
-    // the user re-locate or remove the project; we never auto-remove it (OQ6/D4).
+    // the user re-locate or remove the project; we never auto-remove it.
     if (gitRepository.directory) {
       let isAvailable = false;
       try {
@@ -1195,7 +1195,7 @@ export const cloneGitRepoAction = async ({
     }
 
     // When a user-chosen clone location is provided, validate it and guard
-    // against two projects targeting the same folder (decision OQ5 — hard block).
+    // against two projects targeting the same folder.
     if (directory) {
       if (!path.isAbsolute(directory)) {
         return { errors: ['Clone location must be an absolute path.'] };
@@ -1592,10 +1592,10 @@ export const cloneGitRepoAction = async ({
  *
  * Unlike {@link cloneGitRepoAction} this performs no network clone — it points
  * Insomnia at a folder already on disk:
- *   - If the folder is not yet a git repo, `GitVCS.init` runs `git init` (OQ2).
+ *   - If the folder is not yet a git repo, `GitVCS.init` runs `git init`.
  *   - Existing Insomnia YAML is imported by the watcher; a repo with no Insomnia
- *     data simply yields an empty project ready to populate (OQ1).
- *   - Two projects may not target the same folder (OQ5 — hard block).
+ *     data simply yields an empty project ready to populate.
+ *   - Two projects may not target the same folder.
  */
 export const openGitRepoAction = async ({
   organizationId,
@@ -1632,7 +1632,7 @@ export const openGitRepoAction = async ({
       };
     }
 
-    // Hard-block if another project already owns this folder (OQ5).
+    // Hard-block if another project already owns this folder.
     const existing = await services.gitRepository.getByDirectory(resolvedDirectory);
     if (existing) {
       return { errors: [`A project is already connected to this folder: ${resolvedDirectory}`] };
@@ -1770,7 +1770,7 @@ export const relocateGitRepoAction = async ({
     return { errors: ['The repository is already in that folder.'] };
   }
 
-  // Hard-block if another project already owns the target (OQ5).
+  // Hard-block if another project already owns the target.
   const existing = await services.gitRepository.getByDirectory(targetDir);
   if (existing && existing._id !== repo._id) {
     return { errors: [`A project is already connected to this folder: ${targetDir}`] };
