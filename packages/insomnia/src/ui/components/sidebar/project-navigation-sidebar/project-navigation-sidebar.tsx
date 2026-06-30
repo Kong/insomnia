@@ -521,6 +521,8 @@ const ProjectNavigationSidebarInner = (
       return cachedCollectionChildrenAndMetaRef.current;
     };
 
+    let cancelled = false;
+
     const buildWorkspaceAndCollectionData = async () => {
       const items: FlatItem[] = [];
       // Array of project and collection workspace ids that should get data from db
@@ -759,9 +761,19 @@ const ProjectNavigationSidebarInner = (
         });
       }
 
+      // Bail out if a newer effect run has superseded this one to avoid
+      // a stale async build overwriting fresh data (race condition).
+      if (cancelled) {
+        return;
+      }
+
       setFlatItems(items);
     };
     buildWorkspaceAndCollectionData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     activeFilter,
     collectionSortOrders,
