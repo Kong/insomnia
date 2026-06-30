@@ -5,6 +5,7 @@ import { Tag } from 'liquidjs';
 import type { Plugin } from '~/common/plugins/types';
 
 import packageJson from '../../../package.json';
+import { resolveArg } from './resolve-arg';
 import { tokenizeArgs } from './tokenize-args';
 import type {
   BaseRenderContext,
@@ -50,13 +51,6 @@ export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths
   return result;
 };
 
-function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<string, any>): any {
-  if (arg.type === 'variable') {
-    return scope[arg.value as string];
-  }
-  return arg.value;
-}
-
 export function createLiquidTagWorker(
   ext: PluginTemplateTag,
   plugin: Plugin,
@@ -77,7 +71,7 @@ export function createLiquidTagWorker(
       const renderPurpose = renderContext.getPurpose?.();
 
       const parsedArgs = tokenizeArgs(this.rawArgs);
-      const args = parsedArgs.map(a => resolveArg(a, scope)).map(decodeEncodingWorker);
+      const args = (await Promise.all(parsedArgs.map(a => resolveArg(a, ctx, this.liquid)))).map(decodeEncodingWorker);
 
       const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator?.platform ?? ''] ||
         'linux') as NodeJS.Platform;
