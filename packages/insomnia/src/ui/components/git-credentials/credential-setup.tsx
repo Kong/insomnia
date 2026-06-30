@@ -29,6 +29,7 @@ export const GitCredentialSetup = ({ providers }: Props) => {
   if (showCustomCredentialForm) {
     return <GitCustomCredentialForm onCancel={() => setShowCustomCredentialForm(false)} />;
   }
+
   return (
     <>
       <Card className="flex flex-col items-center justify-center gap-4 text-center font-semibold">

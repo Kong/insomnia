@@ -4,6 +4,28 @@ import { describe, expect, it } from 'vitest';
 
 import { render } from '../index';
 
+describe('template tag arguments', () => {
+  const md5OfVaporeon = 'ec38601e9ebd2fc22c7c476e14c7890d';
+
+  it('evaluates a _.variable argument to its value', async () => {
+    expect(await render("{% hash 'md5', 'hex', _.pokemon %}", { context: { pokemon: 'vaporeon' } })).toBe(md5OfVaporeon);
+  });
+
+  it('evaluates a bare variable argument to its value', async () => {
+    expect(await render("{% hash 'md5', 'hex', pokemon %}", { context: { pokemon: 'vaporeon' } })).toBe(md5OfVaporeon);
+  });
+
+  it('evaluates a bracket-notation argument to its value', async () => {
+    expect(await render("{% hash 'md5', 'hex', _['water-type'] %}", { context: { 'water-type': 'vaporeon' } })).toBe(
+      md5OfVaporeon,
+    );
+  });
+
+  it('hashes a quoted literal argument verbatim', async () => {
+    expect(await render("{% hash 'md5', 'hex', 'vaporeon' %}", { context: { pokemon: 'flareon' } })).toBe(md5OfVaporeon);
+  });
+});
+
 describe('variable interpolation', () => {
   // Basic {{ var }} substitution from a flat context object
   it('renders root-level variables', async () => {

@@ -10,6 +10,7 @@ import { Tag } from 'liquidjs';
 
 import { jarFromCookies } from '~/common/cookies';
 import type { Plugin } from '~/common/plugins/types';
+import { resolveArg } from '~/common/templating/resolve-arg';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from '~/common/templating/types';
 import { decodeEncoding, tokenizeArgs } from '~/common/templating/utils';
 
@@ -17,13 +18,6 @@ import { database as db } from '../common/database';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-
-function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<string, any>): any {
-  if (arg.type === 'variable') {
-    return scope[arg.value as string];
-  }
-  return arg.value;
-}
 
 export function createLiquidTag(
   ext: PluginTemplateTag,
@@ -45,7 +39,7 @@ export function createLiquidTag(
       const renderPurpose = renderContext.getPurpose?.();
 
       const parsedArgs = tokenizeArgs(this.rawArgs);
-      const args = parsedArgs.map(a => resolveArg(a, scope)).map(decodeEncoding);
+      const args = (await Promise.all(parsedArgs.map(a => resolveArg(a, ctx, this.liquid)))).map(decodeEncoding);
 
       const helperContext: PluginTemplateTagContext = {
         ...pluginApp.init(),

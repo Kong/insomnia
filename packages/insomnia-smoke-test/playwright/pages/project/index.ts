@@ -157,7 +157,10 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
     await this.page.getByText('Git Sync').click();
-    await this.page.getByRole('button', { name: 'Access Token author Git' }).click();
+    // The credential select defaults to whichever credential is first (which can be
+    // the "System Git Credentials" native provider). Open it via its stable label and
+    // explicitly pick the custom Access Token credential rather than relying on the default.
+    await this.page.getByRole('button', { name: 'Git Credentials Authorized as' }).click();
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');

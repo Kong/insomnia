@@ -2,6 +2,7 @@ import type * as Har from 'har-format';
 import type { Cookie } from 'insomnia-data';
 import { Cookie as ToughCookie, CookieJar } from 'tough-cookie';
 
+import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { getResponseCookiesFromHeaders } from '../har';
 import { ipcMainHandle } from './electron';
 
@@ -53,51 +54,6 @@ const getCookiesForUrl = (cookies: Cookie[], url: string): Cookie[] => {
   }
 };
 
-const addSetCookiesToToughCookieJar = ({
-  setCookieStrings,
-  currentUrl,
-  cookieJar,
-}: AddSetCookiesArgs): AddSetCookiesResult => {
-  const rejectedCookies: string[] = [];
-  try {
-    const cookieJarWithDefaults = CookieJar.fromJSON(
-      JSON.stringify({
-        cookies: cookieJar.map(c => ({
-          ...c,
-          expires: c.expires === null || c.expires === undefined ? 'Infinity' : c.expires,
-        })),
-      }),
-    );
-
-    cookieJarWithDefaults.rejectPublicSuffixes = false;
-    cookieJarWithDefaults.looseMode = true;
-
-    for (const setCookieStr of setCookieStrings) {
-      try {
-        cookieJarWithDefaults.setCookieSync(setCookieStr, currentUrl);
-      } catch (err) {
-        if (err instanceof Error) {
-          rejectedCookies.push(err.message);
-        }
-      }
-    }
-
-    return {
-      cookies: cookieJarWithDefaults.getCookiesSync(currentUrl).map(c => c.toJSON() as Cookie),
-      rejectedCookies,
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      rejectedCookies.push(error.message);
-    }
-
-    return {
-      cookies: [],
-      rejectedCookies,
-    };
-  }
-};
-
 export interface CookiesBridgeAPI {
   fromJSON: (cookie: CookieInput) => Promise<Cookie | null>;
   parse: (cookie: string) => Promise<Cookie | null>;
@@ -120,8 +76,8 @@ export function registerCookieHandlers() {
   ipcMainHandle('cookies.getCookiesForUrl', (_, { cookies, url }: { cookies: Cookie[]; url: string }) => {
     return getCookiesForUrl(cookies, url);
   });
-  ipcMainHandle('cookies.addSetCookies', (_, args: AddSetCookiesArgs) => {
-    return addSetCookiesToToughCookieJar(args);
+  ipcMainHandle('cookies.addSetCookies', (_, { setCookieStrings, currentUrl, cookieJar }: AddSetCookiesArgs) => {
+    return addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar: { cookies: cookieJar } });
   });
   ipcMainHandle('cookies.getResponseCookiesFromHeaders', (_, headers: { name: string; value: string }[]) => {
     return getResponseCookiesFromHeaders(headers);

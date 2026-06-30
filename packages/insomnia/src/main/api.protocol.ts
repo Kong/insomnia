@@ -7,7 +7,7 @@ import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
 
 import { getApiBaseURL } from '../common/constants';
-import { setDefaultProtocol } from './network/libcurl-promise';
+import { setDefaultProtocol, shouldBypassProxyForHost } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
 
 export interface RegisterProtocolOptions {
@@ -128,14 +128,15 @@ export async function registerInsomniaProtocols() {
               }
             }
           } else {
-            const { protocol } = urlParse(urlStr);
+            const { protocol, hostname } = urlParse(urlStr);
             const { httpProxy, httpsProxy, noProxy } = settings;
             const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-            const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+            const proxy = !shouldBypassProxyForHost(hostname, noProxy) && proxyHost ? setDefaultProtocol(proxyHost) : '';
+            curl.setOpt(Curl.option.PROXY, proxy);
             if (proxy) {
-              curl.setOpt(Curl.option.PROXY, proxy);
               curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
             }
+            // also pass the raw list to curl, which still correctly handles IP/CIDR entries (e.g. "192.168.0.0/16")
             if (noProxy) {
               curl.setOpt(Curl.option.NOPROXY, noProxy);
             }

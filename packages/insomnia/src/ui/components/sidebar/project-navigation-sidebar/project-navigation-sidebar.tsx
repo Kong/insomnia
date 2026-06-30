@@ -334,7 +334,7 @@ const ProjectNavigationSidebarInner = (
     // set up a map of remoteId to projectId for all cloud sync projects.
     const remoteIdToProjectIdMap = new Map<string, string>();
     for (const projectId of cloudSyncProjectIds) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       if (project && 'remoteId' in project && project.remoteId) {
         remoteIdToProjectIdMap.set(project.remoteId, projectId);
       }
@@ -388,7 +388,7 @@ const ProjectNavigationSidebarInner = (
     if (result?.success) {
       setLastSyncedAt(Date.now());
       // Navigate to and expand the first Konnect project after a successful sync
-      const allProjects = await services.project.list({ organizationId });
+      const allProjects = await services.project.listByOrganizationIds(organizationId);
       const sortedKonnectProjects = models.project.sortProjects(
         allProjects.filter(p => p.konnectControlPlaneId != null),
       );
