@@ -59,6 +59,10 @@ export const ProjectCreateForm: FC<Props> = ({
   const [gitMode, setGitMode] = useState<'clone' | 'open'>('clone');
   const [openExistingDir, setOpenExistingDir] = useState('');
 
+  // Local repositories default to the native (system git) credentials, which
+  // are always present as a seeded singleton and need no remote configuration.
+  const nativeCredentialsId = credentials.find(c => c.provider === 'native')?._id;
+
   const [projectData, setProjectData] = useState<ProjectData>({
     name: defaultProjectName,
     uri: '',
@@ -93,6 +97,14 @@ export const ProjectCreateForm: FC<Props> = ({
   }, [newProjectFetcher.data, newProjectFetcher.state]);
 
   const isGitOpen = storageType === 'git' && gitMode === 'open';
+
+  // Preselect native git credentials when adopting a local folder so the user
+  // isn't forced to pick before continuing.
+  useEffect(() => {
+    if (isGitOpen && !projectData.credentialsId && nativeCredentialsId) {
+      setProjectData(prev => ({ ...prev, credentialsId: nativeCredentialsId }));
+    }
+  }, [isGitOpen, projectData.credentialsId, nativeCredentialsId]);
 
   const onUpsertProject = async () => {
     if (!storageType) {
@@ -229,11 +241,9 @@ export const ProjectCreateForm: FC<Props> = ({
                   <GitCredentialSelect
                     credentials={credentials}
                     providers={providers}
-                    selectedCredentialsId={projectData.credentialsId}
-                    onChange={credentialsId =>
-                      setProjectData(prev => ({ ...prev, credentialsId: credentialsId ?? undefined }))
-                    }
-                    label="Git credentials (optional)"
+                    selectedCredentialsId={projectData.credentialsId ?? nativeCredentialsId}
+                    onChange={credentialsId => setProjectData(prev => ({ ...prev, credentialsId }))}
+                    label="Git credentials"
                   />
                 </div>
               )}
