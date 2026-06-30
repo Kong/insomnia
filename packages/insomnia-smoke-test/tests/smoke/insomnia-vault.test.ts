@@ -127,6 +127,11 @@ test.describe('Check vault used in environment', () => {
     // Delay the click to let debounce finish
     await secondRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
+    // ensure the secret value has been persisted before navigating away, otherwise
+    // the request below pops a "1 environment variable is missing" modal for vault.hello
+    await expect.soft(secondRow.locator('.fa-eye-slash')).toBeVisible();
+    await secondRow.locator('.fa-eye-slash').click();
+    await expect.soft(secondRow.getByTestId('OneLineEditor').nth(1)).toContainText('world');
 
     // go back
     await page.getByTestId('workspace-breadcrumb-level-0').click();
@@ -150,6 +155,7 @@ test.describe('Check vault used in environment', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('normal');
     await page.getByRole('button', { name: 'Send' }).click();
 
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
     await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
     await page.getByText('bar').click();
     await page.getByText('world').click();
@@ -177,6 +183,7 @@ test.describe('Check vault used in environment', () => {
     // Wait for tab appear
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-array-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('password').click();
     await page.getByText('bar').click();
@@ -194,6 +201,7 @@ test.describe('Check vault used in environment', () => {
     });
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
 
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('secv2').click();

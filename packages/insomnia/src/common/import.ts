@@ -585,7 +585,7 @@ export const importResourcesToNewWorkspace = async ({
 }): Promise<Workspace> => {
   invariant(resourceCacheItem, 'No resources to import');
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const resources = resourceCacheItem.resources;
@@ -764,7 +764,9 @@ export async function findExistingImportedSpec(
     }
   | undefined
 > {
-  const filteredProjects = await services.project.list({ organizationId });
+  const filteredProjects = organizationId
+    ? await services.project.listByOrganizationIds(organizationId)
+    : await services.project.list();
 
   // match active project first, then look in rest
   const projectIds = new Set<string>();

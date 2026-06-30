@@ -3,7 +3,7 @@ import type { BaseModel } from './base-types';
 export type OauthProviderName = 'gitlab' | 'github';
 
 // New unified provider types
-export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
+export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom' | 'native';
 
 export type GitCredentials = BaseModel & BaseGitCredentials;
 
@@ -117,9 +117,27 @@ interface CustomCredential extends BaseCredentialData {
 }
 
 /**
+ * Native system credential
+ * Delegates authentication to the OS git credential manager at runtime.
+ * No token is stored — credentials are resolved via `git credential fill`.
+ * This is a singleton — one always exists, seeded on first startup.
+ * Author identity is resolved from system git config at commit time, not stored here.
+ */
+export interface NativeGitCredential {
+  provider: 'native';
+  /** User-friendly name used for display/accessibility (aria-label, textValue). */
+  name?: string;
+  author?: {
+    name: string;
+    email: string;
+    avatarUrl?: string;
+  };
+}
+
+/**
  * Unified credential type (new structure)
  */
-export type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | CustomCredential;
+export type BaseGitCredentialsV2 = GitHubCredential | GitLabCredential | CustomCredential | NativeGitCredential;
 
 /**
  * Combined type supporting both legacy and new credential structures
@@ -130,7 +148,12 @@ type BaseGitCredentials = BaseGitCredentialsV1 | BaseGitCredentialsV2;
  * Type guard to check if credential is using new unified structure
  */
 export function isGitCredentialsV2(gitCredential: GitCredentials): gitCredential is GitCredentialsV2 {
-  return 'credentials' in gitCredential && gitCredential.credentials && typeof gitCredential.credentials === 'object';
+  return (
+    ('credentials' in gitCredential &&
+      gitCredential.credentials != null &&
+      typeof gitCredential.credentials === 'object') ||
+    ('provider' in gitCredential && gitCredential.provider === 'native')
+  );
 }
 
 /**

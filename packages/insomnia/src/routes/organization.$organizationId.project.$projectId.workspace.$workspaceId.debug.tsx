@@ -138,7 +138,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
-    const activeProject = await services.project.get(projectId);
+    const activeProject = await services.project.getById(projectId);
     if (!activeProject) {
       showResourceNotFoundToast(`Project not found: ${projectId}`);
       throw redirect(href('/organization/:organizationId/project', { organizationId }));

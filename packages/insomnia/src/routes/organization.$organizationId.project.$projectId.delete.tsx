@@ -14,7 +14,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const user = await services.userSession.get();
@@ -50,7 +50,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
     // If the deleted project is a Konnect project, navigate to another Konnect project
     if (project.konnectControlPlaneId) {
-      const remainingKonnectProjects = (await services.project.list({ organizationId })).filter(
+      const remainingKonnectProjects = (await services.project.listByOrganizationIds(organizationId)).filter(
         p => p.konnectControlPlaneId != null && p._id !== projectId,
       );
 

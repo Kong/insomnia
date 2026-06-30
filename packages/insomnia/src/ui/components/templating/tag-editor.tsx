@@ -512,7 +512,7 @@ export const TagEditor: FC<Props> = props => {
                   <DropdownSection aria-label="Input Type Section" title="Input Type">
                     <DropdownItem aria-label="Static Value">
                       <ItemContent
-                        icon={isVariable ? 'check' : ''}
+                        icon={isVariable ? '' : 'check'}
                         label="Static Value"
                         onClick={() => {
                           const { activeTagData, activeTagDefinition, variables } = state;
@@ -532,7 +532,7 @@ export const TagEditor: FC<Props> = props => {
                     </DropdownItem>
                     <DropdownItem aria-label="Environment Variable">
                       <ItemContent
-                        icon={isVariable ? '' : 'check'}
+                        icon={isVariable ? 'check' : ''}
                         label="Environment Variable"
                         onClick={() => {
                           const { activeTagData, activeTagDefinition, variables } = state;

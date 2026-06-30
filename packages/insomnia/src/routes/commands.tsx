@@ -1,13 +1,5 @@
 import type { Organization } from 'insomnia-api';
-import type {
-  Environment,
-  GrpcRequest,
-  Project,
-  Request,
-  RequestGroup,
-  WebSocketRequest,
-  Workspace,
-} from 'insomnia-data';
+import type { Environment, GrpcRequest, Request, RequestGroup, WebSocketRequest, Workspace } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 
 import { fuzzyMatch } from '~/common/misc';
@@ -46,9 +38,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     ? [organizationId]
     : allOrganizations.map(org => org.id);
 
-  const allProjects = await database.find<Project>(project.type, {
-    parentId: { $in: allOrganizationsIds },
-  });
+  const allProjects = await services.project.listByOrganizationIds(allOrganizationsIds);
 
   const allProjectIds = allProjects.map(project => project._id);
 

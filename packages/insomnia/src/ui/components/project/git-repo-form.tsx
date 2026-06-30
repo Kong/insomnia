@@ -170,7 +170,7 @@ export const GitRepoForm: FC<Props> = ({
                         {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
                         <span>{provider?.displayName}</span>
                         <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-                        <span className="truncate">{selectedItem.author.name}</span>
+                        <span className="truncate">{selectedItem.author?.name}</span>
                       </Fragment>
                     );
                   }
@@ -199,7 +199,7 @@ export const GitRepoForm: FC<Props> = ({
                           {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
                           <span>{provider?.displayName}</span>
                           <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-                          <span className="truncate">{item.author.name}</span>
+                          <span className="truncate">{item.author?.name}</span>
                           {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                         </Fragment>
                       );
@@ -246,7 +246,7 @@ export const GitRepoForm: FC<Props> = ({
               onOpenChange={setIsEmailSelectOpen}
               isOpen={isEmailSelectOpen}
               aria-label="Author Email"
-              selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+              selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author?.email}
               onSelectionChange={email => {
                 setProjectData(prev => ({
                   ...prev,
@@ -266,7 +266,7 @@ export const GitRepoForm: FC<Props> = ({
                         </Fragment>
                       );
                     }
-                    return projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email';
+                    return projectData.selectedAuthorEmail || selectedCredential?.author?.email || 'Select an email';
                   }}
                 </SelectValue>
                 <Icon icon="caret-down" />
