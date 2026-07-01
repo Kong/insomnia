@@ -94,7 +94,6 @@ const bundleParser = async (): Promise<{ InsomniaFileSchema: z.ZodType }> => {
     logLevel: 'warning',
   });
   try {
-     
     return require(tmpFile);
   } finally {
     rmSync(tmpFile, { force: true });
