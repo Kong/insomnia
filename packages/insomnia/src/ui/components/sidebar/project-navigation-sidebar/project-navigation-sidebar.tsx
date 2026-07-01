@@ -334,7 +334,7 @@ const ProjectNavigationSidebarInner = (
     // set up a map of remoteId to projectId for all cloud sync projects.
     const remoteIdToProjectIdMap = new Map<string, string>();
     for (const projectId of cloudSyncProjectIds) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       if (project && 'remoteId' in project && project.remoteId) {
         remoteIdToProjectIdMap.set(project.remoteId, projectId);
       }
@@ -389,7 +389,7 @@ const ProjectNavigationSidebarInner = (
     if (result?.success) {
       setLastSyncedAt(Date.now());
       // Navigate to and expand the first Konnect project after a successful sync
-      const allProjects = await services.project.list({ organizationId });
+      const allProjects = await services.project.listByOrganizationIds(organizationId);
       const sortedKonnectProjects = models.project.sortProjects(
         allProjects.filter(p => p.konnectControlPlaneId != null),
       );
@@ -1093,6 +1093,41 @@ const ProjectNavigationSidebarInner = (
             ref={parentRef}
             className="group/tree flex-1 overflow-y-auto pb-(--padding-sm)"
             data-testid="project-navigation-tree-container"
+            onKeyDownCapture={(e: React.KeyboardEvent) => {
+              if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') {
+                return;
+              }
+              const active = document.activeElement;
+              if (!(active instanceof HTMLElement)) {
+                return;
+              }
+              // Only act when the row itself is focused, not an inner control (button/input).
+              const rowEl = active.closest('[data-key]');
+              if (!rowEl || rowEl !== active) {
+                return;
+              }
+              const docId = (active.dataset.key || '').replace(/^pinned-request-/, '');
+              const item = visibleFlatItems.find(i => i.doc._id === docId && i.kind !== 'pinnedRequest');
+              if (!item) {
+                return;
+              }
+              // ArrowRight expands a collapsed item; ArrowLeft collapses an expanded one.
+              const expand = e.key === 'ArrowRight';
+              const isExpandable =
+                (item.kind === 'collectionChild' && models.requestGroup.isRequestGroup(item.doc)) ||
+                item.kind === 'project' ||
+                item.kind === 'workspace';
+              if (!isExpandable || item.collapsed !== expand) {
+                return;
+              }
+              e.preventDefault();
+              e.stopPropagation();
+              if (item.kind === 'collectionChild') {
+                toggleRequestGroups([docId], item.workspace, !expand);
+              } else {
+                toggleProjectOrWorkspace(docId);
+              }
+            }}
           >
             <GridList
               aria-label="Project Navigation Tree"

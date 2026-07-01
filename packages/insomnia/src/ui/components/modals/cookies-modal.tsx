@@ -23,8 +23,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 
-import { fuzzyMatch } from '../../../common/misc';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { PromptButton } from '../base/prompt-button';
@@ -78,6 +78,8 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
   const handleFilterChange = async (value: string) => {
     setFilter(value);
+    setPage(0);
+
     const renderedCookies: Cookie[] = [];
 
     for (const cookie of activeCookieJar?.cookies || []) {
@@ -93,15 +95,12 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       return;
     }
 
-    const filteredCookies: Cookie[] = [];
+    const query = value.toLowerCase();
+    const cookieStrings = await Promise.all(
+      renderedCookies.map(cookie => window.main.cookies.toString(cookie).catch(() => '')),
+    );
 
-    renderedCookies.forEach(cookie => {
-      if (fuzzyMatch(value, JSON.stringify(cookie), { splitSpace: true })) {
-        filteredCookies.push(cookie);
-      }
-    });
-
-    setFilteredCookies(chunkArray(filteredCookies));
+    setFilteredCookies(chunkArray(renderedCookies.filter((_, i) => cookieStrings[i].toLowerCase().includes(query))));
   };
 
   const handleCookieDelete = (cookieId: string) => {
@@ -414,6 +413,7 @@ interface CookieModifyModalProps {
 const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: CookieModifyModalProps) => {
   const [editCookie, setEditCookie] = useState<Cookie>(cookie);
   const [rawValue, setRawValue] = useState('');
+  const isLightTheme = useIsLightTheme();
 
   useEffect(() => {
     window.main.cookies
@@ -515,7 +515,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                             <input
                               type="datetime-local"
                               defaultValue={localDateTime}
-                              className="calendar-invert"
+                              style={{ colorScheme: isLightTheme ? 'light' : 'dark' }}
                               onChange={event => setEditCookie({ ...editCookie, expires: event.target.value })}
                             />
                           </label>

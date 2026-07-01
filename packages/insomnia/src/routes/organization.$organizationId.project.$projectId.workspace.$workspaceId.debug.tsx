@@ -138,7 +138,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
-    const activeProject = await services.project.get(projectId);
+    const activeProject = await services.project.getById(projectId);
     if (!activeProject) {
       showResourceNotFoundToast(`Project not found: ${projectId}`);
       throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -414,7 +414,13 @@ const Debug = () => {
       }
     },
     request_createHTTP: async () => {
-      const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+      // When a request is active, create a sibling; when a folder is selected (and no request is
+      // active), create inside that folder; otherwise create at the workspace root.
+      const parentId = activeRequest
+        ? activeRequest.parentId
+        : requestGroupId && isRequestGroupId(requestGroupId)
+          ? requestGroupId
+          : activeWorkspace._id;
       createRequestFetcher.submit({
         organizationId,
         projectId,
@@ -1023,6 +1029,7 @@ const Debug = () => {
                                     POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                                     HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                                     OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                                    QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                                     DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                                     PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                                     PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
@@ -1359,6 +1366,7 @@ const CollectionGridListItem = ({
                 POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                 HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                 OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                 DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                 PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                 PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',

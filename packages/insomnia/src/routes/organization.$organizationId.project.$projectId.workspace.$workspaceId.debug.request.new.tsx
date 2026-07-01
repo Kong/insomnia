@@ -12,8 +12,13 @@ import {
 import { invariant } from '~/common/utils/invariant';
 import type { RequestCreatedMetricsProperties } from '~/ui/analytics';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { focusUrlBarOnNextRequest } from '~/ui/components/request-url-bar-focus';
+import { trackCioEvent } from '~/ui/hooks/use-cio';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
+
+// Request types that are edited in the RequestPane / RequestUrlBar and should focus the URL on create.
+const URL_BAR_REQUEST_TYPES: CreateRequestType[] = ['HTTP', 'GraphQL', 'Event Stream', 'From Curl'];
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
@@ -119,34 +124,40 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 
   const certificates = await services.clientCertificate.findByParentId(workspaceId);
 
+  const requestCreatedProperties = {
+    requestType,
+    protocol: requestType,
+    project_id: projectId,
+    collection_id: workspaceId,
+    request_key_id: activeRequestId,
+    has_prescript: !!req?.preRequestScript,
+    has_postscript: !!req?.afterResponseScript,
+    request_header_names: req?.headers?.map(h => h.name) || [],
+    count_cookies: req?.headers?.find(h => h.name.toLowerCase() === 'cookie')
+      ? req.headers?.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
+      : 0,
+    count_certificates: certificates.length,
+    count_headers: req?.headers?.length || 0,
+    count_query_parameters: req?.parameters?.length || 0,
+    count_path_parameters: req?.pathParameters?.length || 0,
+    count_prescript_lines: req?.preRequestScript ? req.preRequestScript.split('\n').length : 0,
+    count_postscript_lines: req?.afterResponseScript ? req.afterResponseScript.split('\n').length : 0,
+    auth_type:
+      req?.authentication && typeof req.authentication === 'object' && 'type' in req.authentication
+        ? req.authentication.type
+        : 'none',
+    has_docs: !!req?.description,
+    source: metrics?.source,
+  };
+
   window.main.trackAnalyticsEvent({
     event: AnalyticsEvent.requestCreated,
-    properties: {
-      requestType,
-      protocol: requestType,
-      project_id: projectId,
-      collection_id: workspaceId,
-      request_key_id: activeRequestId,
-      has_prescript: !!req?.preRequestScript,
-      has_postscript: !!req?.afterResponseScript,
-      request_header_names: req?.headers?.map(h => h.name) || [],
-      count_cookies: req?.headers?.find(h => h.name.toLowerCase() === 'cookie')
-        ? req.headers?.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
-        : 0,
-      count_certificates: certificates.length,
-      count_headers: req?.headers?.length || 0,
-      count_query_parameters: req?.parameters?.length || 0,
-      count_path_parameters: req?.pathParameters?.length || 0,
-      count_prescript_lines: req?.preRequestScript ? req.preRequestScript.split('\n').length : 0,
-      count_postscript_lines: req?.afterResponseScript ? req.afterResponseScript.split('\n').length : 0,
-      auth_type:
-        req?.authentication && typeof req.authentication === 'object' && 'type' in req.authentication
-          ? req.authentication.type
-          : 'none',
-      has_docs: !!req?.description,
-      source: metrics?.source,
-    },
+    properties: requestCreatedProperties,
   });
+
+  // Send to Customer.io directly so the event is tied to the identified user's
+  // email-bearing profile (only fires when logged in). See INS-2678.
+  trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
 
   return redirect(
     href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
@@ -182,6 +193,11 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
         projectId,
         workspaceId,
       });
+
+      // Focus the URL bar once the newly created request opens so the user can start typing.
+      if (URL_BAR_REQUEST_TYPES.includes(requestType)) {
+        focusUrlBarOnNextRequest();
+      }
 
       return submit(JSON.stringify({ requestType, parentId, req, metrics }), {
         action: url,

@@ -232,7 +232,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   }
 
   invariant(projectId, 'Project ID is required');
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(models.project.isConnectedGitProject(project), 'Project is not linked to a git repository');
   const repoId = models.project.getEffectiveRepoId(project);
@@ -306,7 +306,7 @@ export async function getProjectGitFileIssues({
   workspaceId,
   gitRepositoryId,
 }: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project || !models.project.isConnectedGitProject(project)) {
     return [];
   }
@@ -366,6 +366,13 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
  * @param gitRepositoryId - The Git repository ID
  * @returns File system client configured for the appropriate context
  */
+function getGitBaseDir(gitRepositoryId: string): string {
+  return path.join(
+    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+    `version-control/git/${gitRepositoryId}`,
+  );
+}
+
 async function getGitFSClient({
   projectId,
   workspaceId,
@@ -376,10 +383,7 @@ async function getGitFSClient({
   gitRepositoryId: string;
 }) {
   // Base directory where Git data is stored
-  const baseDir = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}`,
-  );
+  const baseDir = getGitBaseDir(gitRepositoryId);
 
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
@@ -513,10 +517,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
-    const baseDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-      `version-control/git/${gitRepository._id}`,
-    );
+    const baseDir = getGitBaseDir(gitRepository._id);
 
     const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
@@ -551,6 +552,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         directory: GIT_CLONE_DIR,
         fs: fsClient,
         gitDirectory: GIT_INTERNAL_DIR,
+        repoPath: baseDir,
       });
 
       await services.gitRepository.update(gitRepository, {
@@ -565,6 +567,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         gitDirectory: GIT_INTERNAL_DIR,
         credentialsId,
         legacyDiff: Boolean(workspaceId),
+        repoPath: baseDir,
       });
 
       // GitVCS.init() opens the local repo without a network call, so explicitly
@@ -1173,7 +1176,7 @@ export const cloneGitRepoAction = async ({
 
       async function getProject() {
         if (cloneIntoProjectId) {
-          const project = await services.project.get(cloneIntoProjectId);
+          const project = await services.project.getById(cloneIntoProjectId);
           invariant(project, 'Project not found');
 
           await services.project.update(project, {
@@ -1196,6 +1199,7 @@ export const cloneGitRepoAction = async ({
       const project = await getProject();
 
       const fsClient = await getGitFSClient({ projectId: project._id, gitRepositoryId: gitRepository._id });
+      const repoBaseDir = getGitBaseDir(gitRepository._id);
 
       if (gitRepository.needsFullClone) {
         await GitVCS.initFromClone({
@@ -1206,6 +1210,7 @@ export const cloneGitRepoAction = async ({
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
           ref,
+          repoPath: repoBaseDir,
         });
 
         await services.gitRepository.update(gitRepository, {
@@ -1219,6 +1224,7 @@ export const cloneGitRepoAction = async ({
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
           credentialsId: gitRepository.credentialsId,
+          repoPath: repoBaseDir,
         });
       }
 
@@ -1231,10 +1237,7 @@ export const cloneGitRepoAction = async ({
       }
 
       // Start watcher — it automatically imports all YAML files during creation
-      const cloneBaseDir = path.join(
-        process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-        `version-control/git/${gitRepository._id}`,
-      );
+      const cloneBaseDir = getGitBaseDir(gitRepository._id);
 
       // If the project already has a ruleset in the DB (e.g. cloud → git migration),
       // write it to disk now so its mtime is newer than the cloned file. This ensures
@@ -1268,7 +1271,7 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
@@ -1385,7 +1388,7 @@ export const cloneGitRepoAction = async ({
       const existingWorkspace = await services.workspace.getById(workspace._id);
 
       if (existingWorkspace) {
-        const project = await services.project.get(existingWorkspace.parentId);
+        const project = await services.project.getById(existingWorkspace.parentId);
         if (!project) {
           return {
             errors: [
@@ -1417,6 +1420,7 @@ export const cloneGitRepoAction = async ({
         workspaceId,
         gitRepositoryId: gitRepository._id,
       });
+      const wsRepoBaseDir = getGitBaseDir(gitRepository._id);
 
       // Configure basic info
       if (gitRepository.needsFullClone) {
@@ -1427,6 +1431,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: routableFS,
           gitDirectory: GIT_INTERNAL_DIR,
+          repoPath: wsRepoBaseDir,
         });
 
         await services.gitRepository.update(gitRepository, {
@@ -1441,6 +1446,7 @@ export const cloneGitRepoAction = async ({
           gitDirectory: GIT_INTERNAL_DIR,
           credentialsId: gitRepository.credentialsId,
           legacyDiff: true,
+          repoPath: wsRepoBaseDir,
         });
       }
 
@@ -1495,7 +1501,7 @@ export const updateGitRepoAction = async ({
       const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
       gitRepositoryId = workspaceMeta?.gitRepositoryId;
     } else if (projectId) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       gitRepositoryId = project.gitRepositoryId;
     }
@@ -1523,7 +1529,7 @@ export const updateGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
       });
     } else if (projectId) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       await services.project.update(project, {
         gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
@@ -1539,6 +1545,7 @@ export const updateGitRepoAction = async ({
       credentialsId: credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
+      repoPath: getGitBaseDir(gitRepository._id),
     });
 
     await GitVCS.setAuthor();
@@ -1583,7 +1590,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
       gitRepositoryId: null,
     });
   } else if (projectId) {
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
     await services.project.update(project, {
       gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
@@ -2462,7 +2469,10 @@ export const discardChangesAction = async ({
 
     await GitVCS.discardChanges(files);
 
-    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Discarding an untracked, never-committed workspace deletes its YAML from disk.
+    // Remove the orphaned workspace from the DB instead of resurrecting it, otherwise
+    // the discarded change reappears immediately.
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id, { removeLocalOnlyOrphans: true });
 
     await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
@@ -2705,7 +2715,7 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
 
   if (project && models.project.isEmptyGitProject(project)) {
     return {
@@ -2878,7 +2888,7 @@ async function getGitProviderEmails({ credentialsId }: { credentialsId: string }
 
     const emails = await provider.fetchUserEmails(credentials);
 
-    if (credentials.credentials) {
+    if (credentials.provider !== 'native' && credentials.credentials) {
       await services.gitCredentials.update(credentials, {
         credentials: {
           ...credentials.credentials,
@@ -2973,7 +2983,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     failedProjects.map(async ({ id, name }) => {
       logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
       try {
-        const project = await services.project.get(id);
+        const project = await services.project.getById(id);
         if (!project || !models.project.isConnectedGitProject(project)) {
           logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
           return;

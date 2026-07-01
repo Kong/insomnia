@@ -1,7 +1,5 @@
-import type { Project, RemoteProject } from 'insomnia-data';
+import type { RemoteProject } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-
-import { database } from '../../common/database';
 
 // Migration:
 // Team ~= Project > Workspaces
@@ -18,11 +16,11 @@ import { database } from '../../common/database';
 
 export const shouldMigrateProjectUnderOrganization = async () => {
   const [localProjectCount, legacyRemoteProjectCount] = await Promise.all([
-    database.count<Project>(models.project.type, {
+    services.project.count({
       remoteId: null,
       parentId: null,
     }),
-    database.count<Project>(models.project.type, {
+    services.project.count({
       remoteId: { $ne: null },
       parentId: null,
     }),
@@ -39,11 +37,11 @@ export const migrateProjectsIntoOrganization = async ({
   // Legacy remote projects without organizations
   // Local projects without organizations except scratchpad
   const [legacyRemoteProjects, localProjects] = await Promise.all([
-    database.find<RemoteProject>(models.project.type, {
+    services.project.list({
       remoteId: { $ne: null },
       parentId: null,
-    }),
-    database.find<Project>(models.project.type, {
+    }) as Promise<RemoteProject[]>,
+    services.project.list({
       remoteId: null,
       parentId: null,
       _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },

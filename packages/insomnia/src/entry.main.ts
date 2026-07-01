@@ -7,8 +7,8 @@ import electron, { app, BrowserWindow, net, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
-import type { Project, RemoteProject, Stats } from 'insomnia-data';
-import { database, initDatabase, initServices, models, services } from 'insomnia-data';
+import type { Stats } from 'insomnia-data';
+import { initDatabase, initServices, models, services } from 'insomnia-data';
 import { isMac } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
 
@@ -303,7 +303,7 @@ async function _createModelInstances() {
   await services.stats.get();
   await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await services.project.get(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
@@ -366,13 +366,13 @@ async function _trackStats() {
     launches: oldStats.launches + 1,
   });
 
-  const localProjects = await database.count<Project>(models.project.type, {
+  const localProjects = await services.project.count({
     remoteId: null,
     parentId: { $ne: null },
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
-  const remoteProjects = await database.count<RemoteProject>(models.project.type, {
+  const remoteProjects = await services.project.count({
     remoteId: { $ne: null },
     parentId: { $ne: null },
   });

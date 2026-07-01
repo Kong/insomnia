@@ -2,7 +2,7 @@ import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketReques
 import { models } from 'insomnia-data';
 import React, { type FC, memo } from 'react';
 
-import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
+import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS, METHOD_QUERY } from '../../../common/constants';
 
 const { isEventStreamRequest, isRequest } = models.request;
 
@@ -21,6 +21,7 @@ const requestBadgeClassNames: Record<string, string> = {
   POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
   HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
   OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+  QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
   DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
   PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
   PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
@@ -49,6 +50,8 @@ export function formatMethodName(method: string) {
 
   if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
     methodName = method.slice(0, 3);
+  } else if (method === METHOD_QUERY) {
+    methodName = 'QRY';
   } else if (method.length > 4) {
     methodName = removeVowels(method).slice(0, 4);
   }

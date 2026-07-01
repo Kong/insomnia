@@ -1,16 +1,16 @@
 import * as crypto from 'node:crypto';
 
-import type { Environment, Project, Workspace } from 'insomnia-data';
+import type { Environment, Workspace } from 'insomnia-data';
 import { database as db, models } from 'insomnia-data';
+
+import * as projectService from './project';
 
 const { type, prefix, vaultEnvironmentPath } = models.environment;
 const { EnvironmentKvPairDataType, EnvironmentType } = models.environment;
 
 // remove all secret items when user reset vault key
 export const removeAllSecrets = async (organizationIds: string[]) => {
-  const allProjects = await db.find<Project>(models.project.type, {
-    parentId: { $in: organizationIds },
-  });
+  const allProjects = await projectService.listByOrganizationIds(organizationIds);
   const allProjectIds = allProjects.map(project => project._id);
   const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(models.workspace.type, {
     parentId: { $in: allProjectIds },

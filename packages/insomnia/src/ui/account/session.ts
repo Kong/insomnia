@@ -1,5 +1,5 @@
 import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
-import type { GitRepository, Project, WorkspaceMeta } from 'insomnia-data';
+import type { GitRepository, WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { getCurrentSessionId, type SessionData, setSessionData, unsetSessionData } from '~/common/account/session';
@@ -132,8 +132,7 @@ async function _removeAllCredentials() {
  *
  */
 async function _removeGitRepository(repo: GitRepository) {
-  const queryIds = models.project.getQueryableGitRepositoryIds(repo._id);
-  const projects = await database.find<Project>(models.project.type, { gitRepositoryId: { $in: queryIds } });
+  const projects = await services.project.listByGitRepositoryIds(repo._id);
   for (const p of projects) {
     await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
   }
