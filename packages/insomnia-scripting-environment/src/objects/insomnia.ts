@@ -16,7 +16,7 @@ import type { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { skip, test, type TestHandler } from './test';
-import { toUrlObject } from './urls';
+import { resolveProtocolForProxy, toUrlObject } from './urls';
 import { checkIfUrlIncludesTag } from './utils';
 
 export class InsomniaObject {
@@ -231,7 +231,7 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
 
   const reqUrl = toUrlObject(rawObj.request.url);
   const proxy = transformToSdkProxyOptions(
-    reqUrl.protocol,
+    resolveProtocolForProxy(rawObj.request.url),
     rawObj.settings.httpProxy,
     rawObj.settings.httpsProxy,
     rawObj.settings.proxyEnabled,
