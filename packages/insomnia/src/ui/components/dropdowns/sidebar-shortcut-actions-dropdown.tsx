@@ -4,6 +4,7 @@ import type { RefObject } from 'react';
 import { useState } from 'react';
 import { Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 
+import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
@@ -128,6 +129,7 @@ export const SidebarShortcutActionsDropdown = ({ target, storageRules, isOpen, o
             onAction={key => actions.find(item => item.id === key)?.action()}
             items={actions}
             className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+            defaultSelectedKeys={['HTTP', 'new-collection']}
           >
             <MenuSection className="flex flex-1 flex-col">
               <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
@@ -140,7 +142,15 @@ export const SidebarShortcutActionsDropdown = ({ target, storageRules, isOpen, o
                     className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                     aria-label={item.name}
                   >
-                    <Icon icon={item.icon} />
+                    {allowCreateWorkspace && item?.scope ? (
+                      <div
+                        className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                      >
+                        <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                      </div>
+                    ) : (
+                      <Icon icon={item.icon} />
+                    )}
                     <span>{item.name}</span>
                   </MenuItem>
                 )}
