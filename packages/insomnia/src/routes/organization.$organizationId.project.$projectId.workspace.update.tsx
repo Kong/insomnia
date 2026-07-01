@@ -62,7 +62,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   await services.workspace.update(workspace, patch);
 
-  const project = await services.project.get(workspace.parentId);
+  const project = await services.project.getById(workspace.parentId);
   invariant(project, 'Project not found');
   if (models.project.isGitProject(project)) {
     const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);

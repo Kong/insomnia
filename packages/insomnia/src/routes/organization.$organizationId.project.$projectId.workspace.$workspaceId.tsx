@@ -88,7 +88,7 @@ const workspaceFileIssueModalText = {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const activeProject = await services.project.get(projectId);
+  const activeProject = await services.project.getById(projectId);
   if (!activeProject) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -153,10 +153,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const activeMockServer = await services.mockServer.getByParentId(workspaceId);
 
-  const organizationProjects =
-    (await database.find<Project>(models.project.type, {
-      parentId: organizationId,
-    })) || [];
+  const organizationProjects = await services.project.listByOrganizationIds(organizationId);
 
   const projects = models.project.sortProjects(organizationProjects);
 

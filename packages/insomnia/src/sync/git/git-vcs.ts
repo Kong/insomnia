@@ -56,6 +56,7 @@ interface InitOptions {
   uri?: string;
   repoId: string;
   ref?: string;
+  repoPath?: string;
   // If enabled git-vcs will only diff files inside a .insomnia directory
   legacyDiff?: boolean;
 }
@@ -68,6 +69,7 @@ interface InitFromCloneOptions {
   gitDirectory: string;
   ref?: string;
   repoId: string;
+  repoPath?: string;
 }
 
 export type GitFileStatus = 'untracked' | 'added' | 'modified' | 'deleted' | 'clean' | 'unknown';
@@ -133,6 +135,7 @@ interface BaseOpts {
   onAuth: git.AuthCallback;
   uri: string;
   repoId: string;
+  repoPath?: string;
   legacyDiff?: boolean;
   ref?: string;
 }
@@ -147,11 +150,21 @@ export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, credentialsId, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
+  async init({
+    directory,
+    fs,
+    gitDirectory,
+    credentialsId,
+    uri = '',
+    repoId,
+    legacyDiff = false,
+    ref,
+    repoPath,
+  }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
-      ...gitCallbacks(credentialsId),
+      ...gitCallbacks(credentialsId, repoPath),
       gitdir: gitDirectory,
       fs,
       http: httpClient,
@@ -159,6 +172,7 @@ export class GitVCS {
       repoId,
       legacyDiff,
       ref,
+      repoPath,
     };
 
     if (await this.repoExists()) {
@@ -202,15 +216,25 @@ export class GitVCS {
     }
   }
 
-  async initFromClone({ repoId, url, credentialsId, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
+  async initFromClone({
+    repoId,
+    url,
+    credentialsId,
+    directory,
+    fs,
+    gitDirectory,
+    ref,
+    repoPath,
+  }: InitFromCloneOptions) {
     this._baseOpts = {
       ...this._baseOpts,
-      ...gitCallbacks(credentialsId),
+      ...gitCallbacks(credentialsId, repoPath),
       dir: directory,
       gitdir: gitDirectory,
       fs,
       http: httpClient,
       repoId,
+      repoPath,
     };
 
     const initRef = ref || this._baseOpts.ref;
@@ -1115,7 +1139,7 @@ export class GitVCS {
       name = author.name;
       email = author.email;
     } else {
-      const author = await getAuthorFromGitRepository(this._baseOpts.repoId);
+      const author = await getAuthorFromGitRepository(this._baseOpts.repoId, this._baseOpts.repoPath);
       name = author.name;
       email = author.email;
     }

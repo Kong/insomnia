@@ -211,47 +211,64 @@ export async function runGitCredentialsMigration(): Promise<void> {
   try {
     if (hasRunMigration()) {
       console.log(`[git-credentials-migration] Already migrated credentials, skipping migration`);
-      return;
+    } else {
+      await migrateGitCredentials();
     }
-
-    console.log(`[git-migration] Starting migration of git-credentials to unified format`);
-
-    const allRepositories = await services.gitRepository.all();
-
-    const githubConnectedRepositories = allRepositories.filter(({ credentials }) => {
-      if (!credentials) {
-        return false;
-      }
-
-      return isGitCredentialsOAuth(credentials) && credentials.oauth2format === 'github';
-    });
-
-    await migrateGitHubConnectedRepositories(githubConnectedRepositories);
-
-    const gitlabConnectedRepositories = allRepositories.filter(({ credentials }) => {
-      if (!credentials) {
-        return false;
-      }
-
-      return isGitCredentialsOAuth(credentials) && credentials.oauth2format === 'gitlab';
-    });
-
-    await migrateGitLabConnectedRepositories(gitlabConnectedRepositories);
-
-    const customCredentialsRepositories = allRepositories.filter(({ credentials }) => {
-      return credentials && !isGitCredentialsOAuth(credentials);
-    });
-
-    await migrateCustomCredentialsRepositories(customCredentialsRepositories);
-
-    console.log(
-      `[git-credentials-migration] Migration completed ${githubConnectedRepositories.length + gitlabConnectedRepositories.length + customCredentialsRepositories.length} repositories`,
-    );
-
-    // Mark migration as complete
-    markMigrationComplete();
-    console.log(`[git-credentials-migration] Migration completed`);
   } catch (error) {
     console.error('[git-credentials-migration] Migration failed:', error);
+  }
+
+  // Ensure the singleton native credential exists — runs every startup, idempotent.
+  // Wrapped separately so a failure here never escapes runGitCredentialsMigration.
+  try {
+    await ensureNativeCredentialExists();
+  } catch (error) {
+    console.error('[git-credentials-migration] Failed to ensure native credential exists:', error);
+  }
+}
+
+async function migrateGitCredentials(): Promise<void> {
+  console.log(`[git-migration] Starting migration of git-credentials to unified format`);
+
+  const allRepositories = await services.gitRepository.all();
+
+  const githubConnectedRepositories = allRepositories.filter(({ credentials }) => {
+    if (!credentials) {
+      return false;
+    }
+
+    return isGitCredentialsOAuth(credentials) && credentials.oauth2format === 'github';
+  });
+
+  await migrateGitHubConnectedRepositories(githubConnectedRepositories);
+
+  const gitlabConnectedRepositories = allRepositories.filter(({ credentials }) => {
+    if (!credentials) {
+      return false;
+    }
+
+    return isGitCredentialsOAuth(credentials) && credentials.oauth2format === 'gitlab';
+  });
+
+  await migrateGitLabConnectedRepositories(gitlabConnectedRepositories);
+
+  const customCredentialsRepositories = allRepositories.filter(({ credentials }) => {
+    return credentials && !isGitCredentialsOAuth(credentials);
+  });
+
+  await migrateCustomCredentialsRepositories(customCredentialsRepositories);
+
+  // Mark migration as complete
+  markMigrationComplete();
+  console.log(
+    `[git-credentials-migration] Migration completed ${githubConnectedRepositories.length + gitlabConnectedRepositories.length + customCredentialsRepositories.length} repositories`,
+  );
+}
+
+async function ensureNativeCredentialExists(): Promise<void> {
+  const existing = await database.findOne<GitCredentials>(models.gitCredentials.type, { provider: 'native' });
+  if (!existing) {
+    await services.gitCredentials.create({ provider: 'native', name: 'System Git Credentials' });
+    console.log('[git-credentials-migration] Created native credential singleton');
   }
 }

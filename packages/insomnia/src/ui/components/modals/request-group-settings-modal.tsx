@@ -94,6 +94,7 @@ export const RequestGroupSettingsModal = ({
               <label>
                 Name
                 <input
+                  autoFocus
                   type="text"
                   placeholder={requestGroup?.name || 'My Folder'}
                   defaultValue={requestGroup?.name}

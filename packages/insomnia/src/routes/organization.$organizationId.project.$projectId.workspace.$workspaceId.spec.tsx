@@ -76,7 +76,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -923,6 +923,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               icon={expandedLintMessageCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'}
               className="h-2.5 w-2.5"
             />
+            ({item.occurrences.length})
             <Icon
               className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
               icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}

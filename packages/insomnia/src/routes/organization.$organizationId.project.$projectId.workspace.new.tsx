@@ -41,7 +41,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   try {
     const redirectAfterCreate = new URL(request.url).searchParams.get('redirectAfterCreate') !== 'false';
     const workspaceData = (await request.json()) as NewWorkspaceData;
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
 
     invariant(project, 'Project not found');
 
