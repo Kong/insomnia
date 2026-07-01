@@ -625,7 +625,7 @@ export function toUrlObject(url: string | Url): Url {
  * Resolves the protocol to use for proxy selection when the request URL may still
  * contain unrendered template tags (pre-request scripts run before template rendering).
  * Falls back to parsing the scheme off the raw URL string, and to 'https:' when the
- * scheme itself is templated (e.g. "{{ baseUrl }}/path").
+ * scheme or host itself is templated (e.g. "{{ baseUrl }}/path").
  */
 export function resolveProtocolForProxy(rawUrl: string): string {
   try {
