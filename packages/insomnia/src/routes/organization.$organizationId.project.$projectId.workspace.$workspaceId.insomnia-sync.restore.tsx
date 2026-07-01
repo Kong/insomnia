@@ -31,13 +31,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  return redirect(
-    `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
-      organizationId,
-      projectId,
-      workspaceId,
-    })}/${models.workspace.scopeToActivity(workspace?.scope)}`,
-  );
+  return null;
 }
 
 export const useInsomniaSyncRestoreActionFetcher = createFetcherSubmitHook(
