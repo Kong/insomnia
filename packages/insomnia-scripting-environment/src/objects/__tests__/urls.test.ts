@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { QueryParam, Url, UrlMatchPattern } from '../urls';
+import { QueryParam, resolveProtocolForProxy, Url, UrlMatchPattern } from '../urls';
 import { Variable } from '../variables';
 
 describe('test Url object', () => {
@@ -339,5 +339,26 @@ describe('test Url Match Pattern', () => {
     expect(matchPattern.testPort('80', 'http')).toBeTruthy();
     expect(matchPattern.testPort('443', 'http')).toBeFalsy();
     expect(matchPattern.testPort('80', 'https')).toBeFalsy();
+  });
+});
+
+describe('test resolveProtocolForProxy', () => {
+  it('uses the parsed protocol when available', () => {
+    expect(resolveProtocolForProxy('https://example.com/')).toEqual('https:');
+    expect(resolveProtocolForProxy('http://example.com/')).toEqual('http:');
+  });
+
+  it('falls back to the scheme in the raw url when parsedProtocol is empty (url has unrendered tags)', () => {
+    // e.g. https://httpbin.io/anything/{% base64 'encode', 'normal', '1' %}
+    expect(resolveProtocolForProxy("https://httpbin.io/anything/{% base64 'encode', 'normal', '1' %}")).toEqual(
+      'https:',
+    );
+    expect(resolveProtocolForProxy('http://example.com/{{ _.var }}')).toEqual('http:');
+  });
+
+  it('falls back to https: when the scheme itself is templated', () => {
+    // e.g. {{ baseUrl }}/path -- scheme unknown until rendering happens
+    expect(resolveProtocolForProxy('{{ _.baseUrl }}/path')).toEqual('https:');
+    expect(resolveProtocolForProxy('http://{{ _.host }}/{{ _.var }}')).toEqual('https:');
   });
 });
