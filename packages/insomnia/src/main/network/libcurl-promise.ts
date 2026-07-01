@@ -365,15 +365,16 @@ export const createConfiguredCurlInstance = ({
   if (!settings.proxyEnabled) {
     curl.setOpt(Curl.option.PROXY, '');
   } else {
-    const { protocol } = urlParse(req.url);
+    const { protocol, hostname } = urlParse(req.url);
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : '';
+    const proxy = !shouldBypassProxyForHost(hostname, noProxy) && proxyHost ? setDefaultProtocol(proxyHost) : '';
+    curl.setOpt(Curl.option.PROXY, proxy);
     if (proxy) {
       debugTimeline.push({ value: `Using proxy: ${proxy}`, name: 'Text', timestamp: Date.now() });
-      curl.setOpt(Curl.option.PROXY, proxy);
       curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
     }
+    // also pass the raw list to curl, which still correctly handles IP/CIDR entries (e.g. "192.168.0.0/16")
     if (noProxy) {
       curl.setOpt(Curl.option.NOPROXY, noProxy);
     }
@@ -579,6 +580,26 @@ export const getHttpVersion = (preferredHttpVersion: string) => {
     }
   }
 };
+
+// workaround for a curl 7.86 bug: https://github.com/curl/curl/issues/10122
+export function shouldBypassProxyForHost(hostname: string | null, noProxy: string): boolean {
+  if (!hostname || !noProxy) {
+    return false;
+  }
+
+  const normalizedHostname = hostname.toLowerCase();
+
+  return noProxy
+    .split(',')
+    .map(entry => entry.trim().toLowerCase())
+    .filter(Boolean)
+    .some(entry => {
+      if (entry.startsWith('.')) {
+        return normalizedHostname === entry.slice(1) || normalizedHostname.endsWith(entry);
+      }
+      return normalizedHostname === entry;
+    });
+}
 
 export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   const trimmedUrl = url.trim();

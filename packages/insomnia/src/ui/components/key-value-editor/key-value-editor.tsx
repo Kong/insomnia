@@ -35,6 +35,13 @@ interface Pair {
   canDisable?: boolean;
 }
 
+// Id of the row whose Name cell should grab focus after an "Add". Module-level so it survives the
+// KeyValueEditor remount that the async pair save triggers, and so it isn't prematurely consumed under
+// React StrictMode. Keying off the specific id (rather than a shared boolean) means only the newly
+// added row can autofocus — never an unrelated row in another mounted KeyValueEditor. Set on "Add",
+// read during render, and cleared once that exact row's Name editor focuses (via onAutoFocus).
+let pendingFocusLastRowId: string | null = null;
+
 function createEmptyPair() {
   return {
     id: generateId('pair'),
@@ -275,6 +282,7 @@ export const KeyValueEditor: FC<Props> = ({
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => {
             const id = generateId('pair');
+            pendingFocusLastRowId = id;
             upsertPair({ id, name: '', value: '', description: '', disabled: false });
           }}
         >
@@ -505,6 +513,23 @@ export const KeyValueEditor: FC<Props> = ({
                 textValue={pair.name + '-' + pair.value}
                 style={{ opacity: pair.disabled ? '0.4' : '1' }}
                 className={`relative grid h-(--line-height-sm) shrink-0 gap-2 bg-(--color-bg) px-2 outline-hidden ${showDescription ? 'grid-cols-[max-content_1fr_1fr_1fr_max-content]' : 'grid-cols-[max-content_1fr_1fr_max-content]'}`}
+                onFocus={event => {
+                  if (isDisabled) {
+                    return;
+                  }
+                  // Only react when the row element itself takes focus, never an inner editor/control.
+                  if (event.target !== event.currentTarget) {
+                    return;
+                  }
+                  const listbox = event.currentTarget.closest('[role="listbox"]');
+                  const enteredFromOutside = !listbox?.contains(event.relatedTarget as Node | null);
+                  // Tabbing onto the grid (focus entering from outside) or landing on the trailing blank
+                  // row drops the cursor into the blank row's Name editor so the user can start typing a
+                  // new pair immediately. Arrow-key navigation between existing rows is left untouched.
+                  if (enteredFromOutside || isBlank) {
+                    blankNameEditorRef.current?.focusEnd();
+                  }
+                }}
               >
                 <div
                   slot="drag"
@@ -520,6 +545,12 @@ export const KeyValueEditor: FC<Props> = ({
                     placeholder={namePlaceholder || 'Name'}
                     defaultValue={pair.name}
                     readOnly={pair.disabled || isDisabled}
+                    autoFocus={pair.id === pendingFocusLastRowId}
+                    onAutoFocus={() => {
+                      if (pendingFocusLastRowId === pair.id) {
+                        pendingFocusLastRowId = null;
+                      }
+                    }}
                     getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
                     onChange={name => {
                       upsertPair({ ...pair, name });

@@ -1735,7 +1735,7 @@ describe('Feature: Control Plane Naming', () => {
 
     const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const projects = konnectProjects(await db.find(models.project.type, { konnectControlPlaneId: { $ne: null } }));
+    const projects = konnectProjects(await insoservices.project.list({ konnectControlPlaneId: { $ne: null } }));
     expect(projects).toHaveLength(1);
     expect(projects[0]).toMatchObject({ name: 'Production', konnectControlPlaneId: 'cp-uuid-1' });
     expect(result.controlPlanes.created).toBe(1);
@@ -1748,7 +1748,7 @@ describe('Feature: Control Plane Naming', () => {
     vi.stubGlobal('fetch', mockFetch([makeCp({ id: 'cp-uuid-1', name: 'Production' })], [], []));
     const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const [project] = konnectProjects(await db.find(models.project.type, { konnectControlPlaneId: { $ne: null } }));
+    const [project] = konnectProjects(await insoservices.project.list({ konnectControlPlaneId: { $ne: null } }));
     expect(project.name).toBe('Production');
     expect(result.controlPlanes.updated).toBe(1);
   });
@@ -1767,17 +1767,13 @@ describe('Feature: Control Plane Naming', () => {
   it('Scenario: Re-sync deletes project when CP is removed from Konnect', async () => {
     vi.stubGlobal('fetch', mockFetch([makeCp({ id: 'cp-uuid-1' })], [], []));
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
-    expect(konnectProjects(await db.find(models.project.type, { konnectControlPlaneId: { $ne: null } }))).toHaveLength(
-      1,
-    );
+    expect(konnectProjects(await insoservices.project.list({ konnectControlPlaneId: { $ne: null } }))).toHaveLength(1);
 
     vi.stubGlobal('fetch', mockFetch([], [], []));
     const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     expect(result.controlPlanes.deleted).toBe(1);
-    expect(konnectProjects(await db.find(models.project.type, { konnectControlPlaneId: { $ne: null } }))).toHaveLength(
-      0,
-    );
+    expect(konnectProjects(await insoservices.project.list({ konnectControlPlaneId: { $ne: null } }))).toHaveLength(0);
   });
 });
 

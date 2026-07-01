@@ -221,9 +221,7 @@ export async function getProjectsWithGitRepositories({
 }: {
   organizationId: string;
 }): Promise<(Project & { gitRepository?: GitRepository })[]> {
-  const projects = await database.find<Project>('Project', {
-    parentId: organizationId,
-  });
+  const projects = await services.project.listByOrganizationIds(organizationId);
 
   const gitRepositoryIds = projects
     .map(p => (models.project.isConnectedGitProject(p) ? models.project.getEffectiveRepoId(p) : null))

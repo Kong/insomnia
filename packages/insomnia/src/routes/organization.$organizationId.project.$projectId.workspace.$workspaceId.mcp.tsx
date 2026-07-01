@@ -14,7 +14,7 @@ import { useWorkspaceLoaderData } from './organization.$organizationId.project.$
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId, organizationId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));

@@ -13,7 +13,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(typeof projectId === 'string', 'Project Id is required');
 
   try {
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;

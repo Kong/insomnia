@@ -11,7 +11,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');
   invariant(typeof projectId === 'string', 'Project ID is required');
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
