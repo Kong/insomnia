@@ -58,7 +58,7 @@ export const ProjectModal = ({
             if (!open) requestClose();
           }}
           isDismissable={false}
-          className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+          className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30 pt-(--padding-xl)"
         >
           <Modal
             ref={modalRef}

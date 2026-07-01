@@ -244,7 +244,7 @@ export const ProjectCreateForm: FC<Props> = ({
               ) : (
                 <div className="flex flex-col gap-2 px-0.5">
                   <Label className="text-sm text-(--color-font)">Folder</Label>
-                  <p className="text-xs text-(--hl-lg)">
+                  <p className="text-xs">
                     Insomnia will open this folder as a Git project. If it isn't a git repository yet, one will be
                     initialized.
                   </p>
