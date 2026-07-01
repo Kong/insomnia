@@ -138,7 +138,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
-    const activeProject = await services.project.get(projectId);
+    const activeProject = await services.project.getById(projectId);
     if (!activeProject) {
       showResourceNotFoundToast(`Project not found: ${projectId}`);
       throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -400,7 +400,13 @@ const Debug = () => {
       }
     },
     request_createHTTP: async () => {
-      const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+      // When a request is active, create a sibling; when a folder is selected (and no request is
+      // active), create inside that folder; otherwise create at the workspace root.
+      const parentId = activeRequest
+        ? activeRequest.parentId
+        : requestGroupId && isRequestGroupId(requestGroupId)
+          ? requestGroupId
+          : activeWorkspace._id;
       createRequestFetcher.submit({
         organizationId,
         projectId,

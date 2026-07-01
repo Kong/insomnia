@@ -62,6 +62,9 @@ export interface OneLineEditorProps {
   eventListeners?: EditorEventListener<keyof EditorEventMap>[];
   // NOTE: stable key for caching/restoring undo history across remounts
   uniquenessKey?: string;
+  autoFocus?: boolean;
+  // Called once when the editor focuses itself due to `autoFocus`. Lets callers clear a one-shot flag.
+  onAutoFocus?: () => void;
 }
 
 export interface EditorEventListener<T extends keyof EditorEventMap> {
@@ -88,6 +91,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       onBlur,
       eventListeners,
       uniquenessKey,
+      autoFocus,
+      onAutoFocus,
     },
     ref,
   ) => {
@@ -308,6 +313,56 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     useResizeObserver(editorContainerRef, ({ width }) => {
       if (width && width > 0) {
         initEditor();
+      }
+    });
+
+    reactUse.useMount(() => {
+      initEditor();
+      if (autoFocus && !readOnly) {
+        onAutoFocus?.();
+        // An enclosing React Aria ListBox (params/headers/environment grids) restores DOM focus to
+        // the row right after we focus the editor, and a single deferred focus loses that race on
+        // slower/headless machines. So we re-assert focus across a short window, re-grabbing only when
+        // focus was bounced to a non-interactive element (the row) — never when the user deliberately
+        // moved to another control (e.g. Tab from the URL bar to Send) — until the editor holds focus
+        // or the window elapses.
+        const deadline = Date.now() + 500;
+        const ensureFocus = () => {
+          const cm = codeMirror.current;
+          if (!cm) {
+            return;
+          }
+          if (!cm.hasFocus()) {
+            const active = document.activeElement as HTMLElement | null;
+            // The row React Aria bounces focus to is a non-interactive container (role="row"/"option");
+            // anything genuinely interactive (a field, button, link, menu item, etc.) means the user
+            // moved on purpose, so we must not steal focus back.
+            const role = active?.getAttribute('role');
+            const userMovedToAnotherControl =
+              !!active &&
+              (active.tagName === 'INPUT' ||
+                active.tagName === 'TEXTAREA' ||
+                active.tagName === 'SELECT' ||
+                active.tagName === 'BUTTON' ||
+                active.tagName === 'A' ||
+                active.isContentEditable ||
+                role === 'button' ||
+                role === 'link' ||
+                role === 'menuitem' ||
+                role === 'menuitemradio' ||
+                role === 'checkbox' ||
+                role === 'tab');
+            if (userMovedToAnotherControl) {
+              return;
+            }
+            cm.focus();
+            cm.getDoc().setCursor(cm.getDoc().lineCount(), 0);
+          }
+          if (Date.now() < deadline) {
+            requestAnimationFrame(ensureFocus);
+          }
+        };
+        requestAnimationFrame(ensureFocus);
       }
     });
 

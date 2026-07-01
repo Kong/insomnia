@@ -1,5 +1,5 @@
-import type { BaseModel, Project, Workspace } from 'insomnia-data';
-import { database, models } from 'insomnia-data';
+import type { BaseModel, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
@@ -35,9 +35,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
 
   useEffect(() => {
     (async () => {
-      const organizationProjects = await database.find<Project>(models.project.type, {
-        parentId: selectedOrgId,
-      });
+      const organizationProjects = await services.project.listByOrganizationIds(selectedOrgId);
       setProjectOptions(models.project.sortProjects(organizationProjects));
       setSelectedProjectId(organizationProjects[0]?._id || '');
     })();

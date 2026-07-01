@@ -68,7 +68,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/auth/login'));
   }
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
 
   if (!project) {
     // When a project is not found (e.g., after deletion), check if user was on Konnect tab
@@ -78,7 +78,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       try {
         const parsedTab = JSON.parse(storedTab);
         if (parsedTab === 'konnect') {
-          const allProjects = await services.project.list({ organizationId });
+          const allProjects = await services.project.listByOrganizationIds(organizationId);
           const konnectProjects = models.project.sortProjects(allProjects.filter(p => p.konnectControlPlaneId != null));
           if (konnectProjects.length > 0) {
             return redirect(

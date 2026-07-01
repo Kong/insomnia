@@ -18,6 +18,7 @@ export type {
   GitHubProviderConfig,
   GitLabProviderConfig,
   CustomProviderConfig,
+  NativeProviderConfig,
   GitRemoteProviderConfig,
   GitRemoteProvider,
   OAuthInitResult,
@@ -35,6 +36,7 @@ export { GitRemoteProviderRegistry } from './registry';
 export { GitHubProvider } from './github';
 export { GitLabProvider } from './gitlab';
 export { CustomProvider } from './custom';
+export { NativeProvider } from './native';
 
 import { getGitHubRestApiUrl } from '~/common/constants';
 
@@ -42,6 +44,7 @@ import { getGitHubRestApiUrl } from '~/common/constants';
 import { CustomProvider } from './custom';
 import { GitHubProvider } from './github';
 import { GitLabProvider } from './gitlab';
+import { NativeProvider } from './native';
 import { GitRemoteProviderRegistry } from './registry';
 
 /**
@@ -90,6 +93,16 @@ export function initializeGitRemoteProviders(): void {
       displayName: 'Access Token',
       description: 'Any Git server with personal access token',
       iconName: 'key',
+    }),
+  );
+
+  // Register Native provider (system git credential manager)
+  gitRemoteProviderRegistry.register(
+    new NativeProvider({
+      type: 'native',
+      displayName: 'System Git Credentials',
+      description: 'Use the credentials configured in your system git credential manager',
+      iconName: ['fab', 'git-alt'],
     }),
   );
 

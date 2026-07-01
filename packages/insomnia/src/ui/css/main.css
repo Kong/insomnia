@@ -1539,12 +1539,25 @@ html {
   padding: var(--padding-xs) var(--padding-sm);
   z-index: 99999;
 }
-.CodeMirror-lint-tooltip .CodeMirror-lint-message-error {
+.CodeMirror-lint-tooltip .CodeMirror-lint-message-error,
+.CodeMirror-lint-tooltip .CodeMirror-lint-message-warning {
   background-image: none;
-  padding-left: 0;
+  position: relative;
 }
-.CodeMirror-lint-tooltip::after {
-  display: none;
+.CodeMirror-lint-tooltip .CodeMirror-lint-message-error::before,
+.CodeMirror-lint-tooltip .CodeMirror-lint-message-warning::before {
+  position: absolute;
+  left: 0;
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+}
+.CodeMirror-lint-tooltip .CodeMirror-lint-message-error::before {
+  content: '\f057'; /* FontAwesome circle-xmark icon */
+  color: var(--color-danger);
+}
+.CodeMirror-lint-tooltip .CodeMirror-lint-message-warning::before {
+  content: '\f071'; /* FontAwesome triangle-exclamation icon */
+  color: var(--color-warning);
 }
 .CodeMirror-hints {
   border: 0;
