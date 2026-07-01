@@ -25,7 +25,7 @@ test.describe('Cloud Sync', () => {
 
   test('Discard, branch and commit actions', async ({ page, insomnia }) => {
     // Sync collection project
-    await page.getByLabel('Collection Project').click();
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('Collection Project');
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // Send request and check body
     await page.getByRole('button', { name: 'Send' }).click();
@@ -100,10 +100,10 @@ test.describe('Cloud Sync', () => {
     await page.getByRole('dialog').locator('[data-icon="x"]').click();
   });
 
-  test('Push actions', async ({ page, app }) => {
+  test('Push actions', async ({ page, app, insomnia }) => {
     test.slow();
 
-    await page.getByLabel('Environment Project').click();
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('Environment Project');
     // Wait for sync-dropdown to be mounted
     await page.getByLabel('Git Sync').waitFor({ state: 'visible' });
     await fetch(`${devServerUrl}/__test-config/cloud-sync/new-commit`, {
