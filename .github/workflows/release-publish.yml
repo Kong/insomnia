@@ -43,8 +43,10 @@ jobs:
       packages: write
     steps:
       - name: Check Release Build Confirmed
+        env:
+          IS_RELEASE_BUILD_TRIGGERED: ${{ github.event.inputs.release_build }}
         run: |
-          if [ "${{ github.event.inputs.release_build }}" != "true" ]; then
+          if [ "$IS_RELEASE_BUILD_TRIGGERED" != "true" ]; then
             echo "::error title=Missing Release Build::You must check 'release_build' to confirm that release-build.yml has been triggered for this version before running this workflow."
             exit 1
           fi
