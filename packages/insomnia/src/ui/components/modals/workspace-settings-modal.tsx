@@ -170,6 +170,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   >
                     <Label className="text-sm text-(--hl)">Name</Label>
                     <Input
+                      autoFocus={!isScratchpadWorkspace}
                       placeholder="Awesome API"
                       className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                     />
