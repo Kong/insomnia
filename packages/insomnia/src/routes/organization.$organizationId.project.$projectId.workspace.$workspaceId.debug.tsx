@@ -134,7 +134,7 @@ const INITIAL_GRPC_REQUEST_STATE = {
   methods: [],
 };
 
-export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
@@ -148,20 +148,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     if (!activeWorkspace) {
       showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
       throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
-    }
-
-    const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
-    const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    const activeRequest = activeRequestId ? await services.request.getById(activeRequestId) : null;
-    // TODO(george): we should remove this after enabling the sidebar for the runner
-    const startOfQuery = request.url.indexOf('?');
-    const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
-    const isDisplayingRunner = urlWithoutQuery.includes('/runner');
-    const doNotSkipToActiveRequest = request.url.includes('doNotSkipToActiveRequest=true');
-    if (activeRequest && !isDisplayingRunner && !doNotSkipToActiveRequest) {
-      return redirect(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`,
-      );
     }
   }
   return null;
