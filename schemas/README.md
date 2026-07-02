@@ -1,6 +1,6 @@
 # Insomnia File Schema
 
-[`insomnia.schema.json`](./insomnia.schema.json) is a [JSON Schema](https://json-schema.org/)
+[`insomnia.schema.5.1.json`](./insomnia.schema.5.1.json) is a [JSON Schema](https://json-schema.org/)
 (draft 2020-12) describing the **Insomnia v5 file format** — the `.yaml` files you
 get when you export a collection, design document, environment or mock server, and
 the files Insomnia reads and writes in Git-backed repositories.
@@ -12,30 +12,27 @@ AI agents a precise contract for the files they generate.
 > [`packages/insomnia/src/common/import-v5-parser.ts`](../packages/insomnia/src/common/import-v5-parser.ts)).
 > Do not edit the schema files by hand — see [Regenerating](#regenerating).
 
-## Files
+## Versioning
 
-Two files are generated for every schema version:
-
-| File                             | Purpose                                                             |
-| -------------------------------- | ------------------------------------------------------------------- |
-| `insomnia.schema.json`           | Stable "latest" alias — always mirrors the current schema version.  |
-| `insomnia.schema.<version>.json` | Immutable, versioned snapshot (e.g. `insomnia.schema.5.1.json`).    |
-
-Reference `insomnia.schema.json` to always validate against the latest format, or pin a
-specific `insomnia.schema.<version>.json` if you need a stable, unchanging contract. The
-current version is defined by `INSOMNIA_SCHEMA_VERSION` in
+Each schema version is published as its own immutable file,
+`insomnia.schema.<version>.json` (e.g. `insomnia.schema.5.1.json`). Bumping the schema
+adds a new file next to the existing ones, so every version stays addressable and no
+published URL ever changes meaning. The current version is defined by
+`INSOMNIA_SCHEMA_VERSION` in
 [`schema-version.ts`](../packages/insomnia/src/common/insomnia-schema-migrations/schema-version.ts).
+
+Reference the specific version you target — when the schema bumps, update the version in
+the URL to move forward.
 
 ## Stable URL
 
-The schemas are published as raw files on the default branch:
+The schema is published as a raw file on the default branch:
 
 ```
-https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.json
 https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json
 ```
 
-This is the value of each schema's `$id` and the URL you should reference below. To pin
+This is the value of the schema's `$id` and the URL you should reference below. To pin
 a specific app version, swap `develop` for a release tag (e.g. `core@12.0.0`).
 
 ## What it covers
@@ -60,7 +57,7 @@ and map your Insomnia files to the schema in `.vscode/settings.json`:
 ```jsonc
 {
   "yaml.schemas": {
-    "https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.json": [
+    "https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json": [
       "**/*.insomnia.yaml",
       ".insomnia/**/*.yml"
     ]
@@ -71,7 +68,7 @@ and map your Insomnia files to the schema in `.vscode/settings.json`:
 You can also point a single file at the schema with an inline modeline comment:
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json
 type: collection.insomnia.rest/5.0
 name: My Collection
 ```
@@ -83,9 +80,9 @@ Validate a file with any JSON Schema validator. Example with
 first — e.g. with [`yq`](https://github.com/mikefarah/yq)):
 
 ```bash
-curl -sO https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.json
+curl -sO https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json
 yq -o=json '.' my-collection.insomnia.yaml > my-collection.json
-ajv validate --spec=draft2020 -s insomnia.schema.json -d my-collection.json
+ajv validate --spec=draft2020 -s insomnia.schema.5.1.json -d my-collection.json
 ```
 
 ### Node.js
@@ -96,7 +93,7 @@ import addFormats from 'ajv-formats';
 import { readFileSync } from 'node:fs';
 import YAML from 'yaml';
 
-const schema = JSON.parse(readFileSync('insomnia.schema.json', 'utf8'));
+const schema = JSON.parse(readFileSync('insomnia.schema.5.1.json', 'utf8'));
 const ajv = addFormats(new Ajv2020({ allErrors: true, strict: false }));
 const validate = ajv.compile(schema);
 
@@ -113,7 +110,7 @@ When asking an agent to author or edit an Insomnia file, give it the schema URL 
 contract to follow and validate against:
 
 > Generate an Insomnia collection that conforms to the JSON Schema at
-> `https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.json`.
+> `https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json`.
 > The top-level `type` must be `collection.insomnia.rest/5.0`.
 
 ## Regenerating

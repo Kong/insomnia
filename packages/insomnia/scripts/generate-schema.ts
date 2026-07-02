@@ -9,13 +9,12 @@
  *
  * Run with: `npm run generate:schema -w insomnia`
  *
- * Two files are written to the repo-root `schemas/` directory:
- * - `insomnia.schema.<version>.json` — a versioned, immutable historical record
- *   for the current `INSOMNIA_SCHEMA_VERSION` (e.g. `insomnia.schema.5.1.json`).
- * - `insomnia.schema.json` — a stable "latest" alias that always mirrors the
- *   current version, so the published URL never changes.
+ * The output is written to the repo-root `schemas/` directory as a versioned,
+ * immutable file for the current `INSOMNIA_SCHEMA_VERSION`
+ * (e.g. `insomnia.schema.5.1.json`). Bumping the version produces a new file
+ * alongside the previous ones, keeping every published schema addressable.
  *
- * The generated files are committed to the repo and kept in sync by a CI drift
+ * The generated file is committed to the repo and kept in sync by a CI drift
  * check (see `.github/workflows/test.yml`). If you change the Zod schema,
  * re-run this script and commit the updated `schemas/*.json`.
  *
@@ -82,9 +81,8 @@ const PARSER_ENTRY = path.join(SRC_DIR, 'common/import-v5-parser.ts');
 // Repo-root `schemas/` directory. This script lives at
 // packages/insomnia/scripts/, so go up three levels to the repo root.
 const OUTPUT_DIR = path.resolve(__dirname, '../../../schemas');
-// Versioned file (immutable per schema version) and the "latest" alias.
+// Versioned, immutable file for the current schema version.
 const VERSIONED_FILENAME = `insomnia.schema.${INSOMNIA_SCHEMA_VERSION}.json`;
-const LATEST_FILENAME = 'insomnia.schema.json';
 
 const bundleParser = async (): Promise<{ InsomniaFileSchema: z.ZodType }> => {
   // Write inside the project so Node can resolve `zod` from node_modules.
@@ -124,28 +122,24 @@ const main = async () => {
 
   normalizeSchema(generated);
 
-  // The two files are byte-identical apart from their `$id`, which points each
-  // one at its own published URL.
-  const buildSchema = (filename: string) => ({
+  const schema = {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
-    $id: `${SCHEMA_BASE_URL}/${filename}`,
+    $id: `${SCHEMA_BASE_URL}/${VERSIONED_FILENAME}`,
     title: 'Insomnia File',
     description:
       `JSON Schema for Insomnia v${INSOMNIA_SCHEMA_VERSION} files (.insomnia / .yaml). ` +
       'Validates collections, API specs, mock servers, global environments and MCP clients. ' +
       'Generated from the Insomnia source of truth — do not edit by hand.',
     ...generated,
-  });
+  };
 
   mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  for (const filename of [VERSIONED_FILENAME, LATEST_FILENAME]) {
-    const outputPath = path.join(OUTPUT_DIR, filename);
-    writeFileSync(outputPath, `${JSON.stringify(buildSchema(filename), null, 2)}\n`);
+  const outputPath = path.join(OUTPUT_DIR, VERSIONED_FILENAME);
+  writeFileSync(outputPath, `${JSON.stringify(schema, null, 2)}\n`);
 
 
-    console.log(`Wrote ${outputPath}`);
-  }
+  console.log(`Wrote ${outputPath}`);
 };
 
 main().catch(err => {
