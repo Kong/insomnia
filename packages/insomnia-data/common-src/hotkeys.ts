@@ -121,7 +121,7 @@ const defaultRegistry: HotKeyRegistry = {
   },
   sidebar_showCreateDropdown: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.n.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.n.keyCode }],
+    winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.n.keyCode }],
   },
   sidebar_toggle: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.backslash.keyCode }],

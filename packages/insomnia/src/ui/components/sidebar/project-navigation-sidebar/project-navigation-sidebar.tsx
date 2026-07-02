@@ -1057,11 +1057,22 @@ const ProjectNavigationSidebarInner = (
       }
 
       event.preventDefault();
-      const triggerElement =
-        focusedRow ?? (parentRef.current?.querySelector('[aria-selected="true"]') as HTMLElement | null);
-      shortcutCreateTriggerRef.current = triggerElement || parentRef.current;
-      setShortcutTargetItemId(targetItem.doc._id);
-      setIsShortcutCreateOpen(true);
+
+      const targetId = targetItem.doc._id;
+      const targetIndex = visibleFlatItems.findIndex(item => item.doc._id === targetId);
+
+      // Scroll the item into view if needed
+      virtualizer.scrollToIndex(targetIndex, { align: 'auto' });
+
+      // Two request animation frames here: the first lets the virtualizer respond to scrollToIndex and the second waits for the browser to commit that
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const targetElement = parentRef.current?.querySelector(`[data-key="${targetId}"]`) as HTMLElement | null;
+          shortcutCreateTriggerRef.current = targetElement || parentRef.current;
+          setShortcutTargetItemId(targetId);
+          setIsShortcutCreateOpen(true);
+        });
+      });
     },
   });
 
