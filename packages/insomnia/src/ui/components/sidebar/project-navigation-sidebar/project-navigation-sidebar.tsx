@@ -1040,7 +1040,7 @@ const ProjectNavigationSidebarInner = (
         return;
       }
 
-      // Find the row the user currently has focused (e.g. via arrow up/down) in the sidebar.
+      // Find the row the user currently has focused via arrow up/down in the sidebar.
       const activeElement = document.activeElement;
       const focusedRow =
         activeElement && parentRef.current?.contains(activeElement)
