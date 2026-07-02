@@ -1017,7 +1017,10 @@ const ProjectNavigationSidebarInner = (
     selectedItemId && visibleFlatItems.findIndex(item => item.doc._id === selectedItemId) !== -1
       ? [selectedItemId]
       : [];
-  const selectedFlatItem = selectedItemId ? visibleFlatItems.find(item => item.doc._id === selectedItemId) : null;
+  const pinnedHeaderKeys = useMemo(
+    () => visibleFlatItems.filter(item => item.kind === 'pinnedHeader').map(item => item.doc._id),
+    [visibleFlatItems],
+  );
   const shortcutTargetItem = shortcutTargetItemId
     ? (visibleFlatItems.find(item => item.doc._id === shortcutTargetItemId && item.kind !== 'pinnedRequest') ?? null)
     : null;
@@ -1046,6 +1049,9 @@ const ProjectNavigationSidebarInner = (
       const focusedKey = focusedRow?.dataset.key ?? null;
       const focusedItem = focusedKey
         ? visibleFlatItems.find(item => item.doc._id === focusedKey && item.kind !== 'pinnedRequest')
+        : null;
+      const selectedFlatItem = selectedItemId
+        ? visibleFlatItems.find(item => item.doc._id === selectedItemId && item.kind !== 'pinnedRequest')
         : null;
       // If the user has a row focused, use that as the target item; otherwise, use the selected item.
       const targetItem = focusedItem ?? selectedFlatItem;
@@ -1212,6 +1218,8 @@ const ProjectNavigationSidebarInner = (
               className="outline-hidden"
               selectedKeys={selectedKeys}
               selectionMode="single"
+              disabledKeys={pinnedHeaderKeys}
+              disabledBehavior="all"
               dragAndDropHooks={sidebarDragAndDropHooks}
             >
               {virtualItem => {
