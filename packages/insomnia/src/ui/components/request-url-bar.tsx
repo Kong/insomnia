@@ -17,6 +17,7 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { clearPendingFocusUrlBar, shouldFocusUrlBar } from '~/ui/components/request-url-bar-focus';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
@@ -127,6 +128,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         inputRef.current.focusEnd();
       }
     }, [inputRef]);
+
+    // Focus the URL bar when this mounts for a freshly created request (flag set by the create flow).
+    // Read (not consumed) during render; the editor clears the flag once it actually focuses, which is
+    // robust to React StrictMode's double-mount and to the request pane keying by requestId.
+    const focusUrlOnMount = shouldFocusUrlBar();
 
     const setUrl = useCallback(
       (url: string) => {
@@ -313,6 +319,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             uniquenessKey={uniquenessKey}
             ref={inputRef}
             type="text"
+            autoFocus={focusUrlOnMount}
+            onAutoFocus={clearPendingFocusUrlBar}
             getAutocompleteConstants={handleAutocompleteUrls}
             placeholder="https://api.myproduct.com/v1/users"
             defaultValue={url}

@@ -12,9 +12,13 @@ import {
 import { invariant } from '~/common/utils/invariant';
 import type { RequestCreatedMetricsProperties } from '~/ui/analytics';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { focusUrlBarOnNextRequest } from '~/ui/components/request-url-bar-focus';
 import { trackCioEvent } from '~/ui/hooks/use-cio';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
+
+// Request types that are edited in the RequestPane / RequestUrlBar and should focus the URL on create.
+const URL_BAR_REQUEST_TYPES: CreateRequestType[] = ['HTTP', 'GraphQL', 'Event Stream', 'From Curl'];
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
@@ -189,6 +193,11 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
         projectId,
         workspaceId,
       });
+
+      // Focus the URL bar once the newly created request opens so the user can start typing.
+      if (URL_BAR_REQUEST_TYPES.includes(requestType)) {
+        focusUrlBarOnNextRequest();
+      }
 
       return submit(JSON.stringify({ requestType, parentId, req, metrics }), {
         action: url,

@@ -105,33 +105,42 @@ test.describe('Check vault used in environment', () => {
 
     // add first secret environment
     const firstRow = kvTable.getByRole('option').first();
-    await firstRow.getByTestId('OneLineEditor').first().click();
+    const firstKey = firstRow.getByTestId('OneLineEditor').first();
+    await firstKey.click();
     await page.keyboard.type('foo');
-    await firstRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
-    await page.keyboard.type('bar');
-    // Delay the click to let debounce finish
+    await expect.soft(firstKey).toContainText('foo');
+    // Convert the row to Secret *before* entering the value, then type the secret directly into the
+    // revealed editor. Converting a just-typed string to Secret races the async persistence
+    // round-trip (the editor's change goes through a fetcher submit + revalidation): the typed value
+    // may not be committed yet when the conversion reads it, so an empty string gets encrypted and the
+    // revealed secret comes back blank. Typing into the already-Secret field encrypts each keystroke,
+    // so there is no stale value to read.
     await firstRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
     await expect.soft(firstRow.locator('.fa-eye-slash')).toBeVisible();
+    // reveal the secret editor and type the value into it
     await firstRow.locator('.fa-eye-slash').click();
-    // test decrypt secret in UI
-    await expect.soft(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
+    const firstValue = firstRow.getByTestId('OneLineEditor').nth(1);
+    await firstValue.click({ delay: 200 });
+    await page.keyboard.type('bar');
+    // test the secret value is shown decrypted in the UI
+    await expect.soft(firstValue).toContainText('bar');
 
-    // add second secret environment
+    // add second secret environment (same order as above: convert to Secret first, then type the value)
     await page.getByRole('button', { name: 'Add Row' }).click();
     const secondRow = kvTable.getByRole('option').nth(1);
-    await secondRow.getByTestId('OneLineEditor').first().click();
+    const secondKey = secondRow.getByTestId('OneLineEditor').first();
+    await secondKey.click();
     await page.keyboard.type('hello');
-    await secondRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
-    await page.keyboard.type('world');
-    // Delay the click to let debounce finish
+    await expect.soft(secondKey).toContainText('hello');
     await secondRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
-    // ensure the secret value has been persisted before navigating away, otherwise
-    // the request below pops a "1 environment variable is missing" modal for vault.hello
     await expect.soft(secondRow.locator('.fa-eye-slash')).toBeVisible();
     await secondRow.locator('.fa-eye-slash').click();
-    await expect.soft(secondRow.getByTestId('OneLineEditor').nth(1)).toContainText('world');
+    const secondValue = secondRow.getByTestId('OneLineEditor').nth(1);
+    await secondValue.click({ delay: 200 });
+    await page.keyboard.type('world');
+    await expect.soft(secondValue).toContainText('world');
 
     // go back
     await page.getByTestId('workspace-breadcrumb-level-0').click();
