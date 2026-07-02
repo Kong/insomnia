@@ -43,13 +43,13 @@ import path from 'node:path';
 
 import type { BaseModel, Workspace, WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import YAML from 'yaml';
 
 import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
+import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -534,6 +534,10 @@ class RepoFileWatcher {
 
     try {
       if (!ruleset) {
+        if (this.hasProblem(absPath)) {
+          return;
+        }
+
         // Ruleset removed from the DB — remove the file if we were tracking it.
         if (this.lastWrittenHash.has(absPath) || this.lastSyncMtime.has(absPath)) {
           await fs.promises.rm(absPath, { force: true });
@@ -654,20 +658,6 @@ class RepoFileWatcher {
     );
   }
 
-  private isSpectralRulesetFile(normalisedPath: string, content: string): boolean {
-    if (!this.isSpectralRulesetPath(normalisedPath)) {
-      return false;
-    }
-    try {
-      const parsedContent = YAML.parse(content);
-      return (
-        !!parsedContent && typeof parsedContent === 'object' && ('extends' in parsedContent || 'rules' in parsedContent)
-      );
-    } catch {
-      return false;
-    }
-  }
-
   /**
    * Read a YAML file from disk and import its documents into the DB.
    *
@@ -691,7 +681,21 @@ class RepoFileWatcher {
     this.lastWrittenHash.set(normalised, result.hash);
     this.lastSyncMtime.set(normalised, result.mtimeMs);
 
-    if (this.isSpectralRulesetFile(normalised, result.content)) {
+    if (this.isSpectralRulesetPath(normalised)) {
+      const validation = validateSpectralRuleset(result.content);
+      if (!validation.isValid) {
+        await services.projectLintRuleset.remove(this.projectId);
+        this.addProblem(normalised, {
+          filePath: absPath,
+          relPath: this.toPosixRelPath(absPath),
+          kind: 'parse-error',
+          message: validation.error,
+        });
+        this.notifyRenderer();
+        return;
+      }
+
+      this.clearProblem(normalised);
       await services.projectLintRuleset.upsert(this.projectId, { rulesetContent: result.content });
       this.notifyRenderer();
       return;
