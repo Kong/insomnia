@@ -64,8 +64,11 @@ jobs:
       - name: Check Insomnia JSON schema is up to date
         run: |
           npm run generate:schema -w insomnia
-          if ! git diff --exit-code schemas/insomnia.schema.json; then
-            echo "::error::schemas/insomnia.schema.json is out of date. Run 'npm run generate:schema -w insomnia' and commit the result."
+          # `git add -N` marks any newly-generated versioned file (e.g. after a
+          # schema version bump) as intent-to-add so `git diff` flags it too.
+          git add -N schemas/
+          if ! git diff --exit-code schemas/; then
+            echo "::error::schemas/ is out of date. Run 'npm run generate:schema -w insomnia' and commit the result."
             exit 1
           fi
 
