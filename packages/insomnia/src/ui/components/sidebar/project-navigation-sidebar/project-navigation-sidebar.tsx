@@ -1037,15 +1037,18 @@ const ProjectNavigationSidebarInner = (
         return;
       }
 
-      // Prefer the row the user has keyboard-focused by arrow up/down in the sidebar
-      const focusedRow = (parentRef.current?.querySelector('[data-focus-visible]')?.closest('[data-key]') ??
-        null) as HTMLElement | null;
+      // Find the row the user currently has focused (e.g. via arrow up/down) in the sidebar.
+      const activeElement = document.activeElement;
+      const focusedRow =
+        activeElement && parentRef.current?.contains(activeElement)
+          ? (activeElement.closest('[data-key]') as HTMLElement | null)
+          : null;
       const focusedKey = focusedRow?.dataset.key ?? null;
       const focusedItem = focusedKey
         ? visibleFlatItems.find(item => item.doc._id === focusedKey && item.kind !== 'pinnedRequest')
         : null;
+      // If the user has a row focused, use that as the target item; otherwise, use the selected item.
       const targetItem = focusedItem ?? selectedFlatItem;
-
       if (
         !targetItem ||
         (targetItem.kind !== 'project' && targetItem.kind !== 'workspace' && targetItem.kind !== 'collectionChild')

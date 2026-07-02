@@ -129,7 +129,7 @@ export const SidebarShortcutActionsDropdown = ({ target, storageRules, isOpen, o
             onAction={key => actions.find(item => item.id === key)?.action()}
             items={actions}
             className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
-            defaultSelectedKeys={['HTTP', 'new-collection']}
+            defaultSelectedKeys={[allowCreateWorkspace ? 'new-collection' : 'HTTP']}
           >
             <MenuSection className="flex flex-1 flex-col">
               <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
