@@ -112,6 +112,15 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const rulesetContent = projectLintRuleset?.rulesetContent || '';
   const rulesetLastCompiledAt = projectLintRuleset?.modified ?? null;
 
+  // For git projects, surface a committed .spectral.yaml that was rejected as
+  // invalid on import (so the user learns it wasn't applied and why, instead of
+  // silently falling back to the default ruleset). Refreshed automatically via
+  // the git.db-synced → revalidate flow in root.tsx.
+  const rulesetImportIssue =
+    isConnectedGitProject && gitRepositoryId
+      ? await window.main.git.getProjectRulesetImportIssue({ projectId, gitRepositoryId })
+      : null;
+
   let parsedSpec: OpenAPIV3.Document | undefined;
 
   try {
@@ -125,6 +134,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     parsedSpec,
     rulesetContent,
     rulesetLastCompiledAt,
+    rulesetImportIssue,
   };
 }
 
@@ -212,8 +222,15 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
-  const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec, rulesetContent, rulesetLastCompiledAt } =
-    useLoaderData<typeof clientLoader>();
+  const {
+    apiSpec,
+    gitSyncRulesetPath,
+    isConnectedGitProject,
+    parsedSpec,
+    rulesetContent,
+    rulesetLastCompiledAt,
+    rulesetImportIssue,
+  } = useLoaderData<typeof clientLoader>();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const [expandedLintMessageCodes, setExpandedLintMessageCodes] = useState<string[]>([]);
@@ -772,13 +789,54 @@ const Component = ({ params }: Route.ComponentProps) => {
     </div>
   ) : null;
 
+  const isRulesetInvalid = !!rulesetImportIssue && !rulesetContent;
+
   const lintToolbar = (
     <div
       className={`flex h-(--line-height-sm) items-center gap-2 overflow-hidden border-solid border-(--hl-md) px-(--padding-sm) ${isLintPaneOpen ? 'border-b' : ''}`}
     >
       <div className="inline-flex items-center gap-2">
-        <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-        {selectedRulesetPath ? (
+        <Icon icon={selectedRulesetPath && !isRulesetInvalid ? 'file-circle-check' : 'file-circle-xmark'} />
+        {isRulesetInvalid && (
+          <>
+            <span>Invalid Custom Ruleset</span>
+            <TooltipTrigger delay={0}>
+              <Button
+                aria-label="Invalid ruleset details"
+                className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              >
+                <Icon icon="circle-info" />
+              </Button>
+              <Tooltip
+                placement="top end"
+                offset={8}
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+              >
+                <p className="mb-2">
+                  The custom ruleset in this project contains invalid content: {rulesetImportIssue}
+                </p>
+                <p>Fix the syntax in your connected git repository. The default OAS ruleset is used until then.</p>
+              </Tooltip>
+            </TooltipTrigger>
+            <TooltipTrigger delay={0}>
+              <Button
+                aria-label="Upload custom ruleset"
+                onPress={handleSelectSpectralFile}
+                className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              >
+                <Icon icon="upload" />
+              </Button>
+              <Tooltip
+                placement="top end"
+                offset={8}
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+              >
+                <p>Upload a valid custom Spectral ruleset to replace the invalid one.</p>
+              </Tooltip>
+            </TooltipTrigger>
+          </>
+        )}
+        {!isRulesetInvalid && selectedRulesetPath && (
           <>
             <TooltipTrigger delay={0}>
               <Button
@@ -836,7 +894,8 @@ const Component = ({ params }: Route.ComponentProps) => {
               </Tooltip>
             </TooltipTrigger>
           </>
-        ) : (
+        )}
+        {!isRulesetInvalid && !selectedRulesetPath && (
           <>
             <span>Default OAS Ruleset</span>
             <TooltipTrigger delay={0}>

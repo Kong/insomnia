@@ -547,6 +547,16 @@ class RepoFileWatcher {
         return;
       }
 
+      // A DB ruleset only exists when it was validated (UI upload or a valid
+      // git import), so any problem still recorded for this path is stale —
+      // e.g. a previously-invalid committed file that the user has now replaced
+      // via upload. Clear it here, because the fs.watch echo of the write below
+      // is dedup-skipped and never reaches importFile's clearProblem path.
+      if (this.hasProblem(absPath)) {
+        this.clearProblem(absPath);
+        this.notifyRenderer();
+      }
+
       const hash = contentHash(ruleset.rulesetContent);
       if (this.lastWrittenHash.get(absPath) === hash) {
         return;
