@@ -70,9 +70,7 @@ export async function updateLocalProjectToRemote({
     });
 
     // For each workspace in the local project
-    const projectWorkspaces = await services.workspace.list({
-      parentId: updatedProject._id,
-    });
+    const projectWorkspaces = await services.workspace.listByParentId(updatedProject._id);
 
     for (const workspace of projectWorkspaces) {
       const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
