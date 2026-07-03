@@ -10,10 +10,9 @@ import type {
   WebSocketRequest,
   WebSocketRequestMeta,
   Workspace,
-  WorkspaceMeta,
 } from 'insomnia-data';
 import type { BaseModel } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
 import { database } from '~/common/database';
 import { fuzzyMatchAll } from '~/common/misc';
@@ -57,10 +56,10 @@ export type WorkspaceWithSyncStatus = Workspace & {
 };
 
 export async function getWorkspacesByProjectIds(projectIds: string[]) {
-  const workspaces = await database.find<Workspace>(models.workspace.type, {
+  const workspaces = await services.workspace.list({
     parentId: { $in: projectIds },
   });
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+  const workspaceMetas = await services.workspaceMeta.list({
     parentId: { $in: workspaces.map(w => w._id) },
   });
   const metaByWorkspaceId = new Map(workspaceMetas.map(meta => [meta.parentId, meta]));

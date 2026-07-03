@@ -784,7 +784,7 @@ export async function findExistingImportedSpec(
     if (!incoming) continue;
 
     for (const pid of projectIds) {
-      const workspaces = await services.workspace.findByParentId(pid);
+      const workspaces = await services.workspace.listByParentId(pid);
       const designWorkspaces = workspaces.filter(w => w.scope === 'design');
 
       for (const ws of designWorkspaces) {

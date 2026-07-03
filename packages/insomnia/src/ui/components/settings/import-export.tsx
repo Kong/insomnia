@@ -415,7 +415,7 @@ export async function exportWorkspaceData({
 }
 
 export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
-  const workspaces = await database.find<Workspace>(models.workspace.type);
+  const workspaces = await services.workspace.list();
 
   const baseEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: { $in: workspaces.map(w => w._id) },

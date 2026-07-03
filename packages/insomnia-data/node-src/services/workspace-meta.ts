@@ -1,7 +1,11 @@
-import type { WorkspaceMeta } from 'insomnia-data';
+import type { Query, WorkspaceMeta } from 'insomnia-data';
 import { database as db, models } from 'insomnia-data';
 
 const { type } = models.workspaceMeta;
+
+export function list(query?: Query<WorkspaceMeta>, sort?: Record<string, any>, limit?: number) {
+  return db.find<WorkspaceMeta>(type, query, sort, limit);
+}
 
 export function create(patch: Partial<WorkspaceMeta> = {}) {
   if (!patch.parentId) {
@@ -24,15 +28,7 @@ export async function getByParentId(parentId: string) {
   return db.findOne<WorkspaceMeta>(type, { parentId });
 }
 
-export async function getByGitRepositoryId(gitRepositoryId: string) {
-  return db.findOne<WorkspaceMeta>(type, { gitRepositoryId });
-}
-
 export async function getOrCreateByParentId(parentId: string) {
   const doc = await getByParentId(parentId);
   return doc || create({ parentId });
-}
-
-export function all() {
-  return db.find<WorkspaceMeta>(type);
 }

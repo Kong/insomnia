@@ -1,5 +1,4 @@
-import type { Workspace } from 'insomnia-data';
-import { database, models, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
@@ -32,7 +31,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     });
 
     // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
+    const workspacesWithBackendProjects = await services.workspace.list({
       _id: {
         $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(
           p => p.rootDocumentId,

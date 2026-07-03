@@ -527,7 +527,7 @@ async function syncServiceWorkspace(
 
 /** Upserts the project-level environment workspace and syncs Konnect proxy URL vars into it. Returns the environment id. */
 async function upsertProjectEnvVars(controlPlane: KonnectControlPlane, project: Project): Promise<string> {
-  const existingEnvWorkspaces = await db.find<Workspace>(models.workspace.type, {
+  const existingEnvWorkspaces = await insoservices.workspace.list({
     parentId: project._id,
     scope: 'environment',
   });
@@ -641,7 +641,7 @@ async function syncControlPlane(
 
   // Load existing Konnect workspaces for this project once, keyed by service id
   const existingWorkspaces = (
-    await db.find<Workspace>(models.workspace.type, {
+    await insoservices.workspace.list({
       parentId: project._id,
       konnectServiceId: { $ne: null },
     })
