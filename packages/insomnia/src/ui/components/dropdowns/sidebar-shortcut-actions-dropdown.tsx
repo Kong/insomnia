@@ -106,6 +106,7 @@ export const SidebarShortcutActionsDropdown = ({ target, storageRules, isOpen, o
           setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
           onOpenChange(false);
         },
+        canCreateMockServer: Boolean(target.kind === 'workspace' ? target.project?._id : target.doc?._id),
       })
     : allowCreateRequest
       ? createRequestOrFolderActionItems({

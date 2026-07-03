@@ -198,7 +198,8 @@ export const ProjectDropdown: FC<Props> = ({
     createMcpClient: createNewMcpClient,
     createMockServer: createNewMockServer,
     createEnvironment: createNewGlobalEnvironment,
-  }).filter(item => (item.id === 'new-mock-server' ? Boolean(canCreateMockServer) : true));
+    canCreateMockServer: Boolean(canCreateMockServer),
+  });
 
   const projectDropdownActions: {
     name: string;
