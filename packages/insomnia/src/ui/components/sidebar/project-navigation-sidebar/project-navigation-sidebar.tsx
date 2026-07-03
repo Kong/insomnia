@@ -394,7 +394,7 @@ const ProjectNavigationSidebarInner = (
       );
       const firstKonnectProject = sortedKonnectProjects[0];
       if (firstKonnectProject) {
-        const workspaces = await services.workspace.findByParentId(firstKonnectProject._id);
+        const workspaces = await services.workspace.listByParentId(firstKonnectProject._id);
         const envWorkspace = workspaces.find(w => w.scope === 'environment');
         if (envWorkspace) {
           // Show environment onboarding after first successful sync

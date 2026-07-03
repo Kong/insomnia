@@ -133,7 +133,7 @@ export const ProjectDropdown: FC<Props> = ({
             source: 'project',
           },
         });
-        const workspacesForProject = await services.workspace.findByParentId(projectId);
+        const workspacesForProject = await services.workspace.listByParentId(projectId);
         exportProjectToFile(projectName, workspacesForProject);
       },
     },

@@ -1,6 +1,6 @@
 import { createTeamProject, fetchTeamProjects, getCurrentPlan, getUserProfile, isApiError } from 'insomnia-api';
-import type { Project, Workspace } from 'insomnia-data';
-import { database, models, services } from 'insomnia-data';
+import type { Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
 import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
@@ -70,9 +70,7 @@ export async function updateLocalProjectToRemote({
     });
 
     // For each workspace in the local project
-    const projectWorkspaces = await database.find<Workspace>('Workspace', {
-      parentId: updatedProject._id,
-    });
+    const projectWorkspaces = await services.workspace.listByParentId(updatedProject._id);
 
     for (const workspace of projectWorkspaces) {
       const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);

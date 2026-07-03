@@ -1,10 +1,9 @@
 import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
-import type { GitRepository, WorkspaceMeta } from 'insomnia-data';
+import type { GitRepository } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { getCurrentSessionId, type SessionData, setSessionData, unsetSessionData } from '~/common/account/session';
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '~/common/constants';
-import { database } from '~/common/database';
 import { getRuntime } from '~/runtimes';
 
 // Re-export the isomorphic session core so renderer callers have a single
@@ -137,7 +136,7 @@ async function _removeGitRepository(repo: GitRepository) {
     await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
   }
 
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, { gitRepositoryId: repo._id });
+  const workspaceMetas = await services.workspaceMeta.list({ gitRepositoryId: repo._id });
   for (const wsMeta of workspaceMetas) {
     await services.workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }

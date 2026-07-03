@@ -269,7 +269,7 @@ class RepoFileWatcher {
    * `importAllFiles` skips them (they are already up-to-date).
    */
   private async flushNewerDbWorkspacesToDisk(): Promise<void> {
-    const workspaces = await services.workspace.findByParentId(this.projectId);
+    const workspaces = await services.workspace.listByParentId(this.projectId);
 
     await Promise.all(
       workspaces.map(async workspace => {
@@ -952,13 +952,11 @@ class RepoFileWatcher {
     filterIds?: Set<string>,
   ): Promise<{ workspace: Workspace; meta: WorkspaceMeta | undefined }[]> {
     const query = filterIds ? { parentId: this.projectId, _id: { $in: [...filterIds] } } : { parentId: this.projectId };
-    const workspaces = await db.find<Workspace>(models.workspace.type, query as Parameters<typeof db.find>[1]);
+    const workspaces = await services.workspace.list(query);
     if (workspaces.length === 0) {
       return [];
     }
-    const metas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
-      parentId: { $in: workspaces.map(w => w._id) },
-    } as Parameters<typeof db.find>[1]);
+    const metas = await services.workspaceMeta.list({ parentId: { $in: workspaces.map(w => w._id) } });
     const metaByParent = new Map(metas.map(m => [m.parentId, m]));
     return workspaces.map(workspace => ({ workspace, meta: metaByParent.get(workspace._id) }));
   }

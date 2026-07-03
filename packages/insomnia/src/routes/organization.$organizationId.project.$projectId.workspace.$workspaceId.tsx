@@ -113,7 +113,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
 
-  const globalEnvironmentWorkspaces = await database.find<Workspace>(models.workspace.type, {
+  const globalEnvironmentWorkspaces = await services.workspace.list({
     parentId: projectId,
     scope: 'environment',
   });
@@ -293,7 +293,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     }
   }
 
-  const workspaces = await services.workspace.findByParentId(projectId);
+  const workspaces = await services.workspace.listByParentId(projectId);
 
   const collection = flattenTree();
 

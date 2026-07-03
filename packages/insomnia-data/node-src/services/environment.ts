@@ -1,9 +1,10 @@
 import * as crypto from 'node:crypto';
 
-import type { Environment, Workspace } from 'insomnia-data';
+import type { Environment } from 'insomnia-data';
 import { database as db, models } from 'insomnia-data';
 
 import * as projectService from './project';
+import * as workspaceService from './workspace';
 
 const { type, prefix, vaultEnvironmentPath } = models.environment;
 const { EnvironmentKvPairDataType, EnvironmentType } = models.environment;
@@ -12,7 +13,7 @@ const { EnvironmentKvPairDataType, EnvironmentType } = models.environment;
 export const removeAllSecrets = async (organizationIds: string[]) => {
   const allProjects = await projectService.listByOrganizationIds(organizationIds);
   const allProjectIds = allProjects.map(project => project._id);
-  const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(models.workspace.type, {
+  const allGlobalEnvironmentWorkspaces = await workspaceService.list({
     parentId: { $in: allProjectIds },
     scope: models.workspace.WorkspaceScopeKeys.environment,
   });

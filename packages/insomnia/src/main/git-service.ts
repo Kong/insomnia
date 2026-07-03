@@ -247,7 +247,7 @@ function toPosixRelPath(relPath: string) {
 }
 
 async function getProjectWorkspacesWithMeta(projectId: string) {
-  const workspaces = await services.workspace.findByParentId(projectId);
+  const workspaces = await services.workspace.listByParentId(projectId);
   const metas = await Promise.all(
     workspaces.map(async workspace => ({
       workspace,
@@ -1160,7 +1160,7 @@ export const cloneGitRepoAction = async ({
 
       if (insomniaFilesIds.length > 0) {
         // Check for existing workspaces with the same IDs (currently commented out)
-        const existingWorkspaces = await database.find(models.workspace.type, {
+        const existingWorkspaces = await services.workspace.list({
           _id: { $in: insomniaFilesIds },
         });
 
