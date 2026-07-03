@@ -143,6 +143,46 @@ test.describe('Export', () => {
     }
   });
 
+  test('Can export project files from the sidebar project dropdown in YAML format', async ({ insomnia, page }) => {
+    const projectName = 'Export Sidebar Project Test';
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.importMultipleFixtures(FIXTURE_FILES);
+    await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection A')).toBeVisible();
+    await expect.soft(insomnia.projectPage.workspaceList.workspaceLocator('Collection B')).toBeVisible();
+    const tempDir = createTempExportDir();
+
+    try {
+      await insomnia.projectPage.exportProjectFromSidebar(projectName, tempDir, 'yaml');
+      await waitForExportFiles(tempDir, 2);
+      const exportedFiles = getExportedFiles(tempDir);
+      expect.soft(exportedFiles).toHaveLength(2);
+      const fixtureMap: Record<string, string> = {
+        'Collection-A': FIXTURE_FILES[0],
+        'Collection-B': FIXTURE_FILES[1],
+      };
+
+      for (const exportedFile of exportedFiles) {
+        const exportedContent = readExportedFile(exportedFile);
+        const fileName = path.basename(exportedFile);
+
+        // Find the matching fixture file by collection name
+        const collectionNameMatch = fileName.match(/^(Collection-[AB])/);
+        expect.soft(collectionNameMatch, `File ${fileName} should match collection name pattern`).not.toBeNull();
+
+        const collectionName = String(collectionNameMatch?.[1]);
+        const fixtureFile = String(fixtureMap[collectionName]);
+        expect.soft(fixtureFile, `Should find fixture for ${collectionName}`).toBeTruthy();
+
+        // Compare with fixture
+        const comparison = compareWithFixture(exportedContent, fixtureFile);
+
+        expect.soft(comparison.matches, `Exported file ${fileName} should match fixture ${fixtureFile}`).toBe(true);
+      }
+    } finally {
+      cleanupExportDir(tempDir);
+    }
+  });
+
   test('Can export single workspace from workspace card dropdown', async ({ insomnia, page }) => {
     const projectName = 'Export Single Workspace Test';
     const fixtureFile = FIXTURE_FILES[0];

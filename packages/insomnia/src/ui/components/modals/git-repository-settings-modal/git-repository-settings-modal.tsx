@@ -38,7 +38,7 @@ export const GitRepositorySettingsModal = ({
     modalRef.current?.show();
   }, []);
 
-  const authorEmail = gitRepository.selectedAuthorEmail || selectedCredential?.author.email;
+  const authorEmail = gitRepository.selectedAuthorEmail || selectedCredential?.author?.email;
 
   return (
     <OverlayContainer>
@@ -56,7 +56,7 @@ export const GitRepositorySettingsModal = ({
             <GitConnectionInfo
               gitRepository={gitRepository}
               providerInfo={selectedProvider}
-              authorName={selectedCredential?.author.name || selectedCredential?.author.email}
+              authorName={selectedCredential?.author?.name || selectedCredential?.author?.email}
             />
           )}
           {authorEmail && (

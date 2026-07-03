@@ -75,7 +75,7 @@ const GitEditProviderOAuthForm = ({
   const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
 
-  const [selectedAuthorEmail, setSelectedAuthorEmail] = useState(gitCredentialToEdit?.author.email);
+  const [selectedAuthorEmail, setSelectedAuthorEmail] = useState(gitCredentialToEdit?.author?.email);
   const initSignInError = getErrorResult(initSignInFetcher.data);
   const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
@@ -124,7 +124,7 @@ const GitEditProviderOAuthForm = ({
       author: {
         name,
         email,
-        avatarUrl: gitCredentialToEdit?.author.avatarUrl,
+        avatarUrl: gitCredentialToEdit?.author?.avatarUrl,
       },
       credentials: credentialsPatch,
     };
@@ -142,18 +142,18 @@ const GitEditProviderOAuthForm = ({
           <div className="flex items-center gap-2">
             {provider?.iconName && <Icon icon={provider.iconName} className="size-5" />}
             <span className="font-semibold text-nowrap">{provider?.displayName}</span>
-            {gitCredentialToEdit?.author.avatarUrl ? (
+            {gitCredentialToEdit?.author?.avatarUrl ? (
               <img
-                src={gitCredentialToEdit?.author.avatarUrl}
-                alt={gitCredentialToEdit?.author.name || 'Avatar'}
+                src={gitCredentialToEdit?.author?.avatarUrl}
+                alt={gitCredentialToEdit?.author?.name || 'Avatar'}
                 className="h-6 w-6 rounded-full"
               />
             ) : (
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--hl-sm) text-xs font-bold text-(--color-font-muted)">
-                {gitCredentialToEdit?.author.name ? gitCredentialToEdit?.author.name.charAt(0).toUpperCase() : '?'}
+                {gitCredentialToEdit?.author?.name ? gitCredentialToEdit?.author?.name.charAt(0).toUpperCase() : '?'}
               </div>
             )}
-            <span>{gitCredentialToEdit?.author.name}</span>
+            <span>{gitCredentialToEdit?.author?.name}</span>
             <Button
               className="text-(--color-surprise)"
               onPress={() => {
@@ -165,7 +165,7 @@ const GitEditProviderOAuthForm = ({
             </Button>
           </div>
           <div className="mt-4 flex w-full flex-col gap-2">
-            <Input name="authorName" isRequired label="Author Name" defaultValue={gitCredentialToEdit?.author.name} />
+            <Input name="authorName" isRequired label="Author Name" defaultValue={gitCredentialToEdit?.author?.name} />
             <Select
               onOpenChange={setIsEmailSelectOpen}
               isOpen={isEmailSelectOpen}
@@ -188,7 +188,7 @@ const GitEditProviderOAuthForm = ({
                         </Fragment>
                       );
                     }
-                    return gitCredentialToEdit?.author.email || 'Select an email';
+                    return gitCredentialToEdit?.author?.email || 'Select an email';
                   }}
                 </SelectValue>
                 <Icon icon="caret-down" />
@@ -594,7 +594,7 @@ const GitCredentialsList = () => {
                   setIsCredentialModalOpen(true);
                 }
               }}
-              items={credentialsFetcher.data?.providers || []}
+              items={(credentialsFetcher.data?.providers || []).filter(p => p.type !== 'native')}
               className="max-h-[85vh] min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
             >
               {item => (
@@ -613,8 +613,8 @@ const GitCredentialsList = () => {
         </MenuTrigger>
       </div>
 
-      {credentialsFetcher.data?.credentials.length === 0 && (
-        <p className="text-center">No Git credentials configured</p>
+      {(credentialsFetcher.data?.credentials || []).filter(c => c.provider !== 'native').length === 0 && (
+        <p className="text-center">No additional Git credentials configured</p>
       )}
 
       <GridList
@@ -634,22 +634,28 @@ const GitCredentialsList = () => {
                 <div className="flex items-center gap-2">
                   {provider?.iconName && <Icon icon={provider.iconName} className="size-5" />}
                   <span className="font-semibold text-nowrap">{provider?.displayName}</span>
-                  {item.author.avatarUrl ? (
-                    <img
-                      src={item.author.avatarUrl}
-                      alt={item.author.name || 'Avatar'}
-                      className="h-6 w-6 rounded-full"
-                    />
+                  {item.provider === 'native' ? (
+                    <span className="text-xs text-(--color-font-muted)">Uses system git config for identity</span>
                   ) : (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--hl-sm) text-xs font-bold text-(--color-font-muted)">
-                      {item.author.name ? item.author.name.charAt(0).toUpperCase() : '?'}
-                    </div>
+                    <>
+                      {item.author?.avatarUrl ? (
+                        <img
+                          src={item.author.avatarUrl}
+                          alt={item.author.name || 'Avatar'}
+                          className="h-6 w-6 rounded-full"
+                        />
+                      ) : (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--hl-sm) text-xs font-bold text-(--color-font-muted)">
+                          {item.author?.name ? item.author.name.charAt(0).toUpperCase() : '?'}
+                        </div>
+                      )}
+                      <span>{item.author?.name}</span>
+                      <span>{item.author?.email}</span>
+                    </>
                   )}
-                  <span>{item.author.name}</span>
-                  <span>{item.author.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isGitCredentialsV2(item) && provider && (
+                  {item.provider !== 'native' && isGitCredentialsV2(item) && provider && (
                     <Button
                       className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                       onPress={() => {
@@ -665,15 +671,17 @@ const GitCredentialsList = () => {
                       <Icon icon="edit" /> Edit
                     </Button>
                   )}
-                  <Button
-                    onPress={() => {
-                      pendingDeleteCredentialIdRef.current = item._id;
-                      relatedProjectsFetcher.load({ gitCredentialsId: item._id });
-                    }}
-                    className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
-                  >
-                    <Icon icon="trash" /> Delete
-                  </Button>
+                  {item.provider !== 'native' && (
+                    <Button
+                      onPress={() => {
+                        pendingDeleteCredentialIdRef.current = item._id;
+                        relatedProjectsFetcher.load({ gitCredentialsId: item._id });
+                      }}
+                      className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+                    >
+                      <Icon icon="trash" /> Delete
+                    </Button>
+                  )}
                 </div>
               </div>
             </GridListItem>

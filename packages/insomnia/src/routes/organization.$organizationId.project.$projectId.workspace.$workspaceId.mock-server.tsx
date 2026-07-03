@@ -48,7 +48,7 @@ export interface MockServerLoaderData {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, projectId, organizationId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -281,6 +281,7 @@ const Component = () => {
                             POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                             HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                             OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                            QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                             DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                             PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                             PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',

@@ -10,6 +10,7 @@ import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
+import { trackCioEvent } from '~/ui/hooks/use-cio';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
@@ -40,7 +41,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   try {
     const redirectAfterCreate = new URL(request.url).searchParams.get('redirectAfterCreate') !== 'false';
     const workspaceData = (await request.json()) as NewWorkspaceData;
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
 
     invariant(project, 'Project not found');
 
@@ -199,10 +200,18 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
+      const requestCreatedProperties = {
+        requestType: 'HTTP',
+        ...(workspaceData.source && { source: workspaceData.source }),
+      };
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.requestCreated,
-        properties: { requestType: 'HTTP', ...(workspaceData.source && { source: workspaceData.source }) },
+        properties: requestCreatedProperties,
       });
+
+      // Send to Customer.io directly so the event is tied to the identified
+      // user's email-bearing profile (only fires when logged in). See INS-2678.
+      trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
 
       if (!redirectAfterCreate) {
         return {

@@ -1,7 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
@@ -26,6 +26,7 @@ import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizati
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
+import { exportProjectToFile } from '~/ui/components/settings/import-export';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -119,6 +120,21 @@ export const ProjectDropdown: FC<Props> = ({
           },
         });
         setImportModalType('file');
+      },
+    },
+    {
+      id: 'export',
+      name: 'Export',
+      icon: 'file-export',
+      action: async (projectId: string, projectName: string) => {
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.exportStarted,
+          properties: {
+            source: 'project',
+          },
+        });
+        const workspacesForProject = await services.workspace.findByParentId(projectId);
+        exportProjectToFile(projectName, workspacesForProject);
       },
     },
     {

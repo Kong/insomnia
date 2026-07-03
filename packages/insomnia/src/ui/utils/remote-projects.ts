@@ -8,7 +8,7 @@ export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { org
 
 export async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
   try {
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
 
     const remoteId = project?.remoteId;
     if (!remoteId) {

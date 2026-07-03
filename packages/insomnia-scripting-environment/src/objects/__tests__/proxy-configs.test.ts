@@ -58,4 +58,15 @@ describe('test ProxyConfig object', () => {
       expect(proxy.getProxyUrl()).toEqual(url);
     });
   });
+
+  it('does not parse a malformed proxy host when the proxy is disabled', () => {
+    expect(() => transformToSdkProxyOptions('', 'fasdf', '', false, '')).not.toThrow();
+    const options = transformToSdkProxyOptions('', 'fasdf', '', false, '');
+    expect(options.disabled).toBe(true);
+    expect(options.host).toEqual('');
+  });
+
+  it('throws on a malformed proxy host when the proxy is enabled', () => {
+    expect(() => transformToSdkProxyOptions('', 'fasdf', '', true, '')).toThrow(/Failed to parse proxy/);
+  });
 });

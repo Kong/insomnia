@@ -119,14 +119,12 @@ const buildTabUrlFromResource = ({
   projectId,
   workspaceId,
   searchParams,
-  withTab,
 }: {
   resource: TabResource;
   organizationId: string;
   projectId: string;
   workspaceId: string;
   searchParams?: URLSearchParams;
-  withTab?: boolean;
 }) => {
   const type = inferTabType(resource);
   if (!type) {
@@ -134,9 +132,6 @@ const buildTabUrlFromResource = ({
   }
 
   const nextSearchParams = new URLSearchParams(searchParams);
-  if (type === 'collection' && withTab) {
-    nextSearchParams.set('doNotSkipToActiveRequest', 'true');
-  }
 
   return buildResourceUrl({
     organizationId,
@@ -147,7 +142,7 @@ const buildTabUrlFromResource = ({
   });
 };
 
-const buildTabFromResource = async (params: AddTabParams, withTab?: boolean): Promise<BaseTab | null> => {
+const buildTabFromResource = async (params: AddTabParams): Promise<BaseTab | null> => {
   const { resource, organizationId, projectId, workspaceId, projectName, workspaceName, searchParams } = params;
   const effectiveWorkspaceId = workspaceId ?? resource._id;
   const type = inferTabType(resource);
@@ -160,7 +155,6 @@ const buildTabFromResource = async (params: AddTabParams, withTab?: boolean): Pr
     projectId,
     workspaceId: effectiveWorkspaceId,
     searchParams,
-    withTab,
   });
 
   const baseTab: BaseTab = {
@@ -292,18 +286,15 @@ export const useTabNavigate = () => {
             folderId: item.type === 'RequestGroup' ? item._id : undefined,
             searchParams,
           })
-        : await buildTabFromResource(
-            {
-              resource: item,
-              organizationId,
-              projectId: project._id,
-              workspaceId: workspace._id,
-              projectName: project.name,
-              workspaceName: workspace.name,
-              searchParams,
-            },
-            withTab,
-          );
+        : await buildTabFromResource({
+            resource: item,
+            organizationId,
+            projectId: project._id,
+            workspaceId: workspace._id,
+            projectName: project.name,
+            workspaceName: workspace.name,
+            searchParams,
+          });
 
       // Skip if this navigation is outdated by a newer one
       if (navigationId !== navigationCounterRef.current) return;
