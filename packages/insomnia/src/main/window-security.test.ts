@@ -35,5 +35,7 @@ describe('main window security posture', () => {
     // ...and must not re-introduce a weakening override.
     expect(mainWindowBlock).not.toMatch(/nodeIntegration\s*:\s*true/);
     expect(mainWindowBlock).not.toMatch(/contextIsolation\s*:\s*false/);
+    // webviewTag must not be re-enabled; the HTML preview now uses a sandboxed <iframe>.
+    expect(mainWindowBlock).not.toMatch(/webviewTag\s*:\s*true/);
   });
 });

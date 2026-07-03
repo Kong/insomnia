@@ -6,14 +6,14 @@ interface Props {
   disableHtmlPreviewJs: boolean;
 }
 
-const escapeHtmlAttribute = (value: string) => value
-  .replace(/&/g, '&amp;')
-  .replace(/"/g, '&quot;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;');
+const escapeHtmlAttribute = (value: string) =>
+  value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-export const getResponsePreviewHtml = (body: string, url: string) => body.replace('<head>', `<head><base href="${escapeHtmlAttribute(url)}">`);
+export const getResponsePreviewHtml = (body: string, url: string) =>
+  body.replace('<head>', `<head><base href="${escapeHtmlAttribute(url)}">`);
 
+// NOTE: allow-same-origin must never appear here. Combined with allow-scripts it
+// defeats the sandbox (the iframe can remove its own sandbox attribute).
 export const getResponsePreviewSandbox = (disableHtmlPreviewJs: boolean) =>
   disableHtmlPreviewJs ? '' : 'allow-scripts';
 

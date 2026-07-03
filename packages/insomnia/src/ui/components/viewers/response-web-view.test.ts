@@ -22,4 +22,9 @@ describe('response-web-view', () => {
   it('allows scripts when HTML preview JS is enabled', () => {
     expect(getResponsePreviewSandbox(false)).toBe('allow-scripts');
   });
+
+  it('never grants allow-same-origin in any sandbox state', () => {
+    expect(getResponsePreviewSandbox(true)).not.toContain('allow-same-origin');
+    expect(getResponsePreviewSandbox(false)).not.toContain('allow-same-origin');
+  });
 });

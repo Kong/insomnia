@@ -90,6 +90,11 @@ app.on('web-contents-created', (_, contents) => {
   } else {
     contextMenu();
   }
+  // Stopgap: unconditionally deny future webview attachments. The HTML preview
+  // was migrated to a sandboxed <iframe>; webviewTag is no longer enabled.
+  contents.on('will-attach-webview', event => {
+    event.preventDefault();
+  });
 });
 
 // When the app is first launched
