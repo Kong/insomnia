@@ -39,6 +39,7 @@ import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -999,6 +1000,20 @@ const ProjectNavigationSidebarInner = (
       ? [selectedItemId]
       : [];
 
+  // Id of the request/folder that should switch into inline rename mode via the rename shortcut.
+  const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
+  useDocBodyKeyboardShortcuts({
+    sidebar_renameSelectedItem: () => {
+      // Only requests and folders (collection children) support inline rename in the sidebar.
+      const selectedItem =
+        selectedItemId &&
+        visibleFlatItems.find(item => item.doc._id === selectedItemId && item.kind === 'collectionChild');
+      if (selectedItem) {
+        setRenamingItemId(selectedItemId);
+      }
+    },
+  });
+
   const { hasKonnectPat } = settings;
   const showKonnectSyncIntro = konnectSyncEnabled && !isProjectTabActive && !hasKonnectPat;
   const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
@@ -1258,7 +1273,12 @@ const ProjectNavigationSidebarInner = (
                     {item.kind === 'pinnedHeader' && <PinnedHeaderNode />}
 
                     {item.kind === 'collectionChild' && (
-                      <RequestNode item={item} onToggleFolder={toggleRequestGroups} />
+                      <RequestNode
+                        item={item}
+                        onToggleFolder={toggleRequestGroups}
+                        isRenaming={renamingItemId === item.doc._id}
+                        onRenameHandled={() => setRenamingItemId(null)}
+                      />
                     )}
 
                     {item.kind === 'pinnedRequest' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
