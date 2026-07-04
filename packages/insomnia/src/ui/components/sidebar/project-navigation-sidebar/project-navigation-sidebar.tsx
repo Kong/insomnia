@@ -39,6 +39,7 @@ import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -999,6 +1000,35 @@ const ProjectNavigationSidebarInner = (
       ? [selectedItemId]
       : [];
 
+  // Id of the sidebar item that should switch into inline rename mode via the rename shortcut.
+  const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
+  useDocBodyKeyboardShortcuts({
+    sidebar_renameFocusedItem: () => {
+      // Rename the row that currently holds keyboard focus within the sidebar tree. Only requests,
+      // folders (collection children) and workspaces (collections, docs, mocks, environments, MCP
+      // clients) support inline rename.
+      const treeEl = parentRef.current;
+      const activeEl = document.activeElement;
+      if (!treeEl || !(activeEl instanceof HTMLElement) || !treeEl.contains(activeEl)) {
+        return;
+      }
+      const rowEl = activeEl.closest('[data-key]');
+      if (!(rowEl instanceof HTMLElement)) {
+        return;
+      }
+      // Pinned rows prefix their key; strip it to resolve the underlying doc id.
+      const docId = (rowEl.dataset.key || '').replace(/^pinned-request-/, '');
+      const focusedItem =
+        docId &&
+        visibleFlatItems.find(
+          item => item.doc._id === docId && (item.kind === 'collectionChild' || item.kind === 'workspace'),
+        );
+      if (focusedItem) {
+        setRenamingItemId(docId);
+      }
+    },
+  });
+
   const { hasKonnectPat } = settings;
   const showKonnectSyncIntro = konnectSyncEnabled && !isProjectTabActive && !hasKonnectPat;
   const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
@@ -1252,13 +1282,20 @@ const ProjectNavigationSidebarInner = (
                         }}
                         highlighted={item.doc._id === onboardingEnvWorkspaceId}
                         nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
+                        isRenaming={renamingItemId === item.doc._id}
+                        onRenameHandled={() => setRenamingItemId(null)}
                       />
                     )}
 
                     {item.kind === 'pinnedHeader' && <PinnedHeaderNode />}
 
                     {item.kind === 'collectionChild' && (
-                      <RequestNode item={item} onToggleFolder={toggleRequestGroups} />
+                      <RequestNode
+                        item={item}
+                        onToggleFolder={toggleRequestGroups}
+                        isRenaming={renamingItemId === item.doc._id}
+                        onRenameHandled={() => setRenamingItemId(null)}
+                      />
                     )}
 
                     {item.kind === 'pinnedRequest' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}

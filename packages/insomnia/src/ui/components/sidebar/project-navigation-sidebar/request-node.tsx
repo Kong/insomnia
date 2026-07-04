@@ -8,7 +8,7 @@ import type {
   Workspace,
 } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -132,9 +132,13 @@ interface RequestNodeProps {
   item: CollectionChildFlatItem | PinnedRequestFlatItem;
   onToggleFolder: (requestGroupIds: string[], workspace: Workspace) => void;
   className?: string;
+  // Whether an external trigger (e.g. the rename keyboard shortcut) has requested to rename this item.
+  isRenaming?: boolean;
+  // Called once the rename edit has been entered so the parent can clear its request.
+  onRenameHandled?: () => void;
 }
 
-export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProps) => {
+export const RequestNode = ({ item, onToggleFolder, className, isRenaming, onRenameHandled }: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
   const isPinnedRequest = kind === 'pinnedRequest';
   const isLastPinned = item.kind === 'pinnedRequest' && item.isLastPinned;
@@ -150,6 +154,15 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
   const level = isPinnedRequest ? 0 : requestLevel;
   const params = useParams() as { requestId?: string; requestGroupId?: string };
   const isSelected = item.doc._id === params.requestId || item.doc._id === params.requestGroupId;
+  // Pinned requests are a duplicate rendering of a request already shown in the tree,
+  // so only the in-tree node reacts to an external rename request to avoid two editors.
+  const shouldRename = Boolean(isRenaming) && !isPinnedRequest;
+
+  useEffect(() => {
+    if (shouldRename) {
+      setIsEditable(true);
+    }
+  }, [shouldRename]);
 
   const content = (
     <>
@@ -169,8 +182,14 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
           value={getRequestNameOrFallback(doc)}
           name="request name"
           ariaLabel={getRequestNameOrFallback(doc)}
+          editable={shouldRename}
           className="flex-1 text-base hover:bg-transparent!"
-          onEditableChange={editable => setIsEditable(editable)}
+          onEditableChange={editable => {
+            setIsEditable(editable);
+            if (!editable) {
+              onRenameHandled?.();
+            }
+          }}
           onSubmit={newName => {
             if (models.requestGroup.isRequestGroup(doc)) {
               patchGroup(doc._id, { name: newName });
