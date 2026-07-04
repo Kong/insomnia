@@ -1003,17 +1003,28 @@ const ProjectNavigationSidebarInner = (
   // Id of the sidebar item that should switch into inline rename mode via the rename shortcut.
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   useDocBodyKeyboardShortcuts({
-    sidebar_renameSelectedItem: () => {
-      // Requests, folders (collection children) and workspaces (collections, docs, mocks,
-      // environments, MCP clients) support inline rename in the sidebar.
-      const selectedItem =
-        selectedItemId &&
+    sidebar_renameFocusedItem: () => {
+      // Rename the row that currently holds keyboard focus within the sidebar tree. Only requests,
+      // folders (collection children) and workspaces (collections, docs, mocks, environments, MCP
+      // clients) support inline rename.
+      const treeEl = parentRef.current;
+      const activeEl = document.activeElement;
+      if (!treeEl || !(activeEl instanceof HTMLElement) || !treeEl.contains(activeEl)) {
+        return;
+      }
+      const rowEl = activeEl.closest('[data-key]');
+      if (!(rowEl instanceof HTMLElement)) {
+        return;
+      }
+      // Pinned rows prefix their key; strip it to resolve the underlying doc id.
+      const docId = (rowEl.dataset.key || '').replace(/^pinned-request-/, '');
+      const focusedItem =
+        docId &&
         visibleFlatItems.find(
-          item =>
-            item.doc._id === selectedItemId && (item.kind === 'collectionChild' || item.kind === 'workspace'),
+          item => item.doc._id === docId && (item.kind === 'collectionChild' || item.kind === 'workspace'),
         );
-      if (selectedItem) {
-        setRenamingItemId(selectedItemId);
+      if (focusedItem) {
+        setRenamingItemId(docId);
       }
     },
   });
