@@ -1000,14 +1000,18 @@ const ProjectNavigationSidebarInner = (
       ? [selectedItemId]
       : [];
 
-  // Id of the request/folder that should switch into inline rename mode via the rename shortcut.
+  // Id of the sidebar item that should switch into inline rename mode via the rename shortcut.
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   useDocBodyKeyboardShortcuts({
     sidebar_renameSelectedItem: () => {
-      // Only requests and folders (collection children) support inline rename in the sidebar.
+      // Requests, folders (collection children) and workspaces (collections, docs, mocks,
+      // environments, MCP clients) support inline rename in the sidebar.
       const selectedItem =
         selectedItemId &&
-        visibleFlatItems.find(item => item.doc._id === selectedItemId && item.kind === 'collectionChild');
+        visibleFlatItems.find(
+          item =>
+            item.doc._id === selectedItemId && (item.kind === 'collectionChild' || item.kind === 'workspace'),
+        );
       if (selectedItem) {
         setRenamingItemId(selectedItemId);
       }
@@ -1267,6 +1271,8 @@ const ProjectNavigationSidebarInner = (
                         }}
                         highlighted={item.doc._id === onboardingEnvWorkspaceId}
                         nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
+                        isRenaming={renamingItemId === item.doc._id}
+                        onRenameHandled={() => setRenamingItemId(null)}
                       />
                     )}
 

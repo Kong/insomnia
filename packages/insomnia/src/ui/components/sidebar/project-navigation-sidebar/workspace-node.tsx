@@ -1,9 +1,12 @@
-import { type Ref, useState } from 'react';
+import { models } from 'insomnia-data';
+import { type Ref, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
+import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-workspace-dropdown';
+import { EditableInput } from '~/ui/components/editable-input';
 
 import { Icon } from '../../icon';
 import {
@@ -23,6 +26,10 @@ interface WorkspaceNodeProps {
   onSortOrderChange: (newSortOrder: SortOrder) => void;
   highlighted?: boolean;
   nodeRef?: Ref<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
+  // Whether an external trigger (e.g. the rename keyboard shortcut) has requested to rename this workspace.
+  isRenaming?: boolean;
+  // Called once the rename edit has been entered so the parent can clear its request.
+  onRenameHandled?: () => void;
 }
 
 export const WorkspaceNode = ({
@@ -32,11 +39,24 @@ export const WorkspaceNode = ({
   onSortOrderChange,
   highlighted,
   nodeRef,
+  isRenaming,
+  onRenameHandled,
 }: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId, hasUncommittedChanges, hasUnpushedChanges } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [isEditable, setIsEditable] = useState(false);
   const isCollection = workspaceScope === 'collection';
+  // The Scratch Pad is a fixed workspace that cannot be renamed (its actions menu omits Rename too).
+  const canRename = !models.workspace.isScratchpad(doc);
+  const shouldRename = Boolean(isRenaming) && canRename;
+  const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
+
+  useEffect(() => {
+    if (shouldRename) {
+      setIsEditable(true);
+    }
+  }, [shouldRename]);
 
   return (
     <div
@@ -67,24 +87,49 @@ export const WorkspaceNode = ({
           <Icon icon={scopeToIconMap[workspaceScope]} className={ICON_CLASS} />
         </div>
 
-        <span className="min-w-0 flex-1 truncate text-base">{workspaceName}</span>
+        {canRename ? (
+          <EditableInput
+            value={workspaceName}
+            name="workspace name"
+            ariaLabel={workspaceName}
+            editable={shouldRename}
+            className="min-w-0 flex-1 text-base hover:bg-transparent!"
+            onEditableChange={editable => {
+              setIsEditable(editable);
+              if (!editable) {
+                onRenameHandled?.();
+              }
+            }}
+            onSubmit={newName =>
+              updateWorkspaceFetcher.submit({
+                organizationId,
+                projectId: project._id,
+                patch: { name: newName, workspaceId },
+              })
+            }
+          />
+        ) : (
+          <span className="min-w-0 flex-1 truncate text-base">{workspaceName}</span>
+        )}
       </div>
       {(hasUncommittedChanges || hasUnpushedChanges) && (
         <div className="flex aspect-square h-6 shrink-0 items-center justify-center">
           <Icon icon="circle" className="h-2 w-2" color="var(--color-warning)" />
         </div>
       )}
-      <div className="shrink-0">
-        <SidebarWorkspaceDropdown
-          workspace={doc}
-          project={project}
-          sortOrder={sortOrder}
-          organizationId={organizationId}
-          onSortOrderChange={onSortOrderChange}
-          isOpen={isContextMenuOpen}
-          onOpenChange={setIsContextMenuOpen}
-        />
-      </div>
+      {!isEditable && (
+        <div className="shrink-0">
+          <SidebarWorkspaceDropdown
+            workspace={doc}
+            project={project}
+            sortOrder={sortOrder}
+            organizationId={organizationId}
+            onSortOrderChange={onSortOrderChange}
+            isOpen={isContextMenuOpen}
+            onOpenChange={setIsContextMenuOpen}
+          />
+        </div>
+      )}
     </div>
   );
 };
