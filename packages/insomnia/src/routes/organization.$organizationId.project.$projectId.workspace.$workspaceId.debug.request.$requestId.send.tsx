@@ -113,7 +113,7 @@ export const sendActionImplementation = async (options: {
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   runtime?: SendActionRuntime;
-}): Promise<{ nextRequestIdOrName: string | undefined } | undefined> => {
+}): Promise<{ nextRequestIdOrName: string | undefined; skipped?: boolean } | undefined> => {
   const {
     requestId,
     userUploadEnvironment,
@@ -184,7 +184,7 @@ export const sendActionImplementation = async (options: {
     );
     await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName, skipped: true };
   }
 
   window.main.completeExecutionStep({ requestId });

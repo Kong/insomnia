@@ -1074,6 +1074,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               // reset nextRequestIdOrName when request name or id meets;
               nextRequestIdOrName = '';
             } else {
+              upsertLiveItem(runnerId, liveItemKey, buildLivePatch('skipped'));
+              testResultsForOneIteration = [...testResultsForOneIteration, { ...buildResult(), skipped: true }];
               continue;
             }
           }
@@ -1114,6 +1116,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           });
           if (execution?.nextRequestIdOrName) {
             nextRequestIdOrName = execution.nextRequestIdOrName || '';
+          }
+
+          if (execution?.skipped) {
+            upsertLiveItem(runnerId, liveItemKey, buildLivePatch('skipped'));
+            testResultsForOneIteration = [...testResultsForOneIteration, { ...buildResult(), skipped: true }];
+            continue;
           }
 
           const afterSend = interruptStatus();

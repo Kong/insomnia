@@ -41,7 +41,13 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
       const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, reqIndex: number) => {
         const key = `request-test-result-${reqIndex}`;
         return (
-          <RequestResultCard key={key} item={requestTestResult} resultFilter={resultFilter} targetTests={targetTests} />
+          <RequestResultCard
+            key={key}
+            item={requestTestResult}
+            resultFilter={resultFilter}
+            targetTests={targetTests}
+            testId={key}
+          />
         );
       });
 

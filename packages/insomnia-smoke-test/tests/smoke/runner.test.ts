@@ -176,8 +176,8 @@ test.describe('runner features tests', () => {
       const iterationTestResultElement = page.getByTestId(testId);
       await iterationTestResultElement.click();
       await expect.soft(iterationTestResultElement).toBeVisible();
-      // req2 should be skipped from pre-request script
-      await expect.soft(iterationTestResultElement).not.toContainText('req2');
+      await expect.soft(iterationTestResultElement.getByTestId('request-test-result-1')).toContainText('SKIPPED');
+      await expect.soft(iterationTestResultElement.getByTestId('request-test-result-2')).toContainText('SKIPPED');
     }
 
     await verifyResultRows(page, 4, 1, 6, [
@@ -258,6 +258,7 @@ test.describe('runner features tests', () => {
 
     // check result
     await page.getByText('1 / 2').first().click();
+    await expect.soft(page.getByTestId('request-test-result-1')).toContainText('SKIPPED');
 
     const expectedTestOrder = [
       'req0-post-check',
