@@ -139,6 +139,7 @@ export enum AnalyticsEvent {
   uploadLintRulesetClicked = 'upload-lint-ruleset-clicked',
   firstRequestPaneExampleClicked = 'first-request-pane-example-clicked',
   firstRequestPaneCollectionChanged = 'first-request-pane-collection-changed',
+  firstRequestExperimentExposed = 'first-request-experiment-exposed',
 }
 
 export enum InsoEvent {

@@ -1,25 +1,32 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Request } from 'insomnia-data';
-import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
+import { services } from 'insomnia-data';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
+import { METHOD_GET } from '~/common/constants';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
-import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { MethodSelector } from '~/ui/components/dropdowns/method-selector';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
-import { Tooltip } from '~/ui/components/tooltip';
-import { getBadgeClassName, ResourceIcon } from '~/ui/components/workspace/resource-icon';
-import { getProjectRecentRequests, type RecentProjectRequest } from '~/ui/utils/recent-project-requests';
+import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
+import {
+  FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
+  type FirstRequestTreatment,
+  getFirstRequestTreatment,
+} from '~/ui/utils/first-request-treatment';
 
+import { useRequestNewActionFetcher } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useWorkspaceNewActionFetcher } from '../../routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Icon } from './icon';
+
 const CURL_COMMAND_PATTERN = /^\s*\$?\s*curl(?:\s|$)/i;
 const NOTION_MCP_SERVER_URL = 'https://mcp.notion.com/mcp';
 
@@ -56,6 +63,28 @@ const normalizeRequestUrl = (value: string) => {
   }
 };
 
+// Collapse a multi-line cURL (backslash line-continuations and/or bare newlines,
+// with their trailing indentation) into a single line, preserving intra-line spacing.
+const flattenCurlCommand = (value: string) =>
+  value
+    .replace(/\\\r?\n\s*/g, ' ')
+    .replace(/\r?\n\s*/g, ' ')
+    .trim();
+
+// Best-effort read of the HTTP method from a cURL string, for keeping the method
+// dropdown in sync while typing/pasting. Explicit -X/--request wins; otherwise a
+// body/form flag implies POST (curl's own default), matching what the importer does.
+const extractCurlMethod = (value: string): string | null => {
+  const explicit = value.match(/(?:-X|--request)\s+['"]?([A-Za-z]+)/);
+  if (explicit) {
+    return explicit[1].toUpperCase();
+  }
+  if (/(?:^|\s)(?:-d|--data(?:-raw|-binary|-urlencode)?|-F|--form)\b/.test(value)) {
+    return 'POST';
+  }
+  return null;
+};
+
 interface CollectionItem {
   id: string;
   label: string;
@@ -69,51 +98,59 @@ interface QuickStartItem {
   onClick: () => void | Promise<void>;
 }
 
-interface RecentRequestsState {
-  projectId: string;
-  requests: RecentProjectRequest[];
-}
-
 interface FirstRequestCreationProps {
-  greetingName: string;
   collectionItems: CollectionItem[];
   selectedCollectionId: string | null;
   onSelectedCollectionChange: (collectionId: string | null) => void;
   onCreateCollection: () => void;
-  onCreateDesignDocument: () => void;
   onImportFrom: () => void;
 }
 
 export const FirstRequestCreation = ({
-  greetingName,
   collectionItems,
   selectedCollectionId,
   onSelectedCollectionChange,
   onCreateCollection,
-  onCreateDesignDocument,
   onImportFrom,
 }: FirstRequestCreationProps) => {
-  const navigate = useNavigate();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { userSession, settings } = useRootLoaderData()!;
+  const organizationData = useOrganizationLoaderData();
+  // Stable id used to bucket new sign-ups ~50/50 into Treatment A or B.
+  const cohortId = userSession.accountId || settings.deviceId || '';
+  // Account creation time (epoch ms); pre-GA accounts are treated as existing users.
+  const accountCreatedAt = organizationData?.user?.created_at
+    ? new Date(organizationData.user.created_at).getTime()
+    : undefined;
+  const inputRef = useRef<HTMLInputElement>(null);
   const createRequestFetcher = useRequestNewActionFetcher();
   const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const createWorkspaceFetcherRef = useRef(createWorkspaceFetcher);
   createWorkspaceFetcherRef.current = createWorkspaceFetcher;
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
-  const [recentRequests, setRecentRequests] = useState<RecentRequestsState>({ projectId, requests: [] });
-  const [isRequestInputFocused, setIsRequestInputFocused] = useState(false);
-  const [curlParseError, setCurlParseError] = useState(false);
+  const [method, setMethod] = useState(METHOD_GET);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [selectOpen, setSelectOpen] = useState(false);
+  // null while stats are loading; treatment is derived once we know the created-request count.
+  const [createdRequests, setCreatedRequests] = useState<number | null>(null);
   const trimmedInput = requestInput.trim();
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
   const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
-  const currentProjectRecentRequests = recentRequests.projectId === projectId ? recentRequests.requests : [];
-  const shouldShowJumpBackIn = currentProjectRecentRequests.length >= 3;
+
+  const treatment: FirstRequestTreatment | null =
+    createdRequests === null
+      ? null
+      : getFirstRequestTreatment({
+          accountCreatedAt,
+          experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
+          createdRequests,
+          cohortId,
+        });
+  const createButtonLabel = treatment === 'B' ? 'Create HTTP Request ⏎' : 'Create ⏎';
 
   const ensureWorkspaceId = async () => {
     if (selectedCollectionId) {
@@ -147,19 +184,25 @@ export const FirstRequestCreation = ({
     return createdWorkspace.workspaceId;
   };
 
-  const handleInputEnter = (event: ReactKeyboardEvent<HTMLTextAreaElement> | KeyboardEvent) => {
+  const handleInputEnter = (event: ReactKeyboardEvent<HTMLInputElement> | KeyboardEvent) => {
     event.preventDefault();
     handleCreateRequest();
   };
 
-  const handleRequestCreateShortcut = (_event: KeyboardEvent) => {
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.keyboardShortcutUsed,
-      properties: {
-        source: 'first-request-creation-pane',
-        action: 'createHttpRequest',
-      },
-    });
+  // Update the input value, clear any stale error, and keep the method dropdown in
+  // sync when the value is a cURL command.
+  const applyRequestInput = (value: string) => {
+    setRequestInput(value);
+    setErrorText(null);
+    if (CURL_COMMAND_PATTERN.test(value.trim())) {
+      const curlMethod = extractCurlMethod(value);
+      if (curlMethod) {
+        setMethod(curlMethod);
+      }
+    }
+  };
+
+  const handleCreateBlankRequest = () => {
     if (!selectedCollectionId) {
       createWorkspaceFetcher.submit({
         organizationId,
@@ -183,8 +226,8 @@ export const FirstRequestCreation = ({
     });
   };
 
-  useKeyboardShortcuts(() => inputRef.current as HTMLTextAreaElement, {
-    request_createHTTP: handleRequestCreateShortcut,
+  useKeyboardShortcuts(() => inputRef.current as HTMLInputElement, {
+    request_createHTTP: handleCreateBlankRequest,
   });
 
   const handleCreateRequest = async () => {
@@ -202,7 +245,7 @@ export const FirstRequestCreation = ({
         try {
           req = await parseCurlRequest(trimmedInput);
         } catch {
-          setCurlParseError(true);
+          setErrorText('Invalid cURL. Verify your input and try again.');
           return;
         }
 
@@ -229,17 +272,14 @@ export const FirstRequestCreation = ({
         requestType: 'HTTP',
         req: {
           url: normalizeRequestUrl(trimmedInput),
+          method,
         },
         metrics: {
           source: 'first-request-pane',
         },
       });
     } catch (error) {
-      showToast({
-        icon: 'circle-exclamation',
-        title: error instanceof Error ? error.message : 'Unable to create request',
-        status: 'error',
-      });
+      setErrorText(error instanceof Error ? error.message : 'Unable to create request');
     }
   };
 
@@ -247,25 +287,34 @@ export const FirstRequestCreation = ({
     setSelectOpen(false);
   }, [selectedCollectionId]);
 
+  // Determine which experiment treatment to show from the lifetime created-request count,
+  // and record exposure once we know it.
   useEffect(() => {
     let isActive = true;
 
-    const loadRecentRequests = async () => {
-      const nextRecentRequests = await getProjectRecentRequests(projectId);
-
+    services.stats.get().then(stats => {
       if (!isActive) {
         return;
       }
 
-      setRecentRequests({ projectId, requests: nextRecentRequests });
-    };
-
-    loadRecentRequests();
+      setCreatedRequests(stats.createdRequests);
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.firstRequestExperimentExposed,
+        properties: {
+          treatment: getFirstRequestTreatment({
+            accountCreatedAt,
+            experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
+            createdRequests: stats.createdRequests,
+            cohortId,
+          }),
+        },
+      });
+    });
 
     return () => {
       isActive = false;
     };
-  }, [projectId]);
+  }, [cohortId, accountCreatedAt]);
 
   const handleCreateNotionMcpWorkspace = () => {
     createWorkspaceFetcher.submit({
@@ -342,31 +391,12 @@ export const FirstRequestCreation = ({
     }
   };
 
-  const quickStartItems: QuickStartItem[] = [
+  const quickActions: QuickStartItem[] = [
     {
-      id: 'mcp-server',
-      label: 'Notion MCP Server',
-      icon: <Icon icon={['fac', 'mcp'] as unknown as IconProp} />,
-      onClick: handleCreateNotionMcpWorkspace,
-    },
-    {
-      id: 'pokemon',
-      label: 'List pokemon',
-      icon: <span className={getBadgeClassName('GET')}>GET</span>,
-      badge: 'GET',
-      onClick: handleCreatePokemonRequest,
-    },
-    {
-      id: 'github-lookup',
-      label: 'Lookup GitHub repository',
-      icon: <SvgIcon icon="graphql" />,
-      onClick: handleCreateGithubLookupRequest,
-    },
-    {
-      id: 'create-openapi-spec',
-      label: 'Create OpenAPI spec',
-      icon: <Icon icon="file" className="text-(--font-size-xl)" />,
-      onClick: onCreateDesignDocument,
+      id: 'new-http-request',
+      label: 'New HTTP request',
+      icon: <Icon icon="plus" className="text-(--font-size-xl)" />,
+      onClick: handleCreateBlankRequest,
     },
     {
       id: 'import-files',
@@ -384,166 +414,137 @@ export const FirstRequestCreation = ({
     },
   ];
 
-  const { settings } = useRootLoaderData()!;
-  const keyComb = getPlatformKeyCombinations(settings.hotKeyRegistry.request_createHTTP)[0];
-  const shortcutDisplay = constructKeyCombinationDisplay(keyComb, false);
+  const exampleItems: QuickStartItem[] = [
+    {
+      id: 'mcp-server',
+      label: 'Connect to Notion MCP',
+      icon: <Icon icon={['fac', 'mcp'] as unknown as IconProp} />,
+      onClick: handleCreateNotionMcpWorkspace,
+    },
+    {
+      id: 'pokemon',
+      label: 'List a pokemon',
+      icon: <span className={getBadgeClassName('GET')}>GET</span>,
+      badge: 'GET',
+      onClick: handleCreatePokemonRequest,
+    },
+    {
+      id: 'github-lookup',
+      label: 'Lookup GitHub repository',
+      icon: <SvgIcon icon="graphql" />,
+      onClick: handleCreateGithubLookupRequest,
+    },
+  ];
+
+  const renderQuickStartButton = (item: QuickStartItem) => (
+    <Button
+      key={item.id}
+      variant="outlined"
+      size="md"
+      className="h-6.5 px-2"
+      onPress={() => {
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.firstRequestPaneExampleClicked,
+          properties: {
+            name: item.label,
+          },
+        });
+        item.onClick();
+      }}
+    >
+      {item.icon}
+      <span>{item.label}</span>
+    </Button>
+  );
+
   return (
     <>
       <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
-        <div className="flex w-full flex-col items-center rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-6 pt-8 pb-5">
-          <h2 className="text-center text-2xl leading-none font-semibold">
-            {shouldShowJumpBackIn ? `Welcome back, ${greetingName}!` : `Welcome, ${greetingName}!`}
-          </h2>
-          <p className="mt-2.5 text-center text-sm">
-            {shouldShowJumpBackIn
-              ? `Today is a new day, we’re rooting for you!`
-              : `We have a sneaking suspicion that you came here to send a request, so let’s get started!`}
-          </p>
-          <div className="mt-8 w-[50%] min-w-135">
-            <div
-              className={`flex aspect-540/127 min-h-31.75 flex-col overflow-hidden rounded-lg border border-(--hl-md) bg-(--color-bg) ${isRequestInputFocused ? 'shadow-[0_0_0_4px_#0044F433]' : ''}`}
-            >
-              <div className="min-h-0 flex-1 px-4 pt-3 pb-2">
-                <textarea
-                  ref={inputRef}
-                  autoFocus
-                  aria-label="Request endpoint or cURL input"
-                  className="text-md h-full w-full flex-1 resize-none font-mono"
-                  placeholder={`Enter an endpoint URL or paste cURL, or ${shortcutDisplay} for a new blank request`}
-                  value={requestInput}
-                  onFocus={() => setIsRequestInputFocused(true)}
-                  onBlur={() => setIsRequestInputFocused(false)}
-                  onChange={event => {
-                    setCurlParseError(false);
-                    setRequestInput(event.target.value);
-                  }}
-                  onKeyDown={createKeybindingsHandler({
-                    Enter: event => handleInputEnter(event),
-                  })}
-                />
-              </div>
-              <div className="flex h-12 shrink-0 items-center justify-between gap-2 p-2">
-                <Tooltip message="Upload Postman, OpenAPI, etc.">
-                  <Button
-                    aria-label="Attach content"
-                    className="w-10 rounded-md px-0"
-                    size="md"
-                    variant="text"
-                    icon={<Icon className="text-lg" icon="paperclip" />}
-                    onPress={() => {
-                      window.main.trackAnalyticsEvent({
-                        event: AnalyticsEvent.importStarted,
-                        properties: {
-                          source: 'first-request-pane',
-                        },
-                      });
-                      setIsImportModalOpen(true);
-                    }}
-                  />
-                </Tooltip>
+        <div className="flex w-full flex-col rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-6 pt-5 pb-6">
+          <h2 className="text-lg font-semibold">New request</h2>
+          <div className="mt-4 flex h-8.5 items-center gap-2 rounded-md border border-(--hl-md) bg-(--color-bg) px-1">
+            <MethodSelector method={method} onChange={setMethod} className="h-6.5" />
+            <input
+              ref={inputRef}
+              autoFocus
+              aria-label="Request endpoint or cURL input"
+              className="h-6.5 min-w-0 flex-1 bg-transparent text-[12px]/[18px] font-normal"
+              placeholder="Enter a URL or paste cURL"
+              value={requestInput}
+              onChange={event => applyRequestInput(event.target.value)}
+              onPaste={event => {
+                const pasted = event.clipboardData.getData('text');
+                // Flatten a pasted multi-line cURL into a single line ourselves so it
+                // stays a valid command (the native single-line paste would drop the newlines).
+                if (/\r?\n/.test(pasted) && CURL_COMMAND_PATTERN.test(pasted.trim())) {
+                  event.preventDefault();
+                  applyRequestInput(flattenCurlCommand(pasted));
+                }
+              }}
+              onKeyDown={createKeybindingsHandler({
+                Enter: event => handleInputEnter(event),
+              })}
+            />
+            <SelectPopover
+              isOpen={selectOpen}
+              onOpenChange={isOpen => setSelectOpen(isOpen)}
+              ariaLabel="Select target collection"
+              items={collectionItems}
+              selectedKey={selectedCollectionId}
+              onSelectionChange={key => {
+                onSelectedCollectionChange(key ? String(key) : null);
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.firstRequestPaneCollectionChanged,
+                });
+              }}
+              title="Where should we put your request?"
+              emptyState="You have no collections, so a new one will be created for you by default."
+              footer={
+                <Button onPress={onCreateCollection} size="sm">
+                  New Collection
+                </Button>
+              }
+              triggerClassName="h-6.5 rounded-md px-3 text-[12px]/[18px] font-[590] data-[focus-visible=true]:!ring-0"
+              popoverClassName="w-[240px]"
+              dialogClassName="w-[240px]"
+              renderTrigger={selectedItem => (
                 <div className="flex items-center gap-2">
-                  <SelectPopover
-                    isOpen={selectOpen}
-                    onOpenChange={isOpen => setSelectOpen(isOpen)}
-                    ariaLabel="Select target collection"
-                    items={collectionItems}
-                    selectedKey={selectedCollectionId}
-                    onSelectionChange={key => {
-                      onSelectedCollectionChange(key ? String(key) : null);
-                      window.main.trackAnalyticsEvent({
-                        event: AnalyticsEvent.firstRequestPaneCollectionChanged,
-                      });
-                    }}
-                    title="Where should we put your request?"
-                    emptyState="You have no collections, so a new one will be created for you by default."
-                    footer={
-                      <Button onPress={onCreateCollection} size="sm">
-                        New Collection
-                      </Button>
-                    }
-                    triggerClassName="h-8 rounded-md px-3 text-sm data-[focus-visible=true]:!ring-0"
-                    popoverClassName="w-[240px]"
-                    dialogClassName="w-[240px]"
-                    renderTrigger={selectedItem => (
-                      <div className="flex items-center gap-2">
-                        <span className="truncate">{selectedItem?.label ?? 'New collection'}</span>
-                        <Icon icon="chevron-down" className="w-3 shrink-0" />
-                      </div>
-                    )}
-                    renderItem={(item, isSelected) => (
-                      <>
-                        <span className="flex-1 truncate">{item.label}</span>
-                        {isSelected ? <Icon icon="check" className="text-(--color-success)" /> : null}
-                      </>
-                    )}
-                  />
-                  <Button
-                    aria-label="Create request"
-                    primary
-                    size="md"
-                    isDisabled={!trimmedInput || isCreatingRequest}
-                    onPress={() => handleCreateRequest()}
-                  >
-                    <span>Create ⏎</span>
-                  </Button>
+                  <span className="truncate">{selectedItem?.label ?? 'New collection'}</span>
+                  <Icon icon="chevron-down" className="w-3 shrink-0" />
                 </div>
-              </div>
-            </div>
-            {curlParseError && (
-              <div className="mt-2 text-xs text-[#FF5631]">Invalid cURL. Verify your input and try again.</div>
-            )}
-            <div className="my-6 px-4">
-              {shouldShowJumpBackIn ? (
+              )}
+              renderItem={(item, isSelected) => (
                 <>
-                  <p className="text-sm font-semibold text-(--hl)">Jump back in</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {currentProjectRecentRequests.map(recentRequest => (
-                      <Button
-                        key={recentRequest.request._id}
-                        variant="outlined"
-                        size="md"
-                        className="px-2"
-                        onPress={() => {
-                          navigate(
-                            `/organization/${organizationId}/project/${projectId}/workspace/${recentRequest.workspaceId}/debug/request/${recentRequest.request._id}`,
-                          );
-                        }}
-                      >
-                        <ResourceIcon resource={recentRequest.request} />
-                        <span className="max-w-[18rem] truncate">{recentRequest.request.name}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm font-semibold text-(--hl)">Not sure where to start?</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {quickStartItems.map(item => (
-                      <Button
-                        key={item.id}
-                        variant="outlined"
-                        size="md"
-                        className="px-2"
-                        onPress={() => {
-                          window.main.trackAnalyticsEvent({
-                            event: AnalyticsEvent.firstRequestPaneExampleClicked,
-                            properties: {
-                              name: item.label,
-                            },
-                          });
-                          item.onClick();
-                        }}
-                      >
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </Button>
-                    ))}
-                  </div>
+                  <span className="flex-1 truncate">{item.label}</span>
+                  {isSelected ? <Icon icon="check" className="text-(--color-success)" /> : null}
                 </>
               )}
-            </div>
+            />
+            <Button
+              aria-label="Create request"
+              primary
+              size="md"
+              className="h-6.5 rounded-sm px-2 text-[12px]/[18px] font-[590]"
+              isDisabled={!trimmedInput || isCreatingRequest}
+              onPress={() => handleCreateRequest()}
+            >
+              <span>{createButtonLabel}</span>
+            </Button>
           </div>
+          {errorText && <div className="mt-2 text-xs text-[#FF5631]">{errorText}</div>}
+
+          {treatment === 'A' && (
+            <div className="mt-6 flex flex-wrap gap-x-10 gap-y-6">
+              <div>
+                <p className="text-sm font-semibold text-(--hl)">Quick actions</p>
+                <div className="mt-3 flex flex-wrap gap-2">{quickActions.map(renderQuickStartButton)}</div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-(--hl)">Start with an example</p>
+                <div className="mt-3 flex flex-wrap gap-2">{exampleItems.map(renderQuickStartButton)}</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       {isImportModalOpen && (

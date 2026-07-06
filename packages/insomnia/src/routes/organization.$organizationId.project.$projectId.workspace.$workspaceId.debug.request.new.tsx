@@ -37,7 +37,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     activeRequestId = (
       await services.request.create({
         parentId: parentId || workspaceId,
-        method: METHOD_GET,
+        method: req?.method || METHOD_GET,
         name: req?.name || 'New Request',
         url: req?.url || '',
         headers: [],

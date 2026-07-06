@@ -82,7 +82,7 @@ export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onCha
       triggerButton={
         <Button
           aria-label="Request Method"
-          className={`flex items-center gap-1 rounded-sm px-2 py-1 text-xs font-semibold uppercase ${getMethodPillClasses(method)} ${className || ''}`}
+          className={`flex items-center gap-1 rounded-sm px-2 py-1 text-center text-[12px]/[100%] font-[590] uppercase ${getMethodPillClasses(method)} ${className || ''}`}
         >
           <span>{method}</span>
           <i className="fa fa-caret-down" />
