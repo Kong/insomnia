@@ -205,6 +205,18 @@ describe('runTagInSandbox — PoC milestone 1', () => {
       expect(actual).toMatch(/^[0-9a-f]{32}$/);
     });
 
+    it('clamps an oversized randomBytes request instead of allocating it', async () => {
+      const source = cryptoTag("return crypto.randomBytes(2147483648).toString('hex').length;");
+      const actual = await runTagInSandbox({
+        pluginSource: source,
+        tagName: 'c',
+        envelope: envelope([]),
+        bridge: noBridge,
+        hostCrypto: nodeHostCrypto,
+      });
+      expect(Number(actual)).toBeLessThanOrEqual(65536 * 2);
+    });
+
     it('throws a clear error when crypto is not provided', async () => {
       const source = cryptoTag("return crypto.createHash('sha256').update(input).digest('hex');");
       await expect(

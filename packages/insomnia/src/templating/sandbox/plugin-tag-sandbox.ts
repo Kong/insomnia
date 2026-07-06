@@ -107,9 +107,11 @@ const installHostCrypto = (ctx: QuickJSContext, hostCrypto?: HostCrypto): void =
   );
   setGlobal(ctx, '__cryptoHmac', hmacFn);
 
-  const randomBytesFn = ctx.newFunction('__cryptoRandomBytes', size =>
-    ctx.newString(hostCrypto.randomBytes(ctx.getNumber(size))),
-  );
+  const randomBytesFn = ctx.newFunction('__cryptoRandomBytes', size => {
+    // Clamp so a plugin can't force a multi-GB allocation (e.g. crypto.randomBytes(2 ** 31)).
+    const clamped = Math.max(0, Math.min(Math.floor(ctx.getNumber(size)) || 0, 65536));
+    return ctx.newString(hostCrypto.randomBytes(clamped));
+  });
   setGlobal(ctx, '__cryptoRandomBytes', randomBytesFn);
 
   const randomUUIDFn = ctx.newFunction('__cryptoRandomUUID', () => ctx.newString(hostCrypto.randomUUID()));
