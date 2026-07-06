@@ -1,10 +1,10 @@
+import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
+import type { RenderError } from '~/common/templating/render-error';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import type { RenderError } from '../../../templating/render-error';
 import { Link } from '../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

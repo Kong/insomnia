@@ -1,13 +1,12 @@
-import { generate, runTests, type Test, type TestResults } from 'insomnia-testing';
+import type { TestResults, UnitTest } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { generate, type Test } from 'insomnia-testing/src/generate/generate';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import type { UnitTest } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { getSendRequestCallback } from '~/network/unit-test-feature';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 
@@ -27,8 +26,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const src = generate([{ name: 'My Suite', suites: [], tests }]);
 
-  const sendRequest = getSendRequestCallback();
-
   let results: TestResults = {
     failures: [],
     passes: [],
@@ -47,12 +44,15 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   };
 
   try {
-    results = await runTests(src, { sendRequest });
+    results = await window.main.runTests(src);
     const testResult = await services.unitTestResult.create({
       results,
       parentId: workspaceId,
     });
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRunAll, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.unitTestRunAll,
+      properties: { organizationId, projectId },
+    });
 
     return redirect(
       href(
@@ -93,7 +93,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: workspaceId,
     });
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRunAll, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.unitTestRunAll,
+      properties: { organizationId, projectId },
+    });
 
     return redirect(
       href(

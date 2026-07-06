@@ -1,7 +1,7 @@
+import type { RequestParameter } from 'insomnia-data';
 import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import type { RequestParameter } from '~/insomnia-data';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -84,6 +84,7 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
 
   return (
     <KeyValueEditor
+      alwaysShowBlankRow
       allowMultiline
       namePlaceholder="name"
       valuePlaceholder="value"

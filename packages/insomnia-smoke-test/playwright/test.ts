@@ -2,11 +2,13 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import path from 'node:path';
 
-import type { ElectronApplication, TraceMode } from '@playwright/test';
+import type { ElectronApplication, PlaywrightWorkerArgs, TraceMode } from '@playwright/test';
 import { test as baseTest } from '@playwright/test';
 
+import type { EnvOptions } from './launch';
+import { launchInsomnia, liveApps } from './launch';
 import { InsomniaApp } from './pages';
-import { bundleType, cwd, executablePath, mainPath, randomDataPath } from './paths';
+import { randomDataPath } from './paths';
 
 // Throw an error if the condition fails
 // > Not providing an inline default argument for message as the result is smaller
@@ -22,25 +24,6 @@ export function invariant(
   // Condition not passed
 
   throw new Error(typeof message === 'function' ? message() : message);
-}
-
-interface EnvOptions {
-  INSOMNIA_DATA_PATH: string;
-  INSOMNIA_API_URL: string;
-  INSOMNIA_APP_WEBSITE_URL: string;
-  INSOMNIA_AI_URL: string;
-  INSOMNIA_MOCK_API_URL: string;
-  INSOMNIA_GITHUB_REST_API_URL: string;
-  INSOMNIA_GITHUB_API_URL: string;
-  INSOMNIA_GITLAB_API_URL: string;
-  INSOMNIA_UPDATES_URL: string;
-  INSOMNIA_SKIP_ONBOARDING: string;
-  INSOMNIA_PUBLIC_KEY: string;
-  INSOMNIA_SECRET_KEY: string;
-  INSOMNIA_SESSION?: string;
-  INSOMNIA_VAULT_KEY: string;
-  INSOMNIA_VAULT_SALT: string;
-  INSOMNIA_VAULT_SRP_SECRET: string;
 }
 
 interface AESMessage {
@@ -89,26 +72,28 @@ export const test = baseTest.extend<{
       INSOMNIA_GITLAB_API_URL: echoServer + '/gitlab-api',
       INSOMNIA_UPDATES_URL: echoServer || 'https://updates.insomnia.rest',
       INSOMNIA_MOCK_API_URL: 'https://mock-stage.insomnia.run',
-      INSOMNIA_SKIP_ONBOARDING: String(userConfig.skipOnboarding),
+      // Empty string (not "false") so the renderer's `if (skipOnboarding)` guard is falsy
+      // and onboarding flows can be exercised; "false" would be a truthy string.
+      INSOMNIA_SKIP_ONBOARDING: userConfig.skipOnboarding ? 'true' : '',
       INSOMNIA_PUBLIC_KEY: userConfig.publicKey,
       INSOMNIA_SECRET_KEY: userConfig.secretKey,
       INSOMNIA_VAULT_KEY: userConfig.vaultKey || '',
       INSOMNIA_VAULT_SALT: userConfig.vaultSalt || '',
       INSOMNIA_VAULT_SRP_SECRET: userConfig.vaultSrpSecret || '',
+      KONNECT_API_URL: echoServer,
+      KONNECT_API_REGIONS: 'us',
       ...(userConfig.session ? { INSOMNIA_SESSION: JSON.stringify(userConfig.session) } : {}),
     };
-    const { ELECTRON_RUN_AS_NODE: _ignored, ...launchEnv } = process.env;
 
-    const electronApp = await playwright._electron.launch({
-      cwd,
-      executablePath,
-      args: bundleType() === 'package' ? ['--no-sandbox'] : ['--no-sandbox', mainPath],
-      env: {
-        ...launchEnv,
-        ...options,
-        PLAYWRIGHT: 'true',
-      },
-    });
+    const electronApp = await launchInsomnia(playwright, options);
+    // Stash the launch options on the app so InsomniaApp.relaunch() can reuse them
+    // without re-deriving env from fixtures.
+    const stashed = electronApp as ElectronApplication & {
+      __launchEnv?: EnvOptions;
+      __playwright?: PlaywrightWorkerArgs['playwright'];
+    };
+    stashed.__launchEnv = options;
+    stashed.__playwright = playwright;
 
     const appContext = electronApp.context();
 
@@ -143,24 +128,49 @@ export const test = baseTest.extend<{
       // Use a different name rather than the default trace.zip to avoid overwriting the trace.
       // Refer: https://github.com/microsoft/playwright/issues/35005
       // Discard the trace if not needed
-      await (isTrace
-        ? appContext.tracing.stop({
-            path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
-          })
-        : appContext.tracing.stop());
+      // The app may have been relaunched during the test (e.g. insomnia.relaunch()), which closes
+      // the original Electron process and invalidates appContext. Guard against that here.
+      try {
+        await (isTrace
+          ? appContext.tracing.stop({
+              path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
+            })
+          : appContext.tracing.stop());
+      } catch {
+        // Original app was closed by relaunch(); tracing on the new app is not captured.
+      }
     }
 
-    await electronApp.close();
+    // Close any apps that are still alive (e.g. relaunched copies). Snapshot
+    // first: close() fires the 'close' listener which calls liveApps.delete(),
+    // so iterating the live Set would skip un-visited entries.
+    for (const live of Array.from(liveApps)) {
+      try {
+        await Promise.race([
+          live.close(),
+          new Promise<void>((_, reject) => setTimeout(() => reject(new Error('close timeout')), 5000)),
+        ]);
+      } catch {
+        try {
+          live.process().kill();
+        } catch {}
+      }
+    }
   },
   page: async ({ app }, use) => {
     // The plugin window is created after the main window's did-finish-load, so
     // firstWindow() always returns the main app window.
     const page = await app.firstWindow({ timeout: 60_000 });
 
-    await page.waitForLoadState();
+    // Surface renderer errors so they appear in test output instead of being silent.
+    page.on('pageerror', err => console.error('[renderer pageerror]', err.message, err.stack));
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.error('[renderer console.error]', msg.text());
+      }
+    });
 
-    // Seed a fake Konnect PAT so konnect-enabled UI renders in all tests
-    await page.evaluate(() => (window as any).main.secretStorage.setSecret('konnectPat', 'kpat_test'));
+    await page.waitForLoadState();
 
     await use(page);
   },

@@ -1,5 +1,9 @@
 import { mkdirSync } from 'node:fs';
 
+declare global {
+  var __PLAYWRIGHT_OPEN_DIALOG_QUEUE__: { filePaths: string[]; canceled: boolean }[] | undefined;
+}
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -8,18 +12,27 @@ import type {
   SaveDialogOptions,
 } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
+import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
+
+import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '~/common/templating/types';
+import type { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import { invariant } from '~/common/utils/invariant';
 
 import { fnOrString } from '../../common/misc';
-import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
-import type { extractNunjucksTagFromCoords } from '../../templating/utils';
-import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
+  | 'run-tests'
   | 'authorizeUserInDefaultBrowser'
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateCodeSnippet'
+  | 'getCodeSnippetTargets'
+  | 'exportHarWithRequest'
+  | 'exportHarRequest'
+  | 'exportHarCurrentRequest'
+  | 'exportRequestsHAR'
+  | 'exportWorkspacesHAR'
   | 'generateMockRouteDataFromSpec'
   | 'generateCommitsFromDiff'
   | 'generateMcpSamplingResponse'
@@ -81,11 +94,13 @@ export type HandleChannels =
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'grpc.writeProtoFile'
+  | 'grpc.validateProtoFile'
   | 'initializeWorkspaceBackendProject'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
   | 'lintSpec'
+  | 'bundleSpectralRuleset'
   | 'llm.clearActiveBackend'
   | 'llm.getActiveBackend'
   | 'llm.getAIFeatureEnabled'
@@ -166,7 +181,26 @@ export type HandleChannels =
   | 'timeline.appendToFile'
   | 'timeline.getPath'
   | 'writeFile'
-  | 'writeResponseBodyToFile';
+  | 'deleteCompiledRuleset'
+  | 'refreshCompiledRuleset'
+  | 'writeResponseBodyToFile'
+  | 'vault.encryptSecretValue'
+  | 'vault.decryptSecretValue'
+  | 'crypt.encryptRSAWithJWK'
+  | 'crypt.decryptRSAWithJWK'
+  | 'crypt.encryptAESBuffer'
+  | 'crypt.encryptAES'
+  | 'crypt.decryptAES'
+  | 'crypt.decryptAESToBuffer'
+  | 'crypt.generateAES256Key'
+  | 'sealedbox.keyPair'
+  | 'sealedbox.open'
+  | 'cookies.fromJSON'
+  | 'cookies.parse'
+  | 'cookies.toString'
+  | 'cookies.getCookiesForUrl'
+  | 'cookies.addSetCookies'
+  | 'cookies.getResponseCookiesFromHeaders';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -175,6 +209,7 @@ export const ipcMainHandle = (
 export type MainOnChannels =
   | 'addExecutionStep'
   | 'analytics.setOrganizationId'
+  | 'applyUpdateAndRestart'
   | 'cancelCurlRequest'
   | 'clear'
   | 'completeExecutionStep'
@@ -182,6 +217,7 @@ export type MainOnChannels =
   | 'curl.closeAll'
   | 'getAppPath'
   | 'getPath'
+  | 'getUpdateStatus'
   | 'grpc.cancel'
   | 'grpc.closeAll'
   | 'grpc.commit'
@@ -222,7 +258,7 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
-  | 'plugins.uiPromptResult'
+  | 'ui.promptResult'
   | 'writeText';
 
 export type RendererOnChannels =
@@ -230,7 +266,7 @@ export type RendererOnChannels =
   | 'db.changes'
   | 'plugins.uiAlert'
   | 'plugins.uiDialog'
-  | 'plugins.uiPrompt'
+  | 'ui.prompt'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
@@ -248,11 +284,13 @@ export type RendererOnChannels =
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
+  | 'update-status-changed'
   | 'show-oauth-authorization-modal'
   | 'hide-oauth-authorization-modal'
   | 'mcp-auth-confirmation'
   | 'git.db-synced'
-  | 'git.file-problems-changed';
+  | 'git.file-problems-changed'
+  | 'llm.changed';
 
 export const ipcMainOn = (
   channel: MainOnChannels,
@@ -295,7 +333,7 @@ export function registerElectronHandlers() {
       },
     ) => {
       const { key, nunjucksTag, pluginTemplateTags = [] } = options;
-      const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
+      const sendLiquidTagContextMsg = (type: NunjucksTagContextMenuAction) => {
         event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
       };
       try {
@@ -303,7 +341,7 @@ export function registerElectronHandlers() {
           ? [
               {
                 label: 'Edit',
-                click: () => sendNunjuckTagContextMsg('edit'),
+                click: () => sendLiquidTagContextMsg('edit'),
               },
               {
                 label: 'Copy',
@@ -315,12 +353,12 @@ export function registerElectronHandlers() {
                 label: 'Cut',
                 click: () => {
                   clipboard.writeText(nunjucksTag.template);
-                  sendNunjuckTagContextMsg('delete');
+                  sendLiquidTagContextMsg('delete');
                 },
               },
               {
                 label: 'Delete',
-                click: () => sendNunjuckTagContextMsg('delete'),
+                click: () => sendLiquidTagContextMsg('delete'),
               },
               { type: 'separator' },
             ]
@@ -400,6 +438,14 @@ export function registerElectronHandlers() {
     });
   });
   ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
+    // Playwright test hook: consume queued responses set via `electronApp.evaluate`
+    // instead of opening the native dialog. See packages/insomnia-smoke-test.
+    if (process.env.PLAYWRIGHT === 'true') {
+      const queue = globalThis.__PLAYWRIGHT_OPEN_DIALOG_QUEUE__;
+      if (queue && queue.length > 0) {
+        return queue.shift();
+      }
+    }
     const { filePaths, canceled } = await dialog.showOpenDialog(options);
     return { filePaths, canceled };
   });

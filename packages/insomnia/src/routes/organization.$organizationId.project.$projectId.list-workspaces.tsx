@@ -1,3 +1,5 @@
+import type { ApiSpec, GitRepository, MockServer } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
@@ -6,17 +8,15 @@ import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import type { InsomniaFile } from '~/common/project';
 import { descendingNumberSort } from '~/common/sorting';
-import type { ApiSpec, GitRepository, MockServer, Project, WorkspaceMeta } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.list-workspaces';
 
 async function getAllLocalFiles({ projectId }: { projectId: string }) {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
+  const projectWorkspaces = await services.workspace.listByParentId(projectId);
   const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
-    database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    services.workspaceMeta.list({
       parentId: {
         $in: projectWorkspaces.map(w => w._id),
       },
@@ -113,12 +113,9 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
-  const organizationProjects =
-    (await database.find<Project>(models.project.type, {
-      parentId: organizationId,
-    })) || [];
+  const organizationProjects = await services.project.listByOrganizationIds(organizationId);
 
   const projects = models.project.sortProjects(organizationProjects);
   const files = await getAllLocalFiles({ projectId });

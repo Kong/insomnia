@@ -1,6 +1,5 @@
+import type { MockServer } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import type { MockServer } from '~/insomnia-data';
 
 import {
   FLEXIBLE_URL_REGEX,

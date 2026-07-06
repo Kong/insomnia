@@ -1,9 +1,9 @@
+import type { McpRequest } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import type { McpRequest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.grant-access';
 
@@ -19,7 +19,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     return;
   }
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found for request');
   if (accessLevel === 'project') {
     await services.project.update(project, { mcpStdioAccess: true });

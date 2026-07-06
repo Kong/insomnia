@@ -36,11 +36,13 @@
             "params": [],
             "text": "hello world!"
           },
-          "queryString": [{
-            "name": "foo",
-            "value": "bar",
-            "comment": "This is a comment"
-          }],
+          "queryString": [
+            {
+              "name": "foo",
+              "value": "bar",
+              "comment": "This is a comment"
+            }
+          ],
           "cookies": [
             {
               "name": "__cfduid",

@@ -1,8 +1,8 @@
+import type { McpPayload, SocketIOPayload } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import type { McpPayload, SocketIOPayload } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
 

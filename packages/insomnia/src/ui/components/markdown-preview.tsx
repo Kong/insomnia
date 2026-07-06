@@ -1,8 +1,9 @@
 import highlight from 'highlight.js/lib/common';
 import React, { type FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import type { HandleRender } from '~/common/templating/types';
+
 import { markdownToHTML } from '../../common/markdown-to-html';
-import type { HandleRender } from '../../templating/types';
 
 interface Props {
   markdown: string;

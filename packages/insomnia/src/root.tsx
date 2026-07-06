@@ -1,5 +1,7 @@
 import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
+import type { Settings, UserSession } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -22,11 +24,7 @@ import {
 import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import type { Settings, UserSession } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { createPlugin } from '~/plugins/create';
-import { setTheme } from '~/plugins/misc';
-import { plugins } from '~/plugins/renderer-bridge';
+import { parseDeepLinkUrl as parseImportDeepLinkUrl, resolveImportDeepLink } from '~/common/import-deep-link';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
@@ -35,6 +33,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
+import { isLoggedIn } from '~/ui/account/session';
 import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -45,10 +44,13 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
-import { Toaster } from '~/ui/components/toast-notification';
+import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
+import { createPlugin } from '~/ui/plugins/create';
+import { setTheme } from '~/ui/plugins/misc';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import type { Route } from './+types/root';
 
@@ -81,15 +83,35 @@ const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ reque
     console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
   }
 };
-const sanitizeUrlAndExtractOrigin = (url: string) => {
-  try {
-    const parsed = new URL(url);
-    return parsed.origin;
-  } catch {
-    return '';
-  }
-};
 export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
+
+const parseDeepLinkUrl = (url: string) => parseImportDeepLinkUrl(url, isDevelopment());
+
+// Handles the auth/logout deep-link (insomnia://app/auth/login) independently
+// of the Root component so that it continues to work even when Root is replaced
+// by ErrorBoundary. Without this, an invalid session that causes an error before
+// Root mounts would leave the IPC listener unregistered, blocking the API-
+// triggered redirect to the logout page.
+// Root calls this hook too, but skips the auth/login case in its own handler
+// (see the early return below) to avoid double-handling.
+const useAuthDeepLinkHandler = () => {
+  const { submit: logoutSubmit } = useLogoutFetcher();
+  useEffect(() => {
+    return window.main.on('shell:open', async (_, url: string) => {
+      const parsed = parseDeepLinkUrl(url);
+      if (!parsed) return;
+      const { urlWithoutParams, params } = parsed;
+
+      if (urlWithoutParams === 'insomnia://app/auth/login') {
+        if (params.message) {
+          window.localStorage.setItem('logoutMessage', params.message);
+        }
+
+        return logoutSubmit();
+      }
+    });
+  }, [logoutSubmit]);
+};
 
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
@@ -108,6 +130,7 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
+  useAuthDeepLinkHandler();
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden">
@@ -116,9 +139,12 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
       </h1>
       <p className="text-(--color-font)">
         Failed to render. Please report to{' '}
-        <a className="font-bold underline" href="https://github.com/Kong/insomnia/issues">
+        <button
+          className="font-bold underline"
+          onClick={() => window.main.openInBrowser('https://github.com/Kong/insomnia/issues')}
+        >
           our Github Issues
-        </a>
+        </button>
       </p>
       {errorMessage && (
         <div className="p-6 text-(--color-font)">
@@ -322,12 +348,12 @@ const Root = () => {
   const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
-  const { submit: logoutSubmit } = useLogoutFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
     key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   });
   const navigate = useNavigate();
+  useAuthDeepLinkHandler();
 
   const { revalidate } = useRevalidator();
   const inflightFetchers = useFetchers();
@@ -358,32 +384,20 @@ const Root = () => {
 
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
-      // Get the url without params
-      let parsedUrl;
-      try {
-        parsedUrl = new URL(url);
-      } catch {
-        console.log('[deep-link] Invalid args, expected insomnia://x/y/z', url);
+      const parsed = parseDeepLinkUrl(url);
+      if (!parsed) {
         return;
       }
-      let urlWithoutParams = url.slice(0, Math.max(0, url.indexOf('?'))) || url;
-      const params = Object.fromEntries(parsedUrl.searchParams);
-      // Change protocol for dev redirects to match switch case
-      if (isDevelopment()) {
-        urlWithoutParams = urlWithoutParams.replace('insomniadev://', 'insomnia://');
+      const { urlWithoutParams, params } = parsed;
+      // Handled by useAuthDeepLinkHandler (registered in both Root and ErrorBoundary)
+      if (urlWithoutParams === 'insomnia://app/auth/login') {
+        return;
       }
       if (urlWithoutParams === 'insomnia://app/alert') {
         return showModal(AlertModal, {
           title: params.title,
           message: params.message,
         });
-      }
-      if (urlWithoutParams === 'insomnia://app/auth/login') {
-        if (params.message) {
-          window.localStorage.setItem('logoutMessage', params.message);
-        }
-
-        return logoutSubmit();
       }
       // Supports params: uri, curl, origin
       if (urlWithoutParams === 'insomnia://app/import') {
@@ -409,38 +423,17 @@ const Root = () => {
         }
         trackImportEvent(AnalyticsEvent.importStarted, { source: 'import-url' });
 
-        if (params.uri) {
-          return setImportObject({
-            type: 'uri',
-            defaultValue: params.uri,
-            origin: sanitizeUrlAndExtractOrigin(params.origin),
-            endpoint: params.endpoint,
-            operationId: params.operationId,
-            autoScan: true,
-            startedAt: Date.now(),
-          });
+        const resource = resolveImportDeepLink(params);
+        if (!resource) {
+          return;
         }
-        if (params.mcp) {
-          return setImportObject({
-            type: 'mcp',
-            defaultValue: params.mcp,
-            origin: sanitizeUrlAndExtractOrigin(params.origin),
-            autoScan: true,
-            startedAt: Date.now(),
-          });
-        }
-        if (params.curl) {
-          const { isValid } = await validateCurl(params.curl);
-          return setImportObject({
-            type: 'curl',
-            defaultValue: params.curl,
-            origin: sanitizeUrlAndExtractOrigin(params.origin),
-            endpoint: params.endpoint,
-            operationId: params.operationId,
-            autoScan: isValid,
-            startedAt: Date.now(),
-          });
-        }
+        // Only cURL gates auto-scan on async validation
+        const autoScan = resource.type === 'curl' ? (await validateCurl(resource.defaultValue)).isValid : true;
+        return setImportObject({
+          ...resource,
+          autoScan,
+          startedAt: Date.now(),
+        });
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
         if (!params.name || params.name.trim() === '') {
@@ -556,11 +549,11 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
-          const authResult = await plugins.executePluginMainAction({
+          const authResult = (await plugins.executePluginMainAction({
             pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },
-          }) as any;
+          })) as any;
           const { success, result, error } = authResult;
           if (success) {
             const { account, uniqueId } = result!;
@@ -636,7 +629,6 @@ const Root = () => {
     authorizeSubmit,
     createCloudCredentials,
     gitProviderCompleteSignInSubmit,
-    logoutSubmit,
     navigate,
     organizationId,
     projectId,
@@ -657,6 +649,40 @@ const Root = () => {
       window.main.openDeepLink(pendingDeepLink);
     }
   }, [organizationId]);
+
+  useEffect(() => {
+    const STORAGE_KEY = 'plugin-system-changes-toast-shown';
+    if (localStorage.getItem(STORAGE_KEY)) {
+      return;
+    }
+    isLoggedIn().then(loggedIn => {
+      if (!loggedIn) return;
+      plugins.getPlugins().then(allPlugins => {
+        const userPlugins = allPlugins.filter(p => p.directory !== '');
+        if (userPlugins.length > 0) {
+          showToast(
+            {
+              title: 'Plugin system updated',
+              description: (
+                <>
+                  You are running at least one plug-in that may be impacted.{' '}
+                  <Button
+                    onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')}
+                    className="cursor-pointer border-0 bg-transparent p-0 text-(--color-link) underline"
+                  >
+                    Learn more
+                  </Button>
+                </>
+              ),
+              status: 'info',
+            },
+            { timeout: null },
+          );
+          localStorage.setItem(STORAGE_KEY, 'true');
+        }
+      });
+    });
+  }, []);
 
   return (
     <>

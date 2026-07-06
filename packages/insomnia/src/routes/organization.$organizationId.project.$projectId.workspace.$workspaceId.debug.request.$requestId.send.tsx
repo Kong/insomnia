@@ -1,19 +1,22 @@
 import contentDisposition from 'content-disposition';
-import { extension as mimeExtension } from 'mime-types';
-import { href, redirect } from 'react-router';
-import { v4 as uuidv4 } from 'uuid';
-
-import { getContentDispositionHeader } from '~/common/misc';
 import type {
   Environment,
   Request,
   RequestGroup,
   RequestMeta,
+  RequestTestResult,
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
   UserUploadEnvironment,
-} from '~/insomnia-data';
-import { database as db, models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { database as db, models, services } from 'insomnia-data';
+import { href, redirect } from 'react-router';
+import { v4 as uuidv4 } from 'uuid';
+
+import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
+import { getContentDispositionHeader } from '~/common/misc';
+import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
+import { invariant } from '~/common/utils/invariant';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import {
@@ -28,11 +31,8 @@ import {
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
 import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
-import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 
 export interface SendActionParams {
@@ -313,7 +313,7 @@ export const sendActionImplementation = async (options: {
     const header = getContentDispositionHeader(responsePatch.headers || []);
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
-      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
+      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.unknown`;
     await writeToDownloadPath(
       window.path.join(requestMeta.downloadPath, name),
       responsePatch,
@@ -372,6 +372,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
           const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);
 
+          const requestType =
+            activeRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL
+              ? 'GraphQL'
+              : models.request.isEventStreamRequest(activeRequest)
+                ? 'Event Stream'
+                : 'HTTP';
           window.main.trackAnalyticsEvent({
             event: AnalyticsEvent.requestExecuted,
             properties: {
@@ -395,6 +401,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               count_path_parameters: activeRequest.pathParameters?.length ?? 0,
               has_docs: !!activeRequest.description,
               count_certificates: clientCertificates.length,
+              request_type: requestType,
+              source: 'request-pane',
             },
           });
 

@@ -1,21 +1,21 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { Project, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { Project, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { plugins } from '~/plugins/renderer-bridge';
+import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import type { CreateRequestType } from '../../hooks/use-request';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -79,6 +79,9 @@ export const RequestGroupActionsDropdown = ({
       requestType,
       parentId,
       req,
+      metrics: {
+        source: 'sidebar',
+      },
     });
 
   const onOpen = async () => {
@@ -196,6 +199,27 @@ export const RequestGroupActionsDropdown = ({
       icon: 'plus',
       items: [
         {
+          id: 'New Folder',
+          name: 'New Folder',
+          icon: 'folder',
+          action: () =>
+            showModal(PromptModal, {
+              title: 'New Folder',
+              defaultValue: 'My Folder',
+              submitName: 'Create',
+              label: 'Name',
+              selectText: true,
+              onComplete: name =>
+                newRequestGroupFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  parentId: requestGroup._id,
+                  name,
+                }),
+            }),
+        },
+        {
           id: 'HTTP',
           name: 'HTTP Request',
           icon: 'plus-circle',
@@ -254,27 +278,6 @@ export const RequestGroupActionsDropdown = ({
             createRequest({
               requestType: 'SocketIO',
               parentId: requestGroup._id,
-            }),
-        },
-        {
-          id: 'New Folder',
-          name: 'New Folder',
-          icon: 'folder',
-          action: () =>
-            showModal(PromptModal, {
-              title: 'New Folder',
-              defaultValue: 'My Folder',
-              submitName: 'Create',
-              label: 'Name',
-              selectText: true,
-              onComplete: name =>
-                newRequestGroupFetcher.submit({
-                  organizationId,
-                  projectId,
-                  workspaceId,
-                  parentId: requestGroup._id,
-                  name,
-                }),
             }),
         },
       ],
@@ -368,7 +371,7 @@ export const RequestGroupActionsDropdown = ({
         >
           <Icon icon="ellipsis" />
         </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden" triggerRef={triggerRef}>
+        <Popover className="flex min-w-max flex-col overflow-y-hidden" placement="bottom end" triggerRef={triggerRef}>
           <Menu
             aria-label="Request Group Actions Menu"
             selectionMode="single"

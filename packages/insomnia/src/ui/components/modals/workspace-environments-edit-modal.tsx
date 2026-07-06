@@ -1,4 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
 import React, { Fragment, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -20,19 +22,17 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
-import { EnvironmentKvPairDataType, EnvironmentType, models } from '~/insomnia-data';
+import { responseTagRegex } from '~/common/templating/utils';
+import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { invariant } from '~/common/utils/invariant';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
-import { getDataFromKVPair } from '~/utils/environment-utils';
-import { invariant } from '~/utils/invariant';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
@@ -145,6 +145,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
           workspaceId,
           params: {
             isPrivate: false,
+            source: 'environment-editor',
           },
         });
       },
@@ -161,6 +162,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
           workspaceId,
           params: {
             isPrivate: true,
+            source: 'environment-editor',
           },
         });
       },
@@ -522,7 +524,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                         onChange={handleEnvironmentChange}
                         environmentInfo={{
                           object: selectedEnvironment.data,
-                          propertyOrder: selectedEnvironment.dataPropertyOrder,
+                          propertyOrder: selectedEnvironment.dataPropertyOrder ?? null,
                         }}
                       />
                     )}
@@ -554,7 +556,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                 </div>
                 <Button
                   onPress={close}
-                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
+                  isDisabled={updateEnvironmentFetcher.state !== 'idle'}
+                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline aria-disabled:opacity-50"
                 >
                   Close
                 </Button>

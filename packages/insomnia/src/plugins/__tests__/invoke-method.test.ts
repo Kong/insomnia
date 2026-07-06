@@ -7,7 +7,7 @@ vi.mock('../context/store', () => ({ init: vi.fn().mockReturnValue({ store: {} }
 vi.mock('../context/network', () => ({ init: vi.fn().mockReturnValue({ network: {} }) }));
 vi.mock('../context/request', () => ({ init: vi.fn().mockReturnValue({ request: {} }) }));
 vi.mock('../context/response', () => ({ init: vi.fn().mockReturnValue({ response: {} }) }));
-vi.mock('~/insomnia-data', () => ({
+vi.mock('insomnia-data', () => ({
   services: {
     settings: { get: vi.fn() },
     request: { getById: vi.fn() },
@@ -20,7 +20,8 @@ vi.mock('~/insomnia-data', () => ({
   },
 }));
 
-import type { Plugin } from '../index';
+import type { Plugin } from '~/common/plugins/types';
+
 import { _testOnlySetPlugins } from '../index';
 import { invokePluginMethod } from '../invoke-method';
 
@@ -41,7 +42,9 @@ afterEach(() => {
 
 describe('invokePluginMethod', () => {
   it('serializes request action metadata', async () => {
-    _testOnlySetPlugins([makePlugin({ module: { requestActions: [{ label: 'Run', icon: 'bolt', action: vi.fn() }] } })]);
+    _testOnlySetPlugins([
+      makePlugin({ module: { requestActions: [{ label: 'Run', icon: 'bolt', action: vi.fn() }] } }),
+    ]);
 
     await expect(invokePluginMethod('getRequestActions')).resolves.toEqual([
       { label: 'Run', icon: 'bolt', pluginName: 'test-plugin' },

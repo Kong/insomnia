@@ -1,9 +1,9 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { removeGitRepository } from '~/account/session';
-import { services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { removeGitRepository } from '~/ui/account/session';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git-credentials.$id.delete';
 

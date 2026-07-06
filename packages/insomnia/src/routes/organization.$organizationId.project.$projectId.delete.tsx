@@ -1,12 +1,12 @@
 import { deleteTeamProject, isApiError } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
+import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.delete';
 
@@ -14,7 +14,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const user = await services.userSession.get();
@@ -39,11 +39,31 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     }
 
     await services.stats.incrementDeletedRequestsForDescendents(project);
+    await services.projectLintRuleset.remove(projectId);
     await services.project.remove(project);
 
     await database.flushChanges(bufferId);
 
+    await window.main.deleteCompiledRuleset({ projectId });
+
     project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
+
+    // If the deleted project is a Konnect project, navigate to another Konnect project
+    if (project.konnectControlPlaneId) {
+      const remainingKonnectProjects = (await services.project.listByOrganizationIds(organizationId)).filter(
+        p => p.konnectControlPlaneId != null && p._id !== projectId,
+      );
+
+      if (remainingKonnectProjects.length > 0) {
+        const targetProject = remainingKonnectProjects[0];
+        return redirect(
+          href('/organization/:organizationId/project/:projectId', {
+            organizationId,
+            projectId: targetProject._id,
+          }),
+        );
+      }
+    }
 
     // When redirect to `/organizations/:organizationId`, it sometimes doesn't reload the index loader, so manually redirect to the initial route for the organization
     const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });

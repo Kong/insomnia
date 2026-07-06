@@ -1,6 +1,5 @@
+import { models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import { models } from '~/insomnia-data';
 
 import {
   METHOD_DELETE,

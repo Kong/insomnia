@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { checkSeats, type CheckSeatsResponse, needsToIncreaseSeats, needsToUpgrade, type Role } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -17,7 +18,6 @@ import { useParams, useSearchParams } from 'react-router';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { debounce } from '~/common/misc';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';

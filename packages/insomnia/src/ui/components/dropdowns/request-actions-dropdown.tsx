@@ -1,8 +1,4 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useCallback, useState } from 'react';
-import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useParams } from 'react-router';
-
 import type {
   GrpcRequest,
   Project,
@@ -11,19 +7,22 @@ import type {
   SocketIORequest,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { plugins } from '~/plugins/renderer-bridge';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
+import React, { Fragment, useCallback, useState } from 'react';
+import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
+import { useParams } from 'react-router';
+
+import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRootLoaderData } from '~/root';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
-import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -147,10 +146,14 @@ export const RequestActionsDropdown = ({
 
   const copyAsCurl = async () => {
     try {
-      const har = await exportHarRequest(request._id, workspaceId);
-      const { HTTPSnippet } = await import('httpsnippet');
-      const snippet = new HTTPSnippet(har);
-      const cmd = snippet.convert('shell', 'curl');
+      const har = await window.main.exportHarRequest({
+        requestId: request._id,
+        environmentOrWorkspaceId: workspaceId,
+      });
+      if (!har) {
+        return;
+      }
+      const cmd = await window.main.generateCodeSnippet({ har, target: 'shell', client: 'curl' });
 
       if (cmd) {
         window.clipboard.writeText(cmd);
@@ -332,7 +335,7 @@ export const RequestActionsDropdown = ({
         >
           <Icon icon="ellipsis" />
         </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden" triggerRef={triggerRef}>
+        <Popover className="flex min-w-max flex-col overflow-y-hidden" placement="bottom end" triggerRef={triggerRef}>
           <Menu
             aria-label="Request Actions Menu"
             selectionMode="single"

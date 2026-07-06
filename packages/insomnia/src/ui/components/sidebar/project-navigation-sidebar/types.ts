@@ -1,5 +1,6 @@
+import type { BaseModel, GitRepository, Project, RequestGroup, Workspace, WorkspaceMeta } from 'insomnia-data';
+
 import type { InsomniaFile } from '~/common/project';
-import type { BaseModel, GitRepository, Project, RequestGroup, Workspace, WorkspaceMeta } from '~/insomnia-data';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 export type ProjectWithPresence = Project & {
@@ -35,6 +36,9 @@ export interface WorkspaceFlatItem extends BaseFlatItem<Workspace> {
   kind: 'workspace';
   // parent project
   project: ProjectWithPresence;
+  // sync flags from the workspace meta, used to show the uncommitted/unpushed changes indicator
+  hasUncommittedChanges?: boolean;
+  hasUnpushedChanges?: boolean;
 }
 
 // Unsynced workspace in cloud sync project

@@ -1,4 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { Project, Workspace } from 'insomnia-data';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -15,7 +16,6 @@ import {
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { Project, Workspace } from '~/insomnia-data';
 import { useInsomniaSyncBranchCheckoutActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.checkout';
 import { useInsomniaSyncPullActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.pull';
 import { useInsomniaSyncPushActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.push';
@@ -108,7 +108,11 @@ export const SyncDropdown: FC<Props> = () => {
   useEffect(() => {
     if (pushFetcher.data && 'error' in pushFetcher.data && pushFetcher.data.error) {
       setOperationError(pushFetcher.data.error);
-      showToast({ icon: cloudSyncIcon, title: `Push failed` });
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Push failed`,
+        status: 'error',
+      });
     } else if (pushFetcher.data && 'success' in pushFetcher.data && pushFetcher.data.success) {
       showToast({
         icon: cloudSyncIcon,
@@ -121,7 +125,11 @@ export const SyncDropdown: FC<Props> = () => {
   useEffect(() => {
     if (pullFetcher.data && 'error' in pullFetcher.data && pullFetcher.data.error) {
       setOperationError(pullFetcher.data.error);
-      showToast({ icon: cloudSyncIcon, title: `Pull failed` });
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Pull failed`,
+        status: 'error',
+      });
     } else if (pullFetcher.data && 'success' in pullFetcher.data && pullFetcher.data.success) {
       showToast({
         icon: cloudSyncIcon,
@@ -272,11 +280,7 @@ export const SyncDropdown: FC<Props> = () => {
       isDisabled: compare.behind === 0 || pullFetcher.state !== 'idle',
       action: () => {
         setOperationError(null);
-        showToast({
-          icon: cloudSyncIcon,
-          title: `Pull failed`,
-          status: 'error',
-        });
+        showToast({ icon: cloudSyncIcon, title: `Pull started` });
         pullFetcher.submit({
           organizationId,
           projectId,

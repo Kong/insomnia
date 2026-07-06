@@ -1,8 +1,8 @@
 import type { Virtualizer } from '@tanstack/react-virtual';
+import { database, models, type Workspace } from 'insomnia-data';
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import { database, models, type Workspace } from '~/insomnia-data';
 import type { NavigationResources } from '~/ui/hooks/use-insomnia-navigation';
 import { useInsomniaNavigation } from '~/ui/hooks/use-insomnia-navigation';
 
@@ -40,24 +40,22 @@ export const useProjectNavigationSidebarNavigation = ({
   const { scrollToIndex } = virtualizer;
   const { routeInfo, getNavigationResources } = useInsomniaNavigation();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const navigationKey = routeInfo ? `${routeInfo.routeId}:${routeInfo.resourceId}` : 'unknown-route';
-  const lastHandledNavigationKeyRef = useRef<string | null>(null);
   const lastHandledScrollKeyRef = useRef<string | null>(null);
+
+  const setActiveTabRef = useRef(setActiveTab);
+  const toggleRequestGroupsRef = useRef(toggleRequestGroups);
+  const expandProjectOrWorkspacesRef = useRef(expandProjectOrWorkspaces);
+  setActiveTabRef.current = setActiveTab;
+  toggleRequestGroupsRef.current = toggleRequestGroups;
+  expandProjectOrWorkspacesRef.current = expandProjectOrWorkspaces;
 
   useEffect(() => {
     let cancelled = false;
 
     if (!routeInfo) {
-      lastHandledNavigationKeyRef.current = null;
       setSelectedItemId(null);
       return;
     }
-
-    if (lastHandledNavigationKeyRef.current === navigationKey) {
-      return;
-    }
-
-    lastHandledNavigationKeyRef.current = navigationKey;
 
     getNavigationResources().then(async resources => {
       if (cancelled) {
@@ -72,7 +70,7 @@ export const useProjectNavigationSidebarNavigation = ({
       }
 
       // update active tab
-      setActiveTab(resources.project.konnectControlPlaneId != null ? 'konnect' : 'projects');
+      setActiveTabRef.current(resources.project.konnectControlPlaneId != null ? 'konnect' : 'projects');
 
       const idsToExpand = [resources.project._id];
       if (resources.workspace && models.workspace.isCollection(resources.workspace)) {
@@ -97,17 +95,17 @@ export const useProjectNavigationSidebarNavigation = ({
         idsToExpand.push(...requestGroupIds);
 
         if (requestGroupIds.length > 0) {
-          await toggleRequestGroups(requestGroupIds, resources.workspace, false);
+          await toggleRequestGroupsRef.current(requestGroupIds, resources.workspace, false);
         }
       }
 
-      expandProjectOrWorkspaces([...idsToExpand]);
+      expandProjectOrWorkspacesRef.current([...idsToExpand]);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [expandProjectOrWorkspaces, getNavigationResources, navigationKey, routeInfo, setActiveTab, toggleRequestGroups]);
+  }, [getNavigationResources, routeInfo]);
 
   useEffect(() => {
     if (!selectedItemId) {

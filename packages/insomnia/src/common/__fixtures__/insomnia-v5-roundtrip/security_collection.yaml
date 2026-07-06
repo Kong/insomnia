@@ -1,0 +1,500 @@
+type: spec.insomnia.rest/5.0
+schema_version: "5.1"
+name: Security & Testing
+meta:
+  id: wrk_b2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7
+  created: 1779753600000
+  modified: 1779753600000
+  description: ""
+collection:
+  - url: "{{ _.base_url }}/test/extra-data"
+    name: Inheritance Test
+    meta:
+      id: req_6d4d4da71cdc41ad9fd942ac9e960c5e
+      created: 1779815482769
+      modified: 1779816054491
+      isPrivate: false
+      description: Returns a JSON object of synthetic name/value pairs. Use
+        `itemCount` to specify the number of fields directly, or `sizeInKB` to
+        target an approximate payload size. Defaults to 100 fields; maximum is
+        10 000 fields or 500 KB.
+      sortKey: -1779815199724
+    method: GET
+    parameters:
+      - name: itemCount
+        value: "100"
+        disabled: true
+      - name: sizeInKB
+        value: "64"
+        disabled: true
+    headers:
+      - name: x-inherited-value
+        value: "{{ _.inherited_value }}"
+        description: ""
+        disabled: false
+    authentication:
+      type: basic
+      useISO88591: false
+      username: "{{ _.inherited_value }}"
+      password: ""
+      disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status is 200', () => {
+          insomnia.expect(insomnia.response.status).to.eql(200);
+        });
+        insomnia.test('Response body is an object', () => {
+          const body = insomnia.response.json();
+          insomnia.expect(body).to.be.an('object');
+        });
+        insomnia.test('Response contains name1 field', () => {
+          const body = insomnia.response.json();
+          insomnia.expect(body).to.have.property('name1');
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - name: auth
+    meta:
+      id: fld_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+      created: 1779753600000
+      modified: 1779743141387
+      sortKey: -1779753600000
+      description: Token issuance. Call this first to get a bearer token for the
+        Baggage API.
+    children:
+      - url: "{{ _.base_url }}/auth/token"
+        name: Get auth token.
+        meta:
+          id: req_c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0
+          created: 1779753600000
+          modified: 1779753600000
+          isPrivate: false
+          description: "Issues a new UUID bearer token. The token is valid for 24 hours.
+            Pass it to all Baggage API requests as `Authorization: Bearer
+            <token>`."
+          sortKey: -1779753600000
+        method: GET
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response has token field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('token');
+            });
+            insomnia.test('Response has issuedAt and expiresIn', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('issuedAt');
+              insomnia.expect(body).to.have.property('expiresIn');
+            });
+            const body = insomnia.response.json();
+            insomnia.globals.set('auth_token', body.token);
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: test
+    meta:
+      id: fld_f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5
+      created: 1779753600000
+      modified: 1781112672831
+      sortKey: -1779753600001
+      description: Synthetic data generation for load and performance testing.
+    children:
+      - url: "{{ _.base_url }}/test/extra-data"
+        name: Get extra data.
+        meta:
+          id: req_d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9
+          created: 1779753600000
+          modified: 1781109096543
+          isPrivate: false
+          description: Returns a JSON object of synthetic name/value pairs. Use
+            `itemCount` to specify the number of fields directly, or `sizeInKB`
+            to target an approximate payload size. Defaults to 100 fields;
+            maximum is 10 000 fields or 500 KB.
+          sortKey: -1779753600001
+        method: GET
+        parameters:
+          - name: itemCount
+            value: "100"
+            disabled: true
+          - name: sizeInKB
+            value: "64"
+            disabled: true
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an object', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.an('object');
+            });
+            insomnia.test('Response contains name1 field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('name1');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/test/delay"
+        name: Delayed response.
+        meta:
+          id: req_e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8
+          created: 1779753600000
+          modified: 1779753600000
+          isPrivate: false
+          description: Waits for the specified number of milliseconds before returning
+            `200 OK`. Defaults to 500 ms. Use this to test client timeout
+            handling, gateway timeout policies, and latency-dependent logic.
+          sortKey: -1779753600000
+        method: GET
+        parameters:
+          - name: ms
+            value: "500"
+            disabled: true
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response has delayed_ms field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('delayed_ms');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/test/delay"
+        name: Delayed response with prompt
+        meta:
+          id: req_2499a1df6cdc40e4a251818c6635ac58
+          created: 1779802919175
+          modified: 1779802954706
+          isPrivate: false
+          description: Waits for the specified number of milliseconds before returning
+            `200 OK`. Defaults to 500 ms. Use this to test client timeout
+            handling, gateway timeout policies, and latency-dependent logic.
+          sortKey: -1779746488882.5
+        method: GET
+        parameters:
+          - name: ms
+            value: "{% prompt 'How many milliseconds?', '', '500', '', false, true %}"
+            disabled: false
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.auth_token }}
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response has delayed_ms field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('delayed_ms');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/test/extra-data"
+        name: Massive Response
+        meta:
+          id: req_831b287b06574cfb93015241974b2b2a
+          created: 1781109105220
+          modified: 1781112797160
+          isPrivate: false
+          description: Returns a JSON object of synthetic name/value pairs. Use
+            `itemCount` to specify the number of fields directly, or `sizeInKB`
+            to target an approximate payload size. Defaults to 100 fields;
+            maximum is 10 000 fields or 500 KB.
+          sortKey: -1779753600000.5
+        method: GET
+        parameters:
+          - name: itemCount
+            value: "100"
+            disabled: true
+          - name: sizeInKB
+            value: "40000"
+            disabled: false
+        scripts:
+          afterResponse: |-
+            insomnia.test('Status is 200', () => {
+              insomnia.expect(insomnia.response.status).to.eql(200);
+            });
+            insomnia.test('Response body is an object', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.be.an('object');
+            });
+            insomnia.test('Response contains name1 field', () => {
+              const body = insomnia.response.json();
+              insomnia.expect(body).to.have.property('name1');
+            });
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+    scripts:
+      preRequest: |-
+        /*if (!insomnia.globals.get('auth_token')) {
+          const response = await insomnia.sendRequest({
+            url: insomnia.globals.get('base_url') + '/auth/token',
+            method: 'GET'
+          });
+          const body = response.json();
+          insomnia.globals.set('auth_token', body.token);
+        }*/
+  - name: inheritance
+    meta:
+      id: fld_e24f092224c24712bc0e624bae1ee0bc
+      created: 1779815199624
+      modified: 1779815930130
+      sortKey: -1779815199624
+      description: ""
+    environment:
+      inherited_value: from-folder
+    environmentPropertyOrder:
+      "&":
+        - inherited_value
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
+    created: 1779753600000
+    modified: 1781112672829
+environments:
+  name: Security Collection-level Env
+  meta:
+    id: env_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
+    created: 1779753600000
+    modified: 1781112672830
+    isPrivate: false
+  data:
+    inherited_value: from-collection-env
+  subEnvironments:
+    - name: Shared Child Collection Env
+      meta:
+        id: env_ce01ec4776894c65bdac6257f386682e
+        created: 1779815070437
+        modified: 1779815572862
+        isPrivate: false
+        sortKey: 1779815070437
+      data:
+        inherited_value: from-shared-child-collection-env
+      color: "#ca2121"
+    - name: Empty Env
+      meta:
+        id: env_78889bc1bfad49a19d1d56fe11578272
+        created: 1779815546981
+        modified: 1781112672830
+        isPrivate: false
+        sortKey: 1779815546981
+spec:
+  contents:
+    openapi: 3.0.4
+    info:
+      title: Insomnia Airlines — Security & Testing API
+      description: >-
+        Authentication and testing utilities for **Insomnia Airlines**.
+
+
+        Use `GET /auth/token` to obtain a bearer token, then pass it as
+        `Authorization: Bearer <token>` on any Baggage API request. Tokens are
+        valid for 24 hours from the moment they are issued.
+
+
+        `GET /test/extra-data` generates large synthetic payloads for load and
+        performance testing. `GET /test/delay` introduces a controlled response
+        delay for latency and timeout testing. Both endpoints require a bearer
+        token and do not interact with any airline data.
+      version: 1.0.0
+      contact:
+        name: Insomnia Airlines API Team
+        email: api@insomnia-airlines.example
+      license:
+        name: Apache 2.0
+        url: https://www.apache.org/licenses/LICENSE-2.0.html
+    servers:
+      - url: https://2110842ae3.us.serverless.gateways.konggateway.com
+        description: Kong Gateway
+      - url: https://insomnia-airlines-api.onrender.com
+        description: Production
+      - url: http://localhost:8000
+        description: Local dev
+    tags:
+      - name: auth
+        description: Token issuance. Call this first to get a bearer token for the
+          Baggage API.
+      - name: test
+        description: Synthetic data generation for load and performance testing.
+    paths:
+      /auth/token:
+        get:
+          tags:
+            - auth
+          summary: Get auth token.
+          description: "Issues a new UUID bearer token. The token is valid for 24 hours.
+            Pass it to all Baggage API requests as `Authorization: Bearer
+            <token>`."
+          operationId: getAuthToken
+          responses:
+            "200":
+              description: A freshly-issued auth token.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/AuthToken"
+                  example:
+                    token: 3f2a1b4c-dead-beef-cafe-000000000001
+                    issuedAt: 2026-05-25T10:00:00Z
+                    expiresIn: 24h
+      /test/delay:
+        get:
+          tags:
+            - test
+          summary: Delayed response.
+          description: Waits for the specified number of milliseconds before returning
+            `200 OK`. Defaults to 500 ms. Use this endpoint to test client
+            timeout handling, gateway timeout policies, and latency-dependent
+            logic.
+          operationId: getDelay
+          parameters:
+            - name: ms
+              in: query
+              description: How long to wait before responding, in milliseconds.
+              required: false
+              schema:
+                type: integer
+                minimum: 0
+                maximum: 30000
+                default: 500
+              example: 2000
+          responses:
+            "200":
+              description: Response returned after the requested delay.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/DelayResponse"
+                  example:
+                    delayed_ms: 2000
+            "401":
+              description: Missing or invalid bearer token.
+      /test/extra-data:
+        get:
+          tags:
+            - test
+          summary: Get extra data.
+          description: Returns a JSON object of synthetic name/value pairs. Use
+            `itemCount` to specify the number of fields directly, or `sizeInKB`
+            to target an approximate payload size. Defaults to 100 fields;
+            maximum is 10 000 fields or 500 KB.
+          operationId: getExtraData
+          parameters:
+            - name: itemCount
+              in: query
+              description: Number of name/value pairs to include in the response.
+              required: false
+              schema:
+                type: integer
+                minimum: 1
+                maximum: 10000
+              example: 500
+            - name: sizeInKB
+              in: query
+              description: Target response payload size in kilobytes (approximate).
+              required: false
+              schema:
+                type: number
+                exclusiveMinimum: 0
+                maximum: 500
+              example: 64
+          responses:
+            "200":
+              description: A flat object of synthetic name/value pairs.
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  example:
+                    name1: value1
+                    name2: value2
+                    name3: value3
+            "400":
+              description: Both `itemCount` and `sizeInKB` were provided.
+    components:
+      securitySchemes:
+        bearerAuth:
+          type: http
+          scheme: bearer
+      schemas:
+        DelayResponse:
+          type: object
+          required:
+            - delayed_ms
+          properties:
+            delayed_ms:
+              type: integer
+              description: The number of milliseconds the server waited before responding.
+              example: 2000
+        AuthToken:
+          type: object
+          required:
+            - token
+            - issuedAt
+            - expiresIn
+          properties:
+            token:
+              type: string
+              format: uuid
+              description: Bearer token to pass in the Authorization header.
+              example: 3f2a1b4c-dead-beef-cafe-000000000001
+            issuedAt:
+              type: string
+              format: date-time
+              description: UTC timestamp when the token was issued.
+              example: 2026-05-25T10:00:00Z
+            expiresIn:
+              type: string
+              description: Token lifetime expressed as a human-readable duration.
+              example: 24h
+  meta:
+    id: spc_e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6
+    created: 1779753600000
+    modified: 1779814874523

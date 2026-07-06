@@ -2,35 +2,33 @@ import { describe, expect, it } from 'vitest';
 
 import { requireInterceptor } from '../require-interceptor';
 
-const allows = (moduleName: string) =>
-  expect(() => requireInterceptor(moduleName)).not.toThrow();
+const allows = (moduleName: string) => expect(() => requireInterceptor(moduleName)).not.toThrow();
 
-const blocks = (moduleName: string) =>
-  expect(() => requireInterceptor(moduleName)).toThrow();
+const blocks = (moduleName: string) => expect(() => requireInterceptor(moduleName)).toThrow();
 
 describe('requireInterceptor', () => {
   describe('blocked modules', () => {
     it('blocks child_process', () => blocks('child_process'));
-    it('blocks fs',            () => blocks('fs'));
-    it('blocks os',            () => blocks('os'));
-    it('blocks net',           () => blocks('net'));
-    it('blocks http',          () => blocks('http'));
-    it('blocks https',         () => blocks('https'));
-    it('blocks crypto',        () => blocks('crypto'));
-    it('blocks vm',            () => blocks('vm'));
+    it('blocks fs', () => blocks('fs'));
+    it('blocks os', () => blocks('os'));
+    it('blocks net', () => blocks('net'));
+    it('blocks http', () => blocks('http'));
+    it('blocks https', () => blocks('https'));
+    it('blocks crypto', () => blocks('crypto'));
+    it('blocks vm', () => blocks('vm'));
     it('blocks worker_threads', () => blocks('worker_threads'));
     it('blocks unknown module', () => blocks('some-unknown-module'));
   });
 
   describe('node built-ins', () => {
-    it('allows path',           () => allows('path'));
-    it('allows assert',         () => allows('assert'));
-    it('allows url',            () => allows('url'));
-    it('allows punycode',       () => allows('punycode'));
-    it('allows querystring',    () => allows('querystring'));
+    it('allows path', () => allows('path'));
+    it('allows assert', () => allows('assert'));
+    it('allows url', () => allows('url'));
+    it('allows punycode', () => allows('punycode'));
+    it('allows querystring', () => allows('querystring'));
     it('allows string_decoder', () => allows('string_decoder'));
-    it('allows stream',         () => allows('stream'));
-    it('allows events',         () => allows('events'));
+    it('allows stream', () => allows('stream'));
+    it('allows events', () => allows('events'));
   });
 
   describe('timers', () => {
@@ -106,16 +104,16 @@ describe('requireInterceptor', () => {
   });
 
   describe('external modules', () => {
-    it('allows ajv',              () => allows('ajv'));
-    it('allows chai',             () => allows('chai'));
-    it('allows cheerio',          () => allows('cheerio'));
-    it('allows crypto-js',        () => allows('crypto-js'));
+    it('allows ajv', () => allows('ajv'));
+    it('allows chai', () => allows('chai'));
+    it('allows cheerio', () => allows('cheerio'));
+    it('allows crypto-js', () => allows('crypto-js'));
     it('allows csv-parse/lib/sync', () => allows('csv-parse/lib/sync'));
-    it('allows lodash',           () => allows('lodash'));
-    it('allows moment',           () => allows('moment'));
-    it('allows tv4',              () => allows('tv4'));
-    it('allows uuid',             () => allows('uuid'));
-    it('allows xml2js',           () => allows('xml2js'));
+    it('allows lodash', () => allows('lodash'));
+    it('allows moment', () => allows('moment'));
+    it('allows tv4', () => allows('tv4'));
+    it('allows uuid', () => allows('uuid'));
+    it('allows xml2js', () => allows('xml2js'));
   });
 
   describe('base64 helpers', () => {
@@ -132,8 +130,8 @@ describe('requireInterceptor', () => {
   });
 
   describe('collection modules', () => {
-    it('allows insomnia-collection',  () => allows('insomnia-collection'));
-    it('allows postman-collection',   () => allows('postman-collection'));
+    it('allows insomnia-collection', () => allows('insomnia-collection'));
+    it('allows postman-collection', () => allows('postman-collection'));
 
     it('insomnia-collection and postman-collection return the same module', () => {
       expect(requireInterceptor('insomnia-collection')).toBe(requireInterceptor('postman-collection'));

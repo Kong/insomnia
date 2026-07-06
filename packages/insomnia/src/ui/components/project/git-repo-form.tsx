@@ -1,3 +1,5 @@
+import type { GitCredentials, ProviderEmail } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { type FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
@@ -12,12 +14,11 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import type { GitCredentials, ProviderEmail } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitValidateCredentialFetcher } from '~/routes/git.validate-credential';
 import type { GitProviderOption } from '~/sync/git/providers/types';
+import { ensureGitRepoUrlSuffix } from '~/sync/git/url-utils';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
@@ -29,15 +30,19 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { ErrorBoundary } from '../error-boundary';
 import type { ActiveView, ProjectData } from './utils';
 
-const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined) => {
-  if (!fullUri) return '';
-  if (prefix && fullUri.startsWith(prefix)) {
-    return fullUri.slice(prefix.length);
-  }
-  return fullUri;
-};
-
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
+
+const validateRepoUrl = (value: string): string | null => {
+  try {
+    const { protocol } = new URL(value.trim());
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      return 'Enter a valid URL to a remote git repo';
+    }
+    return null;
+  } catch {
+    return 'Enter a valid URL to a remote git repo';
+  }
+};
 
 const getCredentialEmails = (credential: GitCredentials | undefined) => {
   if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {
@@ -85,12 +90,6 @@ export const GitRepoForm: FC<Props> = ({
   const selectedCredential = credentials.find(c => c._id === selectedCredentialsId);
   const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
   const needToSetupCredentials = credentials.length === 0;
-  const baseURI =
-    (selectedCredential &&
-      isGitCredentialsV2(selectedCredential) &&
-      selectedCredential.provider === 'custom' &&
-      selectedCredential.credentials?.baseURI) ||
-    '';
 
   const availableEmails = getCredentialEmails(selectedCredential);
   const showEmailSelector = availableEmails.length > 1;
@@ -129,10 +128,8 @@ export const GitRepoForm: FC<Props> = ({
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
             const credentialsId = formData.get('credentialsId') as string;
-            const uri = formData.get('uri') as string;
             const ref = formData.get('branch') as string;
-            const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
-            const fullUri = prefix ? `${prefix}${uri}` : uri;
+            const fullUri = ensureGitRepoUrlSuffix((formData.get('uri') as string) || '');
             setProjectData({
               ...projectData,
               credentialsId,
@@ -173,7 +170,7 @@ export const GitRepoForm: FC<Props> = ({
                         {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
                         <span>{provider?.displayName}</span>
                         <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-                        <span className="truncate">{selectedItem.author.name}</span>
+                        <span className="truncate">{selectedItem.author?.name}</span>
                       </Fragment>
                     );
                   }
@@ -202,7 +199,7 @@ export const GitRepoForm: FC<Props> = ({
                           {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
                           <span>{provider?.displayName}</span>
                           <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-                          <span className="truncate">{item.author.name}</span>
+                          <span className="truncate">{item.author?.name}</span>
                           {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                         </Fragment>
                       );
@@ -249,7 +246,7 @@ export const GitRepoForm: FC<Props> = ({
               onOpenChange={setIsEmailSelectOpen}
               isOpen={isEmailSelectOpen}
               aria-label="Author Email"
-              selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+              selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author?.email}
               onSelectionChange={email => {
                 setProjectData(prev => ({
                   ...prev,
@@ -269,7 +266,7 @@ export const GitRepoForm: FC<Props> = ({
                         </Fragment>
                       );
                     }
-                    return projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email';
+                    return projectData.selectedAuthorEmail || selectedCredential?.author?.email || 'Select an email';
                   }}
                 </SelectValue>
                 <Icon icon="caret-down" />
@@ -316,17 +313,17 @@ export const GitRepoForm: FC<Props> = ({
               ) : (
                 <Input
                   label="Repository URL"
-                  description={'Note: Some repo should include ".git" at the end of the path.'}
-                  prefix={baseURI}
+                  description={'Enter the URL to the remote repo that includes ".git" at the end.'}
                   key={selectedCredentialsId}
-                  defaultValue={getDisplayValue(projectData.uri, baseURI)}
+                  defaultValue={projectData.uri}
                   name="uri"
-                  type={baseURI ? 'text' : 'url'}
+                  type="url"
                   isRequired
-                  onChange={async v => {
-                    const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
-                    const fullUri = prefix ? `${prefix}${v}` : v;
-                    setProjectData(prev => ({ ...prev, uri: fullUri }));
+                  placeholder="e.g. https://github.com/organization/repo-name.git"
+                  validate={validateRepoUrl}
+                  errorMessage="Enter a valid URL to a remote git repo"
+                  onChange={v => {
+                    setProjectData(prev => ({ ...prev, uri: ensureGitRepoUrlSuffix(v) }));
                   }}
                 />
               )}

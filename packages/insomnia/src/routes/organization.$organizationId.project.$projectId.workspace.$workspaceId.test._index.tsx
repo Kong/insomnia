@@ -1,6 +1,5 @@
+import { services } from 'insomnia-data';
 import { href, Outlet, redirect } from 'react-router';
-
-import { services } from '~/insomnia-data';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test._index';
 

@@ -1,19 +1,60 @@
 import path from 'node:path';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Cookie, Request, Response } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+vi.mock('~/common/runtime', () => ({
+  getRuntime: () => ({
+    network: {
+      getTimelinePath: () => Promise.resolve(''),
+      appendToTimelineOnError: () => Promise.resolve(),
+      appendTimelineLines: () => Promise.resolve(),
+      getAuthHeader: () => Promise.resolve(),
+      executeCurlRequest: () => Promise.resolve({}),
+      runScript: () => Promise.resolve({}),
+      applyRequestHooks: (request: any) => Promise.resolve(request),
+      applyResponseHooks: (response: any) => Promise.resolve(response),
+    },
+    crypto: {
+      decryptSecretValue: (value: any) => Promise.resolve(value),
+      encryptSecretValue: (value: any) => Promise.resolve(value),
+      decryptAES: (_symmetricKey: any, encryptedResult: any) => Promise.resolve(encryptedResult),
+    },
+    templating: {
+      renderTemplate: async (input: any) => (typeof input.input === 'string' ? input.input : null),
+    },
+  }),
+}));
+
+import type { Cookie, Request, Response } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
-import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
-import { getRenderedRequestAndContext } from '../render';
+import { getRenderedRequestAndContext } from '../../common/render';
+import { exportHar, exportHarResponse, exportHarWithRequest } from '../../main/har';
+
+let cookieBridge: any;
 
 describe('export', () => {
   beforeEach(async () => {
+    cookieBridge = {
+      fromJSON: vi.fn(),
+      parse: vi.fn().mockResolvedValue(null),
+      toString: vi.fn(),
+      getCookiesForUrl: vi.fn().mockResolvedValue([]),
+      addSetCookies: vi.fn().mockResolvedValue({ cookies: [], rejectedCookies: [] }),
+    };
+    vi.stubGlobal('window', {
+      main: {
+        cookies: cookieBridge,
+      },
+    });
     await db.init({ inMemoryOnly: true }, true);
     await services.project.list();
     await services.settings.getOrCreate();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   describe('exportHar()', () => {
@@ -350,6 +391,16 @@ describe('export', () => {
         contentType: 'application/json',
         bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
       };
+      cookieBridge.parse.mockResolvedValueOnce({
+        id: '',
+        key: 'sessionid',
+        value: '12345',
+        expires: null,
+        domain: '',
+        path: '/',
+        secure: false,
+        httpOnly: true,
+      });
       const harResponse = await exportHarResponse(response);
       expect(harResponse).toMatchObject({
         status: 200,
@@ -444,6 +495,7 @@ describe('export', () => {
         },
       };
       const { request: renderedRequest } = await getRenderedRequestAndContext({ request });
+      cookieBridge.getCookiesForUrl.mockResolvedValue(cookies);
       const har = await exportHarWithRequest(renderedRequest);
       expect(har.cookies.length).toBe(1);
       expect(har).toEqual({

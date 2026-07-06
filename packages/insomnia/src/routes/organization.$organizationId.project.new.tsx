@@ -1,15 +1,13 @@
 import { createTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
-import type { Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.new';
 
@@ -29,9 +27,7 @@ export interface CreateProjectData {
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
-  const projects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  });
+  const projects = await services.project.listByOrganizationIds(organizationId);
   const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
   const gitProjectsCount = gitRepositoryIds.length;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -146,6 +142,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     properties: {
       storage: newProjectData.storageType,
       git_provider,
+      project_id: newProjectId,
     },
   });
 

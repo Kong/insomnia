@@ -1,15 +1,14 @@
 import { createTeamProject, deleteTeamProject, isApiError, updateTeamProject } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import type { WorkspaceMeta } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.update';
 
@@ -36,7 +35,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const { organizationId, projectId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const effectiveRepoId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
@@ -110,6 +109,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'local',
+            project_id: project._id,
           },
         });
       } catch (error: unknown) {
@@ -162,6 +162,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'remote',
+            project_id: project._id,
           },
         });
 
@@ -226,6 +227,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             event: AnalyticsEvent.projectUpdated,
             properties: {
               storage: 'git',
+              project_id: project._id,
             },
           });
         } catch (error: unknown) {
@@ -268,9 +270,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           selectedAuthorEmail,
         });
 
-        const projectWorkspaces = await services.workspace.findByParentId(project._id);
+        const projectWorkspaces = await services.workspace.listByParentId(project._id);
         const bufferId = await database.bufferChanges();
-        const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+        const workspaceMetas = await services.workspaceMeta.list({
           parentId: { $in: projectWorkspaces.map(w => w._id) },
         });
 
@@ -380,6 +382,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event: AnalyticsEvent.projectUpdated,
       properties: {
         storage: 'local',
+        project_id: project._id,
       },
     });
 

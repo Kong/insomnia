@@ -1,5 +1,5 @@
 import { useOrganizationLoaderData } from '~/routes/organization';
-import { diffInDayCeil } from '~/utils';
+import { diffInDayCeil } from '~/ui/utils';
 
 export function useUserService() {
   const { currentPlan, user } = useOrganizationLoaderData()!;

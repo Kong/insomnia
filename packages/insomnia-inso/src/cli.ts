@@ -10,19 +10,27 @@ import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
-import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
-import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
+import { getSendRequestCallbackMemDb } from 'insomnia/src/network/send-request.node';
+import { initRuntime } from 'insomnia/src/runtimes';
+import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
 import { configureFetch } from 'insomnia-api';
-import { generate, runTestsCli } from 'insomnia-testing';
+import type {
+  Environment,
+  Request,
+  RequestGroup,
+  RequestTestResult,
+  UserUploadEnvironment,
+  Workspace,
+} from 'insomnia-data';
+import { initServices, models } from 'insomnia-data';
+import { deserializeNDJSON } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
+import { generate } from 'insomnia-testing/src/generate/generate';
+import { runTestsCli } from 'insomnia-testing/src/run/run';
 import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { Environment, Request, RequestGroup, UserUploadEnvironment, Workspace } from '~/insomnia-data';
-import { initServices, models } from '~/insomnia-data';
-import { servicesNodeImpl } from '~/insomnia-data/node';
-
-import type { RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';
 import { flushAnalytics, InsoEvent, trackInsoEvent } from './analytics';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
@@ -44,6 +52,7 @@ import { generateDocumentation } from './scripts/docs';
 import { getAppDataDir, getDefaultProductName } from './util';
 
 initServices(servicesNodeImpl);
+initRuntime(nodeRuntime);
 
 export interface GlobalOptions {
   ci: boolean;
@@ -887,7 +896,11 @@ export const go = (args?: string[]) => {
     )
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
-    .action(async identifier => {
+    .option(
+      '-r, --ruleset <path>',
+      'path to a Spectral ruleset file, overrides default OAS ruleset and any ruleset in the API Spec folder',
+    )
+    .action(async (identifier, cmd: { ruleset?: string }) => {
       const options = await mergeOptionsAndInit({});
 
       // Assert identifier is a file
@@ -900,11 +913,16 @@ export const go = (args?: string[]) => {
       const pathToSearch = '';
       let specContent: string | undefined;
       let rulesetFileName: string | undefined;
+      if (cmd.ruleset) {
+        rulesetFileName = getAbsoluteFilePath({ workingDir: options.workingDir, file: cmd.ruleset });
+      }
       if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
         specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf8');
-        rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
+        if (!rulesetFileName) {
+          rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
+        }
         if (!specContent) {
           logger.fatal(`Specification content not found using path: ${identifier} in ${identifierAsAbsPath}`);
           return process.exit(1);

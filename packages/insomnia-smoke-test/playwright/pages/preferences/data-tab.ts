@@ -55,6 +55,6 @@ export class PreferencesDataTab extends BasePage {
    */
   private async waitForExportCompleteAlert(): Promise<void> {
     await this.page.getByText('Export Complete').waitFor({ state: 'visible', timeout: 10_000 });
-    await this.page.getByRole('button', { name: 'Ok' }).click();
+    await this.page.getByRole('button', { name: 'Ok', exact: true }).click();
   }
 }

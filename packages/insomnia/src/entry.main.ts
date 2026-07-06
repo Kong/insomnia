@@ -3,29 +3,32 @@ import inspector from 'node:inspector';
 import { arch, release } from 'node:os';
 import path from 'node:path';
 
-import electron, { app, BrowserWindow, session } from 'electron';
+import electron, { app, BrowserWindow, net, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
+import type { Stats } from 'insomnia-data';
+import { initDatabase, initServices, models, services } from 'insomnia-data';
+import { isMac } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
 
-import { insomniaFetch } from '~/common/insomnia-fetch';
-import type { Project, RemoteProject, Stats } from '~/insomnia-data';
-import { database, initDatabase, initServices, models, services } from '~/insomnia-data';
-import { servicesNodeImpl } from '~/insomnia-data/node';
+import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { initRuntime } from '~/runtimes';
+import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
-import { isMac } from './common/platform';
 import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
+import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
@@ -50,15 +53,23 @@ const dataPath =
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
 
 app.setPath('userData', dataPath);
-initElectronStorage(dataPath);
 
 initializeLogging();
+initElectronStorage(dataPath);
 
 initializeSentry();
 
 registerInsomniaProtocols();
 
-configureFetch(options => insomniaFetch({ ...options }));
+let openDeepLinkUrl = async (url: string) => {
+  console.warn('[main] openDeepLinkUrl function not initialized yet, cannot open URL:', url);
+};
+configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => openDeepLinkUrl(uri) }));
+// net.fetch picks up the proxy + OS certs like the renderer; node fetch does neither.
+// only works post-ready, which is fine — nothing calls this earlier. 'omit' = no cookies, same as before.
+setFetchImplementation((input, init) =>
+  net.fetch(input, { ...init, credentials: 'omit', bypassCustomProtocolHandlers: true }),
+);
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -86,6 +97,7 @@ app.on('ready', async () => {
   registerMainHandlers();
   registerPathHandlers();
   registergRPCHandlers();
+  registerCookieHandlers();
   registerGitServiceAPI();
   registerLLMConfigServiceAPI();
   registerWebSocketHandlers();
@@ -122,11 +134,13 @@ app.on('ready', async () => {
   await initDatabase(mainDatabase);
   // Initialize services for main process
   initServices(servicesNodeImpl);
+  initRuntime(nodeRuntime);
   await _createModelInstances();
+  // proxy has to be set up before backup's net.fetch below
+  await watchProxySettings();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
-  watchProxySettings();
 
   await runGitCredentialsMigration();
 
@@ -245,7 +259,7 @@ const _launchApp = async () => {
       });
       window = windowUtils.createWindowsAndReturnMain();
 
-      const openDeepLinkUrl = async (url: string) => {
+      openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -289,7 +303,7 @@ async function _createModelInstances() {
   await services.stats.get();
   await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await services.project.get(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
@@ -352,13 +366,13 @@ async function _trackStats() {
     launches: oldStats.launches + 1,
   });
 
-  const localProjects = await database.count<Project>(models.project.type, {
+  const localProjects = await services.project.count({
     remoteId: null,
     parentId: { $ne: null },
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
-  const remoteProjects = await database.count<RemoteProject>(models.project.type, {
+  const remoteProjects = await services.project.count({
     remoteId: { $ne: null },
     parentId: { $ne: null },
   });
@@ -393,7 +407,11 @@ async function _trackStats() {
           content: {
             title: `Updated to ${currentVersion}`,
             status: 'info',
-            description: "See What's New https://insomnia.rest/changelog",
+            link: {
+              label: "See What's New",
+              url: 'https://insomnia.rest/changelog',
+              external: true,
+            },
           },
         });
       }

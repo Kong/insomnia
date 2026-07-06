@@ -1,5 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import cn from 'classnames';
+import type { McpRequest, McpServerPrimitiveTypes } from 'insomnia-data';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -15,7 +16,6 @@ import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle }
 import { useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import {
   getDefaultServerCapabilities,
   type McpServerData,
@@ -26,7 +26,6 @@ import {
   METHOD_LIST_TOOLS,
 } from '~/common/mcp-utils';
 import { fuzzyMatchAll } from '~/common/misc';
-import type { McpRequest, McpServerPrimitiveTypes } from '~/insomnia-data';
 import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
 import { useRootLoaderData } from '~/root';
 import {
@@ -41,7 +40,6 @@ import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { McpActionsDropdown } from '~/ui/components/dropdowns/mcp-actions-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
-import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpRequestPane, type RequestPaneTabs } from '~/ui/components/mcp/mcp-request-pane';
 import {
   type PrimitiveSubItem,
@@ -255,23 +253,6 @@ export const McpPane = () => {
     },
   });
 
-  const toggleSidebar = () => {
-    const layout = sidebarPanelRef.current?.getLayout();
-
-    if (!layout) {
-      return;
-    }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  };
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-    return unsubscribe;
-  }, []);
-
   useEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
@@ -354,10 +335,6 @@ export const McpPane = () => {
       setMcpServerData(emptyServerData);
     }
   }, [activeResponse?._id, readyState]);
-
-  useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
-  });
 
   return (
     <div className="flex h-full flex-col">

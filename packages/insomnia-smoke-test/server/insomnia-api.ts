@@ -34,6 +34,14 @@ const projectsByOrgId = new Map(
         name: 'Personal Workspace',
       },
     ],
+    // User B personal org — used by cloud-sync multi-user smoke tests so user B
+    // can resolve a personal organization and reach a project page.
+    'org_74b577e6b59d43a5a607f84b4f73e3df': [
+      {
+        id: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
+        name: 'Personal Workspace',
+      },
+    ],
   }),
 );
 
@@ -62,23 +70,41 @@ const organizations = [
     },
     metadata: {
       organizationType: 'team',
-      ownerAccountId: 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
+      ownerAccountId: 'acct_other-team-owner',
+    },
+  },
+  // User B personal organization — required by cloud-sync multi-user smoke
+  // tests so user B passes the personal-org invariant after login.
+  // Unique display_name avoids collisions with the User A org in selectors
+  // like `getByRole('option', { name: 'Personal workspace' })`.
+  {
+    id: 'org_74b577e6b59d43a5a607f84b4f73e3df',
+    name: 'b8e1a4d3c5f24b8da9e0c8f3b7a6d2e1',
+    display_name: 'User B Workspace',
+    branding: {
+      logo_url: '',
+    },
+    metadata: {
+      organizationType: 'personal',
+      ownerAccountId: 'acct_74b577e6b59d43a5a607f84b4f73e3df',
     },
   },
 ];
 
-let organizationFeatures = {
-  features: {
-    gitSync: {
-      enabled: true,
-    },
-    bulkImport: {
-      enabled: true,
-    },
-    konnectSync: {
-      enabled: true,
-    },
+const defaultOrganizationFeatures = {
+  gitSync: {
+    enabled: true,
   },
+  bulkImport: {
+    enabled: true,
+  },
+  konnectSync: {
+    enabled: true,
+  },
+};
+
+let organizationFeatures = {
+  features: { ...defaultOrganizationFeatures },
 };
 
 const v3User = {
@@ -453,9 +479,14 @@ export default function setup(app: Application) {
     res.status(200).send(organizationFeatures);
   });
 
-  // Test Utility Endpoint - Allows altering features at runtime
+  // Test Utility Endpoint - Allows altering features at runtime.
+  // Merge partial overrides over the complete default set so a test that only
+  // toggles a subset of features cannot drop the others (e.g. bulkImport) and
+  // alter later tests sharing this server process.
   app.post('/v1/test-utils/organizations/features', json(), (req, res) => {
-    organizationFeatures = req.body;
+    organizationFeatures = {
+      features: { ...defaultOrganizationFeatures, ...req.body?.features },
+    };
     res.status(200).send();
   });
 
@@ -652,5 +683,9 @@ export default function setup(app: Application) {
     res.json({
       isAllowed: true,
     });
+  });
+
+  app.get('/v2/control-planes', (_req, res) => {
+    res.status(200).json({ data: [] });
   });
 }

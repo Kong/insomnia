@@ -86,6 +86,7 @@ export enum AnalyticsEvent {
   aiFeatureEnabled = 'AI Feature Enabled',
   aiFeatureDisabled = 'AI Feature Disabled',
   installPlugin = 'Plugin Installed',
+  AppMenuPreferencesClicked = 'App Menu Preferences Clicked',
 
   homepageFiltered = 'homepage-filtered',
   quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',
@@ -134,6 +135,9 @@ export enum AnalyticsEvent {
   projectListFiltered = 'project-list-filtered',
   projectSwitched = 'project-switched',
   organizationSwitched = 'organization-switched',
+  uploadLintRulesetClicked = 'upload-lint-ruleset-clicked',
+  firstRequestPaneExampleClicked = 'first-request-pane-example-clicked',
+  firstRequestPaneCollectionChanged = 'first-request-pane-collection-changed',
 }
 
 export enum InsoEvent {

@@ -1,8 +1,8 @@
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
@@ -26,7 +26,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
   if (models.workspace.isWorkspaceId(id)) {
     const item = await services.workspace.getById(id);
-    const targetItem = await services.project.get(targetId);
+    const targetItem = await services.project.getById(targetId);
     invariant(item, 'Drag item not found');
     invariant(targetItem, 'Target item not found');
     await services.workspace.update(item, {

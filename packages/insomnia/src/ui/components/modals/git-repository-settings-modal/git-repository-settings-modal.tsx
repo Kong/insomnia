@@ -1,8 +1,8 @@
+import type { GitRepository } from 'insomnia-data';
 import { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
-import type { GitRepository } from '~/insomnia-data';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
@@ -38,7 +38,7 @@ export const GitRepositorySettingsModal = ({
     modalRef.current?.show();
   }, []);
 
-  const authorEmail = gitRepository.selectedAuthorEmail || selectedCredential?.author.email;
+  const authorEmail = gitRepository.selectedAuthorEmail || selectedCredential?.author?.email;
 
   return (
     <OverlayContainer>
@@ -56,7 +56,7 @@ export const GitRepositorySettingsModal = ({
             <GitConnectionInfo
               gitRepository={gitRepository}
               providerInfo={selectedProvider}
-              authorName={selectedCredential?.author.name || selectedCredential?.author.email}
+              authorName={selectedCredential?.author?.name || selectedCredential?.author?.email}
             />
           )}
           {authorEmail && (

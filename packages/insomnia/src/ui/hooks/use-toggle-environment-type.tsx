@@ -1,11 +1,11 @@
+import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
+import { EnvironmentType } from 'insomnia-data';
 import { useCallback } from 'react';
 
-import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
-import { EnvironmentType } from '~/insomnia-data';
+import { getKVPairFromData } from '~/common/utils/environment-utils';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { getKVPairFromData } from '~/utils/environment-utils';
 
 export function useToggleEnvironmentType() {
   const toggleEnvironmentType = useCallback(
@@ -17,7 +17,7 @@ export function useToggleEnvironmentType() {
     ) => {
       const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
       // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
-      const kvPairData = isSelected ? [] : getKVPairFromData(environment.data, environment.dataPropertyOrder);
+      const kvPairData = isSelected ? [] : getKVPairFromData(environment.data, environment.dataPropertyOrder ?? null);
       const foundDisabledItem = isSelected && environment.kvPairData?.some(pair => !pair.enabled);
       const foundDuplicateNameItem =
         isSelected &&

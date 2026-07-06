@@ -13,6 +13,78 @@ test('Preferences through keyboard shortcut', async ({ page }) => {
   await page.locator('text=Insomnia Preferences').first().click();
 });
 
+test('AI URL settings persist advanced options', async ({ page }) => {
+  await page.evaluate(async () => {
+    await window.main.llm.updateBackendConfig('url', {
+      url: 'https://llm.local/v1',
+      model: 'gpt-4o-mini',
+      apiKey: 'persisted-token',
+      temperature: 0.7,
+      topP: 0.95,
+      maxTokens: 4096,
+    });
+    await window.main.llm.setActiveBackend('url');
+  });
+
+  await page.getByTestId('settings-button').click();
+  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByRole('tab', { name: 'AI Settings' }).click();
+  await page.getByRole('button', { name: 'LLM URL Active' }).click();
+
+  await expect.soft(page.getByLabel('LLM URL')).toHaveValue('https://llm.local/v1');
+  await expect.soft(page.getByLabel('API Token')).toHaveValue('persisted-token');
+
+  await page.getByRole('button', { name: 'Advanced Options' }).click();
+  await expect.soft(page.getByLabel('Temperature (0-2):')).toHaveValue('0.7');
+  await expect.soft(page.getByLabel('Top P (0-1):')).toHaveValue('0.95');
+  await expect.soft(page.getByLabel('Max Tokens (1-128000):')).toHaveValue('4096');
+});
+
+test('AI URL settings can deactivate active backend', async ({ page }) => {
+  await page.evaluate(async () => {
+    await window.main.llm.updateBackendConfig('url', {
+      url: 'https://llm-deactivate.local/v1',
+      model: 'gpt-4o-mini',
+      apiKey: 'activation-token',
+      temperature: 0.6,
+      topP: 0.9,
+      maxTokens: 8192,
+    });
+    await window.main.llm.setActiveBackend('url');
+  });
+
+  await page.getByTestId('settings-button').click();
+  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByRole('tab', { name: 'AI Settings' }).click();
+  await page.getByRole('button', { name: 'LLM URL Active' }).click();
+
+  await expect.soft(page.getByText('Active model:')).toBeVisible();
+  await expect.soft(page.getByText('gpt-4o-mini')).toBeVisible();
+  await expect.soft(page.getByRole('button', { name: 'Deactivate' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Deactivate' }).click();
+
+  await expect.soft(page.getByRole('button', { name: 'LLM URL' })).toBeVisible();
+  await expect.soft(page.getByRole('button', { name: 'LLM URL Active' })).toHaveCount(0);
+
+  const [activeBackend, backendConfig] = await page.evaluate(async () => {
+    const active = await window.main.llm.getActiveBackend();
+    const config = await window.main.llm.getBackendConfig('url');
+    return [active, config] as const;
+  });
+
+  expect.soft(activeBackend).toBeNull();
+  expect.soft(backendConfig).toMatchObject({
+    backend: 'url',
+    url: 'https://llm-deactivate.local/v1',
+    model: 'gpt-4o-mini',
+    apiKey: 'activation-token',
+    temperature: 0.6,
+    topP: 0.9,
+    maxTokens: 8192,
+  });
+});
+
 // Quick reproduction for Kong/insomnia#5664 and INS-2267
 test('Check filter responses by environment preference', async ({ app, page, insomnia }) => {
   const text = await loadFixture('simple.yaml');

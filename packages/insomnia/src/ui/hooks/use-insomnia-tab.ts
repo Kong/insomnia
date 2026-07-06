@@ -1,9 +1,9 @@
 import type { Organization } from 'insomnia-api';
-import { useCallback, useEffect } from 'react';
+import type { Project, Request, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 
-import type { Project, Request, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -119,14 +119,12 @@ const buildTabUrlFromResource = ({
   projectId,
   workspaceId,
   searchParams,
-  withTab,
 }: {
   resource: TabResource;
   organizationId: string;
   projectId: string;
   workspaceId: string;
   searchParams?: URLSearchParams;
-  withTab?: boolean;
 }) => {
   const type = inferTabType(resource);
   if (!type) {
@@ -134,9 +132,6 @@ const buildTabUrlFromResource = ({
   }
 
   const nextSearchParams = new URLSearchParams(searchParams);
-  if (type === 'collection' && withTab) {
-    nextSearchParams.set('doNotSkipToActiveRequest', 'true');
-  }
 
   return buildResourceUrl({
     organizationId,
@@ -147,7 +142,7 @@ const buildTabUrlFromResource = ({
   });
 };
 
-const buildTabFromResource = async (params: AddTabParams, withTab?: boolean): Promise<BaseTab | null> => {
+const buildTabFromResource = async (params: AddTabParams): Promise<BaseTab | null> => {
   const { resource, organizationId, projectId, workspaceId, projectName, workspaceName, searchParams } = params;
   const effectiveWorkspaceId = workspaceId ?? resource._id;
   const type = inferTabType(resource);
@@ -160,7 +155,6 @@ const buildTabFromResource = async (params: AddTabParams, withTab?: boolean): Pr
     projectId,
     workspaceId: effectiveWorkspaceId,
     searchParams,
-    withTab,
   });
 
   const baseTab: BaseTab = {
@@ -256,6 +250,8 @@ const getNavigationTabId = async (routeInfo?: InsomniaNavigationRouteInfo | null
 export const useTabNavigate = () => {
   const navigate = useNavigate();
   const { addTab } = useInsomniaTabContext();
+  // Prevents stale navigation when clicks arrive faster than buildTabFromResource resolves.
+  const navigationCounterRef = useRef(0);
   const tabNavigate = useCallback(
     async (
       {
@@ -278,6 +274,7 @@ export const useTabNavigate = () => {
     ) => {
       const { shouldNavigate = false, withTab = false, asRunner = false, searchParams } = options;
       const organizationId = typeof organization === 'string' ? organization : organization.id;
+      const navigationId = ++navigationCounterRef.current;
 
       const tab = asRunner
         ? buildRunnerTab({
@@ -289,18 +286,18 @@ export const useTabNavigate = () => {
             folderId: item.type === 'RequestGroup' ? item._id : undefined,
             searchParams,
           })
-        : await buildTabFromResource(
-            {
-              resource: item,
-              organizationId,
-              projectId: project._id,
-              workspaceId: workspace._id,
-              projectName: project.name,
-              workspaceName: workspace.name,
-              searchParams,
-            },
-            withTab,
-          );
+        : await buildTabFromResource({
+            resource: item,
+            organizationId,
+            projectId: project._id,
+            workspaceId: workspace._id,
+            projectName: project.name,
+            workspaceName: workspace.name,
+            searchParams,
+          });
+
+      // Skip if this navigation is outdated by a newer one
+      if (navigationId !== navigationCounterRef.current) return;
       if (!tab) return;
 
       if (withTab) {

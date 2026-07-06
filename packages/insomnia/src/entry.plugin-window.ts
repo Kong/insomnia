@@ -1,9 +1,10 @@
 import { ipcRenderer } from 'electron';
-
-import { initDatabase, initServices } from '~/insomnia-data';
+import { initDatabase, initServices } from 'insomnia-data';
 
 import { pluginWindowDatabase } from './main/database.plugin-window';
 import { invokePluginMethod } from './plugins/invoke-method';
+import { initRuntime } from './runtimes';
+import { rendererRuntime } from './runtimes/runtime.renderer';
 import { servicesProxy } from './ui/renderer-services-proxy';
 
 interface PluginInvokeMessage {
@@ -29,6 +30,7 @@ ipcRenderer.on('plugins.invoke', async (_event, { id, method, args }: PluginInvo
   try {
     await initDatabase(pluginWindowDatabase);
     initServices(servicesProxy);
+    initRuntime(rendererRuntime);
     ipcRenderer.send('plugins.windowReady');
   } catch (err) {
     console.error('[plugin-window] Initialization failed:', err);

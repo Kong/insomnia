@@ -1,8 +1,7 @@
+import type { CloudProviderCredential, CloudProviderName } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
-
-import type { CloudProviderCredential, CloudProviderName } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 
 import { debounce } from '../../../../common/misc';
 import { Icon } from '../../icon';

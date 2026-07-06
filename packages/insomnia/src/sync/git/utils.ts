@@ -1,13 +1,17 @@
+import { spawn } from 'node:child_process';
+
+import type { GitAuthor } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import type { GitAuthor } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { gitRemoteProviderRegistry } from '~/sync/git/providers';
-import { invariant } from '~/utils/invariant';
+
+// Re-exported for backwards compatibility. The pure URL helpers live in a
+// provider/electron-free module so they can be imported from the renderer.
+export { addDotGit, ensureGitRepoUrlSuffix, isAzureDevOpsUrl } from './url-utils';
 
 const { isGitCredentialsV2, isGitCredentialsV1 } = models.gitCredentials;
-
-export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
 
 /**
  * OAuth2 token responses often include `expires_in` (seconds until access token expires).
@@ -56,8 +60,8 @@ const onAuthSuccess: AuthSuccessCallback = message => {
 };
 
 const onAuth =
-  (credentialsId?: string | null): AuthCallback =>
-  async (): Promise<GitAuth> => {
+  (credentialsId?: string | null, repoPath?: string): AuthCallback =>
+  async (url): Promise<GitAuth> => {
     if (!credentialsId) {
       console.log('[git-event] No credentials');
       return {
@@ -80,7 +84,7 @@ const onAuth =
 
     if (provider && provider.authCallback) {
       console.log(`[git-event] Using provider ${provider.config.type} for auth callback`);
-      const gitAuth = provider.authCallback(credentials);
+      const gitAuth = provider.authCallback(credentials, url, repoPath);
       return gitAuth;
     }
 
@@ -90,7 +94,16 @@ const onAuth =
     };
   };
 
-export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promise<GitAuthor> => {
+const getGitConfigValue = (key: string, cwd: string): Promise<string> =>
+  new Promise(resolve => {
+    const chunks: string[] = [];
+    const proc = spawn('git', ['config', key], { cwd });
+    proc.stdout.on('data', (d: Buffer) => chunks.push(d.toString()));
+    proc.on('close', () => resolve(chunks.join('').trim()));
+    proc.on('error', () => resolve(''));
+  });
+
+export const getAuthorFromGitRepository = async (gitRepositoryId: string, repoPath?: string): Promise<GitAuthor> => {
   const gitRepo = await services.gitRepository.getById(gitRepositoryId);
 
   if (!gitRepo || !gitRepo.credentialsId) {
@@ -109,17 +122,28 @@ export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promi
     };
   }
 
+  if (credentials.provider === 'native') {
+    if (!repoPath) {
+      return { name: '', email: '' };
+    }
+    const [name, email] = await Promise.all([
+      getGitConfigValue('user.name', repoPath),
+      getGitConfigValue('user.email', repoPath),
+    ]);
+    return { name, email };
+  }
+
   return {
     name: credentials.author.name,
     email: gitRepo.selectedAuthorEmail || credentials.author.email,
   };
 };
 
-export const gitCallbacks = (credentialsId?: string | null) => {
+export const gitCallbacks = (credentialsId?: string | null, repoPath?: string) => {
   return {
     onMessage,
     onAuthFailure: onAuthFailure(credentialsId),
     onAuthSuccess,
-    onAuth: onAuth(credentialsId),
+    onAuth: onAuth(credentialsId, repoPath),
   };
 };

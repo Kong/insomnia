@@ -1,0 +1,49 @@
+{
+  "private": true,
+  "name": "insomnia-data",
+  "license": "Apache-2.0",
+  "version": "12.5.1-alpha.0",
+  "author": "Kong <office@konghq.com>",
+  "description": "Insomnia data functionalities",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-data"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./node": {
+      "import": "./node-src/index.ts",
+      "types": "./node-src/index.ts"
+    },
+    "./common": {
+      "import": "./common-src/index.ts",
+      "types": "./common-src/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "type-check": "tsc -p src/tsconfig.json && tsc -p common-src/tsconfig.json && tsc -p node-src/tsconfig.json && tsc -p tsconfig.test.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@seald-io/nedb": "^4.1.1",
+    "deep-equal": "2.2.3",
+    "graphql": "^16.10.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@getinsomnia/node-libcurl": "3.2.2",
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "@types/deep-equal": "^1.0.4",
+    "mocha": "^11.7.5",
+    "type-fest": "^4.40.0"
+  }
+}

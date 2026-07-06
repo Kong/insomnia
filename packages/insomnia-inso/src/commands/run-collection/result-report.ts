@@ -3,18 +3,16 @@ import nodePath from 'node:path';
 
 import type { ConsolaInstance } from 'consola';
 import { pick } from 'es-toolkit';
-
 import type {
   Environment,
   Request,
   RequestAuthentication,
   RequestHeader,
+  RequestTestResult,
   UserUploadEnvironment,
   Workspace,
-} from '~/insomnia-data';
-import { typedKeys } from '~/utils';
-
-import type { RequestTestResult } from '../../../../insomnia-scripting-environment/src/objects';
+} from 'insomnia-data';
+import { typedKeys } from 'insomnia-data/common';
 
 interface RunReportExecution {
   request: Request;

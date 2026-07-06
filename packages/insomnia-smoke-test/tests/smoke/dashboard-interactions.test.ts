@@ -75,7 +75,7 @@ test.describe('Dashboard', () => {
 
     // Create new collection
     await page.getByLabel('Create in project').click();
-    await page.getByText('Request collection').click();
+    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('workspace-breadcrumb-level-0').click();
 

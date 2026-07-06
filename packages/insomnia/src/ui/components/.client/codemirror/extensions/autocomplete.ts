@@ -1,11 +1,11 @@
 import 'codemirror/addon/mode/overlay';
 
 import CodeMirror, { type EnvironmentAutocompleteOptions, type Hint, type ShowHintOptions } from 'codemirror';
+import { getPlatformKeyCombinations } from 'insomnia-data/common';
 
-import { getPlatformKeyCombinations } from '~/common/hotkeys';
 import { escapeRegex, fnOrString, isNotNullOrUndefined } from '~/common/misc';
-import type { NunjucksParsedTag } from '~/templating/types';
-import { getDefaultFill } from '~/templating/utils';
+import type { NunjucksParsedTag } from '~/common/templating/types';
+import { getDefaultFill } from '~/common/templating/utils';
 
 import { isNunjucksMode } from '../modes/nunjucks';
 

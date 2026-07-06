@@ -4,6 +4,9 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
+import type { MockServer, Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useState } from 'react';
 import {
   Button,
@@ -25,8 +28,6 @@ import {
 } from 'react-aria-components';
 import { href } from 'react-router';
 
-import type { Project, Workspace } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
@@ -36,7 +37,6 @@ import type { CreateRequestType } from '~/ui/hooks/use-request';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import { AnalyticsEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -47,6 +47,7 @@ import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
+import { createRequestOrFolderActionItems } from './actions/create-actions';
 
 interface Props {
   workspace: Workspace;
@@ -54,12 +55,14 @@ interface Props {
   organizationId: string;
   sortOrder?: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
 }
 
 interface ActionItem {
   id: string;
   name: string;
-  icon: IconName;
+  icon: IconProp;
   hint?: PlatformKeyCombinations;
   action: () => void;
   className?: string;
@@ -70,7 +73,7 @@ interface ActionItem {
 interface ActionSection {
   name: string;
   id: string;
-  icon: IconProp;
+  icon: IconName;
   items: ActionItem[];
 }
 
@@ -80,6 +83,8 @@ export const SidebarWorkspaceDropdown = ({
   organizationId,
   sortOrder,
   onSortOrderChange,
+  isOpen,
+  onOpenChange,
 }: Props) => {
   const projectId = project._id;
   const workspaceId = workspace._id;
@@ -87,7 +92,7 @@ export const SidebarWorkspaceDropdown = ({
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsData, setSettingsData] = useState<{ mockServer: MockServer | null; gitFilePath: string | null }>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
 
@@ -100,7 +105,9 @@ export const SidebarWorkspaceDropdown = ({
 
   const workspaceName = workspace.name;
   const projectName = project.name || getProductName();
-  const isCollection = workspace.scope === 'collection';
+  const isCollection = models.workspace.isCollection(workspace);
+  const isDesign = models.workspace.isDesign(workspace);
+  const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const createRequest = (requestType: CreateRequestType) => {
     newRequestFetcher.submit({
@@ -119,106 +126,70 @@ export const SidebarWorkspaceDropdown = ({
     );
   };
 
-  const createSections: ActionSection[] = isCollection
-    ? [
-        {
-          name: 'Create',
-          id: 'create',
-          icon: 'plus',
-          items: [
-            {
-              id: 'New Folder',
-              name: 'New Folder',
-              icon: 'folder',
-              action: () =>
-                showModal(PromptModal, {
-                  title: 'New Folder',
-                  defaultValue: 'My Folder',
-                  submitName: 'Create',
-                  label: 'Name',
-                  selectText: true,
-                  onComplete: (name: string) =>
-                    newRequestGroupFetcher.submit({
-                      organizationId,
-                      projectId,
-                      workspaceId,
-                      parentId: workspaceId,
-                      name,
-                    }),
-                }),
-            },
-            {
-              id: 'HTTP',
-              name: 'HTTP Request',
-              icon: 'plus-circle',
-              action: () => createRequest('HTTP'),
-            },
-            {
-              id: 'Event Stream',
-              name: 'Event Stream Request (SSE)',
-              icon: 'plus-circle',
-              action: () => createRequest('Event Stream'),
-            },
-            {
-              id: 'GraphQL Request',
-              name: 'GraphQL Request',
-              icon: 'plus-circle',
-              action: () => createRequest('GraphQL'),
-            },
-            {
-              id: 'gRPC Request',
-              name: 'gRPC Request',
-              icon: 'plus-circle',
-              action: () => createRequest('gRPC'),
-            },
-            {
-              id: 'WebSocket Request',
-              name: 'WebSocket Request',
-              icon: 'plus-circle',
-              action: () => createRequest('WebSocket'),
-            },
-            {
-              id: 'Socket.IO Request',
-              name: 'Socket.IO Request',
-              icon: 'plus-circle',
-              action: () => createRequest('SocketIO'),
-            },
-          ],
-        },
-        {
-          name: 'Import',
-          id: 'import-create',
-          icon: 'file-import',
-          items: [
-            {
-              id: 'From Curl',
-              name: 'From Curl',
-              icon: 'terminal',
-              action: () => setPasteCurlModalOpen(true),
-            },
-            {
-              id: 'from-file',
-              name: 'From File',
-              icon: 'file-import',
-              action: () => setIsImportModalOpen(true),
-            },
-          ],
-        },
-        {
-          name: 'Run',
-          id: 'run',
-          icon: 'circle-play',
-          items: [
-            {
-              id: 'RunCollection',
-              name: 'Run Collection',
-              icon: 'circle-play',
-              action: () => openInNewTab(true),
-            },
-          ],
-        },
-      ]
-    : [];
+  const createSection: ActionSection = {
+    name: 'Create',
+    id: 'create',
+    icon: 'plus',
+    items: createRequestOrFolderActionItems({
+      createRequest,
+      createFolder: () =>
+        showModal(PromptModal, {
+          title: 'New Folder',
+          defaultValue: 'My Folder',
+          submitName: 'Create',
+          label: 'Name',
+          selectText: true,
+          onComplete: (name: string) =>
+            newRequestGroupFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              parentId: workspaceId,
+              name,
+            }),
+        }),
+      folderFirst: false,
+    }),
+  };
+
+  const importSection: ActionSection = {
+    name: 'Import',
+    id: 'import-create',
+    icon: 'file-import',
+    items: [
+      {
+        id: 'From Curl',
+        name: 'From Curl',
+        icon: 'terminal',
+        action: () => setPasteCurlModalOpen(true),
+      },
+      {
+        id: 'from-file',
+        name: 'From File',
+        icon: 'file-import',
+        action: () => setIsImportModalOpen(true),
+      },
+    ],
+  };
+
+  const runSection: ActionSection = {
+    name: 'Run',
+    id: 'run',
+    icon: 'circle-play',
+    items: [
+      {
+        id: 'RunCollection',
+        name: 'Run Collection',
+        icon: 'circle-play',
+        action: () => openInNewTab(true),
+      },
+    ],
+  };
+
+  const createSections: ActionSection[] = [
+    ...(isCollection ? [createSection, importSection] : []),
+    ...(isCollection || isDesign ? [runSection] : []),
+  ];
 
   const actionSection: ActionSection = {
     name: 'Actions',
@@ -301,7 +272,11 @@ export const SidebarWorkspaceDropdown = ({
         id: 'Settings',
         name: 'Settings',
         icon: 'gear',
-        action: () => setIsSettingsModalOpen(true),
+        action: async () =>
+          setSettingsData({
+            mockServer: (await services.mockServer.getByParentId(workspaceId)) ?? null,
+            gitFilePath: (await services.workspaceMeta.getByParentId(workspaceId))?.gitFilePath ?? null,
+          }),
       },
       {
         id: 'Delete',
@@ -313,11 +288,47 @@ export const SidebarWorkspaceDropdown = ({
     ],
   };
 
-  const allSections: ActionSection[] = [...createSections, actionSection];
+  const scratchpadActionList: ActionSection = {
+    name: 'Actions',
+    id: 'Actions',
+    icon: 'cog',
+    items: [
+      {
+        id: 'Export',
+        name: 'Export',
+        icon: 'file-export',
+        action: () => {
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.exportStarted,
+            properties: { source: `${workspace.scope}-list` },
+          });
+          if (workspace.scope === 'mock-server') {
+            return exportMockServerToFile(workspace);
+          }
+          if (workspace.scope === 'environment') {
+            return exportGlobalEnvironmentToFile(workspace);
+          }
+          if (workspace.scope === 'mcp') {
+            return exportMcpClientToFile(workspace);
+          }
+          return setIsExportModalOpen(true);
+        },
+      },
+    ],
+  };
+
+  const allSections: ActionSection[] = isScratchpadWorkspace
+    ? [...createSections, scratchpadActionList]
+    : [...createSections, actionSection];
 
   return (
     <Fragment>
-      <MenuTrigger>
+      <MenuTrigger
+        isOpen={isOpen}
+        onOpenChange={isOpen => {
+          onOpenChange(isOpen);
+        }}
+      >
         <Button
           aria-label="SideBar Workspace Actions"
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
@@ -348,7 +359,7 @@ export const SidebarWorkspaceDropdown = ({
                       <MenuItem
                         key={item.id}
                         id={item.id}
-                        className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold${item.className ? ` ${item.className}` : ''}`}
+                        className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold ${item.className ? ` ${item.className}` : ''}`}
                         aria-label={item.name}
                       >
                         <Icon icon={item.icon} className="h-4 w-3" />
@@ -358,7 +369,7 @@ export const SidebarWorkspaceDropdown = ({
                     ) : (
                       <SubmenuTrigger>
                         <MenuItem
-                          className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold${item.className ? ` ${item.className}` : ''}`}
+                          className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold ${item.className ? ` ${item.className}` : ''}`}
                           aria-label={item.name}
                         >
                           <Icon icon={item.icon} className="h-4 w-3" />
@@ -413,8 +424,14 @@ export const SidebarWorkspaceDropdown = ({
       {isExportModalOpen && (
         <ExportRequestsModal workspaceIdToExport={workspaceId} onClose={() => setIsExportModalOpen(false)} />
       )}
-      {isSettingsModalOpen && (
-        <WorkspaceSettingsModal workspace={workspace} project={project} onClose={() => setIsSettingsModalOpen(false)} />
+      {settingsData && (
+        <WorkspaceSettingsModal
+          workspace={workspace}
+          mockServer={settingsData.mockServer}
+          gitFilePath={settingsData.gitFilePath}
+          project={project}
+          onClose={() => setSettingsData(undefined)}
+        />
       )}
       {isDeleteModalOpen && (
         <ModalOverlay
@@ -431,7 +448,9 @@ export const SidebarWorkspaceDropdown = ({
               {({ close }) => (
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
-                    <Heading className="text-2xl">Delete {getWorkspaceLabel(workspace).singular}</Heading>
+                    <Heading className="text-2xl">
+                      {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                    </Heading>
                     <Button
                       className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={close}
@@ -450,12 +469,23 @@ export const SidebarWorkspaceDropdown = ({
                     <input type="hidden" name="workspaceId" value={workspaceId} />
                     <div>
                       <p className="line-clamp-5">
-                        This will permanently delete the{' '}
-                        <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
-                        {getWorkspaceLabel(workspace).singular}
+                        {project.konnectControlPlaneId ? (
+                          <>
+                            Do you wish to remove your local copy of the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}? This will not affect anything in Konnect, or any
+                            other users.
+                          </>
+                        ) : (
+                          <>
+                            This will permanently delete the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}
+                          </>
+                        )}
                       </p>
                       {models.project.isRemoteProject(project) && (
-                        <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
+                        <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
                           <div className="flex gap-2">
                             <Radio
@@ -493,7 +523,7 @@ export const SidebarWorkspaceDropdown = ({
                         aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
-                        Delete
+                        {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
                       </Button>
                     </div>
                   </deleteWorkspaceFetcher.Form>

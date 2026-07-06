@@ -1,9 +1,9 @@
 import { createTeamProject, fetchTeamProjects, getCurrentPlan, getUserProfile, isApiError } from 'insomnia-api';
+import type { Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
 import { projectLock } from '~/common/project';
-import type { Project, Workspace } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/common/utils/invariant';
 
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -70,9 +70,7 @@ export async function updateLocalProjectToRemote({
     });
 
     // For each workspace in the local project
-    const projectWorkspaces = await database.find<Workspace>('Workspace', {
-      parentId: updatedProject._id,
-    });
+    const projectWorkspaces = await services.workspace.listByParentId(updatedProject._id);
 
     for (const workspace of projectWorkspaces) {
       const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
@@ -121,7 +119,7 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
 
     const preferredProjectType = localStorage.getItem('prefers-project-type');
     if (preferredProjectType === 'remote') {
-      const localProjects = await database.find<Project>('Project', {
+      const localProjects = await services.project.list({
         parentId: personalOrganizationId,
         remoteId: null,
       });
@@ -166,7 +164,7 @@ async function syncTeamProjects({
   // assumption: api teamProjects is the source of truth for migrated projects
   // once migrated orgs become the source of truth for projects
   // its important that migration be completed before this code is run
-  const existingRemoteProjects = await database.find<Project>(models.project.type, {
+  const existingRemoteProjects = await services.project.list({
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
 
@@ -184,7 +182,7 @@ async function syncTeamProjects({
     }),
   );
 
-  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(models.project.type, {
+  const remoteProjectsThatNeedToBeUpdated = await services.project.list({
     // Remote ID is in the list of remote projects
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
@@ -201,7 +199,7 @@ async function syncTeamProjects({
   );
 
   // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
-  const removedRemoteProjects = await database.find<Project>(models.project.type, {
+  const removedRemoteProjects = await services.project.list({
     // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
     parentId: organizationId,
     // Remote ID is not in the list of remote projects.

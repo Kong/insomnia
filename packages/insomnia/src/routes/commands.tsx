@@ -1,22 +1,14 @@
 import type { Organization } from 'insomnia-api';
+import type { Environment, GrpcRequest, Request, RequestGroup, WebSocketRequest } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 
 import { fuzzyMatch } from '~/common/misc';
-import type {
-  Environment,
-  GrpcRequest,
-  Project,
-  Request,
-  RequestGroup,
-  WebSocketRequest,
-  Workspace,
-} from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/commands';
 
-const { environment, grpcRequest, project, request, requestGroup, workspace } = models;
+const { environment, grpcRequest, project, request, requestGroup } = models;
 
 export async function clientLoader(args: Route.ClientLoaderArgs) {
   const searchParams = new URL(args.request.url).searchParams;
@@ -46,13 +38,11 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     ? [organizationId]
     : allOrganizations.map(org => org.id);
 
-  const allProjects = await database.find<Project>(project.type, {
-    parentId: { $in: allOrganizationsIds },
-  });
+  const allProjects = await services.project.listByOrganizationIds(allOrganizationsIds);
 
   const allProjectIds = allProjects.map(project => project._id);
 
-  const allOrganizationWorkspaces = await database.find<Workspace>(workspace.type, {
+  const allOrganizationWorkspaces = await services.workspace.list({
     parentId: { $in: allProjectIds },
   });
 

@@ -1,31 +1,30 @@
 import { getLearningFeature } from 'insomnia-api';
-import { useEffect, useRef, useState } from 'react';
+import { models, services } from 'insomnia-data';
+import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, Outlet, redirect, useParams, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import {
-  checkAllProjectSyncStatus,
-  getAllLocalFiles,
-  getAllRemoteFiles,
-  getProjectsWithGitRepositories,
-} from '~/common/project';
-import { models, services } from '~/insomnia-data';
+import { checkAllProjectSyncStatus, getProjectsWithGitRepositories } from '~/common/project';
+import { invariant } from '~/common/utils/invariant';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { logout } from '~/ui/account/session';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
-import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
+import {
+  ProjectNavigationSidebar,
+  type ProjectNavigationSidebarHandle,
+  type ProjectNavigationSidebarTabId,
+} from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
-import uiEventBus, { TOGGLE_PROJECT_SIDEBAR } from '~/ui/event-bus';
+import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -61,19 +60,52 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
 
-  if (!models.project.isScratchpadProject({ _id: projectId })) {
-    const { id: sessionId } = await services.userSession.get();
+  const userSession = await services.userSession.get();
+  const { id: sessionId, accountId } = userSession;
 
-    if (!sessionId) {
-      await logout();
-      throw redirect(href('/auth/login'));
-    }
+  if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
+    await logout();
+    throw redirect(href('/auth/login'));
   }
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
 
   if (!project) {
+    // When a project is not found (e.g., after deletion), check if user was on Konnect tab
+    // and try to redirect to another Konnect project to avoid switching tabs
+    const storedTab = localStorage.getItem(`${organizationId}:sidebar-tab`);
+    if (storedTab) {
+      try {
+        const parsedTab = JSON.parse(storedTab);
+        if (parsedTab === 'konnect') {
+          const allProjects = await services.project.listByOrganizationIds(organizationId);
+          const konnectProjects = models.project.sortProjects(allProjects.filter(p => p.konnectControlPlaneId != null));
+          if (konnectProjects.length > 0) {
+            return redirect(
+              href('/organization/:organizationId/project/:projectId', {
+                organizationId,
+                projectId: konnectProjects[0]._id,
+              }),
+            );
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
     return redirect(href('/organization/:organizationId', { organizationId }));
+  }
+
+  try {
+    if (accountId) {
+      const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
+
+      if (!window.localStorage.getItem(firstAccountLandingKey)) {
+        window.localStorage.setItem(firstAccountLandingKey, 'true');
+      }
+    }
+  } catch (error) {
+    console.log('[organizations] Failed to set first account landing flag', error);
   }
 
   const fallbackLearningFeature = {
@@ -84,13 +116,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     url: '',
   };
 
-  const [localFiles, organizationProjects = []] = await Promise.all([
-    getAllLocalFiles({ projectId }),
-    getProjectsWithGitRepositories({ organizationId }),
-  ]);
+  const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
+
   const projects = models.project.sortProjects(organizationProjects);
 
-  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
   const projectsSyncStatusPromise = checkAllProjectSyncStatus(projects);
@@ -101,18 +130,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       : undefined;
 
   return {
-    localFiles,
-    remoteFilesPromise,
     projects,
-    projectsCount: organizationProjects.length,
     activeProject: project,
     activeProjectGitRepository,
-    allFilesCount: localFiles.length,
-    environmentsCount: localFiles.filter(file => file.scope === 'environment').length,
-    documentsCount: localFiles.filter(file => file.scope === 'design').length,
-    collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
-    mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
-    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
     projectsSyncStatusPromise,
     learningFeaturePromise,
   };
@@ -122,11 +142,22 @@ export function useProjectLoaderData() {
   return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
 }
 
+export interface ProjectRouteContextValue {
+  activeSidebarTab: ProjectNavigationSidebarTabId;
+  setActiveSidebarTab: Dispatch<SetStateAction<ProjectNavigationSidebarTabId | undefined>>;
+}
+
+export function useProjectRouteContext() {
+  return useOutletContext<ProjectRouteContextValue>();
+}
+
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { organizationId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
+
+  const [searchParams] = useSearchParams();
   const { activeProject, learningFeaturePromise } = loaderData;
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
@@ -138,7 +169,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
-  const [isSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
+  const { isSidebarCollapsed } = useSidebarContext();
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
@@ -150,17 +181,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     }
   }, [isSidebarCollapsed]);
 
-  useEffect(() => {
-    return uiEventBus.on(TOGGLE_PROJECT_SIDEBAR, (collapsed: boolean) => {
-      if (collapsed) {
-        sidebarPanelRef.current?.collapse();
-      } else {
-        sidebarPanelRef.current?.expand();
-      }
-    });
-  }, []);
-
   const { features } = useOrganizationPermissions();
+  const [storedSidebarTab, setActiveSidebarTab] = reactUse.useLocalStorage<ProjectNavigationSidebarTabId>(
+    `${organizationId}:sidebar-tab`,
+    'projects',
+  );
+  const activeSidebarTab = !features.konnectSync.enabled ? 'projects' : (storedSidebarTab ?? 'projects');
 
   const isScratchPad = models.project.isScratchpadProject(activeProject);
   const gitRepositoryId =
@@ -171,6 +197,15 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     projectId: activeProject?._id,
     gitRepositoryId,
   });
+
+  const navigationSidebarRef = useRef<ProjectNavigationSidebarHandle>(null);
+
+  useEffect(() => {
+    const isExpanded = searchParams.get('isExpanded') === 'true';
+    if (navigationSidebarRef.current && isExpanded && activeProject) {
+      navigationSidebarRef.current.expandProject(activeProject._id);
+    }
+  }, [searchParams, activeProject]);
 
   return (
     <>
@@ -191,9 +226,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         >
           <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
             <ProjectNavigationSidebar
+              activeTab={activeSidebarTab}
               storageRules={storageRules}
               konnectSyncEnabled={features.konnectSync.enabled}
               onCreateProject={() => setIsNewProjectModalOpen(true)}
+              setActiveTab={setActiveSidebarTab}
+              ref={navigationSidebarRef}
             />
             {isScratchPad && <ScratchPadTutorialPanel />}
             {!isLearningFeatureDismissed && learningFeature?.active && (
@@ -221,13 +259,15 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             <SyncBar />
           </div>
         </Panel>
-        <PanelResizeHandle
-          className="relative z-10 h-full w-px bg-(--hl-md)"
-          hitAreaMargins={{ coarse: 15, fine: 15 }}
-        />
+        <PanelResizeHandle className="relative z-10 h-full w-px bg-(--hl-md)" />
         <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
           <GitFileIssuesProvider value={gitFileIssues}>
-            <Outlet />
+            <Outlet
+              context={{
+                activeSidebarTab,
+                setActiveSidebarTab,
+              }}
+            />
           </GitFileIssuesProvider>
         </Panel>
       </PanelGroup>

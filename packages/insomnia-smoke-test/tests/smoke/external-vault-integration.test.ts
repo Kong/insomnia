@@ -65,6 +65,11 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
 
   // close the settings
   await page.locator('.app').press('Escape');
+  // dismiss any remaining modal overlay before interacting with the sidebar
+  await page
+    .locator('[data-close-modal="true"]')
+    .click()
+    .catch(() => {});
 
   // used in request
   await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');
@@ -110,13 +115,7 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
   await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);
   await expect.soft(responsePane).toContainText(externalVaultTestCases.gcp.expectedResult);
   await expect.soft(responsePane).toContainText(externalVaultTestCases.hashicorp.expectedResult);
-  // enable elevated access and execute again in renderer process
-  await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Plugins' }).click();
-  await page.getByText('Allow elevated access for plugins').click();
-  // close the settings
-  await page.locator('.app').press('Escape');
-  // send request and execute the tags in renderer process
+  // send request again to verify vault tags work via render-adapter worker
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);

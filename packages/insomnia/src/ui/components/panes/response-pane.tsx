@@ -1,14 +1,15 @@
+import type { ResponseTimelineEntry } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
-import { services } from '~/insomnia-data';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 
-import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
-import { cancelRequestById } from '../../../network/cancellation';
+import { cancelRequestById } from '../../../network/cancellation.renderer';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -219,7 +220,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
               copyToClipboard={async () => {
                 const bodyBuffer = activeResponse ? await services.helpers.getResponseBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
-                  window.clipboard.writeText(bodyBuffer.toString('utf8'));
+                  window.clipboard.writeText(bodyBufferToUtf8(bodyBuffer));
                 }
               }}
             />

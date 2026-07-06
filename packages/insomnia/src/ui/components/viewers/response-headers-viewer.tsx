@@ -1,6 +1,5 @@
+import type { ResponseHeader } from 'insomnia-data';
 import React, { type FC, Fragment, useMemo } from 'react';
-
-import type { ResponseHeader } from '~/insomnia-data';
 
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';

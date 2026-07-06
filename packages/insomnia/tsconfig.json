@@ -31,7 +31,7 @@
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["**/*", ".react-router/types/**/*"],
+  "include": ["types/global.d.ts", "**/*", ".react-router/types/**/*"],
   "exclude": [
     "./src/__mocks__/@getinsomnia/node-libcurl.ts",
     "**/__mocks__",

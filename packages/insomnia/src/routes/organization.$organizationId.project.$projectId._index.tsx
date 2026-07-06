@@ -1,5 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import type { WorkspaceScope } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -27,20 +29,20 @@ import {
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll } from '~/common/misc';
-import type { InsomniaFile } from '~/common/project';
+import { getAllLocalFiles, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
-import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
+import { FirstRequestCreation } from '~/ui/components/first-request-creation';
 import { Icon } from '~/ui/components/icon';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
@@ -58,26 +60,28 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
+import { getAllRemoteFiles } from '~/ui/utils/remote-projects';
 
-export interface ProjectLoaderData {
-  localFiles: InsomniaFile[];
-  allFilesCount: number;
-  documentsCount: number;
-  environmentsCount: number;
-  collectionsCount: number;
-  mockServersCount: number;
-  mcpClientsCount: number;
-  projectsCount: number;
-  activeProject?: Project;
-  activeProjectGitRepository?: GitRepository;
-  projects: (Project & { gitRepository?: GitRepository })[];
-  remoteFilesPromise?: Promise<InsomniaFile[]>;
-  projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
+import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
+
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+  const { organizationId, projectId } = params;
+  invariant(projectId, 'Project ID is required');
+  invariant(organizationId, 'Organization ID is required');
+
+  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
+  const localFiles = await getAllLocalFiles({ projectId });
+
+  return {
+    localFiles,
+    remoteFilesPromise,
+  };
 }
 
-const Component = () => {
-  const { localFiles, activeProject, activeProjectGitRepository, projects, remoteFilesPromise } =
-    useProjectLoaderData()!;
+const Component = ({ loaderData }: Route.ComponentProps) => {
+  const { localFiles, remoteFilesPromise } = loaderData;
+  const { activeProject, activeProjectGitRepository, projects } = useProjectLoaderData()!;
+  const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -141,7 +145,37 @@ const Component = () => {
     organization &&
     userSession.accountId &&
     models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-  const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
+  const greetingName = userSession.firstName || userSession.email.split('@')[0] || 'there';
+  const collectionItems = useMemo(
+    () =>
+      localFiles
+        .filter(file => file.scope === 'collection' && file.workspace)
+        .map(file => ({
+          id: file.workspace!._id,
+          label: file.name,
+        })),
+    [localFiles],
+  );
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
+    scope: WorkspaceScope;
+    isOpen: boolean;
+    redirect?: boolean;
+    source?: string;
+  } | null>({
+    scope: 'collection',
+    isOpen: false,
+  });
+
+  useEffect(() => {
+    setSelectedCollectionId(currentSelection => {
+      if (currentSelection && collectionItems.some(collection => collection.id === currentSelection)) {
+        return currentSelection;
+      }
+
+      return collectionItems[0]?.id ?? null;
+    });
+  }, [collectionItems]);
 
   const tabNavigate = useTabNavigate();
 
@@ -219,22 +253,31 @@ const Component = () => {
       },
     }));
 
-  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
-    scope: WorkspaceScope;
-    isOpen: boolean;
-  } | null>({
-    scope: 'collection',
-    isOpen: false,
-  });
+  const canCreateMockServer = activeProject?._id;
 
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-  const createNewMockServer = () =>
-    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
+  const createNewCollection = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
+  const createNewDocument = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
+  const createNewMockServer = useCallback(
+    (source: string) =>
+      canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source }),
+    [canCreateMockServer, setNewWorkspaceModalState],
+  );
+  const createNewGlobalEnvironment = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
+  const createNewMcpClient = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
 
-  const createNewCollectionWithRequest = () => {
+  const createNewCollectionWithRequest = useCallback(() => {
     if (!activeProject) {
       return;
     }
@@ -245,52 +288,69 @@ const Component = () => {
       name: 'My first collection',
       scope: 'collection',
       withRequest: true,
+      source: 'home-page',
     });
-  };
+  }, [activeProject, createNewWorkspaceFetcher, organizationId, projectId]);
 
-  const canCreateMockServer = activeProject?._id;
-
-  const createInProjectActionList: {
-    id: string;
-    name: string;
-    icon: IconProp;
-    action: () => void;
-  }[] = [
+  const createInProjectActionList = useMemo<
     {
-      id: 'new-collection',
-      name: 'Request collection',
-      icon: 'bars',
-      action: createNewCollection,
-    },
-    {
-      id: 'new-document',
-      name: 'Design document',
-      icon: 'file',
-      action: createNewDocument,
-    },
-    {
-      id: 'new-mcp-client',
-      name: 'MCP Client',
-      icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: createNewMcpClient,
-    },
-    ...(canCreateMockServer
-      ? [
-          {
-            id: 'new-mock-server',
-            name: 'Mock Server',
-            icon: 'server' as IconName,
-            action: createNewMockServer,
-          },
-        ]
-      : []),
-    {
-      id: 'new-environment',
-      name: 'Environment',
-      icon: 'code',
-      action: createNewGlobalEnvironment,
-    },
-  ];
+      id: string;
+      name: string;
+      icon: IconProp;
+      scope: WorkspaceScope;
+      action: () => void;
+    }[]
+  >(
+    () => [
+      {
+        id: 'new-collection',
+        name: 'Collection',
+        icon: 'bars',
+        action: () => createNewCollection('navbar'),
+        scope: 'collection',
+      },
+      {
+        id: 'new-document',
+        name: 'Document',
+        icon: 'file',
+        action: () => createNewDocument('navbar'),
+        scope: 'design',
+      },
+      {
+        id: 'new-mcp-client',
+        name: 'MCP Client',
+        scope: 'mcp',
+        icon: ['fac', 'mcp'] as unknown as IconProp,
+        action: () => createNewMcpClient('navbar'),
+      },
+      ...(canCreateMockServer
+        ? [
+            {
+              id: 'new-mock-server',
+              name: 'Mock Server',
+              scope: 'mock-server' as WorkspaceScope,
+              icon: 'server' as IconName,
+              action: () => createNewMockServer('navbar'),
+            },
+          ]
+        : []),
+      {
+        id: 'new-environment',
+        name: 'Environment',
+        icon: 'code',
+        action: () => createNewGlobalEnvironment('navbar'),
+        scope: 'environment',
+      },
+    ],
+    [
+      canCreateMockServer,
+      createNewCollection,
+      createNewDocument,
+      createNewGlobalEnvironment,
+      createNewMcpClient,
+      createNewMockServer,
+    ],
+  );
 
   const isRemoteProjectInconsistent =
     activeProject && models.project.isRemoteProject(activeProject) && !storageRules.enableCloudSync;
@@ -308,6 +368,26 @@ const Component = () => {
     <ErrorBoundary>
       <Fragment>
         <OrganizationTabList showActiveStatus={false} />
+        <div className="px-4 pt-4">
+          {activeSidebarTab === 'projects' && (
+            <FirstRequestCreation
+              greetingName={greetingName}
+              collectionItems={collectionItems}
+              selectedCollectionId={selectedCollectionId}
+              onSelectedCollectionChange={setSelectedCollectionId}
+              onCreateDesignDocument={() => createNewDocument('first-request-pane')}
+              onCreateCollection={() => {
+                setNewWorkspaceModalState({
+                  scope: 'collection',
+                  isOpen: true,
+                  redirect: false,
+                  source: 'first-request-pane',
+                });
+              }}
+              onImportFrom={() => setImportModalType('file')}
+            />
+          )}
+        </div>
         {activeProject ? (
           <div className="flex w-full flex-col overflow-hidden">
             {billing.isActive ? null : (
@@ -316,8 +396,8 @@ const Component = () => {
                   <p className="text-base">
                     <Icon icon="exclamation-triangle" className="mr-2" />
                     {isUserOwner
-                      ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.`
-                      : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
+                      ? 'Your space has unpaid past invoices. Please enter a new payment method to continue using Insomnia.'
+                      : 'This space has unpaid past invoices. Please ask the space owner to enter a new payment method to continue using Insomnia.'}
                   </p>
                   {isUserOwner && (
                     <a
@@ -473,7 +553,11 @@ const Component = () => {
                           className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label={item.name}
                         >
-                          <Icon icon={item.icon} />
+                          <div
+                            className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                          >
+                            <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                          </div>
                           <span>{item.name}</span>
                         </MenuItem>
                       )}
@@ -520,7 +604,7 @@ const Component = () => {
                     <div className="flex w-full flex-col items-center justify-center gap-4">
                       <ProjectEmptyView
                         onCreateRequestCollectionWithRequest={createNewCollectionWithRequest}
-                        onCreateDesignDocument={createNewDocument}
+                        onCreateDesignDocument={() => createNewDocument('empty-state')}
                         onImportFrom={() => setImportModalType('file')}
                       />
                       {createNewWorkspaceFetcher.data?.error && (
@@ -668,10 +752,24 @@ const Component = () => {
             project={activeProject}
             storageRules={storageRules}
             scope={newWorkspaceModalState.scope}
+            onCreateWorkspace={workspaceId => {
+              if (
+                newWorkspaceModalState.scope === 'collection' &&
+                newWorkspaceModalState.source === 'first-request-pane'
+              ) {
+                setSelectedCollectionId(workspaceId);
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.firstRequestPaneCollectionChanged,
+                });
+              }
+            }}
+            redirectAfterCreate={newWorkspaceModalState.redirect}
+            source={newWorkspaceModalState.source}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({
                 scope: newWorkspaceModalState.scope,
                 isOpen,
+                redirect: newWorkspaceModalState.redirect,
               });
             }}
           />

@@ -1,4 +1,5 @@
-import { models } from '~/insomnia-data';
+import { models } from 'insomnia-data';
+
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';

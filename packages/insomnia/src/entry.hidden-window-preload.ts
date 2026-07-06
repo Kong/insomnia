@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import type { Compression } from 'insomnia-data';
 
-import type { Compression } from '~/insomnia-data';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import {

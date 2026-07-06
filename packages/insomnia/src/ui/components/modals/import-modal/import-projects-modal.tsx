@@ -1,15 +1,12 @@
 import classnames from 'classnames';
+import { services } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Label, ProgressBar } from 'react-aria-components';
 import { useNavigate, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { database } from '~/common/database';
 import type { ScanResult } from '~/common/import';
-import { selectFileOrFolder } from '~/common/select-file-or-folder';
-import type { Project } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { importScannedResources } from '~/routes/import.resources';
 import { scanImportResources } from '~/routes/import.scan';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -19,6 +16,7 @@ import { Modal, type ModalHandle } from '~/ui/components/base/modal';
 import { ModalHeader } from '~/ui/components/base/modal-header';
 import { Icon } from '~/ui/components/icon';
 import { Button } from '~/ui/components/themed-button';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { showModal } from '..';
 import { AlertModal } from '../alert-modal';
@@ -536,11 +534,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
       }
 
       // Only necessary if skipExisting is true
-      const existingProjects = skipExisting
-        ? await database.find<Project>(models.project.type, {
-            parentId: organizationId,
-          })
-        : [];
+      const existingProjects = skipExisting ? await services.project.listByOrganizationIds(organizationId) : [];
 
       // Load projects from the root folder
       const projectItems: ProjectImportItem[] = (await rootFolder.getProjectFolders()).map((projectFolder, i) => ({

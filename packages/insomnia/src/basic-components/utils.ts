@@ -25,7 +25,7 @@ export function getBorderColorClasses(color: ButtonColor) {
   return {
     primary: '',
     danger: '',
-    default: 'border border-(--hl-md)',
+    default: 'border border-(--hl-md) data-hovered:border-(--hl-lg)',
   }[color];
 }
 

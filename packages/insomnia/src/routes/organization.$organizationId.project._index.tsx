@@ -1,32 +1,50 @@
+import type { GitRepository, Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useParams } from 'react-router';
 
-import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { getProjectsWithGitRepositories } from '~/common/project';
-import type { GitRepository, Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { logout } from '~/ui/account/session';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { EmptyProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
-import { invariant } from '~/utils/invariant';
 
 export interface ProjectIndexLoaderData {
   projectsCount: number;
   projects: (Project & { gitRepository?: GitRepository })[];
 }
 
+const shouldAutoCreateInitialProject = async ({
+  accountId,
+}: {
+  accountId: string | null | undefined;
+}) => {
+  if (!accountId) {
+    return false;
+  }
+
+  const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
+  const legacyFirstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
+
+  return (
+    !window.localStorage.getItem(firstAccountLandingKey) &&
+    !window.localStorage.getItem(legacyFirstPersonalOrgLandingKey)
+  );
+};
+
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const { id: sessionId } = await services.userSession.get();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId) {
     await logout();
@@ -38,6 +56,33 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   // If there are projects in the organization and no project is selected, redirect to the first project
   if (projects.length > 0) {
     return redirect(`/organization/${organizationId}/project/${projects[0]._id}`);
+  }
+
+  let isFirstAccountLanding = false;
+
+  try {
+    isFirstAccountLanding = await shouldAutoCreateInitialProject({ accountId });
+  } catch (error) {
+    console.warn('[project] Failed to evaluate first account landing state', error);
+  }
+
+  if (isFirstAccountLanding) {
+    try {
+      const project = await services.project.create({
+        name: 'Drafts',
+        parentId: organizationId,
+      });
+
+      await services.workspace.create({
+        name: 'My first collection',
+        scope: 'collection',
+        parentId: project._id,
+      });
+
+      return redirect(`/organization/${organizationId}/project/${project._id}?isExpanded=true`);
+    } catch (error) {
+      console.warn('[project] Failed to auto-create initial local project', error);
+    }
   }
 
   return {

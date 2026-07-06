@@ -1,5 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { UnitTestSuite } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { Suspense, useLayoutEffect, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -17,8 +19,7 @@ import { Route as RouteComponent, Routes, useFetchers, useLoaderData, useParams 
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { database } from '~/common/database';
-import type { UnitTestSuite } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
 import { useTestSuiteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.delete';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
@@ -40,7 +41,6 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test';
 import {
@@ -114,26 +114,7 @@ const Component = () => {
     );
   };
 
-  function toggleSidebar() {
-    const layout = sidebarPanelRef.current?.getLayout();
-
-    if (!layout) {
-      return;
-    }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  }
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
-    return unsubscribe;
-  }, []);
-
   useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
     environment_showEditor: () => setEnvironmentModalOpen(true),
     environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
@@ -412,7 +393,7 @@ const Component = () => {
           </ErrorBoundary>
         </Panel>
         <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-        <Panel className="flex flex-col">
+        <Panel id="workspace-content" className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane relative overflow-hidden">
               <Routes>

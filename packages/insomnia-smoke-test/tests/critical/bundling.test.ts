@@ -20,7 +20,7 @@ test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window'
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -52,7 +52,7 @@ test('can use external modules in scripts', async ({ app, page, insomnia }) => {
 
   // import collection
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();

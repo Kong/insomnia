@@ -1,0 +1,26 @@
+type: mcpClient.insomnia/5.0
+schema_version: "5.1"
+name: Insomnia Airlines MCP
+meta:
+  id: wrk_0d459dfea8494d02b93b16df8ed958de
+  created: 1778529679886
+  modified: 1778530232951
+  description: ""
+mcpRequest:
+  name: ""
+  url: "  https://2110842ae3.us.serverless.gateways.konggateway.com/mcp"
+  transportType: streamable-http
+  headers:
+    - name: User-Agent
+      value: insomnia/12.5.1-alpha.0
+  meta:
+    id: mcp-req_0c5cb3a7acdf4074b436e329adf5a7ca
+    created: 1778529679890
+    modified: 1779743467969
+environments:
+  name: Base Environment
+  meta:
+    id: env_a613d1b98cffbf911687e7ceac2131a9e5ffeed8
+    created: 1778529679891
+    modified: 1778529679891
+    isPrivate: false

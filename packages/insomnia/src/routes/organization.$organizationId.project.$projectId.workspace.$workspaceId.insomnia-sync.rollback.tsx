@@ -1,22 +1,22 @@
-import { href, redirect } from 'react-router';
+import { services } from 'insomnia-data';
+import { href } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
-import { models, services } from '~/insomnia-data';
-import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { getSyncItems, remoteCompareCache, reparentSyncDelta } from '~/ui/sync-utils';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.rollback';
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
-  const { organizationId, projectId, workspaceId } = params;
+  const { projectId, workspaceId } = params;
 
   try {
     const { syncItems } = await getSyncItems({ workspaceId });
-    const delta = await window.main.sync.rollbackToLatest(syncItems);
+    const delta = (await window.main.sync.rollbackToLatest(syncItems)) as unknown as Operation;
     // This is to synchronize the local database with the branch changes
-    await database.batchModifyDocs(delta as unknown as Operation);
+    await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
     delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while rolling back changes.';
@@ -28,13 +28,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  return redirect(
-    `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
-      organizationId,
-      projectId,
-      workspaceId,
-    })}/${models.workspace.scopeToActivity(workspace?.scope)}`,
-  );
+  return null;
 }
 
 export const useInsomniaSyncRollbackActionFetcher = createFetcherSubmitHook(

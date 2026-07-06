@@ -1,4 +1,5 @@
-import type { GitRepository } from '~/insomnia-data';
+import type { GitRepository } from 'insomnia-data';
+
 import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';

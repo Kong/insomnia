@@ -56,6 +56,8 @@ export const AISettings = () => {
 
   const toggleAIFeature = useCallback(async (feature: AIFeatureNames, enabled: boolean) => {
     setAIFeatures(prev => ({ ...prev, [feature]: enabled }));
+    // Main broadcasts an `llm.changed` event after the write, which consumers
+    // (e.g. the spec view Generate dropdown) listen for to re-read the status.
     await window.main.llm.setAIFeatureEnabled(feature, enabled);
   }, []);
 
@@ -64,6 +66,8 @@ export const AISettings = () => {
       await window.main.llm.updateBackendConfig(backend, extras);
 
       if (setCurrent) {
+        // Activating an LLM can enable AI features that require an active LLM;
+        // main broadcasts `llm.changed` so consumers re-read the status.
         await window.main.llm.setActiveBackend(backend);
         const newCurrentConfig = await window.main.llm.getCurrentConfig();
         setCurrentLLM(newCurrentConfig);
@@ -118,7 +122,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiMockServers && isMockServerEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiMockServers', enabled)}
+                onChange={enabled => toggleAIFeature('aiMockServers', enabled)}
                 isDisabled={isMockServerFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -144,7 +148,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiCommitMessages && isCommitMessagesEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiCommitMessages', enabled)}
+                onChange={enabled => toggleAIFeature('aiCommitMessages', enabled)}
                 isDisabled={isCommitMessagesFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -170,7 +174,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiMcpClient && isMcpClientEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiMcpClient', enabled)}
+                onChange={enabled => toggleAIFeature('aiMcpClient', enabled)}
                 isDisabled={isMcpClientFeatureDisabled}
                 className="group flex items-center gap-2"
               >

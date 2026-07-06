@@ -19,42 +19,38 @@ export const runScript = async ({
   context: RequestContext;
   securityPolicy?: ScriptSecurityPolicy;
 }): Promise<RequestContext> => {
-  const activePolicy = context.settings.scriptSandboxEnabled !== false
-    ? securityPolicy
-    : new ScriptSecurityPolicy([]);
+  const activePolicy = context.settings.scriptSandboxEnabled !== false ? securityPolicy : new ScriptSecurityPolicy([]);
 
-  const {
-    executionContext,
-    scriptConsole,
-    maskNames,
-    maskValues,
-    bridgeOps,
-  } = await prepareSandbox(script, context, activePolicy);
+  const { executionContext, scriptConsole, maskNames, maskValues, bridgeOps } = await prepareSandbox(
+    script,
+    context,
+    activePolicy,
+  );
 
   const AsyncFunction = (async () => {}).constructor;
   const scriptParams = [
-    'insomnia',                 // insomnia scripting API object
-    'console',                  // log console
-    '_',                        // lodash library
-    'setTimeout',               // proxied setTimeout tracked by the async task monitor
-    '__waitForAllTestsDone__',  // Drains pm.test() assertions before the script exits
-    '__bridgeReset__',          // Clears the async task list and re-enables monitoring
-    '__bridgeStop__',           // Stops recording new promises into the task list
-    '__bridgeSettle__',         // Awaits all tracked promises before returning
-    ...maskNames,             // Masked globals from the security policy (e.g. eval → undefined)
+    'insomnia', // insomnia scripting API object
+    'console', // log console
+    '_', // lodash library
+    'setTimeout', // proxied setTimeout tracked by the async task monitor
+    '__waitForAllTestsDone__', // Drains pm.test() assertions before the script exits
+    '__bridgeReset__', // Clears the async task list and re-enables monitoring
+    '__bridgeStop__', // Stops recording new promises into the task list
+    '__bridgeSettle__', // Awaits all tracked promises before returning
+    ...maskNames, // Masked globals from the security policy (e.g. eval → undefined)
   ];
   const strictMode = context.settings.scriptStrictModeEnabled !== false;
   const scriptBody = [
-    `__bridgeReset__();`,               // Start with a clean async task slate for this script run
-    `await (async function() {`,        // IIFE gives the user script its own lexical scope
-    ...(strictMode ? [`  'use strict';`] : []),  // Strict mode: this === undefined, prevents silent errors
-    `  const $ = insomnia;`,            // Postman-compat alias for the insomnia scripting object
-    `  ${script}`,                      // User script body
+    `__bridgeReset__();`, // Start with a clean async task slate for this script run
+    `await (async function() {`, // IIFE gives the user script its own lexical scope
+    ...(strictMode ? [`  'use strict';`] : []), // Strict mode: this === undefined, prevents silent errors
+    `  const $ = insomnia;`, // Postman-compat alias for the insomnia scripting object
+    `  ${script}`, // User script body
     `})();`,
     `await __waitForAllTestsDone__();`, // Wait for all pm.test() callbacks to resolve
-    `__bridgeStop__();`,                // Stop tracking new promises (user script is done)
-    `await __bridgeSettle__();`,        // Drain any fire-and-forget promises the script created
-    `return insomnia;`,                 // Return the (possibly mutated) insomnia context
+    `__bridgeStop__();`, // Stop tracking new promises (user script is done)
+    `await __bridgeSettle__();`, // Drain any fire-and-forget promises the script created
+    `return insomnia;`, // Return the (possibly mutated) insomnia context
   ].join('\n');
 
   // const scriptBody = [

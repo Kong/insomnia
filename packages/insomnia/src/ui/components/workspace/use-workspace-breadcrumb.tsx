@@ -1,7 +1,7 @@
+import { models } from 'insomnia-data';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';

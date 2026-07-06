@@ -1,0 +1,567 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Operations
+meta:
+  id: wrk_e126af2206e94bf6aebf53183c9e4bda
+  created: 1778268242109
+  modified: 1778270504000
+  description: |-
+    **Operations** — ad-hoc requests against the airline's Operations API.
+
+    This API is **owned by another team** (Ops Engineering) and lives at
+    `airline-ops.example`. We consume it; we don't define it. Treat the
+    request shapes here as snapshots of the upstream contract — confirm
+    with their team's docs before relying on edge-case behaviour.
+
+    Folders are grouped by domain:
+
+    - **Aircraft** — fleet status and utilization
+    - **Mechanics** — maintenance work orders and required checks
+    - **Catering** — meal manifests and station inventory
+    - **Rewards** — loyalty program member operations
+
+    The base URL comes from the `base_url` environment variable — point it at
+    `api.airline-ops.example/v1` (or the staging equivalent) before sending.
+collection:
+  - name: Rewards
+    meta:
+      id: fld_d4f7a0c6b1e3639c2a8d1e4f0a6c3d05
+      created: 1778270501000
+      modified: 1778270501000
+      sortKey: -1778270501000
+      description: Loyalty program member profile, redemptions, and miles credits.
+    children:
+      - url: "{{ _.base_url }}/loyalty/members/:ffId/credits"
+        name: Credit miles
+        meta:
+          id: req_d3f7d3e8b2406c9d5a8f1e7b3c0d9043
+          created: 1778270501098
+          modified: 1781124796917
+          isPrivate: false
+          description: >-
+            Credits miles to a member's account, typically after a flight is
+            flown.
+
+
+            **Eventually consistent:** credits take **~5 seconds** to reflect in
+
+            the balance returned by `Get loyalty member`. Don't immediately
+
+            re-fetch and assume the new balance is right — either trust the
+
+            response of this call, or wait briefly before re-querying. Tests
+            that
+
+            credit then immediately read will be flaky.
+          sortKey: -1778270501098
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "miles": 4830,
+              "reason": "FLIGHT_FLOWN",
+              "flightNumber": "IA204",
+              "departureDate": "2026-05-12"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/loyalty/members/:ffId/redemptions"
+        name: Redeem miles
+        meta:
+          id: req_d2f7d3e8b2406c9d5a8f1e7b3c0d9042
+          created: 1778270501099
+          modified: 1778270501099
+          isPrivate: false
+          description: >-
+            Redeems miles against an award (upgrade, free flight, etc.).
+
+
+            **Error codes don't follow the obvious pattern — read carefully:**
+
+
+            - **400** — malformed request (missing `awardCode`, etc.)
+
+            - **422** — _insufficient miles balance_. Surface this distinctly in
+              UI; users hate seeing a generic "bad request" when they're really
+              just short on miles.
+            - **409** — duplicate redemption attempt within 60s
+            (anti-double-click
+              guard). Safe to ignore on retry, but don't show two confirmations.
+
+            A `200` is **conditional** — confirm with `Get loyalty member`
+            before
+
+            telling the user the upgrade is real. We've seen the redemption show
+
+            up there a few seconds later than expected (see eventual-consistency
+
+            note on `Credit miles`).
+          sortKey: -1778270501099
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "awardCode": "UPGRADE_J_DOM",
+              "flightNumber": "IA204",
+              "departureDate": "2026-05-12",
+              "milesCost": 25000
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/loyalty/members/:ffId"
+        name: Get loyalty member
+        meta:
+          id: req_d1f7d3e8b2406c9d5a8f1e7b3c0d9041
+          created: 1778270501100
+          modified: 1778270501100
+          isPrivate: false
+          description: Returns the loyalty member's profile, tier, and current miles
+            balance.
+          sortKey: -1778270501100
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Catering
+    meta:
+      id: fld_c3e6f9b5a0d2528b1f7c0d3e9f5b2c94
+      created: 1778270502000
+      modified: 1778270502000
+      sortKey: -1778270502000
+      description: Per-flight meal manifests and per-station catering inventory.
+    children:
+      - url: "{{ _.base_url }}/catering/inventory/:stationIata"
+        name: Station catering inventory
+        meta:
+          id: req_c3f7d3e8b2406c9d5a8f1e7b3c0d9033
+          created: 1778270502098
+          modified: 1778270502098
+          isPrivate: false
+          description: Returns current meal-tray inventory at a catering station, by
+            category.
+          sortKey: -1778270502098
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/catering/manifests/:flightNumber"
+        name: Update meal manifest
+        meta:
+          id: req_c2f7d3e8b2406c9d5a8f1e7b3c0d9032
+          created: 1778270502099
+          modified: 1778270502099
+          isPrivate: false
+          description: |-
+            Replaces the meal counts and special-meal selections for a flight.
+
+            **Cutoff:** edits are rejected with **422 Unprocessable Entity**
+            within **90 minutes of scheduled departure**. After the cutoff, the
+            manifest is locked and any changes have to go through the ground-ops
+            radio process — there's no API path through it. If you're building
+            UI that modifies the manifest, surface the cutoff to the user
+            _before_ they bother filling out the form.
+          sortKey: -1778270502099
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "departureDate": "2026-05-12",
+              "meals": {
+                "ECONOMY": 156,
+                "PREMIUM_ECONOMY": 18,
+                "BUSINESS": 12
+              },
+              "specialMeals": [
+                { "category": "VGML", "count": 4 },
+                { "category": "GFML", "count": 2 }
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/catering/manifests/:flightNumber"
+        name: Get meal manifest
+        meta:
+          id: req_c1f7d3e8b2406c9d5a8f1e7b3c0d9031
+          created: 1778270502100
+          modified: 1778270502100
+          isPrivate: false
+          description: >-
+            Returns the meal manifest for a specific flight instance.
+
+
+            **Timezone gotcha:** `departureDate` is the **station-local** date
+            at
+
+            the origin, _not_ UTC. A flight that pushes back at 23:55 ORD will
+
+            have `departureDate == ORD-local date`, which can be a different
+
+            calendar day from UTC. This matches how the Flights API stores it —
+
+            don't convert to UTC on the way in or you'll fetch the wrong
+
+            manifest (or a 404).
+          sortKey: -1778270502100
+        method: GET
+        parameters:
+          - name: departureDate
+            value: 2026-05-12
+            description: Station-local departure date at the origin (YYYY-MM-DD). Required.
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Mechanics
+    meta:
+      id: fld_b2d5e8a4f9c1417a0e6b9c2d8e4f1a83
+      created: 1778270503000
+      modified: 1778270503000
+      sortKey: -1778270503000
+      description: Maintenance work orders and required-check tracking.
+    children:
+      - url: "{{ _.base_url }}/maintenance/checks/:tail"
+        name: Required checks for airframe
+        meta:
+          id: req_b4f7d3e8b2406c9d5a8f1e7b3c0d9024
+          created: 1778270503097
+          modified: 1778270503097
+          isPrivate: false
+          description: Returns the next mandatory checks (A/B/C/D) due for an airframe,
+            with hours/cycles remaining.
+          sortKey: -1778270503097
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/maintenance/work-orders/:id"
+        name: Update work order
+        meta:
+          id: req_b3f7d3e8b2406c9d5a8f1e7b3c0d9023
+          created: 1778270503098
+          modified: 1778270503098
+          isPrivate: false
+          description: Partially updates a work order — typically used by mechanics to
+            advance status, log actual hours, or attach notes.
+          sortKey: -1778270503098
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "IN_PROGRESS",
+              "actualHours": 6.5,
+              "notes": "Borescope clean; moving to landing gear inspection."
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/maintenance/work-orders"
+        name: Create work order
+        meta:
+          id: req_b2f7d3e8b2406c9d5a8f1e7b3c0d9022
+          created: 1778270503099
+          modified: 1778270503099
+          isPrivate: false
+          description: |-
+            Opens a new maintenance work order against an airframe.
+
+            **Idempotency-Key is required.** Without it, retries (network blip,
+            client retry, etc.) can create duplicate work orders, which the
+            mechanics team _will_ notice and complain about. Use a UUID v4 per
+            logical create — same key on retry, new key on a genuinely new
+            request.
+
+            Returns **400** if the header is missing.
+          sortKey: -1778270503099
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "tailNumber": "C-FINS",
+              "type": "B_CHECK",
+              "priority": "ROUTINE",
+              "scheduledStart": "2026-05-15T08:00:00Z",
+              "estimatedHours": 24,
+              "notes": "Engine #2 borescope, scheduled with the heavy maintenance window."
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+          - name: Idempotency-Key
+            value: 9f3c2b8e-4d1a-4f7b-9c0e-2a8d6f4b1c93
+            description: UUID v4. Reuse on retries; rotate on new logical creates.
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/maintenance/work-orders"
+        name: List work orders
+        meta:
+          id: req_b1f7d3e8b2406c9d5a8f1e7b3c0d9021
+          created: 1778270503100
+          modified: 1781124471670
+          isPrivate: false
+          description: >-
+            Lists open and recent maintenance work orders, optionally filtered.
+
+
+            **Pagination quirk:** this endpoint paginates with **`?cursor=`**,
+            not
+
+            `?page=`. Without a cursor you get the first 50 results. The next
+
+            cursor is in the `Link` header — don't try to construct it yourself,
+
+            the format is opaque (looks like a base64 blob today, but their team
+
+            reserves the right to change it).
+          sortKey: -1778270503100
+        method: GET
+        parameters:
+          - name: status
+            value: OPEN
+            description: One of OPEN, IN_PROGRESS, CLOSED, CANCELLED.
+            disabled: false
+          - name: tail
+            value: C-FINS
+            description: Filter to work orders for a specific airframe.
+            disabled: true
+          - name: cursor
+            value: ""
+            description: Opaque pagination cursor from the previous response's Link header.
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Aircraft
+    meta:
+      id: fld_a1c4f7d3e8b2406c9d5a8f1e7b3c0d92
+      created: 1778270504000
+      modified: 1778270504000
+      sortKey: -1778270504000
+      description: Fleet status, individual airframes, and utilization reporting.
+    children:
+      - url: "{{ _.base_url }}/fleet/utilization"
+        name: Fleet utilization report
+        meta:
+          id: req_a4f7d3e8b2406c9d5a8f1e7b3c0d9014
+          created: 1778270504097
+          modified: 1778270504097
+          isPrivate: false
+          description: Block hours and cycles per airframe across a date range. Used by
+            the planning team for fleet rotation.
+          sortKey: -1778270504097
+        method: GET
+        parameters:
+          - name: from
+            value: 2026-05-01
+            description: Inclusive start date (YYYY-MM-DD).
+            disabled: false
+          - name: to
+            value: 2026-05-08
+            description: Inclusive end date (YYYY-MM-DD).
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/fleet/:tail/status"
+        name: Set airframe status
+        meta:
+          id: req_a3f7d3e8b2406c9d5a8f1e7b3c0d9013
+          created: 1778270504098
+          modified: 1778270675613
+          isPrivate: false
+          description: >-
+            Changes the operational status of an airframe. Validated
+            server-side.
+
+
+            **Allowed transitions:**
+
+
+            - `ACTIVE` ↔ `MAINTENANCE` (round-trip — a plane can come out of MX)
+
+            - `ACTIVE` → `RETIRED` (one-way — see note below)
+
+
+            Anything else returns **409 Conflict**, _not_ 400. In particular,
+
+            `RETIRED` → `ACTIVE` is rejected: un-retiring an airframe is a
+            manual
+
+            process owned by Ops Engineering, talk to them before assuming this
+
+            endpoint can do it.
+          sortKey: -1778270504098
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "MAINTENANCE",
+              "reason": "Routine 500-cycle inspection",
+              "effectiveAt": "2026-05-09T03:00:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/fleet/:tail"
+        name: Get airframe by tail number
+        meta:
+          id: req_a2f7d3e8b2406c9d5a8f1e7b3c0d9012
+          created: 1778270504099
+          modified: 1778270504099
+          isPrivate: false
+          description: >-
+            Returns details for a single airframe.
+
+
+            **Heads up — tail numbers are case-sensitive _and_
+            punctuation-sensitive.**
+
+            Send them exactly as `C-FINS` (uppercase, with the dash). Variants
+            like
+
+            `cfins`, `C FINS`, or `C_FINS` all 404 with a generic `"not found"`
+            body
+
+            and no hint about the formatting. Don't lowercase before sending.
+          sortKey: -1778270504099
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/fleet"
+        name: List fleet
+        meta:
+          id: req_a1f7d3e8b2406c9d5a8f1e7b3c0d9011
+          created: 1778270504100
+          modified: 1778270504100
+          isPrivate: false
+          description: Returns all airframes, with optional filters by aircraft type and
+            operational status.
+          sortKey: -1778270504100
+        method: GET
+        parameters:
+          - name: status
+            value: ACTIVE
+            description: One of ACTIVE, MAINTENANCE, RETIRED.
+            disabled: true
+          - name: type
+            value: A320
+            description: Aircraft type code (A320, B787).
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_ea26a0af122c2de0cf5c11966d492252bfa20809
+    created: 1778268242119
+    modified: 1778268242119
+environments:
+  name: Base Environment
+  meta:
+    id: env_ea26a0af122c2de0cf5c11966d492252bfa20809
+    created: 1778268242119
+    modified: 1778268242119
+    isPrivate: false

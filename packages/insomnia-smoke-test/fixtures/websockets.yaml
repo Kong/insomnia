@@ -79,6 +79,21 @@ collection:
     headers:
       - name: duration
         value: "5"
+  - url: ws://localhost:4010/chat/:id
+    name: path-param
+    meta:
+      id: ws-req_path_param_test
+      created: 1666695713693
+      modified: 1666696265532
+    pathParameters:
+      - name: id
+        value: "1234"
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
 cookieJar:
   name: Default Jar
   meta:

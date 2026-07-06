@@ -4,14 +4,16 @@ import type {
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
   RunTemplateTagActionArgs,
-} from './bridge-types';
+} from '~/common/plugins/bridge-types';
+import type { Plugin } from '~/common/plugins/types';
+import { deserializeRenderContext } from '~/common/templating/render-context-serialization';
+
 import * as pluginApp from './context/app';
 import * as pluginData from './context/data';
 import * as pluginNetwork from './context/network';
 import * as pluginRequest from './context/request';
 import * as pluginResponse from './context/response';
 import * as pluginStore from './context/store';
-import type { Plugin } from './index';
 import {
   executePluginMainAction,
   getActivePlugins,
@@ -187,7 +189,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
     case 'applyRequestHooks': {
       const { renderedRequest, projectId, environment } = args as ApplyRequestHooksArgs;
       const newRenderedRequest = { ...renderedRequest };
-      const renderedContext = { ...environment, getProjectId: () => projectId };
+      const renderedContext = deserializeRenderContext(environment);
 
       for (const { plugin, hook } of await getRequestHooks()) {
         const context = {
@@ -212,7 +214,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
       const { response, renderedRequest, projectId, environment } = args as ApplyResponseHooksArgs;
       const newResponse = { ...response };
       const newRequest = { ...renderedRequest };
-      const renderedContext = { ...environment, getProjectId: () => projectId };
+      const renderedContext = deserializeRenderContext(environment);
 
       for (const { plugin, hook } of await getResponseHooks()) {
         const context = {

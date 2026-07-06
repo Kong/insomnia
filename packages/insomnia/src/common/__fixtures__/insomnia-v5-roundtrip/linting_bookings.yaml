@@ -1,0 +1,728 @@
+type: spec.insomnia.rest/5.0
+schema_version: "5.1"
+name: Bookings for Linting Demo
+meta:
+  id: wrk_4ecb9af5e9114adea995237bbc84b9b4
+  created: 1780004611728
+  modified: 1780004611728
+  description: ""
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_59d04557176d043021affc3c43923893ae48765e
+    created: 1780004611733
+    modified: 1780004611733
+environments:
+  name: Base Environment
+  meta:
+    id: env_59d04557176d043021affc3c43923893ae48765e
+    created: 1780004611732
+    modified: 1780004611732
+    isPrivate: false
+spec:
+  contents:
+    openapi: 3.0.4
+    info:
+      title: Insomnia Airlines — Bookings API
+      description: REST API for **Insomnia Airlines** passenger reservations. A
+        booking is identified by a 6-character alphanumeric **PNR** (Passenger
+        Name Record). Each booking has one or more passengers and one or more
+        flight segments.
+      version: 1.0.0
+      contact:
+        name: Insomnia Airlines API Team
+        email: api@insomnia-airlines.example
+    servers:
+      - url: https://2110842ae3.us.serverless.gateways.konggateway.com
+        description: Kong Gateway
+      - url: https://insomnia-airlines-api.onrender.com
+        description: Production
+      - url: http://localhost:8000
+        description: Local dev
+    tags:
+      - name: bookings
+        description: Passenger reservations (PNRs).
+      - name: passengers
+      - name: seats
+        description: Seat assignments on a booking's flight segments.
+    paths:
+      /bookings:
+        get:
+          tags:
+            - bookings
+          description: Returns bookings, optionally filtered by status, frequent-flyer ID,
+            or flight.
+          operationId: listBookings
+          parameters:
+            - name: status
+              in: query
+              description: Filter by booking status.
+              required: false
+              schema:
+                $ref: "#/components/schemas/BookingStatus"
+            - name: limit
+              in: query
+              description: Maximum number of bookings to return.
+              required: false
+              schema:
+                type: integer
+                format: int32
+                minimum: 1
+                maximum: 200
+                default: 50
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Booking"
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        post:
+          tags:
+            - bookings
+          summary: Create a booking.
+          description: Creates a new booking with one or more passengers and one or more
+            flight segments. The PNR is generated server-side.
+          operationId: create_booking
+          requestBody:
+            description: Booking to create.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/BookingInput"
+          responses:
+            "201":
+              description: Booking created.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Booking"
+            "400":
+              description: Invalid booking payload.
+            "409":
+              description: Conflict — duplicate frequent flyer on the same booking.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /bookings/{pnr}:
+        parameters:
+          - name: pnr
+            in: path
+            required: true
+            schema:
+              type: string
+              minLength: 6
+              maxLength: 6
+              pattern: ^[A-Z0-9]{6}$
+        get:
+          tags:
+            - bookings
+          summary: Get booking by PNR.
+          description: Returns a single booking, including its passengers and segments.
+          operationId: getBooking
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Booking"
+            "404":
+              description: Booking not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        patch:
+          tags:
+            - bookings
+          summary: Update booking fields.
+          description: Partially updates a booking — typically used to change status or
+            contact details.
+          operationId: PatchBooking
+          requestBody:
+            description: Fields to update.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/BookingPatch"
+          responses:
+            "200":
+              description: Booking updated.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Booking"
+            "400":
+              description: Invalid patch payload.
+            "404":
+              description: Booking not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        delete:
+          tags:
+            - bookings
+          summary: Cancel a booking.
+          description: Cancels a booking by setting status to CANCELLED.
+          operationId: cancelBooking
+          responses:
+            "204":
+              description: Booking cancelled.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /bookings/{pnr}/passengers:
+        parameters:
+          - name: pnr
+            in: path
+            required: true
+            schema:
+              type: string
+              minLength: 6
+              maxLength: 6
+              pattern: ^[A-Z0-9]{6}$
+        get:
+          tags:
+            - passengers
+          summary: List passengers on a booking.
+          description: Returns the passengers currently attached to a booking.
+          operationId: listBookingPassengers
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Passenger"
+            "404":
+              description: Booking not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        post:
+          tags:
+            - passengers
+          summary: Add a passenger to a booking.
+          description: Attaches a passenger to an existing booking.
+          operationId: addBookingPassenger
+          requestBody:
+            description: Passenger to attach.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PassengerInput"
+          responses:
+            "201":
+              description: Passenger added.
+            "400":
+              description: Invalid passenger payload.
+            "404":
+              description: Booking not found.
+            "409":
+              description: Passenger already on this booking.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /bookings/{pnr}/seats:
+        parameters:
+          - name: pnr
+            in: path
+            required: true
+            description: 6-character alphanumeric Passenger Name Record.
+            schema:
+              type: string
+              minLength: 6
+              maxLength: 6
+              pattern: ^[A-Z0-9]{6}$
+        get:
+          tags:
+            - seats
+          description: Returns all seat assignments on this booking, across all segments.
+          operationId: listSeatAssignments
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SeatAssignment"
+            "404":
+              description: Booking not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        post:
+          tags:
+            - seats
+          summary: Assign a seat.
+          description: Assigns a seat on one segment to one passenger on this booking.
+          operationId: createSeatAssignment
+          requestBody:
+            description: Seat assignment to create.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/SeatAssignmentInput"
+          responses:
+            "201":
+              description: Seat assigned.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/SeatAssignment"
+            "400":
+              description: Invalid payload.
+            "404":
+              description: Booking not found.
+            "409":
+              description: Seat already assigned on this segment.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /bookings/{pnr}/seats/{seatAssignmentId}:
+        parameters:
+          - name: pnr
+            in: path
+            required: true
+            description: 6-character alphanumeric Passenger Name Record.
+            schema:
+              type: string
+              minLength: 6
+              maxLength: 6
+              pattern: ^[A-Z0-9]{6}$
+          - name: seatAssignmentId
+            in: path
+            description: Server-assigned seat-assignment identifier.
+            required: true
+            schema:
+              type: string
+              format: uuid
+        patch:
+          tags:
+            - seats
+          summary: Change a seat assignment.
+          description: Updates the seat number on an existing seat assignment.
+          operationId: patchSeatAssignment
+          requestBody:
+            description: Fields to update.
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/SeatAssignmentPatch"
+          responses:
+            "200":
+              description: Seat assignment updated.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/SeatAssignment"
+            "400":
+              description: Invalid patch payload.
+            "404":
+              description: Booking or seat assignment not found.
+            "409":
+              description: New seat already assigned on this segment.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+        delete:
+          tags:
+            - seats
+          summary: Release a seat assignment.
+          description: Removes a seat assignment, leaving the passenger unseated on that
+            segment.
+          operationId: deleteSeatAssignment
+          responses:
+            "204":
+              description: Seat assignment removed.
+            "404":
+              description: Booking or seat assignment not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+      /passengers/{frequentFlyerId}:
+        parameters:
+          - name: frequentFlyerId
+            in: path
+            description: Frequent-flyer membership identifier.
+            required: true
+            schema:
+              type: string
+              pattern: ^FF[0-9]{6,10}$
+        get:
+          tags:
+            - passengers
+          summary: Get frequent-flyer profile.
+          description: Returns the standalone frequent-flyer profile.
+          operationId: getFrequentFlyer
+          responses:
+            "200":
+              description: Successful operation.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/FrequentFlyer"
+            "404":
+              description: Frequent flyer not found.
+            default:
+              description: Unexpected error.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+    components:
+      schemas:
+        BookingStatus:
+          type: string
+          enum:
+            - HELD
+            - CONFIRMED
+            - CHECKED_IN
+            - FLOWN
+            - CANCELLED
+        TravelClass:
+          type: string
+          enum:
+            - ECONOMY
+            - PREMIUM_ECONOMY
+            - BUSINESS
+            - FIRST
+        Money:
+          type: object
+          description: A monetary value with currency.
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              type: number
+              format: double
+              description: Monetary amount.
+              example: 842.5
+            currency:
+              type: string
+              description: ISO 4217 currency code.
+              minLength: 3
+              maxLength: 3
+              example: USD
+        FlightSegment:
+          type: object
+          description: One leg of a journey on a booking.
+          required:
+            - segmentIndex
+            - flightNumber
+            - departureDate
+            - origin
+            - destination
+            - travelClass
+          properties:
+            segmentIndex:
+              type: integer
+              format: int32
+              description: Zero-based index of this segment within the booking.
+              minimum: 0
+              example: 0
+            flightNumber:
+              type: string
+              pattern: ^IA[0-9]{1,4}$
+              example: IA204
+            departureDate:
+              type: string
+              format: date
+              description: Local departure date at the origin.
+              example: 2026-05-12
+            origin:
+              type: string
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: YYZ
+            destination:
+              type: string
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z]{3}$
+              example: SFO
+            travelClass:
+              $ref: "#/components/schemas/TravelClass"
+        Passenger:
+          type: object
+          description: A person attached to a booking.
+          required:
+            - id
+            - firstName
+            - lastName
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Server-assigned identifier within the booking.
+            firstName:
+              type: string
+              example: Alex
+            lastName:
+              type: string
+              example: Morgan
+            email:
+              type: string
+              format: email
+              example: alex.morgan@example.com
+            frequentFlyerId:
+              type: string
+              pattern: ^FF[0-9]{6,10}$
+              example: FF1029384
+        PassengerInput:
+          type: object
+          required:
+            - firstName
+            - lastName
+          properties:
+            firstName:
+              type: string
+              example: Alex
+            lastName:
+              type: string
+              example: Morgan
+            email:
+              type: string
+              format: email
+              example: alex.morgan@example.com
+            frequentFlyerId:
+              type: string
+              pattern: ^FF[0-9]{6,10}$
+              example: FF1029384
+        SeatAssignment:
+          type: object
+          description: A seat assignment linking one passenger to one seat on one segment.
+          required:
+            - id
+            - passengerId
+            - segmentIndex
+            - seatNumber
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Server-assigned identifier for this seat assignment.
+            passengerId:
+              type: string
+              format: uuid
+              description: Passenger this seat belongs to.
+            segmentIndex:
+              type: integer
+              format: int32
+              minimum: 0
+              example: 0
+            seatNumber:
+              type: string
+              pattern: ^[0-9]{1,3}[A-K]$
+              example: 14C
+        SeatAssignmentInput:
+          type: object
+          required:
+            - passengerId
+            - segmentIndex
+            - seatNumber
+          properties:
+            passengerId:
+              type: string
+              format: uuid
+            segmentIndex:
+              type: integer
+              format: int32
+              minimum: 0
+              example: 0
+            seatNumber:
+              type: string
+              pattern: ^[0-9]{1,3}[A-K]$
+              example: 14C
+        SeatAssignmentPatch:
+          type: object
+          description: Partial update payload for a seat assignment.
+          properties:
+            seatNumber:
+              type: string
+              pattern: ^[0-9]{1,3}[A-K]$
+              example: 15A
+        Booking:
+          type: object
+          description: A passenger reservation record (PNR).
+          required:
+            - pnr
+            - status
+            - passengers
+            - segments
+            - totalFare
+            - createdAt
+          properties:
+            pnr:
+              type: string
+              minLength: 6
+              maxLength: 6
+              pattern: ^[A-Z0-9]{6}$
+              example: AB12CD
+            status:
+              $ref: "#/components/schemas/BookingStatus"
+            contactEmail:
+              type: string
+              format: email
+              example: alex.morgan@example.com
+            passengers:
+              type: array
+              items:
+                $ref: "#/components/schemas/Passenger"
+            segments:
+              type: array
+              items:
+                $ref: "#/components/schemas/FlightSegment"
+            totalFare:
+              $ref: "#/components/schemas/Money"
+            createdAt:
+              type: string
+              format: date-time
+              example: 2026-04-30T19:14:02Z
+        BookingInput:
+          type: object
+          description: Payload for creating a new booking.
+          required:
+            - passengers
+            - segments
+          properties:
+            contactEmail:
+              type: string
+              format: email
+              example: alex.morgan@example.com
+            passengers:
+              type: array
+              minItems: 1
+              items:
+                $ref: "#/components/schemas/PassengerInput"
+            segments:
+              type: array
+              minItems: 1
+              items:
+                $ref: "#/components/schemas/FlightSegmentInput"
+        BookingPatch:
+          type: object
+          properties:
+            status:
+              $ref: "#/components/schemas/BookingStatus"
+            contactEmail:
+              type: string
+              format: email
+        FrequentFlyerTier:
+          type: string
+          description: Loyalty tier within the Insomnia Airlines frequent-flyer program.
+          enum:
+            - STANDARD
+            - SILVER
+            - GOLD
+            - PLATINUM
+        FrequentFlyer:
+          type: object
+          description: A frequent-flyer profile, independent of any one booking.
+          required:
+            - frequentFlyerId
+            - firstName
+            - lastName
+            - tier
+            - milesBalance
+          properties:
+            frequentFlyerId:
+              type: string
+              pattern: ^FF[0-9]{6,10}$
+              example: FF1029384
+            firstName:
+              type: string
+              example: Alex
+            lastName:
+              type: string
+              example: Morgan
+            tier:
+              $ref: "#/components/schemas/FrequentFlyerTier"
+            milesBalance:
+              type: integer
+              format: int64
+              minimum: 0
+              example: 48230
+        FlightSegmentInput:
+          type: object
+          required:
+            - flightNumber
+            - departureDate
+            - travelClass
+          properties:
+            flightNumber:
+              type: string
+              pattern: ^IA[0-9]{1,4}$
+              example: IA204
+            departureDate:
+              type: string
+              format: date
+              example: 2026-05-12
+            travelClass:
+              $ref: "#/components/schemas/TravelClass"
+        Error:
+          type: object
+          description: Standard error response envelope.
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: BOOKING_NOT_FOUND
+            message:
+              type: string
+              example: No booking with PNR 'XYZAB1' exists.
+  meta:
+    id: spc_34cc24c495f447f0ac024d5067fe58ee
+    created: 1780004611732
+    modified: 1780004674930

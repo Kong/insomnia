@@ -1,13 +1,13 @@
+import { models } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { href, redirect, useNavigate } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
 import { Tooltip } from '~/ui/components/tooltip';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/auth.login';
 

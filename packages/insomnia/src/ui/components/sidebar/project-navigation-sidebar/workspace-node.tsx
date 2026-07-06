@@ -1,3 +1,4 @@
+import { type Ref, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import type { SortOrder } from '~/common/constants';
@@ -16,22 +17,38 @@ import { type WorkspaceFlatItem } from './types';
 
 interface WorkspaceNodeProps {
   item: WorkspaceFlatItem;
-  sortOrder: SortOrder;
   onToggle: (workspaceId: string) => void;
+
+  sortOrder: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
+  highlighted?: boolean;
+  nodeRef?: Ref<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
 }
 
-export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: WorkspaceNodeProps) => {
-  const { doc, collapsed, project, organizationId } = item;
+export const WorkspaceNode = ({
+  item,
+  sortOrder,
+  onToggle,
+  onSortOrderChange,
+  highlighted,
+  nodeRef,
+}: WorkspaceNodeProps) => {
+  const { doc, collapsed, project, organizationId, hasUncommittedChanges, hasUnpushedChanges } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const isCollection = workspaceScope === 'collection';
 
   return (
     <div
-      className={`${ROW_CLASS} group`}
+      ref={nodeRef}
+      className={`${ROW_CLASS} group ${highlighted ? 'rounded-xs ring-2 ring-(--color-surprise) ring-inset' : ''}`}
       style={{ paddingLeft: '2em' }}
       data-testid={`workspace-node-${workspaceName}`}
       data-project={project.name}
+      onContextMenu={e => {
+        e.preventDefault();
+        setIsContextMenuOpen(true);
+      }}
     >
       <span className={ACTIVE_BORDER_CLASS} />
       <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
@@ -52,6 +69,11 @@ export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: 
 
         <span className="min-w-0 flex-1 truncate text-base">{workspaceName}</span>
       </div>
+      {(hasUncommittedChanges || hasUnpushedChanges) && (
+        <div className="flex aspect-square h-6 shrink-0 items-center justify-center">
+          <Icon icon="circle" className="h-2 w-2" color="var(--color-warning)" />
+        </div>
+      )}
       <div className="shrink-0">
         <SidebarWorkspaceDropdown
           workspace={doc}
@@ -59,6 +81,8 @@ export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: 
           sortOrder={sortOrder}
           organizationId={organizationId}
           onSortOrderChange={onSortOrderChange}
+          isOpen={isContextMenuOpen}
+          onOpenChange={setIsContextMenuOpen}
         />
       </div>
     </div>

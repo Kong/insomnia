@@ -1,9 +1,9 @@
 import type { Virtualizer } from '@tanstack/react-virtual';
+import { models, type WorkspaceScope } from 'insomnia-data';
 import { useCallback, useMemo, useRef } from 'react';
 import type { DragAndDropHooks, ItemDropTarget } from 'react-aria-components';
 import { DropIndicator, useDragAndDrop } from 'react-aria-components';
 
-import { models } from '~/insomnia-data';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
 import type { CollectionChildFlatItem, EmptyNodeFlatItem, FlatItem } from './types';
@@ -16,6 +16,8 @@ type AllowDropTarget = Extract<
   FlatItem,
   { kind: 'workspace' | 'collectionChild' | 'project' | 'emptyFolder' | 'emptyProject' | 'emptyCollection' }
 >;
+// Whitelist workspace scopes that are allowed to be moved across projects.
+const allowCrossProjectDropWorkspaceScope: WorkspaceScope[] = [models.workspace.WorkspaceScopeKeys.collection];
 
 function isAllowDragItem(item: FlatItem): item is AllowDragItem {
   return allowDragKinds.includes(item.kind);
@@ -34,8 +36,12 @@ function canDrop(
   dropItem: FlatItem,
   { dropPosition }: ItemDropTarget,
   dropPrevItem: FlatItem | null,
+  dropNextItem: FlatItem | null,
+  expandedProjectAndWorkspaceIds?: string[],
 ) {
   const realDropItem = dropPosition === 'before' ? dropPrevItem : dropItem;
+  // The item following realDropItem in the list
+  const itemAfterRealDrop = dropPosition === 'before' ? dropItem : dropNextItem;
   // drag and drop items are same.
   if (
     !realDropItem ||
@@ -52,25 +58,53 @@ function canDrop(
 
   const dropIsProject = realDropItem.kind === 'project';
   const dragInCloud = models.project.isRemoteProject(dragItem.project);
-
-  // workspace -> project: cannot involve cloud project, and cannot move into same project
   if (dragItem.kind === 'workspace') {
+    const dragWorkspaceScope = dragItem.doc.scope;
     if (realDropItem) {
-      // move into project after
       if (realDropItem.kind === 'project') {
-        return (
-          dragItem.project._id !== realDropItem.doc._id &&
-          !dragInCloud &&
-          !models.project.isRemoteProject(realDropItem.doc)
-        );
+        const dropToAnotherProject = dragItem.project._id !== realDropItem.doc._id;
+        // only allow moving collection and design workspace into another project
+        if (dropToAnotherProject && !allowCrossProjectDropWorkspaceScope.includes(dragWorkspaceScope)) {
+          return false;
+        }
+        if (dropToAnotherProject && (dragInCloud || models.project.isRemoteProject(realDropItem.doc))) {
+          // can not move cloud sync workspace into another project, and can not move any workspace into cloud sync project
+          return false;
+        }
+        return true;
       }
-      // move into between workspaces, only allow if they are from different projects and none of them are in cloud
+      const isWorkspaceMoveAllowed = () => {
+        if (dragInCloud) {
+          // cloud sync workspaces can only move within same project and cannot move into other projects
+          return (
+            dragItem.project._id === realDropItem.project._id && models.project.isRemoteProject(realDropItem.project)
+          );
+        }
+        const dropToAnotherProject = dragItem.project._id !== realDropItem.project._id;
+        // only allow moving collection and design workspace into another project
+        if (dropToAnotherProject && !allowCrossProjectDropWorkspaceScope.includes(dragWorkspaceScope)) {
+          return false;
+        }
+        // local/git workspace can move within same project or move into other local/git project
+        return !models.project.isRemoteProject(realDropItem.project);
+      };
       if (realDropItem.kind === 'workspace') {
-        return (
-          dragItem.project._id !== realDropItem.project._id &&
-          !dragInCloud &&
-          !models.project.isRemoteProject(realDropItem.project)
-        );
+        if (realDropItem.doc.scope === 'collection' && expandedProjectAndWorkspaceIds?.includes(realDropItem.doc._id)) {
+          // Can not drop on expanded collection
+          return false;
+        }
+        return isWorkspaceMoveAllowed();
+      }
+      if (realDropItem.kind === 'collectionChild') {
+        // Drop after a collection child who is the last element of its parent workspace
+        const isLastChildOfWorkspace =
+          itemAfterRealDrop == null ||
+          itemAfterRealDrop.kind !== 'collectionChild' ||
+          itemAfterRealDrop.workspace._id !== realDropItem.workspace._id;
+        if (!isLastChildOfWorkspace) {
+          return false;
+        }
+        return isWorkspaceMoveAllowed();
       }
     }
 
@@ -105,18 +139,32 @@ interface UseSidebarDragAndDropOptions {
   flatItems: FlatItem[];
   organizationId: string;
   virtualizer: Virtualizer<HTMLDivElement, Element>;
+  onWorkspaceReorder?: (
+    sourceProjectId: string,
+    targetProjectId: string,
+    draggedId: string,
+    // null means drop to the first position in the target project
+    targetWorkspaceId: string | null,
+    dropPosition: 'before' | 'after',
+  ) => void;
+  expandedProjectAndWorkspaceIds?: string[];
 }
 
 export const useSidebarDragAndDrop = ({
   flatItems,
   organizationId,
   virtualizer,
+  onWorkspaceReorder,
+  expandedProjectAndWorkspaceIds,
 }: UseSidebarDragAndDropOptions): DragAndDropHooks => {
   const reorderFetcher = useDebugReorderActionFetcher();
 
   const flatItemsById = useMemo(() => {
     const visibles = flatItems.filter(item => !item.hidden);
-    return new Map(visibles.map((item, index) => [item.doc._id, [item, visibles[index - 1]]] as const)); // keep previous item for "move into collection/project" logic
+    // keep previous item for "move into collection/project" logic, also previous and next item
+    return new Map(
+      visibles.map((item, index) => [item.doc._id, [item, visibles[index - 1], visibles[index + 1]]] as const),
+    );
   }, [flatItems]);
   const draggingCollectionItemIdRef = useRef<string | null>(null);
 
@@ -162,23 +210,89 @@ export const useSidebarDragAndDrop = ({
       if (
         !draggedItem ||
         !targetItem ||
-        !canDrop(draggedItem, targetItem, event.target, flatItemsById.get(droppedKey)?.[1] || null)
+        !canDrop(
+          draggedItem,
+          targetItem,
+          event.target,
+          flatItemsById.get(droppedKey)?.[1] || null,
+          flatItemsById.get(droppedKey)?.[2] || null,
+          expandedProjectAndWorkspaceIds,
+        )
       ) {
         return;
       }
 
-      // move workspace to another project
+      // move workspace to another project or reorder within same project
       if (draggedItem.kind === 'workspace') {
-        reorderFetcher.submit({
-          organizationId,
-          projectId: draggedItem.project._id,
-          workspaceId: draggedItem.doc._id,
-          params: {
-            type: 'move-workspace',
-            targetId: realTargetItem?.kind === 'workspace' ? realTargetItem.project._id : realTargetItem!.doc._id,
-            id: draggedItem.doc._id,
-          },
-        });
+        if (_dropPosition === 'on') {
+          return;
+        }
+        // Dropping after the last child of a collection
+        if (realTargetItem?.kind === 'collectionChild') {
+          const targetProjectId = realTargetItem.project._id;
+          const isDropToAnotherProject = targetProjectId !== draggedItem.project._id;
+          if (isDropToAnotherProject) {
+            reorderFetcher.submit({
+              organizationId,
+              projectId: draggedItem.project._id,
+              workspaceId: draggedItem.doc._id,
+              params: {
+                type: 'move-workspace',
+                targetId: targetProjectId,
+                id: draggedItem.doc._id,
+              },
+            });
+          }
+          onWorkspaceReorder?.(
+            draggedItem.project._id,
+            targetProjectId,
+            draggedItem.doc._id,
+            realTargetItem.workspace._id,
+            'after',
+          );
+          return;
+        }
+        const isDropToAnotherProject =
+          (realTargetItem?.kind === 'project' && realTargetItem.doc._id !== draggedItem.project._id) ||
+          (realTargetItem?.kind === 'workspace' && realTargetItem.project._id !== draggedItem.project._id);
+        if (isDropToAnotherProject) {
+          // Move workspace to another project
+          reorderFetcher.submit({
+            organizationId,
+            projectId: draggedItem.project._id,
+            workspaceId: draggedItem.doc._id,
+            params: {
+              type: 'move-workspace',
+              targetId: realTargetItem?.kind === 'workspace' ? realTargetItem.project._id : realTargetItem!.doc._id,
+              id: draggedItem.doc._id,
+            },
+          });
+          const targetProjectId =
+            realTargetItem?.kind === 'project' ? realTargetItem.doc._id : realTargetItem!.project._id;
+          if (realTargetItem.kind === 'project') {
+            onWorkspaceReorder?.(draggedItem.project._id, targetProjectId, draggedItem.doc._id, null, 'before');
+          } else if (targetItem) {
+            onWorkspaceReorder?.(
+              draggedItem.project._id,
+              targetProjectId,
+              draggedItem.doc._id,
+              targetItem.doc._id,
+              _dropPosition,
+            );
+          }
+        } else {
+          if (realTargetItem?.kind === 'project') {
+            onWorkspaceReorder?.(draggedItem.project._id, draggedItem.project._id, draggedItem.doc._id, null, 'before');
+          } else if (realTargetItem?.kind === 'workspace') {
+            onWorkspaceReorder?.(
+              draggedItem.project._id,
+              draggedItem.project._id,
+              draggedItem.doc._id,
+              targetItem.doc._id,
+              _dropPosition,
+            );
+          }
+        }
         return;
       }
 
@@ -279,6 +393,8 @@ export const useSidebarDragAndDrop = ({
               targetItem as FlatItem,
               target,
               flatItemsById.get(target.key.toString())?.[1] || null,
+              flatItemsById.get(target.key.toString())?.[2] || null,
+              expandedProjectAndWorkspaceIds,
             )
           ) {
             return (

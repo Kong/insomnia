@@ -1,7 +1,3 @@
-import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
-import { scopeToLabelMap } from '~/common/get-workspace-label';
-import { isNotNullOrUndefined } from '~/common/misc';
-import { descendingNumberSort } from '~/common/sorting';
 import {
   type ApiSpec,
   database,
@@ -11,9 +7,13 @@ import {
   type Project,
   services,
   type Workspace,
-  type WorkspaceMeta,
   type WorkspaceScope,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+
+import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
+import { scopeToLabelMap } from '~/common/get-workspace-label';
+import { isNotNullOrUndefined } from '~/common/misc';
+import { descendingNumberSort } from '~/common/sorting';
 
 export interface InsomniaFile {
   id: string;
@@ -88,8 +88,8 @@ const lockGenerator = () => {
 export const projectLock = lockGenerator();
 
 export const checkSingleProjectSyncStatus = async (projectId: string) => {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+  const projectWorkspaces = await services.workspace.listByParentId(projectId);
+  const workspaceMetas = await services.workspaceMeta.list({
     parentId: {
       $in: projectWorkspaces.map(w => w._id),
     },
@@ -97,8 +97,13 @@ export const checkSingleProjectSyncStatus = async (projectId: string) => {
   return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
 };
 
+const isNotSyncProject = (project: Project) =>
+  models.project.isLocalProject(project) && !models.project.isGitProject(project);
+
 export const checkAllProjectSyncStatus = async (projects: Project[]) => {
-  const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
+  const taskList = projects.map(project =>
+    isNotSyncProject(project) ? Promise.resolve(false) : checkSingleProjectSyncStatus(project._id),
+  );
   const res = await Promise.all(taskList);
   const obj: Record<string, boolean> = {};
   projects.forEach((project, index) => {
@@ -108,9 +113,9 @@ export const checkAllProjectSyncStatus = async (projects: Project[]) => {
 };
 
 export async function getAllLocalFiles({ projectId }: { projectId: string }) {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
+  const projectWorkspaces = await services.workspace.listByParentId(projectId);
   const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
-    database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    services.workspaceMeta.list({
       parentId: {
         $in: projectWorkspaces.map(w => w._id),
       },
@@ -204,76 +209,8 @@ export async function getAllLocalFiles({ projectId }: { projectId: string }) {
   return files;
 }
 
-export const getAllRemoteBackendProjectsByProjectId = async ({
-  teamProjectId,
-  organizationId,
-}: {
-  teamProjectId: string;
-  organizationId: string;
-}) => {
-  return window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId });
-};
-
 export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) =>
   remoteFiles.filter(remoteFile => !workspaces.find(w => w._id === remoteFile.id));
-
-export async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
-  try {
-    const project = await services.project.get(projectId);
-
-    const remoteId = project?.remoteId;
-    if (!remoteId) {
-      return [];
-    }
-
-    console.log(
-      '[getAllRemoteFiles] start fetching remote backend workspaces for project',
-      projectId,
-      `remoteId: ${remoteId}`,
-    );
-
-    const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
-      window.main.sync.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
-      // Remote backend projects are fetched from the backend since they are not stored locally
-      window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
-    ]);
-    console.log(
-      `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,
-    );
-    // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
-      _id: {
-        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(
-          p => p.rootDocumentId,
-        ),
-      },
-      parentId: project._id,
-    });
-    console.log(`[getAllRemoteFiles] found workspacesWithBackendProjects: ${workspacesWithBackendProjects.length}`);
-    // Get the list of remote backend projects that we need to pull
-    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId.filter(
-      p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId),
-    );
-    console.log(`[getAllRemoteFiles] get ${backendProjectsToPull.length} unsynced files`);
-    return backendProjectsToPull.map(backendProject => {
-      const file: InsomniaFile = {
-        id: backendProject.rootDocumentId,
-        name: backendProject.name,
-        scope: 'unsynced',
-        label: 'Unsynced',
-        remoteId: backendProject.id,
-        created: 0,
-        lastModifiedTimestamp: 0,
-      };
-
-      return file;
-    });
-  } catch (e) {
-    console.warn('Failed to load backend projects', e);
-  }
-
-  return [];
-}
 
 /**
  * Get all projects for an organization with their associated git repositories
@@ -283,9 +220,7 @@ export async function getProjectsWithGitRepositories({
 }: {
   organizationId: string;
 }): Promise<(Project & { gitRepository?: GitRepository })[]> {
-  const projects = await database.find<Project>('Project', {
-    parentId: organizationId,
-  });
+  const projects = await services.project.listByOrganizationIds(organizationId);
 
   const gitRepositoryIds = projects
     .map(p => (models.project.isConnectedGitProject(p) ? models.project.getEffectiveRepoId(p) : null))

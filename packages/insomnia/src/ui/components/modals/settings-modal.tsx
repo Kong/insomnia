@@ -8,9 +8,9 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -42,7 +42,7 @@ type SettingsModalTabKey =
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
-  const { userSession, settings } = useRootLoaderData()!;
+  const { userSession } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
   const { organizationId } = useParams() as { organizationId?: string };
@@ -181,21 +181,18 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
                 setting="httpProxy"
                 help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
                 placeholder="localhost:8005"
-                disabled={!settings.proxyEnabled}
               />
               <MaskedSetting
                 label="Proxy for HTTPS"
                 setting="httpsProxy"
                 help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
                 placeholder="localhost:8005"
-                disabled={!settings.proxyEnabled}
               />
               <TextSetting
                 label="No proxy"
                 setting="noProxy"
                 help="Enter a comma-separated list of hostnames that do not require a proxy. To include all subdomains of a domain, prefix it with a dot (e.g., .example.com)."
                 placeholder="localhost,127.0.0.1"
-                disabled={!settings.proxyEnabled}
               />
             </div>
           </TabPanel>

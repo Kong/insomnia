@@ -1,12 +1,12 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import classNames from 'classnames';
+import { models } from 'insomnia-data';
 import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
-import { models } from '~/insomnia-data';
 import type { WorkspaceFileIssue } from '~/main/git-service';
+import { scrollElementIntoView } from '~/ui/utils';
 
-import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
@@ -46,6 +46,7 @@ const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
   GQL: 'text-(--color-font-success) bg-[rgba(var(--color-success-rgb),0.5)]',
   HEAD: 'text-(--color-font-info) bg-[rgba(var(--color-info-rgb),0.5)]',
   OPTIONS: 'text-(--color-font-info) bg-[rgba(var(--color-info-rgb),0.5)]',
+  QUERY: 'text-(--color-font-surprise) bg-[rgba(var(--color-surprise-rgb),0.5)]',
   DELETE: 'text-(--color-font-danger) bg-[rgba(var(--color-danger-rgb),0.5)]',
   PUT: 'text-(--color-font-warning) bg-[rgba(var(--color-warning-rgb),0.5)]',
   PATCH: 'text-(--color-font-notice) bg-[rgba(var(--color-notice-rgb),0.5)]',

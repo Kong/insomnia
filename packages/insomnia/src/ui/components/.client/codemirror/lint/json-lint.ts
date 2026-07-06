@@ -8,7 +8,7 @@ import 'codemirror/addon/lint/json-lint';
 import CodeMirror from 'codemirror';
 import * as jsonlint from 'jsonlint-mod-fixed';
 
-import { render } from '~/templating/index';
+import { render } from '~/ui/templating/renderer-safe';
 CodeMirror.registerHelper('lint', 'json', validator);
 
 interface ValidationError {
@@ -38,7 +38,7 @@ async function validator(text: string): Promise<ValidationError[]> {
     }
   };
 
-  // Render any Nunjucks templates before attempting to parse
+  // Render any Liquid templates before attempting to parse
   try {
     const renderedText: string | null = await render(text, {});
     if (renderedText) {

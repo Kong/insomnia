@@ -1,6 +1,19 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import type {
+  ChangeBufferEvent,
+  Environment,
+  GrpcRequest,
+  Project,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+  Workspace,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -25,24 +38,11 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, redirect, Route as RouteComponent, Routes, useFetchers, useParams, useSearchParams } from 'react-router';
+import { href, redirect, useFetchers, useMatch, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { generateId } from '~/common/misc';
-import type { PlatformKeyCombinations } from '~/common/settings';
-import type {
-  ChangeBufferEvent,
-  Environment,
-  GrpcRequest,
-  Project,
-  Request,
-  RequestGroup,
-  SocketIORequest,
-  WebSocketRequest,
-  Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import { useRootLoaderData } from '~/root';
 import {
@@ -101,8 +101,8 @@ import {
   useRequestPatcher,
 } from '~/ui/hooks/use-request';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { scrollElementIntoView } from '~/utils';
-import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
+import { scrollElementIntoView } from '~/ui/utils';
+import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/ui/utils/grpc';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 
@@ -134,11 +134,11 @@ const INITIAL_GRPC_REQUEST_STATE = {
   methods: [],
 };
 
-export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
-    const activeProject = await services.project.get(projectId);
+    const activeProject = await services.project.getById(projectId);
     if (!activeProject) {
       showResourceNotFoundToast(`Project not found: ${projectId}`);
       throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -148,20 +148,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     if (!activeWorkspace) {
       showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
       throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
-    }
-
-    const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
-    const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    const activeRequest = activeRequestId ? await services.request.getById(activeRequestId) : null;
-    // TODO(george): we should remove this after enabling the sidebar for the runner
-    const startOfQuery = request.url.indexOf('?');
-    const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
-    const isDisplayingRunner = urlWithoutQuery.includes('/runner');
-    const doNotSkipToActiveRequest = request.url.includes('doNotSkipToActiveRequest=true');
-    if (activeRequest && !isDisplayingRunner && !doNotSkipToActiveRequest) {
-      return redirect(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`,
-      );
     }
   }
   return null;
@@ -251,6 +237,10 @@ const Debug = () => {
     requestGroupId?: string;
     panel?: string;
   };
+
+  const isRunner = Boolean(
+    useMatch('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner'),
+  );
 
   const [filter, setFilter] = reactUse.useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
   const collection = useFilteredRequests(_collection, filter ?? '');
@@ -356,26 +346,7 @@ const Debug = () => {
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
 
-  function toggleSidebar() {
-    const layout = sidebarPanelRef.current?.getLayout();
-
-    if (!layout) {
-      return;
-    }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  }
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
-    return unsubscribe;
-  }, []);
-
   useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
         const meta = models.grpcRequest.isGrpcRequestId(requestId)
@@ -429,13 +400,22 @@ const Debug = () => {
       }
     },
     request_createHTTP: async () => {
-      const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+      // When a request is active, create a sibling; when a folder is selected (and no request is
+      // active), create inside that folder; otherwise create at the workspace root.
+      const parentId = activeRequest
+        ? activeRequest.parentId
+        : requestGroupId && isRequestGroupId(requestGroupId)
+          ? requestGroupId
+          : activeWorkspace._id;
       createRequestFetcher.submit({
         organizationId,
         projectId,
         workspaceId,
         requestType: 'HTTP',
         parentId,
+        metrics: {
+          source: 'shortcut',
+        },
       });
     },
     request_showCreateFolder: () => {
@@ -507,6 +487,9 @@ const Debug = () => {
       requestType,
       parentId,
       req,
+      metrics: {
+        source: 'sidebar',
+      },
     });
 
   const reorderFetcher = useDebugReorderActionFetcher();
@@ -660,61 +643,67 @@ const Debug = () => {
           name: 'HTTP Request',
           icon: 'plus-circle',
           hint: hotKeyRegistry.request_createHTTP,
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'HTTP',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'Event Stream',
           name: 'Event Stream Request (SSE)',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'Event Stream',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'GraphQL Request',
           name: 'GraphQL Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'GraphQL',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'gRPC Request',
           name: 'gRPC Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'gRPC',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'WebSocket Request',
           name: 'WebSocket Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'WebSocket',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'Socket.IO Request',
           name: 'Socket.IO Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'SocketIO',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
       ],
     },
@@ -781,25 +770,31 @@ const Debug = () => {
   const tabNavigate = useTabNavigate();
 
   return (
-    <div className="new-sidebar h-full w-full text-(--color-font)">
+    <div className="new-sidebar flex h-full w-full flex-col text-(--color-font)">
       <div className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
-        {!panel && !models.organization.isScratchpadOrganizationId(organizationId) && (
-          <WorkspacePaneHeader hasSettings />
-        )}
+        {!panel && <WorkspacePaneHeader hasSettings />}
       </div>
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id={WORKSPACE_CONTENT_WRAPPER}
-        className="new-sidebar h-full w-full text-(--color-font)"
+        className="new-sidebar min-h-0 flex-1 text-(--color-font)"
         direction="horizontal"
       >
         {/* Design page has a collection view with legacy collection list */}
         {isDesignWorkspace && (
           <>
-            <Panel id="sidebar" order={1} className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
+            <Panel
+              id="sidebar"
+              order={1}
+              className="sidebar theme--sidebar"
+              defaultSize={DEFAULT_SIDEBAR_SIZE}
+              maxSize={40}
+              minSize={10}
+              collapsible
+            >
               <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
                 <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
                   {models.workspace.isDesign(activeWorkspace) && (
@@ -1020,6 +1015,7 @@ const Debug = () => {
                                     POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                                     HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                                     OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                                    QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                                     DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                                     PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                                     PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
@@ -1147,78 +1143,72 @@ const Debug = () => {
             <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
           </>
         )}
-        <Panel order={2} className="flex flex-col">
+        <Panel id="workspace-content" order={2} className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
-            <Routes>
-              <RouteComponent
-                path="*"
-                element={
-                  <>
-                    <Panel id="pane-one" order={1} minSize={10} className="pane-one theme--pane">
-                      {workspaceId ? (
-                        <ErrorBoundary showAlert>
-                          {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
-                          {models.grpcRequest.isGrpcRequestId(requestId) &&
-                            grpcState &&
-                            activeRequest?._id === requestId && (
-                              <GrpcRequestPane
-                                key={grpcState.requestId}
-                                grpcState={grpcState}
-                                setGrpcState={setGrpcState}
-                                reloadRequests={reloadRequests}
-                              />
-                            )}
-                          {models.webSocketRequest.isWebSocketRequestId(requestId) &&
-                            activeRequest?._id === requestId && (
-                              <WebSocketRequestPane environment={activeEnvironment} />
-                            )}
-                          {models.socketIORequest.isSocketIORequestId(requestId) &&
-                            activeRequest?._id === requestId && <SocketIORequestPane environment={activeEnvironment} />}
-                          {isRequestId(requestId) && activeRequest?._id === requestId && (
-                            <RequestPane
-                              environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                              settings={settings}
-                              onPaste={text => {
-                                setPastedCurl(text);
-                                setPasteCurlModalOpen(true);
-                              }}
-                            />
-                          )}
-                          {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
-                          {isRequestSettingsModalOpen && activeRequest && (
-                            <RequestSettingsModal
-                              request={activeRequest}
-                              onHide={() => setIsRequestSettingsModalOpen(false)}
-                            />
-                          )}
-                        </ErrorBoundary>
-                      ) : null}
-                    </Panel>
-                    {activeRequest ? (
-                      <>
-                        <PanelResizeHandle
-                          className={
-                            direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'
-                          }
+            {isRunner ? (
+              <Runner />
+            ) : (
+              <>
+                <Panel id="pane-one" order={1} minSize={10} className="pane-one theme--pane">
+                  {workspaceId ? (
+                    <ErrorBoundary showAlert>
+                      {isRequestGroupId(requestGroupId) && <RequestGroupPane />}
+                      {models.grpcRequest.isGrpcRequestId(requestId) &&
+                        grpcState &&
+                        activeRequest?._id === requestId && (
+                          <GrpcRequestPane
+                            key={grpcState.requestId}
+                            grpcState={grpcState}
+                            setGrpcState={setGrpcState}
+                            reloadRequests={reloadRequests}
+                          />
+                        )}
+                      {models.webSocketRequest.isWebSocketRequestId(requestId) && activeRequest?._id === requestId && (
+                        <WebSocketRequestPane environment={activeEnvironment} />
+                      )}
+                      {models.socketIORequest.isSocketIORequestId(requestId) && activeRequest?._id === requestId && (
+                        <SocketIORequestPane environment={activeEnvironment} />
+                      )}
+                      {isRequestId(requestId) && activeRequest?._id === requestId && (
+                        <RequestPane
+                          environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                          settings={settings}
+                          onPaste={text => {
+                            setPastedCurl(text);
+                            setPasteCurlModalOpen(true);
+                          }}
                         />
-                        <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
-                          <ErrorBoundary showAlert>
-                            {activeRequest && models.grpcRequest.isGrpcRequest(activeRequest) && grpcState && (
-                              <GrpcResponsePane grpcState={grpcState} />
-                            )}
-                            {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
-                            {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                              <ResponsePane activeRequestId={activeRequest._id} />
-                            )}
-                          </ErrorBoundary>
-                        </Panel>
-                      </>
-                    ) : null}
+                      )}
+                      {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
+                      {isRequestSettingsModalOpen && activeRequest && (
+                        <RequestSettingsModal
+                          request={activeRequest}
+                          onHide={() => setIsRequestSettingsModalOpen(false)}
+                        />
+                      )}
+                    </ErrorBoundary>
+                  ) : null}
+                </Panel>
+                {activeRequest ? (
+                  <>
+                    <PanelResizeHandle
+                      className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
+                    />
+                    <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
+                      <ErrorBoundary showAlert>
+                        {activeRequest && models.grpcRequest.isGrpcRequest(activeRequest) && grpcState && (
+                          <GrpcResponsePane grpcState={grpcState} />
+                        )}
+                        {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
+                        {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                          <ResponsePane activeRequestId={activeRequest._id} />
+                        )}
+                      </ErrorBoundary>
+                    </Panel>
                   </>
-                }
-              />
-              <RouteComponent path="runner" element={<Runner />} />
-            </Routes>
+                ) : null}
+              </>
+            )}
           </PanelGroup>
         </Panel>
       </PanelGroup>
@@ -1362,6 +1352,7 @@ const CollectionGridListItem = ({
                 POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                 HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                 OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                 DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                 PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                 PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',

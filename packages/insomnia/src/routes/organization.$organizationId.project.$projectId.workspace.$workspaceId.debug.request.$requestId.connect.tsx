@@ -1,17 +1,18 @@
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
-import { href } from 'react-router';
-
 import type {
   ChangeBufferEvent,
   CookieJar,
   McpTransportType,
   RequestAuthentication,
   RequestHeader,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import type { RenderedRequest } from '~/templating/types';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { href } from 'react-router';
+
+import type { RenderedRequest } from '~/common/templating/types';
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 
@@ -46,6 +47,11 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       headers: rendered.headers,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
+    });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'WebSocket' },
     });
   }
   if (isGraphqlSubscriptionRequest(req)) {
@@ -69,6 +75,11 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       }),
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
+    });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'GraphQL' },
     });
   }
   if (isEventStreamRequest(req)) {
@@ -84,6 +95,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
     });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'Event Stream' },
+    });
   }
   if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
@@ -95,9 +110,18 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       authentication: rendered.authentication,
       query: rendered.query || {},
       path: rendered.path,
+      suppressUserAgent: rendered.suppressUserAgent,
+    });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'SocketIO' },
     });
   }
   if (models.mcpRequest.isMcpRequest(req)) {
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'MCP' },
+    });
     return window.main.mcp.connect({
       requestId,
       workspaceId,

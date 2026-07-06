@@ -1,9 +1,10 @@
-import { services } from '~/insomnia-data';
-import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
+import { services } from 'insomnia-data';
 
-import * as themes from '../plugins/misc';
-import { plugins } from '../plugins/renderer-bridge';
-import * as templating from '../templating';
+import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
+import * as themes from '~/ui/plugins/misc';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import * as templating from '~/ui/templating/renderer-safe';
+
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
 
@@ -35,12 +36,14 @@ window.main.on('plugins.uiDialog', (_, options: Record<string, any>) => {
   window.showWrapper?.(options);
 });
 
-window.main.on('plugins.uiPrompt', (_, id: string, options: Record<string, any>) => {
+window.main.on('ui.prompt', (_, id: string, options: Record<string, any>) => {
   window.showPrompt?.({
     ...options,
     onComplete: (value: string) => {
-      window.main.notifyPluginPromptResult(id, value);
+      window.main.notifyPromptResult(id, value);
     },
-    onHide: () => {},
+    onHide: () => {
+      window.main.notifyPromptResult(id, null);
+    },
   });
 });

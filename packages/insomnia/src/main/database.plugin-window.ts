@@ -1,6 +1,5 @@
 import { ipcRenderer } from 'electron';
-
-import type { IDatabase } from '~/insomnia-data';
+import type { IDatabase } from 'insomnia-data';
 
 // Routes all database calls to the main process via the 'database.invoke' IPC handler
 // that mainDatabase registers on startup.  The plugin window must not open a second

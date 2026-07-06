@@ -70,8 +70,7 @@ async function echoHandler(req: any, res: any) {
   });
 }
 
-app.get('/echo', rawParser, echoHandler);
-app.post('/echo', rawParser, echoHandler);
+app.all('/echo', rawParser, echoHandler);
 
 app.get('/sleep', (_req, res) => {
   res.status(200).send({ sleep: true });

@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import electron from 'electron';
 
-import { validatePluginName } from '../utils/plugin-name';
+import { validatePluginName } from '~/common/utils/plugin-name';
 
 function stripPathTraversal(name: string, maxIterations = 20): string {
   let result = name;

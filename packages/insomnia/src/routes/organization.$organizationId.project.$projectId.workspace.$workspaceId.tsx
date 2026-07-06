@@ -1,11 +1,3 @@
-import { useLayoutEffect, useState } from 'react';
-import { href, Outlet, redirect, useNavigate, useParams, useRouteLoaderData } from 'react-router';
-
-import { Button } from '~/basic-components/button';
-import { Modal } from '~/basic-components/modal';
-import type { SortOrder } from '~/common/constants';
-import { database } from '~/common/database';
-import { sortMethodMap } from '~/common/sorting';
 import type {
   ApiSpec,
   CaCertificate,
@@ -27,13 +19,21 @@ import type {
   WebSocketRequestMeta,
   Workspace,
   WorkspaceMeta,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { useLayoutEffect, useState } from 'react';
+import { href, Outlet, redirect, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+
+import { Button } from '~/basic-components/button';
+import { Modal } from '~/basic-components/modal';
+import type { SortOrder } from '~/common/constants';
+import { database } from '~/common/database';
+import { sortMethodMap } from '~/common/sorting';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
@@ -88,7 +88,7 @@ const workspaceFileIssueModalText = {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const activeProject = await services.project.get(projectId);
+  const activeProject = await services.project.getById(projectId);
   if (!activeProject) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -113,7 +113,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
 
-  const globalEnvironmentWorkspaces = await database.find<Workspace>(models.workspace.type, {
+  const globalEnvironmentWorkspaces = await services.workspace.list({
     parentId: projectId,
     scope: 'environment',
   });
@@ -153,10 +153,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const activeMockServer = await services.mockServer.getByParentId(workspaceId);
 
-  const organizationProjects =
-    (await database.find<Project>(models.project.type, {
-      parentId: organizationId,
-    })) || [];
+  const organizationProjects = await services.project.listByOrganizationIds(organizationId);
 
   const projects = models.project.sortProjects(organizationProjects);
 
@@ -296,7 +293,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     }
   }
 
-  const workspaces = await services.workspace.findByParentId(projectId);
+  const workspaces = await services.workspace.listByParentId(projectId);
 
   const collection = flattenTree();
 

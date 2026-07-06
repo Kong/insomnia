@@ -2,28 +2,23 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
 import os from 'node:os';
 
-import { shell } from 'electron';
+import { app, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
+import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import type {
-  AllTypes,
-  CloudProviderCredential,
-  Request as DBRequest,
-  RequestGroup,
-  Response,
-  Workspace,
-} from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { type Plugin, type TemplateTag } from '~/common/plugins/types';
+import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
+import { getPluginCommonContext, getTemplateTags } from '~/plugins';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
-import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
@@ -69,6 +64,22 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
   return {};
 };
 
+// Run a resolved plugin template tag with a freshly-built common context. Shared by the bundle
+// and user-plugin execute handlers so both build context (incl. renderPurpose) identically.
+const runPluginTag = (
+  run: (context: any, ...args: any[]) => any,
+  body: {
+    args: any[];
+    pluginName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  },
+) => {
+  const { pluginName, args, context: originContext } = body;
+  const { meta, renderPurpose, context } = originContext;
+  const commonContext = getPluginCommonContext({ plugin: { name: pluginName }, renderPurpose });
+  return run({ meta, renderPurpose, context, ...commonContext }, ...args);
+};
+
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
@@ -109,12 +120,15 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
     const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
     const jar = jarFromCookies(cookies.cookies);
-    return jar.getCookiesSync(body.url);
+    return jar.getCookiesSync(body.url).map(c => c.toJSON());
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
-  'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
+  'response.getBodyBuffer': async (body: {
+    response?: { bodyPath?: string; bodyCompression?: any };
+    readFailureValue?: string;
+  }) => {
     return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
@@ -276,18 +290,49 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     tagName: string;
     context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
   }) => {
-    const { tagName, pluginName, args, context: originContext } = body;
-    const { meta, renderPurpose, context } = originContext;
+    const { tagName, pluginName } = body;
     const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
     if (appBundlePluginNames.includes(pluginName)) {
       const module = getBundlePluginModule(pluginName);
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
-        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
-        // @ts-expect-error -- TSCONVERSION: Bundle plugin tag context do not have node functions in utils
-        return targetTag.run({ meta, renderPurpose, context, ...commonContext }, ...args);
+        return runPluginTag(targetTag.run, body);
       }
+    }
+    throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
+  },
+  // generate the template tags for user-installed plugins and send back to the web worker.
+  // Bundle plugins are handled separately by `plugin.getBundlePluginTemplateTags`.
+  'plugin.getUserPluginTemplateTags': async () => {
+    const tags = await getTemplateTags();
+    // Bundle plugins have an empty `directory`; everything else is user-installed.
+    return tags
+      .filter(({ plugin }) => plugin.directory !== '')
+      .map(({ plugin, templateTag }) => ({
+        plugin: {
+          name: plugin.name,
+          description: plugin.description,
+          version: plugin.version,
+          directory: plugin.directory,
+          config: plugin.config,
+        },
+        templateTag,
+      }));
+  },
+  // execute a user-installed plugin tag with the given parameters, in the main process where
+  // Node built-ins (e.g. crypto) the plugin requires are available.
+  'plugin.executeUserPluginTag': async (body: {
+    args: any[];
+    pluginName: string;
+    tagName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  }) => {
+    const { tagName, pluginName } = body;
+    const tags = await getTemplateTags();
+    const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
+    if (targetTag) {
+      return runPluginTag(targetTag.templateTag.run, body);
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
   },
@@ -310,5 +355,34 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       }
     }
     throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
+  },
+  'app.alert': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.dialog': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
+    return requestPromptFromRenderer({
+      title: body.title,
+      label: body.options?.label ?? body.title,
+      defaultValue: body.options?.defaultValue ?? '',
+    });
+  },
+  'app.getPath': async (body: { name: string }) => {
+    return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
+  },
+  'app.showSaveDialog': async (body: { options?: { defaultPath?: string } }) => {
+    const result = await dialog.showSaveDialog(body.options ?? {});
+    return result.canceled ? null : result.filePath;
+  },
+  'app.clipboard.readText': async () => {
+    return clipboard.readText();
+  },
+  'app.clipboard.writeText': async (body: { text: string }) => {
+    clipboard.writeText(body.text);
+  },
+  'app.clipboard.clear': async () => {
+    clipboard.clear();
   },
 };

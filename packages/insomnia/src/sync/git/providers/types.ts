@@ -1,12 +1,11 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { GitCredentials } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
-
-import type { GitCredentials } from '~/insomnia-data';
 
 /**
  * Supported Git remote provider types
  */
-export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom';
+export type GitRemoteProviderType = 'github' | 'gitlab' | 'custom' | 'native';
 
 /**
  * Base configuration for all providers
@@ -47,9 +46,21 @@ export interface CustomProviderConfig extends BaseProviderConfig {
 }
 
 /**
+ * Native system credential provider configuration
+ * Delegates to the OS git credential manager
+ */
+export interface NativeProviderConfig extends BaseProviderConfig {
+  type: 'native';
+}
+
+/**
  * Discriminated union of all provider configs
  */
-export type GitRemoteProviderConfig = GitHubProviderConfig | GitLabProviderConfig | CustomProviderConfig;
+export type GitRemoteProviderConfig =
+  | GitHubProviderConfig
+  | GitLabProviderConfig
+  | CustomProviderConfig
+  | NativeProviderConfig;
 
 /**
  * OAuth initialization result
@@ -179,7 +190,7 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
    * Prepare auth callback for isomorphic-git
    * Converts credential to format expected by isomorphic-git
    */
-  authCallback(credential: GitCredentials): Promise<GitAuth> | GitAuth;
+  authCallback(credential: GitCredentials, url?: string, repoPath?: string): Promise<GitAuth> | GitAuth;
 
   /**
    * Prepare auth failure callback for isomorphic-git

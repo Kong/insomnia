@@ -1,8 +1,8 @@
 import { type Billing, type FeatureList, getOrganizationFeatures, type Organization } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router';
 
-import { models, services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';
 

@@ -91,7 +91,16 @@ const TrailLines = forwardRef<TrailsLineHandle, Props>(
     useImperativeHandle(
       ref,
       () => ({
+        // Synchronously set display style via DOM instead of relying solely on React
+        // state (setShowPaths). Without this, callers that measure containerRef
+        // dimensions immediately after toggle(false) would still read the old
+        // inflated SVG height because the React re-render hasn't flushed yet —
+        // causing a one-directional height growth bug where the container can
+        // grow on resize but never shrink.
         toggle: (show: boolean) => {
+          if (refRoot.current) {
+            refRoot.current.style.display = show ? '' : 'none';
+          }
           setShowPaths(show);
         },
       }),

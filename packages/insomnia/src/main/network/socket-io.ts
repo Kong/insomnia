@@ -5,24 +5,25 @@ import tls from 'node:tls';
 import electron, { BrowserWindow } from 'electron';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
-import { v4 as uuidV4 } from 'uuid';
-
-import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import type {
   BaseSocketIORequest,
   CookieJar,
   RequestAuthentication,
   RequestHeader,
   SocketIOResponse,
-} from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
+import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
+import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import { filterClientCertificates } from '../../network/certificate';
-import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
@@ -148,6 +149,7 @@ interface OpenSocketIORequestOptions {
   cookieJar: CookieJar;
   path?: string;
   initialPayload?: string;
+  suppressUserAgent?: boolean;
 }
 
 const getCertificates = async ({
@@ -286,9 +288,13 @@ const openSocketIOConnection = async (
     const headers = options.headers;
     const url = options.url;
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
 
     // attach cookies to the request
     if (request.settingSendCookies && options.cookieJar.cookies.length) {

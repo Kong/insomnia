@@ -1,6 +1,3 @@
-import clone from 'clone';
-import orderedJSON from 'json-order';
-
 import type {
   CaCertificate,
   ClientCertificate,
@@ -15,49 +12,37 @@ import type {
   RequestGroup,
   RequestHeader,
   RequestParameter,
+  RequestTestResult,
+  ResponseTimelineEntry,
   Settings,
   SocketIORequest,
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { EnvironmentType, models, services } from '~/insomnia-data';
-import {
-  appendTimelineLines,
-  appendToTimelineOnError,
-  applyRequestHooks,
-  applyResponseHooks,
-  executeCurlRequest,
-  getAuthHeader,
-  getTimelinePath,
-  runScript,
-} from '~/network/network-adapter';
-import { getKVPairFromData } from '~/utils/environment-utils';
+} from 'insomnia-data';
+import { EnvironmentType, models, services } from 'insomnia-data';
+import { invariant, serializeNDJSON } from 'insomnia-data/common';
+import orderedJSON from 'json-order';
 
-import type {
-  ExecutionOption,
-  RequestContext,
-  RequestTestResult,
-} from '../../../insomnia-scripting-environment/src/objects';
+import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
+import { RenderError } from '~/common/templating/render-error';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
+import { getKVPairFromData } from '~/common/utils/environment-utils';
+import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
+import { getRuntime } from '~/runtimes';
+
+import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
-import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import * as pluginRequest from '../plugins/context/request';
-import { RenderError } from '../templating/render-error';
-import type { RenderedRequest, RenderPurpose } from '../templating/types';
-import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { invariant } from '../utils/invariant';
-import { serializeNDJSON } from '../utils/ndjson';
-import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
+import type { ResponsePatch } from '../main/network/libcurl-promise';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';
-import type { TransformedExecuteScriptContext } from './concurrency';
-import { addSetCookiesToToughCookieJar } from './set-cookie-util';
+import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
@@ -68,6 +53,7 @@ export interface SendActionRuntime {
 
 export const getOrInheritAuthentication = ({
   request,
+  // requestGroups is supposed to be of order leaf to root
   requestGroups,
 }: {
   request: Request | WebSocketRequest | SocketIORequest;
@@ -78,9 +64,9 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = [...requestGroups]
-    .reverse()
-    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const closestParentFolderWithAuth = requestGroups.find(
+    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
+  );
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
@@ -100,7 +86,7 @@ export function getOrInheritHeaders({
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups.reverse(), request];
+  const headerContexts = [...requestGroups].reverse().concat(request);
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
@@ -154,7 +140,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
-  const timelinePath = await getTimelinePath(responseId);
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -217,7 +203,7 @@ export const fetchRequestData = async (
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const timelinePath = await getTimelinePath(responseId);
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
 
   return {
     request,
@@ -256,7 +242,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const timelinePath = await getTimelinePath(responseId);
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
 
   return {
     environment,
@@ -438,7 +424,7 @@ export async function savePatchesMadeByScript(patches: {
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
       }),
     });
   };
@@ -467,7 +453,7 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
         }),
       });
     }
@@ -518,7 +504,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   }
 
   try {
-    const output = await runScript({
+    const output = await getRuntime().network.runScript({
       script,
       context: {
         request,
@@ -651,7 +637,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await appendToTimelineOnError(
+    await getRuntime().network.appendToTimelineOnError(
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
@@ -801,11 +787,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
   context: Record<string, any>;
 }) => {
   const { request, context } = renderResult;
-  try {
-    return await _applyRequestPluginHooks(request, context);
-  } catch {
-    throw new Error(`Failed to transform request with plugins: ${request._id}`);
-  }
+  return await getRuntime().network.applyRequestHooks(request, context);
 };
 
 export interface sendCurlAndWriteTimelineError {
@@ -862,7 +844,7 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+  const authHeader = await getRuntime().network.getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
     req: renderedRequest,
@@ -874,7 +856,7 @@ export async function sendCurlAndWriteTimeline(
     authHeader,
   };
 
-  const output = await executeCurlRequest(requestOptions);
+  const output = await getRuntime().network.executeCurlRequest(requestOptions);
 
   if ('error' in output) {
     if (runtime) {
@@ -897,12 +879,12 @@ export async function sendCurlAndWriteTimeline(
   // todo: move to main process
   debugTimeline.forEach(entry => timeline.push(entry));
   // transform output
-  const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(
-    headerResults,
-    renderedRequest.cookieJar,
-    finalUrl,
-    renderedRequest.settingStoreCookies,
-  );
+  const { cookies, rejectedCookies, totalSetCookies } = await getRuntime().network.extractCookies({
+    setCookieStrings: headerResults.flatMap(({ headers }: any) => getSetCookiesFromResponseHeaders(headers)),
+    currentUrl: getCurrentUrl({ headerResults, finalUrl }),
+    cookieJar: renderedRequest.cookieJar,
+    settingStoreCookies: renderedRequest.settingStoreCookies,
+  });
   rejectedCookies.forEach(errorMessage =>
     timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
   );
@@ -954,7 +936,19 @@ export const responseTransform = async (
     return response;
   }
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`);
-  return await _applyResponsePluginHooks(response, renderedRequest, context);
+  try {
+    return await getRuntime().network.applyResponseHooks(response, renderedRequest, context);
+  } catch (err) {
+    console.log('[plugin] Response hook failed', err, response);
+    return {
+      url: renderedRequest.url,
+      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
+      statusMessage: 'Error',
+      settingSendCookies: renderedRequest.settingSendCookies,
+      settingStoreCookies: renderedRequest.settingStoreCookies,
+    };
+  }
 };
 export function getAuthQueryParams(authentication: RequestAuthentication) {
   if (authentication.disabled) {
@@ -998,34 +992,6 @@ export const transformUrl = (
   return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
 };
 
-const extractCookies = async (
-  headerResults: HeaderResult[],
-  cookieJar: any,
-  finalUrl: string,
-  settingStoreCookies: boolean,
-) => {
-  // add set-cookie headers to file(cookiejar) and database
-  if (settingStoreCookies) {
-    // supports many set-cookies over many redirects
-    const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
-    const setCookieStrings: string[] = redirects.flat();
-    const totalSetCookies = setCookieStrings.length;
-    if (totalSetCookies) {
-      const currentUrl = getCurrentUrl({ headerResults, finalUrl });
-      const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({
-        setCookieStrings,
-        currentUrl,
-        cookieJar,
-      });
-      const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
-      if (hasCookiesToPersist) {
-        return { cookies, rejectedCookies, totalSetCookies };
-      }
-    }
-  }
-  return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
-};
-
 export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);
 
 export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any; finalUrl: string }): string => {
@@ -1044,50 +1010,6 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
 };
 
-export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
-  const newRenderedRequest = clone(renderedRequest);
-
-  // Apply built-in default-headers hook in the renderer (no IPC needed)
-  const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
-  const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
-  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
-    for (const name of Object.keys(defaultHeaders)) {
-      const value = (defaultHeaders as Record<string, any>)[name];
-      if (reqCtx.hasHeader(name)) {
-        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-      } else if (value === 'null') {
-        reqCtx.removeHeader(name);
-        console.log(`[header] Remove default header ${name}`);
-      } else {
-        reqCtx.setHeader(name, value);
-        console.log(`[header] Set default header ${name}: ${value}`);
-      }
-    }
-  }
-
-  return applyRequestHooks(newRenderedRequest, renderedContext);
-}
-
-export async function _applyResponsePluginHooks(
-  response: ResponsePatch,
-  renderedRequest: RenderedRequest,
-  renderedContext: Record<string, any>,
-): Promise<ResponsePatch> {
-  try {
-    return await applyResponseHooks(response, renderedRequest, renderedContext);
-  } catch (err) {
-    console.log('[plugin] Response hook failed', err, response);
-    return {
-      url: renderedRequest.url,
-      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
-      elapsedTime: 0, // 0 because this path is hit during plugin calls
-      statusMessage: 'Error',
-      settingSendCookies: renderedRequest.settingSendCookies,
-      settingStoreCookies: renderedRequest.settingStoreCookies,
-    };
-  }
-}
-
 export const defaultSendActionRuntime: SendActionRuntime = {
-  appendTimeline: appendTimelineLines,
+  appendTimeline: (timelinePath, logs) => getRuntime().network.appendTimelineLines(timelinePath, logs),
 };

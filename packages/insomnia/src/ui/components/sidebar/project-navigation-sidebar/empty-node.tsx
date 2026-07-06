@@ -1,9 +1,10 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
+import type { WorkspaceScope } from 'insomnia-data';
 import { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
-import type { WorkspaceScope } from '~/insomnia-data';
+import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { showModal } from '~/ui/components/modals';
@@ -24,6 +25,7 @@ interface ActionItem {
   id: string;
   name: string;
   icon: IconProp;
+  scope?: WorkspaceScope;
   action: () => void;
 }
 
@@ -32,15 +34,18 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
     isOpen: boolean;
+    source?: string;
   } | null>({
     scope: 'collection',
     isOpen: false,
   });
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-  const createNewMockServer = () => setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
+  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar' });
+  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar' });
+  const createNewMockServer = () =>
+    setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar' });
+  const createNewGlobalEnvironment = () =>
+    setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar' });
+  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar' });
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
@@ -77,6 +82,12 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
   };
 
   const createRequestActionItems: ActionItem[] = [
+    {
+      id: 'New Folder',
+      name: 'New Folder',
+      icon: 'folder',
+      action: createFolder,
+    },
     {
       id: 'HTTP',
       name: 'HTTP Request',
@@ -131,30 +142,27 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
           requestType: 'SocketIO',
         }),
     },
-    {
-      id: 'New Folder',
-      name: 'New Folder',
-      icon: 'folder',
-      action: createFolder,
-    },
   ];
 
   const createInProjectActionList: ActionItem[] = [
     {
       id: 'new-collection',
       name: 'Request collection',
+      scope: 'collection',
       icon: 'bars',
       action: createNewCollection,
     },
     {
       id: 'new-document',
       name: 'Design document',
+      scope: 'design',
       icon: 'file',
       action: createNewDocument,
     },
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
+      scope: 'mcp',
       icon: ['fac', 'mcp'] as unknown as IconProp,
       action: createNewMcpClient,
     },
@@ -162,6 +170,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
     {
       id: 'new-mock-server',
       name: 'Mock Server',
+      scope: 'mock-server',
       icon: 'server' as IconName,
       action: createNewMockServer,
     },
@@ -169,6 +178,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
     {
       id: 'new-environment',
       name: 'Environment',
+      scope: 'environment',
       icon: 'code',
       action: createNewGlobalEnvironment,
     },
@@ -223,13 +233,15 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
             style={{ left: `${i + 1.5}em` }}
           />
         ))}
-      <span className="ml-3 min-w-0 flex-1 truncate text-xs">{getLabel()}</span>
+      <span className={`${kind === 'emptyFolder' ? 'ml-7' : 'ml-3'} min-w-0 flex-1 truncate text-sm`}>
+        {getLabel()}
+      </span>
       <MenuTrigger>
         <Button
           aria-label={`Create in ${getAriaLabel()}`}
-          className="flex items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
-          <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
+          <Icon icon="plus" /> <span className="hidden md:block">Create</span>
         </Button>
         <Popover className="flex min-w-max flex-col overflow-y-hidden">
           <Menu
@@ -244,7 +256,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
               }
             }}
             items={kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems}
-            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-base shadow-lg select-none focus:outline-hidden"
+            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
             {item => (
               <MenuItem
@@ -253,7 +265,15 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
                 className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                 aria-label={item.name}
               >
-                <Icon icon={item.icon} />
+                {item.scope ? (
+                  <div
+                    className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                  >
+                    <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                  </div>
+                ) : (
+                  <Icon icon={item.icon} className="h-4 w-3" />
+                )}
                 <span>{item.name}</span>
               </MenuItem>
             )}
@@ -266,6 +286,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
           project={project}
           storageRules={storageRules}
           scope={newWorkspaceModalState.scope}
+          source={newWorkspaceModalState.source}
           onOpenChange={isOpen => {
             setNewWorkspaceModalState({
               scope: newWorkspaceModalState.scope,
