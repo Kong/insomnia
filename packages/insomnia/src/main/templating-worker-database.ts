@@ -87,7 +87,7 @@ const runPluginTag = (
 // because the bundled main process shims it via createRequire(import.meta.url) where import.meta.url
 // is undefined, which throws "filename ... Received undefined". Bundle plugins (no directory) fall
 // back to require.resolve by name.
-const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
+export const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
   try {
     let entryPath: string;
     if (directory) {
@@ -98,6 +98,11 @@ const getPluginEntrySource = ({ directory, name }: { directory: string; name: st
       entryPath = path.resolve(base, pkg.main || 'index.js');
       const relative = path.relative(base, entryPath);
       if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+      }
+      // Re-check after resolving symlinks, since a symlinked entry can point outside `base`.
+      const realRelative = path.relative(fs.realpathSync(base), fs.realpathSync(entryPath));
+      if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
         throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
       }
     } else {
