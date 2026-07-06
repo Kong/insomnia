@@ -32,7 +32,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 
   const { accountId } = await services.userSession.get();
 
-  const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
 
   const allOrganizationsIds = models.organization.isScratchpadOrganizationId(organizationId)
     ? [organizationId]
@@ -203,7 +203,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
             name: item.name,
             item,
-            organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+            organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
             projectName: allProjects.find(project => project._id === projectId)?.name || '',
             workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
             organizationId,
@@ -223,7 +223,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             ...workspace,
             teamProjectId: parentProject && project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
-          organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+          organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
           projectName: allProjects.find(project => project._id === projectId)?.name || '',
           organizationId,
           projectId,
@@ -244,7 +244,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
             name: item.name,
             item,
-            organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+            organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
             projectName: allProjects.find(project => project._id === projectId)?.name || '',
             workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
             organizationId,
@@ -264,7 +264,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             ...workspace,
             teamProjectId: parentProject && project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
-          organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+          organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
           projectName: allProjects.find(project => project._id === projectId)?.name || '',
           organizationId,
           projectId,
