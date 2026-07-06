@@ -149,4 +149,34 @@ describe('RepoFileWatcher ruleset import problems', () => {
 
     expect(getRulesetImportIssue(REPO_ID)).toBeNull();
   });
+
+  // Regression: cloning a repo whose committed .spectral.yaml is invalid must
+  // never delete the file. Previously, an invalid ruleset was silently
+  // ignored (not recognized as a ruleset at all) instead of being rejected,
+  // so nothing prevented the file from later being deleted as a stale
+  // tracked file — which git staged as a deletion that Discard could never
+  // resolve, since re-importing the same invalid content each time was also
+  // a silent no-op.
+  it('keeps an invalid cloned ruleset on disk and out of the DB, surviving repeated re-imports', async () => {
+    const absPath = path.join(repoDir, RULESET_PATH);
+    await fs.promises.writeFile(absPath, INVALID_RULESET, 'utf8');
+
+    // Simulate the initial clone import.
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    const exists = () => fs.promises.access(absPath).then(() => true).catch(() => false);
+    expect(await exists()).toBe(true);
+    expect(await services.projectLintRuleset.getByParentId(PROJECT_ID)).toBeFalsy();
+    expect(getRulesetImportIssue(REPO_ID)).not.toBeNull();
+
+    // Simulate a Discard, which re-writes the same invalid content (as if
+    // restored from git HEAD), followed by the resulting re-import.
+    await fs.promises.writeFile(absPath, INVALID_RULESET, 'utf8');
+    await registry.importAllFiles(REPO_ID);
+    await registry.flushNow(REPO_ID);
+
+    expect(await exists()).toBe(true);
+    expect(await services.projectLintRuleset.getByParentId(PROJECT_ID)).toBeFalsy();
+    expect(getRulesetImportIssue(REPO_ID)).not.toBeNull();
+  });
 });
