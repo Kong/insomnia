@@ -52,6 +52,18 @@ const installProbePlugin = (dataPath: string) => {
             return require('crypto').createHash('sha256').update(String(input)).digest('hex');
           },
         },
+        {
+          name: 'requireprobe',
+          displayName: 'Require Probe',
+          description: 'Requires the named module so tests can assert grant/deny behavior',
+          args: [{ displayName: 'Module', type: 'string', defaultValue: 'path' }],
+          async run(context, mod = 'path') {
+            if (mod === 'path') {
+              return require('path').join('a', 'b');
+            }
+            return typeof require(mod);
+          },
+        },
       ];
     `,
   );
@@ -126,4 +138,11 @@ test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sa
 
   // Parity: the sandboxed require('crypto') workload is byte-identical to the legacy render above.
   await assertTagPreview('{% cryptoparity', expectedHash);
+
+  // Module gating (M1): the baseline grant resolves through the registry, while anything outside
+  // it — npm packages and raw Node builtins alike — fails with the exact manifest denial message
+  // that tells a plugin author what to declare.
+  await assertTagPreview("{% requireprobe 'path'", 'a/b');
+  await assertTagPreview("{% requireprobe 'left-pad'", "Module 'left-pad' not permitted by manifest");
+  await assertTagPreview("{% requireprobe 'fs'", "Module 'fs' not permitted by manifest");
 });

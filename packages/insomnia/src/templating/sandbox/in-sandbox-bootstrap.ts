@@ -1,7 +1,8 @@
 /**
  * JS evaluated *inside* the QuickJS sandbox, as global code, before any plugin source. It:
  *   1. polyfills the Web APIs QuickJS lacks (btoa/atob/TextEncoder/TextDecoder) and `console`,
- *   2. provides a minimal CommonJS `require` shim (expanded in later milestones),
+ *   2. provides a manifest-gated CommonJS `require` resolving only from the curated module
+ *      registry (`module-registry.ts`), default-deny against the envelope's `grantedModules`,
  *   3. rebuilds the plugin `context` object in pure JS over the bulk-copied envelope, with every
  *      async capability routed through the single `__hostBridge` host function, and
  *   4. exposes `__invoke()` which finds the requested tag in the evaluated plugin module and runs it.
@@ -107,47 +108,36 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    };',
   '  }',
 
-  // --- minimal CommonJS require shim (expanded in M2/M3) ---
+  // --- manifest-gated CommonJS require over the curated module registry (M1) ---
+  // Factories are registered by MODULE_REGISTRY_SOURCE (module-registry.ts), evaluated right after
+  // this bootstrap. Resolution is default-deny against the envelope's grantedModules: an ungranted
+  // name is "not permitted by manifest"; a granted name with no factory is "not available in
+  // sandbox". Both messages are user-facing contract asserted by tests.
+  '  var __moduleRegistry = {};',
+  '  var __moduleAliases = {};',
+  '  var __moduleCache = {};',
+  '  globalThis.__registerModule = function (name, aliases, factory) {',
+  '    __moduleRegistry[name] = factory;',
+  '    for (var i = 0; i < (aliases || []).length; i++) { __moduleAliases[aliases[i]] = name; }',
+  '  };',
+  // The envelope is injected as __envelopeJSON after the bootstrap evaluates, and __require can run
+  // during plugin module evaluation — so the grant set is read lazily and cached on first use.
+  '  var __grantedModulesCache = null;',
+  '  function __grantedModules() {',
+  '    if (__grantedModulesCache === null) {',
+  '      var env = null;',
+  '      try { env = JSON.parse(globalThis.__envelopeJSON); } catch (e) { env = null; }',
+  '      __grantedModulesCache = (env && env.grantedModules) || [];',
+  '    }',
+  '    return __grantedModulesCache;',
+  '  }',
   '  globalThis.__require = function (name) {',
-  '    if (name === "path") {',
-  '      return {',
-  '        sep: "/",',
-  '        basename: function (p) { var s = String(p).split("/"); return s[s.length - 1]; },',
-  '        extname: function (p) { var b = String(p).split("/").pop(); var d = b.lastIndexOf("."); return d > 0 ? b.slice(d) : ""; },',
-  '        join: function () { return Array.prototype.slice.call(arguments).join("/").replace(/\\/+/g, "/"); }',
-  '      };',
-  '    }',
-  // crypto is backed by synchronous host functions (real host crypto), so digest()/randomBytes()
-  // return values inline — matching node:crypto's synchronous contract.
-  '    if (name === "crypto" || name === "node:crypto") {',
-  '      if (typeof globalThis.__cryptoHash !== "function") { throw new Error("\'crypto\' is not available in this sandbox"); }',
-  '      var mkDigester = function (compute) {',
-  '        var parts = [];',
-  '        var obj = {',
-  '          update: function (data) { parts.push(typeof data === "string" ? data : String(data)); return obj; },',
-  '          digest: function (enc) { return compute(parts.join(""), enc || "hex"); }',
-  '        };',
-  '        return obj;',
-  '      };',
-  '      return {',
-  '        createHash: function (algo) { return mkDigester(function (data, enc) { return globalThis.__cryptoHash(algo, data, "utf8", enc); }); },',
-  '        createHmac: function (algo, key) { var k = typeof key === "string" ? key : String(key); return mkDigester(function (data, enc) { return globalThis.__cryptoHmac(algo, k, data, enc); }); },',
-  '        randomBytes: function (size) {',
-  '          var b64 = globalThis.__cryptoRandomBytes(size);',
-  '          var binary = atob(b64);',
-  '          return {',
-  '            length: binary.length,',
-  '            toString: function (enc) {',
-  '              if (enc === "base64") { return b64; }',
-  '              if (enc === "latin1" || enc === "binary") { return binary; }',
-  '              var hex = ""; for (var i = 0; i < binary.length; i++) { hex += ("0" + binary.charCodeAt(i).toString(16)).slice(-2); } return hex;',
-  '            }',
-  '          };',
-  '        },',
-  '        randomUUID: function () { return globalThis.__cryptoRandomUUID(); }',
-  '      };',
-  '    }',
-  '    throw new Error("Cannot find module \'" + name + "\' in sandbox (not yet supported)");',
+  '    var canonical = __moduleAliases[name] || String(name);',
+  '    if (__grantedModules().indexOf(canonical) === -1) { throw new Error("Module \'" + name + "\' not permitted by manifest"); }',
+  '    var factory = __moduleRegistry[canonical];',
+  '    if (!factory) { throw new Error("Module \'" + name + "\' not available in sandbox"); }',
+  '    if (!(canonical in __moduleCache)) { __moduleCache[canonical] = factory(); }',
+  '    return __moduleCache[canonical];',
   '  };',
 
   // --- rebuild the plugin context over the bulk-copied envelope ---

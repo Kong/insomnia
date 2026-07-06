@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { localTemplateTags } from '../../common/templating/local-template-tags';
 import { createMapBridge, type HostBridge } from './host-bridge';
 import type { ContextEnvelope } from './marshal';
+import { SANDBOX_MODULES, TEMPLATE_TAG_BASELINE_MODULES } from './module-registry';
 import { type HostCrypto, runTagInSandbox } from './plugin-tag-sandbox';
 
 // Real node:crypto-backed host crypto, identical to what main provides.
@@ -68,7 +69,7 @@ module.exports.templateTags = [{
   }
 }];`;
 
-const envelope = (args: unknown[]): ContextEnvelope => ({
+const envelope = (args: unknown[], grantedModules: string[] = ['path', 'crypto']): ContextEnvelope => ({
   args,
   context: {},
   meta: {},
@@ -76,6 +77,7 @@ const envelope = (args: unknown[]): ContextEnvelope => ({
   appInfo: { version: '0.0.0', platform: 'linux' },
   pluginName: 'test-plugin',
   renderDepth: 0,
+  grantedModules,
 });
 
 const noBridge: HostBridge = async path => {
@@ -267,5 +269,87 @@ describe('runTagInSandbox — PoC milestone 1', () => {
       runTagInSandbox({ pluginSource: source, tagName: 'hog', envelope: envelope([]), bridge: noBridge, timeoutMs: 30_000 }),
     ).rejects.toThrow(/memory/i);
     expect(Date.now() - start).toBeLessThan(5000);
+  });
+});
+
+describe('module registry gating (M1)', () => {
+  const requireTag = (mod: string) =>
+    `module.exports.templateTags = [{ name: 'r', run: function () { var m = require('${mod}'); return typeof m; } }];`;
+
+  it('baseline grant only names registered modules', () => {
+    const registered = SANDBOX_MODULES.map(m => m.name);
+    for (const name of TEMPLATE_TAG_BASELINE_MODULES) {
+      expect(registered).toContain(name);
+    }
+  });
+
+  it('resolves a granted, registered module through the registry', async () => {
+    const source =
+      "module.exports.templateTags = [{ name: 'r', run: function () { return require('path').join('a', 'b'); } }];";
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('a/b');
+  });
+
+  it('resolves node:-prefixed aliases against the canonical grant', async () => {
+    const source =
+      "module.exports.templateTags = [{ name: 'r', run: function () { return require('node:path').join('a', 'b'); } }];";
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('a/b');
+  });
+
+  it.each(['left-pad', 'fs', 'child_process', 'process'])(
+    'denies ungranted module %s with the manifest message',
+    async mod => {
+      await expect(
+        runTagInSandbox({ pluginSource: requireTag(mod), tagName: 'r', envelope: envelope([]), bridge: noBridge }),
+      ).rejects.toThrow(`Module '${mod}' not permitted by manifest`);
+    },
+  );
+
+  it('denies even baseline modules when the grant set is empty (default-deny)', async () => {
+    await expect(
+      runTagInSandbox({ pluginSource: requireTag('path'), tagName: 'r', envelope: envelope([], []), bridge: noBridge }),
+    ).rejects.toThrow("Module 'path' not permitted by manifest");
+  });
+
+  it('distinguishes granted-but-unregistered with the availability message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: requireTag('left-pad'),
+        tagName: 'r',
+        envelope: envelope([], ['left-pad']),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'left-pad' not available in sandbox");
+  });
+
+  it('caches module exports — repeated require returns the same object', async () => {
+    const source =
+      "module.exports.templateTags = [{ name: 'r', run: function () { return String(require('path') === require('path')); } }];";
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('true');
+  });
+
+  it('denies a top-level require at plugin-module evaluation time', async () => {
+    const source =
+      "var fs = require('fs');\nmodule.exports.templateTags = [{ name: 'r', run: function () { return 'unreachable'; } }];";
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'r', envelope: envelope([]), bridge: noBridge }),
+    ).rejects.toThrow("Module 'fs' not permitted by manifest");
   });
 });

@@ -132,6 +132,7 @@ export const runPluginTagInSandbox = async (
 ): Promise<string> => {
   const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
   const { createMapBridge } = await import('../templating/sandbox/host-bridge');
+  const { TEMPLATE_TAG_BASELINE_MODULES } = await import('../templating/sandbox/module-registry');
   const { pluginName, tagName, args, context: originContext } = body;
   const { meta, renderPurpose, context } = originContext;
   const bridge = createMapBridge({
@@ -171,6 +172,8 @@ export const runPluginTagInSandbox = async (
       appInfo: { version: app.getVersion(), platform: process.platform },
       pluginName,
       renderDepth: 0,
+      // Pre-manifest baseline grant (C3 replaces this with the plugin's declared modules).
+      grantedModules: [...TEMPLATE_TAG_BASELINE_MODULES],
     },
   });
 };
