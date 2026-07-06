@@ -39,6 +39,8 @@ import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
+import { SidebarShortcutActionsDropdown } from '~/ui/components/dropdowns/sidebar-shortcut-actions-dropdown';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -481,7 +483,7 @@ const ProjectNavigationSidebarInner = (
         },
       });
     }
-  }, [projectNavigationSidebarFilter, konnectFilter]);
+  }, [projectNavigationSidebarFilter, konnectFilter, activeProjectId]);
 
   useEffect(() => {
     getAllRemoteFilesByProjectId();
@@ -985,6 +987,10 @@ const ProjectNavigationSidebarInner = (
   );
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const shortcutCreateTriggerRef = useRef<HTMLElement | null>(null);
+  const [isShortcutCreateOpen, setIsShortcutCreateOpen] = useState(false);
+  // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
+  const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
   const visibleFlatItems = useMemo(() => flatItems.filter(i => !i.hidden), [flatItems]);
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
@@ -1011,6 +1017,70 @@ const ProjectNavigationSidebarInner = (
     selectedItemId && visibleFlatItems.findIndex(item => item.doc._id === selectedItemId) !== -1
       ? [selectedItemId]
       : [];
+  const pinnedHeaderKeys = useMemo(
+    () => visibleFlatItems.filter(item => item.kind === 'pinnedHeader').map(item => item.doc._id),
+    [visibleFlatItems],
+  );
+  const shortcutTargetItem = shortcutTargetItemId
+    ? (visibleFlatItems.find(item => item.doc._id === shortcutTargetItemId && item.kind !== 'pinnedRequest') ?? null)
+    : null;
+  const prevSelectedItemIdRef = useRef(selectedItemId);
+
+  useEffect(() => {
+    // Close the shortcut create dropdown when the selected item changes
+    if (prevSelectedItemIdRef.current !== selectedItemId) {
+      prevSelectedItemIdRef.current = selectedItemId;
+      setIsShortcutCreateOpen(false);
+    }
+  }, [selectedItemId]);
+
+  useDocBodyKeyboardShortcuts({
+    sidebar_showCreateDropdown: event => {
+      if (!isProjectTabActive) {
+        return;
+      }
+
+      // Find the row the user currently has focused via arrow up/down in the sidebar.
+      const activeElement = document.activeElement;
+      const focusedRow =
+        activeElement && parentRef.current?.contains(activeElement)
+          ? (activeElement.closest('[data-key]') as HTMLElement | null)
+          : null;
+      const focusedKey = focusedRow?.dataset.key ?? null;
+      const focusedItem = focusedKey
+        ? visibleFlatItems.find(item => item.doc._id === focusedKey && item.kind !== 'pinnedRequest')
+        : null;
+      const selectedFlatItem = selectedItemId
+        ? visibleFlatItems.find(item => item.doc._id === selectedItemId && item.kind !== 'pinnedRequest')
+        : null;
+      // If the user has a row focused, use that as the target item; otherwise, use the selected item.
+      const targetItem = focusedItem ?? selectedFlatItem;
+      if (
+        !targetItem ||
+        (targetItem.kind !== 'project' && targetItem.kind !== 'workspace' && targetItem.kind !== 'collectionChild')
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const targetId = targetItem.doc._id;
+      const targetIndex = visibleFlatItems.findIndex(item => item.doc._id === targetId);
+
+      // Scroll the item into view if needed
+      virtualizer.scrollToIndex(targetIndex, { align: 'auto' });
+
+      // Two request animation frames here: the first lets the virtualizer respond to scrollToIndex and the second waits for the browser to commit that
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const targetElement = parentRef.current?.querySelector(`[data-key="${targetId}"]`) as HTMLElement | null;
+          shortcutCreateTriggerRef.current = targetElement || parentRef.current;
+          setShortcutTargetItemId(targetId);
+          setIsShortcutCreateOpen(true);
+        });
+      });
+    },
+  });
 
   const { hasKonnectPat } = settings;
   const showKonnectSyncIntro = konnectSyncEnabled && !isProjectTabActive && !hasKonnectPat;
@@ -1148,11 +1218,18 @@ const ProjectNavigationSidebarInner = (
               className="outline-hidden"
               selectedKeys={selectedKeys}
               selectionMode="single"
+              disabledKeys={pinnedHeaderKeys}
+              disabledBehavior="all"
               dragAndDropHooks={sidebarDragAndDropHooks}
             >
               {virtualItem => {
                 const item = visibleFlatItems[virtualItem.index];
                 if (!item) return null;
+
+                // Keep the focus ring on the targeted item while the create dropdown is open,
+                // since keyboard focus has moved into the dropdown menu.
+                const isShortcutTarget =
+                  isShortcutCreateOpen && shortcutTargetItemId === item.doc._id && item.kind !== 'pinnedRequest';
 
                 return (
                   <GridListItem
@@ -1225,7 +1302,7 @@ const ProjectNavigationSidebarInner = (
                         }
                       }
                     }}
-                    className="group outline-hidden select-none"
+                    className={`group rounded-xs outline-hidden select-none data-focus-visible:z-10 data-focus-visible:ring-2 data-focus-visible:ring-(--color-surprise) data-focus-visible:ring-inset ${isShortcutTarget ? 'z-10 ring-2 ring-(--color-surprise) ring-inset' : ''}`}
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -1286,6 +1363,16 @@ const ProjectNavigationSidebarInner = (
               }}
             </GridList>
           </div>
+          {shortcutTargetItem && (
+            <SidebarShortcutActionsDropdown
+              target={shortcutTargetItem}
+              storageRules={storageRules}
+              isOpen={isShortcutCreateOpen}
+              onOpenChange={setIsShortcutCreateOpen}
+              triggerRef={shortcutCreateTriggerRef}
+            />
+          )}
+
           {!isProjectTabActive && lastSyncResult && (
             <div
               className={`m-2 flex items-start justify-between gap-2 rounded-sm p-3 text-xs ${
