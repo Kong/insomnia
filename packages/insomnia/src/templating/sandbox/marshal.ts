@@ -19,7 +19,7 @@ export interface ContextEnvelope {
   appInfo: { version: string; platform: string };
   /** Owning plugin name — needed to scope `store.*` (pluginData) bridge calls. */
   pluginName: string;
-  /** Guards `util.render` recursion across the boundary against the existing renderLimit. */
+  /** Unused: recursion via util.render is now prevented by rejecting {% tag %} syntax there, not by depth-limiting. */
   renderDepth: number;
 }
 

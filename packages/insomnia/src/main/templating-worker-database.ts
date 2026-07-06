@@ -121,7 +121,7 @@ export const getPluginEntrySource = ({ directory, name }: { directory: string; n
 // Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
 // process. The host bridge reuses the existing pluginToMainAPI handlers verbatim, plus a util.render
 // handler that recurses through main templating. Gated behind the templateTagSandboxEnabled setting.
-const runPluginTagInSandbox = async (
+export const runPluginTagInSandbox = async (
   pluginSource: string,
   body: {
     args: any[];
@@ -136,9 +136,11 @@ const runPluginTagInSandbox = async (
   const { meta, renderPurpose, context } = originContext;
   const bridge = createMapBridge({
     ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
+    // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
+    // (including its own) by handing util.render a string containing "{% tagName %}".
     'util.render': async (b: { str: string; context: Record<string, any> }) => {
       const { render } = await import('../templating');
-      return render(b.str, { context: b.context });
+      return render(b.str, { context: b.context, allowTags: false });
     },
   });
   return runTagInSandbox({
