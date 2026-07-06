@@ -98,7 +98,7 @@ export interface ResponsePatch {
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
-export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]();
+export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]?.();
 export const curlRequest = (options: CurlRequestOptions) =>
   new Promise<CurlRequestOutput>(async resolve => {
     try {
@@ -238,6 +238,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
           url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
         };
         curl.isOpen && curl.close();
+        delete cancelCurlRequestHandlers[requestId];
         await waitForStreamToFinish(responseBodyWriteStream);
 
         const headerResults = _parseHeaders(rawHeaders);
@@ -248,6 +249,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       curl.on('error', async (err, code) => {
         const elapsedTime = (curl.getInfo(Curl.info.TOTAL_TIME) as number) * 1000;
         curl.isOpen && curl.close();
+        delete cancelCurlRequestHandlers[requestId];
         await waitForStreamToFinish(responseBodyWriteStream);
 
         // If libcurl can't decompress the response, retry without decompression

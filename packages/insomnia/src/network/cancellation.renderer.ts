@@ -47,12 +47,13 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
     const result = await cancellablePromise({ signal: controller.signal, fn: window.main.curlRequest(requestOptions) });
     return result;
   } catch (err) {
-    cancelRequestFunctionMap.delete(requestId);
     if (err.name === 'AbortError') {
       return { statusMessage: 'Cancelled', error: 'Request was cancelled' };
     }
     console.log('[network] Error', err);
     return { statusMessage: 'Error', error: err.message || 'Something went wrong trying to create curl request' };
+  } finally {
+    cancelRequestFunctionMap.delete(requestId);
   }
 };
 

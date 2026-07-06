@@ -62,6 +62,7 @@ export interface RunnerContextForRequest {
   requestName: string;
   requestUrl: string;
   statusCode: number;
+  statusMessage: string;
   duration: number; // millisecond
   size: number;
   results: RequestTestResult[];
@@ -112,7 +113,7 @@ export const sendActionImplementation = async (options: {
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   runtime?: SendActionRuntime;
-}): Promise<{ nextRequestIdOrName: string | undefined } | undefined> => {
+}): Promise<{ nextRequestIdOrName: string | undefined; skipped?: boolean } | undefined> => {
   const {
     requestId,
     userUploadEnvironment,
@@ -183,7 +184,7 @@ export const sendActionImplementation = async (options: {
     );
     await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName, skipped: true };
   }
 
   window.main.completeExecutionStep({ requestId });
@@ -294,6 +295,10 @@ export const sendActionImplementation = async (options: {
       return acc + (cur.duration || 0);
     }, 0);
     testResultCollector.responseId = response._id;
+    testResultCollector.requestUrl = renderedRequest.url || testResultCollector.requestUrl;
+    testResultCollector.statusCode = baseResponsePatch.statusCode || 0;
+    testResultCollector.statusMessage = baseResponsePatch.statusMessage || '';
+    testResultCollector.size = baseResponsePatch.bytesRead || 0;
   }
   const responsePatch = postMutatedContext
     ? {
