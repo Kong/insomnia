@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { getFirstRequestCohort, getFirstRequestTreatment } from './first-request-treatment';
+import {
+  getBackendFirstRequestTreatment,
+  getFirstRequestCohort,
+  getFirstRequestTreatment,
+  resolveFirstRequestTreatment,
+} from './first-request-treatment';
 
 const GA = Date.parse('2026-07-06T00:00:00.000Z');
 const BEFORE_GA = GA - 60 * 60 * 1000; // 1h before GA
@@ -26,50 +31,80 @@ describe('getFirstRequestCohort', () => {
   });
 });
 
-describe('getFirstRequestTreatment', () => {
-  it('returns "B" for accounts created before the experiment launched, regardless of request count', () => {
+describe('getFirstRequestTreatment (client-side fallback)', () => {
+  it('returns "B" for accounts created before the experiment launched', () => {
     expect(
-      getFirstRequestTreatment({
-        accountCreatedAt: BEFORE_GA,
-        experimentLaunchedAt: GA,
-        createdRequests: 0,
-        cohortId: 'acct_123',
-      }),
+      getFirstRequestTreatment({ accountCreatedAt: BEFORE_GA, experimentLaunchedAt: GA, createdRequests: 0, cohortId: 'acct_123' }),
     ).toBe('B');
   });
 
-  it('assigns new sign-ups (created on/after GA, fewer than 3 requests) to their cohort', () => {
+  it('assigns new sign-ups (created on/after GA, <3 requests) to their cohort', () => {
     const cohort = getFirstRequestCohort('acct_123');
     expect(
-      getFirstRequestTreatment({
-        accountCreatedAt: AFTER_GA,
-        experimentLaunchedAt: GA,
-        createdRequests: 0,
-        cohortId: 'acct_123',
-      }),
+      getFirstRequestTreatment({ accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA, createdRequests: 0, cohortId: 'acct_123' }),
     ).toBe(cohort);
   });
 
   it('graduates a new sign-up to "B" once they have created 3 or more requests', () => {
     expect(
-      getFirstRequestTreatment({
-        accountCreatedAt: AFTER_GA,
-        experimentLaunchedAt: GA,
-        createdRequests: 3,
-        cohortId: 'acct_123',
-      }),
+      getFirstRequestTreatment({ accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA, createdRequests: 3, cohortId: 'acct_123' }),
     ).toBe('B');
   });
+});
 
-  it('treats an unknown creation date via the new-sign-up path (cohort / graduation)', () => {
-    const cohort = getFirstRequestCohort('acct_123');
+describe('getBackendFirstRequestTreatment', () => {
+  it('reads a valid treatment from the user profile', () => {
+    expect(getBackendFirstRequestTreatment({ first_request_treatment: 'A' })).toBe('A');
+    expect(getBackendFirstRequestTreatment({ first_request_treatment: 'B' })).toBe('B');
+  });
+
+  it('returns undefined when the field is missing or invalid', () => {
+    expect(getBackendFirstRequestTreatment({})).toBeUndefined();
+    expect(getBackendFirstRequestTreatment(null)).toBeUndefined();
+    expect(getBackendFirstRequestTreatment({ first_request_treatment: 'C' })).toBeUndefined();
+  });
+});
+
+describe('resolveFirstRequestTreatment (fallback chain)', () => {
+  const base = {
+    experimentLaunchedAt: GA,
+    createdRequests: 0 as number | null,
+    cohortId: 'acct_123',
+    cachedTreatment: null,
+  };
+
+  it('1) uses the backend treatment when present, ignoring everything else', () => {
     expect(
-      getFirstRequestTreatment({
-        accountCreatedAt: undefined,
-        experimentLaunchedAt: GA,
-        createdRequests: 0,
-        cohortId: 'acct_123',
-      }),
-    ).toBe(cohort);
+      resolveFirstRequestTreatment({ ...base, backendTreatment: 'A', accountCreatedAt: BEFORE_GA, createdRequests: 99 }),
+    ).toBe('A');
+  });
+
+  it('2) falls back to the client computation when the profile is loaded but no backend field', () => {
+    expect(resolveFirstRequestTreatment({ ...base, accountCreatedAt: BEFORE_GA })).toBe('B');
+    expect(resolveFirstRequestTreatment({ ...base, accountCreatedAt: AFTER_GA, createdRequests: 3 })).toBe('B');
+    expect(resolveFirstRequestTreatment({ ...base, accountCreatedAt: AFTER_GA, createdRequests: 0 })).toBe(
+      getFirstRequestCohort('acct_123'),
+    );
+  });
+
+  it('2b) decides existing users before stats load; waits (or uses cache) for new users', () => {
+    // created before GA → B without needing stats
+    expect(resolveFirstRequestTreatment({ ...base, accountCreatedAt: BEFORE_GA, createdRequests: null })).toBe('B');
+    // new user, stats still loading, no cache → null (loading)
+    expect(resolveFirstRequestTreatment({ ...base, accountCreatedAt: AFTER_GA, createdRequests: null })).toBeNull();
+    // new user, stats still loading, but cached → cached value
+    expect(
+      resolveFirstRequestTreatment({ ...base, accountCreatedAt: AFTER_GA, createdRequests: null, cachedTreatment: 'A' }),
+    ).toBe('A');
+  });
+
+  it('3) uses the cached value when the profile is unavailable (offline)', () => {
+    expect(
+      resolveFirstRequestTreatment({ ...base, accountCreatedAt: undefined, createdRequests: null, cachedTreatment: 'A' }),
+    ).toBe('A');
+  });
+
+  it('4) defaults to "B" when the profile is unavailable and nothing is cached', () => {
+    expect(resolveFirstRequestTreatment({ ...base, accountCreatedAt: undefined, createdRequests: null })).toBe('B');
   });
 });

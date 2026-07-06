@@ -20,12 +20,19 @@ import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
 import {
   FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
   type FirstRequestTreatment,
-  getFirstRequestTreatment,
+  getBackendFirstRequestTreatment,
+  readCachedFirstRequestTreatment,
+  resolveFirstRequestTreatment,
+  writeCachedFirstRequestTreatment,
 } from '~/ui/utils/first-request-treatment';
 
 import { useRequestNewActionFetcher } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '../../routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Icon } from './icon';
+
+// Guards the experiment-exposure analytics event so it fires at most once per
+// (account, treatment) per app session instead of on every mount.
+const exposedTreatments = new Set<string>();
 
 const CURL_COMMAND_PATTERN = /^\s*\$?\s*curl(?:\s|$)/i;
 const NOTION_MCP_SERVER_URL = 'https://mcp.notion.com/mcp';
@@ -121,10 +128,14 @@ export const FirstRequestCreation = ({
   const organizationData = useOrganizationLoaderData();
   // Stable id used to bucket new sign-ups ~50/50 into Treatment A or B.
   const cohortId = userSession.accountId || settings.deviceId || '';
+  // Server-computed treatment, when the backend provides it (authoritative).
+  const backendTreatment = getBackendFirstRequestTreatment(organizationData?.user);
   // Account creation time (epoch ms); pre-GA accounts are treated as existing users.
   const accountCreatedAt = organizationData?.user?.created_at
     ? new Date(organizationData.user.created_at).getTime()
     : undefined;
+  // Last-known treatment for this account, used as an offline fallback.
+  const [cachedTreatment] = useState(() => readCachedFirstRequestTreatment(userSession.accountId || ''));
   const inputRef = useRef<HTMLInputElement>(null);
   const createRequestFetcher = useRequestNewActionFetcher();
   const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
@@ -141,15 +152,14 @@ export const FirstRequestCreation = ({
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
   const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
 
-  const treatment: FirstRequestTreatment | null =
-    createdRequests === null
-      ? null
-      : getFirstRequestTreatment({
-          accountCreatedAt,
-          experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
-          createdRequests,
-          cohortId,
-        });
+  const treatment: FirstRequestTreatment | null = resolveFirstRequestTreatment({
+    backendTreatment,
+    accountCreatedAt,
+    experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
+    createdRequests,
+    cohortId,
+    cachedTreatment,
+  });
   const createButtonLabel = treatment === 'B' ? 'Create HTTP Request ⏎' : 'Create ⏎';
 
   const ensureWorkspaceId = async () => {
@@ -287,34 +297,47 @@ export const FirstRequestCreation = ({
     setSelectOpen(false);
   }, [selectedCollectionId]);
 
-  // Determine which experiment treatment to show from the lifetime created-request count,
-  // and record exposure once we know it.
+  // Load the lifetime created-request count, used by the client-side fallback.
   useEffect(() => {
     let isActive = true;
 
     services.stats.get().then(stats => {
-      if (!isActive) {
-        return;
+      if (isActive) {
+        setCreatedRequests(stats.createdRequests);
       }
-
-      setCreatedRequests(stats.createdRequests);
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.firstRequestExperimentExposed,
-        properties: {
-          treatment: getFirstRequestTreatment({
-            accountCreatedAt,
-            experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
-            createdRequests: stats.createdRequests,
-            cohortId,
-          }),
-        },
-      });
     });
 
     return () => {
       isActive = false;
     };
-  }, [cohortId, accountCreatedAt]);
+  }, []);
+
+  // Cache the resolved treatment (offline fallback) and record exposure at most
+  // once per (account, treatment) per session.
+  useEffect(() => {
+    if (!treatment) {
+      return;
+    }
+
+    // Only cache confident results (backend or a full client-side computation),
+    // never a value that itself came from the cache/default.
+    const isConfident =
+      backendTreatment !== undefined ||
+      (accountCreatedAt !== undefined &&
+        (accountCreatedAt < FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE || createdRequests !== null));
+    if (isConfident) {
+      writeCachedFirstRequestTreatment(userSession.accountId || '', treatment);
+    }
+
+    const exposureKey = `${userSession.accountId || 'anonymous'}:${treatment}`;
+    if (!exposedTreatments.has(exposureKey)) {
+      exposedTreatments.add(exposureKey);
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.firstRequestExperimentExposed,
+        properties: { treatment },
+      });
+    }
+  }, [treatment, backendTreatment, accountCreatedAt, createdRequests, userSession.accountId]);
 
   const handleCreateNotionMcpWorkspace = () => {
     createWorkspaceFetcher.submit({
