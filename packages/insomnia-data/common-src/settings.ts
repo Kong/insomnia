@@ -166,6 +166,8 @@ export interface Settings {
   scriptSandboxEnabled: boolean;
   // Wraps the user script in 'use strict', preventing accidental globals and making `this` undefined.
   scriptStrictModeEnabled: boolean;
+  // Experimental: execute plugin template tags inside the QuickJS-WASM sandbox instead of directly in the main process.
+  templateTagSandboxEnabled: boolean;
   // Names of security rules that have been individually disabled.
   disabledSecurityRules: string[];
   // AST blocked-property names that have been individually disabled.

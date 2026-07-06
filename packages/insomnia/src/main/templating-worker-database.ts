@@ -1,6 +1,8 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 
 import { app, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
@@ -78,6 +80,99 @@ const runPluginTag = (
   const { meta, renderPurpose, context } = originContext;
   const commonContext = getPluginCommonContext({ plugin: { name: pluginName }, renderPurpose });
   return run({ meta, renderPurpose, context, ...commonContext }, ...args);
+};
+
+// Read a plugin's entry-point source as text so it can be evaluated inside the QuickJS sandbox.
+// User plugins resolve via their on-disk directory + package.json "main"; we avoid require.resolve
+// because the bundled main process shims it via createRequire(import.meta.url) where import.meta.url
+// is undefined, which throws "filename ... Received undefined". Bundle plugins (no directory) fall
+// back to require.resolve by name.
+export const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
+  try {
+    let entryPath: string;
+    if (directory) {
+      const base = path.resolve(directory);
+      const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf8'));
+      // Contain the entry point inside the plugin's own directory — a hostile "main" must not be
+      // able to read (and then execute) a file outside the plugin folder.
+      entryPath = path.resolve(base, pkg.main || 'index.js');
+      const relative = path.relative(base, entryPath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+      }
+      // Re-check after resolving symlinks, since a symlinked entry can point outside `base`.
+      const realRelative = path.relative(fs.realpathSync(base), fs.realpathSync(entryPath));
+      if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
+        throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+      }
+    } else {
+      // Bundle plugins resolve by bare package name only — never a path.
+      if (name.includes('..') || path.isAbsolute(name)) {
+        throw new Error(`invalid bundled plugin name: ${name}`);
+      }
+      entryPath = require.resolve(name);
+    }
+    return fs.readFileSync(entryPath, 'utf8');
+  } catch (err) {
+    throw new Error(`Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`);
+  }
+};
+
+// Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
+// process. The host bridge reuses the existing pluginToMainAPI handlers verbatim, plus a util.render
+// handler that recurses through main templating. Gated behind the templateTagSandboxEnabled setting.
+export const runPluginTagInSandbox = async (
+  pluginSource: string,
+  body: {
+    args: any[];
+    pluginName: string;
+    tagName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  },
+): Promise<string> => {
+  const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
+  const { createMapBridge } = await import('../templating/sandbox/host-bridge');
+  const { pluginName, tagName, args, context: originContext } = body;
+  const { meta, renderPurpose, context } = originContext;
+  const bridge = createMapBridge({
+    ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
+    // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
+    // (including its own) by handing util.render a string containing "{% tagName %}".
+    'util.render': async (b: { str: string; context: Record<string, any> }) => {
+      const { render } = await import('../templating');
+      return render(b.str, { context: b.context, allowTags: false });
+    },
+  });
+  return runTagInSandbox({
+    pluginSource,
+    tagName,
+    bridge,
+    // node:crypto is synchronous and available in main, so back the sandbox's require('crypto')
+    // shim with it via sync host functions rather than the async bridge.
+    hostCrypto: {
+      hash: (algo, data, inputEncoding, outputEncoding) =>
+        crypto
+          .createHash(algo)
+          .update(data, inputEncoding as crypto.Encoding)
+          .digest(outputEncoding as BinaryToTextEncoding),
+      hmac: (algo, key, data, outputEncoding) =>
+        crypto
+          .createHmac(algo, key)
+          .update(data, 'utf8')
+          .digest(outputEncoding as BinaryToTextEncoding),
+      randomBytes: (size: number) => crypto.randomBytes(size).toString('base64'),
+      randomUUID: () => crypto.randomUUID(),
+    },
+    envelope: {
+      args: args || [],
+      context: (context as Record<string, any>) || {},
+      meta,
+      renderPurpose,
+      appInfo: { version: app.getVersion(), platform: process.platform },
+      pluginName,
+      renderDepth: 0,
+    },
+  });
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
@@ -297,6 +392,10 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
+        const settings = await services.settings.get();
+        if (settings.templateTagSandboxEnabled) {
+          return runPluginTagInSandbox(getPluginEntrySource({ directory: '', name: pluginName }), body);
+        }
         return runPluginTag(targetTag.run, body);
       }
     }
@@ -332,6 +431,13 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     const tags = await getTemplateTags();
     const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
     if (targetTag) {
+      const settings = await services.settings.get();
+      if (settings.templateTagSandboxEnabled) {
+        return runPluginTagInSandbox(
+          getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
+          body,
+        );
+      }
       return runPluginTag(targetTag.templateTag.run, body);
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
