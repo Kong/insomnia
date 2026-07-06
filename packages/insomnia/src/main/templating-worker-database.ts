@@ -87,7 +87,7 @@ const runPluginTag = (
 // because the bundled main process shims it via createRequire(import.meta.url) where import.meta.url
 // is undefined, which throws "filename ... Received undefined". Bundle plugins (no directory) fall
 // back to require.resolve by name.
-const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
+export const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
   try {
     let entryPath: string;
     if (directory) {
@@ -98,6 +98,11 @@ const getPluginEntrySource = ({ directory, name }: { directory: string; name: st
       entryPath = path.resolve(base, pkg.main || 'index.js');
       const relative = path.relative(base, entryPath);
       if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+      }
+      // Re-check after resolving symlinks, since a symlinked entry can point outside `base`.
+      const realRelative = path.relative(fs.realpathSync(base), fs.realpathSync(entryPath));
+      if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
         throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
       }
     } else {
@@ -116,7 +121,7 @@ const getPluginEntrySource = ({ directory, name }: { directory: string; name: st
 // Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
 // process. The host bridge reuses the existing pluginToMainAPI handlers verbatim, plus a util.render
 // handler that recurses through main templating. Gated behind the templateTagSandboxEnabled setting.
-const runPluginTagInSandbox = async (
+export const runPluginTagInSandbox = async (
   pluginSource: string,
   body: {
     args: any[];
@@ -131,9 +136,11 @@ const runPluginTagInSandbox = async (
   const { meta, renderPurpose, context } = originContext;
   const bridge = createMapBridge({
     ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
+    // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
+    // (including its own) by handing util.render a string containing "{% tagName %}".
     'util.render': async (b: { str: string; context: Record<string, any> }) => {
       const { render } = await import('../templating');
-      return render(b.str, { context: b.context });
+      return render(b.str, { context: b.context, allowTags: false });
     },
   });
   return runTagInSandbox({

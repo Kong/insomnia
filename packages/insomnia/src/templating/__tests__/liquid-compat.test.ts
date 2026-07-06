@@ -655,3 +655,18 @@ describe('unicode and special byte inputs', () => {
     expect(await render('{{ v }}', { context: { v: '🔥💧' } })).toBe('🔥💧');
   });
 });
+
+describe('allowTags: false', () => {
+  it('still resolves {{ variable }} interpolation', async () => {
+    expect(await render('Bearer {{ token }}', { context: { token: 'abc123' }, allowTags: false })).toBe('Bearer abc123');
+  });
+
+  it('rejects {% tag %} syntax instead of running the tag', async () => {
+    await expect(render("{% hash 'md5', 'hex', 'x' %}", { allowTags: false })).rejects.toThrow();
+  });
+
+  it('a tag still runs when allowTags is unset (default behavior unchanged)', async () => {
+    const md5OfVaporeon = 'ec38601e9ebd2fc22c7c476e14c7890d';
+    expect(await render("{% hash 'md5', 'hex', 'vaporeon' %}")).toBe(md5OfVaporeon);
+  });
+});

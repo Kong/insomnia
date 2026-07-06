@@ -205,6 +205,18 @@ describe('runTagInSandbox — PoC milestone 1', () => {
       expect(actual).toMatch(/^[0-9a-f]{32}$/);
     });
 
+    it('clamps an oversized randomBytes request instead of allocating it', async () => {
+      const source = cryptoTag("return crypto.randomBytes(2147483648).toString('hex').length;");
+      const actual = await runTagInSandbox({
+        pluginSource: source,
+        tagName: 'c',
+        envelope: envelope([]),
+        bridge: noBridge,
+        hostCrypto: nodeHostCrypto,
+      });
+      expect(Number(actual)).toBeLessThanOrEqual(65_536 * 2);
+    });
+
     it('throws a clear error when crypto is not provided', async () => {
       const source = cryptoTag("return crypto.createHash('sha256').update(input).digest('hex');");
       await expect(
@@ -231,5 +243,29 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     await expect(
       runTagInSandbox({ pluginSource: source, tagName: 'needsOs', envelope: envelope([]), bridge: failing }),
     ).rejects.toThrow('bridge exploded');
+  });
+
+  it('times out a synchronous infinite loop instead of hanging', async () => {
+    const source = 'module.exports.templateTags = [{ name: "spin", run: function () { while (true) {} } }];';
+    const start = Date.now();
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'spin', envelope: envelope([]), bridge: noBridge, timeoutMs: 200 }),
+    ).rejects.toThrow(/interrupted|timed out/i);
+    expect(Date.now() - start).toBeLessThan(5000);
+  });
+
+  it('rejects unbounded allocation instead of exhausting host memory', async () => {
+    const source = `module.exports.templateTags = [{ name: "hog", run: function () {
+      var chunks = [];
+      var big = new Array(1 << 20).join("x");
+      while (true) { chunks.push(big); }
+    } }];`;
+    const start = Date.now();
+    // A generous timeoutMs that's far longer than hitting the 32MB memory limit should take, so a
+    // pass here can only be explained by the memory limit firing, not the wall-clock timeout.
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'hog', envelope: envelope([]), bridge: noBridge, timeoutMs: 30_000 }),
+    ).rejects.toThrow(/memory/i);
+    expect(Date.now() - start).toBeLessThan(5000);
   });
 });
