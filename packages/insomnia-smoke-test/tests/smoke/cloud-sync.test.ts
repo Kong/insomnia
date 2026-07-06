@@ -24,8 +24,8 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Discard, branch and commit actions', async ({ page, insomnia }) => {
-    // Sync collection project
-    await page.getByLabel('Collection Project').click();
+    // Sync My Collection R1
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1');
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // Send request and check body
     await page.getByRole('button', { name: 'Send' }).click();
@@ -73,7 +73,7 @@ test.describe('Cloud Sync', () => {
     await expect.soft(page.getByTestId('request-pane').getByText('foo=bar')).toBeHidden();
 
     // select unsynced MCP project to check branch actions
-    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('MCP Project');
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My MCP Client');
     await page.getByLabel('Git Sync').click();
     await page.getByText('Branches').click();
 
@@ -100,10 +100,10 @@ test.describe('Cloud Sync', () => {
     await page.getByRole('dialog').locator('[data-icon="x"]').click();
   });
 
-  test('Push actions', async ({ page, app }) => {
+  test('Push actions', async ({ page, app, insomnia }) => {
     test.slow();
 
-    await page.getByLabel('Environment Project').click();
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Environment');
     // Wait for sync-dropdown to be mounted
     await page.getByLabel('Git Sync').waitFor({ state: 'visible' });
     await fetch(`${devServerUrl}/__test-config/cloud-sync/new-commit`, {
@@ -135,8 +135,8 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Check delete workspace locally and remotely', async ({ page, insomnia }) => {
-    //Sync collection project
-    await page.getByTestId('workspace-grid').getByLabel('Collection Project').click();
+    //Sync My Collection R1
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1');
     // go back
     await page.getByTestId('workspace-breadcrumb-level-0').click();
 
@@ -147,10 +147,10 @@ test.describe('Cloud Sync', () => {
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted locally
 
-    await expect.soft(page.getByTestId('workspace-grid').getByLabel('Collection Project')).toBeVisible();
-    await expect.soft(page.getByTestId('workspace-grid').getByLabel('My Collection R1')).toBeHidden();
-    // Sync collection project again
-    await page.getByTestId('workspace-grid').getByLabel('Collection Project').click();
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('My Collection R1')).toBeVisible();
+    await expect.soft(insomnia.navigationSidebar.workspaceRow('My Collection R1')).toBeHidden();
+    // Sync My Collection R1 again
+    await page.getByTestId('workspace-grid').getByLabel('My Collection R1').click();
     // go back
     await page.getByTestId('workspace-breadcrumb-level-0').click();
 
@@ -159,6 +159,7 @@ test.describe('Cloud Sync', () => {
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted remotely
-    await expect.soft(page.getByTestId('workspace-grid').getByLabel('Collection Project')).toBeHidden();
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('My Collection R1')).toBeHidden();
+    await expect.soft(insomnia.navigationSidebar.workspaceRow('My Collection R1')).toBeHidden();
   });
 });
