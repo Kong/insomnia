@@ -90,9 +90,20 @@ const runPluginTag = (
 const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
   let entryPath: string;
   if (directory) {
-    const pkg = JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8'));
-    entryPath = path.resolve(directory, pkg.main || 'index.js');
+    const base = path.resolve(directory);
+    const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf8'));
+    // Contain the entry point inside the plugin's own directory — a hostile "main" must not be
+    // able to read (and then execute) a file outside the plugin folder.
+    entryPath = path.resolve(base, pkg.main || 'index.js');
+    const relative = path.relative(base, entryPath);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error(`Plugin entry point escapes plugin directory: ${pkg.main}`);
+    }
   } else {
+    // Bundle plugins resolve by bare package name only — never a path.
+    if (name.includes('..') || path.isAbsolute(name)) {
+      throw new Error(`Invalid bundled plugin name: ${name}`);
+    }
     entryPath = require.resolve(name);
   }
   return fs.readFileSync(entryPath, 'utf8');
@@ -134,7 +145,10 @@ const runPluginTagInSandbox = async (
           .update(data, inputEncoding as crypto.Encoding)
           .digest(outputEncoding as BinaryToTextEncoding),
       hmac: (algo, key, data, outputEncoding) =>
-        crypto.createHmac(algo, key).update(data, 'utf8').digest(outputEncoding as BinaryToTextEncoding),
+        crypto
+          .createHmac(algo, key)
+          .update(data, 'utf8')
+          .digest(outputEncoding as BinaryToTextEncoding),
       randomBytes: (size: number) => crypto.randomBytes(size).toString('base64'),
       randomUUID: () => crypto.randomUUID(),
     },
