@@ -114,7 +114,9 @@ export const getPluginEntrySource = ({ directory, name }: { directory: string; n
     }
     return fs.readFileSync(entryPath, 'utf8');
   } catch (err) {
-    throw new Error(`Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`);
+    throw new Error(
+      `Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 };
 

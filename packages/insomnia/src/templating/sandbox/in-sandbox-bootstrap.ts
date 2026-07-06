@@ -7,9 +7,11 @@
  *      async capability routed through the single `__hostBridge` host function, and
  *   4. exposes `__invoke()` which finds the requested tag in the evaluated plugin module and runs it.
  *
- * The host side injects `__hostBridge(path, bodyJson) -> Promise<resultJson>` and (optionally)
- * `__hostConsole(level, msg)` as globals before this runs. The rebuilt context is structurally
- * identical to the worker context in `liquid-extension-worker.ts` — that file is the contract.
+ * The host side injects `__hostBridge(path, bodyJson) -> Promise<resultJson>`, (optionally)
+ * `__hostConsole(level, msg)`, and the `__envelopeJSON`/`__tagName` strings as globals before this
+ * runs; the bootstrap captures the envelope into closure state and deletes those globals so plugin
+ * code can never read or rewrite them. The rebuilt context is structurally identical to the worker
+ * context in `liquid-extension-worker.ts` — that file is the contract.
  *
  * Authoring constraint: this is a plain JS string evaluated by QuickJS, so it deliberately avoids
  * template literals / optional chaining / modern globals and sticks to widely-supported ES5-ish JS.
@@ -17,6 +19,16 @@
 export const IN_SANDBOX_BOOTSTRAP = [
   '(function(){',
   '  "use strict";',
+
+  // --- capture the envelope + tag name, then delete the globals ---
+  // The host injects __envelopeJSON/__tagName before this bootstrap runs. Capturing them into
+  // closure state (and deleting the globals) means plugin top-level code can't rewrite
+  // grantedModules — or any other envelope field — before __invoke() executes.
+  '  var __env = JSON.parse(globalThis.__envelopeJSON);',
+  '  var __tag = globalThis.__tagName;',
+  '  delete globalThis.__envelopeJSON;',
+  '  delete globalThis.__tagName;',
+
   '  var T = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";',
 
   // --- btoa / atob (operate on Latin1 binary strings, matching the browser) ---
@@ -113,27 +125,19 @@ export const IN_SANDBOX_BOOTSTRAP = [
   // this bootstrap. Resolution is default-deny against the envelope's grantedModules: an ungranted
   // name is "not permitted by manifest"; a granted name with no factory is "not available in
   // sandbox". Both messages are user-facing contract asserted by tests.
-  '  var __moduleRegistry = {};',
-  '  var __moduleAliases = {};',
-  '  var __moduleCache = {};',
+  // Null-prototype dictionaries so prototype-chain names ("__proto__", "constructor") behave as
+  // ordinary, absent keys in sandbox-facing lookups.
+  '  var __moduleRegistry = Object.create(null);',
+  '  var __moduleAliases = Object.create(null);',
+  '  var __moduleCache = Object.create(null);',
   '  globalThis.__registerModule = function (name, aliases, factory) {',
   '    __moduleRegistry[name] = factory;',
   '    for (var i = 0; i < (aliases || []).length; i++) { __moduleAliases[aliases[i]] = name; }',
   '  };',
-  // The envelope is injected as __envelopeJSON after the bootstrap evaluates, and __require can run
-  // during plugin module evaluation — so the grant set is read lazily and cached on first use.
-  '  var __grantedModulesCache = null;',
-  '  function __grantedModules() {',
-  '    if (__grantedModulesCache === null) {',
-  '      var env = null;',
-  '      try { env = JSON.parse(globalThis.__envelopeJSON); } catch (e) { env = null; }',
-  '      __grantedModulesCache = (env && env.grantedModules) || [];',
-  '    }',
-  '    return __grantedModulesCache;',
-  '  }',
+  '  var __grantedModules = (__env && __env.grantedModules) || [];',
   '  globalThis.__require = function (name) {',
   '    var canonical = __moduleAliases[name] || String(name);',
-  '    if (__grantedModules().indexOf(canonical) === -1) { throw new Error("Module \'" + name + "\' not permitted by manifest"); }',
+  '    if (__grantedModules.indexOf(canonical) === -1) { throw new Error("Module \'" + name + "\' not permitted by manifest"); }',
   '    var factory = __moduleRegistry[canonical];',
   '    if (!factory) { throw new Error("Module \'" + name + "\' not available in sandbox"); }',
   '    if (!(canonical in __moduleCache)) { __moduleCache[canonical] = factory(); }',
@@ -206,13 +210,13 @@ export const IN_SANDBOX_BOOTSTRAP = [
 
   // --- find the requested tag in the evaluated plugin module and run it ---
   '  globalThis.__invoke = function () {',
-  '    var env = JSON.parse(globalThis.__envelopeJSON);',
+  '    var env = __env;',
   '    var ctx = globalThis.__buildContext(env);',
   '    var mod = globalThis.__pluginModule;',
   '    var tags = (mod && mod.templateTags) || [];',
   '    var tag = null;',
-  '    for (var i = 0; i < tags.length; i++) { if (tags[i].name === globalThis.__tagName) { tag = tags[i]; break; } }',
-  '    if (!tag) { throw new Error("Template tag \'" + globalThis.__tagName + "\' not found in plugin module"); }',
+  '    for (var i = 0; i < tags.length; i++) { if (tags[i].name === __tag) { tag = tags[i]; break; } }',
+  '    if (!tag) { throw new Error("Template tag \'" + __tag + "\' not found in plugin module"); }',
   '    var args = [ctx].concat(env.args || []);',
   '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
   '  };',

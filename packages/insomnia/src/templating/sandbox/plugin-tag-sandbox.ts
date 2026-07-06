@@ -56,10 +56,13 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
 
-    evalOrThrow(ctx, IN_SANDBOX_BOOTSTRAP, '<sandbox-bootstrap>');
-    evalOrThrow(ctx, MODULE_REGISTRY_SOURCE, '<sandbox-modules>');
+    // The envelope/tag globals are injected BEFORE the bootstrap, which captures them into closure
+    // state and deletes the globals — so plugin top-level code can't rewrite grantedModules (or any
+    // other envelope field) before __invoke() runs.
     setGlobalString(ctx, '__envelopeJSON', JSON.stringify(envelope));
     setGlobalString(ctx, '__tagName', tagName);
+    evalOrThrow(ctx, IN_SANDBOX_BOOTSTRAP, '<sandbox-bootstrap>');
+    evalOrThrow(ctx, MODULE_REGISTRY_SOURCE, '<sandbox-modules>');
     evalOrThrow(ctx, wrapPluginSource(pluginSource), '<plugin>');
     evalOrThrow(ctx, RUNNER, '<runner>');
 
@@ -102,7 +105,9 @@ const installHostCrypto = (ctx: QuickJSContext, hostCrypto?: HostCrypto): void =
     return;
   }
   const hashFn = ctx.newFunction('__cryptoHash', (algo, data, inEnc, outEnc) =>
-    ctx.newString(hostCrypto.hash(ctx.getString(algo), ctx.getString(data), ctx.getString(inEnc), ctx.getString(outEnc))),
+    ctx.newString(
+      hostCrypto.hash(ctx.getString(algo), ctx.getString(data), ctx.getString(inEnc), ctx.getString(outEnc)),
+    ),
   );
   setGlobal(ctx, '__cryptoHash', hashFn);
 

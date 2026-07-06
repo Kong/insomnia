@@ -88,6 +88,11 @@ export const TEMPLATE_TAG_BASELINE_MODULES: string[] = ['path', 'crypto'];
  * JS evaluated inside the sandbox immediately after the bootstrap. Populates the registry the
  * bootstrap's `__require` resolves from.
  */
-export const MODULE_REGISTRY_SOURCE: string = SANDBOX_MODULES.map(
-  m => `globalThis.__registerModule(${JSON.stringify(m.name)}, ${JSON.stringify(m.aliases ?? [])}, ${m.factorySource});`,
-).join('\n');
+export const MODULE_REGISTRY_SOURCE: string = [
+  ...SANDBOX_MODULES.map(
+    m =>
+      `globalThis.__registerModule(${JSON.stringify(m.name)}, ${JSON.stringify(m.aliases ?? [])}, ${m.factorySource});`,
+  ),
+  // Lock the registry once populated — plugin code must not be able to register or replace factories.
+  'delete globalThis.__registerModule;',
+].join('\n');

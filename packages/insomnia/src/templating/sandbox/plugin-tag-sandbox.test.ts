@@ -69,7 +69,7 @@ module.exports.templateTags = [{
   }
 }];`;
 
-const envelope = (args: unknown[], grantedModules: string[] = ['path', 'crypto']): ContextEnvelope => ({
+const envelope = (args: unknown[], grantedModules: string[] = TEMPLATE_TAG_BASELINE_MODULES): ContextEnvelope => ({
   args,
   context: {},
   meta: {},
@@ -251,7 +251,13 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     const source = 'module.exports.templateTags = [{ name: "spin", run: function () { while (true) {} } }];';
     const start = Date.now();
     await expect(
-      runTagInSandbox({ pluginSource: source, tagName: 'spin', envelope: envelope([]), bridge: noBridge, timeoutMs: 200 }),
+      runTagInSandbox({
+        pluginSource: source,
+        tagName: 'spin',
+        envelope: envelope([]),
+        bridge: noBridge,
+        timeoutMs: 200,
+      }),
     ).rejects.toThrow(/interrupted|timed out/i);
     expect(Date.now() - start).toBeLessThan(5000);
   });
@@ -266,7 +272,13 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     // A generous timeoutMs that's far longer than hitting the 32MB memory limit should take, so a
     // pass here can only be explained by the memory limit firing, not the wall-clock timeout.
     await expect(
-      runTagInSandbox({ pluginSource: source, tagName: 'hog', envelope: envelope([]), bridge: noBridge, timeoutMs: 30_000 }),
+      runTagInSandbox({
+        pluginSource: source,
+        tagName: 'hog',
+        envelope: envelope([]),
+        bridge: noBridge,
+        timeoutMs: 30_000,
+      }),
     ).rejects.toThrow(/memory/i);
     expect(Date.now() - start).toBeLessThan(5000);
   });
@@ -351,5 +363,31 @@ describe('module registry gating (M1)', () => {
     await expect(
       runTagInSandbox({ pluginSource: source, tagName: 'r', envelope: envelope([]), bridge: noBridge }),
     ).rejects.toThrow("Module 'fs' not permitted by manifest");
+  });
+
+  it('treats prototype-chain names as ordinary ungranted modules', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: requireTag('__proto__'),
+        tagName: 'r',
+        envelope: envelope([]),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module '__proto__' not permitted by manifest");
+  });
+
+  it('ignores plugin tampering with __envelopeJSON — grants are captured before plugin eval', async () => {
+    const forged = JSON.stringify({ ...envelope([]), grantedModules: ['fs', 'path', 'crypto'] });
+    const source = [
+      `globalThis.__envelopeJSON = ${JSON.stringify(forged)};`,
+      'module.exports.templateTags = [{ name: "r", run: function () { try { require("fs"); return "escaped"; } catch (e) { return e.message; } } }];',
+    ].join('\n');
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([]),
+      bridge: noBridge,
+    });
+    expect(actual).toBe("Module 'fs' not permitted by manifest");
   });
 });
