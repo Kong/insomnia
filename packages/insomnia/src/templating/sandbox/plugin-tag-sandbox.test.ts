@@ -214,7 +214,7 @@ describe('runTagInSandbox — PoC milestone 1', () => {
         bridge: noBridge,
         hostCrypto: nodeHostCrypto,
       });
-      expect(Number(actual)).toBeLessThanOrEqual(65536 * 2);
+      expect(Number(actual)).toBeLessThanOrEqual(65_536 * 2);
     });
 
     it('throws a clear error when crypto is not provided', async () => {
@@ -251,7 +251,7 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     await expect(
       runTagInSandbox({ pluginSource: source, tagName: 'spin', envelope: envelope([]), bridge: noBridge, timeoutMs: 200 }),
     ).rejects.toThrow(/interrupted|timed out/i);
-    expect(Date.now() - start).toBeLessThan(5_000);
+    expect(Date.now() - start).toBeLessThan(5000);
   });
 
   it('rejects unbounded allocation instead of exhausting host memory', async () => {
@@ -266,6 +266,6 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     await expect(
       runTagInSandbox({ pluginSource: source, tagName: 'hog', envelope: envelope([]), bridge: noBridge, timeoutMs: 30_000 }),
     ).rejects.toThrow(/memory/i);
-    expect(Date.now() - start).toBeLessThan(5_000);
+    expect(Date.now() - start).toBeLessThan(5000);
   });
 });
