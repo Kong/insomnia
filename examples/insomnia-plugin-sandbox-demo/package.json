@@ -5,6 +5,10 @@
   "main": "index.js",
   "insomnia": {
     "name": "sandbox-demo",
-    "description": "Demo plugin to manually verify the QuickJS template-tag sandbox path"
+    "description": "Demo plugin to manually verify the QuickJS template-tag sandbox path",
+    "permissions": {
+      "modules": ["events"],
+      "capabilities": []
+    }
   }
 }
