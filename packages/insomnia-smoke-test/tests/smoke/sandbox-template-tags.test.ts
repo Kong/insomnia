@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 
 import { expect } from '@playwright/test';
@@ -120,7 +119,10 @@ test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sa
   await page.locator('.app').press('Escape');
 
   // Canary: the same tag now reports sandbox execution, and the async host bridge still round-trips.
-  await assertTagPreview('{% sandboxprobe', `e2e | ran in: sandbox | arch via bridge: ${os.arch()}`);
+  // Derive the expected arch from the Electron main process (where pluginToMainAPI runs) rather
+  // than the Playwright runner, which can differ in cross-arch setups.
+  const electronArch = await app.evaluate(() => process.arch);
+  await assertTagPreview('{% sandboxprobe', `e2e | ran in: sandbox | arch via bridge: ${electronArch}`);
 
   // Parity: the sandboxed require('crypto') workload is byte-identical to the legacy render above.
   await assertTagPreview('{% cryptoparity', expectedHash);

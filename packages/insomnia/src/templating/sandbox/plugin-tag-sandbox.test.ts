@@ -169,8 +169,8 @@ describe('runTagInSandbox — PoC milestone 1', () => {
 
     it('createHmac sha256 hex', async () => {
       const source = cryptoTag("return crypto.createHmac('sha256', 'parity-test-key').update(input).digest('hex');");
-      // nosemgrep: javascript.lang.security.audit.hardcoded-hmac-key.hardcoded-hmac-key
-      const expected = nodeCrypto.createHmac('sha256', 'parity-test-key').update('payload', 'utf8').digest('hex');
+      // The key is a parity-test vector, not a credential.
+      const expected = nodeCrypto.createHmac('sha256', 'parity-test-key').update('payload', 'utf8').digest('hex'); // nosemgrep: javascript.lang.security.audit.hardcoded-hmac-key.hardcoded-hmac-key
       const actual = await runTagInSandbox({
         pluginSource: source,
         tagName: 'c',
