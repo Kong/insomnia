@@ -15,8 +15,23 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const relatedProjects = await services.project.listByGitRepositoryIds(gitRepositoryIds);
 
+  // Only return projects that belong to organizations the current user is a member of. This prevents users from seeing projects they don't have access to, which could lead to confusion or errors when trying to delete git credentials.
   const { accountId } = await services.userSession.get();
-  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  let organizations: Organization[] = [];
+  try {
+    organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  } catch {
+    // If parsing fails, fall through with empty array
+  }
+
+  // If organizations cannot be loaded, return all related projects unfiltered
+  // to avoid silently hiding projects and incorrectly allowing credential deletion.
+  if (organizations.length === 0) {
+    return {
+      projects: relatedProjects,
+    };
+  }
+
   const currentUserOrganizationIds = new Set([
     ...organizations.map(o => o.id),
     models.organization.SCRATCHPAD_ORGANIZATION_ID,
