@@ -111,7 +111,7 @@ const installHostCrypto = (ctx: QuickJSContext, hostCrypto?: HostCrypto): void =
 
   const randomBytesFn = ctx.newFunction('__cryptoRandomBytes', size => {
     // Clamp so a plugin can't force a multi-GB allocation (e.g. crypto.randomBytes(2 ** 31)).
-    const clamped = Math.max(0, Math.min(Math.floor(ctx.getNumber(size)) || 0, 65536));
+    const clamped = Math.max(0, Math.min(Math.floor(ctx.getNumber(size)) || 0, 65_536));
     return ctx.newString(hostCrypto.randomBytes(clamped));
   });
   setGlobal(ctx, '__cryptoRandomBytes', randomBytesFn);
