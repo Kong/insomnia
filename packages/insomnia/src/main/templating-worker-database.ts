@@ -88,25 +88,29 @@ const runPluginTag = (
 // is undefined, which throws "filename ... Received undefined". Bundle plugins (no directory) fall
 // back to require.resolve by name.
 const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
-  let entryPath: string;
-  if (directory) {
-    const base = path.resolve(directory);
-    const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf8'));
-    // Contain the entry point inside the plugin's own directory — a hostile "main" must not be
-    // able to read (and then execute) a file outside the plugin folder.
-    entryPath = path.resolve(base, pkg.main || 'index.js');
-    const relative = path.relative(base, entryPath);
-    if (relative.startsWith('..') || path.isAbsolute(relative)) {
-      throw new Error(`Plugin entry point escapes plugin directory: ${pkg.main}`);
+  try {
+    let entryPath: string;
+    if (directory) {
+      const base = path.resolve(directory);
+      const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf8'));
+      // Contain the entry point inside the plugin's own directory — a hostile "main" must not be
+      // able to read (and then execute) a file outside the plugin folder.
+      entryPath = path.resolve(base, pkg.main || 'index.js');
+      const relative = path.relative(base, entryPath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+      }
+    } else {
+      // Bundle plugins resolve by bare package name only — never a path.
+      if (name.includes('..') || path.isAbsolute(name)) {
+        throw new Error(`invalid bundled plugin name: ${name}`);
+      }
+      entryPath = require.resolve(name);
     }
-  } else {
-    // Bundle plugins resolve by bare package name only — never a path.
-    if (name.includes('..') || path.isAbsolute(name)) {
-      throw new Error(`Invalid bundled plugin name: ${name}`);
-    }
-    entryPath = require.resolve(name);
+    return fs.readFileSync(entryPath, 'utf8');
+  } catch (err) {
+    throw new Error(`Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`);
   }
-  return fs.readFileSync(entryPath, 'utf8');
 };
 
 // Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
