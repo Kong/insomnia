@@ -232,4 +232,13 @@ describe('runTagInSandbox — PoC milestone 1', () => {
       runTagInSandbox({ pluginSource: source, tagName: 'needsOs', envelope: envelope([]), bridge: failing }),
     ).rejects.toThrow('bridge exploded');
   });
+
+  it('times out a synchronous infinite loop instead of hanging', async () => {
+    const source = 'module.exports.templateTags = [{ name: "spin", run: function () { while (true) {} } }];';
+    const start = Date.now();
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'spin', envelope: envelope([]), bridge: noBridge, timeoutMs: 200 }),
+    ).rejects.toThrow(/interrupted|timed out/i);
+    expect(Date.now() - start).toBeLessThan(5_000);
+  });
 });

@@ -44,8 +44,11 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
   const { getQuickJSModule } = await import('./quickjs-runtime');
   const QuickJS = await getQuickJSModule();
   const ctx = QuickJS.newContext();
+  const deadline = Date.now() + timeoutMs;
 
   try {
+    // Polled during synchronous execution so a tight sync loop in plugin code can't bypass the timeout.
+    ctx.runtime.setInterruptHandler(() => Date.now() > deadline);
     installHostBridge(ctx, bridge);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
