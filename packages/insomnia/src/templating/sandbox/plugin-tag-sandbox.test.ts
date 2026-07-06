@@ -253,4 +253,19 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     ).rejects.toThrow(/interrupted|timed out/i);
     expect(Date.now() - start).toBeLessThan(5_000);
   });
+
+  it('rejects unbounded allocation instead of exhausting host memory', async () => {
+    const source = `module.exports.templateTags = [{ name: "hog", run: function () {
+      var chunks = [];
+      var big = new Array(1 << 20).join("x");
+      while (true) { chunks.push(big); }
+    } }];`;
+    const start = Date.now();
+    // A generous timeoutMs that's far longer than hitting the 32MB memory limit should take, so a
+    // pass here can only be explained by the memory limit firing, not the wall-clock timeout.
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'hog', envelope: envelope([]), bridge: noBridge, timeoutMs: 30_000 }),
+    ).rejects.toThrow(/memory/i);
+    expect(Date.now() - start).toBeLessThan(5_000);
+  });
 });

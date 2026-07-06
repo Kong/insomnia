@@ -49,6 +49,8 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
   try {
     // Polled during synchronous execution so a tight sync loop in plugin code can't bypass the timeout.
     ctx.runtime.setInterruptHandler(() => Date.now() > deadline);
+    // Caps the WASM heap so a plugin can't OOM the host by allocating without bound.
+    ctx.runtime.setMemoryLimit(32 * 1024 * 1024);
     installHostBridge(ctx, bridge);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
