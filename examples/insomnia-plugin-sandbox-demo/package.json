@@ -1,0 +1,10 @@
+{
+  "name": "insomnia-plugin-sandbox-demo",
+  "version": "1.0.0",
+  "description": "Demo plugin to manually verify the QuickJS template-tag sandbox path",
+  "main": "index.js",
+  "insomnia": {
+    "name": "sandbox-demo",
+    "description": "Demo plugin to manually verify the QuickJS template-tag sandbox path"
+  }
+}
