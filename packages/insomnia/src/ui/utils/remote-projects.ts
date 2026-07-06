@@ -1,4 +1,4 @@
-import { database, models, services, type Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
 import { type InsomniaFile } from '~/common/project';
 
@@ -30,7 +30,7 @@ export async function getAllRemoteFiles({ projectId, organizationId }: { project
       `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,
     );
     // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
+    const workspacesWithBackendProjects = await services.workspace.list({
       _id: {
         $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(
           p => p.rootDocumentId,

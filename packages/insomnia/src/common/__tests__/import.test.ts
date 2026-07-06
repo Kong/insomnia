@@ -160,7 +160,7 @@ describe('importRaw()', () => {
     });
 
     const workspacesCount = await services.workspace.count();
-    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
+    const projectWorkspaces = await services.workspace.listByParentId(projectToImportTo._id);
     const curlRequests = await services.request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);
@@ -247,7 +247,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
+    const projectWorkspaces = await services.workspace.listByParentId(projectToImportTo._id);
 
     const requestGroups = await services.requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await services.request.findByParentId(requestGroups[0]._id);
@@ -325,7 +325,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await services.workspace.findByParentId(projectId);
+    const projectWorkspaces = await services.workspace.listByParentId(projectId);
     const importedWorkspaceId = projectWorkspaces[0]._id;
     const requestBaseEnvironment = await services.environment.getByParentId(importedWorkspaceId);
 

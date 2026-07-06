@@ -4,6 +4,11 @@ run-name: Publish ${{ github.event.inputs.version }} channel by @${{ github.acto
 on:
   workflow_dispatch:
     inputs:
+      release_build:
+        required: true
+        type: boolean
+        default: false
+        description: Confirm that release-build.yml has been triggered for this version
       version:
         required: true
         description: Release version (e.g. 12.5.0)
@@ -37,6 +42,15 @@ jobs:
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
     steps:
+      - name: Check Release Build Confirmed
+        env:
+          IS_RELEASE_BUILD_TRIGGERED: ${{ github.event.inputs.release_build }}
+        run: |
+          if [ "$IS_RELEASE_BUILD_TRIGGERED" != "true" ]; then
+            echo "::error title=Missing Release Build::You must check 'release_build' to confirm that release-build.yml has been triggered for this version before running this workflow."
+            exit 1
+          fi
+
       - name: Calculate Release Branch
         env:
           VERSION: ${{ github.event.inputs.version }}

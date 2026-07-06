@@ -36,7 +36,7 @@ export function getByParentId(parentId: string) {
 }
 
 export async function findByProjectId(projectId: string) {
-  const workspaces = await workspace.findByParentId(projectId);
+  const workspaces = await workspace.listByParentId(projectId);
   return db.find<MockServer>(type, { parentId: { $in: workspaces.map(ws => ws._id) } });
 }
 

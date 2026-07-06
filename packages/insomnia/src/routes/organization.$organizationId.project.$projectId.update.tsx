@@ -1,5 +1,4 @@
 import { createTeamProject, deleteTeamProject, isApiError, updateTeamProject } from 'insomnia-api';
-import type { WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
@@ -271,9 +270,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           selectedAuthorEmail,
         });
 
-        const projectWorkspaces = await services.workspace.findByParentId(project._id);
+        const projectWorkspaces = await services.workspace.listByParentId(project._id);
         const bufferId = await database.bufferChanges();
-        const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+        const workspaceMetas = await services.workspaceMeta.list({
           parentId: { $in: projectWorkspaces.map(w => w._id) },
         });
 

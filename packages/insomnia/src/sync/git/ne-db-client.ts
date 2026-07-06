@@ -16,7 +16,7 @@
 import path from 'node:path';
 
 import type { BaseModel } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
@@ -209,7 +209,7 @@ export class NeDBClient {
         models.socketIORequest.type,
       ];
     } else if (type !== null && id === null) {
-      const workspace = await db.findOne(models.workspace.type, { _id: this._workspaceId });
+      const workspace = await services.workspace.getById(this._workspaceId);
       const children = workspace ? await db.getWithDescendants(workspace, [type]) : [];
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {

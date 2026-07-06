@@ -1,7 +1,7 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
-import { mockSaveDialogForFile } from '../../utils';
+import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
 import { BasePage } from '../base-page';
 import { NavigationSidebar } from '../components/navigation-sidebar';
 import { WorkspaceListComponent } from './workspace-list';
@@ -247,6 +247,28 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('dialog').getByRole('button', { name: 'Export' }).click();
 
     // Select export format
+    await this.exportModal.selectExportFormat(format);
+  }
+
+  /**
+   * Exports all workspaces in a project via the sidebar project actions dropdown.
+   * Mirrors the Preferences > Data tab export, but triggered from the project context menu.
+   * Note: After calling this method, use waitForExportFiles() utility to ensure files are written.
+   * @param projectName - The name of the project to export
+   * @param exportPath - The directory (yaml) or file (har) path used to mock the save dialog
+   * @param format - The export format ('yaml' or 'har')
+   */
+  async exportProjectFromSidebar(
+    projectName: string,
+    exportPath: string,
+    format: 'yaml' | 'har' = 'yaml',
+  ): Promise<void> {
+    await this.sidebar.selectProjectDropdownOption({ actionName: 'Export', projectName });
+    if (format === 'yaml') {
+      await mockOpenDialogForDirectory(this.app, exportPath);
+    } else if (format === 'har') {
+      await mockSaveDialogForFile(this.app, exportPath);
+    }
     await this.exportModal.selectExportFormat(format);
   }
 }
