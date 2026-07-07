@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
-import type { GitRepository, Project, Workspace } from 'insomnia-data';
+import type { BaseModel, GitRepository, Project, Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 
 export type ProjectWithGitRepository = Project & { gitRepository?: GitRepository };
@@ -16,6 +16,7 @@ export interface OrganizationData {
 }
 
 export const fetchOrganizationData = async (organizationId: string): Promise<OrganizationData> => {
+  console.log(`Fetching organization data for organizationId: ${organizationId}`);
   const { projects, workspaces } = await window.main.getOrganizationData(organizationId);
   return {
     projects: models.project.sortProjects(projects),
@@ -32,28 +33,16 @@ export const useOrganizationData = (organizationId: string): OrganizationData =>
   return organizationData;
 };
 
-export const findOrganizationIdForProject = (queryClient: QueryClient, projectId: string): string | undefined => {
-  const cached = queryClient.getQueriesData<OrganizationData>({ queryKey: organizationDataKeys.all });
-  for (const [queryKey, data] of cached) {
-    if (data?.projects.some(p => p._id === projectId)) {
-      return queryKey[1] as string;
-    }
-  }
-  return undefined;
-};
-
 export const findOrgAndProjectForWorkspace = (
   queryClient: QueryClient,
-  workspaceId: string,
+  doc: BaseModel,
 ): { organizationId: string; projectId: string } | undefined => {
   const cached = queryClient.getQueriesData<OrganizationData>({ queryKey: organizationDataKeys.all });
+  const { parentId } = doc;
   for (const [queryKey, data] of cached) {
-    if (data?.workspaces.some(w => w._id === workspaceId)) {
-      const workspace = data.workspaces.find(w => w._id === workspaceId);
-      const project = data.projects.find(p => p._id === workspace?.parentId);
-      if (workspace && project) {
-        return { organizationId: queryKey[1] as string, projectId: project._id };
-      }
+    const project = data?.projects.find(p => p._id === parentId);
+    if (project) {
+      return { organizationId: queryKey[1] as string, projectId: project._id };
     }
   }
   return undefined;
