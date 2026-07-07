@@ -226,6 +226,13 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    var args = [ctx].concat(env.args || []);',
   '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
   '  };',
+
+  // --- lock the sandbox-internal globals ---
+  // Plugin code runs after this bootstrap; pin these so it can't reassign the require gate or the
+  // context/invocation entry points. __registerModule is intentionally left mutable — the module
+  // registry source deletes it once the registry is populated.
+  '  var __lock = function (n) { Object.defineProperty(globalThis, n, { value: globalThis[n], writable: false, configurable: false }); };',
+  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke");',
   '})();',
 ].join('\n');
 

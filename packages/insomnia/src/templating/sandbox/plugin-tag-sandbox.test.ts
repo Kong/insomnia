@@ -406,4 +406,20 @@ describe('module registry gating (M1)', () => {
     });
     expect(actual).toBe("Module 'crypto' not permitted by manifest");
   });
+
+  it('locks __require so a plugin cannot replace the gate', async () => {
+    // __require is pinned non-writable after the bootstrap; reassigning it throws in strict mode,
+    // so a plugin cannot swap in a permissive resolver.
+    const source = [
+      'try { globalThis.__require = function () { return {}; }; } catch (e) {}',
+      'module.exports.templateTags = [{ name: "r", run: function () { try { require("fs"); return "escaped"; } catch (e) { return e.message; } } }];',
+    ].join('\n');
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([]),
+      bridge: noBridge,
+    });
+    expect(actual).toBe("Module 'fs' not permitted by manifest");
+  });
 });
