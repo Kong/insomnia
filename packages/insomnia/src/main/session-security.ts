@@ -12,14 +12,15 @@ import { type Session } from 'electron';
  * camera, microphone, geolocation, notifications, MIDI, etc. We therefore deny
  * by default and allow only the small set the app actually uses.
  *
- * Clipboard write backs `navigator.clipboard.writeText` (e.g. the "copy routes"
- * action in the project navigation sidebar). `clipboard-read` is included so a
- * future paste affordance does not silently fail; remove it if unused.
+ * Only clipboard write is allowed — it backs `navigator.clipboard.writeText`
+ * (e.g. the "copy routes" action in the project navigation sidebar). Clipboard
+ * *read* is deliberately not allowed: nothing in the renderer reads the
+ * clipboard via the web API, and granting silent read access is a privacy risk.
  *
  * This module is intentionally free of side effects so the allow-list logic can
  * be unit tested (see `session-security.test.ts`).
  */
-export const ALLOWED_PERMISSIONS = ['clipboard-read', 'clipboard-sanitized-write'] as const;
+export const ALLOWED_PERMISSIONS = ['clipboard-sanitized-write'] as const;
 
 export const isPermissionAllowed = (permission: string): boolean =>
   (ALLOWED_PERMISSIONS as readonly string[]).includes(permission);
