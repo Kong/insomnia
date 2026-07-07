@@ -390,4 +390,20 @@ describe('module registry gating (M1)', () => {
     });
     expect(actual).toBe("Module 'fs' not permitted by manifest");
   });
+
+  it('keeps the grant check working when a plugin poisons Array.prototype.indexOf', async () => {
+    // The gate captures a pristine indexOf before plugin code runs, so overriding the intrinsic to
+    // never return -1 must not let an ungranted module through.
+    const source = [
+      'Array.prototype.indexOf = function () { return 0; };',
+      'module.exports.templateTags = [{ name: "r", run: function () { try { require("crypto"); return "escaped"; } catch (e) { return e.message; } } }];',
+    ].join('\n');
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe("Module 'crypto' not permitted by manifest");
+  });
 });

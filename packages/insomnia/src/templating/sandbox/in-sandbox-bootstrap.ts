@@ -29,6 +29,12 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '  delete globalThis.__envelopeJSON;',
   '  delete globalThis.__tagName;',
 
+  // --- pristine intrinsics for the module gate ---
+  // Captured now, before any plugin code runs, so the grant check can't be defeated by a plugin
+  // reassigning Array.prototype.indexOf (or the global String). Callers below use these instead of
+  // method syntax / String() so the gate never routes through a plugin-mutable intrinsic.
+  '  var __arrIndexOf = Function.prototype.call.bind(Array.prototype.indexOf);',
+
   '  var T = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";',
 
   // --- btoa / atob (operate on Latin1 binary strings, matching the browser) ---
@@ -136,8 +142,8 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '  };',
   '  var __grantedModules = (__env && __env.grantedModules) || [];',
   '  globalThis.__require = function (name) {',
-  '    var canonical = __moduleAliases[name] || String(name);',
-  '    if (__grantedModules.indexOf(canonical) === -1) { throw new Error("Module \'" + name + "\' not permitted by manifest"); }',
+  '    var canonical = __moduleAliases[name] || ("" + name);',
+  '    if (__arrIndexOf(__grantedModules, canonical) === -1) { throw new Error("Module \'" + name + "\' not permitted by manifest"); }',
   '    var factory = __moduleRegistry[canonical];',
   '    if (!factory) { throw new Error("Module \'" + name + "\' not available in sandbox"); }',
   '    if (!(canonical in __moduleCache)) { __moduleCache[canonical] = factory(); }',
