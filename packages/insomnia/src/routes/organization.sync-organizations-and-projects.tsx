@@ -3,7 +3,7 @@ import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
+import { findMigrationTargetSpaceId, migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
 import { AsyncTask, createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.sync-organizations-and-projects';
@@ -32,12 +32,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     }
 
     if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
-      const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+      const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
       invariant(organizations.length, 'Failed to fetch organizations.');
       invariant(sessionId, 'sessionId is required');
-      // TODO: when migrating to /v3/users/me/spaces, target the owned space with total_members === 1
-      // so legacy orphan local projects land in the user's solo space rather than a shared owned space.
-      taskPromiseList.push(migrateProjectsUnderOrganization(organizations[0].id, sessionId));
+      taskPromiseList.push(migrateProjectsUnderOrganization(findMigrationTargetSpaceId(organizations), sessionId));
     }
 
     if (asyncTaskList.includes(AsyncTask.SyncProjects)) {

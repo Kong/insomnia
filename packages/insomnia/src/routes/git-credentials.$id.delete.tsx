@@ -2,6 +2,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
+import { removeGitRepository } from '~/ui/account/session';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git-credentials.$id.delete';
@@ -15,7 +16,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const connectedRepositories = await services.gitRepository.getAllByCredentialId(id);
 
   for (const repo of connectedRepositories) {
-    await services.gitRepository.update(repo, { credentialsId: null });
+    await removeGitRepository(repo);
   }
 
   await services.gitCredentials.remove(credential);

@@ -22,6 +22,7 @@ import { initRuntime } from '~/runtimes';
 import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
+import { configureV3ClientDefaults } from './common/configure-v3-client';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
 import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
@@ -65,6 +66,7 @@ let openDeepLinkUrl = async (url: string) => {
   console.warn('[main] openDeepLinkUrl function not initialized yet, cannot open URL:', url);
 };
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => openDeepLinkUrl(uri) }));
+configureV3ClientDefaults();
 // net.fetch picks up the proxy + OS certs like the renderer; node fetch does neither.
 // only works post-ready, which is fine — nothing calls this earlier. 'omit' = no cookies, same as before.
 setFetchImplementation((input, init) =>

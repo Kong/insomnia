@@ -121,7 +121,7 @@ export const getInitialEntry = async () => {
     const user = await services.userSession.get();
     if (user.id) {
       const organizations = JSON.parse(
-        localStorage.getItem(`${user.accountId}:organizations`) || '[]',
+        localStorage.getItem(`${user.accountId}:spaces`) || '[]',
       ) as Organization[];
       // If no organizations are in local storage, go fetch from org index loader
       if (organizations.length === 0) {

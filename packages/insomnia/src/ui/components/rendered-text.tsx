@@ -7,6 +7,7 @@ import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 interface Props {
   children: string;
   render: HandleRender;
+  requestId?: string;
 }
 interface State {
   renderedText: string;
@@ -70,7 +71,7 @@ class RenderedTextInternal extends PureComponent<Props, State> {
 }
 
 export const RenderedText: FC<Omit<Props, 'render'>> = props => {
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucks({ requestId: props.requestId });
 
   return <RenderedTextInternal {...props} render={handleRender} />;
 };

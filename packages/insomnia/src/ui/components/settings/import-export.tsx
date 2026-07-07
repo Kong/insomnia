@@ -492,7 +492,7 @@ const UntrackedProject = ({
                   );
                 }
 
-                return <Fragment>{selectedItem.display_name}</Fragment>;
+                return <Fragment>{selectedItem.name}</Fragment>;
               }}
             </SelectValue>
             <Icon icon="caret-down" />
@@ -513,7 +513,7 @@ const UntrackedProject = ({
                 >
                   {({ isSelected }) => (
                     <Fragment>
-                      {item.display_name}
+                      {item.name}
                       {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                     </Fragment>
                   )}
@@ -681,7 +681,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
   const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
+    organizationData?.organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
