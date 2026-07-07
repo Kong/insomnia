@@ -103,6 +103,10 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '      getRandomValues: function (typedArray) {',
   '        if (typeof globalThis.__cryptoRandomBytes !== "function") { throw new Error("crypto.getRandomValues is not available in this sandbox"); }',
   '        if (!typedArray || typeof typedArray.byteLength !== "number") { throw new TypeError("getRandomValues expects a TypedArray"); }',
+  // Enforce the WebCrypto 65536-byte quota. This both matches the spec (which throws
+  // QuotaExceededError past this limit) and stays within the host __cryptoRandomBytes clamp, so we
+  // never silently zero-fill a tail — a request that would be short-changed fails loudly instead.
+  '        if (typedArray.byteLength > 65536) { throw new Error("Failed to execute \'getRandomValues\': The ArrayBufferView\'s byte length (" + typedArray.byteLength + ") exceeds the number of bytes of entropy available via this API (65536)."); }',
   '        var bin = atob(globalThis.__cryptoRandomBytes(typedArray.byteLength));',
   '        var view = new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);',
   '        for (var i = 0; i < view.length; i++) { view[i] = bin.charCodeAt(i) & 255; }',
