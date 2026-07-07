@@ -39,4 +39,24 @@ module.exports.templateTags = [
       return typeof require(mod);
     },
   },
+  {
+    name: 'eventsprobe',
+    displayName: 'Events Probe',
+    description: "Demos a manifest-granted module: this plugin declares insomnia.permissions.modules ['events']",
+    args: [],
+    async run() {
+      // Works because package.json declares the `events` grant; a plugin without it would get
+      // "Module 'events' not permitted by manifest".
+      // eslint-disable-next-line no-undef, unicorn/prefer-node-protocol -- CJS plugin requiring the registry's canonical module name
+      const EventEmitter = require('events').EventEmitter;
+      // eslint-disable-next-line unicorn/prefer-event-target -- demoing the sandbox 'events' module, not browser EventTarget
+      const emitter = new EventEmitter();
+      let out = '';
+      emitter.on('ping', value => {
+        out = value;
+      });
+      emitter.emit('ping', 'events-ok');
+      return out;
+    },
+  },
 ];

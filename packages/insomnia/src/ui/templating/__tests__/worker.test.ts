@@ -21,6 +21,9 @@ const userPluginTag: TemplateTag = {
     // user-installed plugins are loaded from disk and have a non-empty directory
     directory: '/Users/me/Library/Application Support/Insomnia/plugins/insomnia-plugin-request-body-hmac',
     config: { disabled: false },
+    permissions: { modules: [], capabilities: [] },
+    permissionWarnings: [],
+    permissionsDeclared: false,
     module: {},
   },
   templateTag: {

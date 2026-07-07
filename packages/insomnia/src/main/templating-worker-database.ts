@@ -131,6 +131,9 @@ export const runPluginTagInSandbox = async (
     tagName: string;
     context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
   },
+  // Registry-module names the plugin may require(). Defaults to the baseline floor; callers pass the
+  // plugin's manifest-resolved grant (baseline ∪ insomnia.permissions.modules).
+  grantedModules?: string[],
 ): Promise<string> => {
   const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
   const { createMapBridge } = await import('../templating/sandbox/host-bridge');
@@ -174,8 +177,7 @@ export const runPluginTagInSandbox = async (
       appInfo: { version: app.getVersion(), platform: process.platform },
       pluginName,
       renderDepth: 0,
-      // Pre-manifest baseline grant (C3 replaces this with the plugin's declared modules).
-      grantedModules: [...TEMPLATE_TAG_BASELINE_MODULES],
+      grantedModules: grantedModules ?? [...TEMPLATE_TAG_BASELINE_MODULES],
     },
   });
 };
@@ -375,6 +377,9 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
           config: {
             disabled: false,
           },
+          permissions: { modules: [], capabilities: [] },
+          permissionWarnings: [],
+          permissionsDeclared: false,
           module,
         },
         templateTag: tt,
@@ -438,9 +443,11 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (targetTag) {
       const settings = await services.settings.get();
       if (settings.templateTagSandboxEnabled) {
+        const { resolveTemplateTagModules } = await import('../templating/sandbox/module-registry');
         return runPluginTagInSandbox(
           getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
           body,
+          resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
         );
       }
       return runPluginTag(targetTag.templateTag.run, body);

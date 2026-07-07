@@ -26,3 +26,8 @@ renders `a/b` (baseline grant, curated registry implementation), while `{% requi
 or any npm package fails with `Module 'X' not permitted by manifest`. A granted-but-unshipped
 module would fail with `Module 'X' not available in sandbox`. Registry coverage grows in M2/M3;
 relative files (`require('./util')`) arrive with plugin pre-bundling (M4).
+
+The `eventsprobe` tag demos a **manifest-declared grant** (C3): this plugin's `package.json`
+declares `insomnia.permissions.modules: ["events"]`, so `{% eventsprobe %}` renders `events-ok`.
+A plugin that did not declare `events` would get `Module 'events' not permitted by manifest`.
+Preferences → Plugins shows each plugin's declared permissions (this one lists `modules: events`).

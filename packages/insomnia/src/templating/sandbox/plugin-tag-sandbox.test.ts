@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { localTemplateTags } from '../../common/templating/local-template-tags';
 import { createMapBridge, type HostBridge } from './host-bridge';
 import type { ContextEnvelope } from './marshal';
-import { SANDBOX_MODULES, TEMPLATE_TAG_BASELINE_MODULES } from './module-registry';
+import { resolveTemplateTagModules, SANDBOX_MODULES, TEMPLATE_TAG_BASELINE_MODULES } from './module-registry';
 import { type HostCrypto, runTagInSandbox } from './plugin-tag-sandbox';
 
 // Real node:crypto-backed host crypto, identical to what main provides.
@@ -421,5 +421,54 @@ describe('module registry gating (M1)', () => {
       bridge: noBridge,
     });
     expect(actual).toBe("Module 'fs' not permitted by manifest");
+  });
+});
+
+describe('manifest-declared module grants (C3)', () => {
+  const eventsTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var E = require('events').EventEmitter; var e = new E(); var out = ''; e.on('x', function (v) { out = v; }); e.emit('x', 'fired'); return out; } }];";
+
+  it('resolveTemplateTagModules unions the baseline with declared modules', () => {
+    expect(resolveTemplateTagModules(['events'])).toEqual([...TEMPLATE_TAG_BASELINE_MODULES, 'events']);
+    expect(resolveTemplateTagModules()).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
+    // Declaring a baseline module doesn't duplicate it.
+    expect(resolveTemplateTagModules(['path'])).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
+  });
+
+  it('canonicalizes declared aliases so the node:-prefixed form grants the module', () => {
+    expect(resolveTemplateTagModules(['node:events'])).toEqual([...TEMPLATE_TAG_BASELINE_MODULES, 'events']);
+    // node:crypto resolves to the already-baseline crypto without duplicating it.
+    expect(resolveTemplateTagModules(['node:crypto'])).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
+  });
+
+  it('a plugin declaring the node:events alias can use EventEmitter', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: eventsTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:events'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('fired');
+  });
+
+  it('a plugin granted "events" can use EventEmitter', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: eventsTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['events'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('fired');
+  });
+
+  it('a plugin without the grant is denied "events" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: eventsTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
 });
