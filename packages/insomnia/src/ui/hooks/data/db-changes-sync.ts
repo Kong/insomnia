@@ -3,11 +3,7 @@ import { models } from 'insomnia-data';
 
 import type { ChangeBufferEvent } from '~/common/database';
 
-import {
-  findOrgAndProjectForWorkspace,
-  findOrganizationIdForProject,
-  organizationDataKeys,
-} from './use-organization-data';
+import { findOrgAndProjectForWorkspace, organizationDataKeys } from './use-organization-data';
 import {
   type CollectionWorkspaceChildren,
   findWorkspaceIdForDoc,
@@ -52,15 +48,13 @@ export const subscribeQueryClientToDbChanges = (queryClient: QueryClient): (() =
       }
 
       if (doc.type === models.project.type) {
-        const organizationId = findOrganizationIdForProject(queryClient, doc._id);
-        if (organizationId) {
-          organizationIdsToRevalidate.add(organizationId);
-        }
+        const organizationId = doc.parentId;
+        organizationIdsToRevalidate.add(organizationId);
         continue;
       }
 
       if (doc.type === models.workspace.type) {
-        const { organizationId } = findOrgAndProjectForWorkspace(queryClient, doc._id) || {};
+        const { organizationId } = findOrgAndProjectForWorkspace(queryClient, doc) || {};
         if (organizationId) {
           organizationIdsToRevalidate.add(organizationId);
         }
