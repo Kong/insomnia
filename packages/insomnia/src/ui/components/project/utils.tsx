@@ -46,12 +46,13 @@ export const deriveRepoName = (uri?: string): string => {
   if (!uri) {
     return 'repository';
   }
-  const cleaned = uri
-    .trim()
-    .replace(/\.git$/i, '')
-    .replace(/[/\\]+$/, '');
-  const last = cleaned.split(/[/\\:]/).pop();
-  return last || 'repository';
+  const trimmed = uri.trim().replace(/[/\\]+$/, '');
+  const lastSegment = trimmed.split(/[/\\:]/).pop() || '';
+  const name = lastSegment.replace(/\.git$/i, '').split(/[?#]/, 1)[0].trim();
+  if (!name || name === '.' || name === '..') {
+    return 'repository';
+  }
+  return name;
 };
 
 export type ProjectType = 'local' | 'remote' | 'git';
