@@ -9,6 +9,31 @@ import { PromptModal } from '../modals/prompt-modal';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 
+// Safely read the recent custom methods from localStorage. A corrupted/non-JSON
+// value or blocked storage returns an empty list instead of throwing.
+const readRecentMethods = (): string[] => {
+  try {
+    const raw = window.localStorage.getItem(LOCALSTORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((m): m is string => typeof m === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+
+// Persist the recent custom methods, ignoring storage failures (e.g. private
+// mode / quota / blocked storage) so callers are never blocked by a failed write.
+const writeRecentMethods = (methods: string[]): void => {
+  try {
+    window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(methods));
+  } catch {
+    // Ignore storage failures.
+  }
+};
+
 interface Props {
   method: string;
   onChange: (method: string) => void;
@@ -24,11 +49,7 @@ interface Props {
  * contained so it can be dropped into any surface that needs method selection.
  */
 export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onChange, className }, ref) => {
-  const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
-  const parsedLocalStorageHttpMethods = localStorageHttpMethods
-    ? (JSON.parse(localStorageHttpMethods) as string[])
-    : [];
-  const [recent, setRecent] = useState(parsedLocalStorageHttpMethods);
+  const [recent, setRecent] = useState(readRecentMethods);
 
   const handleSetCustomMethod = useCallback(() => {
     showModal(PromptModal, {
@@ -44,11 +65,10 @@ export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onCha
       onDeleteHint: methodToDelete => {
         // Note: We need to read and remove the method from localStorage and not rely on react state
         // It solves the case where you try to delete more than one method at a time, because recent is updated only once
-        const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
-        const currentRecent = localStorageHttpMethods ? (JSON.parse(localStorageHttpMethods) as string[]) : [];
+        const currentRecent = readRecentMethods();
         const newRecent = currentRecent.filter(m => m !== methodToDelete);
         setRecent(newRecent);
-        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
+        writeRecentMethods(newRecent);
       },
       onComplete: methodToAdd => {
         // Don't add empty methods
@@ -62,13 +82,12 @@ export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onCha
 
         // Note: We need to read and remove the method from localStorage and not rely on react state
         // It solves the case where you try to add a new method after you deleted some others
-        const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
-        const currentRecent = localStorageHttpMethods ? (JSON.parse(localStorageHttpMethods) as string[]) : [];
+        const currentRecent = readRecentMethods();
         // Save method as recent
         if (!currentRecent.includes(methodToAdd)) {
           const newRecent = [...currentRecent, methodToAdd];
           setRecent(newRecent);
-          window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
+          writeRecentMethods(newRecent);
         }
         onChange(methodToAdd);
       },
