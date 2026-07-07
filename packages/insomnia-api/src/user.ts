@@ -23,6 +23,25 @@ export const getEncryptionKeys = async ({ sessionId }: { sessionId: string }): P
   return fetch<UserEncryptionKeys>({ method: 'GET', path: '/v3/users/me/encryption-keys', sessionId });
 };
 
+// POST /v3/users/me/requests-created
+// Reports request creation to the backend, which keeps the account-level,
+// device-independent count that powers first-request experiment graduation.
+// The body is optional; the server defaults to a count of 1 and caps per call.
+export const reportRequestsCreated = async ({
+  sessionId,
+  count,
+}: {
+  sessionId: string;
+  count?: number;
+}): Promise<{ requests_created: number }> => {
+  return fetch<{ requests_created: number }>({
+    method: 'POST',
+    path: '/v3/users/me/requests-created',
+    sessionId,
+    data: count === undefined ? undefined : { count },
+  });
+};
+
 // GET /v1/billing/current-plan
 export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
 type PaymentSchedules = 'month' | 'year';
