@@ -418,12 +418,6 @@ async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 
  * @param directory - Optional user-chosen repo directory (resolved from DB when omitted)
  * @returns File system client configured for the appropriate context
  */
-function getGitBaseDir(gitRepositoryId: string): string {
-  return path.join(
-    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}`,
-  );
-}
 
 async function getGitFSClient({
   projectId,
@@ -1311,7 +1305,7 @@ export const cloneGitRepoAction = async ({
         directory: gitRepository.directory,
       });
 
-      const repoBaseDir = getGitBaseDir(gitRepository._id);
+      const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
 
       if (gitRepository.needsFullClone) {
         await GitVCS.initFromClone({
@@ -1349,7 +1343,7 @@ export const cloneGitRepoAction = async ({
       }
 
       // Start watcher — it automatically imports all YAML files during creation
-      const cloneBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
+      const cloneBaseDir = repoBaseDir;
 
       // If the project already has a ruleset in the DB (e.g. cloud → git migration),
       // write it to disk now so its mtime is newer than the cloned file. This ensures
@@ -1532,7 +1526,7 @@ export const cloneGitRepoAction = async ({
         workspaceId,
         gitRepositoryId: gitRepository._id,
       });
-      const wsRepoBaseDir = getGitBaseDir(gitRepository._id);
+      const wsRepoBaseDir = await getRepoBaseDir(gitRepository._id);
 
       // Configure basic info
       if (gitRepository.needsFullClone) {
@@ -1914,7 +1908,7 @@ export const updateGitRepoAction = async ({
       credentialsId: credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
-      repoPath: getGitBaseDir(gitRepository._id),
+      repoPath: await getRepoBaseDir(gitRepository._id, gitRepository.directory),
     });
 
     await GitVCS.setAuthor();
