@@ -797,45 +797,6 @@ const Component = ({ params }: Route.ComponentProps) => {
     >
       <div className="inline-flex items-center gap-2">
         <Icon icon={selectedRulesetPath && !isRulesetInvalid ? 'file-circle-check' : 'file-circle-xmark'} />
-        {isRulesetInvalid && (
-          <>
-            <span>Invalid Custom Ruleset</span>
-            <TooltipTrigger delay={0}>
-              <Button
-                aria-label="Invalid ruleset details"
-                className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="circle-info" />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-              >
-                <p className="mb-2">
-                  The custom ruleset in this project contains invalid content: {rulesetImportIssue}
-                </p>
-                <p>Fix the syntax in your connected git repository. The default OAS ruleset is used until then.</p>
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger delay={0}>
-              <Button
-                aria-label="Upload custom ruleset"
-                onPress={handleSelectSpectralFile}
-                className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="upload" />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-              >
-                <p>Upload a valid custom Spectral ruleset to replace the invalid one.</p>
-              </Tooltip>
-            </TooltipTrigger>
-          </>
-        )}
         {!isRulesetInvalid && selectedRulesetPath && (
           <>
             <TooltipTrigger delay={0}>
@@ -895,9 +856,29 @@ const Component = ({ params }: Route.ComponentProps) => {
             </TooltipTrigger>
           </>
         )}
-        {!isRulesetInvalid && !selectedRulesetPath && (
+        {!selectedRulesetPath && (
           <>
             <span>Default OAS Ruleset</span>
+            {isRulesetInvalid && (
+              <TooltipTrigger delay={0}>
+                <Button
+                  aria-label="Invalid ruleset details"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
+                </Button>
+                <Tooltip
+                  placement="top end"
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                >
+                  <p className="mb-2">
+                    The custom ruleset in this project contains invalid content: {rulesetImportIssue}
+                  </p>
+                  <p>Fix the syntax in your connected git repository. The default OAS ruleset is used until then.</p>
+                </Tooltip>
+              </TooltipTrigger>
+            )}
             <TooltipTrigger delay={0}>
               <Button
                 aria-label="Upload custom ruleset"
