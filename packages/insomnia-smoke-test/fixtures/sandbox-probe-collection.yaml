@@ -20,6 +20,9 @@ collection:
       text: |
         {% sandboxprobe 'e2e' %}
         {% cryptoparity 'insomnia-test' %}
+        {% requireprobe 'path' %}
+        {% requireprobe 'left-pad' %}
+        {% requireprobe 'fs' %}
     headers:
       - name: Content-Type
         value: text/plain
