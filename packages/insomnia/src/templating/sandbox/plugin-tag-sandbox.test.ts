@@ -435,6 +435,22 @@ describe('manifest-declared module grants (C3)', () => {
     expect(resolveTemplateTagModules(['path'])).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
   });
 
+  it('canonicalizes declared aliases so the node:-prefixed form grants the module', () => {
+    expect(resolveTemplateTagModules(['node:events'])).toEqual([...TEMPLATE_TAG_BASELINE_MODULES, 'events']);
+    // node:crypto resolves to the already-baseline crypto without duplicating it.
+    expect(resolveTemplateTagModules(['node:crypto'])).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
+  });
+
+  it('a plugin declaring the node:events alias can use EventEmitter', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: eventsTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:events'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('fired');
+  });
+
   it('a plugin granted "events" can use EventEmitter', async () => {
     const actual = await runTagInSandbox({
       pluginSource: eventsTag,

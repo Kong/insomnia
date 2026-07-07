@@ -129,11 +129,17 @@ export const TEMPLATE_TAG_BASELINE_MODULES: string[] = ['path', 'crypto'];
  * they simply fail at require time with "not available in sandbox" (parse and grant are separate
  * concerns). Profile-ceiling intersection is added in P1.
  */
+// alias -> canonical (e.g. "node:events" -> "events"); a Map so keys like "__proto__" stay literal.
+const canonicalModuleName = new Map<string, string>(
+  SANDBOX_MODULES.flatMap(m => [[m.name, m.name], ...(m.aliases ?? []).map(a => [a, m.name] as [string, string])]),
+);
+
 export const resolveTemplateTagModules = (declaredModules: string[] = []): string[] => {
   const resolved = [...TEMPLATE_TAG_BASELINE_MODULES];
   for (const name of declaredModules) {
-    if (!resolved.includes(name)) {
-      resolved.push(name);
+    const canonical = canonicalModuleName.get(name) ?? name;
+    if (!resolved.includes(canonical)) {
+      resolved.push(canonical);
     }
   }
   return resolved;
