@@ -702,6 +702,7 @@ export function registerMainHandlers() {
       }),
       services.workspace.list({ parentId: { $in: projectIds } }),
     ]);
+    const workspaceMetas = await services.workspaceMeta.list({ parentId: { $in: workspaces.map(w => w._id) } });
 
     const projectsWithGitRepos = models.project.sortProjects(projects).map(project => {
       const effectiveId = models.project.isConnectedGitProject(project)
@@ -713,7 +714,7 @@ export function registerMainHandlers() {
       };
     });
 
-    return { projects: projectsWithGitRepos, workspaces };
+    return { projects: projectsWithGitRepos, workspaces, workspaceMetas };
   });
 
   ipcMainHandle('getLocalStorageDataFromFileOrigin', async () => {

@@ -235,7 +235,11 @@ const ProjectNavigationSidebarInner = (
   );
 
   const queryClient = useQueryClient();
-  const { projects: organizationProjects, workspaces: organizationWorkspaces } = useOrganizationData(organizationId);
+  const {
+    projects: organizationProjects,
+    workspaces: organizationWorkspaces,
+    workspaceMetas,
+  } = useOrganizationData(organizationId);
   // Show konnect or none-konnect projects based on selected tab
   const activeProjects = organizationProjects.filter(
     isProjectTabActive ? p => !p.konnectControlPlaneId : p => p.konnectControlPlaneId != null,
@@ -567,11 +571,31 @@ const ProjectNavigationSidebarInner = (
               isCollection && (expandedProjectAndWorkspaceIds ?? []).includes(workspaceId)
             );
 
+            // Change indicators apply to git and cloud (remote) projects only
+            const showSyncStatus = models.project.isRemoteProject(project) || models.project.isGitProject(project);
+            const hasUncommittedChanges = showSyncStatus
+              ? workspaceMetas.find(wm => wm.parentId === workspaceId)?.hasUncommittedChanges
+              : false;
+            const hasUnpushedChanges = showSyncStatus
+              ? workspaceMetas.find(wm => wm.parentId === workspaceId)?.hasUnpushedChanges
+              : false;
+            if (hasUncommittedChanges || hasUnpushedChanges) {
+              const workspaceProjectItem = items.find(i => i.kind === 'project' && i.doc._id === projectId) as Extract<
+                FlatItem,
+                { kind: 'project' }
+              >;
+              if (workspaceProjectItem) {
+                workspaceProjectItem.showSyncStatus = showSyncStatus;
+              }
+            }
+
             items.push({
               kind: 'workspace',
               organizationId,
               project: project,
               doc: workspace as Workspace,
+              hasUncommittedChanges,
+              hasUnpushedChanges,
               collapsed: isWorkspaceCollapsed,
               hidden: isProjectCollapsed,
             });
@@ -719,6 +743,7 @@ const ProjectNavigationSidebarInner = (
     organizationWorkspaces,
     projectWorkspaceSortOrder,
     unsyncedFilesByProjectId,
+    workspaceMetas,
   ]);
 
   const handleLocalWorkspaceReorder = useCallback(

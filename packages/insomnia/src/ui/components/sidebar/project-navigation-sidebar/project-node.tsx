@@ -3,12 +3,9 @@ import { models } from 'insomnia-data';
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import { checkAllProjectSyncStatus } from '~/common/project';
 import { useRootLoaderData } from '~/root';
 import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
-import { useOrganizationData } from '~/ui/hooks/data/use-organization-data';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import { AvatarGroup } from '../../avatar';
 import { Icon } from '../../icon';
@@ -24,19 +21,14 @@ interface ProjectNodeProps {
 }
 
 export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrderChange }: ProjectNodeProps) => {
-  const { doc, collapsed, organizationId } = item;
+  const { doc, collapsed, organizationId, showSyncStatus = false } = item;
   const { userSession } = useRootLoaderData()!;
   const { presence } = useInsomniaEventStreamContext();
-  const { projects: organizationProjects } = useOrganizationData(organizationId);
   const { name: projectName, _id: projectId } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-  const projectsSyncStatusPromise = checkAllProjectSyncStatus(organizationProjects);
 
-  const [allProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise, organizationId);
   const hasUncommittedOrUnpushedChanges =
-    allProjectSyncStatus?.[projectId] ||
-    doc.gitRepository?.hasUncommittedChanges ||
-    doc.gitRepository?.hasUnpushedChanges;
+    showSyncStatus || doc.gitRepository?.hasUncommittedChanges || doc.gitRepository?.hasUnpushedChanges;
 
   const projectPresence = presence
     .filter(p => p.project === doc.remoteId)
@@ -84,7 +76,7 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
         )}
         <span className="min-w-0 flex-1 truncate text-base text-[rgb(var(--color-font-rgb),0.8)]">{projectName}</span>
       </div>
-      {projectPresence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={projectPresence} />}{' '}
+      {projectPresence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={projectPresence} />}
       {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
         <ProjectDropdown
           organizationId={organizationId}

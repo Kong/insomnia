@@ -18,7 +18,6 @@ import { type WorkspaceFlatItem } from './types';
 interface WorkspaceNodeProps {
   item: WorkspaceFlatItem;
   onToggle: (workspaceId: string) => void;
-
   sortOrder: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
   highlighted?: boolean;

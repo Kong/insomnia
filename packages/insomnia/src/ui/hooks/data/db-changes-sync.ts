@@ -3,7 +3,14 @@ import { models } from 'insomnia-data';
 
 import type { ChangeBufferEvent } from '~/common/database';
 
-import { findOrgAndProjectForWorkspace, organizationDataKeys } from './use-organization-data';
+import {
+  addOrganizationDataWorkspaceMeta,
+  deleteOrganizationDataWorkspaceMeta,
+  findOrgAndProjectForWorkspace,
+  findOrgForWorkspaceId,
+  organizationDataKeys,
+  updateOrganizationDataWorkspaceMeta,
+} from './use-organization-data';
 import {
   type CollectionWorkspaceChildren,
   findWorkspaceIdForDoc,
@@ -35,7 +42,14 @@ const WORKSPACE_CHILD_DOC_TYPES = [
   models.environment.type,
 ];
 
-export const MONITOR_DOC_TYPES = [models.project.type, models.workspace.type, ...WORKSPACE_CHILD_DOC_TYPES];
+const WORKSPACE_META_DOC_TYPES = [models.workspaceMeta.type];
+
+export const MONITOR_DOC_TYPES = [
+  models.project.type,
+  models.workspace.type,
+  ...WORKSPACE_CHILD_DOC_TYPES,
+  ...WORKSPACE_META_DOC_TYPES,
+];
 
 // Bridge local NeDB change events to the TanStack cache: patch in place for plain field updates,
 export const subscribeQueryClientToDbChanges = (queryClient: QueryClient): (() => void) => {
@@ -57,6 +71,20 @@ export const subscribeQueryClientToDbChanges = (queryClient: QueryClient): (() =
         const { organizationId } = findOrgAndProjectForWorkspace(queryClient, doc) || {};
         if (organizationId) {
           organizationIdsToRevalidate.add(organizationId);
+        }
+        continue;
+      }
+
+      if (doc.type === models.workspaceMeta.type) {
+        const organizationId = findOrgForWorkspaceId(queryClient, doc.parentId);
+        if (organizationId) {
+          if (event === 'insert') {
+            addOrganizationDataWorkspaceMeta(queryClient, organizationId, doc);
+          } else if (event === 'update') {
+            updateOrganizationDataWorkspaceMeta(queryClient, organizationId, doc);
+          } else if (event === 'remove') {
+            deleteOrganizationDataWorkspaceMeta(queryClient, organizationId, doc);
+          }
         }
         continue;
       }
