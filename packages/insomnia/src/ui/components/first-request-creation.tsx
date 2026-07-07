@@ -19,8 +19,12 @@ import { showToast } from '~/ui/components/toast-notification';
 import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
 import {
   FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
+  FIRST_REQUEST_EXPERIMENT_NAME,
   type FirstRequestTreatment,
   getBackendFirstRequestTreatment,
+  getBackendIsNewSignup,
+  getFirstRequestTreatmentGroup,
+  isFirstRequestExperimentParticipant,
   readCachedFirstRequestTreatment,
   resolveFirstRequestTreatment,
   writeCachedFirstRequestTreatment,
@@ -30,9 +34,9 @@ import { useRequestNewActionFetcher } from '../../routes/organization.$organizat
 import { useWorkspaceNewActionFetcher } from '../../routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Icon } from './icon';
 
-// Guards the experiment-exposure analytics event so it fires at most once per
-// (account, treatment) per app session instead of on every mount.
-const exposedTreatments = new Set<string>();
+// Guards the experiment-assignment analytics event so a given (account, treatment)
+// isn't emitted twice within an app session (cross-session de-dup uses the cache).
+const emittedAssignments = new Set<string>();
 
 const CURL_COMMAND_PATTERN = /^\s*\$?\s*curl(?:\s|$)/i;
 const NOTION_MCP_SERVER_URL = 'https://mcp.notion.com/mcp';
@@ -134,6 +138,13 @@ export const FirstRequestCreation = ({
   const accountCreatedAt = organizationData?.user?.created_at
     ? new Date(organizationData.user.created_at).getTime()
     : undefined;
+  // Whether this user is part of the experiment population (a genuine new sign-up).
+  // Only participants emit assignment analytics; existing users still get B in the UI.
+  const isParticipant = isFirstRequestExperimentParticipant({
+    isNewSignup: getBackendIsNewSignup(organizationData?.user),
+    accountCreatedAt,
+    experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
+  });
   // Last-known treatment for this account, used as an offline fallback.
   const [cachedTreatment] = useState(() => readCachedFirstRequestTreatment(userSession.accountId || ''));
   const inputRef = useRef<HTMLInputElement>(null);
@@ -312,32 +323,49 @@ export const FirstRequestCreation = ({
     };
   }, []);
 
-  // Cache the resolved treatment (offline fallback) and record exposure at most
-  // once per (account, treatment) per session.
+  // On a *confident* treatment result, emit an experiment-assignment analytics event
+  // only when the treatment changed vs the last-known (cached) value — i.e. on the
+  // initial assignment and on a Treatment A→B transition. The warehouse derives each
+  // assignment's `experiment_end_at` as the next assignment's timestamp (LEAD).
   useEffect(() => {
     if (!treatment) {
       return;
     }
 
-    // Only cache confident results (backend or a full client-side computation),
-    // never a value that itself came from the cache/default.
+    // Confident = from the backend or a full client-side computation, never a value
+    // that itself came from the cache/default (which would create phantom churn).
     const isConfident =
       backendTreatment !== undefined ||
       (accountCreatedAt !== undefined &&
         (accountCreatedAt < FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE || createdRequests !== null));
-    if (isConfident) {
-      writeCachedFirstRequestTreatment(userSession.accountId || '', treatment);
+    if (!isConfident) {
+      return;
     }
 
-    const exposureKey = `${userSession.accountId || 'anonymous'}:${treatment}`;
-    if (!exposedTreatments.has(exposureKey)) {
-      exposedTreatments.add(exposureKey);
+    const accountId = userSession.accountId || '';
+    // Persist the last-known treatment for offline rendering (all users, incl. existing).
+    writeCachedFirstRequestTreatment(accountId, treatment);
+
+    // Emit assignment analytics only for experiment participants (new sign-ups) — existing
+    // users get B but are not part of the A/B population — and only when the treatment
+    // changed vs the last-known value (initial assignment or A→B transition).
+    if (!isParticipant) {
+      return;
+    }
+    const changed = treatment !== cachedTreatment;
+    const sessionKey = `${accountId || 'anonymous'}:${treatment}`;
+    if (changed && !emittedAssignments.has(sessionKey)) {
+      emittedAssignments.add(sessionKey);
       window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.firstRequestExperimentExposed,
-        properties: { treatment },
+        event: AnalyticsEvent.experimentAssigned,
+        properties: {
+          experiment_name: FIRST_REQUEST_EXPERIMENT_NAME,
+          treatment_group: getFirstRequestTreatmentGroup(treatment),
+          assigned_at: new Date().toISOString(),
+        },
       });
     }
-  }, [treatment, backendTreatment, accountCreatedAt, createdRequests, userSession.accountId]);
+  }, [treatment, isParticipant, backendTreatment, accountCreatedAt, createdRequests, userSession.accountId, cachedTreatment]);
 
   const handleCreateNotionMcpWorkspace = () => {
     createWorkspaceFetcher.submit({

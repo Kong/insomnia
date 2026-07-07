@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getBackendFirstRequestTreatment,
+  getBackendIsNewSignup,
   getFirstRequestCohort,
   getFirstRequestTreatment,
+  getFirstRequestTreatmentGroup,
+  isFirstRequestExperimentParticipant,
   resolveFirstRequestTreatment,
 } from './first-request-treatment';
 
@@ -52,6 +55,13 @@ describe('getFirstRequestTreatment (client-side fallback)', () => {
   });
 });
 
+describe('getFirstRequestTreatmentGroup', () => {
+  it('maps the internal treatment to the analytics treatment_group', () => {
+    expect(getFirstRequestTreatmentGroup('A')).toBe('treatment_a');
+    expect(getFirstRequestTreatmentGroup('B')).toBe('treatment_b');
+  });
+});
+
 describe('getBackendFirstRequestTreatment', () => {
   it('reads a valid treatment from the user profile', () => {
     expect(getBackendFirstRequestTreatment({ first_request_treatment: 'A' })).toBe('A');
@@ -62,6 +72,31 @@ describe('getBackendFirstRequestTreatment', () => {
     expect(getBackendFirstRequestTreatment({})).toBeUndefined();
     expect(getBackendFirstRequestTreatment(null)).toBeUndefined();
     expect(getBackendFirstRequestTreatment({ first_request_treatment: 'C' })).toBeUndefined();
+  });
+});
+
+describe('getBackendIsNewSignup', () => {
+  it('reads a boolean flag from the user profile, else undefined', () => {
+    expect(getBackendIsNewSignup({ is_new_signup: true })).toBe(true);
+    expect(getBackendIsNewSignup({ is_new_signup: false })).toBe(false);
+    expect(getBackendIsNewSignup({})).toBeUndefined();
+    expect(getBackendIsNewSignup(null)).toBeUndefined();
+  });
+});
+
+describe('isFirstRequestExperimentParticipant', () => {
+  it('prefers the server is_new_signup flag when provided', () => {
+    expect(isFirstRequestExperimentParticipant({ isNewSignup: true, accountCreatedAt: BEFORE_GA, experimentLaunchedAt: GA })).toBe(true);
+    expect(isFirstRequestExperimentParticipant({ isNewSignup: false, accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA })).toBe(false);
+  });
+
+  it('falls back to created_at >= GA when the flag is absent', () => {
+    expect(isFirstRequestExperimentParticipant({ accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA })).toBe(true);
+    expect(isFirstRequestExperimentParticipant({ accountCreatedAt: BEFORE_GA, experimentLaunchedAt: GA })).toBe(false);
+  });
+
+  it('returns false when neither signal is known', () => {
+    expect(isFirstRequestExperimentParticipant({ experimentLaunchedAt: GA })).toBe(false);
   });
 });
 

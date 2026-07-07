@@ -139,7 +139,9 @@ export enum AnalyticsEvent {
   uploadLintRulesetClicked = 'upload-lint-ruleset-clicked',
   firstRequestPaneExampleClicked = 'first-request-pane-example-clicked',
   firstRequestPaneCollectionChanged = 'first-request-pane-collection-changed',
-  firstRequestExperimentExposed = 'first-request-experiment-exposed',
+  // Generic experiment-assignment event (reusable across experiments). Emitted on
+  // each assignment change; feeds the warehouse `experiment_assignments` model.
+  experimentAssigned = 'Experiment Assigned',
 }
 
 export enum InsoEvent {

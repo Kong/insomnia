@@ -17,6 +17,13 @@ export const FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE = Date.parse('2026-07-18T00:00
 
 const CACHE_KEY_PREFIX = 'insomnia.firstRequestTreatment';
 
+/** Experiment name used in analytics (the `experiment_name` column). */
+export const FIRST_REQUEST_EXPERIMENT_NAME = 'new_user_first_request_experience';
+
+/** Maps the internal treatment to the analytics `treatment_group` value. */
+export const getFirstRequestTreatmentGroup = (treatment: FirstRequestTreatment): 'treatment_a' | 'treatment_b' =>
+  treatment === 'A' ? 'treatment_a' : 'treatment_b';
+
 /**
  * Deterministic ~50/50 cohort assignment for the first-request experiment.
  *
@@ -81,6 +88,41 @@ export const getFirstRequestTreatment = ({
 export const getBackendFirstRequestTreatment = (user: unknown): FirstRequestTreatment | undefined => {
   const value = (user as { first_request_treatment?: unknown } | null | undefined)?.first_request_treatment;
   return value === 'A' || value === 'B' ? value : undefined;
+};
+
+/**
+ * Reads the server's `is_new_signup` flag from the user profile, when provided.
+ * Used to decide whether the user is an experiment participant for analytics.
+ */
+export const getBackendIsNewSignup = (user: unknown): boolean | undefined => {
+  const value = (user as { is_new_signup?: unknown } | null | undefined)?.is_new_signup;
+  return typeof value === 'boolean' ? value : undefined;
+};
+
+/**
+ * Whether the user is part of the experiment population (a genuine new sign-up),
+ * as opposed to a pre-existing user who is simply defaulted to Treatment B.
+ *
+ * Prefers the server `is_new_signup` flag; otherwise derives it from the account
+ * creation date vs GA. Returns false when neither is known (can't confirm → don't
+ * emit assignment analytics).
+ */
+export const isFirstRequestExperimentParticipant = ({
+  isNewSignup,
+  accountCreatedAt,
+  experimentLaunchedAt,
+}: {
+  isNewSignup?: boolean;
+  accountCreatedAt?: number;
+  experimentLaunchedAt: number;
+}): boolean => {
+  if (isNewSignup !== undefined) {
+    return isNewSignup;
+  }
+  if (accountCreatedAt !== undefined) {
+    return accountCreatedAt >= experimentLaunchedAt;
+  }
+  return false;
 };
 
 const cacheKey = (accountId: string) => `${CACHE_KEY_PREFIX}:${accountId || 'anonymous'}`;
