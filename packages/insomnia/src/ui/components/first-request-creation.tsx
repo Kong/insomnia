@@ -582,7 +582,11 @@ export const FirstRequestCreation = ({
               <span>{createButtonLabel}</span>
             </Button>
           </div>
-          {errorText && <div className="mt-2 text-xs text-[#FF5631]">{errorText}</div>}
+          {errorText && (
+            <div className="mt-2 text-xs text-[#FF5631]" role="alert" aria-live="polite">
+              {errorText}
+            </div>
+          )}
 
           {treatment === 'A' && (
             <div className="mt-6 flex flex-wrap gap-x-10 gap-y-6">
