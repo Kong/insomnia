@@ -753,10 +753,6 @@ class RepoFileWatcher {
       return null;
     }
 
-    if (fileStat.isSymbolicLink()) {
-      return null;
-    }
-
     // ── Fast-path: mtime unchanged → skip ────────────────────────────
     // Bypassed when forceRead is true (e.g. importAllFiles after git
     // operations) so every file is always read and compared by content.
