@@ -41,10 +41,11 @@ test.describe('Git repositories in user-chosen folders', () => {
       await expect.poll(() => fs.existsSync(path.join(folder, '.git')), { timeout: 30_000 }).toBe(true);
 
       // Back to the project dashboard, then try to adopt the same folder again.
-      await insomnia.projectPage.openGitProjectFromFolder('Second Adoption', folder);
+      await insomnia.projectPage.chooseGitProjectFolderForOpen('Second Adoption', folder);
 
-      // The hard-block surfaces an error mentioning the already-connected folder.
+      // The UI blocks before submit and surfaces the already-connected folder.
       await expect.soft(page.getByText(/already connected to this folder/i)).toBeVisible();
+      await expect.soft(page.getByRole('button', { name: 'Open', exact: true })).toBeDisabled();
     } finally {
       fs.rmSync(folder, { recursive: true, force: true });
     }

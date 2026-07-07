@@ -152,17 +152,25 @@ export class ProjectPage extends BasePage {
   }
 
   /**
-   * Opens an existing local folder as a Git project (no clone). The native
-   * directory picker is mocked to return `folderPath`. If the folder isn't a git
-   * repo, the app runs `git init`.
+   * Selects an existing local folder in the Git project form without opening it.
+   * The native directory picker is mocked to return `folderPath`.
    */
-  async openGitProjectFromFolder(name: string, folderPath: string): Promise<void> {
+  async chooseGitProjectFolderForOpen(name: string, folderPath: string): Promise<void> {
     await mockOpenDialogForDirectory(this.app, folderPath);
     await this.page.getByRole('button', { name: 'Create new Project' }).click();
     await this.setProjectName(name);
     await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Open local folder' }).click();
     await this.page.getByRole('button', { name: 'Choose folder' }).click();
+  }
+
+  /**
+   * Opens an existing local folder as a Git project (no clone). The native
+   * directory picker is mocked to return `folderPath`. If the folder isn't a git
+   * repo, the app runs `git init`.
+   */
+  async openGitProjectFromFolder(name: string, folderPath: string): Promise<void> {
+    await this.chooseGitProjectFolderForOpen(name, folderPath);
     await this.page.getByRole('button', { name: 'Open', exact: true }).click();
     // Confirm the "Do you trust this folder?" dialog before the folder is opened/initialized.
     await this.page.getByRole('button', { name: 'Open folder' }).click();
