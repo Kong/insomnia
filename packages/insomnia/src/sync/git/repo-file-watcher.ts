@@ -993,7 +993,6 @@ class RepoFileWatcher {
     return rel.startsWith(GIT_DIR + path.sep) || rel === GIT_DIR;
   }
 
-  /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping `.git`. */
   /**
    * Whether the repository's working-tree directory still exists on disk.
    *
@@ -1011,6 +1010,7 @@ class RepoFileWatcher {
     }
   }
 
+  /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping `.git`. */
   private async collectYamlFiles(dir: string): Promise<string[]> {
     const result: string[] = [];
     let entries: fs.Dirent[];
