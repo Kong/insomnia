@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getEncryptionKeys, getUserProfile } from '../user';
+import { getEncryptionKeys, getUserProfile, reportRequestsCreated } from '../user';
 
 const { mockFetch } = vi.hoisted(() => ({
   mockFetch: vi.fn(),
@@ -111,5 +111,45 @@ describe('getEncryptionKeys', () => {
       path: '/v3/users/me/encryption-keys',
       sessionId: 'sess_xyz',
     });
+  });
+});
+
+describe('reportRequestsCreated', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('POSTs to the requests-created endpoint with no body by default (server defaults to 1)', async () => {
+    mockFetch.mockResolvedValue({ requests_created: 5 });
+
+    await reportRequestsCreated({ sessionId: 'sess_xyz' });
+
+    expect(mockFetch).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v3/users/me/requests-created',
+      sessionId: 'sess_xyz',
+      data: undefined,
+    });
+  });
+
+  it('sends an explicit count when provided', async () => {
+    mockFetch.mockResolvedValue({ requests_created: 7 });
+
+    await reportRequestsCreated({ sessionId: 'sess_xyz', count: 3 });
+
+    expect(mockFetch).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v3/users/me/requests-created',
+      sessionId: 'sess_xyz',
+      data: { count: 3 },
+    });
+  });
+
+  it('returns the updated account total from the API response', async () => {
+    mockFetch.mockResolvedValue({ requests_created: 42 });
+
+    const result = await reportRequestsCreated({ sessionId: 'sess_xyz' });
+
+    expect(result.requests_created).toBe(42);
   });
 });
