@@ -48,7 +48,9 @@ export function init(response?: MaybeResponse) {
       },
 
       getBody() {
-        return services.helpers.getResponseBodyBuffer(response);
+        return services.helpers
+          .getResponseBodyBuffer(response)
+          .then(result => (typeof result === 'string' ? result : Buffer.from(result)));
       },
 
       getBodyStream() {
