@@ -474,13 +474,16 @@ describe('manifest-declared module grants (C3)', () => {
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
-  // Run a plugin `run` body and return its string result. Globals are ungated, so the grant set is
-  // irrelevant; crypto-backed globals need hostCrypto, passed here to match the main-process path.
-  const runGlobal = (body: string) =>
+  // Run a plugin `run` body and return its string result. `body` is always a constant literal at
+  // the call sites; dynamic values are passed as tag args (data via the envelope, read as
+  // arguments[1..] inside the tag) rather than interpolated into the source — so no test value is
+  // ever concatenated into eval'd code. Globals are ungated, so the grant set is irrelevant;
+  // crypto-backed globals need hostCrypto, passed here to match the main-process path.
+  const runGlobal = (body: string, args: unknown[] = []) =>
     runTagInSandbox({
-      pluginSource: `module.exports.templateTags = [{ name: 'g', run: function () { ${body} } }];`,
+      pluginSource: `module.exports.templateTags = [{ name: 'g', run: function (context) { ${body} } }];`,
       tagName: 'g',
-      envelope: envelope([]),
+      envelope: envelope(args),
       bridge: noBridge,
       hostCrypto: nodeHostCrypto,
     });
@@ -492,13 +495,13 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       ['hex', 'hi there 👋'],
       ['latin1', 'hello'],
     ])('Buffer.from(str).toString(%s)', async (enc, input) => {
-      const actual = await runGlobal(`return Buffer.from(${JSON.stringify(input)}).toString(${JSON.stringify(enc)});`);
+      const actual = await runGlobal('return Buffer.from(arguments[1]).toString(arguments[2]);', [input, enc]);
       expect(actual).toBe(Buffer.from(input).toString(enc as BufferEncoding));
     });
 
     it('round-trips base64 back to utf8', async () => {
       const b64 = Buffer.from('round trip').toString('base64');
-      const actual = await runGlobal(`return Buffer.from(${JSON.stringify(b64)}, 'base64').toString('utf8');`);
+      const actual = await runGlobal("return Buffer.from(arguments[1], 'base64').toString('utf8');", [b64]);
       expect(actual).toBe('round trip');
     });
 
@@ -554,7 +557,8 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
     it('parses the common parts of an absolute URL', async () => {
       const u = 'https://user:pw@example.com:8443/a/b?x=1&y=2#frag';
       const actual = await runGlobal(
-        `var u = new URL(${JSON.stringify(u)}); return [u.protocol, u.hostname, u.port, u.pathname, u.search, u.hash, u.origin].join('|');`,
+        "var u = new URL(arguments[1]); return [u.protocol, u.hostname, u.port, u.pathname, u.search, u.hash, u.origin].join('|');",
+        [u],
       );
       const expected = new URL(u);
       expect(actual).toBe(
@@ -589,7 +593,9 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
     it('cannot be spoofed away by plugin code', async () => {
       // Non-writable: a reassignment throws in strict mode / is a no-op — the marker survives.
       expect(
-        await runGlobal('try { INSOMNIA_TEMPLATE_SANDBOX = false; } catch (e) {} return String(INSOMNIA_TEMPLATE_SANDBOX);'),
+        await runGlobal(
+          'try { INSOMNIA_TEMPLATE_SANDBOX = false; } catch (e) {} return String(INSOMNIA_TEMPLATE_SANDBOX);',
+        ),
       ).toBe('true');
     });
   });
