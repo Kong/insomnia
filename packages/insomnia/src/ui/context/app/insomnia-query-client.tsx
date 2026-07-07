@@ -21,7 +21,7 @@ export const InsomniaTanstackQueryClientContext = ({
   organizationId,
 }: PropsWithChildren<{ organizationId: string }>) => {
   useEffect(() => {
-    subscribeQueryClientToDbChanges(dbQueryClient);
+    return subscribeQueryClientToDbChanges(dbQueryClient);
   }, []);
 
   useEffect(() => {
