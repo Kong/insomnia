@@ -1063,6 +1063,13 @@ const ProjectNavigationSidebarInner = (
       }
 
       event.preventDefault();
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.keyboardShortcutUsed,
+        properties: {
+          source: 'navigation-sidebar',
+          action: 'showCreateDropdown',
+        },
+      });
 
       const targetId = targetItem.doc._id;
       const targetIndex = visibleFlatItems.findIndex(item => item.doc._id === targetId);
