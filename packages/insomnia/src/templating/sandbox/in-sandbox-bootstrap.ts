@@ -31,7 +31,7 @@ export const IN_SANDBOX_BOOTSTRAP = [
 
   // --- stable sandbox identity marker ---
   // A plugin (or the e2e canary) can feature-detect the sandbox with this. Needed because the
-  // sandbox now provides a `process` stub (M2), so "typeof process === undefined" no longer
+  // sandbox now provides a `process` stub (M2), so `typeof process === "undefined"` no longer
   // distinguishes sandbox from the legacy main-process path. Non-writable so it can\'t be spoofed.
   '  Object.defineProperty(globalThis, "INSOMNIA_TEMPLATE_SANDBOX", { value: true, writable: false, configurable: false, enumerable: true });',
 

@@ -135,8 +135,11 @@ const clearPluginToast = async (page: Page) => {
   }
 };
 
-// Enable the sandbox via Preferences → Scripting, then close the modal. Hard-asserts the switch
-// flipped on (a missed click must fail here, not silently leave tags on the legacy path).
+// Enable the sandbox via Preferences → Scripting, then close the modal. The assertions are
+// `expect.soft` because this suite's ESLint config (playwright/require-soft-assertions) mandates it;
+// soft still *waits* for the switch to flip and the modal to close (serializing the UI), it just
+// won't abort here. The authoritative signal that the flag actually took effect is the downstream
+// `assertTagPreviewEventually` canary, which polls the rendered output until it reports `sandbox`.
 const enableSandbox = async (page: Page) => {
   await page.getByTestId('settings-button').click();
   const sandboxToggle = page.getByTestId('toggle-template-tag-sandbox');
@@ -145,7 +148,7 @@ const enableSandbox = async (page: Page) => {
   await sandboxToggle.click();
   await expect.soft(sandboxToggle.getByRole('switch')).toBeChecked();
   await page.locator('.app').press('Escape');
-  // Ensure the settings modal has fully closed before the caller renders anything.
+  // Wait for the settings modal to fully close before the caller renders anything.
   await expect.soft(page.getByTestId('toggle-template-tag-sandbox')).toBeHidden();
 };
 

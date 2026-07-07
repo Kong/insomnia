@@ -545,6 +545,14 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       expect(actual).toBe('true:16:true');
     });
 
+    it('getRandomValues throws past the 65536-byte quota instead of zero-filling the tail', async () => {
+      // The host clamps __cryptoRandomBytes to 65536; without the quota guard a larger request would
+      // silently leave the tail zero (predictable). Match WebCrypto: throw QuotaExceededError.
+      await expect(runGlobal('return crypto.getRandomValues(new Uint8Array(65537));')).rejects.toThrow(
+        /exceeds the number of bytes of entropy/,
+      );
+    });
+
     it('subtle.digest SHA-256 matches node:crypto', async () => {
       const actual = await runGlobal(
         "var data = new TextEncoder().encode('insomnia'); return crypto.subtle.digest('SHA-256', data).then(function (buf) { var b = new Uint8Array(buf); var h = ''; for (var i = 0; i < b.length; i++) { h += ('0' + b[i].toString(16)).slice(-2); } return h; });",
