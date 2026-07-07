@@ -560,25 +560,20 @@ const ProjectNavigationSidebarInner = (
               hidden: activeFilter ? !unsyncedWorkspaceMatchesFilter : isProjectCollapsed,
             });
           } else {
-            const workspaceWithSyncStatus = workspace as WorkspaceWithSyncStatus;
-            const { scope, _id: workspaceId } = workspaceWithSyncStatus;
+            const { scope, _id: workspaceId } = workspace as Workspace;
             const isCollection = scope === 'collection';
             // Only collection workspace has nested children
             const isWorkspaceCollapsed = !(
               isCollection && (expandedProjectAndWorkspaceIds ?? []).includes(workspaceId)
             );
-            // Change indicators apply to git and cloud (remote) projects only
-            const showSyncStatus = models.project.isRemoteProject(project) || models.project.isGitProject(project);
 
             items.push({
               kind: 'workspace',
               organizationId,
               project: project,
-              doc: workspaceWithSyncStatus,
+              doc: workspace as Workspace,
               collapsed: isWorkspaceCollapsed,
               hidden: isProjectCollapsed,
-              hasUncommittedChanges: showSyncStatus ? workspaceWithSyncStatus.hasUncommittedChanges : false,
-              hasUnpushedChanges: showSyncStatus ? workspaceWithSyncStatus.hasUnpushedChanges : false,
             });
 
             const allRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceId.get(

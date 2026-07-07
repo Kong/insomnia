@@ -690,7 +690,7 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('getOrganizationData', async (_, organizationId: string) => {
-    const projects = await services.project.list({ organizationId });
+    const projects = await services.project.listByOrganizationIds(organizationId);
     const projectIds = projects.map(p => p._id);
     const gitRepositoryIds = projects
       .map(p => (models.project.isConnectedGitProject(p) ? models.project.getEffectiveRepoId(p) : null))
