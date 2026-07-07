@@ -29,6 +29,12 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '  delete globalThis.__envelopeJSON;',
   '  delete globalThis.__tagName;',
 
+  // --- stable sandbox identity marker ---
+  // A plugin (or the e2e canary) can feature-detect the sandbox with this. Needed because the
+  // sandbox now provides a `process` stub (M2), so "typeof process === undefined" no longer
+  // distinguishes sandbox from the legacy main-process path. Non-writable so it can\'t be spoofed.
+  '  Object.defineProperty(globalThis, "INSOMNIA_TEMPLATE_SANDBOX", { value: true, writable: false, configurable: false, enumerable: true });',
+
   // --- pristine intrinsics for the module gate ---
   // Captured now, before any plugin code runs, so the grant check can't be defeated by a plugin
   // reassigning Array.prototype.indexOf (or the global String). Callers below use these instead of

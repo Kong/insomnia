@@ -7,9 +7,10 @@ The `sandboxprobe` tag reports **where** it executed and exercises an async host
 - Sandbox flag **off** → `hello | ran in: main-process | arch via bridge: <arch>`
 - Sandbox flag **on** → `hello | ran in: sandbox | arch via bridge: <arch>`
 
-`ran in` flips because Node's `process` global exists in the legacy main-process path but is
-absent inside QuickJS. `arch via bridge` proves `context.util.nodeOS()` round-tripped through
-`__hostBridge` → `pluginToMainAPI['nodeOS']` and back.
+`ran in` flips because the sandbox defines the `INSOMNIA_TEMPLATE_SANDBOX` marker global, which the
+legacy main-process path lacks. (`process` used to be the signal, but since M2 the sandbox provides
+a `process` stub too, so a dedicated marker is used instead.) `arch via bridge` proves
+`context.util.nodeOS()` round-tripped through `__hostBridge` → `pluginToMainAPI['nodeOS']` and back.
 
 ## Install (dev)
 
@@ -31,3 +32,9 @@ The `eventsprobe` tag demos a **manifest-declared grant** (C3): this plugin's `p
 declares `insomnia.permissions.modules: ["events"]`, so `{% eventsprobe %}` renders `events-ok`.
 A plugin that did not declare `events` would get `Module 'events' not permitted by manifest`.
 Preferences → Plugins shows each plugin's declared permissions (this one lists `modules: events`).
+
+The `stdlibprobe` tag demos the **ambient sandbox globals** (M2) — `Buffer`, `URL`/`URLSearchParams`,
+a frozen `process` stub, and Web-Crypto `crypto.getRandomValues`/`crypto.subtle`. These are always
+present (not manifest-gated) as pure-JS or host-backed safe equivalents, and render identically to
+the legacy main-process path: `{% stdlibprobe 'buffer' %}`, `{% stdlibprobe 'url' %}`,
+`{% stdlibprobe 'platform' %}`.
