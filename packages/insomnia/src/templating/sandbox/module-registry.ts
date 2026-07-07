@@ -23,6 +23,11 @@ export interface SandboxModuleDefinition {
   /**
    * ES5 function-expression source, evaluated inside the sandbox, that returns the module's
    * exports. Invoked at most once per sandbox context — `__require` caches the exports object.
+   *
+   * SECURITY INVARIANT: this string is interpolated **verbatim** (not escaped) into
+   * `MODULE_REGISTRY_SOURCE` and eval'd inside the sandbox, so it MUST be a trusted, in-repo
+   * literal. Never derive it from plugin manifests, user input, or anything fetched at runtime —
+   * doing so is code injection into the sandbox bootstrap.
    */
   factorySource: string;
 }
@@ -89,10 +94,15 @@ export const TEMPLATE_TAG_BASELINE_MODULES: string[] = ['path', 'crypto'];
  * bootstrap's `__require` resolves from.
  */
 export const MODULE_REGISTRY_SOURCE: string = [
-  ...SANDBOX_MODULES.map(
-    m =>
-      `globalThis.__registerModule(${JSON.stringify(m.name)}, ${JSON.stringify(m.aliases ?? [])}, ${m.factorySource});`,
-  ),
+  ...SANDBOX_MODULES.map(m => {
+    // name/aliases are JSON-encoded (data); factorySource is interpolated raw (code), so it must be
+    // a trusted literal — see SandboxModuleDefinition.factorySource. Tripwire: reject anything that
+    // isn't a bare function expression, catching accidental non-literal/derived sources.
+    if (!/^function\b/.test(m.factorySource.trim())) {
+      throw new Error(`Sandbox module '${m.name}' factorySource must be a function expression`);
+    }
+    return `globalThis.__registerModule(${JSON.stringify(m.name)}, ${JSON.stringify(m.aliases ?? [])}, ${m.factorySource});`;
+  }),
   // Lock the registry once populated — plugin code must not be able to register or replace factories.
   'delete globalThis.__registerModule;',
 ].join('\n');
