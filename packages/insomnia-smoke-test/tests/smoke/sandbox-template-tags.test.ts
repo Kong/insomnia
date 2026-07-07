@@ -32,7 +32,9 @@ const installProbePlugin = (dataPath: string) => {
           description: 'Reports whether it executed inside the QuickJS sandbox',
           args: [{ displayName: 'Label', type: 'string', defaultValue: 'hello' }],
           async run(context, label = 'hello') {
-            const ranIn = typeof process === 'undefined' ? 'sandbox' : 'main-process';
+            // The sandbox sets INSOMNIA_TEMPLATE_SANDBOX; the legacy main-process path does not.
+            // (process now exists in both — the sandbox provides a stub — so it can't be the signal.)
+            const ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'sandbox' : 'main-process';
             let arch = 'n/a';
             try {
               const hostOS = await context.util.nodeOS();
@@ -62,6 +64,44 @@ const installProbePlugin = (dataPath: string) => {
               return require('path').join('a', 'b');
             }
             return typeof require(mod);
+          },
+        },
+        {
+          name: 'stdlibprobe',
+          displayName: 'Stdlib Probe',
+          description: 'Exercises ambient globals (Buffer/URL/process/crypto) for parity + escape checks',
+          args: [{ displayName: 'API', type: 'string', defaultValue: 'buffer' }],
+          async run(context, api = 'buffer') {
+            if (api === 'buffer') {
+              return Buffer.from('hi 👋').toString('base64');
+            }
+            if (api === 'url') {
+              const u = new URL('https://user@example.com:8443/p?a=1#h');
+              return [u.hostname, u.port, u.pathname, u.search, u.origin].join('|');
+            }
+            if (api === 'querystring') {
+              const p = new URLSearchParams('a=1&b=two');
+              return p.get('a') + ',' + p.get('b');
+            }
+            if (api === 'platform') {
+              return process.platform;
+            }
+            if (api === 'subtle') {
+              const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('insomnia'));
+              const bytes = new Uint8Array(buf);
+              let hex = '';
+              for (let i = 0; i < bytes.length; i++) {
+                hex += ('0' + bytes[i].toString(16)).slice(-2);
+              }
+              return hex;
+            }
+            if (api === 'env') {
+              return JSON.stringify(process.env);
+            }
+            if (api === 'frozen') {
+              return String(Object.isFrozen(process));
+            }
+            return 'unknown-api';
           },
         },
       ];
@@ -95,14 +135,18 @@ const clearPluginToast = async (page: Page) => {
   }
 };
 
-// Enable the sandbox via Preferences → Scripting, then close the modal.
+// Enable the sandbox via Preferences → Scripting, then close the modal. Hard-asserts the switch
+// flipped on (a missed click must fail here, not silently leave tags on the legacy path).
 const enableSandbox = async (page: Page) => {
   await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Scripting' }).click();
   const sandboxToggle = page.getByTestId('toggle-template-tag-sandbox');
+  await page.getByRole('tab', { name: 'Scripting' }).click();
+  await sandboxToggle.getByRole('switch').waitFor();
   await sandboxToggle.click();
   await expect.soft(sandboxToggle.getByRole('switch')).toBeChecked();
   await page.locator('.app').press('Escape');
+  // Ensure the settings modal has fully closed before the caller renders anything.
+  await expect.soft(page.getByTestId('toggle-template-tag-sandbox')).toBeHidden();
 };
 
 test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sandbox', async ({
@@ -150,27 +194,53 @@ test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sa
     const modal = page.getByRole('dialog');
     await expect.soft(modal.getByLabel('Live Preview')).toContainText(expected);
     await modal.getByRole('button', { name: 'Done' }).click();
+    // Wait for the editor to fully close — otherwise a still-open dialog (e.g. after an async tag
+    // render) intercepts the next interaction, which can silently swallow the settings toggle.
+    await expect.soft(modal).toBeHidden();
+  };
+
+  // Read a tag's rendered Live Preview value (used to compare flag-off vs flag-on parity).
+  const readTagPreview = async (tagPrefix: string): Promise<string> => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    const preview = modal.getByLabel('Live Preview');
+    await expect.soft(preview).not.toHaveValue('rendering...');
+    const value = (await preview.inputValue()).trim();
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+    return value;
+  };
+
+  // The tag editor renders once per open, so a preview opened before a just-changed setting has
+  // propagated to the main process (where the sandbox flag is read) stays stale. Re-open the pill
+  // each poll until the output reflects the new flag.
+  const assertTagPreviewEventually = async (tagPrefix: string, expected: string) => {
+    await expect.poll(() => readTagPreview(tagPrefix), { timeout: 20_000 }).toContain(expected);
   };
 
   const expectedHash = crypto.createHash('sha256').update('insomnia-test').digest('hex');
+  // M2 stdlib APIs whose output must be byte-identical between the legacy path and the sandbox.
+  const parityApis = ['buffer', 'url', 'querystring', 'platform', 'subtle'] as const;
 
-  // Flag off (default): tags run on the legacy main-process path.
+  // Flag off (default): tags run on the legacy main-process path. Capture the stdlib outputs here
+  // so we can assert the sandbox reproduces them byte-for-byte once the flag is on.
   await assertTagPreview('{% sandboxprobe', 'e2e | ran in: main-process');
   await assertTagPreview('{% cryptoparity', expectedHash);
+  const legacyStdlib: Record<string, string> = {};
+  for (const api of parityApis) {
+    legacyStdlib[api] = await readTagPreview(`{% stdlibprobe '${api}'`);
+  }
 
-  // Toggle the sandbox on: Preferences → Scripting → "Run template tags in sandbox".
-  await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Scripting' }).click();
-  const sandboxToggle = page.getByTestId('toggle-template-tag-sandbox');
-  await sandboxToggle.click();
-  await expect.soft(sandboxToggle.getByRole('switch')).toBeChecked();
-  await page.locator('.app').press('Escape');
+  // Toggle the sandbox on (Preferences → Scripting). enableSandbox hard-asserts the switch flips,
+  // so a missed click fails here loudly instead of silently rendering on the legacy path below.
+  await enableSandbox(page);
 
   // Canary: the same tag now reports sandbox execution, and the async host bridge still round-trips.
   // Derive the expected arch from the Electron main process (where pluginToMainAPI runs) rather
-  // than the Playwright runner, which can differ in cross-arch setups.
+  // than the Playwright runner, which can differ in cross-arch setups. Poll (re-opening the pill)
+  // so the just-toggled flag has time to propagate to the main process before we assert on it.
   const electronArch = await app.evaluate(() => process.arch);
-  await assertTagPreview('{% sandboxprobe', `e2e | ran in: sandbox | arch via bridge: ${electronArch}`);
+  await assertTagPreviewEventually('{% sandboxprobe', `e2e | ran in: sandbox | arch via bridge: ${electronArch}`);
 
   // Parity: the sandboxed require('crypto') workload is byte-identical to the legacy render above.
   await assertTagPreview('{% cryptoparity', expectedHash);
@@ -181,6 +251,19 @@ test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sa
   await assertTagPreview("{% requireprobe 'path'", 'a/b');
   await assertTagPreview("{% requireprobe 'left-pad'", "Module 'left-pad' not permitted by manifest");
   await assertTagPreview("{% requireprobe 'fs'", "Module 'fs' not permitted by manifest");
+
+  // Sandbox stdlib (M2): the ambient globals (Buffer/URL/URLSearchParams/process.platform/
+  // crypto.subtle) produce byte-identical output to the legacy Node path they replace.
+  for (const api of parityApis) {
+    expect.soft(await readTagPreview(`{% stdlibprobe '${api}'`), `stdlib '${api}' parity`).toBe(legacyStdlib[api]);
+  }
+  // subtle.digest is also pinned to a known value (guards against both paths sharing a bug).
+  expect.soft(legacyStdlib.subtle).toBe(crypto.createHash('sha256').update('insomnia').digest('hex'));
+
+  // Escape checks — sandbox-only (the legacy path has a real, unfrozen process): the process stub
+  // exposes no host environment and is frozen.
+  await assertTagPreview("{% stdlibprobe 'env'", '{}');
+  await assertTagPreview("{% stdlibprobe 'frozen'", 'true');
 });
 
 // The tag body used by both manifest plugins: require('events') and prove EventEmitter works, or
