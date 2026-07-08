@@ -36,7 +36,7 @@ export const GitCredentialSelect: FC<Props> = ({
       onOpenChange={setIsOpen}
       aria-label={label}
       selectedKey={selected?._id ?? null}
-      onSelectionChange={key => onChange(key as string)}
+      onSelectionChange={key => key && onChange(String(key))}
     >
       <Label className="mb-2 px-0.5 pt-0 text-sm text-(--color-font)">{label}</Label>
       <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
