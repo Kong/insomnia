@@ -159,9 +159,10 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '    };',
   '    var __enc = function (s) { return encodeURIComponent(s).replace(/%20/g, "+"); };',
   '    USP.prototype.append = function (k, v) { this._p.push([String(k), String(v)]); };',
+  // WHATWG: update the FIRST match in place, drop later ones; append if absent.
   '    USP.prototype.set = function (k, v) {',
   '      var found = false; k = String(k); v = String(v);',
-  '      for (var i = this._p.length - 1; i >= 0; i--) { if (this._p[i][0] === k) { if (found) { this._p.splice(i, 1); } else { this._p[i][1] = v; found = true; } } }',
+  '      for (var i = 0; i < this._p.length;) { if (this._p[i][0] === k) { if (found) { this._p.splice(i, 1); continue; } this._p[i][1] = v; found = true; } i++; }',
   '      if (!found) { this._p.push([k, v]); }',
   '    };',
   '    USP.prototype.get = function (k) { k = String(k); for (var i = 0; i < this._p.length; i++) { if (this._p[i][0] === k) { return this._p[i][1]; } } return null; };',

@@ -634,5 +634,13 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       // Parity: our '+'-encoding round-trips through node's URLSearchParams.
       expect(new URLSearchParams(actual).get('q')).toBe('c d');
     });
+
+    it('set updates the first occurrence in place and drops the rest', async () => {
+      const actual = await runGlobal("var p = new URLSearchParams('a=1&b=2&a=3'); p.set('a', '9'); return p.toString();");
+      const expected = new URLSearchParams('a=1&b=2&a=3');
+      expected.set('a', '9');
+      expect(actual).toBe(expected.toString());
+      expect(actual).toBe('a=9&b=2');
+    });
   });
 });
