@@ -1,12 +1,25 @@
 /**
  * @vitest-environment jsdom
  */
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { dispatchEditorUndo } from './editor-undo';
 
+// jsdom does not implement execCommand, so install a stub per test to observe
+// the native-fallback path. Restore the original explicitly afterwards:
+// vi.restoreAllMocks() cannot revert a direct property assignment, so leaving it
+// would leak the stub into later tests and make the suite order-dependent.
+const originalExecCommand = document.execCommand;
+let execCommand: ReturnType<typeof vi.fn>;
+
+beforeEach(() => {
+  execCommand = vi.fn().mockReturnValue(true);
+  document.execCommand = execCommand;
+});
+
 afterEach(() => {
   document.body.innerHTML = '';
+  document.execCommand = originalExecCommand;
   vi.restoreAllMocks();
 });
 
@@ -27,9 +40,6 @@ const mountFocusedCodeMirror = () => {
 describe('dispatchEditorUndo', () => {
   it('drives CodeMirror history when focus is inside a CodeMirror editor', () => {
     const cm = mountFocusedCodeMirror();
-    // jsdom does not implement execCommand; install a stub to observe the call.
-    const execCommand = vi.fn().mockReturnValue(true);
-    document.execCommand = execCommand;
 
     dispatchEditorUndo('undo');
     dispatchEditorUndo('redo');
@@ -44,9 +54,6 @@ describe('dispatchEditorUndo', () => {
     const input = document.createElement('input');
     document.body.append(input);
     input.focus();
-    // jsdom does not implement execCommand; install a stub to observe the call.
-    const execCommand = vi.fn().mockReturnValue(true);
-    document.execCommand = execCommand;
 
     dispatchEditorUndo('undo');
     dispatchEditorUndo('redo');
@@ -56,10 +63,6 @@ describe('dispatchEditorUndo', () => {
   });
 
   it('falls back to the native edit command when nothing is focused', () => {
-    // jsdom does not implement execCommand; install a stub to observe the call.
-    const execCommand = vi.fn().mockReturnValue(true);
-    document.execCommand = execCommand;
-
     dispatchEditorUndo('undo');
 
     expect(execCommand).toHaveBeenCalledWith('undo');
