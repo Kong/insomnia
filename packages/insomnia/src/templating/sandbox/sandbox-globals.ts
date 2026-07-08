@@ -96,10 +96,15 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '    globalThis.process = Object.freeze(proc);',
   '  }',
 
-  // --- crypto (Web Crypto subset: getRandomValues + subtle.digest), host-backed ---
+  // --- crypto (Web Crypto subset: getRandomValues + randomUUID + subtle.digest), host-backed ---
   '  if (typeof globalThis.crypto === "undefined") {',
   '    var __algoMap = { "SHA-1": "sha1", "SHA-256": "sha256", "SHA-384": "sha384", "SHA-512": "sha512" };',
   '    globalThis.crypto = {',
+  // host-backed; throw (not weak fallback) when the host binding is absent, like getRandomValues.
+  '      randomUUID: function () {',
+  '        if (typeof globalThis.__cryptoRandomUUID !== "function") { throw new Error("crypto.randomUUID is not available in this sandbox"); }',
+  '        return globalThis.__cryptoRandomUUID();',
+  '      },',
   '      getRandomValues: function (typedArray) {',
   '        if (typeof globalThis.__cryptoRandomBytes !== "function") { throw new Error("crypto.getRandomValues is not available in this sandbox"); }',
   '        if (!typedArray || typeof typedArray.byteLength !== "number") { throw new TypeError("getRandomValues expects a TypedArray"); }',

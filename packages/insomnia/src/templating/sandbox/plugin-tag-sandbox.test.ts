@@ -564,6 +564,11 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       );
       expect(actual).toBe(nodeCrypto.createHash('sha256').update('insomnia').digest('hex'));
     });
+
+    it('randomUUID returns a v4 UUID (host-backed, matches node:crypto shape)', async () => {
+      const actual = await runGlobal('return crypto.randomUUID();');
+      expect(actual).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    });
   });
 
   describe('URL', () => {
