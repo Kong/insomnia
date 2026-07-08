@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  getBackendFirstRequestTreatment,
-  getBackendIsNewSignup,
   getFirstRequestCohort,
   getFirstRequestTreatment,
   getFirstRequestTreatmentGroup,
+  getOnboardingIsNewSignup,
+  getOnboardingReachedThreshold,
+  getOnboardingTreatment,
   isFirstRequestExperimentParticipant,
   resolveFirstRequestTreatment,
 } from './first-request-treatment';
@@ -37,20 +38,20 @@ describe('getFirstRequestCohort', () => {
 describe('getFirstRequestTreatment (client-side fallback)', () => {
   it('returns "B" for accounts created before the experiment launched', () => {
     expect(
-      getFirstRequestTreatment({ accountCreatedAt: BEFORE_GA, experimentLaunchedAt: GA, createdRequests: 0, cohortId: 'acct_123' }),
+      getFirstRequestTreatment({ accountCreatedAt: BEFORE_GA, experimentLaunchedAt: GA, hasGraduated: false, cohortId: 'acct_123' }),
     ).toBe('B');
   });
 
-  it('assigns new sign-ups (created on/after GA, <3 requests) to their cohort', () => {
+  it('assigns new sign-ups (created on/after GA, not graduated) to their cohort', () => {
     const cohort = getFirstRequestCohort('acct_123');
     expect(
-      getFirstRequestTreatment({ accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA, createdRequests: 0, cohortId: 'acct_123' }),
+      getFirstRequestTreatment({ accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA, hasGraduated: false, cohortId: 'acct_123' }),
     ).toBe(cohort);
   });
 
-  it('graduates a new sign-up to "B" once they have created 3 or more requests', () => {
+  it('graduates a new sign-up to "B" once they have graduated', () => {
     expect(
-      getFirstRequestTreatment({ accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA, createdRequests: 3, cohortId: 'acct_123' }),
+      getFirstRequestTreatment({ accountCreatedAt: AFTER_GA, experimentLaunchedAt: GA, hasGraduated: true, cohortId: 'acct_123' }),
     ).toBe('B');
   });
 });
@@ -62,25 +63,34 @@ describe('getFirstRequestTreatmentGroup', () => {
   });
 });
 
-describe('getBackendFirstRequestTreatment', () => {
-  it('reads a valid treatment from the user profile', () => {
-    expect(getBackendFirstRequestTreatment({ first_request_treatment: 'A' })).toBe('A');
-    expect(getBackendFirstRequestTreatment({ first_request_treatment: 'B' })).toBe('B');
+describe('getOnboardingTreatment', () => {
+  it('reads a valid treatment from the onboarding state', () => {
+    expect(getOnboardingTreatment({ first_request_treatment: 'A' })).toBe('A');
+    expect(getOnboardingTreatment({ first_request_treatment: 'B' })).toBe('B');
   });
 
   it('returns undefined when the field is missing or invalid', () => {
-    expect(getBackendFirstRequestTreatment({})).toBeUndefined();
-    expect(getBackendFirstRequestTreatment(null)).toBeUndefined();
-    expect(getBackendFirstRequestTreatment({ first_request_treatment: 'C' })).toBeUndefined();
+    expect(getOnboardingTreatment({})).toBeUndefined();
+    expect(getOnboardingTreatment(null)).toBeUndefined();
+    expect(getOnboardingTreatment({ first_request_treatment: 'C' as unknown as 'A' })).toBeUndefined();
   });
 });
 
-describe('getBackendIsNewSignup', () => {
-  it('reads a boolean flag from the user profile, else undefined', () => {
-    expect(getBackendIsNewSignup({ is_new_signup: true })).toBe(true);
-    expect(getBackendIsNewSignup({ is_new_signup: false })).toBe(false);
-    expect(getBackendIsNewSignup({})).toBeUndefined();
-    expect(getBackendIsNewSignup(null)).toBeUndefined();
+describe('getOnboardingIsNewSignup', () => {
+  it('reads a boolean flag from the onboarding state, else undefined', () => {
+    expect(getOnboardingIsNewSignup({ is_new_signup: true })).toBe(true);
+    expect(getOnboardingIsNewSignup({ is_new_signup: false })).toBe(false);
+    expect(getOnboardingIsNewSignup({})).toBeUndefined();
+    expect(getOnboardingIsNewSignup(null)).toBeUndefined();
+  });
+});
+
+describe('getOnboardingReachedThreshold', () => {
+  it('is true only when the server confirms the sticky latch', () => {
+    expect(getOnboardingReachedThreshold({ has_reached_request_threshold: true })).toBe(true);
+    expect(getOnboardingReachedThreshold({ has_reached_request_threshold: false })).toBe(false);
+    expect(getOnboardingReachedThreshold({})).toBe(false);
+    expect(getOnboardingReachedThreshold(null)).toBe(false);
   });
 });
 
@@ -103,6 +113,7 @@ describe('isFirstRequestExperimentParticipant', () => {
 describe('resolveFirstRequestTreatment (fallback chain)', () => {
   const base = {
     experimentLaunchedAt: GA,
+    hasReachedThreshold: false,
     createdRequests: 0 as number | null,
     cohortId: 'acct_123',
     cachedTreatment: null,
@@ -110,7 +121,13 @@ describe('resolveFirstRequestTreatment (fallback chain)', () => {
 
   it('1) uses the backend treatment when present, ignoring everything else', () => {
     expect(
-      resolveFirstRequestTreatment({ ...base, backendTreatment: 'A', accountCreatedAt: BEFORE_GA, createdRequests: 99 }),
+      resolveFirstRequestTreatment({
+        ...base,
+        backendTreatment: 'A',
+        accountCreatedAt: BEFORE_GA,
+        hasReachedThreshold: true,
+        createdRequests: 99,
+      }),
     ).toBe('A');
   });
 
@@ -120,6 +137,12 @@ describe('resolveFirstRequestTreatment (fallback chain)', () => {
     expect(resolveFirstRequestTreatment({ ...base, accountCreatedAt: AFTER_GA, createdRequests: 0 })).toBe(
       getFirstRequestCohort('acct_123'),
     );
+  });
+
+  it('2a) the server-confirmed graduation latch decides "B" without needing local stats', () => {
+    expect(
+      resolveFirstRequestTreatment({ ...base, accountCreatedAt: AFTER_GA, hasReachedThreshold: true, createdRequests: null }),
+    ).toBe('B');
   });
 
   it('2b) decides existing users before stats load; waits (or uses cache) for new users', () => {

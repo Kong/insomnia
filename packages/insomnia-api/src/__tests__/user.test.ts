@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getEncryptionKeys, getUserProfile, reportRequestsCreated } from '../user';
+import { getEncryptionKeys, getOnboardingState, getUserProfile, latchRequestThresholdReached } from '../user';
 
 const { mockFetch } = vi.hoisted(() => ({
   mockFetch: vi.fn(),
@@ -114,42 +114,47 @@ describe('getEncryptionKeys', () => {
   });
 });
 
-describe('reportRequestsCreated', () => {
+describe('getOnboardingState', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('POSTs to the requests-created endpoint with no body by default (server defaults to 1)', async () => {
-    mockFetch.mockResolvedValue({ requests_created: 5 });
+  it('GETs the onboarding endpoint with the sessionId', async () => {
+    mockFetch.mockResolvedValue({ first_request_treatment: 'A', is_new_signup: true, has_reached_request_threshold: false });
 
-    await reportRequestsCreated({ sessionId: 'sess_xyz' });
+    const result = await getOnboardingState({ sessionId: 'sess_xyz' });
+
+    expect(mockFetch).toHaveBeenCalledWith({ method: 'GET', path: '/v3/users/me/onboarding', sessionId: 'sess_xyz' });
+    expect(result.first_request_treatment).toBe('A');
+    expect(result.is_new_signup).toBe(true);
+    expect(result.has_reached_request_threshold).toBe(false);
+  });
+
+  it('passes an empty state through as-is', async () => {
+    mockFetch.mockResolvedValue({});
+
+    const result = await getOnboardingState({ sessionId: 'sess_xyz' });
+
+    expect(result).toEqual({});
+  });
+});
+
+describe('latchRequestThresholdReached', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('POSTs the idempotent threshold latch and returns the updated state', async () => {
+    mockFetch.mockResolvedValue({ has_reached_request_threshold: true });
+
+    const result = await latchRequestThresholdReached({ sessionId: 'sess_xyz' });
 
     expect(mockFetch).toHaveBeenCalledWith({
       method: 'POST',
-      path: '/v3/users/me/requests-created',
+      path: '/v3/users/me/onboarding',
       sessionId: 'sess_xyz',
-      data: undefined,
+      data: { reached_request_threshold: true },
     });
-  });
-
-  it('sends an explicit count when provided', async () => {
-    mockFetch.mockResolvedValue({ requests_created: 7 });
-
-    await reportRequestsCreated({ sessionId: 'sess_xyz', count: 3 });
-
-    expect(mockFetch).toHaveBeenCalledWith({
-      method: 'POST',
-      path: '/v3/users/me/requests-created',
-      sessionId: 'sess_xyz',
-      data: { count: 3 },
-    });
-  });
-
-  it('returns the updated account total from the API response', async () => {
-    mockFetch.mockResolvedValue({ requests_created: 42 });
-
-    const result = await reportRequestsCreated({ sessionId: 'sess_xyz' });
-
-    expect(result.requests_created).toBe(42);
+    expect(result.has_reached_request_threshold).toBe(true);
   });
 });
