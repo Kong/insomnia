@@ -652,3 +652,13 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
     });
   });
 });
+
+describe('createMapBridge — resolves only registered own handlers', () => {
+  it('rejects inherited Object.prototype keys instead of invoking them', async () => {
+    const bridge = createMapBridge({ real: async () => 'ok' });
+    expect(await bridge('real', {})).toBe('ok');
+    for (const evil of ['constructor', '__proto__', 'hasOwnProperty', 'toString']) {
+      await expect(bridge(evil, {})).rejects.toThrow(`No host bridge handler registered for "${evil}"`);
+    }
+  });
+});
