@@ -23,7 +23,7 @@ export const createMapBridge =
     // an inherited Object.prototype member instead of a real handler.
     const handler = Object.prototype.hasOwnProperty.call(handlers, path) ? handlers[path] : undefined;
     if (typeof handler !== 'function') {
-      throw new Error(`No host bridge handler registered for "${path}"`);
+      throw new TypeError(`No host bridge handler registered for "${path}"`);
     }
     return handler(body);
   };

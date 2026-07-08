@@ -43,7 +43,7 @@ export const resolveDbByKey = async (request: Request) => {
     : undefined;
   try {
     if (typeof handler !== 'function') {
-      throw new Error(`No host bridge handler registered for "${urlHostLowerCase}"`);
+      throw new TypeError(`No host bridge handler registered for "${urlHostLowerCase}"`);
     }
     const result = await handler(body);
     return new Response(JSON.stringify(result));
