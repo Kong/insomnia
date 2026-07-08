@@ -1,68 +1,20 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useQueries, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type {
-  ApiSpec,
   BaseModel,
-  Environment,
-  GrpcRequest,
-  GrpcRequestMeta,
-  McpRequest,
-  MockServer,
-  Request,
-  RequestGroup,
-  RequestGroupMeta,
-  RequestMeta,
-  SocketIORequest,
-  SocketIORequestMeta,
-  WebSocketRequest,
-  WebSocketRequestMeta,
+  CollectionWorkspaceChildren,
+  DesignWorkspaceChildren,
+  EnvironmentWorkspaceChildren,
+  McpWorkspaceChildren,
+  MockServerWorkspaceChildren,
   Workspace,
+  WorkspaceChildren,
   WorkspaceScope,
 } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 
 import { database } from '~/common/database';
-
-type CollectionChildDoc = Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup;
-export type { CollectionChildDoc };
-
-type CollectionRequestMeta = RequestMeta | GrpcRequestMeta | WebSocketRequestMeta | SocketIORequestMeta;
-
-interface CommonWorkspaceChildren<TChildren, TChildrenMeta extends object = {}> {
-  children: TChildren;
-  childrenMetas: TChildrenMeta;
-}
-export interface CollectionWorkspaceChildren
-  extends CommonWorkspaceChildren<
-    { requestsAndGroups: CollectionChildDoc[] },
-    {
-      allRequestMetas: CollectionRequestMeta[];
-      requestGroupMetas: RequestGroupMeta[];
-    }
-  > {}
-
-export interface MockServerWorkspaceChildren extends CommonWorkspaceChildren<{ mockServer: MockServer }> {}
-
-export interface DesignWorkspaceChildren
-  extends CommonWorkspaceChildren<
-    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[] },
-    {
-      allRequestMetas: CollectionRequestMeta[];
-      requestGroupMetas: RequestGroupMeta[];
-    }
-  > {}
-
-export interface EnvironmentWorkspaceChildren extends CommonWorkspaceChildren<{ baseEnvironment: Environment }> {}
-
-export interface McpWorkspaceChildren extends CommonWorkspaceChildren<{ mcpRequest: McpRequest }> {}
-
-export type WorkspaceChildren =
-  | CollectionWorkspaceChildren
-  | MockServerWorkspaceChildren
-  | DesignWorkspaceChildren
-  | EnvironmentWorkspaceChildren
-  | McpWorkspaceChildren;
 
 interface ScopeToChildren {
   'collection': CollectionWorkspaceChildren;
@@ -72,219 +24,13 @@ interface ScopeToChildren {
   'mcp': McpWorkspaceChildren;
 }
 
+type WorkspaceChildrenForScope<S extends WorkspaceScope | undefined> = S extends WorkspaceScope
+  ? ScopeToChildren[S]
+  : WorkspaceChildren;
+
 export const workspaceChildrenKeys = {
   all: ['workspaceChildrenAndMetas'],
   byWorkspaceId: (workspaceId: string) => [...workspaceChildrenKeys.all, workspaceId],
-};
-
-// Walk the given collection and group every request, request and request-group meta under it.
-async function getAllCollectionChildrenAndMetasByWorkspaceIds(
-  workspaceIds: string[],
-): Promise<Map<string, CollectionWorkspaceChildren>> {
-  const allRequestsAndMetaByWorkspaceId = new Map<string, CollectionWorkspaceChildren>();
-  if (workspaceIds.length === 0) {
-    return allRequestsAndMetaByWorkspaceId;
-  }
-  let requestGroupIdQueue = [...workspaceIds];
-  const allRequestGroups: RequestGroup[] = [];
-  // Map to track which workspace each request group belongs to
-  const requestGroupToWorkspaceId = new Map<string, string>();
-  const requestToWorkspaceId = new Map<string, string>();
-  const grpcRequestToWorkspaceId = new Map<string, string>();
-  const wsRequestToWorkspaceId = new Map<string, string>();
-  const socketIORequestToWorkspaceId = new Map<string, string>();
-  // Initialize the map with workspace IDs
-  workspaceIds.forEach(workspaceId => {
-    requestGroupToWorkspaceId.set(workspaceId, workspaceId);
-    requestToWorkspaceId.set(workspaceId, workspaceId);
-    grpcRequestToWorkspaceId.set(workspaceId, workspaceId);
-    wsRequestToWorkspaceId.set(workspaceId, workspaceId);
-    socketIORequestToWorkspaceId.set(workspaceId, workspaceId);
-    allRequestsAndMetaByWorkspaceId.set(workspaceId, {
-      children: {
-        requestsAndGroups: [],
-      },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
-    });
-  });
-
-  while (requestGroupIdQueue.length) {
-    const requestGroups = await database.find<RequestGroup>(models.requestGroup.type, {
-      parentId: { $in: requestGroupIdQueue },
-    });
-
-    if (requestGroups.length === 0) {
-      break;
-    }
-
-    requestGroups.forEach(requestGroup => {
-      const workspaceId = requestGroupToWorkspaceId.get(requestGroup.parentId);
-      if (workspaceId) {
-        requestGroupToWorkspaceId.set(requestGroup._id, workspaceId);
-      }
-    });
-
-    allRequestGroups.push(...requestGroups);
-    requestGroupIdQueue = requestGroups.map(rg => rg._id);
-  }
-
-  const listOfParentIds = [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)];
-
-  const [reqs, grpcReqs, wsReqs, socketIOReqs] = await Promise.all([
-    database.find(models.request.type, { parentId: { $in: listOfParentIds } }),
-    database.find(models.grpcRequest.type, { parentId: { $in: listOfParentIds } }),
-    database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } }),
-    database.find(models.socketIORequest.type, { parentId: { $in: listOfParentIds } }),
-  ]);
-
-  const allRequests = [...reqs, ...allRequestGroups, ...grpcReqs, ...wsReqs, ...socketIOReqs] as CollectionChildDoc[];
-
-  const [requestMetas, grpcRequestMetas, requestGroupMetas, wsRequestMetas, socketIORequestMetas] = await Promise.all([
-    database.find<RequestMeta>(models.requestMeta.type, { parentId: { $in: reqs.map(r => r._id) } }),
-    database.find<GrpcRequestMeta>(models.grpcRequestMeta.type, {
-      parentId: { $in: grpcReqs.map(r => r._id) },
-    }),
-    database.find<RequestGroupMeta>(models.requestGroupMeta.type, {
-      parentId: { $in: allRequestGroups.map(requestGroup => requestGroup._id) },
-    }),
-    database.find<WebSocketRequestMeta>(models.webSocketRequestMeta.type, {
-      parentId: { $in: wsReqs.map(r => r._id) },
-    }),
-    database.find<SocketIORequestMeta>(models.socketIORequestMeta.type, {
-      parentId: { $in: socketIOReqs.map(r => r._id) },
-    }),
-  ]);
-
-  const allRequestMetas = [...requestMetas, ...grpcRequestMetas, ...wsRequestMetas, ...socketIORequestMetas];
-  // Associate requests with their workspace IDs and group request metas by workspace ID
-  allRequests.forEach(request => {
-    const { parentId, _id: requestId } = request;
-    const workspaceId = requestGroupToWorkspaceId.get(parentId);
-    if (workspaceId) {
-      // Track which workspace this request belongs to
-      if (models.grpcRequest.isGrpcRequest(request)) {
-        grpcRequestToWorkspaceId.set(requestId, workspaceId);
-      } else if (models.request.isRequest(request)) {
-        requestToWorkspaceId.set(requestId, workspaceId);
-      } else if (models.webSocketRequest.isWebSocketRequest(request)) {
-        wsRequestToWorkspaceId.set(requestId, workspaceId);
-      } else if (models.socketIORequest.isSocketIORequest(request)) {
-        socketIORequestToWorkspaceId.set(requestId, workspaceId);
-      }
-      const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
-      if (workspaceData) {
-        workspaceData.children.requestsAndGroups.push(request);
-      }
-    }
-  });
-  // Build map of requestGroupMetas by workspace ID
-  requestGroupMetas.forEach(requestGroupMeta => {
-    const workspaceId = requestGroupToWorkspaceId.get(requestGroupMeta.parentId);
-    if (workspaceId) {
-      const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
-      if (workspaceData) {
-        workspaceData.childrenMetas.requestGroupMetas.push(requestGroupMeta);
-      }
-    }
-  });
-  allRequestMetas.forEach(requestMeta => {
-    const requestOrGrpcRequestId = requestMeta.parentId;
-    let workspaceId: string | undefined;
-    if (models.request.isRequestId(requestOrGrpcRequestId)) {
-      workspaceId = requestToWorkspaceId.get(requestOrGrpcRequestId);
-    } else if (models.grpcRequest.isGrpcRequestId(requestOrGrpcRequestId)) {
-      workspaceId = grpcRequestToWorkspaceId.get(requestOrGrpcRequestId);
-    } else if (models.webSocketRequest.isWebSocketRequestId(requestOrGrpcRequestId)) {
-      workspaceId = wsRequestToWorkspaceId.get(requestOrGrpcRequestId);
-    } else if (models.socketIORequest.isSocketIORequestId(requestOrGrpcRequestId)) {
-      workspaceId = socketIORequestToWorkspaceId.get(requestOrGrpcRequestId);
-    }
-    if (workspaceId) {
-      const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
-      if (workspaceData) {
-        workspaceData.childrenMetas.allRequestMetas.push(requestMeta);
-      }
-    }
-  });
-
-  return allRequestsAndMetaByWorkspaceId;
-}
-
-const getAllMockServerChildrenByWorkspaceIds = async (workspaceIds: string[]) => {
-  const map = new Map<string, MockServerWorkspaceChildren>();
-  if (workspaceIds.length > 0) {
-    const mockServers = await database.find<MockServer>(models.mockServer.type, {
-      parentId: { $in: workspaceIds },
-    });
-    workspaceIds.forEach(workspaceId => {
-      map.set(workspaceId, {
-        children: {
-          mockServer: mockServers.find(mockServer => mockServer.parentId === workspaceId)!,
-        },
-        childrenMetas: {},
-      });
-    });
-  }
-  return map;
-};
-
-const getAllDesignChildrenByWorkspaceIds = async (workspaceIds: string[]) => {
-  const map = new Map<string, DesignWorkspaceChildren>();
-  if (workspaceIds.length > 0) {
-    const apiSpecs = await database.find<ApiSpec>(models.apiSpec.type, {
-      parentId: { $in: workspaceIds },
-    });
-    const designRequestsAndMetas = await getAllCollectionChildrenAndMetasByWorkspaceIds(workspaceIds);
-    workspaceIds.forEach(workspaceId => {
-      map.set(workspaceId, {
-        children: {
-          apiSpec: apiSpecs.find(apiSpec => apiSpec.parentId === workspaceId),
-          requestsAndGroups: designRequestsAndMetas.get(workspaceId)?.children.requestsAndGroups || [],
-        },
-        childrenMetas: {
-          allRequestMetas: designRequestsAndMetas.get(workspaceId)?.childrenMetas.allRequestMetas || [],
-          requestGroupMetas: designRequestsAndMetas.get(workspaceId)?.childrenMetas.requestGroupMetas || [],
-        },
-      });
-    });
-  }
-  return map;
-};
-
-const getAllEnvironmentChildrenByWorkspaceIds = async (workspaceIds: string[]) => {
-  const map = new Map<string, EnvironmentWorkspaceChildren>();
-  if (workspaceIds.length > 0) {
-    const environments = await database.find<Environment>(models.environment.type, {
-      parentId: { $in: workspaceIds },
-    });
-    workspaceIds.forEach(workspaceId => {
-      map.set(workspaceId, {
-        children: {
-          baseEnvironment: environments.find(environment => environment.parentId === workspaceId)!,
-        },
-        childrenMetas: {},
-      });
-    });
-  }
-  return map;
-};
-
-const getAllMcpChildrenByWorkspaceIds = async (workspaceIds: string[]) => {
-  const map = new Map<string, McpWorkspaceChildren>();
-  if (workspaceIds.length > 0) {
-    const mcpRequests = await database.find<McpRequest>(models.mcpRequest.type, {
-      parentId: { $in: workspaceIds },
-    });
-    workspaceIds.forEach(workspaceId => {
-      map.set(workspaceId, {
-        children: {
-          mcpRequest: mcpRequests.find(mcpRequest => mcpRequest.parentId === workspaceId)!,
-        },
-        childrenMetas: {},
-      });
-    });
-  }
-  return map;
 };
 
 export const findWorkspaceIdForDoc = (queryClient: QueryClient, doc: BaseModel) => {
@@ -367,31 +113,34 @@ export function updateCollectionChildrenWithUpdatedDoc(
   return null;
 }
 
-const getWorkspaceChildren = async (
+const getWorkspaceChildren = async <S extends WorkspaceScope | undefined = undefined>(
   workspaceIds: string[],
-  scope?: WorkspaceScope,
-): Promise<Map<string, WorkspaceChildren>> => {
+  scope?: S,
+): Promise<Map<string, WorkspaceChildrenForScope<S>>> => {
   if (scope) {
     switch (scope) {
       case 'design': {
-        const designChildrenByWorkspaceIds = await getAllDesignChildrenByWorkspaceIds(workspaceIds);
-        return designChildrenByWorkspaceIds;
+        const designChildrenByWorkspaceIds = await services.appData.getAllDesignChildrenByWorkspaceIds(workspaceIds);
+        return designChildrenByWorkspaceIds as Map<string, WorkspaceChildrenForScope<S>>;
       }
       case 'collection': {
-        const collectionChildrenByWorkspaceIds = await getAllCollectionChildrenAndMetasByWorkspaceIds(workspaceIds);
-        return collectionChildrenByWorkspaceIds;
+        const collectionChildrenByWorkspaceIds =
+          await services.appData.getAllCollectionChildrenAndMetasByWorkspaceIds(workspaceIds);
+        return collectionChildrenByWorkspaceIds as Map<string, WorkspaceChildrenForScope<S>>;
       }
       case 'mock-server': {
-        const mockServerChildrenByWorkspaceIds = await getAllMockServerChildrenByWorkspaceIds(workspaceIds);
-        return mockServerChildrenByWorkspaceIds;
+        const mockServerChildrenByWorkspaceIds =
+          await services.appData.getAllMockServerChildrenByWorkspaceIds(workspaceIds);
+        return mockServerChildrenByWorkspaceIds as Map<string, WorkspaceChildrenForScope<S>>;
       }
       case 'environment': {
-        const environmentChildrenByWorkspaceIds = await getAllEnvironmentChildrenByWorkspaceIds(workspaceIds);
-        return environmentChildrenByWorkspaceIds;
+        const environmentChildrenByWorkspaceIds =
+          await services.appData.getAllEnvironmentChildrenByWorkspaceIds(workspaceIds);
+        return environmentChildrenByWorkspaceIds as Map<string, WorkspaceChildrenForScope<S>>;
       }
       case 'mcp': {
-        const mcpChildrenByWorkspaceIds = await getAllMcpChildrenByWorkspaceIds(workspaceIds);
-        return mcpChildrenByWorkspaceIds;
+        const mcpChildrenByWorkspaceIds = await services.appData.getAllMcpChildrenByWorkspaceIds(workspaceIds);
+        return mcpChildrenByWorkspaceIds as Map<string, WorkspaceChildrenForScope<S>>;
       }
       default: {
         console.warn(`Unsupported workspace scope: ${scope}`);
@@ -409,11 +158,13 @@ const getWorkspaceChildren = async (
     const designWorkspaceIds = workspaces.filter(w => w.scope === 'design').map(w => w._id);
     const environmentWorkspaceIds = workspaces.filter(w => w.scope === 'environment').map(w => w._id);
     const mcpWorkspaceIds = workspaces.filter(w => w.scope === 'mcp').map(w => w._id);
-    const collectionChildrenPromise = getAllCollectionChildrenAndMetasByWorkspaceIds(collectionWorkspaceIds);
-    const mockServerChildrenPromise = getAllMockServerChildrenByWorkspaceIds(mockServerWorkspaceIds);
-    const designChildrenPromise = getAllDesignChildrenByWorkspaceIds(designWorkspaceIds);
-    const environmentChildrenPromise = getAllEnvironmentChildrenByWorkspaceIds(environmentWorkspaceIds);
-    const mcpChildrenPromise = getAllMcpChildrenByWorkspaceIds(mcpWorkspaceIds);
+    const collectionChildrenPromise =
+      services.appData.getAllCollectionChildrenAndMetasByWorkspaceIds(collectionWorkspaceIds);
+    const mockServerChildrenPromise = services.appData.getAllMockServerChildrenByWorkspaceIds(mockServerWorkspaceIds);
+    const designChildrenPromise = services.appData.getAllDesignChildrenByWorkspaceIds(designWorkspaceIds);
+    const environmentChildrenPromise =
+      services.appData.getAllEnvironmentChildrenByWorkspaceIds(environmentWorkspaceIds);
+    const mcpChildrenPromise = services.appData.getAllMcpChildrenByWorkspaceIds(mcpWorkspaceIds);
     const [
       collectionChildrenByWorkspaceIds,
       mockServerChildrenByWorkspaceIds,
@@ -478,10 +229,6 @@ export const useWorkspaceChildren = (workspaceId: string, scope?: WorkspaceScope
   });
   return workspaceChildren;
 };
-
-type WorkspaceChildrenForScope<S extends WorkspaceScope | undefined> = S extends WorkspaceScope
-  ? ScopeToChildren[S]
-  : WorkspaceChildren;
 
 export const useWorkspaceChildrenByWorkspaceIds = <S extends WorkspaceScope | undefined = undefined>(
   workspaceIds: string[],

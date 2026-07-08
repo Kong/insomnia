@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import type { BaseModel, GitRepository, Project, Workspace, WorkspaceMeta } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
 export type ProjectWithGitRepository = Project & { gitRepository?: GitRepository };
 
@@ -23,7 +23,7 @@ export interface OrganizationData {
 
 export const fetchOrganizationData = async (organizationId: string): Promise<OrganizationData> => {
   console.log(`Fetching organization data for organizationId: ${organizationId}`);
-  const { projects, workspaces, workspaceMetas } = await window.main.getOrganizationData(organizationId);
+  const { projects, workspaces, workspaceMetas } = await services.appData.getOrganizationData(organizationId);
   return {
     projects: models.project.sortProjects(projects),
     workspaces,
@@ -55,10 +55,7 @@ export const findOrgAndProjectForWorkspace = (
   return undefined;
 };
 
-export const findOrgForWorkspaceId = (
-  queryClient: QueryClient,
-  workspaceId: string,
-): string | undefined => {
+export const findOrgForWorkspaceId = (queryClient: QueryClient, workspaceId: string): string | undefined => {
   const cached = queryClient.getQueriesData<OrganizationData>({ queryKey: organizationDataKeys.all });
   for (const [queryKey, data] of cached) {
     if (data?.workspaces.some(w => w._id === workspaceId)) {
