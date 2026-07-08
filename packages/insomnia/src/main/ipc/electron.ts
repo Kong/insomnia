@@ -269,6 +269,8 @@ export type MainOnChannels =
 export type RendererOnChannels =
   | 'contextMenuCommand'
   | 'db.changes'
+  | 'edit:undo'
+  | 'edit:redo'
   | 'plugins.uiAlert'
   | 'plugins.uiDialog'
   | 'ui.prompt'
