@@ -33,6 +33,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
+import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import { isLoggedIn } from '~/ui/account/session';
 import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
@@ -51,6 +52,7 @@ import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 
 import type { Route } from './+types/root';
 
@@ -356,6 +358,10 @@ const Root = () => {
   useAuthDeepLinkHandler();
 
   const { revalidate } = useRevalidator();
+  // Used to adopt a folder opened from the OS — going through the project-creation
+  // action (not a raw IPC) so React Router revalidates loaders afterwards.
+  const openFolderFetcher = useProjectNewActionFetcher();
+  const { submit: openFolderSubmit } = openFolderFetcher;
   const inflightFetchers = useFetchers();
   const ifInSubmission = inflightFetchers.some(f => f.formMethod === 'POST');
   const latestInSubmission = useLatest(ifInSubmission);
@@ -397,6 +403,45 @@ const Root = () => {
         return showModal(AlertModal, {
           title: params.title,
           message: params.message,
+        });
+      }
+      // Open a local folder as a Git project (from the OS: Finder "Open With",
+      // `insomnia /path/to/folder`, or this deep link). The main process has
+      // already verified the path is an existing directory
+      if (urlWithoutParams === 'insomnia://app/open-folder') {
+        const folderPath = params.path;
+        if (!folderPath) {
+          return;
+        }
+        const userSession = await services.userSession.get();
+        if (!userSession.id) {
+          window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
+          window.localStorage.setItem('logoutMessage', 'Please log in to open a folder in Insomnia.');
+          return navigate(href('/auth/login'));
+        }
+        // Create the project in the currently active org, falling back to the
+        // last-visited org (the running app always has one).
+        const targetOrg =
+          organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID
+            ? organizationId
+            : window.localStorage.getItem('lastVisitedOrganizationId') || '';
+        if (!targetOrg) {
+          return navigate(href('/organization'));
+        }
+        // Opening a folder from the OS adopts whatever it contains — confirm trust first.
+        if (!(await confirmOpenFolderTrust(folderPath))) {
+          return;
+        }
+        // Go through the project-creation action (not a raw IPC) so React Router
+        // revalidates loaders and the sidebar/project list update; the action's
+        // redirect navigates to the new project.
+        return openFolderSubmit({
+          organizationId: targetOrg,
+          projectData: {
+            name: window.path.basename(folderPath) || 'New Git Project',
+            storageType: 'git',
+            openExistingDirectory: folderPath,
+          },
         });
       }
       // Supports params: uri, curl, origin
@@ -630,10 +675,19 @@ const Root = () => {
     createCloudCredentials,
     gitProviderCompleteSignInSubmit,
     navigate,
+    openFolderSubmit,
     organizationId,
     projectId,
     redirectToDefaultBrowserSubmit,
   ]);
+
+  // Surface failures from adopting an OS-opened folder (e.g. unreadable folder or
+  // a collision with an existing project).
+  useEffect(() => {
+    if (openFolderFetcher.state === 'idle' && openFolderFetcher.data?.error) {
+      showModal(AlertModal, { title: 'Could not open folder', message: openFolderFetcher.data.error });
+    }
+  }, [openFolderFetcher.data, openFolderFetcher.state]);
 
   // Replay a deep link that was queued before login (e.g. insomnia://app/import
   // clicked while signed out).  We wait for organizationId so that the full

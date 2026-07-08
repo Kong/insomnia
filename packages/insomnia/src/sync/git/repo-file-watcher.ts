@@ -344,6 +344,17 @@ class RepoFileWatcher {
       return;
     }
 
+    // If the whole repo folder is gone (deleted/moved/unmounted), an empty disk
+    // must NOT be read as "every file was deleted" — that would wipe the DB.
+    // Treat the repo as temporarily unavailable and skip syncing.
+    if (!(await this.repoDirIsAvailable())) {
+      console.warn(
+        '[repo-file-watcher] Repo directory unavailable — skipping import to avoid data loss:',
+        this.repoDir,
+      );
+      return;
+    }
+
     const yamlFiles = await this.collectYamlFiles(this.repoDir);
 
     // Import each file through the queue so they serialise with any
@@ -615,6 +626,13 @@ class RepoFileWatcher {
   }
 
   private async pollDirectory(dir: string): Promise<void> {
+    // Don't sync when the repo folder is gone — see importAllFiles. This prevents
+    // the deletion-detection loop below from wiping the DB when the folder was
+    // deleted/unmounted rather than its files individually removed.
+    if (!(await this.repoDirIsAvailable())) {
+      return;
+    }
+
     // Check known files for mtime changes or deletions — no readdir
     for (const [absPath, lastMtime] of this.lastSyncMtime) {
       try {
@@ -736,7 +754,12 @@ class RepoFileWatcher {
     try {
       fileStat = await fs.promises.lstat(absPath);
     } catch {
-      await this.handleFileDeletion(normalised);
+      // Only treat a missing file as a real deletion when the repo folder itself
+      // still exists. If the whole folder is gone (deleted/unmounted) we must not
+      // remove the workspace from the DB — the repo is unavailable, not emptied.
+      if (await this.repoDirIsAvailable()) {
+        await this.handleFileDeletion(normalised);
+      }
       return null;
     }
 
@@ -978,6 +1001,23 @@ class RepoFileWatcher {
   private isInGitDir(absPath: string): boolean {
     const rel = path.relative(this.repoDir, absPath);
     return rel.startsWith(GIT_DIR + path.sep) || rel === GIT_DIR;
+  }
+
+  /**
+   * Whether the repository's working-tree directory still exists on disk.
+   *
+   * When the user deletes/moves the folder (or unmounts its drive) the disk
+   * appears empty. We must NOT interpret that as "all files deleted" and wipe the
+   * database — instead we treat the repo as temporarily unavailable and skip
+   * syncing, so the project's collections survive (and re-sync if the folder
+   * returns).
+   */
+  private async repoDirIsAvailable(): Promise<boolean> {
+    try {
+      return (await fs.promises.stat(this.repoDir)).isDirectory();
+    } catch {
+      return false;
+    }
   }
 
   /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping `.git`. */

@@ -58,6 +58,7 @@ import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
@@ -621,9 +622,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   const [operationError, setOperationError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const repoPath = gitRepository?._id
-    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
-    : '';
+  const repoPath = gitRepository?._id ? resolveGitRepoBaseDir(gitRepository) : '';
   const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
