@@ -174,7 +174,7 @@ export const runPluginTagInSandbox = async (
       context: (context as Record<string, any>) || {},
       meta,
       renderPurpose,
-      appInfo: { version: app.getVersion(), platform: process.platform },
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
       pluginName,
       renderDepth: 0,
       grantedModules: grantedModules ?? [...TEMPLATE_TAG_BASELINE_MODULES],

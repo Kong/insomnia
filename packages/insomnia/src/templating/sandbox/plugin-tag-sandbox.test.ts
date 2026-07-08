@@ -74,7 +74,7 @@ const envelope = (args: unknown[], grantedModules: string[] = TEMPLATE_TAG_BASEL
   context: {},
   meta: {},
   renderPurpose: 'preview',
-  appInfo: { version: '0.0.0', platform: 'linux' },
+  appInfo: { version: '0.0.0', platform: 'linux', arch: 'arm64' },
   pluginName: 'test-plugin',
   renderDepth: 0,
   grantedModules,
@@ -517,6 +517,11 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
     it('exposes the host platform from the envelope', async () => {
       // envelope() sets appInfo.platform = 'linux'
       expect(await runGlobal('return process.platform;')).toBe('linux');
+    });
+
+    it('exposes the host arch from the envelope', async () => {
+      // envelope() sets appInfo.arch = 'arm64'; the stub must mirror it (not fall back to "unknown")
+      expect(await runGlobal('return process.arch;')).toBe('arm64');
     });
 
     it('has a frozen, empty env (no host environment leak)', async () => {

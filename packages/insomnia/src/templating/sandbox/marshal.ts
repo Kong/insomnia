@@ -16,7 +16,7 @@ export interface ContextEnvelope {
   /** Result of the host-side `getPurpose()` call. */
   renderPurpose?: RenderPurpose;
   /** `app.getInfo()` is synchronous, so its value is copied in rather than bridged. */
-  appInfo: { version: string; platform: string };
+  appInfo: { version: string; platform: string; arch: string };
   /** Owning plugin name — needed to scope `store.*` (pluginData) bridge calls. */
   pluginName: string;
   /** Unused: recursion via util.render is now prevented by rejecting {% tag %} syntax there, not by depth-limiting. */
