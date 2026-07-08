@@ -635,6 +635,14 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       expect(new URLSearchParams(actual).get('q')).toBe('c d');
     });
 
+    it('copy-constructs from another URLSearchParams instance', async () => {
+      const actual = await runGlobal(
+        "var a = new URLSearchParams('x=1&y=2&x=3'); var b = new URLSearchParams(a); return b.toString();",
+      );
+      expect(actual).toBe(new URLSearchParams(new URLSearchParams('x=1&y=2&x=3')).toString());
+      expect(actual).toBe('x=1&y=2&x=3');
+    });
+
     it('set updates the first occurrence in place and drops the rest', async () => {
       const actual = await runGlobal("var p = new URLSearchParams('a=1&b=2&a=3'); p.set('a', '9'); return p.toString();");
       const expected = new URLSearchParams('a=1&b=2&a=3');

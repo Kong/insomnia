@@ -153,6 +153,10 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '        }',
   '      } else if (Object.prototype.toString.call(init) === "[object Array]") {',
   '        for (var a = 0; a < init.length; a++) { this._p.push([String(init[a][0]), String(init[a][1])]); }',
+  // Copy-construct from another URLSearchParams; without this the object branch would read its
+  // internal _p field as a bogus "_p" param.
+  '      } else if (init instanceof USP) {',
+  '        for (var c = 0; c < init._p.length; c++) { this._p.push([init._p[c][0], init._p[c][1]]); }',
   '      } else if (typeof init === "object") {',
   '        for (var key in init) { if (Object.prototype.hasOwnProperty.call(init, key)) { this._p.push([key, String(init[key])]); } }',
   '      }',
