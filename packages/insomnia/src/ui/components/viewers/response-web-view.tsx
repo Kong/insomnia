@@ -20,7 +20,11 @@ export const getResponsePreviewSandbox = (disableHtmlPreviewJs: boolean) =>
 export const ResponseWebView: FC<Props> = ({ body, disableHtmlPreviewJs, url }) => {
   return (
     <iframe
-      className="h-full w-full border-0"
+      // bg-white preserves the previous <webview> rendering (main.css set
+      // `webview { background-color: #fff }`). Without it the transparent
+      // iframe shows the app theme behind pages that declare no background,
+      // making dark-theme HTML previews unreadable.
+      className="h-full w-full border-0 bg-white"
       data-testid="ResponseWebView"
       sandbox={getResponsePreviewSandbox(disableHtmlPreviewJs)}
       srcDoc={getResponsePreviewHtml(body, url)}
