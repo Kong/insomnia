@@ -1,9 +1,7 @@
-import { reportRequestsCreated } from 'insomnia-api';
 import type { Request, RequestBody, RequestParameter } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { getCurrentSessionId } from '~/common/account/session';
 import {
   CONTENT_TYPE_EVENT_STREAM,
   CONTENT_TYPE_GRAPHQL,
@@ -17,27 +15,13 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { focusUrlBarOnNextRequest } from '~/ui/components/request-url-bar-focus';
 import { trackCioEvent } from '~/ui/hooks/use-cio';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
+import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 // Request types that are edited in the RequestPane / RequestUrlBar and should focus the URL on create.
 const URL_BAR_REQUEST_TYPES: CreateRequestType[] = ['HTTP', 'GraphQL', 'Event Stream', 'From Curl'];
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-
-// Fire-and-forget report to the backend that a request was created, so it can keep
-// the account-level, device-independent count powering first-request experiment
-// graduation. Never blocks or fails request creation; no-op when logged out.
-async function reportRequestCreated() {
-  try {
-    const sessionId = await getCurrentSessionId();
-    if (!sessionId) {
-      return;
-    }
-    await reportRequestsCreated({ sessionId });
-  } catch (error) {
-    console.error('Failed to report created request to backend', error);
-  }
-}
 
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
@@ -138,7 +122,9 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
   services.stats.incrementCreatedRequests();
-  reportRequestCreated();
+  // Once this install has created enough requests, latch the sticky graduation
+  // bit on the server (fire-and-forget, idempotent — see maybeLatchRequestThreshold).
+  services.stats.get().then(stats => maybeLatchRequestThreshold(stats.createdRequests));
 
   const certificates = await services.clientCertificate.findByParentId(workspaceId);
 
