@@ -19,7 +19,6 @@ interface Props {
   responseId: string;
   bodyBuffer: Uint8Array | null;
   contentType: string;
-  disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   filter: string;
   filterHistory: string[];
@@ -29,7 +28,6 @@ interface Props {
 
 export const ResponseMultipartViewer: FC<Props> = ({
   download,
-  disableHtmlPreviewJs,
   disablePreviewLinks,
   editorFontSize,
   filter,
@@ -192,7 +190,6 @@ export const ResponseMultipartViewer: FC<Props> = ({
         <ResponseViewer
           bytes={selectedPart.bytes || 0}
           contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
-          disableHtmlPreviewJs={disableHtmlPreviewJs}
           disablePreviewLinks={disablePreviewLinks}
           download={download}
           editorFontSize={editorFontSize}

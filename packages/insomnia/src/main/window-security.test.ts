@@ -35,5 +35,8 @@ describe('main window security posture', () => {
     // ...and must not re-introduce a weakening override.
     expect(mainWindowBlock).not.toMatch(/nodeIntegration\s*:\s*true/);
     expect(mainWindowBlock).not.toMatch(/contextIsolation\s*:\s*false/);
+    // webviewTag must not be re-enabled; the HTML preview now opens in a
+    // hardened, top-level BrowserWindow (see src/main/html-preview.ts).
+    expect(mainWindowBlock).not.toMatch(/webviewTag\s*:\s*true/);
   });
 });

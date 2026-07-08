@@ -345,6 +345,9 @@ const main: Window['main'] = {
       create: options => invokeWithNormalizedError('database.caCertificate.create', options),
     },
   },
+  htmlPreview: {
+    open: options => ipcRenderer.send('htmlPreview.open', options),
+  },
   hiddenBrowserWindow: {
     runScript: options =>
       new Promise(async (resolve, reject) => {

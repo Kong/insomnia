@@ -12,7 +12,6 @@ import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
 import { ResponseMultipartViewer } from './response-multipart-viewer';
 import { ResponsePDFViewer } from './response-pdf-viewer';
-import { ResponseWebView } from './response-web-view';
 
 const CHARSET_ALIASES: Record<string, string> = {
   'utf8': 'utf8',
@@ -54,7 +53,6 @@ export function xmlDecode(input: string) {
 export interface ResponseViewerProps {
   bytes: number;
   contentType: string;
-  disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   download: (...args: any[]) => any;
   editorFontSize: number;
@@ -74,7 +72,6 @@ export const ResponseViewer = ({
   bodyBuffer,
   getBody,
   contentType: originalContentType,
-  disableHtmlPreviewJs,
   disablePreviewLinks,
   download,
   editorFontSize,
@@ -294,16 +291,11 @@ export const ResponseViewer = ({
     );
   }
 
-  if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
-    return (
-      <ResponseWebView
-        body={getBodyAsString()}
-        key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
-        url={url}
-        webpreferences={`disableDialogs=true, javascript=${disableHtmlPreviewJs ? 'no' : 'yes'}`}
-      />
-    );
-  }
+  // HTML is not rendered visually inline: an inline preview cannot be a
+  // top-level browsing context and would either break framing-aware pages or
+  // occlude the app UI. The visual preview opens in a dedicated window via the
+  // "Open visual preview" action in the preview-mode dropdown; inline we show
+  // the source (falls through to the source viewer below).
 
   if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('application/pdf') === 0) {
     return (
@@ -326,7 +318,6 @@ export const ResponseViewer = ({
       <ResponseMultipartViewer
         bodyBuffer={overSizedBody}
         contentType={contentType}
-        disableHtmlPreviewJs={disableHtmlPreviewJs}
         disablePreviewLinks={disablePreviewLinks}
         download={download}
         editorFontSize={editorFontSize}

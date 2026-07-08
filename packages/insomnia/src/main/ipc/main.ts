@@ -43,6 +43,7 @@ import {
   exportRequestsHAR,
   exportWorkspacesHAR,
 } from '~/main/har';
+import { openHtmlPreview } from '~/main/html-preview';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -371,6 +372,9 @@ export interface RendererToMainBridgeAPI {
     getPath: (responseId: string) => Promise<string>;
     appendToFile: (options: { timelinePath: string; data: string }) => Promise<void>;
   };
+  htmlPreview: {
+    open: (options: { body: string; url: string; disableJs: boolean }) => void;
+  };
 }
 
 export function registerMainHandlers() {
@@ -388,6 +392,9 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('getExecution', (_, options: { requestId: string }) => {
     return getExecution(options.requestId);
+  });
+  ipcMainOn('htmlPreview.open', (_, options: { body: string; url: string; disableJs: boolean }) => {
+    openHtmlPreview(options);
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return services.caCertificate.create(options);

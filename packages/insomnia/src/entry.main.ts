@@ -91,6 +91,13 @@ app.on('web-contents-created', (_, contents) => {
   } else {
     contextMenu();
   }
+
+  // The HTML response preview now renders in a hardened, top-level
+  // BrowserWindow (see src/main/html-preview.ts); webviewTag is disabled on
+  // the main window. Deny any future <webview> attachment as defense in depth.
+  contents.on('will-attach-webview', event => {
+    event.preventDefault();
+  });
 });
 
 // When the app is first launched
@@ -123,7 +130,9 @@ app.on('ready', async () => {
   disableSpellcheckerDownload();
 
   // Default-deny web-API permissions; only allow-listed ones are granted (see permission-policy.ts).
-  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => callback(isPermissionAllowed(permission)));
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) =>
+    callback(isPermissionAllowed(permission)),
+  );
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(permission));
 
   if (isDevelopment()) {

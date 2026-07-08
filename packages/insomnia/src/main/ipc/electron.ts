@@ -223,6 +223,7 @@ export type MainOnChannels =
   | 'getAppPath'
   | 'getPath'
   | 'getUpdateStatus'
+  | 'htmlPreview.open'
   | 'grpc.cancel'
   | 'grpc.closeAll'
   | 'grpc.commit'

@@ -4,6 +4,7 @@ import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
+import { useRootLoaderData } from '~/root';
 
 import {
   type RequestLoaderData,
@@ -19,9 +20,29 @@ interface Props {
 
 export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) => {
   const { activeRequest, activeRequestMeta, activeResponse } = useRequestLoaderData() as RequestLoaderData;
+  const { settings } = useRootLoaderData()!;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const patchRequestMeta = useRequestMetaPatcher();
   const handleDownloadPrettify = useCallback(() => download(true), [download]);
+
+  // HTML responses render visually in a dedicated, hardened top-level window
+  // (see src/main/html-preview.ts) rather than inline, which cannot be a
+  // top-level browsing context.
+  const isHtmlResponse = !!activeResponse?.contentType.includes('html');
+  const openVisualPreview = useCallback(async () => {
+    if (!activeResponse || !models.response.isResponse(activeResponse)) {
+      return;
+    }
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
+    if (!bodyBuffer) {
+      return;
+    }
+    window.main.htmlPreview.open({
+      body: bodyBufferToUtf8(bodyBuffer) || '',
+      url: activeResponse.url,
+      disableJs: settings.disableHtmlPreviewJs,
+    });
+  }, [activeResponse, settings.disableHtmlPreviewJs]);
 
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
@@ -111,6 +132,11 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
         ))}
       </DropdownSection>
       <DropdownSection aria-label="Action Section" title="Action">
+        <DropdownItem aria-label="Open visual preview">
+          {isHtmlResponse && (
+            <ItemContent icon="external-link" label="Open visual preview" onClick={openVisualPreview} />
+          )}
+        </DropdownItem>
         <DropdownItem aria-label="Copy raw response">
           <ItemContent icon="copy" label="Copy raw response" onClick={copyToClipboard} />
         </DropdownItem>

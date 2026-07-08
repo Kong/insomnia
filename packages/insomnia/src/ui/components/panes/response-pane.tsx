@@ -229,7 +229,6 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             key={activeResponse._id}
             bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
             contentType={activeResponse.contentType || ''}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
             disablePreviewLinks={settings.disableResponsePreviewLinks}
             download={handleDownloadResponseBody}
             editorFontSize={settings.editorFontSize}
