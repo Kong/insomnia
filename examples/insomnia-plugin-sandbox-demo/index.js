@@ -80,4 +80,20 @@ module.exports.templateTags = [
       return Buffer.from('hi 👋').toString('base64');
     },
   },
+  {
+    name: 'capabilityprobe',
+    displayName: 'Capability Probe',
+    description: 'Demos manifest-gated host capabilities (C1): this plugin declares capabilities ["storage"]',
+    args: [],
+    async run(context) {
+      // Works because package.json declares the `storage` capability. A plugin without it would get
+      // "Capability 'storage' not granted — add it to insomnia.permissions.capabilities".
+      try {
+        await context.store.setItem('demo_k', 'storage-ok');
+        return await context.store.getItem('demo_k');
+      } catch (err) {
+        return err.message;
+      }
+    },
+  },
 ];
