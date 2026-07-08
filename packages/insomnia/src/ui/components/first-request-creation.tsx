@@ -1,4 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { getOnboardingState, type UserOnboardingState } from 'insomnia-api';
 import type { Request } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
@@ -6,6 +7,7 @@ import { useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
+import { getCurrentSessionId } from '~/common/account/session';
 import { METHOD_GET } from '~/common/constants';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
@@ -17,13 +19,15 @@ import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
+import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import {
   FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
   FIRST_REQUEST_EXPERIMENT_NAME,
   type FirstRequestTreatment,
-  getBackendFirstRequestTreatment,
-  getBackendIsNewSignup,
   getFirstRequestTreatmentGroup,
+  getOnboardingIsNewSignup,
+  getOnboardingReachedThreshold,
+  getOnboardingTreatment,
   isFirstRequestExperimentParticipant,
   readCachedFirstRequestTreatment,
   resolveFirstRequestTreatment,
@@ -132,8 +136,12 @@ export const FirstRequestCreation = ({
   const organizationData = useOrganizationLoaderData();
   // Stable id used to bucket new sign-ups ~50/50 into Treatment A or B.
   const cohortId = userSession.accountId || settings.deviceId || '';
-  // Server-computed treatment, when the backend provides it (authoritative).
-  const backendTreatment = getBackendFirstRequestTreatment(organizationData?.user);
+  // Onboarding state from the backend (standalone resource), loaded on mount.
+  const [onboarding, setOnboarding] = useState<UserOnboardingState | null>(null);
+  // Server-computed treatment, when the backend is steering assignment (authoritative).
+  const backendTreatment = getOnboardingTreatment(onboarding);
+  // Sticky server-confirmed graduation latch (account-wide, device-independent).
+  const hasReachedThreshold = getOnboardingReachedThreshold(onboarding);
   // Account creation time (epoch ms); pre-GA accounts are treated as existing users.
   const accountCreatedAt = organizationData?.user?.created_at
     ? new Date(organizationData.user.created_at).getTime()
@@ -141,7 +149,7 @@ export const FirstRequestCreation = ({
   // Whether this user is part of the experiment population (a genuine new sign-up).
   // Only participants emit assignment analytics; existing users still get B in the UI.
   const isParticipant = isFirstRequestExperimentParticipant({
-    isNewSignup: getBackendIsNewSignup(organizationData?.user),
+    isNewSignup: getOnboardingIsNewSignup(onboarding),
     accountCreatedAt,
     experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
   });
@@ -167,6 +175,7 @@ export const FirstRequestCreation = ({
     backendTreatment,
     accountCreatedAt,
     experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
+    hasReachedThreshold,
     createdRequests,
     cohortId,
     cachedTreatment,
@@ -323,6 +332,37 @@ export const FirstRequestCreation = ({
     };
   }, []);
 
+  // Load the backend onboarding state (treatment / participant flag / graduation
+  // latch). Best-effort: on failure we fall back to the local computation.
+  useEffect(() => {
+    let isActive = true;
+
+    getCurrentSessionId().then(sessionId => {
+      if (!sessionId) {
+        return;
+      }
+      getOnboardingState({ sessionId })
+        .then(state => {
+          if (isActive) {
+            setOnboarding(state);
+          }
+        })
+        .catch(error => console.error('Failed to load onboarding state', error));
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  // Self-heal the graduation latch: if this install has already crossed the
+  // threshold (e.g. the crossing creation's latch call was dropped), retry it.
+  useEffect(() => {
+    if (createdRequests !== null) {
+      maybeLatchRequestThreshold(createdRequests);
+    }
+  }, [createdRequests]);
+
   // On a *confident* treatment result, emit an experiment-assignment analytics event
   // only when the treatment changed vs the last-known (cached) value — i.e. on the
   // initial assignment and on a Treatment A→B transition. The warehouse derives each
@@ -337,7 +377,7 @@ export const FirstRequestCreation = ({
     const isConfident =
       backendTreatment !== undefined ||
       (accountCreatedAt !== undefined &&
-        (accountCreatedAt < FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE || createdRequests !== null));
+        (accountCreatedAt < FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE || hasReachedThreshold || createdRequests !== null));
     if (!isConfident) {
       return;
     }
@@ -365,7 +405,16 @@ export const FirstRequestCreation = ({
         },
       });
     }
-  }, [treatment, isParticipant, backendTreatment, accountCreatedAt, createdRequests, userSession.accountId, cachedTreatment]);
+  }, [
+    treatment,
+    isParticipant,
+    backendTreatment,
+    accountCreatedAt,
+    hasReachedThreshold,
+    createdRequests,
+    userSession.accountId,
+    cachedTreatment,
+  ]);
 
   const handleCreateNotionMcpWorkspace = () => {
     createWorkspaceFetcher.submit({
