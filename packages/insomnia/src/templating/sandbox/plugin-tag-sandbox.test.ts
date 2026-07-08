@@ -653,6 +653,28 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
   });
 });
 
+describe('raw host bridge is not reachable from plugin code', () => {
+  it('deletes __hostBridge from the sandbox global while context.* still round-trips', async () => {
+    const probe = await runTagInSandbox({
+      pluginSource: "module.exports.templateTags = [{ name: 'g', run: function () { return typeof globalThis.__hostBridge; } }];",
+      tagName: 'g',
+      envelope: envelope([]),
+      bridge: noBridge,
+    });
+    expect(probe).toBe('undefined');
+
+    const bridge = createMapBridge({ nodeOS: async () => ({ arch: 'test-arch' }) });
+    const viaContext = await runTagInSandbox({
+      pluginSource:
+        "module.exports.templateTags = [{ name: 'g', run: function (context) { return context.util.nodeOS().then(function (o) { return o.arch; }); } }];",
+      tagName: 'g',
+      envelope: envelope([]),
+      bridge,
+    });
+    expect(viaContext).toBe('test-arch');
+  });
+});
+
 describe('createMapBridge — resolves only registered own handlers', () => {
   it('rejects inherited Object.prototype keys instead of invoking them', async () => {
     const bridge = createMapBridge({ real: async () => 'ok' });

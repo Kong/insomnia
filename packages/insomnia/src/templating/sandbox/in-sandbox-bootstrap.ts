@@ -113,8 +113,11 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '  globalThis.console = { log: __log("log"), info: __log("info"), warn: __log("warn"), error: __log("error"), debug: __log("debug") };',
 
   // --- the single async bridge helper ---
+  // Capture then drop the global so plugin code can't call the raw bridge, bypassing context.*.
+  '  var __hostBridgeFn = globalThis.__hostBridge;',
+  '  delete globalThis.__hostBridge;',
   '  function __bridge(path, body) {',
-  '    return globalThis.__hostBridge(path, JSON.stringify(body || {})).then(function (raw) {',
+  '    return __hostBridgeFn(path, JSON.stringify(body || {})).then(function (raw) {',
   '      var res = JSON.parse(raw);',
   '      if (!res.ok) { throw new Error(res.error && res.error.message ? res.error.message : "host bridge error: " + path); }',
   '      return res.value;',
