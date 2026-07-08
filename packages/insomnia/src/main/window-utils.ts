@@ -25,7 +25,7 @@ import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
-import { createPluginWindow, destroyPluginWindow } from './plugin-window';
+import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
@@ -632,6 +632,21 @@ export function createWindow(): ElectronBrowserWindow {
         click: () => {
           const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
           hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
+        },
+      },
+      {
+        label: 'Show/hide plugin browser window ',
+        click: () => {
+          const pluginWindow = getPluginWindow();
+          invariant(pluginWindow, 'pluginWindow is not defined');
+          pluginWindow.isVisible() ? pluginWindow.hide() : pluginWindow.show();
+        },
+      },
+      {
+        label: 'Stop/start plugin browser window ',
+        click: () => {
+          const pluginWindow = getPluginWindow();
+          pluginWindow ? destroyPluginWindow() : createPluginWindow();
         },
       },
       {
