@@ -21,6 +21,12 @@ export interface ContextEnvelope {
   pluginName: string;
   /** Unused: recursion via util.render is now prevented by rejecting {% tag %} syntax there, not by depth-limiting. */
   renderDepth: number;
+  /**
+   * Canonical registry-module names the plugin may `require()` (default-deny; see
+   * `module-registry.ts`). Until the manifest loader (C3) lands, callers pass the
+   * `TEMPLATE_TAG_BASELINE_MODULES` baseline.
+   */
+  grantedModules: string[];
 }
 
 /**

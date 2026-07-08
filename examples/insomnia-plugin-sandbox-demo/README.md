@@ -21,6 +21,13 @@ absent inside QuickJS. `arch via bridge` proves `context.util.nodeOS()` round-tr
 6. In a request URL/header, insert the `Sandbox Probe` template tag (or type `{% sandboxprobe 'hi' %}`),
    and watch the preview change as you toggle the flag.
 
-Note: this cut's `require` shim only supports `path` and `crypto`. A plugin that `require()`s
-an npm package, another builtin, or a relative file will throw a clear
-`Cannot find module ... in sandbox` — broader coverage is follow-up work.
+The `requireprobe` tag demos the manifest-gated module registry (M1): `{% requireprobe 'path' %}`
+renders `a/b` (baseline grant, curated registry implementation), while `{% requireprobe 'fs' %}`
+or any npm package fails with `Module 'X' not permitted by manifest`. A granted-but-unshipped
+module would fail with `Module 'X' not available in sandbox`. Registry coverage grows in M2/M3;
+relative files (`require('./util')`) arrive with plugin pre-bundling (M4).
+
+The `eventsprobe` tag demos a **manifest-declared grant** (C3): this plugin's `package.json`
+declares `insomnia.permissions.modules: ["events"]`, so `{% eventsprobe %}` renders `events-ok`.
+A plugin that did not declare `events` would get `Module 'events' not permitted by manifest`.
+Preferences → Plugins shows each plugin's declared permissions (this one lists `modules: events`).

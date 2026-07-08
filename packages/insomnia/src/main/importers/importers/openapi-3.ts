@@ -533,18 +533,20 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
   return {};
 };
 
+const flattenParameter = (name: string, value: unknown, disabled: boolean): { name: string; value: string; disabled: boolean }[] => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return Object.entries(value).flatMap(([key, child]) => flattenParameter(`${name}[${key}]`, child, disabled));
+  }
+  return [{ name, disabled, value: String(value ?? '') }];
+};
+
 /**
  * Converts openapi schema of parameters into insomnia one.
  */
 const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
-  return parameters.map(parameter => {
-    const { required, name, schema } = parameter;
-    return {
-      name,
-      disabled: required !== true,
-      value: `${generateParameterExample(schema as OpenAPIV3.SchemaObject)}`,
-    };
-  });
+  return parameters.flatMap(({ required, name, schema }) =>
+    flattenParameter(name, generateParameterExample(schema as OpenAPIV3.SchemaObject), required !== true),
+  );
 };
 
 /**

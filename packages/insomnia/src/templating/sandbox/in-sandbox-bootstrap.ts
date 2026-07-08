@@ -1,14 +1,17 @@
 /**
  * JS evaluated *inside* the QuickJS sandbox, as global code, before any plugin source. It:
  *   1. polyfills the Web APIs QuickJS lacks (btoa/atob/TextEncoder/TextDecoder) and `console`,
- *   2. provides a minimal CommonJS `require` shim (expanded in later milestones),
+ *   2. provides a manifest-gated CommonJS `require` resolving only from the curated module
+ *      registry (`module-registry.ts`), default-deny against the envelope's `grantedModules`,
  *   3. rebuilds the plugin `context` object in pure JS over the bulk-copied envelope, with every
  *      async capability routed through the single `__hostBridge` host function, and
  *   4. exposes `__invoke()` which finds the requested tag in the evaluated plugin module and runs it.
  *
- * The host side injects `__hostBridge(path, bodyJson) -> Promise<resultJson>` and (optionally)
- * `__hostConsole(level, msg)` as globals before this runs. The rebuilt context is structurally
- * identical to the worker context in `liquid-extension-worker.ts` — that file is the contract.
+ * The host side injects `__hostBridge(path, bodyJson) -> Promise<resultJson>`, (optionally)
+ * `__hostConsole(level, msg)`, and the `__envelopeJSON`/`__tagName` strings as globals before this
+ * runs; the bootstrap captures the envelope into closure state and deletes those globals so plugin
+ * code can never read or rewrite them. The rebuilt context is structurally identical to the worker
+ * context in `liquid-extension-worker.ts` — that file is the contract.
  *
  * Authoring constraint: this is a plain JS string evaluated by QuickJS, so it deliberately avoids
  * template literals / optional chaining / modern globals and sticks to widely-supported ES5-ish JS.
@@ -16,6 +19,22 @@
 export const IN_SANDBOX_BOOTSTRAP = [
   '(function(){',
   '  "use strict";',
+
+  // --- capture the envelope + tag name, then delete the globals ---
+  // The host injects __envelopeJSON/__tagName before this bootstrap runs. Capturing them into
+  // closure state (and deleting the globals) means plugin top-level code can't rewrite
+  // grantedModules — or any other envelope field — before __invoke() executes.
+  '  var __env = JSON.parse(globalThis.__envelopeJSON);',
+  '  var __tag = globalThis.__tagName;',
+  '  delete globalThis.__envelopeJSON;',
+  '  delete globalThis.__tagName;',
+
+  // --- pristine intrinsics for the module gate ---
+  // Captured now, before any plugin code runs, so the grant check can't be defeated by a plugin
+  // reassigning Array.prototype.indexOf (or the global String). Callers below use these instead of
+  // method syntax / String() so the gate never routes through a plugin-mutable intrinsic.
+  '  var __arrIndexOf = Function.prototype.call.bind(Array.prototype.indexOf);',
+
   '  var T = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";',
 
   // --- btoa / atob (operate on Latin1 binary strings, matching the browser) ---
@@ -107,47 +126,28 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    };',
   '  }',
 
-  // --- minimal CommonJS require shim (expanded in M2/M3) ---
+  // --- manifest-gated CommonJS require over the curated module registry (M1) ---
+  // Factories are registered by MODULE_REGISTRY_SOURCE (module-registry.ts), evaluated right after
+  // this bootstrap. Resolution is default-deny against the envelope's grantedModules: an ungranted
+  // name is "not permitted by manifest"; a granted name with no factory is "not available in
+  // sandbox". Both messages are user-facing contract asserted by tests.
+  // Null-prototype dictionaries so prototype-chain names ("__proto__", "constructor") behave as
+  // ordinary, absent keys in sandbox-facing lookups.
+  '  var __moduleRegistry = Object.create(null);',
+  '  var __moduleAliases = Object.create(null);',
+  '  var __moduleCache = Object.create(null);',
+  '  globalThis.__registerModule = function (name, aliases, factory) {',
+  '    __moduleRegistry[name] = factory;',
+  '    for (var i = 0; i < (aliases || []).length; i++) { __moduleAliases[aliases[i]] = name; }',
+  '  };',
+  '  var __grantedModules = (__env && __env.grantedModules) || [];',
   '  globalThis.__require = function (name) {',
-  '    if (name === "path") {',
-  '      return {',
-  '        sep: "/",',
-  '        basename: function (p) { var s = String(p).split("/"); return s[s.length - 1]; },',
-  '        extname: function (p) { var b = String(p).split("/").pop(); var d = b.lastIndexOf("."); return d > 0 ? b.slice(d) : ""; },',
-  '        join: function () { return Array.prototype.slice.call(arguments).join("/").replace(/\\/+/g, "/"); }',
-  '      };',
-  '    }',
-  // crypto is backed by synchronous host functions (real host crypto), so digest()/randomBytes()
-  // return values inline — matching node:crypto's synchronous contract.
-  '    if (name === "crypto" || name === "node:crypto") {',
-  '      if (typeof globalThis.__cryptoHash !== "function") { throw new Error("\'crypto\' is not available in this sandbox"); }',
-  '      var mkDigester = function (compute) {',
-  '        var parts = [];',
-  '        var obj = {',
-  '          update: function (data) { parts.push(typeof data === "string" ? data : String(data)); return obj; },',
-  '          digest: function (enc) { return compute(parts.join(""), enc || "hex"); }',
-  '        };',
-  '        return obj;',
-  '      };',
-  '      return {',
-  '        createHash: function (algo) { return mkDigester(function (data, enc) { return globalThis.__cryptoHash(algo, data, "utf8", enc); }); },',
-  '        createHmac: function (algo, key) { var k = typeof key === "string" ? key : String(key); return mkDigester(function (data, enc) { return globalThis.__cryptoHmac(algo, k, data, enc); }); },',
-  '        randomBytes: function (size) {',
-  '          var b64 = globalThis.__cryptoRandomBytes(size);',
-  '          var binary = atob(b64);',
-  '          return {',
-  '            length: binary.length,',
-  '            toString: function (enc) {',
-  '              if (enc === "base64") { return b64; }',
-  '              if (enc === "latin1" || enc === "binary") { return binary; }',
-  '              var hex = ""; for (var i = 0; i < binary.length; i++) { hex += ("0" + binary.charCodeAt(i).toString(16)).slice(-2); } return hex;',
-  '            }',
-  '          };',
-  '        },',
-  '        randomUUID: function () { return globalThis.__cryptoRandomUUID(); }',
-  '      };',
-  '    }',
-  '    throw new Error("Cannot find module \'" + name + "\' in sandbox (not yet supported)");',
+  '    var canonical = __moduleAliases[name] || ("" + name);',
+  '    if (__arrIndexOf(__grantedModules, canonical) === -1) { throw new Error("Module \'" + name + "\' not permitted by manifest"); }',
+  '    var factory = __moduleRegistry[canonical];',
+  '    if (!factory) { throw new Error("Module \'" + name + "\' not available in sandbox"); }',
+  '    if (!(canonical in __moduleCache)) { __moduleCache[canonical] = factory(); }',
+  '    return __moduleCache[canonical];',
   '  };',
 
   // --- rebuild the plugin context over the bulk-copied envelope ---
@@ -216,16 +216,23 @@ export const IN_SANDBOX_BOOTSTRAP = [
 
   // --- find the requested tag in the evaluated plugin module and run it ---
   '  globalThis.__invoke = function () {',
-  '    var env = JSON.parse(globalThis.__envelopeJSON);',
+  '    var env = __env;',
   '    var ctx = globalThis.__buildContext(env);',
   '    var mod = globalThis.__pluginModule;',
   '    var tags = (mod && mod.templateTags) || [];',
   '    var tag = null;',
-  '    for (var i = 0; i < tags.length; i++) { if (tags[i].name === globalThis.__tagName) { tag = tags[i]; break; } }',
-  '    if (!tag) { throw new Error("Template tag \'" + globalThis.__tagName + "\' not found in plugin module"); }',
+  '    for (var i = 0; i < tags.length; i++) { if (tags[i].name === __tag) { tag = tags[i]; break; } }',
+  '    if (!tag) { throw new Error("Template tag \'" + __tag + "\' not found in plugin module"); }',
   '    var args = [ctx].concat(env.args || []);',
   '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
   '  };',
+
+  // --- lock the sandbox-internal globals ---
+  // Plugin code runs after this bootstrap; pin these so it can't reassign the require gate or the
+  // context/invocation entry points. __registerModule is intentionally left mutable — the module
+  // registry source deletes it once the registry is populated.
+  '  var __lock = function (n) { Object.defineProperty(globalThis, n, { value: globalThis[n], writable: false, configurable: false }); };',
+  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke");',
   '})();',
 ].join('\n');
 

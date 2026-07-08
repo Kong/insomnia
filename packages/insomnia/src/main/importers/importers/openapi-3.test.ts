@@ -5,6 +5,181 @@ import { describe, expect, it } from 'vitest';
 import { convert } from './openapi-3';
 
 describe('openapi-3', () => {
+  describe('query parameters', () => {
+    it('should flatten object-type query parameters into bracket notation', async () => {
+      const openApiDoc: OpenAPIV3.Document = {
+        openapi: '3.0.3',
+        info: {
+          title: 'Platform API',
+          version: '1.0.0',
+        },
+        servers: [
+          {
+            url: 'https://api.example.com/v3',
+          },
+        ],
+        paths: {
+          '/organizations/{organizationId}/users': {
+            get: {
+              operationId: 'listUsers',
+              parameters: [
+                {
+                  name: 'organizationId',
+                  in: 'path',
+                  required: true,
+                  schema: { type: 'string' },
+                },
+                {
+                  name: 'filter',
+                  in: 'query',
+                  required: true,
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      name: {
+                        type: 'object',
+                        properties: {
+                          contains: { type: 'string' },
+                        },
+                      },
+                      email: {
+                        type: 'object',
+                        properties: {
+                          contains: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+              responses: {
+                '200': { description: 'OK' },
+              },
+            },
+          },
+          '/pets': {
+            get: {
+              operationId: 'listPets',
+              parameters: [
+                {
+                  name: 'limit',
+                  in: 'query',
+                  schema: { type: 'integer' },
+                },
+                {
+                  name: 'status',
+                  in: 'query',
+                  schema: { type: 'string' },
+                },
+              ],
+              responses: {
+                '200': { description: 'OK' },
+              },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      expect(result).not.toBeNull();
+
+      const usersRequest = result?.find(item => item._type === 'request' && item.url?.includes('/users'));
+      expect(usersRequest).toBeDefined();
+
+      const params = usersRequest?.parameters || [];
+      expect(params.length).toBe(2);
+
+      const filterNameContainsParam = params.find(p => p.name === 'filter[name][contains]');
+      expect(filterNameContainsParam).toBeDefined();
+      expect(filterNameContainsParam?.value).toBe('string');
+      expect(filterNameContainsParam?.disabled).toBe(false);
+
+      const filterEmailContainsParam = params.find(p => p.name === 'filter[email][contains]');
+      expect(filterEmailContainsParam).toBeDefined();
+      expect(filterEmailContainsParam?.value).toBe('string');
+      expect(filterEmailContainsParam?.disabled).toBe(false);
+
+      const petsRequest = result?.find(item => item._type === 'request' && item.url?.includes('/pets'));
+      expect(petsRequest).toBeDefined();
+
+      const petsParams = petsRequest?.parameters || [];
+      expect(petsParams.length).toBe(2);
+
+      const limitParam = petsParams.find(p => p.name === 'limit');
+      expect(limitParam).toBeDefined();
+      expect(limitParam?.value).toBe('0');
+
+      const statusParam = petsParams.find(p => p.name === 'status');
+      expect(statusParam).toBeDefined();
+      expect(statusParam?.value).toBe('string');
+
+      const allValues = [...params, ...petsParams].map(p => p.value);
+      expect(allValues).not.toContain('[object Object]');
+    });
+
+    it('should flatten deeply nested object-type query parameters', async () => {
+      const openApiDoc: OpenAPIV3.Document = {
+        openapi: '3.0.3',
+        info: {
+          title: 'Nested API',
+          version: '1.0.0',
+        },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/items': {
+            get: {
+              operationId: 'listItems',
+              parameters: [
+                {
+                  name: 'filter',
+                  in: 'query',
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      status: { type: 'string' },
+                      sort: {
+                        type: 'object',
+                        properties: {
+                          field: { type: 'string' },
+                          order: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+              responses: { '200': { description: 'OK' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      expect(result).not.toBeNull();
+
+      const request = result?.find(item => item._type === 'request');
+      expect(request).toBeDefined();
+
+      const params = request?.parameters || [];
+      expect(params.length).toBe(3);
+
+      const statusParam = params.find(p => p.name === 'filter[status]');
+      expect(statusParam).toBeDefined();
+      expect(statusParam?.value).toBe('string');
+
+      const sortFieldParam = params.find(p => p.name === 'filter[sort][field]');
+      expect(sortFieldParam).toBeDefined();
+      expect(sortFieldParam?.value).toBe('string');
+
+      const sortOrderParam = params.find(p => p.name === 'filter[sort][order]');
+      expect(sortOrderParam).toBeDefined();
+      expect(sortOrderParam?.value).toBe('string');
+
+      const allValues = params.map(p => p.value);
+      expect(allValues).not.toContain('[object Object]');
+    });
+  });
+
   describe('schema composition with allOf, oneOf, and anyOf', () => {
     it('should handle schema composition with pet-related schemas', async () => {
       const openApiDoc: OpenAPIV3.Document = {

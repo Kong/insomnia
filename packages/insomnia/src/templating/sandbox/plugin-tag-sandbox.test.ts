@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { localTemplateTags } from '../../common/templating/local-template-tags';
 import { createMapBridge, type HostBridge } from './host-bridge';
 import type { ContextEnvelope } from './marshal';
+import { resolveTemplateTagModules, SANDBOX_MODULES, TEMPLATE_TAG_BASELINE_MODULES } from './module-registry';
 import { type HostCrypto, runTagInSandbox } from './plugin-tag-sandbox';
 
 // Real node:crypto-backed host crypto, identical to what main provides.
@@ -68,7 +69,7 @@ module.exports.templateTags = [{
   }
 }];`;
 
-const envelope = (args: unknown[]): ContextEnvelope => ({
+const envelope = (args: unknown[], grantedModules: string[] = TEMPLATE_TAG_BASELINE_MODULES): ContextEnvelope => ({
   args,
   context: {},
   meta: {},
@@ -76,6 +77,7 @@ const envelope = (args: unknown[]): ContextEnvelope => ({
   appInfo: { version: '0.0.0', platform: 'linux' },
   pluginName: 'test-plugin',
   renderDepth: 0,
+  grantedModules,
 });
 
 const noBridge: HostBridge = async path => {
@@ -249,7 +251,13 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     const source = 'module.exports.templateTags = [{ name: "spin", run: function () { while (true) {} } }];';
     const start = Date.now();
     await expect(
-      runTagInSandbox({ pluginSource: source, tagName: 'spin', envelope: envelope([]), bridge: noBridge, timeoutMs: 200 }),
+      runTagInSandbox({
+        pluginSource: source,
+        tagName: 'spin',
+        envelope: envelope([]),
+        bridge: noBridge,
+        timeoutMs: 200,
+      }),
     ).rejects.toThrow(/interrupted|timed out/i);
     expect(Date.now() - start).toBeLessThan(5000);
   });
@@ -264,8 +272,203 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     // A generous timeoutMs that's far longer than hitting the 32MB memory limit should take, so a
     // pass here can only be explained by the memory limit firing, not the wall-clock timeout.
     await expect(
-      runTagInSandbox({ pluginSource: source, tagName: 'hog', envelope: envelope([]), bridge: noBridge, timeoutMs: 30_000 }),
+      runTagInSandbox({
+        pluginSource: source,
+        tagName: 'hog',
+        envelope: envelope([]),
+        bridge: noBridge,
+        timeoutMs: 30_000,
+      }),
     ).rejects.toThrow(/memory/i);
     expect(Date.now() - start).toBeLessThan(5000);
+  });
+});
+
+describe('module registry gating (M1)', () => {
+  const requireTag = (mod: string) =>
+    `module.exports.templateTags = [{ name: 'r', run: function () { var m = require('${mod}'); return typeof m; } }];`;
+
+  it('baseline grant only names registered modules', () => {
+    const registered = SANDBOX_MODULES.map(m => m.name);
+    for (const name of TEMPLATE_TAG_BASELINE_MODULES) {
+      expect(registered).toContain(name);
+    }
+  });
+
+  it('resolves a granted, registered module through the registry', async () => {
+    const source =
+      "module.exports.templateTags = [{ name: 'r', run: function () { return require('path').join('a', 'b'); } }];";
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('a/b');
+  });
+
+  it('resolves node:-prefixed aliases against the canonical grant', async () => {
+    const source =
+      "module.exports.templateTags = [{ name: 'r', run: function () { return require('node:path').join('a', 'b'); } }];";
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('a/b');
+  });
+
+  it.each(['left-pad', 'fs', 'child_process', 'process'])(
+    'denies ungranted module %s with the manifest message',
+    async mod => {
+      await expect(
+        runTagInSandbox({ pluginSource: requireTag(mod), tagName: 'r', envelope: envelope([]), bridge: noBridge }),
+      ).rejects.toThrow(`Module '${mod}' not permitted by manifest`);
+    },
+  );
+
+  it('denies even baseline modules when the grant set is empty (default-deny)', async () => {
+    await expect(
+      runTagInSandbox({ pluginSource: requireTag('path'), tagName: 'r', envelope: envelope([], []), bridge: noBridge }),
+    ).rejects.toThrow("Module 'path' not permitted by manifest");
+  });
+
+  it('distinguishes granted-but-unregistered with the availability message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: requireTag('left-pad'),
+        tagName: 'r',
+        envelope: envelope([], ['left-pad']),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'left-pad' not available in sandbox");
+  });
+
+  it('caches module exports — repeated require returns the same object', async () => {
+    const source =
+      "module.exports.templateTags = [{ name: 'r', run: function () { return String(require('path') === require('path')); } }];";
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('true');
+  });
+
+  it('denies a top-level require at plugin-module evaluation time', async () => {
+    const source =
+      "var fs = require('fs');\nmodule.exports.templateTags = [{ name: 'r', run: function () { return 'unreachable'; } }];";
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'r', envelope: envelope([]), bridge: noBridge }),
+    ).rejects.toThrow("Module 'fs' not permitted by manifest");
+  });
+
+  it('treats prototype-chain names as ordinary ungranted modules', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: requireTag('__proto__'),
+        tagName: 'r',
+        envelope: envelope([]),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module '__proto__' not permitted by manifest");
+  });
+
+  it('ignores plugin tampering with __envelopeJSON — grants are captured before plugin eval', async () => {
+    const forged = JSON.stringify({ ...envelope([]), grantedModules: ['fs', 'path', 'crypto'] });
+    const source = [
+      `globalThis.__envelopeJSON = ${JSON.stringify(forged)};`,
+      'module.exports.templateTags = [{ name: "r", run: function () { try { require("fs"); return "escaped"; } catch (e) { return e.message; } } }];',
+    ].join('\n');
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([]),
+      bridge: noBridge,
+    });
+    expect(actual).toBe("Module 'fs' not permitted by manifest");
+  });
+
+  it('keeps the grant check working when a plugin poisons Array.prototype.indexOf', async () => {
+    // The gate captures a pristine indexOf before plugin code runs, so overriding the intrinsic to
+    // never return -1 must not let an ungranted module through.
+    const source = [
+      'Array.prototype.indexOf = function () { return 0; };',
+      'module.exports.templateTags = [{ name: "r", run: function () { try { require("crypto"); return "escaped"; } catch (e) { return e.message; } } }];',
+    ].join('\n');
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([], ['path']),
+      bridge: noBridge,
+    });
+    expect(actual).toBe("Module 'crypto' not permitted by manifest");
+  });
+
+  it('locks __require so a plugin cannot replace the gate', async () => {
+    // __require is pinned non-writable after the bootstrap; reassigning it throws in strict mode,
+    // so a plugin cannot swap in a permissive resolver.
+    const source = [
+      'try { globalThis.__require = function () { return {}; }; } catch (e) {}',
+      'module.exports.templateTags = [{ name: "r", run: function () { try { require("fs"); return "escaped"; } catch (e) { return e.message; } } }];',
+    ].join('\n');
+    const actual = await runTagInSandbox({
+      pluginSource: source,
+      tagName: 'r',
+      envelope: envelope([]),
+      bridge: noBridge,
+    });
+    expect(actual).toBe("Module 'fs' not permitted by manifest");
+  });
+});
+
+describe('manifest-declared module grants (C3)', () => {
+  const eventsTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var E = require('events').EventEmitter; var e = new E(); var out = ''; e.on('x', function (v) { out = v; }); e.emit('x', 'fired'); return out; } }];";
+
+  it('resolveTemplateTagModules unions the baseline with declared modules', () => {
+    expect(resolveTemplateTagModules(['events'])).toEqual([...TEMPLATE_TAG_BASELINE_MODULES, 'events']);
+    expect(resolveTemplateTagModules()).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
+    // Declaring a baseline module doesn't duplicate it.
+    expect(resolveTemplateTagModules(['path'])).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
+  });
+
+  it('canonicalizes declared aliases so the node:-prefixed form grants the module', () => {
+    expect(resolveTemplateTagModules(['node:events'])).toEqual([...TEMPLATE_TAG_BASELINE_MODULES, 'events']);
+    // node:crypto resolves to the already-baseline crypto without duplicating it.
+    expect(resolveTemplateTagModules(['node:crypto'])).toEqual(TEMPLATE_TAG_BASELINE_MODULES);
+  });
+
+  it('a plugin declaring the node:events alias can use EventEmitter', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: eventsTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:events'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('fired');
+  });
+
+  it('a plugin granted "events" can use EventEmitter', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: eventsTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['events'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('fired');
+  });
+
+  it('a plugin without the grant is denied "events" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: eventsTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
 });

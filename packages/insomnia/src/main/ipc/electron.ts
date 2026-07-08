@@ -65,6 +65,7 @@ export type HandleChannels =
   | 'git.discardChanges'
   | 'git.fetchGitRemoteBranches'
   | 'git.getProjectGitFileIssues'
+  | 'git.getProjectRulesetImportIssue'
   | 'git.validateGitRepositoryCredentials'
   | 'git.validateGitCredentialById'
   | 'git.getGitBranches'

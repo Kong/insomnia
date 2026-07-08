@@ -62,7 +62,7 @@ export const ProjectModal = ({
         >
           <Modal
             ref={modalRef}
-            className="flex h-max max-h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)"
+            className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)"
           >
             <Dialog
               aria-label="Create or update dialog"

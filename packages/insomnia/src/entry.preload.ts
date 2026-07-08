@@ -204,6 +204,7 @@ const git: GitServiceAPI = {
   getGitBranches: options => invokeWithNormalizedError('git.getGitBranches', options),
   fetchGitRemoteBranches: options => invokeWithNormalizedError('git.fetchGitRemoteBranches', options),
   getProjectGitFileIssues: options => invokeWithNormalizedError('git.getProjectGitFileIssues', options),
+  getProjectRulesetImportIssue: options => invokeWithNormalizedError('git.getProjectRulesetImportIssue', options),
   validateGitRepositoryCredentials: options =>
     invokeWithNormalizedError('git.validateGitRepositoryCredentials', options),
   validateGitCredentialById: options => invokeWithNormalizedError('git.validateGitCredentialById', options),

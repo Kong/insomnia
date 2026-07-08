@@ -324,6 +324,35 @@ export async function getProjectGitFileIssues({
   });
 }
 
+/**
+ * Return the current import problem message for the project's Spectral
+ * ruleset (`.spectral.yaml`), or null if the ruleset is valid/absent. Used by
+ * the spec page to passively surface a git-imported ruleset that was rejected
+ * as invalid.
+ */
+export async function getProjectRulesetImportIssue({
+  projectId,
+  gitRepositoryId,
+}: {
+  projectId: string;
+  gitRepositoryId: string;
+}): Promise<string | null> {
+  const project = await services.project.getById(projectId);
+  if (!project || !models.project.isConnectedGitProject(project)) {
+    return null;
+  }
+
+  const effectiveRepoId = models.project.getEffectiveRepoId(project);
+  if (effectiveRepoId !== gitRepositoryId) {
+    return null;
+  }
+
+  const issue = repoFileWatcherRegistry
+    .getProblems(effectiveRepoId)
+    .find(problem => problem.relPath === '.spectral.yaml');
+  return issue?.message ?? null;
+}
+
 export interface BranchRemoteInfo {
   trackingRemote: string | null;
   isOrigin: boolean;
@@ -3456,6 +3485,7 @@ export interface GitServiceAPI {
   validateGitRepositoryCredentials: typeof validateGitRepositoryCredentials;
   validateGitCredentialById: typeof validateGitCredentialById;
   getProjectGitFileIssues: typeof getProjectGitFileIssues;
+  getProjectRulesetImportIssue: typeof getProjectRulesetImportIssue;
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
@@ -3485,6 +3515,9 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.getProjectGitFileIssues', (_, options: Parameters<typeof getProjectGitFileIssues>[0]) =>
     getProjectGitFileIssues(options),
+  );
+  ipcMainHandle('git.getProjectRulesetImportIssue', (_, options: Parameters<typeof getProjectRulesetImportIssue>[0]) =>
+    getProjectRulesetImportIssue(options),
   );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
