@@ -1,3 +1,5 @@
+import type { UserOnboardingState } from 'insomnia-api';
+
 export type FirstRequestTreatment = 'A' | 'B';
 
 /**
@@ -52,25 +54,25 @@ export const getFirstRequestCohort = (id: string): FirstRequestTreatment => {
  *
  * - Accounts created before the experiment launched are existing users → B.
  * - New sign-ups are split ~50/50 into A or B by {@link getFirstRequestCohort}.
- * - A new sign-up in Treatment A graduates to B once they have created
- *   {@link FIRST_REQUEST_GRADUATION_THRESHOLD} or more requests.
+ * - A new sign-up in Treatment A graduates to B once they have graduated (created
+ *   at least {@link FIRST_REQUEST_GRADUATION_THRESHOLD} requests — a sticky fact).
  */
 export const getFirstRequestTreatment = ({
   accountCreatedAt,
   experimentLaunchedAt,
-  createdRequests,
+  hasGraduated,
   cohortId,
 }: {
   accountCreatedAt?: number;
   experimentLaunchedAt: number;
-  createdRequests: number;
+  hasGraduated: boolean;
   cohortId: string;
 }): FirstRequestTreatment => {
   if (accountCreatedAt !== undefined && accountCreatedAt < experimentLaunchedAt) {
     return 'B';
   }
 
-  if (createdRequests >= FIRST_REQUEST_GRADUATION_THRESHOLD) {
+  if (hasGraduated) {
     return 'B';
   }
 
@@ -78,25 +80,34 @@ export const getFirstRequestTreatment = ({
 };
 
 /**
- * Reads the server-computed treatment from the user profile, when the backend
- * provides it (field `first_request_treatment`). Returns undefined if absent or
- * invalid, so the caller can fall back to the client-side computation.
- *
- * Typed as `unknown` because the generated `User` SDK type does not include the
- * field yet; remove the cast once the SDK is regenerated with it.
+ * Reads the server-computed treatment from the onboarding resource, when the
+ * backend is steering assignment (field `first_request_treatment`). Returns
+ * undefined if absent or invalid, so the caller can fall back to the client-side
+ * computation.
  */
-export const getBackendFirstRequestTreatment = (user: unknown): FirstRequestTreatment | undefined => {
-  const value = (user as { first_request_treatment?: unknown } | null | undefined)?.first_request_treatment;
+export const getOnboardingTreatment = (
+  onboarding: UserOnboardingState | null | undefined,
+): FirstRequestTreatment | undefined => {
+  const value = onboarding?.first_request_treatment;
   return value === 'A' || value === 'B' ? value : undefined;
 };
 
 /**
- * Reads the server's `is_new_signup` flag from the user profile, when provided.
- * Used to decide whether the user is an experiment participant for analytics.
+ * Reads the server's `is_new_signup` flag from the onboarding resource, when
+ * provided. Used to decide whether the user is an experiment participant.
  */
-export const getBackendIsNewSignup = (user: unknown): boolean | undefined => {
-  const value = (user as { is_new_signup?: unknown } | null | undefined)?.is_new_signup;
+export const getOnboardingIsNewSignup = (onboarding: UserOnboardingState | null | undefined): boolean | undefined => {
+  const value = onboarding?.is_new_signup;
   return typeof value === 'boolean' ? value : undefined;
+};
+
+/**
+ * Reads the sticky "reached the graduation threshold" latch from the onboarding
+ * resource. This is the account-wide, device-independent, irreversible source of
+ * truth for graduation; defaults to false when the server hasn't confirmed it.
+ */
+export const getOnboardingReachedThreshold = (onboarding: UserOnboardingState | null | undefined): boolean => {
+  return onboarding?.has_reached_request_threshold === true;
 };
 
 /**
@@ -145,6 +156,30 @@ export const writeCachedFirstRequestTreatment = (accountId: string, treatment: F
   }
 };
 
+const LATCH_KEY_PREFIX = 'insomnia.firstRequestThresholdLatched';
+const latchKey = (accountId: string) => `${LATCH_KEY_PREFIX}:${accountId || 'anonymous'}`;
+
+/**
+ * Whether this install has already confirmed the graduation-threshold latch with
+ * the server for this account. Purely a local optimisation to avoid re-POSTing an
+ * idempotent latch — the server remains the source of truth.
+ */
+export const isRequestThresholdLatched = (accountId: string): boolean => {
+  try {
+    return window.localStorage.getItem(latchKey(accountId)) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const markRequestThresholdLatched = (accountId: string): void => {
+  try {
+    window.localStorage.setItem(latchKey(accountId), '1');
+  } catch {
+    // Ignore storage failures; we simply retry the (idempotent) latch next time.
+  }
+};
+
 /**
  * Resolves the treatment through a fallback chain so the experience is robust
  * offline and whether or not the backend has shipped its field yet:
@@ -161,6 +196,7 @@ export const resolveFirstRequestTreatment = ({
   backendTreatment,
   accountCreatedAt,
   experimentLaunchedAt,
+  hasReachedThreshold,
   createdRequests,
   cohortId,
   cachedTreatment,
@@ -168,6 +204,9 @@ export const resolveFirstRequestTreatment = ({
   backendTreatment?: FirstRequestTreatment;
   accountCreatedAt?: number;
   experimentLaunchedAt: number;
+  // Sticky server-confirmed graduation latch; decides B on its own when true.
+  hasReachedThreshold: boolean;
+  // Local per-install created-request count (null while still loading).
   createdRequests: number | null;
   cohortId: string;
   cachedTreatment: FirstRequestTreatment | null;
@@ -183,9 +222,18 @@ export const resolveFirstRequestTreatment = ({
     if (accountCreatedAt < experimentLaunchedAt) {
       return 'B';
     }
-    // New sign-ups need the created-request count to decide graduation.
+    // Server-confirmed graduation is definitive and needs no local stats.
+    if (hasReachedThreshold) {
+      return 'B';
+    }
+    // Otherwise fall back to the local created-request count for graduation.
     if (createdRequests !== null) {
-      return getFirstRequestTreatment({ accountCreatedAt, experimentLaunchedAt, createdRequests, cohortId });
+      return getFirstRequestTreatment({
+        accountCreatedAt,
+        experimentLaunchedAt,
+        hasGraduated: createdRequests >= FIRST_REQUEST_GRADUATION_THRESHOLD,
+        cohortId,
+      });
     }
     // Stats still loading: prefer a cached value over showing nothing.
     return cachedTreatment;
