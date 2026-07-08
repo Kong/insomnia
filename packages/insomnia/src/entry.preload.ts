@@ -389,7 +389,6 @@ const main: Window['main'] = {
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),
-  getOrganizationData: organizationId => invokeWithNormalizedError('getOrganizationData', organizationId),
   getLocalStorageDataFromFileOrigin: () => invokeWithNormalizedError('getLocalStorageDataFromFileOrigin'),
   generateMockRouteDataFromSpec: (
     openApiSpec: string | undefined,

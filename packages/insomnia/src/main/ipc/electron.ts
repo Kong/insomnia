@@ -200,8 +200,7 @@ export type HandleChannels =
   | 'cookies.toString'
   | 'cookies.getCookiesForUrl'
   | 'cookies.addSetCookies'
-  | 'cookies.getResponseCookiesFromHeaders'
-  | 'getOrganizationData';
+  | 'cookies.getResponseCookiesFromHeaders';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
