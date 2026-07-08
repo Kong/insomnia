@@ -24,12 +24,17 @@ interface BaseFlatItem<T extends BaseModel> {
 
 export interface ProjectFlatItem extends BaseFlatItem<ProjectWithGitRepository> {
   kind: 'project';
+  // Flag to show uncommitted/unpushed changes indicator on the project node if any of its workspaces have uncommitted/unpushed changes
+  showSyncStatus?: boolean;
 }
 
 export interface WorkspaceFlatItem extends BaseFlatItem<Workspace> {
   kind: 'workspace';
   // parent project
   project: ProjectWithGitRepository;
+  // sync flags from the workspace meta, used to show the uncommitted/unpushed changes indicator
+  hasUncommittedChanges?: boolean;
+  hasUnpushedChanges?: boolean;
 }
 
 // Unsynced workspace in cloud sync project
