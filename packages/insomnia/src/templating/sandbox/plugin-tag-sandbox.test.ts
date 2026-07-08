@@ -74,7 +74,7 @@ const envelope = (args: unknown[], grantedModules: string[] = TEMPLATE_TAG_BASEL
   context: {},
   meta: {},
   renderPurpose: 'preview',
-  appInfo: { version: '0.0.0', platform: 'linux' },
+  appInfo: { version: '0.0.0', platform: 'linux', arch: 'arm64' },
   pluginName: 'test-plugin',
   renderDepth: 0,
   grantedModules,
@@ -519,6 +519,11 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       expect(await runGlobal('return process.platform;')).toBe('linux');
     });
 
+    it('exposes the host arch from the envelope', async () => {
+      // envelope() sets appInfo.arch = 'arm64'; the stub must mirror it (not fall back to "unknown")
+      expect(await runGlobal('return process.arch;')).toBe('arm64');
+    });
+
     it('has a frozen, empty env (no host environment leak)', async () => {
       expect(await runGlobal('return JSON.stringify(process.env);')).toBe('{}');
       expect(await runGlobal('return String(Object.isFrozen(process.env));')).toBe('true');
@@ -558,6 +563,11 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
         "var data = new TextEncoder().encode('insomnia'); return crypto.subtle.digest('SHA-256', data).then(function (buf) { var b = new Uint8Array(buf); var h = ''; for (var i = 0; i < b.length; i++) { h += ('0' + b[i].toString(16)).slice(-2); } return h; });",
       );
       expect(actual).toBe(nodeCrypto.createHash('sha256').update('insomnia').digest('hex'));
+    });
+
+    it('randomUUID returns a v4 UUID (host-backed, matches node:crypto shape)', async () => {
+      const actual = await runGlobal('return crypto.randomUUID();');
+      expect(actual).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     });
   });
 
@@ -624,5 +634,53 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       // Parity: our '+'-encoding round-trips through node's URLSearchParams.
       expect(new URLSearchParams(actual).get('q')).toBe('c d');
     });
+
+    it('copy-constructs from another URLSearchParams instance', async () => {
+      const actual = await runGlobal(
+        "var a = new URLSearchParams('x=1&y=2&x=3'); var b = new URLSearchParams(a); return b.toString();",
+      );
+      expect(actual).toBe(new URLSearchParams(new URLSearchParams('x=1&y=2&x=3')).toString());
+      expect(actual).toBe('x=1&y=2&x=3');
+    });
+
+    it('set updates the first occurrence in place and drops the rest', async () => {
+      const actual = await runGlobal("var p = new URLSearchParams('a=1&b=2&a=3'); p.set('a', '9'); return p.toString();");
+      const expected = new URLSearchParams('a=1&b=2&a=3');
+      expected.set('a', '9');
+      expect(actual).toBe(expected.toString());
+      expect(actual).toBe('a=9&b=2');
+    });
+  });
+});
+
+describe('raw host bridge is not reachable from plugin code', () => {
+  it('deletes __hostBridge from the sandbox global while context.* still round-trips', async () => {
+    const probe = await runTagInSandbox({
+      pluginSource: "module.exports.templateTags = [{ name: 'g', run: function () { return typeof globalThis.__hostBridge; } }];",
+      tagName: 'g',
+      envelope: envelope([]),
+      bridge: noBridge,
+    });
+    expect(probe).toBe('undefined');
+
+    const bridge = createMapBridge({ nodeOS: async () => ({ arch: 'test-arch' }) });
+    const viaContext = await runTagInSandbox({
+      pluginSource:
+        "module.exports.templateTags = [{ name: 'g', run: function (context) { return context.util.nodeOS().then(function (o) { return o.arch; }); } }];",
+      tagName: 'g',
+      envelope: envelope([]),
+      bridge,
+    });
+    expect(viaContext).toBe('test-arch');
+  });
+});
+
+describe('createMapBridge — resolves only registered own handlers', () => {
+  it('rejects inherited Object.prototype keys instead of invoking them', async () => {
+    const bridge = createMapBridge({ real: async () => 'ok' });
+    expect(await bridge('real', {})).toBe('ok');
+    for (const evil of ['constructor', '__proto__', 'hasOwnProperty', 'toString']) {
+      await expect(bridge(evil, {})).rejects.toThrow(`No host bridge handler registered for "${evil}"`);
+    }
   });
 });

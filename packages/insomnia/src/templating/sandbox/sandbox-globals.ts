@@ -96,10 +96,15 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '    globalThis.process = Object.freeze(proc);',
   '  }',
 
-  // --- crypto (Web Crypto subset: getRandomValues + subtle.digest), host-backed ---
+  // --- crypto (Web Crypto subset: getRandomValues + randomUUID + subtle.digest), host-backed ---
   '  if (typeof globalThis.crypto === "undefined") {',
   '    var __algoMap = { "SHA-1": "sha1", "SHA-256": "sha256", "SHA-384": "sha384", "SHA-512": "sha512" };',
   '    globalThis.crypto = {',
+  // host-backed; throw (not weak fallback) when the host binding is absent, like getRandomValues.
+  '      randomUUID: function () {',
+  '        if (typeof globalThis.__cryptoRandomUUID !== "function") { throw new Error("crypto.randomUUID is not available in this sandbox"); }',
+  '        return globalThis.__cryptoRandomUUID();',
+  '      },',
   '      getRandomValues: function (typedArray) {',
   '        if (typeof globalThis.__cryptoRandomBytes !== "function") { throw new Error("crypto.getRandomValues is not available in this sandbox"); }',
   '        if (!typedArray || typeof typedArray.byteLength !== "number") { throw new TypeError("getRandomValues expects a TypedArray"); }',
@@ -148,15 +153,20 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '        }',
   '      } else if (Object.prototype.toString.call(init) === "[object Array]") {',
   '        for (var a = 0; a < init.length; a++) { this._p.push([String(init[a][0]), String(init[a][1])]); }',
+  // Copy-construct from another URLSearchParams; without this the object branch would read its
+  // internal _p field as a bogus "_p" param.
+  '      } else if (init instanceof USP) {',
+  '        for (var c = 0; c < init._p.length; c++) { this._p.push([init._p[c][0], init._p[c][1]]); }',
   '      } else if (typeof init === "object") {',
   '        for (var key in init) { if (Object.prototype.hasOwnProperty.call(init, key)) { this._p.push([key, String(init[key])]); } }',
   '      }',
   '    };',
   '    var __enc = function (s) { return encodeURIComponent(s).replace(/%20/g, "+"); };',
   '    USP.prototype.append = function (k, v) { this._p.push([String(k), String(v)]); };',
+  // WHATWG: update the FIRST match in place, drop later ones; append if absent.
   '    USP.prototype.set = function (k, v) {',
   '      var found = false; k = String(k); v = String(v);',
-  '      for (var i = this._p.length - 1; i >= 0; i--) { if (this._p[i][0] === k) { if (found) { this._p.splice(i, 1); } else { this._p[i][1] = v; found = true; } } }',
+  '      for (var i = 0; i < this._p.length;) { if (this._p[i][0] === k) { if (found) { this._p.splice(i, 1); continue; } this._p[i][1] = v; found = true; } i++; }',
   '      if (!found) { this._p.push([k, v]); }',
   '    };',
   '    USP.prototype.get = function (k) { k = String(k); for (var i = 0; i < this._p.length; i++) { if (this._p[i][0] === k) { return this._p[i][1]; } } return null; };',
