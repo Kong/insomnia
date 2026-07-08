@@ -23,22 +23,37 @@ export const getEncryptionKeys = async ({ sessionId }: { sessionId: string }): P
   return fetch<UserEncryptionKeys>({ method: 'GET', path: '/v3/users/me/encryption-keys', sessionId });
 };
 
-// POST /v3/users/me/requests-created
-// Reports request creation to the backend, which keeps the account-level,
-// device-independent count that powers first-request experiment graduation.
-// The body is optional; the server defaults to a count of 1 and caps per call.
-export const reportRequestsCreated = async ({
-  sessionId,
-  count,
-}: {
-  sessionId: string;
-  count?: number;
-}): Promise<{ requests_created: number }> => {
-  return fetch<{ requests_created: number }>({
+// Onboarding state for the current user. A standalone, removable resource (kept
+// off the permanent users/me contract) that holds transient onboarding/experiment
+// state with its own lifecycle. All fields are optional/backward-compatible.
+export interface UserOnboardingState {
+  // Server-computed first-request experiment treatment. Present only when the
+  // server is steering assignment; absent → the client computes it locally.
+  first_request_treatment?: 'A' | 'B';
+  // Whether the account is a genuine new sign-up (an experiment participant).
+  is_new_signup?: boolean;
+  // Sticky, irreversible latch: the account has ever created at least the minimum
+  // number of requests to graduate the first-request experiment (account-wide,
+  // device-independent). Once true it never reverts.
+  has_reached_request_threshold?: boolean;
+}
+
+// GET /v3/users/me/onboarding
+export const getOnboardingState = async ({ sessionId }: { sessionId: string }): Promise<UserOnboardingState> => {
+  return fetch<UserOnboardingState>({ method: 'GET', path: '/v3/users/me/onboarding', sessionId });
+};
+
+// POST /v3/users/me/onboarding
+// Idempotent latch: tells the server the account has reached the first-request
+// graduation threshold. Safe to call repeatedly — the server stores a sticky bit
+// that never reverts, so dropped calls simply self-heal on the next attempt.
+// Returns the updated onboarding state.
+export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: string }): Promise<UserOnboardingState> => {
+  return fetch<UserOnboardingState>({
     method: 'POST',
-    path: '/v3/users/me/requests-created',
+    path: '/v3/users/me/onboarding',
     sessionId,
-    data: count === undefined ? undefined : { count },
+    data: { reached_request_threshold: true },
   });
 };
 
