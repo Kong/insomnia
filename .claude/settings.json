@@ -5,5 +5,19 @@
       "Edit(packages/insomnia/bin/yarn-standalone.js)",
       "Write(packages/insomnia/bin/yarn-standalone.js)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/prettier-format.js",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }
