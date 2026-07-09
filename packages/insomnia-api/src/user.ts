@@ -32,10 +32,6 @@ export interface UserOnboardingState {
   first_request_treatment?: 'A' | 'B';
   // Whether the account is a genuine new sign-up (an experiment participant).
   is_new_signup?: boolean;
-  // Sticky, irreversible latch: the account has created at least the minimum number
-  // of requests to graduate the first-request experiment (account-wide,
-  // device-independent). Once true it never reverts.
-  reached_request_threshold?: boolean;
 }
 
 // GET /v3/users/me/onboarding
@@ -48,7 +44,11 @@ export const getOnboardingState = async ({ sessionId }: { sessionId: string }): 
 // first-request graduation threshold. Idempotent by definition, so it's safe to call
 // repeatedly — the server stores a sticky bit that never reverts and dropped calls
 // self-heal on the next attempt. Returns the updated onboarding state.
-export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: string }): Promise<UserOnboardingState> => {
+export const latchRequestThresholdReached = async ({
+  sessionId,
+}: {
+  sessionId: string;
+}): Promise<UserOnboardingState> => {
   return fetch<UserOnboardingState>({
     method: 'PUT',
     path: '/v3/users/me/onboarding/request-threshold-reached',

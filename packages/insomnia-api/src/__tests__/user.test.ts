@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getEncryptionKeys, getOnboardingState, getUserProfile, latchRequestThresholdReached } from '../user';
+import { getEncryptionKeys, getOnboardingState, getUserProfile } from '../user';
 
 const { mockFetch } = vi.hoisted(() => ({
   mockFetch: vi.fn(),
@@ -120,14 +120,13 @@ describe('getOnboardingState', () => {
   });
 
   it('GETs the onboarding endpoint with the sessionId', async () => {
-    mockFetch.mockResolvedValue({ first_request_treatment: 'A', is_new_signup: true, reached_request_threshold: false });
+    mockFetch.mockResolvedValue({ first_request_treatment: 'A', is_new_signup: true });
 
     const result = await getOnboardingState({ sessionId: 'sess_xyz' });
 
     expect(mockFetch).toHaveBeenCalledWith({ method: 'GET', path: '/v3/users/me/onboarding', sessionId: 'sess_xyz' });
     expect(result.first_request_treatment).toBe('A');
     expect(result.is_new_signup).toBe(true);
-    expect(result.reached_request_threshold).toBe(false);
   });
 
   it('passes an empty state through as-is', async () => {
@@ -136,24 +135,5 @@ describe('getOnboardingState', () => {
     const result = await getOnboardingState({ sessionId: 'sess_xyz' });
 
     expect(result).toEqual({});
-  });
-});
-
-describe('latchRequestThresholdReached', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('PUTs the idempotent threshold-reached latch (no body) and returns the updated state', async () => {
-    mockFetch.mockResolvedValue({ reached_request_threshold: true });
-
-    const result = await latchRequestThresholdReached({ sessionId: 'sess_xyz' });
-
-    expect(mockFetch).toHaveBeenCalledWith({
-      method: 'PUT',
-      path: '/v3/users/me/onboarding/request-threshold-reached',
-      sessionId: 'sess_xyz',
-    });
-    expect(result.reached_request_threshold).toBe(true);
   });
 });
