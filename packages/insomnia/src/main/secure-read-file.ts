@@ -12,7 +12,16 @@ import { SECURITY_SETTINGS_PATH_LABEL } from '../common/misc';
 export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   const allowList = getSecuredFolderAllowList(userAllowList);
   const securedPath = securePath(filePath);
-  const isAllowed = allowList.some(f => path.resolve(f) !== '' && securedPath.startsWith(path.resolve(f)));
+  // Require an exact match or a separator-bounded prefix so a sibling dir sharing a name prefix
+  // (e.g. ".../Insomnia Nightly" for a ".../Insomnia" root) can't pass a bare `startsWith`.
+  const isAllowed = allowList.some(f => {
+    const root = path.resolve(f);
+    if (root === '') {
+      return false;
+    }
+    const rootWithSep = root.endsWith(path.sep) ? root : root + path.sep;
+    return securedPath === root || securedPath.startsWith(rootWithSep);
+  });
   return { isAllowed, securedPath };
 };
 const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
