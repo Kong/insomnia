@@ -29,6 +29,12 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '  delete globalThis.__envelopeJSON;',
   '  delete globalThis.__tagName;',
 
+  // --- stable sandbox identity marker ---
+  // A plugin (or the e2e canary) can feature-detect the sandbox with this. Needed because the
+  // sandbox now provides a `process` stub (M2), so `typeof process === "undefined"` no longer
+  // distinguishes sandbox from the legacy main-process path. Non-writable so it can\'t be spoofed.
+  '  Object.defineProperty(globalThis, "INSOMNIA_TEMPLATE_SANDBOX", { value: true, writable: false, configurable: false, enumerable: true });',
+
   // --- pristine intrinsics for the module gate ---
   // Captured now, before any plugin code runs, so the grant check can't be defeated by a plugin
   // reassigning Array.prototype.indexOf (or the global String). Callers below use these instead of
@@ -107,8 +113,11 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '  globalThis.console = { log: __log("log"), info: __log("info"), warn: __log("warn"), error: __log("error"), debug: __log("debug") };',
 
   // --- the single async bridge helper ---
+  // Capture then drop the global so plugin code can't call the raw bridge, bypassing context.*.
+  '  var __hostBridgeFn = globalThis.__hostBridge;',
+  '  delete globalThis.__hostBridge;',
   '  function __bridge(path, body) {',
-  '    return globalThis.__hostBridge(path, JSON.stringify(body || {})).then(function (raw) {',
+  '    return __hostBridgeFn(path, JSON.stringify(body || {})).then(function (raw) {',
   '      var res = JSON.parse(raw);',
   '      if (!res.ok) { throw new Error(res.error && res.error.message ? res.error.message : "host bridge error: " + path); }',
   '      return res.value;',

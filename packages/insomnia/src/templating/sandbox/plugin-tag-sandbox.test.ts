@@ -74,7 +74,7 @@ const envelope = (args: unknown[], grantedModules: string[] = TEMPLATE_TAG_BASEL
   context: {},
   meta: {},
   renderPurpose: 'preview',
-  appInfo: { version: '0.0.0', platform: 'linux' },
+  appInfo: { version: '0.0.0', platform: 'linux', arch: 'arm64' },
   pluginName: 'test-plugin',
   renderDepth: 0,
   grantedModules,
@@ -470,5 +470,217 @@ describe('manifest-declared module grants (C3)', () => {
         bridge: noBridge,
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
+  });
+});
+
+describe('ambient globals — sandbox stdlib (M2)', () => {
+  // Run a plugin `run` body and return its string result. `body` is always a constant literal at
+  // the call sites; dynamic values are passed as tag args (data via the envelope, read as
+  // arguments[1..] inside the tag) rather than interpolated into the source — so no test value is
+  // ever concatenated into eval'd code. Globals are ungated, so the grant set is irrelevant;
+  // crypto-backed globals need hostCrypto, passed here to match the main-process path.
+  const runGlobal = (body: string, args: unknown[] = []) =>
+    runTagInSandbox({
+      pluginSource: `module.exports.templateTags = [{ name: 'g', run: function (context) { ${body} } }];`,
+      tagName: 'g',
+      envelope: envelope(args),
+      bridge: noBridge,
+      hostCrypto: nodeHostCrypto,
+    });
+
+  describe('Buffer parity vs node:Buffer', () => {
+    it.each([
+      ['utf8', 'hi there 👋'],
+      ['base64', 'hi there 👋'],
+      ['hex', 'hi there 👋'],
+      ['latin1', 'hello'],
+    ])('Buffer.from(str).toString(%s)', async (enc, input) => {
+      const actual = await runGlobal('return Buffer.from(arguments[1]).toString(arguments[2]);', [input, enc]);
+      expect(actual).toBe(Buffer.from(input).toString(enc as BufferEncoding));
+    });
+
+    it('round-trips base64 back to utf8', async () => {
+      const b64 = Buffer.from('round trip').toString('base64');
+      const actual = await runGlobal("return Buffer.from(arguments[1], 'base64').toString('utf8');", [b64]);
+      expect(actual).toBe('round trip');
+    });
+
+    it('Buffer.concat + isBuffer', async () => {
+      const actual = await runGlobal(
+        "var a = Buffer.from('ab'); var b = Buffer.from('cd'); var c = Buffer.concat([a, b]); return c.toString('utf8') + ':' + Buffer.isBuffer(c) + ':' + Buffer.isBuffer('x');",
+      );
+      expect(actual).toBe('abcd:true:false');
+    });
+  });
+
+  describe('process stub', () => {
+    it('exposes the host platform from the envelope', async () => {
+      // envelope() sets appInfo.platform = 'linux'
+      expect(await runGlobal('return process.platform;')).toBe('linux');
+    });
+
+    it('exposes the host arch from the envelope', async () => {
+      // envelope() sets appInfo.arch = 'arm64'; the stub must mirror it (not fall back to "unknown")
+      expect(await runGlobal('return process.arch;')).toBe('arm64');
+    });
+
+    it('has a frozen, empty env (no host environment leak)', async () => {
+      expect(await runGlobal('return JSON.stringify(process.env);')).toBe('{}');
+      expect(await runGlobal('return String(Object.isFrozen(process.env));')).toBe('true');
+    });
+
+    it('is frozen', async () => {
+      expect(await runGlobal('return String(Object.isFrozen(process));')).toBe('true');
+    });
+
+    it('nextTick schedules a microtask', async () => {
+      expect(
+        await runGlobal(
+          "return new Promise(function (resolve) { process.nextTick(function (v) { resolve(v); }, 'ticked'); });",
+        ),
+      ).toBe('ticked');
+    });
+  });
+
+  describe('crypto (Web Crypto subset)', () => {
+    it('getRandomValues fills the array and returns it', async () => {
+      const actual = await runGlobal(
+        'var a = new Uint8Array(16); var r = crypto.getRandomValues(a); var nonZero = 0; for (var i = 0; i < a.length; i++) { if (a[i] !== 0) { nonZero++; } } return (r === a) + ":" + a.length + ":" + (nonZero > 0);',
+      );
+      expect(actual).toBe('true:16:true');
+    });
+
+    it('getRandomValues throws past the 65536-byte quota instead of zero-filling the tail', async () => {
+      // The host clamps __cryptoRandomBytes to 65536; without the quota guard a larger request would
+      // silently leave the tail zero (predictable). Match WebCrypto: throw QuotaExceededError.
+      await expect(runGlobal('return crypto.getRandomValues(new Uint8Array(65537));')).rejects.toThrow(
+        /exceeds the number of bytes of entropy/,
+      );
+    });
+
+    it('subtle.digest SHA-256 matches node:crypto', async () => {
+      const actual = await runGlobal(
+        "var data = new TextEncoder().encode('insomnia'); return crypto.subtle.digest('SHA-256', data).then(function (buf) { var b = new Uint8Array(buf); var h = ''; for (var i = 0; i < b.length; i++) { h += ('0' + b[i].toString(16)).slice(-2); } return h; });",
+      );
+      expect(actual).toBe(nodeCrypto.createHash('sha256').update('insomnia').digest('hex'));
+    });
+
+    it('randomUUID returns a v4 UUID (host-backed, matches node:crypto shape)', async () => {
+      const actual = await runGlobal('return crypto.randomUUID();');
+      expect(actual).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    });
+  });
+
+  describe('URL', () => {
+    it('parses the common parts of an absolute URL', async () => {
+      const u = 'https://user:pw@example.com:8443/a/b?x=1&y=2#frag';
+      const actual = await runGlobal(
+        "var u = new URL(arguments[1]); return [u.protocol, u.hostname, u.port, u.pathname, u.search, u.hash, u.origin].join('|');",
+        [u],
+      );
+      const expected = new URL(u);
+      expect(actual).toBe(
+        [
+          expected.protocol,
+          expected.hostname,
+          expected.port,
+          expected.pathname,
+          expected.search,
+          expected.hash,
+          expected.origin,
+        ].join('|'),
+      );
+    });
+
+    it('drops the default port like WHATWG', async () => {
+      const actual = await runGlobal("var u = new URL('https://example.com:443/x'); return u.host + '|' + u.port;");
+      expect(actual).toBe('example.com|');
+    });
+
+    it('exposes searchParams', async () => {
+      const actual = await runGlobal("return new URL('https://h/p?a=1&a=2&b=3').searchParams.getAll('a').join(',');");
+      expect(actual).toBe('1,2');
+    });
+  });
+
+  describe('sandbox identity marker', () => {
+    it('exposes a non-writable INSOMNIA_TEMPLATE_SANDBOX global', async () => {
+      expect(await runGlobal('return String(INSOMNIA_TEMPLATE_SANDBOX);')).toBe('true');
+    });
+
+    it('cannot be spoofed away by plugin code', async () => {
+      // Non-writable: a reassignment throws in strict mode / is a no-op — the marker survives.
+      expect(
+        await runGlobal(
+          'try { INSOMNIA_TEMPLATE_SANDBOX = false; } catch (e) {} return String(INSOMNIA_TEMPLATE_SANDBOX);',
+        ),
+      ).toBe('true');
+    });
+  });
+
+  describe('URLSearchParams', () => {
+    it('parses, reads, and serializes', async () => {
+      const actual = await runGlobal(
+        "var p = new URLSearchParams('a=1&b=two&a=3'); return p.get('a') + '|' + p.getAll('a').join(',') + '|' + p.has('b') + '|' + p.toString();",
+      );
+      expect(actual).toBe('1|1,3|true|a=1&b=two&a=3');
+    });
+
+    it('encodes spaces as + and set replaces', async () => {
+      const actual = await runGlobal(
+        "var p = new URLSearchParams(); p.append('q', 'a b'); p.set('q', 'c d'); return p.toString();",
+      );
+      expect(actual).toBe('q=c+d');
+      // Parity: our '+'-encoding round-trips through node's URLSearchParams.
+      expect(new URLSearchParams(actual).get('q')).toBe('c d');
+    });
+
+    it('copy-constructs from another URLSearchParams instance', async () => {
+      const actual = await runGlobal(
+        "var a = new URLSearchParams('x=1&y=2&x=3'); var b = new URLSearchParams(a); return b.toString();",
+      );
+      expect(actual).toBe(new URLSearchParams(new URLSearchParams('x=1&y=2&x=3')).toString());
+      expect(actual).toBe('x=1&y=2&x=3');
+    });
+
+    it('set updates the first occurrence in place and drops the rest', async () => {
+      const actual = await runGlobal("var p = new URLSearchParams('a=1&b=2&a=3'); p.set('a', '9'); return p.toString();");
+      const expected = new URLSearchParams('a=1&b=2&a=3');
+      expected.set('a', '9');
+      expect(actual).toBe(expected.toString());
+      expect(actual).toBe('a=9&b=2');
+    });
+  });
+});
+
+describe('raw host bridge is not reachable from plugin code', () => {
+  it('deletes __hostBridge from the sandbox global while context.* still round-trips', async () => {
+    const probe = await runTagInSandbox({
+      pluginSource: "module.exports.templateTags = [{ name: 'g', run: function () { return typeof globalThis.__hostBridge; } }];",
+      tagName: 'g',
+      envelope: envelope([]),
+      bridge: noBridge,
+    });
+    expect(probe).toBe('undefined');
+
+    const bridge = createMapBridge({ nodeOS: async () => ({ arch: 'test-arch' }) });
+    const viaContext = await runTagInSandbox({
+      pluginSource:
+        "module.exports.templateTags = [{ name: 'g', run: function (context) { return context.util.nodeOS().then(function (o) { return o.arch; }); } }];",
+      tagName: 'g',
+      envelope: envelope([]),
+      bridge,
+    });
+    expect(viaContext).toBe('test-arch');
+  });
+});
+
+describe('createMapBridge — resolves only registered own handlers', () => {
+  it('rejects inherited Object.prototype keys instead of invoking them', async () => {
+    const bridge = createMapBridge({ real: async () => 'ok' });
+    expect(await bridge('real', {})).toBe('ok');
+    for (const evil of ['constructor', '__proto__', 'hasOwnProperty', 'toString']) {
+      await expect(bridge(evil, {})).rejects.toThrow(`No host bridge handler registered for "${evil}"`);
+    }
   });
 });
