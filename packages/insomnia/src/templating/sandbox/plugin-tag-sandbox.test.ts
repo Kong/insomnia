@@ -658,7 +658,9 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
     });
 
     it('set updates the first occurrence in place and drops the rest', async () => {
-      const actual = await runGlobal("var p = new URLSearchParams('a=1&b=2&a=3'); p.set('a', '9'); return p.toString();");
+      const actual = await runGlobal(
+        "var p = new URLSearchParams('a=1&b=2&a=3'); p.set('a', '9'); return p.toString();",
+      );
       const expected = new URLSearchParams('a=1&b=2&a=3');
       expected.set('a', '9');
       expect(actual).toBe(expected.toString());
@@ -670,7 +672,8 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
 describe('raw host bridge is not reachable from plugin code', () => {
   it('deletes __hostBridge from the sandbox global while context.* still round-trips', async () => {
     const probe = await runTagInSandbox({
-      pluginSource: "module.exports.templateTags = [{ name: 'g', run: function () { return typeof globalThis.__hostBridge; } }];",
+      pluginSource:
+        "module.exports.templateTags = [{ name: 'g', run: function () { return typeof globalThis.__hostBridge; } }];",
       tagName: 'g',
       envelope: envelope([]),
       bridge: noBridge,
@@ -763,10 +766,22 @@ describe('capability gating at the host bridge (C1)', () => {
     expect(actual).toBe('x64');
   });
 
-  it('denies a non-baseline capability (storage) and names it', async () => {
+  it('the bridge rejects an ungranted capability even if the context branch is present (backstop)', async () => {
+    // Defense in depth: grant `storage` to the context (so C2 keeps `context.store`) but withhold it
+    // from the bridge filter. The store call reaches the bridge, which is the backstop and rejects
+    // with the capability message. (The no-manifest case where the branch is simply absent is
+    // covered by the C2 "omits non-baseline branches" test.)
     await expect(
-      runGated("return await context.store.getItem('k');", [...TEMPLATE_TAG_BASELINE_CAPABILITIES], {
-        'pluginData.getItem': async () => 'stored-value',
+      runTagInSandbox({
+        pluginSource:
+          "module.exports.templateTags = [{ name: 'g', run: async function (context) { return await context.store.getItem('k'); } }];",
+        tagName: 'g',
+        envelope: envelope([], TEMPLATE_TAG_BASELINE_MODULES, resolveTemplateTagCapabilities(['storage'])),
+        bridge: createMapBridge(
+          filterByCapabilities({ 'pluginData.getItem': async () => 'stored-value' }, [
+            ...TEMPLATE_TAG_BASELINE_CAPABILITIES,
+          ]),
+        ),
       }),
     ).rejects.toThrow("Capability 'storage' not granted");
   });
@@ -785,5 +800,112 @@ describe('capability gating at the host bridge (C1)', () => {
       'util.render': async () => 'rendered',
     });
     expect(actual).toBe('rendered');
+  });
+});
+
+describe('capability-aware context construction (C2)', () => {
+  // Reports the shape of the rebuilt context: which branches exist for a given capability grant.
+  // No bridge is called — only `typeof` introspection — so noBridge is fine.
+  const SHAPE_PROBE = `module.exports.templateTags = [{ name: 's', run: function (context) {
+    return JSON.stringify({
+      app: typeof context.app,
+      store: typeof context.store,
+      network: typeof context.network,
+      render: typeof context.util.render,
+      readFile: typeof context.util.readFile,
+      nodeOS: typeof context.util.nodeOS,
+      openInBrowser: typeof context.util.openInBrowser,
+      modelsRequest: typeof context.util.models.request,
+      cloudCredential: typeof context.util.models.cloudCredential,
+      contextData: typeof context.context
+    });
+  } }];`;
+
+  const shape = async (granted: string[]) => {
+    const raw = await runTagInSandbox({
+      pluginSource: SHAPE_PROBE,
+      tagName: 's',
+      envelope: envelope([], TEMPLATE_TAG_BASELINE_MODULES, granted),
+      bridge: noBridge,
+    });
+    return JSON.parse(raw) as Record<string, string>;
+  };
+
+  it('omits non-baseline branches with only the baseline grant', async () => {
+    const s = await shape([...TEMPLATE_TAG_BASELINE_CAPABILITIES]);
+    // Baseline present:
+    expect(s.render).toBe('function');
+    expect(s.nodeOS).toBe('function');
+    expect(s.modelsRequest).toBe('object');
+    expect(s.contextData).toBe('object'); // plain data, never gated
+    // Non-baseline absent:
+    expect(s.app).toBe('undefined');
+    expect(s.store).toBe('undefined');
+    expect(s.network).toBe('undefined');
+    expect(s.readFile).toBe('undefined');
+    expect(s.openInBrowser).toBe('undefined');
+    expect(s.cloudCredential).toBe('undefined');
+  });
+
+  it('attaches context.network / context.store exactly as declared (feature-detect matrix)', async () => {
+    const none = await shape([...TEMPLATE_TAG_BASELINE_CAPABILITIES]);
+    expect(`${none.network}:${none.store}`).toBe('undefined:undefined');
+
+    const net = await shape(resolveTemplateTagCapabilities(['network']));
+    expect(`${net.network}:${net.store}`).toBe('object:undefined');
+
+    const both = await shape(resolveTemplateTagCapabilities(['network', 'storage']));
+    expect(`${both.network}:${both.store}`).toBe('object:object');
+  });
+
+  it('supports graceful degradation via feature detection', async () => {
+    const detect = `module.exports.templateTags = [{ name: 'd', run: function (context) {
+      return context.network ? 'online-mode' : 'offline-mode';
+    } }];`;
+    const offline = await runTagInSandbox({
+      pluginSource: detect,
+      tagName: 'd',
+      envelope: envelope([], TEMPLATE_TAG_BASELINE_MODULES, [...TEMPLATE_TAG_BASELINE_CAPABILITIES]),
+      bridge: noBridge,
+    });
+    expect(offline).toBe('offline-mode');
+    const online = await runTagInSandbox({
+      pluginSource: detect,
+      tagName: 'd',
+      envelope: envelope([], TEMPLATE_TAG_BASELINE_MODULES, resolveTemplateTagCapabilities(['network'])),
+      bridge: noBridge,
+    });
+    expect(online).toBe('online-mode');
+  });
+
+  it('attaches app + fs-read + credentials branches only when their capability is granted', async () => {
+    const s = await shape(resolveTemplateTagCapabilities(['app', 'fs-read', 'credentials']));
+    expect(s.app).toBe('object');
+    expect(s.openInBrowser).toBe('function'); // openInBrowser is under the app capability
+    expect(s.readFile).toBe('function');
+    expect(s.cloudCredential).toBe('object');
+  });
+
+  // The two layers must never disagree: a context branch is attached iff its bridge path's
+  // capability (C1's BRIDGE_PATH_CAPABILITIES) is granted. For each non-baseline branch, granting
+  // its bridge-path capability makes it present; the baseline-only grant leaves it absent.
+  it('context shape agrees with the bridge capability map (C1 ↔ C2)', async () => {
+    const branchToBridgePath: Record<string, string> = {
+      network: 'network.sendRequest',
+      store: 'pluginData.getItem',
+      readFile: 'readFile',
+      openInBrowser: 'openInBrowser',
+      cloudCredential: 'cloudCredential.getById',
+    };
+    const baseline = await shape([...TEMPLATE_TAG_BASELINE_CAPABILITIES]);
+    for (const [branch, bridgePath] of Object.entries(branchToBridgePath)) {
+      const capability = BRIDGE_PATH_CAPABILITIES[bridgePath];
+      expect(capability, `${bridgePath} must be a mapped bridge path`).toBeTruthy();
+      // Absent under baseline (none of these capabilities are baseline)…
+      expect(baseline[branch], `${branch} should be absent without ${capability}`).toBe('undefined');
+      // …present once its capability is granted.
+      const granted = await shape(resolveTemplateTagCapabilities([capability]));
+      expect(granted[branch], `${branch} should be present with ${capability}`).not.toBe('undefined');
+    }
   });
 });
