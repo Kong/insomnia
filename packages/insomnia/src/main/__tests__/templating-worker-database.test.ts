@@ -12,7 +12,7 @@ vi.mock('insomnia-data', () => ({
     workspace: { getById: vi.fn() },
     oAuth2Token: { getByParentId: vi.fn() },
     cookieJar: { getOrCreateForParentId: vi.fn() },
-    response: { getLatestForRequestId: vi.fn() },
+    response: { getLatestForRequestId: vi.fn(), getById: vi.fn() },
     helpers: { getResponseBodyBuffer: vi.fn() },
     settings: { get: vi.fn() },
   },
@@ -26,7 +26,19 @@ vi.mock('../network/libcurl-promise', () => ({ curlRequest: vi.fn() }));
 vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
+import { services } from 'insomnia-data';
+
 import { getPluginEntrySource, runPluginTagInSandbox } from '../templating-worker-database';
+
+// Run a one-tag plugin whose `run` body is `body`, through the real pluginToMainAPI bridge (services
+// mocked above). Returns the rendered string. `caps` overrides granted capabilities.
+const runTag = (runBody: string, caps?: string[]) =>
+  runPluginTagInSandbox(
+    `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
+    { args: [], pluginName: 'p', tagName: 't', context: { meta: {}, renderPurpose: 'send' as const, context: {} as any } },
+    undefined,
+    caps,
+  );
 
 describe('getPluginEntrySource', () => {
   let dir: string;
@@ -89,5 +101,29 @@ describe('runPluginTagInSandbox — util.render escape', () => {
         context: { meta: {}, renderPurpose: 'send' as const, context: { name: 'kyle' } as any },
       }),
     ).resolves.toBe('hello kyle');
+  });
+});
+
+describe('response.getBodyBuffer — no arbitrary file read (S1)', () => {
+  it('reads the server-loaded response bodyPath, ignoring a plugin-supplied path', async () => {
+    (services.response.getById as any).mockResolvedValue({ _id: 'r1', bodyPath: '/app/owned/body', bodyCompression: null });
+    (services.helpers.getResponseBodyBuffer as any).mockImplementation(async (resp: any) => `read:${resp?.bodyPath}`);
+    // The plugin fabricates bodyPath: '/etc/passwd'; the handler must re-load by _id and read only
+    // the server-owned path.
+    const result = await runTag(
+      "return await context.util.models.response.getBodyBuffer({ _id: 'r1', bodyPath: '/etc/passwd' });",
+    );
+    expect(services.response.getById).toHaveBeenCalledWith('r1');
+    expect(result).toBe('read:/app/owned/body');
+  });
+
+  it('returns the read-failure value (never touches disk) when the response id is unknown', async () => {
+    (services.response.getById as any).mockResolvedValue(null);
+    (services.helpers.getResponseBodyBuffer as any).mockClear();
+    const result = await runTag(
+      "return await context.util.models.response.getBodyBuffer({ bodyPath: '/etc/passwd' }, 'FAIL');",
+    );
+    expect(result).toBe('FAIL');
+    expect(services.helpers.getResponseBodyBuffer).not.toHaveBeenCalled();
   });
 });

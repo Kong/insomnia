@@ -249,10 +249,17 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: {
-    response?: { bodyPath?: string; bodyCompression?: any };
+    response?: { _id?: string; bodyPath?: string; bodyCompression?: any };
     readFailureValue?: string;
   }) => {
-    return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
+    // Re-load the response by id and read only its server-owned bodyPath — never a caller-supplied
+    // path — so a plugin can't turn this into an arbitrary-file read.
+    const id = body.response?._id;
+    const real = typeof id === 'string' ? await services.response.getById(id) : null;
+    if (!real) {
+      return body.readFailureValue ?? '';
+    }
+    return await services.helpers.getResponseBodyBuffer(real, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
     const doc = await services.pluginData.getByKey(body.pluginName, body.key);
