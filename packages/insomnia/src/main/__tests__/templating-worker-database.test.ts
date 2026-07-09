@@ -12,7 +12,7 @@ vi.mock('insomnia-data', () => ({
     workspace: { getById: vi.fn() },
     oAuth2Token: { getByParentId: vi.fn() },
     cookieJar: { getOrCreateForParentId: vi.fn() },
-    response: { getLatestForRequestId: vi.fn() },
+    response: { getLatestForRequestId: vi.fn(), getById: vi.fn() },
     helpers: { getResponseBodyBuffer: vi.fn() },
     settings: { get: vi.fn() },
   },
@@ -26,7 +26,18 @@ vi.mock('../network/libcurl-promise', () => ({ curlRequest: vi.fn() }));
 vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
+import { services } from 'insomnia-data';
+
 import { getPluginEntrySource, runPluginTagInSandbox } from '../templating-worker-database';
+
+// Runs a one-tag plugin through the real pluginToMainAPI bridge; `caps` overrides granted capabilities.
+const runTag = (runBody: string, caps?: string[]) =>
+  runPluginTagInSandbox(
+    `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
+    { args: [], pluginName: 'p', tagName: 't', context: { meta: {}, renderPurpose: 'send' as const, context: {} as any } },
+    undefined,
+    caps,
+  );
 
 describe('getPluginEntrySource', () => {
   let dir: string;
@@ -89,5 +100,72 @@ describe('runPluginTagInSandbox — util.render escape', () => {
         context: { meta: {}, renderPurpose: 'send' as const, context: { name: 'kyle' } as any },
       }),
     ).resolves.toBe('hello kyle');
+  });
+});
+
+describe('cloudCredential.update cannot forge type/_id to write another collection', () => {
+  const CREDS = ['render', 'models.read', 'util', 'crypto', 'credentials'];
+
+  it('rejects when the id does not resolve to an existing cloud credential', async () => {
+    (services.cloudCredential.getById as any).mockResolvedValue(null);
+    (services.cloudCredential.update as any).mockClear();
+    await expect(
+      runTag(
+        "return await context.util.models.cloudCredential.update({ type: 'Settings', _id: 'settings-id', dataFolders: ['/'] }, {});",
+        CREDS,
+      ),
+    ).rejects.toThrow(/not found/);
+    expect(services.cloudCredential.update).not.toHaveBeenCalled();
+  });
+
+  it('updates the re-loaded credential and drops identity fields from the patch', async () => {
+    const existing = { _id: 'cred1', type: 'CloudProviderCredential', name: 'orig' };
+    (services.cloudCredential.getById as any).mockResolvedValue(existing);
+    (services.cloudCredential.update as any).mockResolvedValue(existing);
+    await runTag(
+      "return await context.util.models.cloudCredential.update({ _id: 'cred1' }, { name: 'new', type: 'Settings', _id: 'other-id' });",
+      CREDS,
+    );
+    const [docArg, patchArg] = (services.cloudCredential.update as any).mock.calls[0];
+    expect(docArg).toBe(existing); // authoritative reloaded doc, not the caller's object
+    expect(patchArg).toEqual({ name: 'new' }); // type/_id stripped
+  });
+});
+
+describe('id arguments are string-coerced before reaching the query layer', () => {
+  it('coerces an object id to a string so it cannot become a Mongo-style operator query', async () => {
+    (services.request.getById as any).mockResolvedValue(null);
+    await runTag('return String(await context.util.models.request.getById({ $ne: null }));');
+    // The handler must pass a primitive string, not the { $ne: null } object, to the query layer.
+    expect(services.request.getById).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('coerces oAuth2Token parentId likewise', async () => {
+    (services.oAuth2Token.getByParentId as any).mockResolvedValue(null);
+    await runTag('return String(await context.util.models.oAuth2Token.getByRequestId({ $exists: true }));');
+    expect(services.oAuth2Token.getByParentId).toHaveBeenCalledWith('[object Object]');
+  });
+});
+
+describe('response.getBodyBuffer reads only the server-loaded response body', () => {
+  it('reads the server-loaded response bodyPath, ignoring a plugin-supplied path', async () => {
+    (services.response.getById as any).mockResolvedValue({ _id: 'r1', bodyPath: '/app/owned/body', bodyCompression: null });
+    (services.helpers.getResponseBodyBuffer as any).mockImplementation(async (resp: any) => `read:${resp?.bodyPath}`);
+    // The plugin fabricates bodyPath; the handler must re-load by _id and read only the server-owned path.
+    const result = await runTag(
+      "return await context.util.models.response.getBodyBuffer({ _id: 'r1', bodyPath: '/home/user/.ssh/id_rsa' });",
+    );
+    expect(services.response.getById).toHaveBeenCalledWith('r1');
+    expect(result).toBe('read:/app/owned/body');
+  });
+
+  it('returns the read-failure value (never touches disk) when the response id is unknown', async () => {
+    (services.response.getById as any).mockResolvedValue(null);
+    (services.helpers.getResponseBodyBuffer as any).mockClear();
+    const result = await runTag(
+      "return await context.util.models.response.getBodyBuffer({ bodyPath: '/home/user/.ssh/id_rsa' }, 'FAIL');",
+    );
+    expect(result).toBe('FAIL');
+    expect(services.helpers.getResponseBodyBuffer).not.toHaveBeenCalled();
   });
 });
