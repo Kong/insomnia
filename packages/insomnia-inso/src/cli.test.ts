@@ -285,6 +285,22 @@ describe('inso packaged binary', () => {
       expect(result.code).toBe(1);
     });
   });
+
+  // binaries/inso is the secure wrapper on Windows (see build-secure-wrapper-inso.sh).
+  describe.skipIf(process.platform !== 'win32')('secure wrapper (Windows)', () => {
+    it('forwards piped stdin without hanging', async () => {
+      const result = await runCliFromRoot(
+        'echo hello | $PWD/packages/insomnia-inso/binaries/inso -h',
+      );
+      expect(result.code).toBe(0);
+    });
+
+    it('keeps stdout and stderr independent on failure', async () => {
+      const result = await runCliFromRoot(packagedErrorCodes[0]);
+      expect(result.code).toBe(1);
+      expect(result.stderr.length).toBeGreaterThan(0);
+    });
+  });
 });
 
 const helpCommands = [
