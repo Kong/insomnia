@@ -1,41 +1,12 @@
+import type { Space } from '@getinsomnia/insomnia-v3-fetch';
+
 import { fetch } from './fetch';
 
-interface Branding {
-  logo_url: string;
-}
-
-export type OrganizationType = 'personal' | 'team' | 'enterprise';
-
-export interface OrganizationMetadata {
-  organizationType: OrganizationType;
-  ownerAccountId: string;
-  description?: string;
-}
-
-export interface Organization {
-  id: string;
-  name: string;
-  display_name: string;
-  branding?: Branding;
-  metadata: OrganizationMetadata;
-}
-
-export interface OrganizationsResponse {
-  start: number;
-  limit: number;
-  length: number;
-  total: number;
-  next: string;
-  organizations: Organization[];
-}
-
-export const getOrganizations = ({ sessionId }: { sessionId: string }) => {
-  return fetch<OrganizationsResponse>({
-    method: 'GET',
-    path: '/v1/organizations',
-    sessionId,
-  });
-};
+/**
+ * Re-exported as `Organization` so existing consumers stay source-compatible.
+ * Use {@link getSpaces} (from `./spaces`) to fetch the user's spaces.
+ */
+export type Organization = Space;
 
 export const needsToUpgrade = 'NEEDS_TO_UPGRADE';
 export const needsToIncreaseSeats = 'NEEDS_TO_INCREASE_SEATS';
@@ -212,10 +183,3 @@ export const getOrganizationMemberRoles = ({
   });
 };
 
-export const getOrganizationDetail = ({ organizationId, sessionId }: { organizationId: string; sessionId: string }) => {
-  return fetch<Organization>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}`,
-    sessionId,
-  });
-};

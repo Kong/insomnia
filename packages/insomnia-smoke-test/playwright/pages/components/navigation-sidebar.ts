@@ -90,6 +90,15 @@ export class NavigationSidebar {
     return this.root.getByTestId(`workspace-node-${workspaceName}`);
   }
 
+  workspaceGridListItem(workspaceName: string): Locator {
+    return this.navigationTree.getByRole('row', { name: workspaceName });
+  }
+
+  async expectWorkspaceActive(workspaceName: string): Promise<void> {
+    await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
+    await expect.soft(this.workspaceGridListItem(workspaceName)).toHaveAttribute('aria-selected', 'true');
+  }
+
   async selectWorkspace(workspaceName: string): Promise<void> {
     await this.workspaceRow(workspaceName).click();
   }
@@ -268,9 +277,9 @@ export class NavigationSidebar {
   async fetchUnsyncedWorkspace(name: string): Promise<void> {
     const unsyncedWorkspaceButton = this.unsyncedWorkspaceButton(name);
     await unsyncedWorkspaceButton.click();
-    await this.unsyncedWorkspaceRow(name)
-      .waitFor({ state: 'hidden', timeout: 5000 })
-      .catch(() => {});
+    await expect.soft(this.unsyncedWorkspaceRow(name)).toBeHidden({ timeout: 5000 });
+    await expect.soft(this.workspaceRow(name)).toBeVisible();
+    await this.expectWorkspaceActive(name);
   }
 
   // ===========================================================================

@@ -91,6 +91,29 @@ const organizations = [
   },
 ];
 
+// Spaces fixture — backs the v3 `/users/me/spaces` endpoint. Mirrors the legacy
+// `organizations` array above: same ids, `display_name` → `name`, and `is_owner`
+// derived against the v3 test account (User A, `v3User.id` below).
+const v3TestAccountId = 'acct_64a477e6b59d43a5a607f84b4f73e3ce';
+const spaces = organizations.map(org => {
+  const isOwner = org.metadata.ownerAccountId === v3TestAccountId;
+  return {
+    id: org.id,
+    name: org.display_name,
+    picture: null,
+    owner_first_name: null,
+    owner_last_name: null,
+    owner_email: null,
+    // Personal workspace is the user's solo space; Magic represents a shared team
+    // org. Keeps the PR2 migration-target heuristic (`is_owner && total_members === 1`)
+    // deterministic for smoke tests.
+    total_members: isOwner ? 1 : 2,
+    total_invites: 0,
+    is_owner: isOwner,
+    can_leave: !isOwner,
+  };
+});
+
 const defaultOrganizationFeatures = {
   gitSync: {
     enabled: true,
@@ -193,19 +216,6 @@ const userPermissions = {
   'update:membership': true,
   'update:organization': true,
   'update:team_project': true,
-};
-
-const orgInfo = {
-  id: 'org_3d314c35-b9ca-4aec-b57d-04cea38da05c',
-  name: 'Sync',
-  display_name: 'Sync',
-  branding: {
-    logo_url: 'https://d2evto68nv31gd.cloudfront.net/org_98e187f8-a753-4abf-b0b2-58cdb852eba6',
-  },
-  metadata: {
-    organizationType: 'team',
-    ownerAccountId: 'acct_e9cf786dc67b4dbc8c002359b3cc3d70',
-  },
 };
 
 const currentRole = {
@@ -468,10 +478,17 @@ export default function setup(app: Application) {
     res.status(200).send(currentPlan);
   });
 
-  // Organizations
-  app.get('/v1/organizations', (_req, res) => {
+  // Spaces (replaces the legacy /v1/organizations list endpoint).
+  app.get('/v3/users/me/spaces', (_req, res) => {
     res.status(200).send({
-      organizations: organizations,
+      data: spaces,
+      meta: {
+        page: {
+          next: null,
+          previous: null,
+          size: spaces.length,
+        },
+      },
     });
   });
 
@@ -573,10 +590,6 @@ export default function setup(app: Application) {
 
   app.get('/v1/organizations/:organizationId/user-permissions', (_req, res) => {
     res.json(userPermissions);
-  });
-
-  app.get('/v1/organizations/:organizationId', (_req, res) => {
-    res.json(orgInfo);
   });
 
   app.get('/v1/organizations/:organizationId/members/:accountId/roles', (_req, res) => {

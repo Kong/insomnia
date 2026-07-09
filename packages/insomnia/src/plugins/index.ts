@@ -6,6 +6,7 @@ import type { Request, RequestGroup, Workspace } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import type { PluginConfigMap } from 'insomnia-data/common';
 
+import { parsePluginPermissions } from '~/common/plugins/permissions';
 import type {
   DocumentAction,
   Plugin,
@@ -109,12 +110,21 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         // Delete require cache entry and re-require
         const module = nodeRequire(modulePath);
 
+        const parsedPermissions = parsePluginPermissions(pluginJson.insomnia);
+        if (parsedPermissions.warnings.length > 0) {
+          // Constant format string; interpolated values passed as args so a plugin name can't forge log output.
+          console.warn('[plugin] %s has invalid insomnia.permissions: %o', pluginJson.name, parsedPermissions.warnings);
+        }
+
         pluginMap[pluginJson.name] = {
           name: pluginJson.name,
           description: pluginJson.description || pluginJson.insomnia.description || '',
           version: pluginJson.version || 'unknown',
           directory: modulePath || '',
           config: pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false },
+          permissions: parsedPermissions.permissions,
+          permissionWarnings: parsedPermissions.warnings,
+          permissionsDeclared: parsedPermissions.declared,
           module: module,
         };
       } catch (err) {
@@ -188,6 +198,10 @@ function getBundlePluginMap() {
         version: 'unknown',
         directory: '',
         config: { disabled: false },
+        // Bundle plugins are first-party; they declare no manifest and run on the baseline grant.
+        permissions: { modules: [], capabilities: [] },
+        permissionWarnings: [],
+        permissionsDeclared: false,
         module: module,
       };
     } catch (err) {

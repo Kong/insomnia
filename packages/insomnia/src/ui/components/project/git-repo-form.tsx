@@ -21,14 +21,16 @@ import type { GitProviderOption } from '~/sync/git/providers/types';
 import { ensureGitRepoUrlSuffix } from '~/sync/git/url-utils';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
+import { MiddleTruncate } from '~/ui/components/base/middle-truncate';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
 import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { ErrorBoundary } from '../error-boundary';
-import type { ActiveView, ProjectData } from './utils';
+import { type ActiveView, deriveRepoName, getLastCloneParentDir, type ProjectData, setLastCloneParentDir } from './utils';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
@@ -158,8 +160,8 @@ export const GitRepoForm: FC<Props> = ({
             }}
             defaultSelectedKey={credentials?.[0]?._id}
           >
-            <Label className="mb-2 px-0.5 pt-0 text-sm">Authorized as</Label>
-            <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+            <Label className="mb-1 pt-0 text-sm">Authorized as</Label>
+            <Button className="flex h-(--line-height-xs) w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
               <SelectValue<GitCredentials> className="flex items-center justify-center gap-2 truncate">
                 {({ selectedItem }) => {
                   if (selectedItem) {
@@ -254,8 +256,8 @@ export const GitRepoForm: FC<Props> = ({
                 }));
               }}
             >
-              <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
-              <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+              <Label className="mb-1 pt-0 text-sm">Author Email</Label>
+              <Button className="flex h-(--line-height-xs) w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
                 <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
                   {({ selectedItem }) => {
                     if (selectedItem) {
@@ -336,6 +338,52 @@ export const GitRepoForm: FC<Props> = ({
               url={projectData.uri || ''}
               isDisabled={false}
             />
+          </div>
+
+          <div className={isCredentialInvalid ? 'hidden' : 'flex flex-col gap-2 px-0.5'}>
+            <Label className="text-sm text-(--color-font)">Clone location</Label>
+            <div className="flex items-center gap-2">
+              {projectData.cloneParentDir ? (
+                <MiddleTruncate
+                  value={window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))}
+                  className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
+                />
+              ) : (
+                <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
+                  Managed by Insomnia (default location)
+                </div>
+              )}
+              <Button
+                type="button"
+                onPress={async () => {
+                  const defaultPath =
+                    projectData.cloneParentDir ||
+                    getLastCloneParentDir() ||
+                    window.path.join(window.app.getPath('home'), 'Insomnia');
+                  const { canceled, filePath } = await selectFileOrFolder({
+                    itemTypes: ['directory'],
+                    defaultPath,
+                  });
+                  if (canceled || !filePath) {
+                    return;
+                  }
+                  setLastCloneParentDir(filePath);
+                  setProjectData(prev => ({ ...prev, cloneParentDir: filePath }));
+                }}
+                className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+              >
+                Choose folder…
+              </Button>
+              {projectData.cloneParentDir && (
+                <Button
+                  type="button"
+                  onPress={() => setProjectData(prev => ({ ...prev, cloneParentDir: undefined }))}
+                  className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+                >
+                  Use default
+                </Button>
+              )}
+            </div>
           </div>
         </Form>
       )}

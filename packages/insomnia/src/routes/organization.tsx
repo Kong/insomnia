@@ -42,7 +42,7 @@ export interface OrganizationLoaderData {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { id, accountId } = await services.userSession.get();
   if (id) {
-    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as User;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
     return {

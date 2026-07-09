@@ -11,6 +11,8 @@ export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY
 // Cached engine instances
 let liquidAll: Liquid | null = null;
 let liquidAllTagMetadata: Map<string, any> | null = null;
+// No local/plugin tags registered, so unlike liquidAll this never needs to be invalidated on reload().
+let liquidNoTags: Liquid | null = null;
 
 /**
  * Render text based on stuff
@@ -18,6 +20,7 @@ let liquidAllTagMetadata: Map<string, any> | null = null;
  * @param {Object} [config] - Config options for rendering
  * @param {Object} [config.context] - Context to render with
  * @param {Object} [config.path] - Path to include in the error message
+ * @param {boolean} [config.allowTags] - Set to false to reject `{% tag %}` syntax (still allows `{{ variable }}` interpolation). Used by the sandboxed util.render bridge so a plugin can't invoke another tag's real, unsandboxed run() through it.
  */
 export function render(
   text: string,
@@ -25,6 +28,7 @@ export function render(
     context?: Record<string, any>;
     path?: string;
     ignoreUndefinedEnvVariable?: boolean;
+    allowTags?: boolean;
   } = {},
 ) {
   const hasTemplateInterpolationSymbols = text.includes('{{') && text.includes('}}');
@@ -44,7 +48,7 @@ export function render(
     // NOTE: this is added as a breadcrumb because rendering sometimes hangs
     const id = setTimeout(() => console.log('[templating] Warning: liquid failed to respond within 5 seconds'), 5000);
     try {
-      const { engine } = await getLiquid(config.ignoreUndefinedEnvVariable);
+      const { engine } = config.allowTags === false ? await getLiquidNoTags() : await getLiquid(config.ignoreUndefinedEnvVariable);
       const preprocessed = stripLiquidComments(text);
       const result = await engine.parseAndRender(preprocessed, templatingContext);
       clearTimeout(id);
@@ -123,4 +127,20 @@ async function getLiquid(
   }
 
   return { engine, tagMetadata };
+}
+
+// A Liquid engine with no local/plugin tags registered — only native Liquid control flow and
+// {{ variable }} interpolation work; any {% tag %} fails to parse instead of dispatching to that
+// tag's real run().
+async function getLiquidNoTags(): Promise<{ engine: Liquid }> {
+  if (!liquidNoTags) {
+    const { engine } = buildLiquidEngine({
+      tagFactory: () => {
+        throw new Error('unreachable: no tags are registered on this engine');
+      },
+      tags: [],
+    });
+    liquidNoTags = engine;
+  }
+  return { engine: liquidNoTags };
 }

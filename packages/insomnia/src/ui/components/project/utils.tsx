@@ -15,6 +15,44 @@ export interface ProjectData {
   credentialsId?: string;
   connectRepositoryLater?: boolean;
   selectedAuthorEmail?: string | null;
+  /**
+   * Optional user-chosen parent folder to clone into. When set, the repo is
+   * cloned into `<cloneParentDir>/<repo-name>`; when unset, Insomnia manages the
+   * location.
+   */
+  cloneParentDir?: string;
 }
+
+const LAST_CLONE_DIR_KEY = 'insomnia.git.lastCloneParentDir';
+
+export const getLastCloneParentDir = (): string => {
+  try {
+    return window.localStorage.getItem(LAST_CLONE_DIR_KEY) || '';
+  } catch {
+    return '';
+  }
+};
+
+export const setLastCloneParentDir = (dir: string): void => {
+  try {
+    window.localStorage.setItem(LAST_CLONE_DIR_KEY, dir);
+  } catch {
+    // ignore storage errors
+  }
+};
+
+/** Derive the destination folder name from a git URL (e.g. `…/foo.git` → `foo`). */
+export const deriveRepoName = (uri?: string): string => {
+  if (!uri) {
+    return 'repository';
+  }
+  const trimmed = uri.trim().replace(/[/\\]+$/, '');
+  const lastSegment = trimmed.split(/[/\\:]/).pop() || '';
+  const name = lastSegment.replace(/\.git$/i, '').split(/[?#]/, 1)[0].trim();
+  if (!name || name === '.' || name === '..') {
+    return 'repository';
+  }
+  return name;
+};
 
 export type ProjectType = 'local' | 'remote' | 'git';

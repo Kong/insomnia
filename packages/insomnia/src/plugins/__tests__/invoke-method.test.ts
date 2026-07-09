@@ -31,6 +31,9 @@ const makePlugin = (overrides: Partial<Plugin> = {}): Plugin => ({
   version: '1.0.0',
   directory: '/plugins/test-plugin',
   config: { disabled: false },
+  permissions: { modules: [], capabilities: [] },
+  permissionWarnings: [],
+  permissionsDeclared: false,
   module: {},
   ...overrides,
 });

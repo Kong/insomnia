@@ -115,9 +115,9 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
               <label>
                 Organization:
                 <select name="orgId" value={selectedOrgId} onChange={e => setSelectedOrgId(e.target.value)}>
-                  {organizationData?.organizations.map(({ id, display_name }) => (
+                  {organizationData?.organizations.map(({ id, name }) => (
                     <option key={id} value={id}>
-                      {display_name}
+                      {name}
                     </option>
                   ))}
                 </select>

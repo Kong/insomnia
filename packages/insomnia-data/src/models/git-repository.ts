@@ -32,6 +32,7 @@ export function init(): BaseGitRepository {
     hasUnpushedChanges: false,
     uriNeedsMigration: true,
     repoMigrationVersion: 0,
+    directory: null,
   };
 }
 
@@ -69,6 +70,16 @@ export interface BaseGitRepository {
    * for version-rollback scenarios.
    */
   repoMigrationVersion: number;
+  /**
+   * Absolute path to a user-chosen location on the local filesystem where this
+   * repository's working tree and .git directory live.
+   *
+   * `null` (the default) means the repository is stored in the app-managed
+   * location: `{INSOMNIA_DATA_PATH || userData}/version-control/git/{_id}`.
+   * Insomnia owns that managed folder. When `directory` is set, the user owns
+   * the folder and Insomnia must not delete it on project removal.
+   */
+  directory: string | null;
 }
 
 export const isGitRepository = (model: Pick<BaseModel, 'type'>): model is GitRepository => model.type === type;

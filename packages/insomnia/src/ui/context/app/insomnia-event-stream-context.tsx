@@ -206,7 +206,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
             } else if (event.type === 'VaultKeyChanged') {
               const accountId = userSession.accountId;
               const organizations = JSON.parse(
-                localStorage.getItem(`${accountId}:organizations`) || '[]',
+                localStorage.getItem(`${accountId}:spaces`) || '[]',
               ) as Organization[];
               clearVaultKeySubmit({
                 organizations: organizations?.map(org => org.id) || [],

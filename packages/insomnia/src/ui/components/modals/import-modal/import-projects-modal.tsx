@@ -505,7 +505,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
 
   const organizationData = useOrganizationLoaderData();
   const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
+    organizationData?.organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [projectItems, setProjectItems] = useState<ProjectImportItem[]>([]);
   const [processingUIStatus, setProcessingUiStatus] = useState<'loading' | 'importing' | 'error' | 'complete'>(

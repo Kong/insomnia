@@ -153,6 +153,13 @@ export const FirstRequestCreation = ({
   };
 
   const handleRequestCreateShortcut = (_event: KeyboardEvent) => {
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.keyboardShortcutUsed,
+      properties: {
+        source: 'first-request-creation-pane',
+        action: 'createHttpRequest',
+      },
+    });
     if (!selectedCollectionId) {
       createWorkspaceFetcher.submit({
         organizationId,

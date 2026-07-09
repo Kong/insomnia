@@ -66,9 +66,11 @@ that native stack — but this is **not universal** (see runtime results).
 - **Undo** → `role: 'undo'`, accelerator `CmdOrCtrl+Z`
 - **Redo** → `role: 'redo'`, accelerator `Shift+CmdOrCtrl+Z`
 
-These map to Electron's native `webContents.undo()/redo()`, which act on the focused native
-editable element — **independent of CodeMirror's internal history**. This is why plain inputs
-get working undo "for free", and why there are two competing undo stacks in CodeMirror surfaces.
+These originally mapped to Electron's native `webContents.undo()/redo()`, which act on the focused
+native editable element — **independent of CodeMirror's internal history**. This is why plain inputs
+got working undo "for free", and why there were two competing undo stacks in CodeMirror surfaces.
+**This is now reconciled** — the menu items route through one app-level handler (see opportunity 4
+below).
 
 ## Remount triggers
 
@@ -135,8 +137,14 @@ landed. Confirmed: a stable editor keeps focus and undoes correctly; the remount
    paths); external value changes resync in place via OneLineEditor's `defaultValue` effect.
 3. **DONE.** `setValue` is non-destructive — it replaces the value via `replaceRange` (history
    preserved, undoable) and no-ops when unchanged.
-4. **Reconcile the two undo stacks** (native menu vs. CodeMirror). Out of scope for low-hanging
-   fruit; track separately.
+4. **DONE.** Reconcile the two undo stacks (native menu vs. CodeMirror) through one app-level
+   handler. The Edit menu's `Undo`/`Redo` no longer use `role: 'undo'`/`'redo'` (which only drove
+   the native stack and left CodeMirror's Cmd+Z inert behind the menu accelerator); they now send
+   `edit:undo`/`edit:redo` to the focused window. A single renderer handler
+   ([`editor-undo.ts`](../packages/insomnia/src/ui/components/.client/codemirror/editor-undo.ts),
+   wired in [`renderer-listeners.ts`](../packages/insomnia/src/ui/renderer-listeners.ts)) routes by
+   focus: a CodeMirror surface drives `cm.undo()/redo()`; anything else replays the browser's native
+   edit command (`execCommand`), preserving the old behaviour for plain inputs.
 5. **Plain controlled inputs (Category C).** Largest surface, lowest per-item value; defer
    unless a specific input is reported.
 

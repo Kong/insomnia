@@ -1,0 +1,25 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Sandbox Manifest Collection
+meta:
+  id: wrk_5a4db0c5000000000000000000000010
+  created: 1751800000010
+  modified: 1751800000010
+collection:
+  - url: http://127.0.0.1:4010/echo
+    name: Manifest Probe
+    meta:
+      id: req_5a4db0c5000000000000000000000011
+      created: 1751800000011
+      modified: 1751800000011
+      isPrivate: false
+      sortKey: -1751800000011
+    method: GET
+    body:
+      mimeType: text/plain
+      text: |
+        {% eventsgranted %}
+        {% eventsbaseline %}
+    headers:
+      - name: Content-Type
+        value: text/plain

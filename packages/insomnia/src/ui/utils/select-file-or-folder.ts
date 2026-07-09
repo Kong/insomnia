@@ -2,6 +2,7 @@ interface Options {
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
   showHiddenFiles?: boolean;
+  defaultPath?: string;
 }
 
 interface FileSelection {
@@ -9,7 +10,7 @@ interface FileSelection {
   canceled: boolean;
 }
 
-export const selectFileOrFolder = async ({ itemTypes, extensions, showHiddenFiles }: Options) => {
+export const selectFileOrFolder = async ({ itemTypes, extensions, showHiddenFiles, defaultPath }: Options) => {
   const types = itemTypes || ['file'];
   let title = 'Select ';
 
@@ -48,6 +49,7 @@ export const selectFileOrFolder = async ({ itemTypes, extensions, showHiddenFile
   const { canceled, filePaths } = await window.dialog.showOpenDialog({
     title,
     buttonLabel: 'Select',
+    defaultPath,
     properties,
     filters: [
       {

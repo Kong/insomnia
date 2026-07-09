@@ -131,7 +131,8 @@ export async function registerInsomniaProtocols() {
             const { protocol, hostname } = urlParse(urlStr);
             const { httpProxy, httpsProxy, noProxy } = settings;
             const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-            const proxy = !shouldBypassProxyForHost(hostname, noProxy) && proxyHost ? setDefaultProtocol(proxyHost) : '';
+            const proxy =
+              !shouldBypassProxyForHost(hostname, noProxy) && proxyHost ? setDefaultProtocol(proxyHost) : '';
             curl.setOpt(Curl.option.PROXY, proxy);
             if (proxy) {
               curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);

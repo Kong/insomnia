@@ -1,5 +1,5 @@
 import type * as Har from 'har-format';
-import type { BaseModel, Cookie, Environment, Request, RequestGroup, Response, Workspace } from 'insomnia-data';
+import type { BaseModel, Cookie, Request, RequestGroup, Response, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
@@ -227,9 +227,9 @@ export async function exportHarRequest(requestId: string, environmentOrWorkspace
     const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(environmentOrWorkspaceId);
     const baseEnvironment = await services.environment.getOrCreateForParentId(environmentOrWorkspaceId);
     const activeEnvironment =
-      (await database.findOne<Environment>(models.environment.type, {
-        _id: workspaceMeta.activeEnvironmentId,
-      })) || baseEnvironment;
+      (workspaceMeta.activeEnvironmentId
+        ? await services.environment.getById(workspaceMeta.activeEnvironmentId)
+        : null) || baseEnvironment;
     environmentId = activeEnvironment._id;
   } else {
     throw new Error(`Invalid environmentOrWorkspaceId provided to exportHarRequest: ${environmentOrWorkspaceId}`);

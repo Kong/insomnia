@@ -6,6 +6,7 @@ import { useParams } from 'react-router';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { docsGitSync } from '../../../../common/documentation';
 import { Link } from '../../base/link';
@@ -39,6 +40,7 @@ export const GitRepositorySettingsModal = ({
   }, []);
 
   const authorEmail = gitRepository.selectedAuthorEmail || selectedCredential?.author?.email;
+  const repoBaseDir = resolveGitRepoBaseDir(gitRepository);
 
   return (
     <OverlayContainer>
@@ -61,10 +63,23 @@ export const GitRepositorySettingsModal = ({
           )}
           {authorEmail && (
             <div className="mt-4 flex text-[12px]">
-              <div className="w-[110px] font-semibold">Author Email</div>
+              <div className="w-27.5 font-semibold">Author Email</div>
               <div>{authorEmail}</div>
             </div>
           )}
+          <div className="mt-4 flex items-start text-[12px]">
+            <div className="w-27.5 font-semibold">Local folder</div>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="min-w-0 flex-1 break-all">{repoBaseDir}</span>
+              <button
+                type="button"
+                className="btn btn--super-compact btn--outlined"
+                onClick={() => window.shell.showItemInFolder(repoBaseDir)}
+              >
+                Reveal
+              </button>
+            </div>
+          </div>
         </ModalBody>
         <ModalFooter>
           <div

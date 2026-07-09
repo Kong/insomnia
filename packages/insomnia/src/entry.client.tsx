@@ -17,6 +17,7 @@ import { createServicesProxy } from '~/ui/services-proxy';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { getInitialEntry } from '~/ui/utils/router';
 
+import { configureV3ClientDefaults } from './common/configure-v3-client';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
@@ -44,6 +45,7 @@ initServices(dataServices);
 initRuntime(rendererRuntime);
 
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
+configureV3ClientDefaults();
 
 await migrateFromLocalStorage();
 registerSyncMergeConflictListener();

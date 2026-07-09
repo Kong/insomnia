@@ -1,3 +1,4 @@
+import { services } from 'insomnia-data';
 import { useCallback } from 'react';
 
 import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
@@ -11,7 +12,8 @@ import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId
 let getRenderContextPromiseCache: any = {};
 
 export interface UseNunjucksOptions {
-  renderContext: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo'>;
+  renderContext?: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo'>;
+  requestId?: string;
 }
 export const initializeNunjucksRenderPromiseCache = () => {
   getRenderContextPromiseCache = {};
@@ -30,11 +32,11 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
   const workspaceData = useWorkspaceLoaderData();
 
   const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(
-      requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace,
-    );
+    const overrideRequest = options?.requestId ? await services.request.getById(options.requestId) : null;
+    const base = overrideRequest || requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace;
+    const ancestors = await getRenderContextAncestors(base);
     return getRenderContext({
-      request: requestData?.activeRequest || undefined,
+      request: overrideRequest || requestData?.activeRequest || undefined,
       environment: workspaceData?.activeEnvironment._id,
       ancestors,
       ...options?.renderContext,
@@ -44,6 +46,7 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
     workspaceData?.activeWorkspace,
     workspaceData?.activeEnvironment._id,
     options?.renderContext,
+    options?.requestId,
     activeRequestGroup,
   ]);
 

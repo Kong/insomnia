@@ -1,9 +1,7 @@
-import type { Organization, PersonalPlanType } from 'insomnia-api';
+import type { PersonalPlanType } from 'insomnia-api';
 
 export const SCRATCHPAD_ORGANIZATION_ID = 'org_scratchpad';
 export const isScratchpadOrganizationId = (organizationId: string) => organizationId === SCRATCHPAD_ORGANIZATION_ID;
-export const isOwnerOfOrganization = ({ organization, accountId }: { organization: Organization; accountId: string }) =>
-  organization.metadata.ownerAccountId === accountId;
 
 export const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {

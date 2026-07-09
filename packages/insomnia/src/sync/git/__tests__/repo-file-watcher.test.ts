@@ -87,3 +87,96 @@ describe('RepoFileWatcher orphan reconciliation', () => {
     expect(stillThere).not.toBeNull();
   });
 });
+
+describe('RepoFileWatcher ruleset import problems', () => {
+  let repoDir: string;
+  let registry: RepoFileWatcherRegistry;
+  const RULESET_PATH = '.spectral.yaml';
+  const VALID_RULESET = 'extends:\n  - "spectral:oas"\nrules: {}\n';
+  const INVALID_RULESET = 'rules:\n  - [unclosed';
+
+  const getRulesetImportIssue = (repoId: string) =>
+    registry.getProblems(repoId).find(problem => problem.relPath === RULESET_PATH) ?? null;
+
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+    repoDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-repo-watcher-ruleset-'));
+    registry = makeRegistry();
+  });
+
+  afterEach(async () => {
+    registry.stopAll();
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    vi.clearAllMocks();
+  });
+
+  it('surfaces the .spectral.yaml problem when invalid and clears it once fixed', async () => {
+    const absPath = path.join(repoDir, RULESET_PATH);
+
+    // Invalid → issue surfaced.
+    await fs.promises.writeFile(absPath, INVALID_RULESET, 'utf8');
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    expect(getRulesetImportIssue(REPO_ID)).toMatchObject({ kind: 'parse-error', relPath: RULESET_PATH });
+
+    // Fixed → issue cleared.
+    await fs.promises.writeFile(absPath, VALID_RULESET, 'utf8');
+    await registry.importAllFiles(REPO_ID);
+    expect(getRulesetImportIssue(REPO_ID)).toBeNull();
+  });
+
+  it('returns null when the ruleset is valid', async () => {
+    await fs.promises.writeFile(path.join(repoDir, RULESET_PATH), VALID_RULESET, 'utf8');
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    expect(getRulesetImportIssue(REPO_ID)).toBeNull();
+  });
+
+  it('returns null when the watcher is not running', () => {
+    expect(getRulesetImportIssue('nonexistent_repo')).toBeNull();
+  });
+
+  // Regression: uploading a valid ruleset over a previously-invalid committed
+  // file must clear the stale problem, so the spec page stops showing
+  // "Invalid ruleset — using default".
+  it('clears a stale ruleset problem after a valid ruleset is stored via upload', async () => {
+    const absPath = path.join(repoDir, RULESET_PATH);
+    await fs.promises.writeFile(absPath, INVALID_RULESET, 'utf8');
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    expect(getRulesetImportIssue(REPO_ID)).not.toBeNull();
+
+    // Simulate a UI upload: valid ruleset upserted to the DB, then flushed to disk.
+    await services.projectLintRuleset.upsert(PROJECT_ID, { rulesetContent: VALID_RULESET });
+    await registry.flushNow(REPO_ID);
+
+    expect(getRulesetImportIssue(REPO_ID)).toBeNull();
+  });
+
+  // Regression: cloning a repo whose committed .spectral.yaml is invalid must
+  // never delete the file. Previously, an invalid ruleset was silently
+  // ignored (not recognized as a ruleset at all) instead of being rejected,
+  // so nothing prevented the file from later being deleted as a stale
+  // tracked file — which git staged as a deletion that Discard could never
+  // resolve, since re-importing the same invalid content each time was also
+  // a silent no-op.
+  it('keeps an invalid cloned ruleset on disk and out of the DB, surviving repeated re-imports', async () => {
+    const absPath = path.join(repoDir, RULESET_PATH);
+    await fs.promises.writeFile(absPath, INVALID_RULESET, 'utf8');
+
+    // Simulate the initial clone import.
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    const exists = () => fs.promises.access(absPath).then(() => true).catch(() => false);
+    expect(await exists()).toBe(true);
+    expect(await services.projectLintRuleset.getByParentId(PROJECT_ID)).toBeFalsy();
+    expect(getRulesetImportIssue(REPO_ID)).not.toBeNull();
+
+    // Simulate a Discard, which re-writes the same invalid content (as if
+    // restored from git HEAD), followed by the resulting re-import.
+    await fs.promises.writeFile(absPath, INVALID_RULESET, 'utf8');
+    await registry.importAllFiles(REPO_ID);
+    await registry.flushNow(REPO_ID);
+
+    expect(await exists()).toBe(true);
+    expect(await services.projectLintRuleset.getByParentId(PROJECT_ID)).toBeFalsy();
+    expect(getRulesetImportIssue(REPO_ID)).not.toBeNull();
+  });
+});

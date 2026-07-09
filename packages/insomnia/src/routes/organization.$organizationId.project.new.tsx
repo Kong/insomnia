@@ -24,6 +24,13 @@ export interface CreateProjectData {
   connectRepositoryLater?: boolean;
   ref?: string;
   selectedAuthorEmail?: string | null;
+  /** Optional absolute path to a user-chosen folder to clone the repo into. */
+  directory?: string | null;
+  /**
+   * When set, adopt this existing local folder as a Git project instead of
+   * cloning from a URL.
+   */
+  openExistingDirectory?: string;
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
@@ -74,6 +81,23 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       return project._id;
     }
 
+    // Adopt an existing local folder rather than cloning from a URL.
+    if (newProjectData.openExistingDirectory) {
+      const { projectId, errors } = await window.main.git.openGitRepo({
+        organizationId,
+        name: newProjectData.name,
+        directory: newProjectData.openExistingDirectory,
+        credentialsId: newProjectData.credentialsId,
+      });
+
+      if (errors) {
+        throw new Error(errors.join(', '));
+      }
+      reportGitProjectCount(organizationId, sessionId);
+
+      return projectId;
+    }
+
     invariant(newProjectData.credentialsId, 'Credentials ID is required for Git project creation');
     const { projectId, errors } = await window.main.git.cloneGitRepo({
       organizationId,
@@ -82,6 +106,7 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       name: newProjectData.name,
       ref: newProjectData.ref || '',
       selectedAuthorEmail: newProjectData.selectedAuthorEmail,
+      directory: newProjectData.directory,
     });
 
     if (errors) {

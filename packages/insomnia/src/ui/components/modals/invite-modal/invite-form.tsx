@@ -1,6 +1,5 @@
 import classNames from 'classnames';
 import { checkSeats, type CheckSeatsResponse, needsToIncreaseSeats, needsToUpgrade, type Role } from 'insomnia-api';
-import { models } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -125,10 +124,7 @@ export const InviteForm = ({
   const { userSession } = useRootLoaderData()!;
   const organizationData = useOrganizationLoaderData();
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner =
-    organization &&
-    userSession.accountId &&
-    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const isUserOwner = Boolean(organization?.is_owner);
   const sessionId = userSession.id;
 
   const [loading, setLoading] = useState(false);

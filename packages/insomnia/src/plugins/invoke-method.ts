@@ -56,6 +56,9 @@ function serializePlugin(p: Plugin) {
     version: p.version,
     directory: p.directory,
     config: p.config,
+    permissions: p.permissions,
+    permissionWarnings: p.permissionWarnings,
+    permissionsDeclared: p.permissionsDeclared,
   };
 }
 

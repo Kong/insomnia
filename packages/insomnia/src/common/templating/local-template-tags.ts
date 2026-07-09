@@ -1012,6 +1012,9 @@ export const localTemplateTags: TemplateTag[] = localTemplatePlugins.map(t => ({
     config: {
       disabled: false,
     },
+    permissions: { modules: [], capabilities: [] },
+    permissionWarnings: [],
+    permissionsDeclared: false,
     module: {},
   },
   templateTag: t.templateTag,

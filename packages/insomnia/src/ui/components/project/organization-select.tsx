@@ -34,7 +34,7 @@ export const OrganizationSelect = ({
   }, [isOpen]);
 
   const filteredOrgs = organizations.filter(org =>
-    org.display_name.toLowerCase().includes(filterText.toLowerCase()),
+    org.name.toLowerCase().includes(filterText.toLowerCase()),
   );
 
   return (
@@ -51,7 +51,7 @@ export const OrganizationSelect = ({
         <Button className="flex flex-1 items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
           <SelectValue<Organization> className="flex items-center justify-center gap-2 truncate">
             {({ selectedItems }) => {
-              return selectedItems?.[0]?.display_name || 'Select an organization';
+              return selectedItems?.[0]?.name || 'Select an organization';
             }}
           </SelectValue>
           <Icon icon="caret-down" />
@@ -93,13 +93,13 @@ export const OrganizationSelect = ({
                 id={item.id}
                 key={item.id}
                 className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                aria-label={item.display_name}
-                textValue={item.display_name}
+                aria-label={item.name}
+                textValue={item.name}
                 value={item}
               >
                 {({ isSelected }) => (
                   <Fragment>
-                    <span>{item.display_name}</span>
+                    <span>{item.name}</span>
                     {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                   </Fragment>
                 )}

@@ -2,6 +2,7 @@ import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequ
 
 import type { ParsedApiSpec } from '~/common/api-specs';
 import type { PluginTheme } from '~/common/plugins/bridge-types';
+import type { PluginPermissions } from '~/common/plugins/permissions';
 import type { PluginTemplateTag } from '~/common/templating/types';
 
 // shared types for private plugins
@@ -73,6 +74,12 @@ export interface Plugin {
   version: string;
   directory: string;
   config: { disabled: boolean };
+  /** Parsed, validated `insomnia.permissions` manifest (sandbox plan C3). */
+  permissions: PluginPermissions;
+  /** Validation warnings from parsing `permissions`; shown on the plugin card. Empty when clean. */
+  permissionWarnings: string[];
+  /** True when the plugin declared a valid `permissions` object (even if empty); false = baseline access (no/malformed manifest). */
+  permissionsDeclared: boolean;
   module: {
     templateTags?: PluginTemplateTag[];
     requestHooks?: ((requestContext: any) => void)[];

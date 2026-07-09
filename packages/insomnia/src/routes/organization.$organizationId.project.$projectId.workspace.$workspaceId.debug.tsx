@@ -407,6 +407,14 @@ const Debug = () => {
         : requestGroupId && isRequestGroupId(requestGroupId)
           ? requestGroupId
           : activeWorkspace._id;
+
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.keyboardShortcutUsed,
+        properties: {
+          source: parentId === activeWorkspace._id ? 'empty-collection-page' : 'collection-page-request-list',
+          action: 'createHttpRequest',
+        },
+      });
       createRequestFetcher.submit({
         organizationId,
         projectId,

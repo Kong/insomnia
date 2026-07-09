@@ -33,6 +33,7 @@ import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
+import { createWorkspaceActionItems } from './actions/create-actions';
 
 export const ICON_CLASS = 'h-3 w-3 shrink-0';
 
@@ -191,47 +192,14 @@ export const ProjectDropdown: FC<Props> = ({
     },
   ];
 
-  const createInProjectActionList: ProjectActionItem[] = [
-    {
-      id: 'new-collection',
-      name: 'Collection',
-      scope: 'collection',
-      icon: 'bars',
-      action: createNewCollection,
-    },
-    {
-      id: 'new-document',
-      name: 'Document',
-      scope: 'design',
-      icon: 'file',
-      action: createNewDocument,
-    },
-    {
-      id: 'new-mcp-client',
-      name: 'MCP Client',
-      scope: 'mcp',
-      icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: createNewMcpClient,
-    },
-    ...(canCreateMockServer
-      ? [
-          {
-            id: 'new-mock-server',
-            name: 'Mock Server',
-            scope: 'mock-server' as WorkspaceScope,
-            icon: 'server' as IconName,
-            action: createNewMockServer,
-          },
-        ]
-      : []),
-    {
-      id: 'new-environment',
-      name: 'Environment',
-      scope: 'environment',
-      icon: 'code',
-      action: createNewGlobalEnvironment,
-    },
-  ];
+  const createInProjectActionList: ProjectActionItem[] = createWorkspaceActionItems({
+    createCollection: createNewCollection,
+    createDocument: createNewDocument,
+    createMcpClient: createNewMcpClient,
+    createMockServer: createNewMockServer,
+    createEnvironment: createNewGlobalEnvironment,
+    canCreateMockServer: Boolean(canCreateMockServer),
+  });
 
   const projectDropdownActions: {
     name: string;

@@ -77,6 +77,12 @@ export interface SerializablePlugin {
   version: string;
   directory: string;
   config: { disabled: boolean };
+  /** Parsed `insomnia.permissions` manifest (sandbox plan C3), surfaced in Preferences → Plugins. */
+  permissions: { modules: string[]; capabilities: string[] };
+  /** Validation warnings from parsing `permissions`; shown on the plugin card. Empty when clean. */
+  permissionWarnings: string[];
+  /** True when the plugin declared a valid `permissions` object (even if empty); false = baseline access (no/malformed manifest). */
+  permissionsDeclared: boolean;
 }
 
 export interface SerializableTheme {

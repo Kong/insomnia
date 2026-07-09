@@ -137,7 +137,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   const baseEnvironment = await services.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
 
-  const subEnvironments = (await services.environment.findByParentId(baseEnvironment._id)).sort(
+  const subEnvironments = (await services.environment.listByParentId(baseEnvironment._id)).sort(
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
 

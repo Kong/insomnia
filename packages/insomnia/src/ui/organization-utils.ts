@@ -1,4 +1,11 @@
-import { createTeamProject, fetchTeamProjects, getCurrentPlan, getUserProfile, isApiError } from 'insomnia-api';
+import {
+  createTeamProject,
+  fetchTeamProjects,
+  getCurrentPlan,
+  getUserProfile,
+  isApiError,
+  type Organization,
+} from 'insomnia-api';
 import type { Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
@@ -39,7 +46,7 @@ export async function syncOrganizations(sessionId: string, accountId: string) {
 
     invariant(accountId, 'Account ID is not defined');
 
-    localStorage.setItem(`${accountId}:organizations`, JSON.stringify(organizations));
+    localStorage.setItem(`${accountId}:spaces`, JSON.stringify(organizations));
     localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
     localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
   } catch (error) {
@@ -109,6 +116,17 @@ export async function updateLocalProjectToRemote({
   return {
     error: null,
   };
+}
+
+/**
+ * Picks the space that orphaned legacy local projects (no parentId / no remoteId) should be
+ * re-parented into: the user's solo space — an owned space with no other members. If none
+ * qualifies (every owned space has collaborators), falls back to the first cached space so the
+ * migration still runs.
+ */
+export function findMigrationTargetSpaceId(organizations: Organization[]): string {
+  const soloSpace = organizations.find(o => o.is_owner && o.total_members === 1);
+  return soloSpace?.id ?? organizations[0].id;
 }
 
 export async function migrateProjectsUnderOrganization(personalOrganizationId: string, sessionId: string) {

@@ -1,20 +1,19 @@
-import { getOrganizations, type Organization } from 'insomnia-api';
-import { models } from 'insomnia-data';
+import { getSpaces, type Organization } from 'insomnia-api';
 
 import * as userSessionService from './user-session';
 
-function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
+function sortOrganizations(organizations: Organization[]): Organization[] {
   const owned = organizations
-    .filter(organization => models.organization.isOwnerOfOrganization({ organization, accountId }))
-    .sort((a, b) => a.display_name.localeCompare(b.display_name));
+    .filter(organization => organization.is_owner)
+    .sort((a, b) => a.name.localeCompare(b.name));
   const notOwned = organizations
-    .filter(organization => !models.organization.isOwnerOfOrganization({ organization, accountId }))
-    .sort((a, b) => a.display_name.localeCompare(b.display_name));
+    .filter(organization => !organization.is_owner)
+    .sort((a, b) => a.name.localeCompare(b.name));
   return [...owned, ...notOwned];
 }
 
 /**
- * List organizations from the Insomnia cloud API.
+ * List organizations (spaces) from the Insomnia cloud API.
  */
 export async function list(): Promise<Organization[]> {
   const { id: sessionId, accountId } = await userSessionService.get();
@@ -23,10 +22,9 @@ export async function list(): Promise<Organization[]> {
     return [];
   }
 
-  const result = await getOrganizations({ sessionId });
-  const organizations = result?.organizations ?? [];
+  const organizations = await getSpaces({ sessionId });
 
-  return sortOrganizations(accountId, organizations);
+  return sortOrganizations(organizations);
 }
 
 /**

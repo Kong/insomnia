@@ -26,6 +26,10 @@ export interface RunnerResultPerRequest {
   requestName: string;
   requestUrl: string;
   responseCode: number;
+  responseMessage?: string;
+  responseTime?: number;
+  responseSize?: number;
+  skipped?: boolean;
 }
 
 export interface ResponseInfo {
