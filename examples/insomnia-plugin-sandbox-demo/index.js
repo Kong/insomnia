@@ -8,7 +8,7 @@ module.exports.templateTags = [
     async run(context, label = 'hello') {
       // The sandbox sets INSOMNIA_TEMPLATE_SANDBOX; the legacy main-process path does not. (Both now
       // have `process` — the sandbox provides a stub since M2 — so it can't be the discriminator.)
-      // eslint-disable-next-line no-undef -- sandbox-only global; guarded by typeof
+
       const ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'sandbox' : 'main-process';
 
       // Exercise an async host bridge — proves __hostBridge + the executePendingJobs driver loop
