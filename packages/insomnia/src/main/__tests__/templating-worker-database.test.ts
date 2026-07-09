@@ -104,7 +104,36 @@ describe('runPluginTagInSandbox — util.render escape', () => {
   });
 });
 
-describe('NeDB operator-injection hardening (S3)', () => {
+describe('cloudCredential.update cannot forge type/_id to write another collection', () => {
+  const CREDS = ['render', 'models.read', 'util', 'crypto', 'credentials'];
+
+  it('rejects when the id does not resolve to an existing cloud credential', async () => {
+    (services.cloudCredential.getById as any).mockResolvedValue(null);
+    (services.cloudCredential.update as any).mockClear();
+    await expect(
+      runTag(
+        "return await context.util.models.cloudCredential.update({ type: 'Settings', _id: 'settings-id', dataFolders: ['/'] }, {});",
+        CREDS,
+      ),
+    ).rejects.toThrow(/not found/);
+    expect(services.cloudCredential.update).not.toHaveBeenCalled();
+  });
+
+  it('updates the re-loaded credential and drops identity fields from the patch', async () => {
+    const existing = { _id: 'cred1', type: 'CloudProviderCredential', name: 'orig' };
+    (services.cloudCredential.getById as any).mockResolvedValue(existing);
+    (services.cloudCredential.update as any).mockResolvedValue(existing);
+    await runTag(
+      "return await context.util.models.cloudCredential.update({ _id: 'cred1' }, { name: 'new', type: 'Settings', _id: 'evil' });",
+      CREDS,
+    );
+    const [docArg, patchArg] = (services.cloudCredential.update as any).mock.calls[0];
+    expect(docArg).toBe(existing); // authoritative reloaded doc, not the caller's object
+    expect(patchArg).toEqual({ name: 'new' }); // type/_id stripped
+  });
+});
+
+describe('id arguments are string-coerced before reaching the query layer', () => {
   it('coerces an object id to a string so it cannot become a Mongo-style operator query', async () => {
     (services.request.getById as any).mockResolvedValue(null);
     await runTag('return String(await context.util.models.request.getById({ $ne: null }));');
@@ -119,7 +148,7 @@ describe('NeDB operator-injection hardening (S3)', () => {
   });
 });
 
-describe('response.getBodyBuffer — no arbitrary file read (S1)', () => {
+describe('response.getBodyBuffer reads only the server-loaded response body', () => {
   it('reads the server-loaded response bodyPath, ignoring a plugin-supplied path', async () => {
     (services.response.getById as any).mockResolvedValue({ _id: 'r1', bodyPath: '/app/owned/body', bodyCompression: null });
     (services.helpers.getResponseBodyBuffer as any).mockImplementation(async (resp: any) => `read:${resp?.bodyPath}`);
