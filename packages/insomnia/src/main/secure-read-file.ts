@@ -11,10 +11,11 @@ import { SECURITY_SETTINGS_PATH_LABEL } from '../common/misc';
 
 export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   const allowList = getSecuredFolderAllowList(userAllowList);
-  const securedPath = securePath(filePath);
+  // Resolve symlinks so a link inside an allowed dir can't point outside it.
+  const securedPath = resolveRealPath(securePath(filePath));
   // Match the root exactly or bound the prefix by a separator, so a same-prefix sibling dir can't pass.
   const isAllowed = allowList.some(f => {
-    const root = path.resolve(f);
+    const root = resolveRealPath(path.resolve(f));
     if (root === '') {
       return false;
     }
@@ -24,6 +25,13 @@ export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   return { isAllowed, securedPath };
 };
 const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
+const resolveRealPath = (resolvedPath: string) => {
+  try {
+    return fs.realpathSync(resolvedPath);
+  } catch {
+    return resolvedPath;
+  }
+};
 const getSecuredFolderAllowList = (userAllowList: string[]) => {
   const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
   // we use tmpdir for buildMultipart
