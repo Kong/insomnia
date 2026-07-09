@@ -37,8 +37,15 @@ export const resolveDbByKey = async (request: Request) => {
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
   );
   const urlHostLowerCase = url.host.toLowerCase();
+  // Own-property + function check so a key like "constructor" can't resolve to an inherited member.
+  const handler = Object.prototype.hasOwnProperty.call(withLowercasedKeys, urlHostLowerCase)
+    ? withLowercasedKeys[urlHostLowerCase]
+    : undefined;
   try {
-    const result = await withLowercasedKeys[urlHostLowerCase](body);
+    if (typeof handler !== 'function') {
+      throw new TypeError(`No host bridge handler registered for "${urlHostLowerCase}"`);
+    }
+    const result = await handler(body);
     return new Response(JSON.stringify(result));
   } catch (err) {
     console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
@@ -174,7 +181,7 @@ export const runPluginTagInSandbox = async (
       context: (context as Record<string, any>) || {},
       meta,
       renderPurpose,
-      appInfo: { version: app.getVersion(), platform: process.platform },
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
       pluginName,
       renderDepth: 0,
       grantedModules: grantedModules ?? [...TEMPLATE_TAG_BASELINE_MODULES],

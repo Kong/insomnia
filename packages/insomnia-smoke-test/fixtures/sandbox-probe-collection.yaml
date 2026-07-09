@@ -23,6 +23,13 @@ collection:
         {% requireprobe 'path' %}
         {% requireprobe 'left-pad' %}
         {% requireprobe 'fs' %}
+        {% stdlibprobe 'buffer' %}
+        {% stdlibprobe 'url' %}
+        {% stdlibprobe 'querystring' %}
+        {% stdlibprobe 'platform' %}
+        {% stdlibprobe 'subtle' %}
+        {% stdlibprobe 'env' %}
+        {% stdlibprobe 'frozen' %}
     headers:
       - name: Content-Type
         value: text/plain

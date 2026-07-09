@@ -6,9 +6,10 @@ module.exports.templateTags = [
     description: 'Reports whether it executed inside the QuickJS sandbox, and exercises an async bridge',
     args: [{ displayName: 'Label', type: 'string', defaultValue: 'hello' }],
     async run(context, label = 'hello') {
-      // In the QuickJS sandbox, Node globals like `process` are absent; in the legacy main-process
-      // path they exist. This makes the chosen execution path directly observable in the output.
-      const ranIn = typeof process === 'undefined' ? 'sandbox' : 'main-process';
+      // The sandbox sets INSOMNIA_TEMPLATE_SANDBOX; the legacy main-process path does not. (Both now
+      // have `process` — the sandbox provides a stub since M2 — so it can't be the discriminator.)
+      // eslint-disable-next-line no-undef -- sandbox-only global; guarded by typeof
+      const ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'sandbox' : 'main-process';
 
       // Exercise an async host bridge — proves __hostBridge + the executePendingJobs driver loop
       // round-trip work end-to-end (context.util.nodeOS -> pluginToMainAPI['nodeOS']).
@@ -57,6 +58,26 @@ module.exports.templateTags = [
       });
       emitter.emit('ping', 'events-ok');
       return out;
+    },
+  },
+  {
+    name: 'stdlibprobe',
+    displayName: 'Stdlib Probe',
+    description: 'Demos the ambient sandbox globals (Buffer/URL/process) seeded in M2',
+    args: [{ displayName: 'API', type: 'string', defaultValue: 'buffer' }],
+    async run(context, api = 'buffer') {
+      // These globals are always present in the sandbox (not manifest-gated) as pure-JS/host-backed
+      // safe equivalents. Output matches the legacy main-process render.
+      if (api === 'url') {
+        // eslint-disable-next-line no-undef -- URL is a sandbox-provided ambient global
+        return new URL('https://example.com:8443/p?a=1').host;
+      }
+      if (api === 'platform') {
+        // eslint-disable-next-line no-undef -- process stub is a sandbox-provided ambient global
+        return process.platform;
+      }
+      // eslint-disable-next-line no-undef -- Buffer is a sandbox-provided ambient global
+      return Buffer.from('hi 👋').toString('base64');
     },
   },
 ];

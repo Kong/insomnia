@@ -4,6 +4,7 @@ import type { HostBridge } from './host-bridge';
 import { IN_SANDBOX_BOOTSTRAP, RUNNER, wrapPluginSource } from './in-sandbox-bootstrap';
 import { type ContextEnvelope, encodeBridgeFailure, encodeBridgeSuccess } from './marshal';
 import { MODULE_REGISTRY_SOURCE } from './module-registry';
+import { SANDBOX_GLOBALS_SOURCE } from './sandbox-globals';
 
 /**
  * Synchronous crypto operations backed by the host's real crypto (node:crypto in main). Exposed as
@@ -62,6 +63,11 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     setGlobalString(ctx, '__envelopeJSON', JSON.stringify(envelope));
     setGlobalString(ctx, '__tagName', tagName);
     evalOrThrow(ctx, IN_SANDBOX_BOOTSTRAP, '<sandbox-bootstrap>');
+    // Ambient globals (Buffer/process/crypto/URL) depend on the bootstrap's encoders and the host
+    // crypto functions, so they eval after the bootstrap and host installs. The non-sensitive
+    // appInfo (platform/arch) is injected as its own global for the process stub to read + delete.
+    setGlobalString(ctx, '__sandboxAppInfoJSON', JSON.stringify(envelope.appInfo ?? {}));
+    evalOrThrow(ctx, SANDBOX_GLOBALS_SOURCE, '<sandbox-globals>');
     evalOrThrow(ctx, MODULE_REGISTRY_SOURCE, '<sandbox-modules>');
     evalOrThrow(ctx, wrapPluginSource(pluginSource), '<plugin>');
     evalOrThrow(ctx, RUNNER, '<runner>');
