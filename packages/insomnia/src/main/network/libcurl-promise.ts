@@ -289,11 +289,11 @@ export const curlRequest = (options: CurlRequestOptions) =>
 
 /**
  * Parse a PAC-format proxy string (from Electron's session.resolveProxy) into
- * a curl proxy URL and type.  Returns empty string when DIRECT.
+ * a curl proxy URL and type.  Returns null when DIRECT.
  * Format: "PROXY host:port", "HTTPS host:port", "SOCKS host:port", etc.
  * https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
  */
-export function parseResolvedProxy(pacString: string | undefined): { proxyUrl: string; proxyType: number } | null {
+export function parseResolvedProxy(pacString: string | undefined): { proxyUrl: string; proxyType: CurlProxy } | null {
   if (!pacString) {
     return null;
   }
@@ -314,7 +314,7 @@ export function parseResolvedProxy(pacString: string | undefined): { proxyUrl: s
   if (!proxyAddr) {
     return null;
   }
-  let curlProxyType: number;
+  let curlProxyType: CurlProxy;
   switch (proxyType) {
     case 'PROXY':
     case 'HTTP': {
@@ -421,8 +421,13 @@ export const createConfiguredCurlInstance = async ({
 
   if (!settings.proxyEnabled) {
     // When proxy is not explicitly configured, fall back to system proxy
-    const systemProxy = await electron.session.defaultSession.resolveProxy(finalUrl);
-    const resolved = parseResolvedProxy(systemProxy);
+    let resolved: ReturnType<typeof parseResolvedProxy> = null;
+    try {
+      const systemProxy = await electron.session.defaultSession.resolveProxy(finalUrl);
+      resolved = parseResolvedProxy(systemProxy);
+    } catch {
+      // If resolveProxy fails (e.g. invalid URL, session issues), fall back to direct connection
+    }
     if (resolved) {
       curl.setOpt(Curl.option.PROXYTYPE, resolved.proxyType);
       curl.setOpt(Curl.option.PROXY, resolved.proxyUrl);
