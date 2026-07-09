@@ -17,13 +17,12 @@ test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
   });
   const certsDialog = page.getByRole('dialog');
 
+  const fixturePath = getFixturePath('certificates');
+
   await page.getByTestId('settings-button').click();
-  await page.getByTestId('dataFolders').fill(getFixturePath(path.join('certificates', 'client')));
+  await page.getByTestId('dataFolders').fill(fixturePath);
   await page.getByTestId('dataFolders-btn').click();
-  await expect.soft(page.getByText('client')).toBeVisible({ timeout: UI_TIMEOUT });
-  await page.getByTestId('dataFolders').fill(getFixturePath(path.join('certificates', 'rootCA.pem')));
-  await page.getByTestId('dataFolders-btn').click();
-  await expect.soft(page.getByText('rootCA.pem')).toBeVisible({ timeout: UI_TIMEOUT });
+  await expect.soft(page.getByText(fixturePath)).toBeVisible({ timeout: UI_TIMEOUT });
   await page.locator('.app').press('Escape');
   // wait for settings dialog to fully close before continuing
   await page.getByTestId('settings-button').waitFor({ state: 'visible', timeout: UI_TIMEOUT });
@@ -44,8 +43,6 @@ test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   // SSL error is expected here — no CA cert yet
   await expect.soft(page.getByText('Error: SSL peer certificate or SSH remote key was not OK')).toBeVisible({ timeout: RESPONSE_TIMEOUT });
-
-  const fixturePath = getFixturePath('certificates');
 
   await page.getByRole('button', { name: 'Add Certificates' }).click();
   await certsDialog.waitFor({ state: 'visible', timeout: UI_TIMEOUT });
