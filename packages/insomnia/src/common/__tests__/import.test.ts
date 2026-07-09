@@ -663,7 +663,7 @@ describe('export/import round-trip is deterministic', () => {
     expect(workspace.scope).toBe('environment');
 
     const importedBase = await services.environment.getByParentId(workspace._id);
-    const subEnvs = await services.environment.findByParentId(importedBase!._id);
+    const subEnvs = await services.environment.listByParentId(importedBase!._id);
     expect(subEnvs).toHaveLength(1);
     expect(subEnvs[0].name).toBe('Dev');
     expect(subEnvs[0].data).toEqual({ base_url: 'http://localhost:8000', auth_token: 'secret-token' });
