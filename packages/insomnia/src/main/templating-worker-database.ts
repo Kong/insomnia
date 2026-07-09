@@ -226,27 +226,27 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return crypto.createHash('md5').update(body.input).digest(body.encoding);
   },
   'request.getById': async (body: { id: string }) => {
-    return await services.request.getById(body.id);
+    return await services.request.getById(String(body.id));
   },
   'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {
-    return await services.workspace.getById(body.id);
+    return await services.workspace.getById(String(body.id));
   },
   'oAuth2Token.getByRequestId': async (body: { parentId: string }) => {
-    return await services.oAuth2Token.getByParentId(body.parentId);
+    return await services.oAuth2Token.getByParentId(String(body.parentId));
   },
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
-    return await services.cookieJar.getOrCreateForParentId(body.parentId);
+    return await services.cookieJar.getOrCreateForParentId(String(body.parentId));
   },
   'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
-    const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
+    const cookies = await services.cookieJar.getOrCreateForParentId(String(body.parentId));
     const jar = jarFromCookies(cookies.cookies);
     return jar.getCookiesSync(body.url).map(c => c.toJSON());
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
+    return await services.response.getLatestForRequestId(String(body.requestId), body.environmentId);
   },
   'response.getBodyBuffer': async (body: {
     response?: { _id?: string; bodyPath?: string; bodyCompression?: any };
@@ -262,18 +262,18 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await services.helpers.getResponseBodyBuffer(real, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, String(body.key));
     return doc !== null;
   },
   'pluginData.setItem': async (body: { pluginName: string; key: string; value: string }) => {
-    return services.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
+    return services.pluginData.upsertByKey(body.pluginName, String(body.key), String(body.value));
   },
   'pluginData.getItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, String(body.key));
     return doc ? doc.value : null;
   },
   'pluginData.removeItem': async (body: { pluginName: string; key: string }) => {
-    return services.pluginData.removeByKey(body.pluginName, body.key);
+    return services.pluginData.removeByKey(body.pluginName, String(body.key));
   },
   'pluginData.clear': async (body: { pluginName: string }) => {
     return services.pluginData.removeAll(body.pluginName);
@@ -286,7 +286,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     }));
   },
   'cloudCredential.getById': async (body: { id: string }) => {
-    return await services.cloudCredential.getById(body.id);
+    return await services.cloudCredential.getById(String(body.id));
   },
   'cloudCredential.update': async (body: {
     originCredential: CloudProviderCredential;

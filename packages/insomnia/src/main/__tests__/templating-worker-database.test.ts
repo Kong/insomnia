@@ -104,6 +104,21 @@ describe('runPluginTagInSandbox — util.render escape', () => {
   });
 });
 
+describe('NeDB operator-injection hardening (S3)', () => {
+  it('coerces an object id to a string so it cannot become a Mongo-style operator query', async () => {
+    (services.request.getById as any).mockResolvedValue(null);
+    await runTag('return String(await context.util.models.request.getById({ $ne: null }));');
+    // The handler must pass a primitive string, not the { $ne: null } object, to the query layer.
+    expect(services.request.getById).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('coerces oAuth2Token parentId likewise', async () => {
+    (services.oAuth2Token.getByParentId as any).mockResolvedValue(null);
+    await runTag('return String(await context.util.models.oAuth2Token.getByRequestId({ $exists: true }));');
+    expect(services.oAuth2Token.getByParentId).toHaveBeenCalledWith('[object Object]');
+  });
+});
+
 describe('response.getBodyBuffer — no arbitrary file read (S1)', () => {
   it('reads the server-loaded response bodyPath, ignoring a plugin-supplied path', async () => {
     (services.response.getById as any).mockResolvedValue({ _id: 'r1', bodyPath: '/app/owned/body', bodyCompression: null });
