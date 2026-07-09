@@ -19,9 +19,11 @@ export type HostBridge = (path: string, body: unknown) => Promise<unknown>;
 export const createMapBridge =
   (handlers: Record<string, (body: any) => Promise<unknown>>): HostBridge =>
   async (path, body) => {
-    const handler = handlers[path];
-    if (!handler) {
-      throw new Error(`No host bridge handler registered for "${path}"`);
+    // Own-property + function check so a path like "constructor"/"hasOwnProperty" can't resolve to
+    // an inherited Object.prototype member instead of a real handler.
+    const handler = Object.prototype.hasOwnProperty.call(handlers, path) ? handlers[path] : undefined;
+    if (typeof handler !== 'function') {
+      throw new TypeError(`No host bridge handler registered for "${path}"`);
     }
     return handler(body);
   };
