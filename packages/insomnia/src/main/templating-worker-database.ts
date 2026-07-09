@@ -426,10 +426,14 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         const settings = await services.settings.get();
         if (settings.templateTagSandboxEnabled) {
           const { ALL_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
+          const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
           // Bundle plugins are first-party and trusted: grant every module + capability.
-          return runPluginTagInSandbox(getPluginEntrySource({ directory: '', name: pluginName }), body, undefined, [
-            ...ALL_CAPABILITIES,
-          ]);
+          return runPluginTagInSandbox(
+            getPluginEntrySource({ directory: '', name: pluginName }),
+            body,
+            [...ALL_SANDBOX_MODULES],
+            [...ALL_CAPABILITIES],
+          );
         }
         return runPluginTag(targetTag.run, body);
       }
