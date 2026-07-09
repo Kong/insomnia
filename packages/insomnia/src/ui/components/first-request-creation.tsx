@@ -11,7 +11,6 @@ import { getCurrentSessionId } from '~/common/account/session';
 import { METHOD_GET } from '~/common/constants';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { MethodSelector } from '~/ui/components/dropdowns/method-selector';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -21,14 +20,11 @@ import { showToast } from '~/ui/components/toast-notification';
 import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
 import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import {
-  FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
   FIRST_REQUEST_EXPERIMENT_NAME,
   type FirstRequestTreatment,
   getFirstRequestTreatmentGroup,
   getOnboardingIsNewSignup,
-  getOnboardingReachedThreshold,
   getOnboardingTreatment,
-  isFirstRequestExperimentParticipant,
   readCachedFirstRequestTreatment,
   resolveFirstRequestTreatment,
   writeCachedFirstRequestTreatment,
@@ -132,27 +128,15 @@ export const FirstRequestCreation = ({
     organizationId: string;
     projectId: string;
   };
-  const { userSession, settings } = useRootLoaderData()!;
-  const organizationData = useOrganizationLoaderData();
-  // Stable id used to bucket new sign-ups ~50/50 into Treatment A or B.
-  const cohortId = userSession.accountId || settings.deviceId || '';
+  const { userSession } = useRootLoaderData()!;
   // Onboarding state from the backend (standalone resource), loaded on mount.
+  // null while the fetch is still in flight; an object (possibly empty) once settled.
   const [onboarding, setOnboarding] = useState<UserOnboardingState | null>(null);
-  // Server-computed treatment, when the backend is steering assignment (authoritative).
+  // Server-computed treatment (the backend is authoritative for assignment).
   const backendTreatment = getOnboardingTreatment(onboarding);
-  // Sticky server-confirmed graduation latch (account-wide, device-independent).
-  const hasReachedThreshold = getOnboardingReachedThreshold(onboarding);
-  // Account creation time (epoch ms); pre-GA accounts are treated as existing users.
-  const accountCreatedAt = organizationData?.user?.created_at
-    ? new Date(organizationData.user.created_at).getTime()
-    : undefined;
-  // Whether this user is part of the experiment population (a genuine new sign-up).
-  // Only participants emit assignment analytics; existing users still get B in the UI.
-  const isParticipant = isFirstRequestExperimentParticipant({
-    isNewSignup: getOnboardingIsNewSignup(onboarding),
-    accountCreatedAt,
-    experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
-  });
+  // Whether this user is part of the experiment population (a genuine new sign-up),
+  // per the server. Only participants emit assignment analytics; everyone else gets B.
+  const isParticipant = getOnboardingIsNewSignup(onboarding) === true;
   // Last-known treatment for this account, used as an offline fallback.
   const [cachedTreatment] = useState(() => readCachedFirstRequestTreatment(userSession.accountId || ''));
   const inputRef = useRef<HTMLInputElement>(null);
@@ -173,11 +157,7 @@ export const FirstRequestCreation = ({
 
   const treatment: FirstRequestTreatment | null = resolveFirstRequestTreatment({
     backendTreatment,
-    accountCreatedAt,
-    experimentLaunchedAt: FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE,
-    hasReachedThreshold,
-    createdRequests,
-    cohortId,
+    onboardingLoaded: onboarding !== null,
     cachedTreatment,
   });
   const createButtonLabel = treatment === 'B' ? 'Create HTTP Request ⏎' : 'Create ⏎';
@@ -317,7 +297,8 @@ export const FirstRequestCreation = ({
     setSelectOpen(false);
   }, [selectedCollectionId]);
 
-  // Load the lifetime created-request count, used by the client-side fallback.
+  // Load the lifetime created-request count, used to decide when to latch the
+  // server-side graduation threshold.
   useEffect(() => {
     let isActive = true;
 
@@ -332,23 +313,23 @@ export const FirstRequestCreation = ({
     };
   }, []);
 
-  // Load the backend onboarding state (treatment / participant flag / graduation
-  // latch). Best-effort: on failure we fall back to the local computation.
+  // Load the backend onboarding state (authoritative treatment + participant flag).
+  // Settle to an empty object when logged out or on failure so the resolver stops
+  // waiting and falls back to the cached value / safe default.
   useEffect(() => {
     let isActive = true;
 
-    getCurrentSessionId().then(sessionId => {
-      if (!sessionId) {
-        return;
-      }
-      getOnboardingState({ sessionId })
-        .then(state => {
-          if (isActive) {
-            setOnboarding(state);
-          }
-        })
-        .catch(error => console.error('Failed to load onboarding state', error));
-    });
+    getCurrentSessionId()
+      .then(sessionId => (sessionId ? getOnboardingState({ sessionId }) : {}))
+      .catch(error => {
+        console.error('Failed to load onboarding state', error);
+        return {};
+      })
+      .then(state => {
+        if (isActive) {
+          setOnboarding(state);
+        }
+      });
 
     return () => {
       isActive = false;
@@ -372,13 +353,9 @@ export const FirstRequestCreation = ({
       return;
     }
 
-    // Confident = from the backend or a full client-side computation, never a value
-    // that itself came from the cache/default (which would create phantom churn).
-    const isConfident =
-      backendTreatment !== undefined ||
-      (accountCreatedAt !== undefined &&
-        (accountCreatedAt < FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE || hasReachedThreshold || createdRequests !== null));
-    if (!isConfident) {
+    // Confident = the server told us the treatment, never a cached/default value
+    // (which would create phantom churn in the assignment timeline).
+    if (backendTreatment === undefined) {
       return;
     }
 
@@ -405,16 +382,7 @@ export const FirstRequestCreation = ({
         },
       });
     }
-  }, [
-    treatment,
-    isParticipant,
-    backendTreatment,
-    accountCreatedAt,
-    hasReachedThreshold,
-    createdRequests,
-    userSession.accountId,
-    cachedTreatment,
-  ]);
+  }, [treatment, isParticipant, backendTreatment, userSession.accountId, cachedTreatment]);
 
   const handleCreateNotionMcpWorkspace = () => {
     createWorkspaceFetcher.submit({

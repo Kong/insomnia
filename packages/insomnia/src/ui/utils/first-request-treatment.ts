@@ -5,17 +5,12 @@ export type FirstRequestTreatment = 'A' | 'B';
 /**
  * Number of created requests after which a new sign-up graduates from the
  * first-request experience Treatment A to Treatment B.
+ *
+ * The server owns graduation; the client uses this only to decide when its local
+ * created-request count has crossed the threshold and it should latch the sticky
+ * bit on the server (see `maybeLatchRequestThreshold`).
  */
 export const FIRST_REQUEST_GRADUATION_THRESHOLD = 3;
-
-/**
- * v13.1.0 GA release date (epoch ms). Only used by the client-side fallback when
- * the backend does not (yet) return a treatment. Accounts created before this are
- * treated as pre-existing users (Treatment B).
- *
- * TODO(INS-2933): set to the actual v13.1.0 GA date before release.
- */
-export const FIRST_REQUEST_EXPERIMENT_LAUNCH_DATE = Date.parse('2026-07-18T00:00:00.000Z');
 
 const CACHE_KEY_PREFIX = 'insomnia.firstRequestTreatment';
 
@@ -27,63 +22,10 @@ export const getFirstRequestTreatmentGroup = (treatment: FirstRequestTreatment):
   treatment === 'A' ? 'treatment_a' : 'treatment_b';
 
 /**
- * Deterministic ~50/50 cohort assignment for the first-request experiment.
- *
- * Used only by the client-side fallback (the backend is authoritative when it
- * returns a treatment). Buckets a user by hashing a stable id (accountId, falling
- * back to deviceId); stable per user, needs no stored state, splits ~50/50.
- */
-export const getFirstRequestCohort = (id: string): FirstRequestTreatment => {
-  if (!id) {
-    return 'B';
-  }
-
-  // Bounded polynomial rolling hash (mod a large prime) so it stays a safe integer
-  // and is deterministic; its parity gives a ~50/50 split across the population.
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + (id.codePointAt(i) ?? 0)) % 2_147_483_647;
-  }
-
-  return hash % 2 === 0 ? 'A' : 'B';
-};
-
-/**
- * Pure client-side treatment computation (the fallback used when the backend does
- * not return a treatment).
- *
- * - Accounts created before the experiment launched are existing users → B.
- * - New sign-ups are split ~50/50 into A or B by {@link getFirstRequestCohort}.
- * - A new sign-up in Treatment A graduates to B once they have graduated (created
- *   at least {@link FIRST_REQUEST_GRADUATION_THRESHOLD} requests — a sticky fact).
- */
-export const getFirstRequestTreatment = ({
-  accountCreatedAt,
-  experimentLaunchedAt,
-  hasGraduated,
-  cohortId,
-}: {
-  accountCreatedAt?: number;
-  experimentLaunchedAt: number;
-  hasGraduated: boolean;
-  cohortId: string;
-}): FirstRequestTreatment => {
-  if (accountCreatedAt !== undefined && accountCreatedAt < experimentLaunchedAt) {
-    return 'B';
-  }
-
-  if (hasGraduated) {
-    return 'B';
-  }
-
-  return getFirstRequestCohort(cohortId);
-};
-
-/**
- * Reads the server-computed treatment from the onboarding resource, when the
- * backend is steering assignment (field `first_request_treatment`). Returns
- * undefined if absent or invalid, so the caller can fall back to the client-side
- * computation.
+ * Reads the server-computed treatment from the onboarding resource (field
+ * `first_request_treatment`). The server is authoritative for assignment; the
+ * client does not compute treatment itself. Returns undefined if absent or
+ * invalid, so the caller can fall back to the cached value / safe default.
  */
 export const getOnboardingTreatment = (
   onboarding: UserOnboardingState | null | undefined,
@@ -93,47 +35,13 @@ export const getOnboardingTreatment = (
 };
 
 /**
- * Reads the server's `is_new_signup` flag from the onboarding resource, when
- * provided. Used to decide whether the user is an experiment participant.
+ * Reads the server's `is_new_signup` flag from the onboarding resource. This is the
+ * sole signal for experiment participation (whether to emit assignment analytics);
+ * an absent flag means "not a confirmed participant".
  */
 export const getOnboardingIsNewSignup = (onboarding: UserOnboardingState | null | undefined): boolean | undefined => {
   const value = onboarding?.is_new_signup;
   return typeof value === 'boolean' ? value : undefined;
-};
-
-/**
- * Reads the sticky "reached the graduation threshold" latch from the onboarding
- * resource. This is the account-wide, device-independent, irreversible source of
- * truth for graduation; defaults to false when the server hasn't confirmed it.
- */
-export const getOnboardingReachedThreshold = (onboarding: UserOnboardingState | null | undefined): boolean => {
-  return onboarding?.has_reached_request_threshold === true;
-};
-
-/**
- * Whether the user is part of the experiment population (a genuine new sign-up),
- * as opposed to a pre-existing user who is simply defaulted to Treatment B.
- *
- * Prefers the server `is_new_signup` flag; otherwise derives it from the account
- * creation date vs GA. Returns false when neither is known (can't confirm → don't
- * emit assignment analytics).
- */
-export const isFirstRequestExperimentParticipant = ({
-  isNewSignup,
-  accountCreatedAt,
-  experimentLaunchedAt,
-}: {
-  isNewSignup?: boolean;
-  accountCreatedAt?: number;
-  experimentLaunchedAt: number;
-}): boolean => {
-  if (isNewSignup !== undefined) {
-    return isNewSignup;
-  }
-  if (accountCreatedAt !== undefined) {
-    return accountCreatedAt >= experimentLaunchedAt;
-  }
-  return false;
 };
 
 const cacheKey = (accountId: string) => `${CACHE_KEY_PREFIX}:${accountId || 'anonymous'}`;
@@ -181,64 +89,33 @@ export const markRequestThresholdLatched = (accountId: string): void => {
 };
 
 /**
- * Resolves the treatment through a fallback chain so the experience is robust
- * offline and whether or not the backend has shipped its field yet:
+ * Resolves which treatment to render. The server is authoritative for assignment
+ * (treatment, participation and graduation), so the client no longer computes any
+ * of it — it only falls back gracefully when the server hasn't answered:
  *
  *   1. Backend-provided treatment (authoritative).
- *   2. Client-side computation (when the profile is available).
- *   3. Cached last-known treatment (offline / while stats load).
- *   4. Safe default (B) when nothing else is known.
+ *   2. Cached last-known treatment (offline / endpoint not yet reached).
+ *   3. Safe default (B) once we know the server won't tell us.
  *
- * Returns null only while a client-side result is still pending (stats loading),
- * so callers can render a neutral state instead of flickering.
+ * Returns null only while the first onboarding response is still pending and
+ * nothing is cached, so callers can render a neutral state instead of flashing B
+ * and then switching.
  */
 export const resolveFirstRequestTreatment = ({
   backendTreatment,
-  accountCreatedAt,
-  experimentLaunchedAt,
-  hasReachedThreshold,
-  createdRequests,
-  cohortId,
+  onboardingLoaded,
   cachedTreatment,
 }: {
   backendTreatment?: FirstRequestTreatment;
-  accountCreatedAt?: number;
-  experimentLaunchedAt: number;
-  // Sticky server-confirmed graduation latch; decides B on its own when true.
-  hasReachedThreshold: boolean;
-  // Local per-install created-request count (null while still loading).
-  createdRequests: number | null;
-  cohortId: string;
+  // Whether the onboarding fetch has settled (resolved or failed).
+  onboardingLoaded: boolean;
   cachedTreatment: FirstRequestTreatment | null;
 }): FirstRequestTreatment | null => {
-  // 1) Backend is authoritative when present.
   if (backendTreatment) {
     return backendTreatment;
   }
-
-  // 2) Client-side fallback when the profile loaded.
-  if (accountCreatedAt !== undefined) {
-    // Existing users are decided without waiting for local stats.
-    if (accountCreatedAt < experimentLaunchedAt) {
-      return 'B';
-    }
-    // Server-confirmed graduation is definitive and needs no local stats.
-    if (hasReachedThreshold) {
-      return 'B';
-    }
-    // Otherwise fall back to the local created-request count for graduation.
-    if (createdRequests !== null) {
-      return getFirstRequestTreatment({
-        accountCreatedAt,
-        experimentLaunchedAt,
-        hasGraduated: createdRequests >= FIRST_REQUEST_GRADUATION_THRESHOLD,
-        cohortId,
-      });
-    }
-    // Stats still loading: prefer a cached value over showing nothing.
+  if (cachedTreatment) {
     return cachedTreatment;
   }
-
-  // 3) Profile unavailable (offline / failed): last-known, else safe default.
-  return cachedTreatment ?? 'B';
+  return onboardingLoaded ? 'B' : null;
 };
