@@ -144,16 +144,15 @@ describe('latchRequestThresholdReached', () => {
     vi.clearAllMocks();
   });
 
-  it('PATCHes the idempotent threshold latch and returns the updated state', async () => {
+  it('PUTs the idempotent threshold-reached latch (no body) and returns the updated state', async () => {
     mockFetch.mockResolvedValue({ reached_request_threshold: true });
 
     const result = await latchRequestThresholdReached({ sessionId: 'sess_xyz' });
 
     expect(mockFetch).toHaveBeenCalledWith({
-      method: 'PATCH',
-      path: '/v3/users/me/onboarding',
+      method: 'PUT',
+      path: '/v3/users/me/onboarding/request-threshold-reached',
       sessionId: 'sess_xyz',
-      data: { reached_request_threshold: true },
     });
     expect(result.reached_request_threshold).toBe(true);
   });

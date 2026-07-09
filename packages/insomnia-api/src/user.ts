@@ -43,17 +43,16 @@ export const getOnboardingState = async ({ sessionId }: { sessionId: string }): 
   return fetch<UserOnboardingState>({ method: 'GET', path: '/v3/users/me/onboarding', sessionId });
 };
 
-// PATCH /v3/users/me/onboarding
-// Idempotent latch: tells the server the account has reached the first-request
-// graduation threshold. Safe to call repeatedly — the server stores a sticky bit
-// that never reverts, so dropped calls simply self-heal on the next attempt.
-// Returns the updated onboarding state.
+// PUT /v3/users/me/onboarding/request-threshold-reached
+// Idempotent latch: PUTting this sub-resource marks that the account has reached the
+// first-request graduation threshold. Idempotent by definition, so it's safe to call
+// repeatedly — the server stores a sticky bit that never reverts and dropped calls
+// self-heal on the next attempt. Returns the updated onboarding state.
 export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: string }): Promise<UserOnboardingState> => {
   return fetch<UserOnboardingState>({
-    method: 'PATCH',
-    path: '/v3/users/me/onboarding',
+    method: 'PUT',
+    path: '/v3/users/me/onboarding/request-threshold-reached',
     sessionId,
-    data: { reached_request_threshold: true },
   });
 };
 
