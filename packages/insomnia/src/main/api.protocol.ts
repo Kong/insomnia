@@ -54,7 +54,12 @@ export async function registerInsomniaProtocols() {
       const settings = await services.settings.get();
       // systemProxy follows the PAC return value format.
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
-      const systemProxyStr = await session.defaultSession.resolveProxy(urlStr);
+      let systemProxyStr: string | undefined;
+      try {
+        systemProxyStr = await session.defaultSession.resolveProxy(urlStr);
+      } catch {
+        // If resolveProxy fails, fall back to direct connection
+      }
 
       // here we use libcurl to forward the SSE request because the SSE request sent by net.fetch can not be disconnected correctly in some cases
       // see https://github.com/electron/electron/issues/47097
