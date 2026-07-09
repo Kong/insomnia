@@ -120,20 +120,20 @@ describe('getOnboardingState', () => {
   });
 
   it('GETs the onboarding endpoint with the sessionId', async () => {
-    mockFetch.mockResolvedValue({ first_request_treatment: 'A', is_new_signup: true });
+    mockFetch.mockResolvedValue({ first_request_treatment: 'treatment_a', is_new_signup: true });
 
     const result = await getOnboardingState({ sessionId: 'sess_xyz' });
 
     expect(mockFetch).toHaveBeenCalledWith({ method: 'GET', path: '/v3/users/me/onboarding', sessionId: 'sess_xyz' });
-    expect(result.first_request_treatment).toBe('A');
+    expect(result.first_request_treatment).toBe('treatment_a');
     expect(result.is_new_signup).toBe(true);
   });
 
-  it('passes an empty state through as-is', async () => {
-    mockFetch.mockResolvedValue({});
+  it('passes a null treatment through as-is', async () => {
+    mockFetch.mockResolvedValue({ first_request_treatment: null, is_new_signup: false });
 
     const result = await getOnboardingState({ sessionId: 'sess_xyz' });
 
-    expect(result).toEqual({});
+    expect(result).toEqual({ first_request_treatment: null, is_new_signup: false });
   });
 });

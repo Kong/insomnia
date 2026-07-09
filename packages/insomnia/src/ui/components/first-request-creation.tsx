@@ -1,5 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { getOnboardingState, type UserOnboardingState } from 'insomnia-api';
+import { getOnboardingState, type UserOnboarding } from 'insomnia-api';
 import type { Request } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
@@ -130,8 +130,11 @@ export const FirstRequestCreation = ({
   };
   const { userSession } = useRootLoaderData()!;
   // Onboarding state from the backend (standalone resource), loaded on mount.
-  // null while the fetch is still in flight; an object (possibly empty) once settled.
-  const [onboarding, setOnboarding] = useState<UserOnboardingState | null>(null);
+  // null until a successful fetch resolves it (logged out / failed fetches leave it null).
+  const [onboarding, setOnboarding] = useState<UserOnboarding | null>(null);
+  // Whether the onboarding fetch has settled (resolved or failed), independent of
+  // whether it actually produced a value — used to know when to fall back.
+  const [onboardingLoaded, setOnboardingLoaded] = useState(false);
   // Server-computed treatment (the backend is authoritative for assignment).
   const backendTreatment = getOnboardingTreatment(onboarding);
   // Whether this user is part of the experiment population (a genuine new sign-up),
@@ -157,7 +160,7 @@ export const FirstRequestCreation = ({
 
   const treatment: FirstRequestTreatment | null = resolveFirstRequestTreatment({
     backendTreatment,
-    onboardingLoaded: onboarding !== null,
+    onboardingLoaded,
     cachedTreatment,
   });
   const createButtonLabel = treatment === 'B' ? 'Create HTTP Request ⏎' : 'Create ⏎';
@@ -314,20 +317,21 @@ export const FirstRequestCreation = ({
   }, []);
 
   // Load the backend onboarding state (authoritative treatment + participant flag).
-  // Settle to an empty object when logged out or on failure so the resolver stops
-  // waiting and falls back to the cached value / safe default.
+  // Settle to null when logged out or on failure so the resolver stops waiting and
+  // falls back to the cached value / safe default.
   useEffect(() => {
     let isActive = true;
 
     getCurrentSessionId()
-      .then(sessionId => (sessionId ? getOnboardingState({ sessionId }) : {}))
+      .then(sessionId => (sessionId ? getOnboardingState({ sessionId }) : null))
       .catch(error => {
         console.error('Failed to load onboarding state', error);
-        return {};
+        return null;
       })
       .then(state => {
         if (isActive) {
           setOnboarding(state);
+          setOnboardingLoaded(true);
         }
       });
 

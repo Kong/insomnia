@@ -1,6 +1,14 @@
-import type { UserOnboardingState } from 'insomnia-api';
+import { type UserOnboarding, UserOnboardingFirstRequestTreatmentEnum } from 'insomnia-api';
 
 export type FirstRequestTreatment = 'A' | 'B';
+
+// The generated SDK type omits `null` for `first_request_treatment` despite the
+// OpenAPI spec marking it nullable — the server sends `null` when the treatment
+// is unknown (see UserOnboarding). Widen it back here so callers can pass the raw
+// server response through without a cast.
+type OnboardingState = Omit<UserOnboarding, 'first_request_treatment'> & {
+  first_request_treatment: UserOnboarding['first_request_treatment'] | null;
+};
 
 /**
  * Number of created requests after which a new sign-up graduates from the
@@ -24,14 +32,20 @@ export const getFirstRequestTreatmentGroup = (treatment: FirstRequestTreatment):
 /**
  * Reads the server-computed treatment from the onboarding resource (field
  * `first_request_treatment`). The server is authoritative for assignment; the
- * client does not compute treatment itself. Returns undefined if absent or
- * invalid, so the caller can fall back to the cached value / safe default.
+ * client does not compute treatment itself. Returns undefined if absent/unknown
+ * or invalid, so the caller can fall back to the cached value / safe default.
  */
 export const getOnboardingTreatment = (
-  onboarding: UserOnboardingState | null | undefined,
+  onboarding: OnboardingState | null | undefined,
 ): FirstRequestTreatment | undefined => {
   const value = onboarding?.first_request_treatment;
-  return value === 'A' || value === 'B' ? value : undefined;
+  if (value === UserOnboardingFirstRequestTreatmentEnum.TreatmentA) {
+    return 'A';
+  }
+  if (value === UserOnboardingFirstRequestTreatmentEnum.TreatmentB) {
+    return 'B';
+  }
+  return undefined;
 };
 
 /**
@@ -39,7 +53,7 @@ export const getOnboardingTreatment = (
  * sole signal for experiment participation (whether to emit assignment analytics);
  * an absent flag means "not a confirmed participant".
  */
-export const getOnboardingIsNewSignup = (onboarding: UserOnboardingState | null | undefined): boolean | undefined => {
+export const getOnboardingIsNewSignup = (onboarding: OnboardingState | null | undefined): boolean | undefined => {
   const value = onboarding?.is_new_signup;
   return typeof value === 'boolean' ? value : undefined;
 };

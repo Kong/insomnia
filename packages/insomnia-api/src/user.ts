@@ -1,8 +1,10 @@
-import type { User, UserEncryptionKeys } from '@getinsomnia/insomnia-v3-fetch';
+import type { User, UserEncryptionKeys, UserOnboarding } from '@getinsomnia/insomnia-v3-fetch';
+import { UserOnboardingFirstRequestTreatmentEnum } from '@getinsomnia/insomnia-v3-fetch';
 
 import { fetch } from './fetch';
 
-export type { User, UserEncryptionKeys };
+export type { User, UserEncryptionKeys, UserOnboarding };
+export { UserOnboardingFirstRequestTreatmentEnum };
 
 // POST /auth/logout
 export const logout = ({ sessionId }: { sessionId: string }) => {
@@ -23,35 +25,20 @@ export const getEncryptionKeys = async ({ sessionId }: { sessionId: string }): P
   return fetch<UserEncryptionKeys>({ method: 'GET', path: '/v3/users/me/encryption-keys', sessionId });
 };
 
-// Onboarding state for the current user. A standalone, removable resource (kept
-// off the permanent users/me contract) that holds transient onboarding/experiment
-// state with its own lifecycle. All fields are optional/backward-compatible.
-export interface UserOnboardingState {
-  // Server-computed first-request experiment treatment (the server is authoritative);
-  // absent → the client falls back to the cached value / safe default.
-  first_request_treatment?: 'A' | 'B';
-  // Whether the account is a genuine new sign-up (an experiment participant).
-  is_new_signup?: boolean;
-}
-
 // GET /v3/users/me/onboarding
-export const getOnboardingState = async ({ sessionId }: { sessionId: string }): Promise<UserOnboardingState> => {
-  return fetch<UserOnboardingState>({ method: 'GET', path: '/v3/users/me/onboarding', sessionId });
+export const getOnboardingState = async ({ sessionId }: { sessionId: string }): Promise<UserOnboarding> => {
+  return fetch<UserOnboarding>({ method: 'GET', path: '/v3/users/me/onboarding', sessionId });
 };
 
-// PUT /v3/users/me/onboarding/request-threshold-reached
-// Idempotent latch: PUTting this sub-resource marks that the account has reached the
+// POST /v3/users/me/onboarding/request-threshold
+// Idempotent latch: POSTing this sub-resource marks that the account has reached the
 // first-request graduation threshold. Idempotent by definition, so it's safe to call
 // repeatedly — the server stores a sticky bit that never reverts and dropped calls
-// self-heal on the next attempt. Returns the updated onboarding state.
-export const latchRequestThresholdReached = async ({
-  sessionId,
-}: {
-  sessionId: string;
-}): Promise<UserOnboardingState> => {
-  return fetch<UserOnboardingState>({
-    method: 'PUT',
-    path: '/v3/users/me/onboarding/request-threshold-reached',
+// self-heal on the next attempt. Responds 204 with no body.
+export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: string }): Promise<void> => {
+  return fetch<void>({
+    method: 'POST',
+    path: '/v3/users/me/onboarding/request-threshold',
     sessionId,
   });
 };
