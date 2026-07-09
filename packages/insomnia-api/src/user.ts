@@ -43,14 +43,14 @@ export const getOnboardingState = async ({ sessionId }: { sessionId: string }): 
   return fetch<UserOnboardingState>({ method: 'GET', path: '/v3/users/me/onboarding', sessionId });
 };
 
-// POST /v3/users/me/onboarding
+// PATCH /v3/users/me/onboarding
 // Idempotent latch: tells the server the account has reached the first-request
 // graduation threshold. Safe to call repeatedly — the server stores a sticky bit
 // that never reverts, so dropped calls simply self-heal on the next attempt.
 // Returns the updated onboarding state.
 export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: string }): Promise<UserOnboardingState> => {
   return fetch<UserOnboardingState>({
-    method: 'POST',
+    method: 'PATCH',
     path: '/v3/users/me/onboarding',
     sessionId,
     data: { reached_request_threshold: true },
