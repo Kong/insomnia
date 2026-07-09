@@ -30,8 +30,7 @@ import { services } from 'insomnia-data';
 
 import { getPluginEntrySource, runPluginTagInSandbox } from '../templating-worker-database';
 
-// Run a one-tag plugin whose `run` body is `body`, through the real pluginToMainAPI bridge (services
-// mocked above). Returns the rendered string. `caps` overrides granted capabilities.
+// Runs a one-tag plugin through the real pluginToMainAPI bridge; `caps` overrides granted capabilities.
 const runTag = (runBody: string, caps?: string[]) =>
   runPluginTagInSandbox(
     `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
@@ -124,7 +123,7 @@ describe('cloudCredential.update cannot forge type/_id to write another collecti
     (services.cloudCredential.getById as any).mockResolvedValue(existing);
     (services.cloudCredential.update as any).mockResolvedValue(existing);
     await runTag(
-      "return await context.util.models.cloudCredential.update({ _id: 'cred1' }, { name: 'new', type: 'Settings', _id: 'evil' });",
+      "return await context.util.models.cloudCredential.update({ _id: 'cred1' }, { name: 'new', type: 'Settings', _id: 'other-id' });",
       CREDS,
     );
     const [docArg, patchArg] = (services.cloudCredential.update as any).mock.calls[0];
@@ -152,10 +151,9 @@ describe('response.getBodyBuffer reads only the server-loaded response body', ()
   it('reads the server-loaded response bodyPath, ignoring a plugin-supplied path', async () => {
     (services.response.getById as any).mockResolvedValue({ _id: 'r1', bodyPath: '/app/owned/body', bodyCompression: null });
     (services.helpers.getResponseBodyBuffer as any).mockImplementation(async (resp: any) => `read:${resp?.bodyPath}`);
-    // The plugin fabricates bodyPath: '/etc/passwd'; the handler must re-load by _id and read only
-    // the server-owned path.
+    // The plugin fabricates bodyPath; the handler must re-load by _id and read only the server-owned path.
     const result = await runTag(
-      "return await context.util.models.response.getBodyBuffer({ _id: 'r1', bodyPath: '/etc/passwd' });",
+      "return await context.util.models.response.getBodyBuffer({ _id: 'r1', bodyPath: '/home/user/.ssh/id_rsa' });",
     );
     expect(services.response.getById).toHaveBeenCalledWith('r1');
     expect(result).toBe('read:/app/owned/body');
@@ -165,7 +163,7 @@ describe('response.getBodyBuffer reads only the server-loaded response body', ()
     (services.response.getById as any).mockResolvedValue(null);
     (services.helpers.getResponseBodyBuffer as any).mockClear();
     const result = await runTag(
-      "return await context.util.models.response.getBodyBuffer({ bodyPath: '/etc/passwd' }, 'FAIL');",
+      "return await context.util.models.response.getBodyBuffer({ bodyPath: '/home/user/.ssh/id_rsa' }, 'FAIL');",
     );
     expect(result).toBe('FAIL');
     expect(services.helpers.getResponseBodyBuffer).not.toHaveBeenCalled();

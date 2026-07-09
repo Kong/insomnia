@@ -14,7 +14,7 @@ describe('isPathAllowed enforces a separator boundary on allowed roots', () => {
   });
 
   it('rejects a sibling directory that merely shares a name prefix', () => {
-    expect(isPathAllowed(`${root}-evil/secret`, [root]).isAllowed).toBe(false);
+    expect(isPathAllowed(`${root}-other/secret`, [root]).isAllowed).toBe(false);
   });
 
   it('rejects a sibling install sharing a name prefix (e.g. Insomnia Nightly vs Insomnia)', () => {

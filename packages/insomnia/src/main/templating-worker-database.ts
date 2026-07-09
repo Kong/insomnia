@@ -252,8 +252,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     response?: { _id?: string; bodyPath?: string; bodyCompression?: any };
     readFailureValue?: string;
   }) => {
-    // Re-load the response by id and read only its server-owned bodyPath — never a caller-supplied
-    // path — so a plugin can't turn this into an arbitrary-file read.
+    // Re-load by id and read only the server-owned bodyPath, never a caller-supplied one.
     const id = body.response?._id;
     const real = typeof id === 'string' ? await services.response.getById(id) : null;
     if (!real) {
@@ -292,9 +291,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     originCredential: CloudProviderCredential;
     patch: Partial<CloudProviderCredential>;
   }) => {
-    // Re-load the real credential by id and strip identity fields from the patch so a plugin can't
-    // forge `type`/`_id` to upsert into another collection (e.g. Settings). Only an existing cloud
-    // credential can be updated.
+    // Re-load by id and strip identity fields from the patch, so a plugin can't forge type/_id to write another collection.
     const id = String(body.originCredential?._id);
     const existing = await services.cloudCredential.getById(id);
     if (!existing) {
