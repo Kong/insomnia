@@ -31,6 +31,7 @@ async function updateProxy() {
       await session.defaultSession.setProxy({
         proxyRules: proxyRules.join(';'),
         proxyBypassRules: noProxy ?? '',
+        mode: 'fixed_servers',
       });
       return;
     } catch (err) {
