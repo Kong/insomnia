@@ -139,7 +139,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   });
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
+  const uniqueKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {
@@ -251,7 +251,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
             <div className="flex-1" title={activeRequest.url}>
               <OneLineEditor
                 id="grpc-url"
-                key={uniquenessKey}
+                key={uniqueKey}
+                historyKey={`grpc-url::${requestId}`}
                 type="text"
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
@@ -436,7 +437,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     </div>
                   )}
                   <Tabs
-                    key={uniquenessKey}
+                    key={uniqueKey}
                     aria-label="Grpc tabbed messages tabs"
                     className="flex h-full w-full flex-1 flex-col"
                   >
@@ -456,6 +457,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     <TabPanel id="body" className="h-full w-full overflow-y-auto">
                       <CodeEditor
                         id="grpc-request-editor"
+                        historyKey={`grpc-request-editor::${requestId}`}
                         ref={editorRef}
                         defaultValue={activeRequest.body.text}
                         onChange={text => patchRequest(requestId, { body: { text } })}
@@ -483,7 +485,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
               </TabPanel>
             )}
             <TabPanel className={'h-full w-full overflow-y-auto'} id="headers">
-              <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+              <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <KeyValueEditor
                   namePlaceholder="header"
                   valuePlaceholder="value"

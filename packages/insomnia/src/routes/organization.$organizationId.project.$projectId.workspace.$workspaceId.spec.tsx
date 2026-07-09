@@ -628,7 +628,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const generateDisabledKeys = generateActionList.filter(item => item.isDisabled).map(item => item.id);
 
-  const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
+  const historyKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
@@ -657,14 +657,14 @@ const Component = ({ params }: Route.ComponentProps) => {
     <div className="relative flex h-full w-full overflow-hidden">
       <CodeEditor
         id="spec-editor"
-        key={uniquenessKey}
+        key={historyKey}
         showPrettifyButton
         ref={editor}
         lintOptions={lintOptions}
         mode={apiSpec.contents ? 'openapi' : undefined}
         defaultValue={apiSpec.contents || ''}
         onChange={onCodeEditorChange}
-        uniquenessKey={uniquenessKey}
+        historyKey={historyKey}
       />
       {apiSpec.contents ? null : (
         <DesignEmptyState

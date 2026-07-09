@@ -45,7 +45,7 @@ const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  uniquenessKey: string;
+  historyKey: string;
   onPaste: (text: string) => void;
 }
 
@@ -55,7 +55,7 @@ export interface RequestUrlBarHandle {
 }
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
-  ({ handleAutocompleteUrls, uniquenessKey, onPaste }, ref) => {
+  ({ handleAutocompleteUrls, historyKey, onPaste }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
@@ -316,7 +316,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             // send and local edits, which used to remount and blur the editor mid-edit.
             key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}`}
             // Stable across that remount, so undo history is restored from the cache.
-            uniquenessKey={uniquenessKey}
+            historyKey={historyKey}
             ref={inputRef}
             type="text"
             autoFocus={focusUrlOnMount}
