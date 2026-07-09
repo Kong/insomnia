@@ -120,14 +120,14 @@ describe('getOnboardingState', () => {
   });
 
   it('GETs the onboarding endpoint with the sessionId', async () => {
-    mockFetch.mockResolvedValue({ first_request_treatment: 'A', is_new_signup: true, has_reached_request_threshold: false });
+    mockFetch.mockResolvedValue({ first_request_treatment: 'A', is_new_signup: true, reached_request_threshold: false });
 
     const result = await getOnboardingState({ sessionId: 'sess_xyz' });
 
     expect(mockFetch).toHaveBeenCalledWith({ method: 'GET', path: '/v3/users/me/onboarding', sessionId: 'sess_xyz' });
     expect(result.first_request_treatment).toBe('A');
     expect(result.is_new_signup).toBe(true);
-    expect(result.has_reached_request_threshold).toBe(false);
+    expect(result.reached_request_threshold).toBe(false);
   });
 
   it('passes an empty state through as-is', async () => {
@@ -145,7 +145,7 @@ describe('latchRequestThresholdReached', () => {
   });
 
   it('PATCHes the idempotent threshold latch and returns the updated state', async () => {
-    mockFetch.mockResolvedValue({ has_reached_request_threshold: true });
+    mockFetch.mockResolvedValue({ reached_request_threshold: true });
 
     const result = await latchRequestThresholdReached({ sessionId: 'sess_xyz' });
 
@@ -155,6 +155,6 @@ describe('latchRequestThresholdReached', () => {
       sessionId: 'sess_xyz',
       data: { reached_request_threshold: true },
     });
-    expect(result.has_reached_request_threshold).toBe(true);
+    expect(result.reached_request_threshold).toBe(true);
   });
 });

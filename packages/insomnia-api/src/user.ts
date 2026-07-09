@@ -27,15 +27,15 @@ export const getEncryptionKeys = async ({ sessionId }: { sessionId: string }): P
 // off the permanent users/me contract) that holds transient onboarding/experiment
 // state with its own lifecycle. All fields are optional/backward-compatible.
 export interface UserOnboardingState {
-  // Server-computed first-request experiment treatment. Present only when the
-  // server is steering assignment; absent → the client computes it locally.
+  // Server-computed first-request experiment treatment (the server is authoritative);
+  // absent → the client falls back to the cached value / safe default.
   first_request_treatment?: 'A' | 'B';
   // Whether the account is a genuine new sign-up (an experiment participant).
   is_new_signup?: boolean;
-  // Sticky, irreversible latch: the account has ever created at least the minimum
-  // number of requests to graduate the first-request experiment (account-wide,
+  // Sticky, irreversible latch: the account has created at least the minimum number
+  // of requests to graduate the first-request experiment (account-wide,
   // device-independent). Once true it never reverts.
-  has_reached_request_threshold?: boolean;
+  reached_request_threshold?: boolean;
 }
 
 // GET /v3/users/me/onboarding
