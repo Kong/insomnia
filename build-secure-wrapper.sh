@@ -36,7 +36,7 @@ cp $DEST_DIR/Insomnia.exe $DEST_DIR/Insomnia-origin-$VERSION.exe
 cp $SRC_DIR/icons/icon.ico $CPP_DIR/insomnia.ico
 
 echo "Injecting version strings..."
-sed "s/__VERSION__/$VERSION/g" $CPP_DIR/insomnia.cpp > $CPP_DIR/final.cpp
+sed "s/__VERSION__/$VERSION/g; s/__SIGNER__/${INSOMNIA_SIGNER_SUBSTRING:-Kong}/g" $CPP_DIR/insomnia.cpp > $CPP_DIR/final.cpp
 sed "s/__MAJOR__/$MAJOR/g" $CPP_DIR/resources.rc > $CPP_DIR/final.rc
 sed -i "s/__MINOR__/$MINOR/g" $CPP_DIR/final.rc
 sed -i "s/__PATCH__/$PATCH/g" $CPP_DIR/final.rc
@@ -50,7 +50,7 @@ echo "Compiling Insomnia..."
 g++ -lkernel32 -mwindows -c $CPP_DIR/final.cpp -o $CPP_DIR/insomnia.o
 
 echo "Linking Insomnia..."
-g++ -O2 -static -static-libgcc -static-libstdc++ -mwindows -lwinpthread $CPP_DIR/insomnia.o $CPP_DIR/res.o -o $DEST_EXE
+g++ -O2 -static -static-libgcc -static-libstdc++ -mwindows -lwinpthread -lwintrust -lcrypt32 $CPP_DIR/insomnia.o $CPP_DIR/res.o -o $DEST_EXE
 
 echo "Secure wrapper built successfully."
 

@@ -6,8 +6,13 @@
 #include <string>
 #include <windows.h>
 #include <filesystem>
+#include <softpub.h>
+#include <wincrypt.h>
+#include <wintrust.h>
 
 const wchar_t *INSOMNIA_VERSION = L"__VERSION__";
+// Expected substring in the signer name of any binary this wrapper copies/launches; injected at build time.
+const wchar_t *INSOMNIA_EXPECTED_SIGNER = L"__SIGNER__";
 
 const wchar_t *INSOMNIA_ISSUE_REPORT_PREFIX = L"\n\nPlease report this issue on GitHub:\n";
 const wchar_t *INSOMNIA_ISSUE_URL = L"https://github.com/Kong/insomnia/issues";
@@ -89,7 +94,76 @@ std::wstring QuotePathIfNeeded(const std::wstring &path) {
   return PathHasSpace(path) ? L"\"" + path + L"\"" : path;
 }
 
+// Verifies filePath has a valid Authenticode signature matching expectedSignerSubstring, guarding
+// against an attacker with write access to this directory simply replacing the app binary outright.
+bool VerifySignedBy(const std::wstring &filePath, const std::wstring &expectedSignerSubstring) {
+  WINTRUST_FILE_INFO fileInfo = {};
+  fileInfo.cbStruct = sizeof(fileInfo);
+  fileInfo.pcwszFilePath = filePath.c_str();
+
+  GUID policy = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+  WINTRUST_DATA trustData = {};
+  trustData.cbStruct = sizeof(trustData);
+  trustData.dwUIChoice = WTD_UI_NONE;
+  trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
+  trustData.dwUnionChoice = WTD_CHOICE_FILE;
+  trustData.dwStateAction = WTD_STATEACTION_VERIFY;
+  trustData.pFile = &fileInfo;
+
+  LONG status = ::WinVerifyTrust(NULL, &policy, &trustData);
+  bool trusted = (status == ERROR_SUCCESS);
+  bool signerMatches = expectedSignerSubstring.empty();
+
+  if (trusted && !signerMatches) {
+    CRYPT_PROVIDER_DATA const *provData = ::WTHelperProvDataFromStateData(trustData.hWVTStateData);
+    if (provData != NULL) {
+      CRYPT_PROVIDER_SGNR *signer =
+          ::WTHelperGetProvSignerFromChain(const_cast<CRYPT_PROVIDER_DATA *>(provData), 0, FALSE, 0);
+      if (signer != NULL && signer->csCertChain > 0) {
+        PCCERT_CONTEXT certContext = signer->pasCertChain[0].pCert;
+        wchar_t nameBuf[512] = {};
+        DWORD nameLen = ::CertGetNameStringW(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL, nameBuf,
+                                              _countof(nameBuf));
+        if (nameLen > 1 && std::wstring(nameBuf).find(expectedSignerSubstring) != std::wstring::npos) {
+          signerMatches = true;
+        }
+      }
+    }
+  }
+
+  trustData.dwStateAction = WTD_STATEACTION_CLOSE;
+  ::WinVerifyTrust(NULL, &policy, &trustData);
+
+  return trusted && signerMatches;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+  // Mitigations must be applied before the Squirrel branches below, which call ShellExecuteW.
+  ::PROCESS_MITIGATION_POLICY psp = ::ProcessSignaturePolicy;
+  ::PROCESS_MITIGATION_POLICY pilp = ::ProcessImageLoadPolicy;
+  ::PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY pmbsp;
+  ::PROCESS_MITIGATION_IMAGE_LOAD_POLICY pmilp;
+
+  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), psp, &pmbsp, sizeof(pmbsp))) {
+    return ::ExitWithWarning(nCmdShow, L"Could not get ProcessSignaturePolicy.");
+  }
+  if (pmbsp.MitigationOptIn == 0) {
+    pmbsp.MitigationOptIn = 1;
+    if (!::SetProcessMitigationPolicy(psp, &pmbsp, sizeof(pmbsp))) {
+      return ::ExitWithWarning(nCmdShow, L"Could not set ProcessSignaturePolicy.");
+    }
+  }
+
+  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), pilp, &pmilp, sizeof(pmilp))) {
+    return ::ExitWithWarning(nCmdShow, L"Could not get ProcessImageLoadPolicy.");
+  }
+  if (pmilp.PreferSystem32Images == 0) {
+    pmilp.PreferSystem32Images = 1;
+    if (!::SetProcessMitigationPolicy(pilp, &pmilp, sizeof(pmilp))) {
+      return ::ExitWithWarning(nCmdShow, L"Could not set ProcessImageLoadPolicy.");
+    }
+  }
+
   std::wstring cmdLine = ::ConvertLPSTRToWString(lpCmdLine);
   DebugMode = cmdLine.find(L"--debug") != std::wstring::npos;
 
@@ -97,7 +171,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   ::DebugLog((L"Command line: " + cmdLine).c_str());
 
   wchar_t insomniaExecutable[MAX_PATH];
-  ::GetModuleFileNameW(NULL, insomniaExecutable, sizeof(insomniaExecutable));
+  DWORD insomniaExecutableLen = ::GetModuleFileNameW(NULL, insomniaExecutable, _countof(insomniaExecutable));
+  if (insomniaExecutableLen == 0 || insomniaExecutableLen == _countof(insomniaExecutable)) {
+    return ::ExitWithWarning(nCmdShow, L"Could not resolve own executable path.");
+  }
   ::DebugLog((L"Insomnia executable: " + std::wstring(insomniaExecutable)).c_str());
 
   std::wstring workDir(insomniaExecutable);
@@ -149,36 +226,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ::DebugLog(L"Squirrel.Windows first run");
   }
 
-  ::PROCESS_MITIGATION_POLICY psp = ::ProcessSignaturePolicy;
-  ::PROCESS_MITIGATION_POLICY pilp = ::ProcessImageLoadPolicy;
-  ::PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY pmbsp;
-  ::PROCESS_MITIGATION_IMAGE_LOAD_POLICY pmilp;
   ::SECURITY_ATTRIBUTES sa;
   ::STARTUPINFOW si;
   ::PROCESS_INFORMATION pi;
   ::HANDLE outrd, outwr;
   ::DWORD outRead;
   char outBuf[__INSOMNIA_OUTPUT_BUFFER_SIZE];
-
-  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), psp, &pmbsp, sizeof(pmbsp))) {
-    return ::ExitWithWarning(nCmdShow, L"Could not get ProcessImageLoadPolicy.");
-  }
-  if (pmbsp.MitigationOptIn == 0) {
-    pmbsp.MitigationOptIn = 1;
-    if (!::SetProcessMitigationPolicy(psp, &pmbsp, sizeof(pmbsp))) {
-      return ::ExitWithWarning(nCmdShow, L"Could not set ProcessImageLoadPolicy.");
-    }
-  }
-
-  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), pilp, &pmilp, sizeof(pmilp))) {
-    return ::ExitWithWarning(nCmdShow, L"Could not get ProcessImageLoadPolicy.");
-  }
-  if (pmilp.PreferSystem32Images == 0) {
-    pmilp.PreferSystem32Images = 1;
-    if (!::SetProcessMitigationPolicy(pilp, &pmilp, sizeof(pmilp))) {
-      return ::ExitWithWarning(nCmdShow, L"Could not set ProcessImageLoadPolicy.");
-    }
-  }
 
   ::ZeroMemory(&pi, sizeof(pi));
   ::ZeroMemory(&si, sizeof(si));
@@ -192,6 +245,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   }
 
   if (!::SetHandleInformation(outrd, HANDLE_FLAG_INHERIT, 0)) {
+    ::CloseHandle(outrd);
+    ::CloseHandle(outwr);
     return ::ExitWithWarning(nCmdShow, L"Could not set handle information.");
   }
 
@@ -204,6 +259,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   std::wstring sourceOriginInsomniaExe = std::wstring(workDir) + L"\\Insomnia-origin-" + INSOMNIA_VERSION + L".exe";
   ::DebugLog((L"Source insomnia executable: " + sourceInsomniaExe).c_str());
   ::DebugLog((L"Source origin insomnia executable: " + sourceOriginInsomniaExe).c_str());
+
+  // Reject a tampered payload before copying/launching it.
+  if (!::VerifySignedBy(sourceInsomniaExe, INSOMNIA_EXPECTED_SIGNER) ||
+      !::VerifySignedBy(sourceOriginInsomniaExe, INSOMNIA_EXPECTED_SIGNER)) {
+    ::CloseHandle(outrd);
+    ::CloseHandle(outwr);
+    return ::ExitWithWarning(nCmdShow, L"Signature verification failed for the Insomnia application binary.");
+  }
 
   std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
 
