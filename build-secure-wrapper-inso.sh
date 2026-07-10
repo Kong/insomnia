@@ -47,10 +47,10 @@ echo "Compiling resources..."
 windres $CPP_DIR/final.rc $CPP_DIR/res.o
 
 echo "Compiling inso wrapper..."
-g++ -lkernel32 -mconsole -c $CPP_DIR/final.cpp -o $CPP_DIR/inso.o
+g++ -lkernel32 -mconsole -municode -c $CPP_DIR/final.cpp -o $CPP_DIR/inso.o
 
 echo "Linking inso wrapper..."
-g++ -O2 -static -static-libgcc -static-libstdc++ -mconsole -lwinpthread -lwintrust -lcrypt32 $CPP_DIR/inso.o $CPP_DIR/res.o -o $DEST_EXE
+g++ -O2 -static -static-libgcc -static-libstdc++ -mconsole -municode -lwinpthread -lwintrust -lcrypt32 $CPP_DIR/inso.o $CPP_DIR/res.o -o $DEST_EXE
 
 echo "Secure wrapper built successfully."
 echo "Done."
