@@ -2,7 +2,7 @@ import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { type FC, Fragment, useEffect, useState } from 'react';
+import React, { type FC, Fragment, useState } from 'react';
 import {
   Button,
   Collection,
@@ -22,7 +22,6 @@ import * as reactUse from 'react-use';
 import type { SORT_ORDERS } from '~/common/constants';
 import { sortOrderName } from '~/common/constants';
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
@@ -30,7 +29,6 @@ import { exportProjectToFile } from '~/ui/components/settings/import-export';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
 import { createWorkspaceActionItems } from './actions/create-actions';
@@ -54,6 +52,7 @@ interface Props {
   onSortOrderChange: (newOrder: WorkspaceSortOrder) => void;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  onDeleteProject: (projectId: string) => void;
 }
 
 interface ProjectActionItem {
@@ -74,6 +73,7 @@ export const ProjectDropdown: FC<Props> = ({
   onSortOrderChange,
   isOpen,
   onOpenChange,
+  onDeleteProject,
 }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
@@ -86,8 +86,6 @@ export const ProjectDropdown: FC<Props> = ({
   });
   const { workspaceId } = useParams() as { workspaceId?: string };
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
-
-  const deleteProjectFetcher = useProjectDeleteActionFetcher();
 
   const isRemoteProjectInconsistent = models.project.isRemoteProject(project) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
@@ -181,10 +179,7 @@ export const ProjectDropdown: FC<Props> = ({
           color: 'danger',
           onDone: async (isYes: boolean) => {
             if (isYes) {
-              deleteProjectFetcher.submit({
-                organizationId,
-                projectId,
-              });
+              onDeleteProject(projectId);
             }
           },
         });
@@ -220,15 +215,6 @@ export const ProjectDropdown: FC<Props> = ({
       items: projectActionList,
     },
   ];
-
-  useEffect(() => {
-    if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
-      showModal(AlertModal, {
-        title: 'Could not delete project',
-        message: deleteProjectFetcher.data.error,
-      });
-    }
-  }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
 
   reactUse.useUpdateEffect(() => {
     if (workspaceId && newWorkspaceModalState?.isOpen) {

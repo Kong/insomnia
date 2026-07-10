@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type { CollectionWorkspaceChildren, WorkspaceChildren } from 'insomnia-data';
+import type { CollectionWorkspaceChildren, OrganizationData, WorkspaceChildren } from 'insomnia-data';
 import { models } from 'insomnia-data';
 
 import type { ChangeBufferEvent } from '~/common/database';
@@ -55,7 +55,7 @@ export const subscribeQueryClientToDbChanges = (queryClient: QueryClient): (() =
   const unsubscribe = window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
     const organizationIdsToRevalidate = new Set<string>();
     const workspaceIdsToRevalidate: string[] = [];
-    for (const [event, doc] of changes) {
+    for (const [event, doc, patches] of changes) {
       if (!MONITOR_DOC_TYPES.includes(doc.type)) {
         continue;
       }
@@ -75,6 +75,7 @@ export const subscribeQueryClientToDbChanges = (queryClient: QueryClient): (() =
       }
 
       if (doc.type === models.workspaceMeta.type) {
+        // Meta is changed very frequently, so we just update the cache instead of invalidating it to avoid unnecessary re-renders.
         const organizationId = findOrgForWorkspaceId(queryClient, doc.parentId);
         if (organizationId) {
           if (event === 'insert') {
@@ -91,7 +92,7 @@ export const subscribeQueryClientToDbChanges = (queryClient: QueryClient): (() =
       // request/requestGroup/meta changed: update the owning workspace children cache.
       if (COLLECTION_CHILDREN_DOC_TYPES.includes(doc.type)) {
         if (event === 'update') {
-          const isUpdateParent = 'parentId' in doc;
+          const isUpdateParent = 'parentId' in patches;
           if (!isUpdateParent) {
             const docWorkspaceId = findWorkspaceIdForDoc(queryClient, doc);
             if (docWorkspaceId) {
@@ -109,6 +110,7 @@ export const subscribeQueryClientToDbChanges = (queryClient: QueryClient): (() =
                 },
               );
             }
+            continue;
           } else {
             // update that changes the parentId, we need to invalidate both the old and new workspace children cache.
             const docId = doc._id;

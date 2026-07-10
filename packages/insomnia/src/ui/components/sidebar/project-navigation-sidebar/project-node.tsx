@@ -18,9 +18,17 @@ interface ProjectNodeProps {
   onToggle: (projectId: string) => void;
   sortOrder: WorkspaceSortOrder;
   onSortOrderChange: (newSortOrder: WorkspaceSortOrder) => void;
+  onDeleteProject: (projectId: string) => void;
 }
 
-export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrderChange }: ProjectNodeProps) => {
+export const ProjectNode = ({
+  item,
+  storageRules,
+  onToggle,
+  sortOrder,
+  onSortOrderChange,
+  onDeleteProject,
+}: ProjectNodeProps) => {
   const { doc, collapsed, organizationId, showSyncStatus = false } = item;
   const { userSession } = useRootLoaderData()!;
   const { presence } = useInsomniaEventStreamContext();
@@ -89,6 +97,7 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
           onSortOrderChange={onSortOrderChange}
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
+          onDeleteProject={onDeleteProject}
         />
       )}
     </div>

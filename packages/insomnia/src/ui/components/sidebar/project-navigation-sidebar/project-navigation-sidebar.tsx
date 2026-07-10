@@ -27,7 +27,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { href, useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { Button as BasicButton } from '~/basic-components/button';
@@ -38,12 +38,14 @@ import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
+import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { SidebarShortcutActionsDropdown } from '~/ui/components/dropdowns/sidebar-shortcut-actions-dropdown';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
@@ -223,6 +225,7 @@ const ProjectNavigationSidebarInner = (
     `${organizationId}:nav-expanded-projects-and-workspaces`,
     [],
   );
+  const deleteProjectFetcher = useProjectDeleteActionFetcher();
   const isProjectTabActive = activeTab === 'projects';
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();
   const [lastSyncedAt, setLastSyncedAt] = reactUse.useLocalStorage<number | null>(
@@ -742,6 +745,15 @@ const ProjectNavigationSidebarInner = (
     workspaceMetas,
   ]);
 
+  useEffect(() => {
+    if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
+      showModal(AlertModal, {
+        title: 'Could not delete project',
+        message: deleteProjectFetcher.data.error,
+      });
+    }
+  }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
+
   const handleLocalWorkspaceReorder = useCallback(
     (
       sourceProjectId: string,
@@ -1218,6 +1230,12 @@ const ProjectNavigationSidebarInner = (
                           setProjectWorkspaceSortOrder(prev => {
                             const newProjectWorkspaceSortOrder = { ...prev, [item.doc._id]: newSortOrder };
                             return newProjectWorkspaceSortOrder;
+                          })
+                        }
+                        onDeleteProject={projectId =>
+                          deleteProjectFetcher.submit({
+                            organizationId,
+                            projectId,
                           })
                         }
                       />
