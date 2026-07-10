@@ -22,12 +22,12 @@ it carries the template and full procedure. This file is the quick reference for
 
 ` ```tsx live ` blocks resolve component names from `src/theme/ReactLiveScope/index.ts`, NOT from
 MDX imports. Any component used in a live block must be imported there and added to the
-`ReactLiveScope` object. Library components import as `insomnia/src/basic-components/<name>`.
+`ReactLiveScope` object. Library components import from the barrel as `insomnia/src/basic-components`.
 
 ## Commands
 
 ```bash
-cd packages/insomnia-components-docs
+cd packages/insomnia-component-docs
 npm run start   # local preview while writing
 npm run build   # verify (catches broken live blocks / bad imports)
 ```
