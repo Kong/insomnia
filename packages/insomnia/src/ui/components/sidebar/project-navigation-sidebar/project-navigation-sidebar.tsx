@@ -533,7 +533,6 @@ const ProjectNavigationSidebarInner = (
       const projectIds = projectsWithPresence.map(p => p._id);
       const collectionWorkspaceIds: string[] = [];
       const workspacesByProject = await tryToGetWorkspacesFromCache(projectIds);
-      console.log('workspacesByProject', workspacesByProject);
       projectIds.forEach(projectId => {
         const workspaces = workspacesByProject.get(projectId) || [];
         workspaces.forEach(wk => {
@@ -559,6 +558,7 @@ const ProjectNavigationSidebarInner = (
           hidden: false,
         });
         const workspaces = workspacesByProject.get(projectId) || [];
+        console.log('workspaces for project', JSON.stringify(workspaces));
         const workspaceOrder = projectWorkspaceSortOrder[projectId] || 'type-manual';
         let sortedWorkspaces: Workspace[] = [];
         if (workspaceOrder === 'type-manual') {
