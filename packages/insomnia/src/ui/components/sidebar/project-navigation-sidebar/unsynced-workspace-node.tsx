@@ -51,6 +51,7 @@ export const UnsyncedWorkspaceNode = ({ item }: { item: UnsyncedWorkspaceFlatIte
           onPress={() => {
             const { project, doc, organizationId } = item;
             const { remoteId: backendProjectId } = doc;
+            console.log('unsynced workspace node clicked', { backendProjectId });
             if (project.remoteId && backendProjectId) {
               pullRemoteFileFetcher.submit({
                 backendProjectId,

@@ -533,6 +533,7 @@ const ProjectNavigationSidebarInner = (
       const projectIds = projectsWithPresence.map(p => p._id);
       const collectionWorkspaceIds: string[] = [];
       const workspacesByProject = await tryToGetWorkspacesFromCache(projectIds);
+      console.log('workspacesByProject', workspacesByProject);
       projectIds.forEach(projectId => {
         const workspaces = workspacesByProject.get(projectId) || [];
         workspaces.forEach(wk => {
