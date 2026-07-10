@@ -123,6 +123,9 @@ export const SANDBOX_MODULES: SandboxModuleDefinition[] = [
  */
 export const TEMPLATE_TAG_BASELINE_MODULES: string[] = ['path', 'crypto'];
 
+/** Every registered module name — the trusted grant for first-party bundle plugins. */
+export const ALL_SANDBOX_MODULES: string[] = SANDBOX_MODULES.map(m => m.name);
+
 /**
  * Resolve the module set a template-tag plugin may `require()`: the baseline floor plus whatever the
  * plugin declared in `insomnia.permissions.modules`. Unknown declared names are harmless here —

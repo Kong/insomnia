@@ -3,7 +3,16 @@ import nodeCrypto from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
 import { localTemplateTags } from '../../common/templating/local-template-tags';
-import { createMapBridge, type HostBridge } from './host-bridge';
+import {
+  ALL_CAPABILITIES,
+  BRIDGE_PATH_CAPABILITIES,
+  createMapBridge,
+  filterByCapabilities,
+  type HostBridge,
+  resolveTemplateTagCapabilities,
+  TEMPLATE_TAG_BASELINE_CAPABILITIES,
+} from './host-bridge';
+import { IN_SANDBOX_BOOTSTRAP } from './in-sandbox-bootstrap';
 import type { ContextEnvelope } from './marshal';
 import { resolveTemplateTagModules, SANDBOX_MODULES, TEMPLATE_TAG_BASELINE_MODULES } from './module-registry';
 import { type HostCrypto, runTagInSandbox } from './plugin-tag-sandbox';
@@ -69,7 +78,11 @@ module.exports.templateTags = [{
   }
 }];`;
 
-const envelope = (args: unknown[], grantedModules: string[] = TEMPLATE_TAG_BASELINE_MODULES): ContextEnvelope => ({
+const envelope = (
+  args: unknown[],
+  grantedModules: string[] = TEMPLATE_TAG_BASELINE_MODULES,
+  grantedCapabilities: string[] = ALL_CAPABILITIES,
+): ContextEnvelope => ({
   args,
   context: {},
   meta: {},
@@ -78,6 +91,7 @@ const envelope = (args: unknown[], grantedModules: string[] = TEMPLATE_TAG_BASEL
   pluginName: 'test-plugin',
   renderDepth: 0,
   grantedModules,
+  grantedCapabilities,
 });
 
 const noBridge: HostBridge = async path => {
@@ -682,5 +696,94 @@ describe('createMapBridge — resolves only registered own handlers', () => {
     for (const evil of ['constructor', '__proto__', 'hasOwnProperty', 'toString']) {
       await expect(bridge(evil, {})).rejects.toThrow(`No host bridge handler registered for "${evil}"`);
     }
+  });
+});
+
+describe('capability gating at the host bridge (C1)', () => {
+  // Completeness: every bridge path the sandbox can actually call (every __bridge("…") in the
+  // bootstrap) must have a capability mapping, or filterByCapabilities fails it closed. A new
+  // bridge path added without a mapping fails this test.
+  it('maps every sandbox-callable bridge path to a capability', () => {
+    const calledPaths = new Set([...IN_SANDBOX_BOOTSTRAP.matchAll(/__bridge\("([^"]+)"/g)].map(m => m[1]));
+    expect(calledPaths.size).toBeGreaterThan(0);
+    for (const path of calledPaths) {
+      expect(BRIDGE_PATH_CAPABILITIES, `bridge path "${path}" needs a capability mapping`).toHaveProperty(path);
+    }
+  });
+
+  describe('resolveTemplateTagCapabilities', () => {
+    it('defaults to the baseline floor', () => {
+      expect(resolveTemplateTagCapabilities()).toEqual(TEMPLATE_TAG_BASELINE_CAPABILITIES);
+    });
+    it('unions declared capabilities onto the baseline without duplicating', () => {
+      expect(resolveTemplateTagCapabilities(['network', 'render'])).toEqual([
+        ...TEMPLATE_TAG_BASELINE_CAPABILITIES,
+        'network',
+      ]);
+    });
+  });
+
+  describe('filterByCapabilities', () => {
+    const handlers = { 'network.sendRequest': async () => 'sent', 'pluginData.getItem': async () => 'stored' };
+
+    it('passes a granted path through to its handler', async () => {
+      const filtered = filterByCapabilities(handlers, ['network']);
+      await expect(filtered['network.sendRequest']({})).resolves.toBe('sent');
+    });
+
+    it('rejects an ungranted path with a message naming the capability', async () => {
+      const filtered = filterByCapabilities(handlers, ['render']);
+      await expect(filtered['network.sendRequest']({})).rejects.toThrow(
+        "Capability 'network' not granted — add it to insomnia.permissions.capabilities",
+      );
+    });
+
+    it('fails closed for a path with no capability mapping', async () => {
+      const filtered = filterByCapabilities({ 'made.up.path': async () => 'x' }, ALL_CAPABILITIES);
+      await expect(filtered['made.up.path']({})).rejects.toThrow(/no capability mapping/);
+    });
+  });
+
+  // End-to-end through the sandbox: the gate is at the bridge, so the branch still exists in context
+  // (C2 removes it) but calling it rejects unless the capability is granted.
+  const runGated = (body: string, granted: string[], handlers: Record<string, (b: any) => Promise<unknown>>) =>
+    runTagInSandbox({
+      pluginSource: `module.exports.templateTags = [{ name: 'g', run: async function (context) { ${body} } }];`,
+      tagName: 'g',
+      envelope: envelope([], TEMPLATE_TAG_BASELINE_MODULES, granted),
+      bridge: createMapBridge(filterByCapabilities(handlers, granted)),
+    });
+
+  it('allows a baseline util call (nodeOS) with no declared capabilities', async () => {
+    const actual = await runGated(
+      'var os = await context.util.nodeOS(); return os.arch;',
+      [...TEMPLATE_TAG_BASELINE_CAPABILITIES],
+      { nodeOS: async () => ({ arch: 'x64' }) },
+    );
+    expect(actual).toBe('x64');
+  });
+
+  it('denies a non-baseline capability (storage) and names it', async () => {
+    await expect(
+      runGated("return await context.store.getItem('k');", [...TEMPLATE_TAG_BASELINE_CAPABILITIES], {
+        'pluginData.getItem': async () => 'stored-value',
+      }),
+    ).rejects.toThrow("Capability 'storage' not granted");
+  });
+
+  it('allows the same call once the capability is declared', async () => {
+    const actual = await runGated(
+      "return await context.store.getItem('k');",
+      resolveTemplateTagCapabilities(['storage']),
+      { 'pluginData.getItem': async () => 'stored-value' },
+    );
+    expect(actual).toBe('stored-value');
+  });
+
+  it('gating is per-capability, not all-or-nothing: baseline render still works when network is denied', async () => {
+    const actual = await runGated('return await context.util.render("x");', [...TEMPLATE_TAG_BASELINE_CAPABILITIES], {
+      'util.render': async () => 'rendered',
+    });
+    expect(actual).toBe('rendered');
   });
 });
