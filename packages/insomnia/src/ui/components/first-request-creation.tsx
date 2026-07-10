@@ -351,10 +351,11 @@ export const FirstRequestCreation = ({
     }
   }, [createdRequests]);
 
-  // On a *confident* treatment result, emit an experiment-assignment analytics event
-  // only when the treatment changed vs the last-known (cached) value — i.e. on the
-  // initial assignment and on a Treatment A→B transition. The warehouse derives each
-  // assignment's `experiment_end_at` as the next assignment's timestamp (LEAD).
+  // On a *confident* treatment result, emit the initial assignment analytics event —
+  // only the very first observed assignment for this account (nothing cached yet).
+  // The A→B graduation transition is emitted from maybeLatchRequestThreshold instead,
+  // since that's the one place graduation is guaranteed to be detected (this pane
+  // may never remount once the account has already graduated).
   useEffect(() => {
     if (!treatment) {
       return;
@@ -371,14 +372,14 @@ export const FirstRequestCreation = ({
     writeCachedFirstRequestTreatment(accountId, treatment);
 
     // Emit assignment analytics only for experiment participants (new sign-ups) — existing
-    // users get B but are not part of the A/B population — and only when the treatment
-    // changed vs the last-known value (initial assignment or A→B transition).
+    // users get B but are not part of the A/B population — and only for the first-ever
+    // observed assignment (nothing was cached for this account before this render).
     if (!isParticipant) {
       return;
     }
-    const changed = treatment !== cachedTreatment;
+    const isFirstObservedAssignment = cachedTreatment === null;
     const sessionKey = `${accountId || 'anonymous'}:${treatment}`;
-    if (changed && !emittedAssignments.has(sessionKey)) {
+    if (isFirstObservedAssignment && !emittedAssignments.has(sessionKey)) {
       emittedAssignments.add(sessionKey);
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.experimentAssigned,

@@ -1,9 +1,13 @@
-import { latchRequestThresholdReached } from 'insomnia-api';
+import { getOnboardingState, latchRequestThresholdReached } from 'insomnia-api';
 
 import { getAccountId, getCurrentSessionId } from '~/common/account/session';
+import { AnalyticsEvent } from '~/ui/analytics';
 
 import {
+  FIRST_REQUEST_EXPERIMENT_NAME,
   FIRST_REQUEST_GRADUATION_THRESHOLD,
+  getFirstRequestTreatmentGroup,
+  getOnboardingIsNewSignup,
   isRequestThresholdLatched,
   markRequestThresholdLatched,
   readRequestCountBaseline,
@@ -27,6 +31,12 @@ import {
  * call is safe to repeat: it's guarded by a local flag to avoid needless POSTs,
  * but a dropped call self-heals because the guard is only set after the server
  * confirms, so the next request creation / pane load retries it.
+ *
+ * Also emits the graduation (A→B) assignment analytics event here, not from the
+ * first-request UI — this is the one place graduation is guaranteed to be
+ * detected, since by the time an account has crossed the threshold it usually
+ * won't re-render the first-request empty-state pane that would otherwise need
+ * to observe the transition.
  *
  * Fire-and-forget: never throws, and no-ops when logged out or below threshold.
  */
@@ -53,6 +63,26 @@ export const maybeLatchRequestThreshold = async (createdRequests: number): Promi
 
     await latchRequestThresholdReached({ sessionId });
     markRequestThresholdLatched(accountId);
+
+    // Best-effort, decoupled from the latch itself: a failure here shouldn't
+    // retry the (already-confirmed) latch, so it isn't awaited or folded into
+    // the outer try/catch.
+    getOnboardingState({ sessionId })
+      .then(onboarding => {
+        if (getOnboardingIsNewSignup(onboarding) === true) {
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.experimentAssigned,
+            properties: {
+              experiment_name: FIRST_REQUEST_EXPERIMENT_NAME,
+              treatment_group: getFirstRequestTreatmentGroup('B'),
+              assigned_at: new Date().toISOString(),
+            },
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Failed to emit first-request graduation analytics event', error);
+      });
   } catch (error) {
     // Leave the local flag unset so the (idempotent) latch is retried next time.
     console.error('Failed to latch first-request graduation threshold', error);
