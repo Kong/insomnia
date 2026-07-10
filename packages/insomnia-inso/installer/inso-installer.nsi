@@ -29,11 +29,11 @@ InstallDir "$LOCALAPPDATA\Kong\Inso"
 Section "Install"
   ReadRegStr $0 HKCU "Software\Kong\Inso" "Version"
 
-  SetOutPath "$InstallDir"
+  SetOutPath "$INSTDIR"
   File "${BINARIES_DIR}\inso.exe"
   File "${BINARIES_DIR}\inso-node.dll"
   WriteRegStr HKCU "Software\Kong\Inso" "Version" "${VERSION}"
-  WriteRegStr HKCU "Software\Kong\Inso" "InstallDir" "$InstallDir"
+  WriteRegStr HKCU "Software\Kong\Inso" "InstallDir" "$INSTDIR"
 
   ; Only touch PATH on a genuinely first install — the directory never changes between
   ; versions, so a version upgrade never needs to touch it again.
@@ -42,10 +42,10 @@ Section "Install"
     ReadRegStr $1 HKCU "Environment" "Path"
     StrCmp $1 "" firstPathEntry appendPathEntry
     firstPathEntry:
-      WriteRegExpandStr HKCU "Environment" "Path" "$InstallDir"
+      WriteRegExpandStr HKCU "Environment" "Path" "$INSTDIR"
       Goto pathUpdated
     appendPathEntry:
-      WriteRegExpandStr HKCU "Environment" "Path" "$1;$InstallDir"
+      WriteRegExpandStr HKCU "Environment" "Path" "$1;$INSTDIR"
     pathUpdated:
       SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   skipPathUpdate:
@@ -56,6 +56,6 @@ Section "Install"
   System::Call 'kernel32::AttachConsole(i -1)'
 
   ${GetParameters} $2
-  ExecWait '"$InstallDir\inso.exe" $2' $3
+  ExecWait '"$INSTDIR\inso.exe" $2' $3
   SetErrorLevel $3
 SectionEnd
