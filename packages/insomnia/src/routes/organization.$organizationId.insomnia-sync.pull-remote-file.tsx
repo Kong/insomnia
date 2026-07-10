@@ -27,6 +27,18 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const workspace = await services.workspace.getById(workspaceId);
 
     invariant(workspace, 'Workspace not found');
+    console.log(
+      '[pull-remote-file] pulled remote workspace',
+      JSON.stringify({
+        backendProjectId,
+        remoteId,
+        projectId,
+        workspaceId,
+        workspaceParentId: workspace.parentId,
+        workspaceName: workspace.name,
+        workspaceScope: workspace.scope,
+      }),
+    );
     const activity = models.workspace.scopeToActivity(workspace?.scope);
 
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${activity}`);
