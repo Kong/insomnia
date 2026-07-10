@@ -9,12 +9,7 @@ import { twMergeConfig } from './cn';
  */
 export const tv = createTV({ twMergeConfig });
 
-/** Shared `sm/md/lg` size scale (matches the existing Button convention) for reuse across components. */
-export const sizes = {
-  sm: 'h-7 px-2 text-sm gap-1 rounded-sm',
-  md: 'h-8 px-3 text-base gap-2 rounded-md',
-  lg: 'h-9 px-4 text-lg gap-3 rounded-lg',
-};
-
-/** Shared focus-visible ring, applied to interactive elements. */
-export const focusRing = 'outline-none data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md)';
+// Cross-component variant fragments (size/color/state scales) will be added here in M1, once real
+// components (Button, IconButton, Input, …) reveal which class subsets are genuinely shared.
+// Defining them before a second consumer exists risks encoding a button-shaped guess that other
+// components can't reuse — see the plan's "validate against real usage" principle (§8).
