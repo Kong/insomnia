@@ -1,8 +1,10 @@
-import type { User, UserEncryptionKeys } from '@getinsomnia/insomnia-v3-fetch';
+import type { User, UserEncryptionKeys, UserOnboarding } from '@getinsomnia/insomnia-v3-fetch';
+import { UserOnboardingFirstRequestTreatmentEnum } from '@getinsomnia/insomnia-v3-fetch';
 
 import { fetch } from './fetch';
 
-export type { User, UserEncryptionKeys };
+export type { User, UserEncryptionKeys, UserOnboarding };
+export { UserOnboardingFirstRequestTreatmentEnum };
 
 // POST /auth/logout
 export const logout = ({ sessionId }: { sessionId: string }) => {
@@ -21,6 +23,24 @@ export const getUserProfile = async ({ sessionId }: { sessionId: string }): Prom
 // GET /v3/users/me/encryption-keys
 export const getEncryptionKeys = async ({ sessionId }: { sessionId: string }): Promise<UserEncryptionKeys> => {
   return fetch<UserEncryptionKeys>({ method: 'GET', path: '/v3/users/me/encryption-keys', sessionId });
+};
+
+// GET /v3/users/me/onboarding
+export const getOnboardingState = async ({ sessionId }: { sessionId: string }): Promise<UserOnboarding> => {
+  return fetch<UserOnboarding>({ method: 'GET', path: '/v3/users/me/onboarding', sessionId });
+};
+
+// POST /v3/users/me/onboarding/request-threshold
+// Idempotent latch: POSTing this sub-resource marks that the account has reached the
+// first-request graduation threshold. Idempotent by definition, so it's safe to call
+// repeatedly — the server stores a sticky bit that never reverts and dropped calls
+// self-heal on the next attempt. Responds 204 with no body.
+export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: string }): Promise<void> => {
+  return fetch<void>({
+    method: 'POST',
+    path: '/v3/users/me/onboarding/request-threshold',
+    sessionId,
+  });
 };
 
 // GET /v1/billing/current-plan

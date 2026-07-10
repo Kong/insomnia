@@ -11,6 +11,7 @@ import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { trackCioEvent } from '~/ui/hooks/use-cio';
+import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
@@ -199,6 +200,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           headers: [],
         })
       )._id;
+
+      services.stats.incrementCreatedRequests();
+      // Keep graduation in sync with requests created via this path too (fire-and-forget,
+      // idempotent — see maybeLatchRequestThreshold).
+      services.stats.get().then(stats => maybeLatchRequestThreshold(stats.createdRequests));
 
       const requestCreatedProperties = {
         requestType: 'HTTP',

@@ -26,6 +26,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@getinsomnia/insomnia-v3-fetch": "^1.0.16"
+    "@getinsomnia/insomnia-v3-fetch": "^1.0.20"
   }
 }
