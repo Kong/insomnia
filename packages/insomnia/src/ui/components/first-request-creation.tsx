@@ -301,7 +301,8 @@ export const FirstRequestCreation = ({
   }, [selectedCollectionId]);
 
   // Load the lifetime created-request count, used to decide when to latch the
-  // server-side graduation threshold.
+  // server-side graduation threshold (see maybeLatchRequestThreshold for how the
+  // device-wide count is scoped back down to this account).
   useEffect(() => {
     let isActive = true;
 
@@ -340,8 +341,10 @@ export const FirstRequestCreation = ({
     };
   }, []);
 
-  // Self-heal the graduation latch: if this install has already crossed the
+  // Self-heal the graduation latch: if this account has already crossed the
   // threshold (e.g. the crossing creation's latch call was dropped), retry it.
+  // maybeLatchRequestThreshold scopes the device-wide createdRequests count back
+  // down to this account before deciding whether to latch.
   useEffect(() => {
     if (createdRequests !== null) {
       maybeLatchRequestThreshold(createdRequests);
@@ -534,7 +537,7 @@ export const FirstRequestCreation = ({
       <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
         <div className="flex w-full flex-col rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-6 pt-5 pb-6">
           <h2 className="text-lg font-semibold">New request</h2>
-          <div className="mt-4 flex h-8.5 items-center gap-2 rounded-md border border-(--hl-md) bg-(--color-bg) px-1">
+          <div className="mt-4 flex h-8.5 items-center gap-1.5 rounded-md border border-(--hl-md) bg-(--color-bg) px-1">
             <MethodSelector method={method} onChange={setMethod} className="h-6.5" />
             <input
               ref={inputRef}

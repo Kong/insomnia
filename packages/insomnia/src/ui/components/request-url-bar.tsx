@@ -301,7 +301,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const isCancellable = currentInterval || currentTimeout || isEventStreamOpen || isGraphQLSubscriptionOpen;
     return (
       <div className="flex w-full items-stretch justify-between self-stretch">
-        <div className="flex items-center p-1">
+        <div className="flex items-stretch p-1">
           <MethodSelector
             className="self-stretch"
             ref={methodDropdownRef}

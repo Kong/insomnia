@@ -78,6 +78,37 @@ export const writeCachedFirstRequestTreatment = (accountId: string, treatment: F
   }
 };
 
+const BASELINE_KEY_PREFIX = 'insomnia.firstRequestCountBaseline';
+const baselineKey = (accountId: string) => `${BASELINE_KEY_PREFIX}:${accountId || 'anonymous'}`;
+
+/**
+ * `stats.createdRequests` is a device-wide lifetime counter, not scoped per
+ * account — switching accounts on the same install would otherwise let a brand
+ * new account inherit requests created by a previous account and graduate
+ * prematurely. This snapshots the counter's value the first time an account is
+ * seen on this install, so callers can count only requests created since then.
+ */
+export const readRequestCountBaseline = (accountId: string): number | null => {
+  try {
+    const value = window.localStorage.getItem(baselineKey(accountId));
+    if (value === null) {
+      return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+export const writeRequestCountBaseline = (accountId: string, count: number): void => {
+  try {
+    window.localStorage.setItem(baselineKey(accountId), String(count));
+  } catch {
+    // Ignore storage failures (e.g. private mode / quota).
+  }
+};
+
 const LATCH_KEY_PREFIX = 'insomnia.firstRequestThresholdLatched';
 const latchKey = (accountId: string) => `${LATCH_KEY_PREFIX}:${accountId || 'anonymous'}`;
 
