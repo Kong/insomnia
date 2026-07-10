@@ -2,12 +2,12 @@ import path from 'node:path';
 import { Readable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
-import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
+import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
 
 import { getApiBaseURL } from '../common/constants';
-import { setDefaultProtocol, shouldBypassProxyForHost } from './network/libcurl-promise';
+import { parseResolvedProxy, setDefaultProtocol, shouldBypassProxyForHost } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
 
 export interface RegisterProtocolOptions {
@@ -54,7 +54,12 @@ export async function registerInsomniaProtocols() {
       const settings = await services.settings.get();
       // systemProxy follows the PAC return value format.
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
-      let systemProxyStr = await session.defaultSession.resolveProxy(urlStr);
+      let systemProxyStr: string | undefined;
+      try {
+        systemProxyStr = await session.defaultSession.resolveProxy(urlStr);
+      } catch {
+        // If resolveProxy fails, fall back to direct connection
+      }
 
       // here we use libcurl to forward the SSE request because the SSE request sent by net.fetch can not be disconnected correctly in some cases
       // see https://github.com/electron/electron/issues/47097
@@ -68,64 +73,12 @@ export async function registerInsomniaProtocols() {
 
           if (!settings.proxyEnabled) {
             // follow system proxy
-            if (!systemProxyStr) {
-              // if systemProxy is empty, it means no proxy is used
-              systemProxyStr = 'DIRECT';
-            }
-
-            const proxy = systemProxyStr
-              .trim()
-              .split(/\s*;\s*/g)
-              .find(Boolean);
-
-            // only the first proxy specified will be used
-            const firstProxy = proxy;
-            const parts = firstProxy?.split(/\s+/);
-
-            const proxyType = parts?.[0];
-
-            if (proxyType === 'DIRECT') {
-              curl.setOpt(Curl.option.PROXY, '');
+            const resolved = parseResolvedProxy(systemProxyStr);
+            if (resolved) {
+              curl.setOpt(Curl.option.PROXYTYPE, resolved.proxyType);
+              curl.setOpt(Curl.option.PROXY, resolved.proxyUrl);
             } else {
-              let unknownProxy = false;
-              let curlOptProxyType = CurlProxy.Http;
-              switch (proxyType) {
-                case 'PROXY': {
-                  curlOptProxyType = CurlProxy.Http;
-                  break;
-                }
-                case 'HTTP': {
-                  curlOptProxyType = CurlProxy.Http;
-                  break;
-                }
-                case 'SOCKS': {
-                  curlOptProxyType = CurlProxy.Socks4;
-                  break;
-                }
-                case 'HTTPS': {
-                  curlOptProxyType = CurlProxy.Https;
-                  break;
-                }
-                case 'SOCKS4': {
-                  curlOptProxyType = CurlProxy.Socks4;
-                  break;
-                }
-                case 'SOCKS5': {
-                  curlOptProxyType = CurlProxy.Socks5;
-                  break;
-                }
-                default: {
-                  // unknown proxy type
-                  unknownProxy = true;
-                  break;
-                }
-              }
-              if (unknownProxy) {
-                curl.setOpt(Curl.option.PROXY, '');
-              } else if (parts?.[1]) {
-                curl.setOpt(Curl.option.PROXYTYPE, curlOptProxyType);
-                curl.setOpt(Curl.option.PROXY, parts[1]);
-              }
+              curl.setOpt(Curl.option.PROXY, '');
             }
           } else {
             const { protocol, hostname } = urlParse(urlStr);

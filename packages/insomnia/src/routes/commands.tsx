@@ -1,5 +1,5 @@
 import type { Organization } from 'insomnia-api';
-import type { Environment, GrpcRequest, Request, RequestGroup, WebSocketRequest } from 'insomnia-data';
+import type { GrpcRequest, Request, RequestGroup, WebSocketRequest } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 
 import { fuzzyMatch } from '~/common/misc';
@@ -8,7 +8,7 @@ import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/commands';
 
-const { environment, grpcRequest, project, request, requestGroup } = models;
+const { grpcRequest, project, request, requestGroup } = models;
 
 export async function clientLoader(args: Route.ClientLoaderArgs) {
   const searchParams = new URL(args.request.url).searchParams;
@@ -163,13 +163,9 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 
   const allRequests = [...requests, ...grpcRequests, ...webSocketRequests];
 
-  const [baseEnvironment] = await database.find<Environment>(environment.type, {
-    parentId: workspaceId,
-  });
+  const baseEnvironment = workspaceId ? await services.environment.getByParentId(workspaceId) : undefined;
 
-  const subEnvironments = await database.find<Environment>(environment.type, {
-    parentId: baseEnvironment?._id,
-  });
+  const subEnvironments = baseEnvironment ? await services.environment.listByParentId(baseEnvironment._id) : [];
 
   const environments = baseEnvironment ? [baseEnvironment, ...subEnvironments] : [];
 

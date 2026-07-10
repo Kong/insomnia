@@ -687,7 +687,7 @@ describe('Feature: Re-sync', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     // Find the workspace and add a manual request
-    const workspaces = konnectWorkspaces(await db.find(models.workspace.type, { konnectServiceId: { $ne: null } }));
+    const workspaces = konnectWorkspaces(await insoservices.workspace.list({ konnectServiceId: { $ne: null } }));
     await insoservices.request.create({
       parentId: workspaces[0]._id,
       name: 'Manual Request',
@@ -1549,7 +1549,7 @@ describe('Feature: Collection Naming', () => {
 
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const workspaces = konnectWorkspaces(await db.find(models.workspace.type, { konnectServiceId: { $ne: null } }));
+    const workspaces = konnectWorkspaces(await insoservices.workspace.list({ konnectServiceId: { $ne: null } }));
     expect(workspaces).toHaveLength(1);
     expect(workspaces[0].name).toBe('User Service');
   });
@@ -1559,7 +1559,7 @@ describe('Feature: Collection Naming', () => {
 
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const [ws] = konnectWorkspaces(await db.find(models.workspace.type, { konnectServiceId: { $ne: null } }));
+    const [ws] = konnectWorkspaces(await insoservices.workspace.list({ konnectServiceId: { $ne: null } }));
     expect(ws.name).toBe('Gateway Service svc-uuid-2');
   });
 
@@ -1570,7 +1570,7 @@ describe('Feature: Collection Naming', () => {
     vi.stubGlobal('fetch', mockFetch([makeCp()], [makeService({ id: 'svc-uuid-1', name: 'Users API' })], []));
     const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const [ws] = konnectWorkspaces(await db.find(models.workspace.type, { konnectServiceId: { $ne: null } }));
+    const [ws] = konnectWorkspaces(await insoservices.workspace.list({ konnectServiceId: { $ne: null } }));
     expect(ws.name).toBe('Users API');
     expect(result.services.updated).toBe(1);
   });
@@ -1578,7 +1578,7 @@ describe('Feature: Collection Naming', () => {
   it('Scenario: Re-sync deletes collection when service is removed from Konnect', async () => {
     vi.stubGlobal('fetch', mockFetch([makeCp()], [makeService({ id: 'svc-uuid-1' })], []));
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
-    expect(konnectWorkspaces(await db.find(models.workspace.type, { konnectServiceId: { $ne: null } }))).toHaveLength(
+    expect(konnectWorkspaces(await insoservices.workspace.list({ konnectServiceId: { $ne: null } }))).toHaveLength(
       1,
     );
 
@@ -1587,7 +1587,7 @@ describe('Feature: Collection Naming', () => {
     const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     expect(result.services.deleted).toBe(1);
-    expect(konnectWorkspaces(await db.find(models.workspace.type, { konnectServiceId: { $ne: null } }))).toHaveLength(
+    expect(konnectWorkspaces(await insoservices.workspace.list({ konnectServiceId: { $ne: null } }))).toHaveLength(
       0,
     );
   });
@@ -1601,7 +1601,7 @@ describe('Feature: Environment Variable Mapping', () => {
 
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const envWorkspace = await insoservices.workspace.get({ scope: 'environment' });
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
     const kvNames = (env.kvPairData ?? []).map((kv: any) => kv.name);
     expect(kvNames).toContain('proxy_host');
@@ -1614,7 +1614,7 @@ describe('Feature: Environment Variable Mapping', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     // User fills in proxy_host and adds their own variable
-    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const envWorkspace = await insoservices.workspace.get({ scope: 'environment' });
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
     const updatedKvPairs = (env.kvPairData ?? []).map((kv: any) =>
       kv.name === 'proxy_host' ? { ...kv, value: 'myproxy.example.com' } : kv,
@@ -1653,7 +1653,7 @@ describe('Feature: Environment Variable Mapping', () => {
 
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const envWorkspace = await insoservices.workspace.get({ scope: 'environment' });
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
     const proxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'proxy_host');
     const grpcProxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'grpc_proxy_host');
@@ -1669,7 +1669,7 @@ describe('Feature: Environment Variable Mapping', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     // User fills in proxy_host manually
-    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const envWorkspace = await insoservices.workspace.get({ scope: 'environment' });
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
     const updatedKvPairs = (env.kvPairData ?? []).map((kv: any) =>
       kv.name === 'proxy_host' ? { ...kv, value: 'user-chosen.example.com' } : kv,
@@ -1701,7 +1701,7 @@ describe('Feature: Environment Variable Mapping', () => {
     vi.stubGlobal('fetch', mockFetch([makeCp()], [], []));
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const envWorkspace = await insoservices.workspace.get({ scope: 'environment' });
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
     const proxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'proxy_host');
     expect(proxyHost?.value).toBe('');
