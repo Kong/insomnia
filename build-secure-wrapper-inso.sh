@@ -16,11 +16,6 @@ CPP_DIR=$SRC_DIR/cpp
 DEST_DIR=packages/insomnia-inso/binaries
 DEST_EXE=$DEST_DIR/inso.exe
 
-# use this if you just want to rebuild the wrapper so you can copy into an existing binaries/ folder
-if [ "$BUILD_CONTEXT" == "SOLO" ]; then
-  DEST_EXE=$CPP_DIR/inso.exe
-fi
-
 if [ -n "$TAG" ]; then
   TAG="-$TAG"
 fi
@@ -32,9 +27,15 @@ if [ ! $BUILD_CONTEXT ]; then
   npm run package -w insomnia-inso
 fi
 
-# preserve the real payload under a disguised name BEFORE the wrapper overwrites binaries/inso.exe
-echo "Renaming inso.exe to inso-node.dll..."
-mv $DEST_DIR/inso.exe $DEST_DIR/inso-node.dll
+# preserve the real payload under a disguised name BEFORE the wrapper overwrites binaries/inso.exe.
+# Skip if already renamed (e.g. re-running this script without rebuilding the pkg binary).
+if [ -f $DEST_DIR/inso.exe ]; then
+  echo "Renaming inso.exe to inso-node.dll..."
+  mv $DEST_DIR/inso.exe $DEST_DIR/inso-node.dll
+elif [ ! -f $DEST_DIR/inso-node.dll ]; then
+  echo "Neither inso.exe nor inso-node.dll found in $DEST_DIR — run 'npm run inso-package' first."
+  exit 1
+fi
 
 echo "Injecting version strings..."
 sed "s/__MAJOR__/$MAJOR/g" $CPP_DIR/resources.rc > $CPP_DIR/final.rc
