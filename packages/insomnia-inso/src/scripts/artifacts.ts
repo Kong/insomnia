@@ -24,9 +24,9 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
         '../binaries',
         platform === 'win32' ? '-a -cf' : '-cJf',
         platform === 'win32' ? `inso-windows-${version}.zip` : `inso-linux-${process.arch}-${version}.tar.xz`,
-        // On win32, inso.exe is the secure wrapper and inso-core-<version>.exe is the real
-        // payload it launches (see build-secure-wrapper-inso.sh) — both must ship together.
-        ...(platform === 'win32' ? ['inso.exe', `inso-core-${version}.exe`] : ['inso']),
+        // On win32, inso.exe is the secure wrapper and inso-node.dll is the real payload
+        // it launches (see build-secure-wrapper-inso.sh) — both must ship together.
+        ...(platform === 'win32' ? ['inso.exe', 'inso-node.dll'] : ['inso']),
       ],
       { cwd, shell: platform === 'win32' },
     );

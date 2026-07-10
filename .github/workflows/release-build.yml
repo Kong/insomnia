@@ -259,7 +259,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia-inso/binaries/tosign" -ItemType Directory -Force
-          Get-ChildItem -Path "packages/insomnia-inso/binaries" -Filter *.exe | Move-Item -Destination "packages/insomnia-inso/binaries/tosign"
+          Get-ChildItem -Path "packages/insomnia-inso/binaries/*" -Include *.exe,inso-node.dll | Move-Item -Destination "packages/insomnia-inso/binaries/tosign"
 
       - name: Code-sign inso exe (Windows only)
         if: runner.os == 'Windows'
@@ -278,7 +278,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Get-ChildItem -Path "packages/insomnia-inso/binaries/tosign" -Filter *.exe | Move-Item -Destination "packages/insomnia-inso/binaries"
+          Get-ChildItem -Path "packages/insomnia-inso/binaries/tosign/*" -Include *.exe,inso-node.dll | Move-Item -Destination "packages/insomnia-inso/binaries"
           Remove-Item -Path "packages/insomnia-inso/binaries/tosign" -Recurse -Force
 
       # inso.exe (Windows only) is signed above via the /tosign round trip; macOS/Linux binaries

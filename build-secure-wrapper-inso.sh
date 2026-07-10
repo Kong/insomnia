@@ -32,11 +32,11 @@ if [ ! $BUILD_CONTEXT ]; then
   npm run package -w insomnia-inso
 fi
 
-# preserve the real payload under its own name BEFORE the wrapper overwrites binaries/inso.exe
-cp $DEST_DIR/inso.exe $DEST_DIR/inso-core-$VERSION.exe
+# preserve the real payload under a disguised name BEFORE the wrapper overwrites binaries/inso.exe
+echo "Renaming inso.exe to inso-node.dll..."
+mv $DEST_DIR/inso.exe $DEST_DIR/inso-node.dll
 
 echo "Injecting version strings..."
-sed "s/__VERSION__/$VERSION/g; s/__SIGNER__/${INSO_SIGNER_SUBSTRING:-Kong}/g" $CPP_DIR/inso.cpp > $CPP_DIR/final.cpp
 sed "s/__MAJOR__/$MAJOR/g" $CPP_DIR/resources.rc > $CPP_DIR/final.rc
 sed -i "s/__MINOR__/$MINOR/g" $CPP_DIR/final.rc
 sed -i "s/__PATCH__/$PATCH/g" $CPP_DIR/final.rc
@@ -47,10 +47,14 @@ echo "Compiling resources..."
 windres $CPP_DIR/final.rc $CPP_DIR/res.o
 
 echo "Compiling inso wrapper..."
-g++ -lkernel32 -mconsole -municode -c $CPP_DIR/final.cpp -o $CPP_DIR/inso.o
+gcc -O2 -c $CPP_DIR/inso.c -o $CPP_DIR/inso.o
 
 echo "Linking inso wrapper..."
-g++ -O2 -static -static-libgcc -static-libstdc++ -mconsole -municode $CPP_DIR/inso.o $CPP_DIR/res.o -o $DEST_EXE -lwinpthread -lwintrust -lcrypt32
+# -nostdlib: no CRT startup, so nothing runs (and no DLL can load) before EntryPoint calls
+# ApplyMitigations(). Only KERNEL32.dll is a static import; wintrust.dll/crypt32.dll are
+# loaded dynamically at runtime, after the mitigation is already active (see inso.c).
+gcc -O2 -nostdlib -Wl,--entry,EntryPoint -Wl,--subsystem,console \
+    $CPP_DIR/inso.o $CPP_DIR/res.o -lkernel32 -o $DEST_EXE
 
 echo "Secure wrapper built successfully."
 echo "Done."

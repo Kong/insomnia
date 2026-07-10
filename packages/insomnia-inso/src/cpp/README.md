@@ -1,6 +1,6 @@
 # Secure Wrapper
 
-Mitigates the same [local search path vulnerability](https://vuldb.com/?id.295961) as `packages/insomnia/src/cpp` (CVE-2025-1353), adapted for a console CLI: `inso.exe` sets `PROCESS_MITIGATION_IMAGE_LOAD_POLICY.PreferSystem32Images` before launching the real `inso-core-<version>.exe` payload as a child process, forwarding stdin/stdout/stderr and the child's real exit code.
+Mitigates the same [local search path vulnerability](https://vuldb.com/?id.295961) as `packages/insomnia/src/cpp` (CVE-2025-1353), adapted for a console CLI: `inso.exe` is a pure-C, `-nostdlib` binary (only KERNEL32.dll is a static import — no CRT init that could load a DLL before the mitigation is set) that sets `PROCESS_MITIGATION_IMAGE_LOAD_POLICY.PreferSystem32Images` before verifying and launching the real `inso-node.dll` payload as a child process, forwarding stdin/stdout/stderr and the child's real exit code.
 
 ## Building Locally
 
