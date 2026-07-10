@@ -48,16 +48,6 @@ export const getOnboardingTreatment = (
   return undefined;
 };
 
-/**
- * Reads the server's `is_new_signup` flag from the onboarding resource. This is the
- * sole signal for experiment participation (whether to emit assignment analytics);
- * an absent flag means "not a confirmed participant".
- */
-export const getOnboardingIsNewSignup = (onboarding: OnboardingState | null | undefined): boolean | undefined => {
-  const value = onboarding?.is_new_signup;
-  return typeof value === 'boolean' ? value : undefined;
-};
-
 const cacheKey = (accountId: string) => `${CACHE_KEY_PREFIX}:${accountId || 'anonymous'}`;
 
 /** Last-known treatment for this account, used as an offline fallback. */

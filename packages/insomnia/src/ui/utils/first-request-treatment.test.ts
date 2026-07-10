@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getFirstRequestTreatmentGroup,
-  getOnboardingIsNewSignup,
   getOnboardingTreatment,
   resolveFirstRequestTreatment,
 } from './first-request-treatment';
@@ -24,14 +23,6 @@ describe('getOnboardingTreatment', () => {
     expect(getOnboardingTreatment({ first_request_treatment: null, is_new_signup: false })).toBeUndefined();
     expect(getOnboardingTreatment(null)).toBeUndefined();
     expect(getOnboardingTreatment({ first_request_treatment: 'unknown', is_new_signup: false })).toBeUndefined();
-  });
-});
-
-describe('getOnboardingIsNewSignup', () => {
-  it('reads a boolean flag from the onboarding state, else undefined', () => {
-    expect(getOnboardingIsNewSignup({ is_new_signup: true, first_request_treatment: null })).toBe(true);
-    expect(getOnboardingIsNewSignup({ is_new_signup: false, first_request_treatment: null })).toBe(false);
-    expect(getOnboardingIsNewSignup(null)).toBeUndefined();
   });
 });
 

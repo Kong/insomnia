@@ -7,7 +7,6 @@ import {
   FIRST_REQUEST_EXPERIMENT_NAME,
   FIRST_REQUEST_GRADUATION_THRESHOLD,
   getFirstRequestTreatmentGroup,
-  getOnboardingIsNewSignup,
   isRequestThresholdLatched,
   markRequestThresholdLatched,
   readRequestCountBaseline,
@@ -69,7 +68,9 @@ export const maybeLatchRequestThreshold = async (createdRequests: number): Promi
     // the outer try/catch.
     getOnboardingState({ sessionId })
       .then(onboarding => {
-        if (getOnboardingIsNewSignup(onboarding) === true) {
+        // Only participants emit assignment analytics; a missing/failed onboarding
+        // fetch means "not a confirmed participant".
+        if (onboarding?.is_new_signup === true) {
           window.main.trackAnalyticsEvent({
             event: AnalyticsEvent.experimentAssigned,
             properties: {

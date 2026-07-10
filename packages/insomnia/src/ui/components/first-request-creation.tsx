@@ -23,7 +23,6 @@ import {
   FIRST_REQUEST_EXPERIMENT_NAME,
   type FirstRequestTreatment,
   getFirstRequestTreatmentGroup,
-  getOnboardingIsNewSignup,
   getOnboardingTreatment,
   readCachedFirstRequestTreatment,
   resolveFirstRequestTreatment,
@@ -139,7 +138,9 @@ export const FirstRequestCreation = ({
   const backendTreatment = getOnboardingTreatment(onboarding);
   // Whether this user is part of the experiment population (a genuine new sign-up),
   // per the server. Only participants emit assignment analytics; everyone else gets B.
-  const isParticipant = getOnboardingIsNewSignup(onboarding) === true;
+  // A missing onboarding resource (not yet loaded / fetch failed) means "not a
+  // confirmed participant".
+  const isParticipant = onboarding?.is_new_signup === true;
   // Last-known treatment for this account, used as an offline fallback.
   const [cachedTreatment] = useState(() => readCachedFirstRequestTreatment(userSession.accountId || ''));
   const inputRef = useRef<HTMLInputElement>(null);
