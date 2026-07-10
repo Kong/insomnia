@@ -1,0 +1,55 @@
+---
+id: COMPONENT_ID
+sidebar_label: 'ComponentLabel'
+sidebar_position: 99
+---
+
+# ComponentName
+
+One-line description of the component and what it is built on (e.g. "built on React Aria's `X` component").
+
+## Props
+
+| Prop        | Type       | Default | Description        |
+| ----------- | ---------- | ------- | ------------------ |
+| `propName`  | `type`     | `-`     | What it does       |
+| `className` | `string`   | `-`     | Additional classes |
+| `children`  | `ReactNode`| `-`     | Content            |
+
+Extends all [React Aria XProps](https://react-spectrum.adobe.com/react-aria/X.html#props).
+
+## Usage Examples
+
+### Basic
+
+```tsx live
+function Example() {
+  return <ComponentName>Hello</ComponentName>;
+}
+```
+
+### Variants
+
+```tsx live
+function Example() {
+  return (
+    <div className="flex gap-4">
+      <ComponentName variant="a">A</ComponentName>
+      <ComponentName variant="b">B</ComponentName>
+    </div>
+  );
+}
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-font`: Text color
+- `--color-bg`: Background color
+- `--hl-sm`: Subtle highlight (hover/focus)
+
+<!-- If the component carries a theme scope class (e.g. theme--dialog / theme--tooltip),
+     note it here: user themes can customize this component's colors via that class. -->
