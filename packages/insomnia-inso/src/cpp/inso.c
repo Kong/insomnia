@@ -36,12 +36,20 @@ static void PrintErr(const char *a, const char *b) {
   WriteFile(err, "\r\n", 2, &written, NULL);
 }
 
-/* Sets the same two mitigations as the GUI's secure wrapper, first thing on process start. */
+/* Sets the same two mitigations as the GUI's wrapper, plus SetDefaultDllDirectories:
+   PreferSystem32Images alone did not stop a transitively-loaded DLL (cryptnet.dll, loaded
+   internally by crypt32.dll) from loading locally — confirmed via Process Monitor. */
 static int ApplyMitigations(void) {
   PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY sigPolicy;
   PROCESS_MITIGATION_IMAGE_LOAD_POLICY imgPolicy;
   ZeroMemory(&sigPolicy, sizeof(sigPolicy));
   ZeroMemory(&imgPolicy, sizeof(imgPolicy));
+
+  /* Deliberately excludes LOAD_LIBRARY_SEARCH_APPLICATION_DIR — that's the directory this
+     vulnerability is about; it must never be part of the default search path. */
+  if (!SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32)) {
+    return 0;
+  }
 
   if (!GetProcessMitigationPolicy(GetCurrentProcess(), ProcessSignaturePolicy, &sigPolicy, sizeof(sigPolicy))) {
     return 0;
@@ -85,9 +93,8 @@ typedef CRYPT_PROVIDER_DATA *(WINAPI *PFN_WTHelperProvDataFromStateData)(HANDLE)
 typedef CRYPT_PROVIDER_SGNR *(WINAPI *PFN_WTHelperGetProvSignerFromChain)(CRYPT_PROVIDER_DATA *, DWORD, BOOL, DWORD);
 typedef DWORD(WINAPI *PFN_CertGetNameStringW)(PCCERT_CONTEXT, DWORD, DWORD, void *, LPWSTR, DWORD);
 
-/* wintrust.dll/crypt32.dll are loaded dynamically, and only after ApplyMitigations() has
-   already succeeded, so PreferSystem32Images protects these loads (and everything they
-   transitively depend on) too — no static import table entry for either DLL exists. */
+/* Loaded dynamically, after ApplyMitigations() has succeeded; LOAD_LIBRARY_SEARCH_SYSTEM32
+   forces this specific call to System32 too, on top of the process-wide default already set. */
 static int VerifySignedBy(const wchar_t *filePath, const wchar_t *expectedSignerSubstring) {
   HMODULE hWintrust, hCrypt32;
   PFN_WinVerifyTrust pWinVerifyTrust;
@@ -100,8 +107,8 @@ static int VerifySignedBy(const wchar_t *filePath, const wchar_t *expectedSigner
   LONG status;
   int trusted, signerMatches;
 
-  hWintrust = LoadLibraryW(L"wintrust.dll");
-  hCrypt32 = LoadLibraryW(L"crypt32.dll");
+  hWintrust = LoadLibraryExW(L"wintrust.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+  hCrypt32 = LoadLibraryExW(L"crypt32.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
   if (!hWintrust || !hCrypt32) {
     return 0;
   }
