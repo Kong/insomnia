@@ -3,6 +3,7 @@ import { services } from 'insomnia-data';
 import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
+import { useFetcher } from 'react-router';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
@@ -64,6 +65,8 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     responseFilterHistory.unshift(responseFilter);
     patchRequestMeta(requestId, { responseFilterHistory });
   };
+  const requestSendingFetcher = useFetcher({ key: `send-request-${activeRequest._id}` });
+  const isRequestSending = requestSendingFetcher.state !== 'idle';
 
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
@@ -276,7 +279,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         </TabPanel>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        {isExecuting && (
+        {(isExecuting || isRequestSending) && (
           <ResponseTimer
             handleCancel={() => cancelRequestById(activeRequest._id)}
             activeRequestId={activeRequestId}

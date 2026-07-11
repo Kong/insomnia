@@ -148,7 +148,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
     const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
     const connectRequestFetcher = useRequestConnectActionFetcher();
-    const sendRequestFetcher = useDebugRequestSendActionFetcher();
+    const sendRequestFetcher = useDebugRequestSendActionFetcher({ key: `send-request-${activeRequest._id}` });
 
     const { updateTabById } = useInsomniaTabContext();
 
