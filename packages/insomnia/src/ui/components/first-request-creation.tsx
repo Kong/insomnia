@@ -332,18 +332,20 @@ export const FirstRequestCreation = ({
   useEffect(() => {
     let isActive = true;
 
-    getCurrentSessionId()
-      .then(sessionId => (sessionId ? getOnboardingState({ sessionId }) : null))
-      .catch(error => {
+    const loadOnboardingState = async () => {
+      let state: UserOnboarding | null = null;
+      try {
+        const sessionId = await getCurrentSessionId();
+        state = sessionId ? await getOnboardingState({ sessionId }) : null;
+      } catch (error) {
         console.error('Failed to load onboarding state', error);
-        return null;
-      })
-      .then(state => {
-        if (isActive) {
-          setOnboarding(state);
-          setOnboardingLoaded(true);
-        }
-      });
+      }
+      if (isActive) {
+        setOnboarding(state);
+        setOnboardingLoaded(true);
+      }
+    };
+    loadOnboardingState();
 
     return () => {
       isActive = false;
