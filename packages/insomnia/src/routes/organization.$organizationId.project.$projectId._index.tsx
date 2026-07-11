@@ -141,7 +141,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner = organization && userSession.accountId && Boolean(organization.is_owner);
+  const isUserOwner = Boolean(organization?.is_owner);
   const collectionItems = useMemo(
     () =>
       localFiles
