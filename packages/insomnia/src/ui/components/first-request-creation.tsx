@@ -246,6 +246,7 @@ export const FirstRequestCreation = ({
 
   const handleCreateRequest = async () => {
     if (!trimmedInput) {
+      handleCreateBlankRequest();
       return;
     }
     const workspaceId = await ensureWorkspaceId();
@@ -300,6 +301,13 @@ export const FirstRequestCreation = ({
   useEffect(() => {
     setSelectOpen(false);
   }, [selectedCollectionId]);
+
+  // Focus the request input whenever the pane is (re-)shown for a project. A plain
+  // `autoFocus` attribute only fires on the input's initial DOM mount, so it misses
+  // client-side navigations between projects that reuse this component instance.
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [projectId]);
 
   // Load the lifetime created-request count, used to decide when to latch the
   // server-side graduation threshold (see maybeLatchRequestThreshold for how the
@@ -543,7 +551,6 @@ export const FirstRequestCreation = ({
             <MethodSelector method={method} onChange={setMethod} className="h-6.5" />
             <input
               ref={inputRef}
-              autoFocus
               aria-label="Request endpoint or cURL input"
               className="h-6.5 min-w-0 flex-1 bg-transparent text-[12px]/[18px] font-normal"
               placeholder="Enter a URL or paste cURL"
@@ -602,7 +609,7 @@ export const FirstRequestCreation = ({
               primary
               size="md"
               className="h-6.5 rounded-sm px-2 text-[12px]/[18px] font-[590]"
-              isDisabled={!trimmedInput || isCreatingRequest}
+              isDisabled={isCreatingRequest}
               onPress={() => handleCreateRequest()}
             >
               <span>{createButtonLabel}</span>
