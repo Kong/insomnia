@@ -1,8 +1,6 @@
 import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { pipeline } from 'node:stream/promises';
-import zlib from 'node:zlib';
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
@@ -44,6 +42,7 @@ import {
   exportWorkspacesHAR,
 } from '~/main/har';
 import { convert } from '~/main/importers/convert';
+import { writeResponseBodyToFile } from '~/main/ipc/write-response-body-to-file';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
@@ -142,43 +141,6 @@ const readDir = async (_: unknown, options: { path: string }) => {
       .filter(file => file.type !== 'other');
   } catch (err) {
     throw new Error(`Failed to read directory: ${err}`);
-  }
-};
-
-const writeResponseBodyToFile = async (
-  _: unknown,
-  options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
-) => {
-  // Validate sourcePath is within the expected responses directory to prevent a
-  // compromised renderer from using this handler to read arbitrary files on disk.
-  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
-  const allowedResponsesDir = path.join(userdataDirectory, 'responses');
-  const resolvedSource = path.resolve(options.sourcePath);
-  if (!resolvedSource.startsWith(allowedResponsesDir + path.sep) || !resolvedSource.endsWith('.response')) {
-    throw new Error(
-      'writeResponseBodyToFile: sourcePath is outside the allowed responses directory or does not end in .response',
-    );
-  }
-
-  try {
-    const dir = path.dirname(options.destinationPath);
-    await fs.promises.mkdir(dir, { recursive: true });
-
-    await (options.bodyCompression === 'zip'
-      ? pipeline(
-          fs.createReadStream(options.sourcePath),
-          zlib.createGunzip(),
-          fs.createWriteStream(options.destinationPath),
-        )
-      : fs.promises.copyFile(options.sourcePath, options.destinationPath));
-
-    return options.destinationPath;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-
-    throw new Error(String(err));
   }
 };
 
@@ -466,7 +428,7 @@ export function registerMainHandlers() {
     invalidateCompiledRulesetCache(options.projectId);
     return writeCompiledRuleset(options.projectId, options.rulesetContent);
   });
-  ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
+  ipcMainHandle('writeResponseBodyToFile', (_, options) => writeResponseBodyToFile(options));
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
   });

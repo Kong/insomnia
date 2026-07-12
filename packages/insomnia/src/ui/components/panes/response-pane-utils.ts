@@ -15,7 +15,7 @@ export async function downloadResponseBody(
     | null
     | undefined,
   prettify: boolean,
-  getBodyBuffer?: () => Promise<Uint8Array | null>,
+  getBodyBuffer?: () => Promise<Uint8Array | string | null>,
 ) {
   if (!activeResponse || !activeRequest) {
     console.warn('Nothing to download');
@@ -35,7 +35,7 @@ export async function downloadResponseBody(
   }
   let bodyBuffer = activeResponse.bodyBuffer ?? null;
 
-  if (!bodyBuffer && !prettify && activeResponse.bodyPath) {
+  if (!prettify && activeResponse.bodyPath) {
     await window.main.writeResponseBodyToFile({
       sourcePath: activeResponse.bodyPath,
       destinationPath: outputPath,
@@ -46,9 +46,16 @@ export async function downloadResponseBody(
 
   if (!bodyBuffer && getBodyBuffer) {
     const diskBodyBuffer = await getBodyBuffer();
+    if (typeof diskBodyBuffer === 'string') {
+      throw new Error(diskBodyBuffer);
+    }
     if (diskBodyBuffer) {
       bodyBuffer = diskBodyBuffer;
     }
+  }
+
+  if (!bodyBuffer && activeResponse.bodyPath) {
+    throw new Error('Failed to read response body from filesystem');
   }
 
   if (prettify && contentType.includes('json')) {

@@ -73,12 +73,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         activeRequest,
         activeResponse,
         prettify,
-        activeResponse
-          ? async () => {
-              const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
-              return typeof bodyBuffer === 'string' ? null : bodyBuffer;
-            }
-          : undefined,
+        activeResponse ? () => services.helpers.getResponseBodyBuffer(activeResponse) : undefined,
       ),
     [activeRequest, activeResponse],
   );
