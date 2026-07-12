@@ -1,11 +1,13 @@
 import classnames from 'classnames';
 import clone from 'clone';
-import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from 'insomnia-data';
+import type { BaseModel, CloudProviderCredential, PluginData, Request, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import { getAppBundlePlugins } from '~/common/constants';
+import { generateId } from '~/common/misc';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
 import * as templateUtils from '~/common/templating/utils';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
@@ -27,6 +29,10 @@ const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
 const cloudCredentialModelType = models.cloudCredential.type;
+const vaultPluginName =
+  getAppBundlePlugins()
+    .map(p => p.name)
+    .find(name => name.includes('insomnia-plugin-external-vault')) || '@kong/insomnia-plugin-external-vault';
 
 interface Props {
   defaultValue: string;
@@ -42,6 +48,7 @@ interface State {
   tagDefinitions: NunjucksParsedTag[];
   loadingDocs: boolean;
   allDocs: Record<string, BaseModel[]>;
+  vaultPluginData: PluginData[];
   rendering: boolean;
   preview: string;
   error: string;
@@ -76,6 +83,7 @@ export const TagEditor: FC<Props> = props => {
     preview: '',
     error: '',
     variables: [],
+    vaultPluginData: [],
   });
   const { handleRender, handleGetRenderContext } = useNunjucks({ renderContext: { purpose: 'preview' } });
 
@@ -97,8 +105,14 @@ export const TagEditor: FC<Props> = props => {
       (requestDocs || []).concat(requestGroupDocs || []),
       props.workspace._id,
     );
-    setState(state => ({ ...state, allDocs, loadingDocs: false }));
+    const vaultPluginData = await services.pluginData.all(vaultPluginName);
+    setState(state => ({ ...state, allDocs, vaultPluginData, loadingDocs: false }));
   }, [props.workspace]);
+
+  const refreshVaultPluginData = useCallback(async () => {
+    const vaultPluginData = await services.pluginData.all(vaultPluginName);
+    setState(state => ({ ...state, vaultPluginData }));
+  }, []);
 
   reactUse.useMount(async () => {
     const activeTagData = templateUtils.tokenizeTag(props.defaultValue);
@@ -397,6 +411,20 @@ export const TagEditor: FC<Props> = props => {
           } else if (argDefinition.type === 'model') {
             const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
             let targetDoc = state.allDocs[modelName];
+            const getModelValue = () => {
+              if (typeof strValue === 'string') {
+                if (modelName === cloudCredentialModelType) {
+                  return models.cloudCredential.isCloudCredentialId(strValue)
+                    ? // legacy version to save cloud credential id in tag
+                      strValue
+                    : // new version to save cloud credential id in pluginData, and each tag will have a unique id as key to get the cloud credential id as value from pluginData
+                      state.vaultPluginData.find(data => data.key === strValue)?.value || '';
+                }
+                return strValue;
+              }
+              return 'unknown';
+            };
+
             // hard coded here to filter cloud credential data by the provider
             if (modelName === cloudCredentialModelType) {
               const providerNameFromArgs = activeTagData.args[0].value;
@@ -407,7 +435,31 @@ export const TagEditor: FC<Props> = props => {
                 <option>Loading...</option>
               </select>
             ) : (
-              <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
+              <select
+                value={getModelValue()}
+                onChange={event => {
+                  if (modelName === cloudCredentialModelType) {
+                    const selectedCredentialId = event.currentTarget.value;
+                    let tagUniqueId = strValue;
+                    if (models.cloudCredential.isCloudCredentialId(strValue) || !strValue) {
+                      // legacy version to save cloud credential id in tag or default empty value, generate a unique id as key to save in pluginData
+                      tagUniqueId = generateId('externalVaultTag');
+                      let argIndex = -1;
+                      if (event.currentTarget.parentNode instanceof HTMLElement) {
+                        const index = event.currentTarget.parentNode?.dataset.argIndex;
+                        argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
+                      }
+                      // update the tag arg value to the unique id so that we can use it as key to get the selected cloud credential id from pluginData
+                      updateArg(tagUniqueId, argIndex);
+                    }
+                    // Update the link between the unique id and the selected cloud credential id in pluginData
+                    return services.pluginData
+                      .upsertByKey(vaultPluginName, tagUniqueId, selectedCredentialId)
+                      .then(refreshVaultPluginData);
+                  }
+                  return handleChange(event);
+                }}
+              >
                 <option value="n/a">-- Select Item --</option>
                 {targetDoc.map((doc: any) => {
                   let namePrefix: string | null = null;
