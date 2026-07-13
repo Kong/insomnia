@@ -119,6 +119,20 @@ describe('test Variables object', () => {
     folders.get('folder2').environment.set('value', 'folder1ValueOverride');
     expect(variables.get('value')).toEqual('folder1ValueOverride');
   });
+
+  it.each([0, '', false])('get returns a falsy local value (%s) instead of falling through to lower-precedence scopes', value => {
+    const variables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { count: 'baseGlobals-value' }),
+      globalVars: new Environment('globals', {}),
+      environmentVars: new Environment('environments', {}),
+      collectionVars: new Environment('baseEnvironment', {}),
+      iterationDataVars: new Environment('iterationData', {}),
+      folderLevelVars: [],
+      localVars: new Environment('local', { count: value }),
+    });
+
+    expect(variables.get('count')).toBe(value);
+  });
 });
 
 describe('Environment serialization', () => {
@@ -133,12 +147,12 @@ describe('set rejects null/undefined', () => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const env = new Environment('test', {});
     env.set('key', null);
-    expect(warnSpy).toHaveBeenCalledWith('Variable \"key\" has a null or undefined value');
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null, undefined, or NaN value');
     expect(env.has('key')).toBe(false);
     warnSpy.mockRestore();
   });
 
-  it.each([null, undefined])('Variables.set warns and skips on %s', value => {
+  it.each([null, undefined, Number.NaN])('Variables.set warns and skips on %s', value => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const variables = new Variables({
       baseGlobalVars: new Environment('baseGlobals', {}),
@@ -150,7 +164,7 @@ describe('set rejects null/undefined', () => {
       localVars: new Environment('local', {}),
     });
     variables.set('key', value);
-    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null or undefined value');
+    expect(warnSpy).toHaveBeenCalledWith('Variable \"key\" has a null, undefined, or NaN value');
     expect(variables.get('key')).toBeUndefined();
     warnSpy.mockRestore();
   });

@@ -81,15 +81,15 @@ export class Environment {
 
   /**
    * Sets a variable in the key-value store with the specified name and value.
-   * If the provided value is `null` or `undefined`, a warning is logged and the variable is not set.
+   * If the provided value is `null`, `undefined`, or `NaN`, a warning is logged and the variable is not set.
    *
    * @param variableName - The name of the variable to set.
    * @param variableValue - The value to assign to the variable. Can be a boolean, number, string, undefined, or null.
-   *                        If `null` or `undefined`, the variable will not be set, and a warning will be logged.
+   *                        If `null`, `undefined`, or `NaN`, the variable will not be set, and a warning will be logged.
    */
   set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
-    if (variableValue === null || variableValue === undefined) {
-      getExistingConsole().warn(`Variable "${variableName}" has a null or undefined value`);
+    if (variableValue === null || variableValue === undefined || Number.isNaN(variableValue)) {
+      getExistingConsole().warn(`Variable "${variableName}" has a null, undefined, or NaN value`);
       return;
     }
     this.kvs.set(variableName, variableValue);
@@ -285,8 +285,7 @@ export class Variables {
    * @returns The value of the variable if found, otherwise undefined
    */
   get = (variableName: string) => {
-    let finalVal: boolean | number | string | object | undefined;
-    [
+    const scope = [
       this.localVars,
       mergeFolderLevelVars(this.folderLevelVars),
       this.iterationDataVars,
@@ -294,27 +293,22 @@ export class Variables {
       this.collectionVars,
       this.globalVars,
       this.baseGlobalVars,
-    ].forEach(vars => {
-      const value = vars.get(variableName);
-      if (!finalVal && value) {
-        finalVal = value;
-      }
-    });
+    ].find(vars => vars.has(variableName));
 
-    return finalVal;
+    return scope?.get(variableName);
   };
 
   /**
    * Sets a local variable with the specified name and value.
-   * If the provided value is `null` or `undefined`, a warning is logged and the variable is not set.
+   * If the provided value is `null`, `undefined`, or `NaN`, a warning is logged and the variable is not set.
    *
    * @param variableName - The name of the variable to set.
    * @param variableValue - The value to assign to the variable. Can be a boolean, number, string, undefined, or null.
-   *                        If `null` or `undefined`, the variable will not be set and a warning will be logged.
+   *                        If `null`, `undefined`, or `NaN`, the variable will not be set and a warning will be logged.
    */
   set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
-    if (variableValue === null || variableValue === undefined) {
-      getExistingConsole().warn(`Variable "${variableName}" has a null or undefined value`);
+    if (variableValue === null || variableValue === undefined || Number.isNaN(variableValue)) {
+      getExistingConsole().warn(`Variable "${variableName}" has a null, undefined, or NaN value`);
       return;
     }
 
