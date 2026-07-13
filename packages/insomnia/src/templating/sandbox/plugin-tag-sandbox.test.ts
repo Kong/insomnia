@@ -9,13 +9,13 @@ import {
   createMapBridge,
   filterByCapabilities,
   type HostBridge,
-  resolveTemplateTagCapabilities,
   TEMPLATE_TAG_BASELINE_CAPABILITIES,
 } from './host-bridge';
 import { IN_SANDBOX_BOOTSTRAP } from './in-sandbox-bootstrap';
 import type { ContextEnvelope } from './marshal';
-import { resolveTemplateTagModules, SANDBOX_MODULES, TEMPLATE_TAG_BASELINE_MODULES } from './module-registry';
+import { SANDBOX_MODULES, TEMPLATE_TAG_BASELINE_MODULES } from './module-registry';
 import { type HostCrypto, runTagInSandbox } from './plugin-tag-sandbox';
+import { resolveTemplateTagCapabilities, resolveTemplateTagModules } from './surface-profiles';
 
 // Real node:crypto-backed host crypto, identical to what main provides.
 const nodeHostCrypto: HostCrypto = {
@@ -879,7 +879,9 @@ describe('capability-aware context construction (C2)', () => {
   });
 
   it('attaches app + fs-read + credentials branches only when their capability is granted', async () => {
-    const s = await shape(resolveTemplateTagCapabilities(['app', 'fs-read', 'credentials']));
+    // Capabilities passed straight into the envelope (as a bundle plugin's ALL_CAPABILITIES grant
+    // would) — this tests C2's shape gating, independent of the P1 template-tag profile ceiling.
+    const s = await shape([...TEMPLATE_TAG_BASELINE_CAPABILITIES, 'app', 'fs-read', 'credentials']);
     expect(s.app).toBe('object');
     expect(s.openInBrowser).toBe('function'); // openInBrowser is under the app capability
     expect(s.readFile).toBe('function');
@@ -887,8 +889,8 @@ describe('capability-aware context construction (C2)', () => {
   });
 
   // The two layers must never disagree: a context branch is attached iff its bridge path's
-  // capability (C1's BRIDGE_PATH_CAPABILITIES) is granted. For each non-baseline branch, granting
-  // its bridge-path capability makes it present; the baseline-only grant leaves it absent.
+  // capability (C1's BRIDGE_PATH_CAPABILITIES) is in the envelope grant. Grant each capability
+  // directly (bypassing the P1 profile) so this checks C2 shape ↔ C1 map, not profile ceilings.
   it('context shape agrees with the bridge capability map (C1 ↔ C2)', async () => {
     const branchToBridgePath: Record<string, string> = {
       network: 'network.sendRequest',
@@ -903,8 +905,8 @@ describe('capability-aware context construction (C2)', () => {
       expect(capability, `${bridgePath} must be a mapped bridge path`).toBeTruthy();
       // Absent under baseline (none of these capabilities are baseline)…
       expect(baseline[branch], `${branch} should be absent without ${capability}`).toBe('undefined');
-      // …present once its capability is granted.
-      const granted = await shape(resolveTemplateTagCapabilities([capability]));
+      // …present once its capability is in the grant.
+      const granted = await shape([...TEMPLATE_TAG_BASELINE_CAPABILITIES, capability]);
       expect(granted[branch], `${branch} should be present with ${capability}`).not.toBe('undefined');
     }
   });
