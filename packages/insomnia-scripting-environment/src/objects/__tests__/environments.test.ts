@@ -133,7 +133,7 @@ describe('set rejects null/undefined', () => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const env = new Environment('test', {});
     env.set('key', null);
-    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null value');
+    expect(warnSpy).toHaveBeenCalledWith('Variable \"key\" has a null or undefined value');
     expect(env.has('key')).toBe(false);
     warnSpy.mockRestore();
   });
