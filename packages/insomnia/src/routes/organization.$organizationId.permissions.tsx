@@ -35,7 +35,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     };
   }
 
-  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
   const organization = organizations.find(o => o.id === organizationId);
 
   if (!organization) {

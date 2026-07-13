@@ -30,6 +30,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import type { MergeConflict } from '../../../sync/types';
 import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
@@ -570,9 +571,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       ]
     : [];
 
-  const repoPath = gitRepository?._id
-    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
-    : '';
+  const repoPath = gitRepository?._id ? resolveGitRepoBaseDir(gitRepository) : '';
 
   const gitSyncActions: {
     id: string;

@@ -41,15 +41,15 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { Workspace, WorkspaceMeta } from 'insomnia-data';
+import type { BaseModel, Workspace, WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import YAML from 'yaml';
 
 import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
+import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -82,6 +82,19 @@ function contentHash(content: string): string {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
+/**
+ * Path-traversal guard: returns true when `absPath` resolves outside `repoDir`.
+ *
+ * A plain `rel.startsWith('..')` check would also reject legitimate in-repo
+ * paths whose relative path merely begins with `..` (e.g. a file named
+ * `..foo.yaml`). Only treat the path as an escape when the relative path is
+ * exactly `..` or a `..` path segment (`../...`).
+ */
+function isPathOutsideRepo(repoDir: string, absPath: string): boolean {
+  const rel = path.relative(repoDir, absPath);
+  return rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel);
+}
+
 export interface WatcherNotifier {
   onDbSynced: () => void;
   onProblemsChanged: (payload: FileProblemsChangedPayload) => void;
@@ -94,10 +107,13 @@ class RepoFileWatcher {
   private readonly notifier: WatcherNotifier;
 
   private fsWatchers: fs.FSWatcher[] = [];
+  private fsWatchActive = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  /** Debounce timer for the DB→disk outbound flush */
-  private flushDebounce: ReturnType<typeof setTimeout> | null = null;
+  /** Per-workspace debounce timers for the DB→disk outbound flush */
+  private flushDebounces = new Map<string, ReturnType<typeof setTimeout>>();
+  /** Debounce timer for the project-level lint ruleset (.spectral.yaml) flush */
+  private flushRulesetDebounce: ReturnType<typeof setTimeout> | null = null;
   /** Set to true by stop() so async callbacks can bail out cleanly */
   private stopped = false;
 
@@ -121,6 +137,9 @@ class RepoFileWatcher {
    * Used to detect gitFilePath renames so the old file can be removed.
    */
   private lastKnownGitFilePath = new Map<string, string>();
+
+  /** In-memory docId → workspaceId lookup to avoid repeated DB traversals. */
+  private docToWorkspace = new Map<string, string>();
 
   /**
    * Files that could not be imported due to conflicts or parse errors.
@@ -190,8 +209,12 @@ class RepoFileWatcher {
       clearTimeout(t);
     }
 
-    if (this.flushDebounce) {
-      clearTimeout(this.flushDebounce);
+    for (const t of this.flushDebounces.values()) {
+      clearTimeout(t);
+    }
+
+    if (this.flushRulesetDebounce) {
+      clearTimeout(this.flushRulesetDebounce);
     }
   }
 
@@ -207,10 +230,15 @@ class RepoFileWatcher {
       return;
     }
 
-    // Cancel any pending debounced flush — we're doing it immediately
-    if (this.flushDebounce) {
-      clearTimeout(this.flushDebounce);
-      this.flushDebounce = null;
+    // Cancel any pending debounced flushes — we're doing it immediately
+    for (const timer of this.flushDebounces.values()) {
+      clearTimeout(timer);
+    }
+    this.flushDebounces.clear();
+
+    if (this.flushRulesetDebounce) {
+      clearTimeout(this.flushRulesetDebounce);
+      this.flushRulesetDebounce = null;
     }
 
     // Cancel all pending debounced imports and enqueue them immediately.
@@ -222,7 +250,7 @@ class RepoFileWatcher {
       this.queue.enqueue(() => this.importFile(absPath));
     }
 
-    this.queue.enqueue(() => this.flushProjectWorkspacesToDisk());
+    this.queue.enqueue(() => this.flushWorkspacesToDisk());
     this.queue.enqueue(() => this.flushProjectLintRulesetToDisk());
     await this.queue.waitUntilDone();
   }
@@ -241,7 +269,7 @@ class RepoFileWatcher {
    * `importAllFiles` skips them (they are already up-to-date).
    */
   private async flushNewerDbWorkspacesToDisk(): Promise<void> {
-    const workspaces = await services.workspace.findByParentId(this.projectId);
+    const workspaces = await services.workspace.listByParentId(this.projectId);
 
     await Promise.all(
       workspaces.map(async workspace => {
@@ -251,8 +279,7 @@ class RepoFileWatcher {
           const absPath = path.resolve(this.repoDir, gitFilePath);
 
           // Path-traversal guard
-          const rel = path.relative(this.repoDir, absPath);
-          if (rel.startsWith('..') || path.isAbsolute(rel)) return;
+          if (isPathOutsideRepo(this.repoDir, absPath)) return;
 
           // Get the most recently modified DB document in this workspace\u2019s tree
           const allDocs = await db.getWithDescendants(workspace);
@@ -287,8 +314,7 @@ class RepoFileWatcher {
           const hash = contentHash(yamlContent);
           const normalised = path.normalize(absPath);
           this.lastWrittenHash.set(normalised, hash);
-          const newStat = await fs.promises.stat(absPath);
-          this.lastSyncMtime.set(normalised, newStat.mtimeMs);
+          this.lastSyncMtime.set(normalised, Date.now() + 1);
 
           console.log(
             '[repo-file-watcher] DB newer than disk for workspace',
@@ -315,6 +341,17 @@ class RepoFileWatcher {
    */
   async importAllFiles(options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
     if (this.stopped) {
+      return;
+    }
+
+    // If the whole repo folder is gone (deleted/moved/unmounted), an empty disk
+    // must NOT be read as "every file was deleted" — that would wipe the DB.
+    // Treat the repo as temporarily unavailable and skip syncing.
+    if (!(await this.repoDirIsAvailable())) {
+      console.warn(
+        '[repo-file-watcher] Repo directory unavailable — skipping import to avoid data loss:',
+        this.repoDir,
+      );
       return;
     }
 
@@ -348,39 +385,103 @@ class RepoFileWatcher {
         return;
       }
 
-      const hasSyncableChange = changes.some(([, doc]) => models.canSync(doc));
-      if (!hasSyncableChange) {
+      const affectedWorkspaceIds = new Set<string>();
+      let lintRulesetChanged = false;
+
+      for (const [, doc] of changes) {
+        if (!models.canSync(doc)) {
+          continue;
+        }
+        // The project lint ruleset is parented to the project, not a workspace.
+        // It flushes to .spectral.yaml on its own — keep it out of the workspace
+        // resolution below so it doesn't fall into the "flush all" branch.
+        if (models.projectLintRuleset.isProjectLintRuleset(doc)) {
+          if (doc.parentId === this.projectId) {
+            lintRulesetChanged = true;
+          }
+          continue;
+        }
+        const workspaceId = this.resolveWorkspaceId(doc);
+        if (workspaceId) {
+          affectedWorkspaceIds.add(workspaceId);
+        } else {
+          // Cannot determine workspace — conservatively flush all known workspaces
+          for (const wsId of this.lastKnownGitFilePath.keys()) {
+            affectedWorkspaceIds.add(wsId);
+          }
+          break;
+        }
+      }
+
+      if (lintRulesetChanged) {
+        // Debounce: coalesce rapid ruleset edits into one flush
+        if (this.flushRulesetDebounce) {
+          clearTimeout(this.flushRulesetDebounce);
+        }
+        this.flushRulesetDebounce = setTimeout(() => {
+          this.flushRulesetDebounce = null;
+          this.queue.enqueue(() => this.flushProjectLintRulesetToDisk());
+        }, DEBOUNCE_MS);
+      }
+
+      if (affectedWorkspaceIds.size === 0) {
         return;
       }
 
-      // Debounce: coalesce rapid bursts into one flush
-      if (this.flushDebounce) {
-        clearTimeout(this.flushDebounce);
+      for (const workspaceId of affectedWorkspaceIds) {
+        const existing = this.flushDebounces.get(workspaceId);
+        if (existing) {
+          clearTimeout(existing);
+        }
+        const timer = setTimeout(() => {
+          this.flushDebounces.delete(workspaceId);
+          this.queue.enqueue(() => this.flushWorkspacesToDisk(new Set([workspaceId])));
+        }, DEBOUNCE_MS);
+        this.flushDebounces.set(workspaceId, timer);
       }
-      this.flushDebounce = setTimeout(() => {
-        this.flushDebounce = null;
-        this.queue.enqueue(() => this.flushProjectWorkspacesToDisk());
-        this.queue.enqueue(() => this.flushProjectLintRulesetToDisk());
-      }, DEBOUNCE_MS);
     });
   }
 
+  private resolveWorkspaceId(doc: BaseModel): string | undefined {
+    if (models.workspace.isWorkspace(doc)) {
+      return doc.parentId === this.projectId ? doc._id : undefined;
+    }
+    const cached = this.docToWorkspace.get(doc._id);
+    if (cached) return cached;
+    // Direct child of a known workspace?
+    if (this.lastKnownGitFilePath.has(doc.parentId)) {
+      this.docToWorkspace.set(doc._id, doc.parentId);
+      return doc.parentId;
+    }
+    // Grandchild — parent's workspace is already in the map
+    const parentWs = this.docToWorkspace.get(doc.parentId);
+    if (parentWs) {
+      this.docToWorkspace.set(doc._id, parentWs);
+      return parentWs;
+    }
+    return undefined;
+  }
+
   /**
-   * Re-export every workspace in the project to its on-disk YAML file.
+   * Re-export workspaces in the project to their on-disk YAML files.
+   * When `workspaceIds` is provided, only those workspaces are processed.
    * Skips writes when the exported content is identical to what was last
    * written (content-hash dedup), or when the target file currently has a
    * blocking import problem that the user must resolve first.
    */
-  private async flushProjectWorkspacesToDisk(): Promise<void> {
-    const entries = await this.getWorkspacesWithMeta();
+  private async flushWorkspacesToDisk(workspaceIds?: Set<string>): Promise<void> {
+    const entries = await this.getWorkspacesWithMeta(workspaceIds);
     const currentWorkspaceIds = new Set(entries.map(({ workspace }) => workspace._id));
 
-    // Find deleted workspaces and remove their files from disk.
-    for (const [workspaceId, absPath] of Array.from(this.lastKnownGitFilePath.entries())) {
+    // Find deleted workspaces within scope and remove their files from disk.
+    const scopedIds = workspaceIds ?? new Set(this.lastKnownGitFilePath.keys());
+    for (const [workspaceId, absPath] of this.lastKnownGitFilePath) {
+      if (!scopedIds.has(workspaceId)) {
+        continue;
+      }
       if (currentWorkspaceIds.has(workspaceId)) {
         continue;
       }
-
       await this.removeWorkspaceFileFromDisk(workspaceId, absPath);
     }
 
@@ -391,6 +492,10 @@ class RepoFileWatcher {
 
       const gitFilePath: string = meta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
       const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
+
+      if (isPathOutsideRepo(this.repoDir, absPath)) {
+        continue;
+      }
 
       if (this.hasProblem(absPath)) {
         continue;
@@ -409,7 +514,6 @@ class RepoFileWatcher {
 
         const hash = contentHash(yamlContent);
 
-        // Skip writing if the content hasn't changed
         if (this.lastWrittenHash.get(absPath) === hash) {
           continue;
         }
@@ -417,16 +521,14 @@ class RepoFileWatcher {
         await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
         await fs.promises.writeFile(absPath, yamlContent, 'utf8');
 
-        // New file written successfully — now safe to remove the old one
         if (isRename) {
           await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
         }
 
-        // Record hash + mtime so the FS→DB side skips this echo
         this.lastWrittenHash.set(absPath, hash);
         this.lastKnownGitFilePath.set(workspace._id, absPath);
-        const stat = await fs.promises.stat(absPath);
-        this.lastSyncMtime.set(absPath, stat.mtimeMs);
+        // Use Date.now() — always >= the actual mtime of the file just written, saves a stat() syscall
+        this.lastSyncMtime.set(absPath, Date.now());
       } catch (err) {
         console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
       }
@@ -443,6 +545,10 @@ class RepoFileWatcher {
 
     try {
       if (!ruleset) {
+        if (this.hasProblem(absPath)) {
+          return;
+        }
+
         // Ruleset removed from the DB — remove the file if we were tracking it.
         if (this.lastWrittenHash.has(absPath) || this.lastSyncMtime.has(absPath)) {
           await fs.promises.rm(absPath, { force: true });
@@ -450,6 +556,16 @@ class RepoFileWatcher {
           this.lastSyncMtime.delete(absPath);
         }
         return;
+      }
+
+      // A DB ruleset only exists when it was validated (UI upload or a valid
+      // git import), so any problem still recorded for this path is stale —
+      // e.g. a previously-invalid committed file that the user has now replaced
+      // via upload. Clear it here, because the fs.watch echo of the write below
+      // is dedup-skipped and never reaches importFile's clearProblem path.
+      if (this.hasProblem(absPath)) {
+        this.clearProblem(absPath);
+        this.notifyRenderer();
       }
 
       const hash = contentHash(ruleset.rulesetContent);
@@ -481,16 +597,27 @@ class RepoFileWatcher {
       });
 
       watcher.on('error', err => {
-        console.warn('[repo-file-watcher] fs.watch error:', err);
+        console.warn('[repo-file-watcher] fs.watch error, falling back to polling:', err);
+        // The watcher can no longer be relied upon for fs events. Drop the
+        // fs.watch flag and start the polling fallback so we don't end up with
+        // neither reliable events nor polling.
+        this.fsWatchActive = false;
+        this.startPolling();
       });
 
       this.fsWatchers.push(watcher);
+      this.fsWatchActive = true;
     } catch (err) {
       console.warn('[repo-file-watcher] Could not start fs.watch, relying on polling only:', err);
     }
   }
 
   private startPolling(): void {
+    // Skip when fs.watch is active (polling is only a fallback), when polling is
+    // already running, or after the watcher has been stopped.
+    if (this.fsWatchActive || this.pollTimer || this.stopped) {
+      return;
+    }
     this.pollTimer = setInterval(() => {
       this.pollDirectory(this.repoDir).catch(err => {
         console.warn('[repo-file-watcher] poll error:', err);
@@ -499,25 +626,37 @@ class RepoFileWatcher {
   }
 
   private async pollDirectory(dir: string): Promise<void> {
-    const yamlFiles = await this.collectYamlFiles(dir);
-    const seenPaths = new Set<string>(yamlFiles);
+    // Don't sync when the repo folder is gone — see importAllFiles. This prevents
+    // the deletion-detection loop below from wiping the DB when the folder was
+    // deleted/unmounted rather than its files individually removed.
+    if (!(await this.repoDirIsAvailable())) {
+      return;
+    }
 
-    for (const absPath of yamlFiles) {
+    // Check known files for mtime changes or deletions — no readdir
+    for (const [absPath, lastMtime] of this.lastSyncMtime) {
       try {
-        const stat = await fs.promises.stat(absPath);
-        const lastMtime = this.lastSyncMtime.get(absPath) ?? 0;
+        // Use lstat (not stat) so symlinks are detected rather than followed.
+        // importFile/readIfChanged ignore symlinks, so following the link here
+        // would compare the target's mtime and enqueue an import that always
+        // skips — repeated every poll. Skip symlinks to suppress that churn.
+        const stat = await fs.promises.lstat(absPath);
+        if (stat.isSymbolicLink()) {
+          continue;
+        }
         if (stat.mtimeMs > lastMtime) {
           this.queue.enqueue(() => this.importFile(absPath));
         }
       } catch {
-        // File may have been removed between readdir and stat
+        this.queue.enqueue(() => this.importFile(absPath));
       }
     }
 
-    // Detect deletions: check tracked files that no longer exist on disk
-    for (const [trackedPath] of this.lastSyncMtime) {
-      if (!seenPaths.has(trackedPath)) {
-        this.queue.enqueue(() => this.importFile(trackedPath));
+    // Scan once for new yaml files not yet tracked
+    const yamlFiles = await this.collectYamlFiles(dir);
+    for (const absPath of yamlFiles) {
+      if (!this.lastSyncMtime.has(absPath)) {
+        this.queue.enqueue(() => this.importFile(absPath));
       }
     }
   }
@@ -547,20 +686,6 @@ class RepoFileWatcher {
     );
   }
 
-  private isSpectralRulesetFile(normalisedPath: string, content: string): boolean {
-    if (!this.isSpectralRulesetPath(normalisedPath)) {
-      return false;
-    }
-    try {
-      const parsedContent = YAML.parse(content);
-      return (
-        !!parsedContent && typeof parsedContent === 'object' && ('extends' in parsedContent || 'rules' in parsedContent)
-      );
-    } catch {
-      return false;
-    }
-  }
-
   /**
    * Read a YAML file from disk and import its documents into the DB.
    *
@@ -584,7 +709,21 @@ class RepoFileWatcher {
     this.lastWrittenHash.set(normalised, result.hash);
     this.lastSyncMtime.set(normalised, result.mtimeMs);
 
-    if (this.isSpectralRulesetFile(normalised, result.content)) {
+    if (this.isSpectralRulesetPath(normalised)) {
+      const validation = validateSpectralRuleset(result.content);
+      if (!validation.isValid) {
+        await services.projectLintRuleset.remove(this.projectId);
+        this.addProblem(normalised, {
+          filePath: absPath,
+          relPath: this.toPosixRelPath(absPath),
+          kind: 'parse-error',
+          message: validation.error,
+        });
+        this.notifyRenderer();
+        return;
+      }
+
+      this.clearProblem(normalised);
       await services.projectLintRuleset.upsert(this.projectId, { rulesetContent: result.content });
       this.notifyRenderer();
       return;
@@ -610,12 +749,21 @@ class RepoFileWatcher {
     normalised: string,
     forceRead = false,
   ): Promise<{ content: string; hash: string; mtimeMs: number } | null> {
-    // ── Check if file still exists ───────────────────────────────────
+    // ── Check if file still exists and is not a symlink ──────────────
     let fileStat: fs.Stats;
     try {
-      fileStat = await fs.promises.stat(absPath);
+      fileStat = await fs.promises.lstat(absPath);
     } catch {
-      await this.handleFileDeletion(normalised);
+      // Only treat a missing file as a real deletion when the repo folder itself
+      // still exists. If the whole folder is gone (deleted/unmounted) we must not
+      // remove the workspace from the DB — the repo is unavailable, not emptied.
+      if (await this.repoDirIsAvailable()) {
+        await this.handleFileDeletion(normalised);
+      }
+      return null;
+    }
+
+    if (fileStat.isSymbolicLink()) {
       return null;
     }
 
@@ -657,12 +805,13 @@ class RepoFileWatcher {
     normalised: string,
     content: string,
   ): ReturnType<typeof tryImportV5Data>['data'] | null {
-    const firstLine = content.split('\n')[0].trim();
+    const nl = content.indexOf('\n');
+    const firstLine = (nl === -1 ? content : content.slice(0, nl)).trim();
     if (!InsomniaFileTypeValues.some(t => firstLine.includes(t))) {
       return null;
     }
 
-    if (content.split('\n').some(l => l.startsWith('<<<<<<<') || l.startsWith('>>>>>>>'))) {
+    if (/^(?:<{7}|>{7})/m.test(content)) {
       this.addProblem(normalised, {
         filePath: absPath,
         relPath: this.toPosixRelPath(absPath),
@@ -698,10 +847,10 @@ class RepoFileWatcher {
       return;
     }
     const originDocs = await db.getWithDescendants(existingWorkspace);
-    const deletedDocs = originDocs.filter(
-      originDoc => !docs.some(d => d._id === originDoc._id) && models.canSync(originDoc),
-    );
+    const importedIds = new Set(docs.map(d => d._id));
+    const deletedDocs = originDocs.filter(o => !importedIds.has(o._id) && models.canSync(o));
     for (const doc of deletedDocs) {
+      this.docToWorkspace.delete(doc._id);
       await db.unsafeRemove(doc);
     }
   }
@@ -713,6 +862,9 @@ class RepoFileWatcher {
     syncTime: number,
     docs: NonNullable<ReturnType<typeof tryImportV5Data>['data']>,
   ): Promise<void> {
+    const workspaceDoc = docs.find(models.workspace.isWorkspace) as Workspace | undefined;
+    const workspaceId = workspaceDoc?._id;
+
     const bufferId = await db.bufferChanges();
     try {
       for (const doc of docs) {
@@ -724,6 +876,9 @@ class RepoFileWatcher {
             gitFileLastSyncTime: syncTime,
           });
           this.lastKnownGitFilePath.set(doc._id, normalised);
+        }
+        if (workspaceId) {
+          this.docToWorkspace.set(doc._id, workspaceId);
         }
         await db.update(doc);
       }
@@ -759,14 +914,21 @@ class RepoFileWatcher {
 
     const relPath = this.toPosixRelPath(normalised);
 
-    // Find the workspace whose gitFilePath matches this deleted file
-    const entries = await this.getWorkspacesWithMeta();
-    for (const { workspace, meta } of entries) {
-      if (meta?.gitFilePath === relPath) {
+    // Find the workspace whose path matches the deleted file — O(workspaces) map scan,
+    // avoids a full getWorkspacesWithMeta() DB fetch.
+    let workspaceIdToDelete: string | undefined;
+    for (const [wsId, wsPath] of this.lastKnownGitFilePath) {
+      if (wsPath === normalised) {
+        workspaceIdToDelete = wsId;
+        break;
+      }
+    }
+    if (workspaceIdToDelete) {
+      const workspace = await services.workspace.getById(workspaceIdToDelete);
+      if (workspace) {
         console.log('[repo-file-watcher] File deleted, removing workspace:', workspace._id, relPath);
         await this.removeWorkspaceWithDescendants(workspace);
         this.notifyRenderer();
-        break;
       }
     }
 
@@ -813,29 +975,49 @@ class RepoFileWatcher {
     const bufferId = await db.bufferChanges();
     try {
       for (const doc of descendants) {
+        this.docToWorkspace.delete(doc._id);
         await db.unsafeRemove(doc);
       }
     } finally {
       await db.flushChanges(bufferId);
     }
+    this.docToWorkspace.delete(workspace._id);
   }
 
-  /** Fetch all workspaces in this project together with their metadata. */
-  private async getWorkspacesWithMeta(): Promise<{ workspace: Workspace; meta: WorkspaceMeta | undefined }[]> {
-    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this.projectId });
-    const results: { workspace: Workspace; meta: WorkspaceMeta | undefined }[] = [];
-    for (const workspace of workspaces) {
-      const meta = await db.findOne<WorkspaceMeta>(models.workspaceMeta.type, {
-        parentId: workspace._id,
-      });
-      results.push({ workspace, meta });
+  /** Fetch workspaces in this project together with their metadata. When `filterIds` is provided, only those workspaces are returned. */
+  private async getWorkspacesWithMeta(
+    filterIds?: Set<string>,
+  ): Promise<{ workspace: Workspace; meta: WorkspaceMeta | undefined }[]> {
+    const query = filterIds ? { parentId: this.projectId, _id: { $in: [...filterIds] } } : { parentId: this.projectId };
+    const workspaces = await services.workspace.list(query);
+    if (workspaces.length === 0) {
+      return [];
     }
-    return results;
+    const metas = await services.workspaceMeta.list({ parentId: { $in: workspaces.map(w => w._id) } });
+    const metaByParent = new Map(metas.map(m => [m.parentId, m]));
+    return workspaces.map(workspace => ({ workspace, meta: metaByParent.get(workspace._id) }));
   }
 
   private isInGitDir(absPath: string): boolean {
     const rel = path.relative(this.repoDir, absPath);
     return rel.startsWith(GIT_DIR + path.sep) || rel === GIT_DIR;
+  }
+
+  /**
+   * Whether the repository's working-tree directory still exists on disk.
+   *
+   * When the user deletes/moves the folder (or unmounts its drive) the disk
+   * appears empty. We must NOT interpret that as "all files deleted" and wipe the
+   * database — instead we treat the repo as temporarily unavailable and skip
+   * syncing, so the project's collections survive (and re-sync if the folder
+   * returns).
+   */
+  private async repoDirIsAvailable(): Promise<boolean> {
+    try {
+      return (await fs.promises.stat(this.repoDir)).isDirectory();
+    } catch {
+      return false;
+    }
   }
 
   /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping `.git`. */
@@ -847,17 +1029,20 @@ class RepoFileWatcher {
     } catch {
       return result;
     }
+    const subDirectories: string[] = [];
     for (const entry of entries) {
       const absPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === GIT_DIR) {
-          continue;
+        if (entry.name !== GIT_DIR) {
+          subDirectories.push(absPath);
         }
-        const nested = await this.collectYamlFiles(absPath);
-        result.push(...nested);
       } else if (entry.isFile() && entry.name.endsWith('.yaml')) {
         result.push(path.normalize(absPath));
       }
+    }
+    const nested = await Promise.all(subDirectories.map(d => this.collectYamlFiles(d)));
+    for (const n of nested) {
+      result.push(...n);
     }
     return result;
   }
@@ -959,6 +1144,9 @@ class RepoFileWatcher {
     for (const { workspace, meta } of entries) {
       if (meta?.gitFilePath) {
         const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
+        if (isPathOutsideRepo(this.repoDir, absPath)) {
+          continue;
+        }
         this.lastKnownGitFilePath.set(workspace._id, absPath);
       }
     }

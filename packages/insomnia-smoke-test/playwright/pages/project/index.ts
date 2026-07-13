@@ -1,7 +1,7 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
-import { mockSaveDialogForFile } from '../../utils';
+import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
 import { BasePage } from '../base-page';
 import { NavigationSidebar } from '../components/navigation-sidebar';
 import { WorkspaceListComponent } from './workspace-list';
@@ -72,7 +72,9 @@ export class ProjectPage extends BasePage {
       }
 
       const breadcrumbLink = this.page.getByTestId('workspace-breadcrumb-level-0').getByRole('link');
-      await ((await breadcrumbLink.isVisible()) ? breadcrumbLink.click() : this.sidebar.projectRow(projectName).click());
+      await ((await breadcrumbLink.isVisible())
+        ? breadcrumbLink.click()
+        : this.sidebar.projectRow(projectName).click());
 
       try {
         await this.page.waitForURL(this.projectDashboardUrl, { timeout: 5000, waitUntil: 'commit' });
@@ -103,9 +105,7 @@ export class ProjectPage extends BasePage {
   async createCollection(name = 'My Collection'): Promise<void> {
     await this.selectCreateInProjectType('Collection');
     await this.page.getByRole('dialog').waitFor({ state: 'visible' });
-    const nameInput = this.page
-      .getByRole('dialog')
-      .getByPlaceholder('Enter a name for your Request Collection');
+    const nameInput = this.page.getByRole('dialog').getByPlaceholder('Enter a name for your Request Collection');
     await nameInput.waitFor({ state: 'visible' });
     await nameInput.fill(name);
     await this.page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
@@ -149,6 +149,57 @@ export class ProjectPage extends BasePage {
     await this.setProjectName(name);
     await this.selectStorageType(storageType);
     await this.page.getByRole('button', { name: 'Create', exact: true }).click();
+  }
+
+  /**
+   * Selects an existing local folder in the Git project form without opening it.
+   * The native directory picker is mocked to return `folderPath`.
+   */
+  async chooseGitProjectFolderForOpen(name: string, folderPath: string): Promise<void> {
+    await mockOpenDialogForDirectory(this.app, folderPath);
+    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    await this.setProjectName(name);
+    await this.selectStorageType('git');
+    await this.page.getByRole('button', { name: 'Open local folder' }).click();
+    await this.page.getByRole('button', { name: 'Choose folder' }).click();
+  }
+
+  /**
+   * Opens an existing local folder as a Git project (no clone). The native
+   * directory picker is mocked to return `folderPath`. If the folder isn't a git
+   * repo, the app runs `git init`.
+   */
+  async openGitProjectFromFolder(name: string, folderPath: string): Promise<void> {
+    await this.chooseGitProjectFolderForOpen(name, folderPath);
+    await this.page.getByRole('button', { name: 'Open', exact: true }).click();
+    // Confirm the "Do you trust this folder?" dialog before the folder is opened/initialized.
+    await this.page.getByRole('button', { name: 'Open folder' }).click();
+  }
+
+  /**
+   * Clones a repo into a user-chosen parent folder (the picker is mocked to
+   * return `parentFolderPath`). The repo is cloned into
+   * `<parentFolderPath>/<repo-name>`. Requires the git test server + credential.
+   */
+  async cloneGitProjectIntoFolder(name: string, parentFolderPath: string): Promise<void> {
+    await mockOpenDialogForDirectory(this.app, parentFolderPath);
+    await this.sidebar.clickNewProject();
+    await this.page.getByRole('textbox', { name: 'Project name' }).click();
+    await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
+    await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
+    await this.page.getByText('Git Sync').click();
+    await this.page.getByRole('button', { name: 'Git Credentials Authorized as' }).click();
+    await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
+    // Use the reachable git test server URL so remote branches can be listed.
+    // deriveRepoName() still yields "git-server" from this URL.
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');
+    await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
+    await this.page.getByRole('option', { name: 'master' }).click();
+    // Pick the custom clone destination before scanning.
+    await this.page.getByRole('button', { name: 'Choose folder' }).click();
+    await this.page.getByRole('button', { name: 'Scan for files' }).click();
+    await this.page.getByRole('button', { name: 'Create Blank Project' }).click();
   }
 
   async createGitSyncProject(name = 'My Git Project'): Promise<void> {
@@ -247,6 +298,28 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('dialog').getByRole('button', { name: 'Export' }).click();
 
     // Select export format
+    await this.exportModal.selectExportFormat(format);
+  }
+
+  /**
+   * Exports all workspaces in a project via the sidebar project actions dropdown.
+   * Mirrors the Preferences > Data tab export, but triggered from the project context menu.
+   * Note: After calling this method, use waitForExportFiles() utility to ensure files are written.
+   * @param projectName - The name of the project to export
+   * @param exportPath - The directory (yaml) or file (har) path used to mock the save dialog
+   * @param format - The export format ('yaml' or 'har')
+   */
+  async exportProjectFromSidebar(
+    projectName: string,
+    exportPath: string,
+    format: 'yaml' | 'har' = 'yaml',
+  ): Promise<void> {
+    await this.sidebar.selectProjectDropdownOption({ actionName: 'Export', projectName });
+    if (format === 'yaml') {
+      await mockOpenDialogForDirectory(this.app, exportPath);
+    } else if (format === 'har') {
+      await mockSaveDialogForFile(this.app, exportPath);
+    }
     await this.exportModal.selectExportFormat(format);
   }
 }

@@ -1,0 +1,4183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json",
+  "title": "Insomnia File",
+  "description": "JSON Schema for Insomnia v5.1 files (.insomnia / .yaml). Validates collections, API specs, mock servers, global environments and MCP clients. Generated from the Insomnia source of truth — do not edit by hand.",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "collection.insomnia.rest/5.0"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "created": {
+              "type": "number"
+            },
+            "modified": {
+              "type": "number"
+            },
+            "isPrivate": {
+              "type": "boolean"
+            },
+            "description": {
+              "type": "string"
+            },
+            "sortKey": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "collection": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "cookieJar": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "cookies": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "expires": {
+                    "anyOf": [
+                      {},
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "secure": {
+                    "type": "boolean"
+                  },
+                  "httpOnly": {
+                    "type": "boolean"
+                  },
+                  "extensions": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/__schema1"
+                    }
+                  },
+                  "creation": {},
+                  "creationIndex": {
+                    "type": "number"
+                  },
+                  "hostOnly": {
+                    "type": "boolean"
+                  },
+                  "pathIsDefault": {
+                    "type": "boolean"
+                  },
+                  "lastAccessed": {}
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "environments": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "color": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "dataPropertyOrder": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            },
+            "dataPropertyOrder": {
+              "$ref": "#/$defs/__schema1"
+            }
+          }
+        },
+        "certificates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "disabled": {
+                "type": "boolean"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "spec.insomnia.rest/5.0"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "created": {
+              "type": "number"
+            },
+            "modified": {
+              "type": "number"
+            },
+            "isPrivate": {
+              "type": "boolean"
+            },
+            "description": {
+              "type": "string"
+            },
+            "sortKey": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "collection": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "cookieJar": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "cookies": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "expires": {
+                    "anyOf": [
+                      {},
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "secure": {
+                    "type": "boolean"
+                  },
+                  "httpOnly": {
+                    "type": "boolean"
+                  },
+                  "extensions": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/__schema1"
+                    }
+                  },
+                  "creation": {},
+                  "creationIndex": {
+                    "type": "number"
+                  },
+                  "hostOnly": {
+                    "type": "boolean"
+                  },
+                  "pathIsDefault": {
+                    "type": "boolean"
+                  },
+                  "lastAccessed": {}
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "environments": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "color": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "dataPropertyOrder": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            },
+            "dataPropertyOrder": {
+              "$ref": "#/$defs/__schema1"
+            }
+          }
+        },
+        "spec": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "created": {
+                      "type": "number"
+                    },
+                    "modified": {
+                      "type": "number"
+                    },
+                    "isPrivate": {
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "sortKey": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              },
+              "required": [
+                "file"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "contents": {
+                  "$ref": "#/$defs/__schema1"
+                },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "created": {
+                      "type": "number"
+                    },
+                    "modified": {
+                      "type": "number"
+                    },
+                    "isPrivate": {
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "sortKey": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "testSuites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "tests": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "created": {
+                          "type": "number"
+                        },
+                        "modified": {
+                          "type": "number"
+                        },
+                        "isPrivate": {
+                          "type": "boolean"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "sortKey": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ]
+                    },
+                    "requestId": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "certificates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "disabled": {
+                "type": "boolean"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "mock.insomnia.rest/5.0"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "created": {
+              "type": "number"
+            },
+            "modified": {
+              "type": "number"
+            },
+            "isPrivate": {
+              "type": "boolean"
+            },
+            "description": {
+              "type": "string"
+            },
+            "sortKey": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "server": {
+          "type": "object",
+          "properties": {
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "url": {
+              "type": "string"
+            },
+            "useInsomniaCloud": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "url"
+          ]
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "body": {
+                "type": "string"
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
+                }
+              },
+              "method": {
+                "type": "string"
+              },
+              "mimeType": {
+                "type": "string"
+              },
+              "statusCode": {
+                "type": "number"
+              },
+              "statusText": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "environment.insomnia.rest/5.0"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "created": {
+              "type": "number"
+            },
+            "modified": {
+              "type": "number"
+            },
+            "isPrivate": {
+              "type": "boolean"
+            },
+            "description": {
+              "type": "string"
+            },
+            "sortKey": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "environments": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "color": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "dataPropertyOrder": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            },
+            "dataPropertyOrder": {
+              "$ref": "#/$defs/__schema1"
+            }
+          }
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "mcpClient.insomnia/5.0"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "created": {
+              "type": "number"
+            },
+            "modified": {
+              "type": "number"
+            },
+            "isPrivate": {
+              "type": "boolean"
+            },
+            "description": {
+              "type": "string"
+            },
+            "sortKey": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "mcpRequest": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "transportType": {
+              "type": "string",
+              "enum": [
+                "stdio",
+                "streamable-http"
+              ]
+            },
+            "headers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "disabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ]
+              }
+            },
+            "authentication": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "basic"
+                        },
+                        "useISO88591": {
+                          "type": "boolean"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "apikey"
+                        },
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "addTo": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "oauth2"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "grantType": {
+                          "type": "string",
+                          "enum": [
+                            "authorization_code",
+                            "client_credentials",
+                            "implicit",
+                            "password",
+                            "refresh_token",
+                            "mcp_auth_flow"
+                          ]
+                        },
+                        "accessTokenUrl": {
+                          "type": "string"
+                        },
+                        "authorizationUrl": {
+                          "type": "string"
+                        },
+                        "clientId": {
+                          "type": "string"
+                        },
+                        "clientSecret": {
+                          "type": "string"
+                        },
+                        "audience": {
+                          "type": "string"
+                        },
+                        "scope": {
+                          "type": "string"
+                        },
+                        "resource": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        },
+                        "redirectUrl": {
+                          "type": "string"
+                        },
+                        "useDefaultBrowser": {
+                          "type": "boolean"
+                        },
+                        "credentialsInBody": {
+                          "type": "boolean"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "refreshToken": {
+                          "type": "string"
+                        },
+                        "tokenPrefix": {
+                          "type": "string"
+                        },
+                        "usePkce": {
+                          "type": "boolean"
+                        },
+                        "pkceMethod": {
+                          "type": "string"
+                        },
+                        "responseType": {
+                          "type": "string",
+                          "enum": [
+                            "code",
+                            "token",
+                            "none",
+                            "id_token",
+                            "id_token token"
+                          ]
+                        },
+                        "origin": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "grantType"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "hawk"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "key": {
+                          "type": "string"
+                        },
+                        "ext": {
+                          "type": "string"
+                        },
+                        "validatePayload": {
+                          "type": "boolean"
+                        },
+                        "algorithm": {
+                          "type": "string",
+                          "enum": [
+                            "sha1",
+                            "sha256"
+                          ]
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "algorithm"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "oauth1"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "signatureMethod": {
+                          "type": "string",
+                          "enum": [
+                            "HMAC-SHA1",
+                            "RSA-SHA1",
+                            "HMAC-SHA256",
+                            "PLAINTEXT"
+                          ]
+                        },
+                        "consumerKey": {
+                          "type": "string"
+                        },
+                        "tokenKey": {
+                          "type": "string"
+                        },
+                        "tokenSecret": {
+                          "type": "string"
+                        },
+                        "privateKey": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        },
+                        "nonce": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string"
+                        },
+                        "callback": {
+                          "type": "string"
+                        },
+                        "realm": {
+                          "type": "string"
+                        },
+                        "verifier": {
+                          "type": "string"
+                        },
+                        "includeBodyHash": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "digest"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "ntlm"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "bearer"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "token": {
+                          "type": "string"
+                        },
+                        "prefix": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "iam"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "accessKeyId": {
+                          "type": "string"
+                        },
+                        "secretAccessKey": {
+                          "type": "string"
+                        },
+                        "sessionToken": {
+                          "type": "string"
+                        },
+                        "region": {
+                          "type": "string"
+                        },
+                        "service": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "netrc"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "asap"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "issuer": {
+                          "type": "string"
+                        },
+                        "subject": {
+                          "type": "string"
+                        },
+                        "audience": {
+                          "type": "string"
+                        },
+                        "addintionalClaims": {
+                          "type": "string"
+                        },
+                        "privateKey": {
+                          "type": "string"
+                        },
+                        "keyId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "none"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "singleToken"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "token": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {}
+                }
+              ]
+            },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "env": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "str"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ]
+              }
+            },
+            "roots": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "uri": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "environments": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "color": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "dataPropertyOrder": {
+                    "$ref": "#/$defs/__schema1"
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            },
+            "dataPropertyOrder": {
+              "$ref": "#/$defs/__schema1"
+            }
+          }
+        }
+      },
+      "required": [
+        "type"
+      ]
+    }
+  ],
+  "$defs": {
+    "__schema0": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              },
+              "metadata": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "protoFileId": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "protoMethodName": {
+                "type": "string"
+              },
+              "reflectionApi": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "apiKey": {
+                    "type": "string"
+                  },
+                  "module": {
+                    "type": "string"
+                  }
+                }
+              },
+              "children": {},
+              "method": {}
+            },
+            "required": [
+              "reflectionApi"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "method": {
+                "type": "string"
+              },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "mimeType": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "multiline": {
+                          "anyOf": [
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "parameters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "multiline": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
+                }
+              },
+              "authentication": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "basic"
+                          },
+                          "useISO88591": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "apikey"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "addTo": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth2"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "grantType": {
+                            "type": "string",
+                            "enum": [
+                              "authorization_code",
+                              "client_credentials",
+                              "implicit",
+                              "password",
+                              "refresh_token",
+                              "mcp_auth_flow"
+                            ]
+                          },
+                          "accessTokenUrl": {
+                            "type": "string"
+                          },
+                          "authorizationUrl": {
+                            "type": "string"
+                          },
+                          "clientId": {
+                            "type": "string"
+                          },
+                          "clientSecret": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "scope": {
+                            "type": "string"
+                          },
+                          "resource": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "redirectUrl": {
+                            "type": "string"
+                          },
+                          "useDefaultBrowser": {
+                            "type": "boolean"
+                          },
+                          "credentialsInBody": {
+                            "type": "boolean"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "accessToken": {
+                            "type": "string"
+                          },
+                          "refreshToken": {
+                            "type": "string"
+                          },
+                          "tokenPrefix": {
+                            "type": "string"
+                          },
+                          "usePkce": {
+                            "type": "boolean"
+                          },
+                          "pkceMethod": {
+                            "type": "string"
+                          },
+                          "responseType": {
+                            "type": "string",
+                            "enum": [
+                              "code",
+                              "token",
+                              "none",
+                              "id_token",
+                              "id_token token"
+                            ]
+                          },
+                          "origin": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "grantType"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "hawk"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "ext": {
+                            "type": "string"
+                          },
+                          "validatePayload": {
+                            "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "algorithm"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth1"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "signatureMethod": {
+                            "type": "string",
+                            "enum": [
+                              "HMAC-SHA1",
+                              "RSA-SHA1",
+                              "HMAC-SHA256",
+                              "PLAINTEXT"
+                            ]
+                          },
+                          "consumerKey": {
+                            "type": "string"
+                          },
+                          "tokenKey": {
+                            "type": "string"
+                          },
+                          "tokenSecret": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "nonce": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string"
+                          },
+                          "callback": {
+                            "type": "string"
+                          },
+                          "realm": {
+                            "type": "string"
+                          },
+                          "verifier": {
+                            "type": "string"
+                          },
+                          "includeBodyHash": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "digest"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "ntlm"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "bearer"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "prefix": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "iam"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "accessKeyId": {
+                            "type": "string"
+                          },
+                          "secretAccessKey": {
+                            "type": "string"
+                          },
+                          "sessionToken": {
+                            "type": "string"
+                          },
+                          "region": {
+                            "type": "string"
+                          },
+                          "service": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "netrc"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "asap"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "issuer": {
+                            "type": "string"
+                          },
+                          "subject": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "addintionalClaims": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "keyId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "none"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "singleToken"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {}
+                  }
+                ]
+              },
+              "scripts": {
+                "type": "object",
+                "properties": {
+                  "preRequest": {
+                    "type": "string"
+                  },
+                  "afterResponse": {
+                    "type": "string"
+                  }
+                }
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "renderRequestBody": {
+                    "type": "boolean"
+                  },
+                  "encodeUrl": {
+                    "type": "boolean"
+                  },
+                  "followRedirects": {
+                    "type": "string",
+                    "enum": [
+                      "global",
+                      "on",
+                      "off"
+                    ]
+                  },
+                  "cookies": {
+                    "type": "object",
+                    "properties": {
+                      "send": {
+                        "type": "boolean"
+                      },
+                      "store": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "rebuildPath": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "cookies"
+                ]
+              },
+              "pathParameters": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "children": {}
+            },
+            "required": [
+              "method"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^ws-req.*"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "encodeUrl": {
+                    "type": "boolean"
+                  },
+                  "cookies": {
+                    "type": "object",
+                    "properties": {
+                      "store": {
+                        "type": "boolean"
+                      },
+                      "send": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "followRedirects": {
+                    "type": "string",
+                    "enum": [
+                      "global",
+                      "on",
+                      "off"
+                    ]
+                  }
+                },
+                "required": [
+                  "cookies"
+                ]
+              },
+              "authentication": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "basic"
+                          },
+                          "useISO88591": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "apikey"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "addTo": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth2"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "grantType": {
+                            "type": "string",
+                            "enum": [
+                              "authorization_code",
+                              "client_credentials",
+                              "implicit",
+                              "password",
+                              "refresh_token",
+                              "mcp_auth_flow"
+                            ]
+                          },
+                          "accessTokenUrl": {
+                            "type": "string"
+                          },
+                          "authorizationUrl": {
+                            "type": "string"
+                          },
+                          "clientId": {
+                            "type": "string"
+                          },
+                          "clientSecret": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "scope": {
+                            "type": "string"
+                          },
+                          "resource": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "redirectUrl": {
+                            "type": "string"
+                          },
+                          "useDefaultBrowser": {
+                            "type": "boolean"
+                          },
+                          "credentialsInBody": {
+                            "type": "boolean"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "accessToken": {
+                            "type": "string"
+                          },
+                          "refreshToken": {
+                            "type": "string"
+                          },
+                          "tokenPrefix": {
+                            "type": "string"
+                          },
+                          "usePkce": {
+                            "type": "boolean"
+                          },
+                          "pkceMethod": {
+                            "type": "string"
+                          },
+                          "responseType": {
+                            "type": "string",
+                            "enum": [
+                              "code",
+                              "token",
+                              "none",
+                              "id_token",
+                              "id_token token"
+                            ]
+                          },
+                          "origin": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "grantType"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "hawk"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "ext": {
+                            "type": "string"
+                          },
+                          "validatePayload": {
+                            "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "algorithm"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth1"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "signatureMethod": {
+                            "type": "string",
+                            "enum": [
+                              "HMAC-SHA1",
+                              "RSA-SHA1",
+                              "HMAC-SHA256",
+                              "PLAINTEXT"
+                            ]
+                          },
+                          "consumerKey": {
+                            "type": "string"
+                          },
+                          "tokenKey": {
+                            "type": "string"
+                          },
+                          "tokenSecret": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "nonce": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string"
+                          },
+                          "callback": {
+                            "type": "string"
+                          },
+                          "realm": {
+                            "type": "string"
+                          },
+                          "verifier": {
+                            "type": "string"
+                          },
+                          "includeBodyHash": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "digest"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "ntlm"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "bearer"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "prefix": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "iam"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "accessKeyId": {
+                            "type": "string"
+                          },
+                          "secretAccessKey": {
+                            "type": "string"
+                          },
+                          "sessionToken": {
+                            "type": "string"
+                          },
+                          "region": {
+                            "type": "string"
+                          },
+                          "service": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "netrc"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "asap"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "issuer": {
+                            "type": "string"
+                          },
+                          "subject": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "addintionalClaims": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "keyId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "none"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "singleToken"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {}
+                  }
+                ]
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
+                }
+              },
+              "parameters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "multiline": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "pathParameters": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "children": {},
+              "method": {}
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^socketio-req.*"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "encodeUrl": {
+                    "type": "boolean"
+                  },
+                  "cookies": {
+                    "type": "object",
+                    "properties": {
+                      "store": {
+                        "type": "boolean"
+                      },
+                      "send": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "cookies"
+                ]
+              },
+              "authentication": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "basic"
+                          },
+                          "useISO88591": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "apikey"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "addTo": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth2"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "grantType": {
+                            "type": "string",
+                            "enum": [
+                              "authorization_code",
+                              "client_credentials",
+                              "implicit",
+                              "password",
+                              "refresh_token",
+                              "mcp_auth_flow"
+                            ]
+                          },
+                          "accessTokenUrl": {
+                            "type": "string"
+                          },
+                          "authorizationUrl": {
+                            "type": "string"
+                          },
+                          "clientId": {
+                            "type": "string"
+                          },
+                          "clientSecret": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "scope": {
+                            "type": "string"
+                          },
+                          "resource": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "redirectUrl": {
+                            "type": "string"
+                          },
+                          "useDefaultBrowser": {
+                            "type": "boolean"
+                          },
+                          "credentialsInBody": {
+                            "type": "boolean"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "accessToken": {
+                            "type": "string"
+                          },
+                          "refreshToken": {
+                            "type": "string"
+                          },
+                          "tokenPrefix": {
+                            "type": "string"
+                          },
+                          "usePkce": {
+                            "type": "boolean"
+                          },
+                          "pkceMethod": {
+                            "type": "string"
+                          },
+                          "responseType": {
+                            "type": "string",
+                            "enum": [
+                              "code",
+                              "token",
+                              "none",
+                              "id_token",
+                              "id_token token"
+                            ]
+                          },
+                          "origin": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "grantType"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "hawk"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "ext": {
+                            "type": "string"
+                          },
+                          "validatePayload": {
+                            "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "algorithm"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth1"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "signatureMethod": {
+                            "type": "string",
+                            "enum": [
+                              "HMAC-SHA1",
+                              "RSA-SHA1",
+                              "HMAC-SHA256",
+                              "PLAINTEXT"
+                            ]
+                          },
+                          "consumerKey": {
+                            "type": "string"
+                          },
+                          "tokenKey": {
+                            "type": "string"
+                          },
+                          "tokenSecret": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "nonce": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string"
+                          },
+                          "callback": {
+                            "type": "string"
+                          },
+                          "realm": {
+                            "type": "string"
+                          },
+                          "verifier": {
+                            "type": "string"
+                          },
+                          "includeBodyHash": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "digest"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "ntlm"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "bearer"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "prefix": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "iam"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "accessKeyId": {
+                            "type": "string"
+                          },
+                          "secretAccessKey": {
+                            "type": "string"
+                          },
+                          "sessionToken": {
+                            "type": "string"
+                          },
+                          "region": {
+                            "type": "string"
+                          },
+                          "service": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "netrc"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "asap"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "issuer": {
+                            "type": "string"
+                          },
+                          "subject": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "addintionalClaims": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "keyId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "none"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "singleToken"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {}
+                  }
+                ]
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
+                }
+              },
+              "parameters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "multiline": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "pathParameters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "multiline": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "eventListeners": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "eventName": {
+                      "type": "string"
+                    },
+                    "desc": {
+                      "type": "string"
+                    },
+                    "isOpen": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              },
+              "children": {},
+              "method": {}
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "children": {
+                "$ref": "#/$defs/__schema0"
+              },
+              "scripts": {
+                "type": "object",
+                "properties": {
+                  "preRequest": {
+                    "type": "string"
+                  },
+                  "afterResponse": {
+                    "type": "string"
+                  }
+                }
+              },
+              "authentication": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "basic"
+                              },
+                              "useISO88591": {
+                                "type": "boolean"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "password": {
+                                "type": "string"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "apikey"
+                              },
+                              "key": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "addTo": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "oauth2"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "grantType": {
+                                "type": "string",
+                                "enum": [
+                                  "authorization_code",
+                                  "client_credentials",
+                                  "implicit",
+                                  "password",
+                                  "refresh_token",
+                                  "mcp_auth_flow"
+                                ]
+                              },
+                              "accessTokenUrl": {
+                                "type": "string"
+                              },
+                              "authorizationUrl": {
+                                "type": "string"
+                              },
+                              "clientId": {
+                                "type": "string"
+                              },
+                              "clientSecret": {
+                                "type": "string"
+                              },
+                              "audience": {
+                                "type": "string"
+                              },
+                              "scope": {
+                                "type": "string"
+                              },
+                              "resource": {
+                                "type": "string"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "password": {
+                                "type": "string"
+                              },
+                              "redirectUrl": {
+                                "type": "string"
+                              },
+                              "useDefaultBrowser": {
+                                "type": "boolean"
+                              },
+                              "credentialsInBody": {
+                                "type": "boolean"
+                              },
+                              "state": {
+                                "type": "string"
+                              },
+                              "code": {
+                                "type": "string"
+                              },
+                              "accessToken": {
+                                "type": "string"
+                              },
+                              "refreshToken": {
+                                "type": "string"
+                              },
+                              "tokenPrefix": {
+                                "type": "string"
+                              },
+                              "usePkce": {
+                                "type": "boolean"
+                              },
+                              "pkceMethod": {
+                                "type": "string"
+                              },
+                              "responseType": {
+                                "type": "string",
+                                "enum": [
+                                  "code",
+                                  "token",
+                                  "none",
+                                  "id_token",
+                                  "id_token token"
+                                ]
+                              },
+                              "origin": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "grantType"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "hawk"
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "key": {
+                                "type": "string"
+                              },
+                              "ext": {
+                                "type": "string"
+                              },
+                              "validatePayload": {
+                                "type": "boolean"
+                              },
+                              "algorithm": {
+                                "type": "string",
+                                "enum": [
+                                  "sha1",
+                                  "sha256"
+                                ]
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "algorithm"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "oauth1"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "signatureMethod": {
+                                "type": "string",
+                                "enum": [
+                                  "HMAC-SHA1",
+                                  "RSA-SHA1",
+                                  "HMAC-SHA256",
+                                  "PLAINTEXT"
+                                ]
+                              },
+                              "consumerKey": {
+                                "type": "string"
+                              },
+                              "tokenKey": {
+                                "type": "string"
+                              },
+                              "tokenSecret": {
+                                "type": "string"
+                              },
+                              "privateKey": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "type": "string"
+                              },
+                              "nonce": {
+                                "type": "string"
+                              },
+                              "timestamp": {
+                                "type": "string"
+                              },
+                              "callback": {
+                                "type": "string"
+                              },
+                              "realm": {
+                                "type": "string"
+                              },
+                              "verifier": {
+                                "type": "string"
+                              },
+                              "includeBodyHash": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "digest"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "password": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "ntlm"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "password": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "bearer"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "token": {
+                                "type": "string"
+                              },
+                              "prefix": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "iam"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "accessKeyId": {
+                                "type": "string"
+                              },
+                              "secretAccessKey": {
+                                "type": "string"
+                              },
+                              "sessionToken": {
+                                "type": "string"
+                              },
+                              "region": {
+                                "type": "string"
+                              },
+                              "service": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "netrc"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "asap"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "issuer": {
+                                "type": "string"
+                              },
+                              "subject": {
+                                "type": "string"
+                              },
+                              "audience": {
+                                "type": "string"
+                              },
+                              "addintionalClaims": {
+                                "type": "string"
+                              },
+                              "privateKey": {
+                                "type": "string"
+                              },
+                              "keyId": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "none"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "singleToken"
+                              },
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "token": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "environment": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "environmentPropertyOrder": {
+                "$ref": "#/$defs/__schema1"
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
+                }
+              },
+              "method": {},
+              "url": {},
+              "parameters": {},
+              "pathParameters": {}
+            }
+          }
+        ]
+      }
+    },
+    "__schema1": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema1"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema1"
+          }
+        }
+      ]
+    }
+  }
+}

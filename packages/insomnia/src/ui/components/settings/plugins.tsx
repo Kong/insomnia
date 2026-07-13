@@ -179,7 +179,7 @@ export const Plugins: FC = () => {
                   />
                 </TextField>
                 <Button
-                  className="flex h-full shrink-0 min-w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
+                  className="flex h-full min-w-[13ch] shrink-0 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
                   isDisabled={isInstallingFromNpm}
                   type="submit"
                   onPress={async () => {
@@ -481,6 +481,23 @@ export const Plugins: FC = () => {
                   ? PLUGIN_HUB_BASE
                   : NPM_PACKAGE_BASE + '/' + plugin.name;
 
+                // Summarize the plugin's declared sandbox permissions (C3). No declaration means it
+                // runs on the baseline grant; a declared block lists its requested modules/capabilities.
+                const { modules, capabilities } = plugin.permissions ?? { modules: [], capabilities: [] };
+                const permissionParts: string[] = [];
+                if (modules.length > 0) {
+                  permissionParts.push(`modules: ${modules.join(', ')}`);
+                }
+                if (capabilities.length > 0) {
+                  permissionParts.push(`capabilities: ${capabilities.join(', ')}`);
+                }
+                const permissionLabel =
+                  permissionParts.length > 0
+                    ? permissionParts.join(' · ')
+                    : plugin.permissionsDeclared
+                      ? 'Declared empty permissions (baseline access)'
+                      : 'No permissions declared (baseline access)';
+
                 return (
                   <GridListItem
                     textValue={plugin.name}
@@ -515,6 +532,23 @@ export const Plugins: FC = () => {
                           <HelpTooltip info className="space-left">
                             {plugin.description}
                           </HelpTooltip>
+                        )}
+                        <span
+                          data-testid={`plugin-permissions-${plugin.name}`}
+                          className="truncate text-xs text-(--hl)"
+                          title={permissionLabel}
+                        >
+                          {permissionLabel}
+                        </span>
+                        {plugin.permissionWarnings && plugin.permissionWarnings.length > 0 && (
+                          <span
+                            data-testid={`plugin-permission-warning-${plugin.name}`}
+                            className="text-(--color-warning)"
+                          >
+                            <HelpTooltip info={false} className="space-left text-(--color-warning)">
+                              {plugin.permissionWarnings.join(' ')}
+                            </HelpTooltip>
+                          </span>
                         )}
                       </div>
                     </div>

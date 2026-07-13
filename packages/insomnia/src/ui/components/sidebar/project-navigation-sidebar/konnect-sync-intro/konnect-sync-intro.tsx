@@ -20,7 +20,7 @@ export const KonnectSyncIntro = ({ onConfigure }: KonnectSyncIntroProps) => {
         </div>
         <Button
           onPress={onConfigure}
-          className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+          className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-white/40 px-4 py-2 text-sm text-white transition-colors hover:bg-white/10 aria-pressed:bg-white/10"
         >
           Configure
         </Button>

@@ -87,6 +87,7 @@ export enum AnalyticsEvent {
   aiFeatureDisabled = 'AI Feature Disabled',
   installPlugin = 'Plugin Installed',
   AppMenuPreferencesClicked = 'App Menu Preferences Clicked',
+  keyboardShortcutUsed = 'Keyboard Shortcut Used',
 
   homepageFiltered = 'homepage-filtered',
   quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',
@@ -138,6 +139,9 @@ export enum AnalyticsEvent {
   uploadLintRulesetClicked = 'upload-lint-ruleset-clicked',
   firstRequestPaneExampleClicked = 'first-request-pane-example-clicked',
   firstRequestPaneCollectionChanged = 'first-request-pane-collection-changed',
+  // Generic experiment-assignment event (reusable across experiments). Emitted on
+  // each assignment change; feeds the warehouse `experiment_assignments` model.
+  experimentAssigned = 'Experiment Assigned',
 }
 
 export enum InsoEvent {

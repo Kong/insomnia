@@ -18,6 +18,10 @@ export async function getAllByCredentialId(credentialsId: string) {
   return db.find<GitRepository>(type, { credentialsId });
 }
 
+export async function getByDirectory(directory: string) {
+  return db.findOne<GitRepository>(type, { directory });
+}
+
 export function update(repo: GitRepository, patch: Partial<GitRepository>) {
   return db.docUpdate<GitRepository>(repo, patch);
 }

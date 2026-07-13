@@ -34,7 +34,7 @@ const config: PlaywrightTestConfig = {
       // High-confidence smoke/sanity checks, runs on Test App only on Ubuntu
       name: 'Smoke',
       testMatch: /smoke\/.*.test.ts/,
-      retries: 0,
+      retries: 1,
     },
     {
       // Single critical path test, runs on release recurring

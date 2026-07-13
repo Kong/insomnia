@@ -1,5 +1,5 @@
-import { models, services } from 'insomnia-data';
-import { href, redirect } from 'react-router';
+import { services } from 'insomnia-data';
+import { href } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
@@ -10,7 +10,7 @@ import { createFetcherSubmitHook } from '~/ui/utils/router';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.restore';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
-  const { organizationId, projectId, workspaceId } = params;
+  const { projectId, workspaceId } = params;
 
   const formData = await request.formData();
   const id = formData.get('id');
@@ -31,13 +31,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  return redirect(
-    `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
-      organizationId,
-      projectId,
-      workspaceId,
-    })}/${models.workspace.scopeToActivity(workspace?.scope)}`,
-  );
+  return null;
 }
 
 export const useInsomniaSyncRestoreActionFetcher = createFetcherSubmitHook(

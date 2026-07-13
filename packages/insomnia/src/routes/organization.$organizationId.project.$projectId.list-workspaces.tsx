@@ -1,4 +1,4 @@
-import type { ApiSpec, GitRepository, MockServer, WorkspaceMeta } from 'insomnia-data';
+import type { ApiSpec, GitRepository, MockServer } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
@@ -14,9 +14,9 @@ import { createFetcherLoadHook } from '~/ui/utils/router';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.list-workspaces';
 
 async function getAllLocalFiles({ projectId }: { projectId: string }) {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
+  const projectWorkspaces = await services.workspace.listByParentId(projectId);
   const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
-    database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    services.workspaceMeta.list({
       parentId: {
         $in: projectWorkspaces.map(w => w._id),
       },

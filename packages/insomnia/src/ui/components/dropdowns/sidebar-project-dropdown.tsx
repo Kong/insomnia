@@ -1,7 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
@@ -26,12 +26,14 @@ import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizati
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
+import { exportProjectToFile } from '~/ui/components/settings/import-export';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
+import { createWorkspaceActionItems } from './actions/create-actions';
 
 export const ICON_CLASS = 'h-3 w-3 shrink-0';
 
@@ -122,6 +124,21 @@ export const ProjectDropdown: FC<Props> = ({
       },
     },
     {
+      id: 'export',
+      name: 'Export',
+      icon: 'file-export',
+      action: async (projectId: string, projectName: string) => {
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.exportStarted,
+          properties: {
+            source: 'project',
+          },
+        });
+        const workspacesForProject = await services.workspace.listByParentId(projectId);
+        exportProjectToFile(projectName, workspacesForProject);
+      },
+    },
+    {
       id: 'settings',
       name: 'Settings',
       icon: 'gear',
@@ -175,47 +192,14 @@ export const ProjectDropdown: FC<Props> = ({
     },
   ];
 
-  const createInProjectActionList: ProjectActionItem[] = [
-    {
-      id: 'new-collection',
-      name: 'Collection',
-      scope: 'collection',
-      icon: 'bars',
-      action: createNewCollection,
-    },
-    {
-      id: 'new-document',
-      name: 'Document',
-      scope: 'design',
-      icon: 'file',
-      action: createNewDocument,
-    },
-    {
-      id: 'new-mcp-client',
-      name: 'MCP Client',
-      scope: 'mcp',
-      icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: createNewMcpClient,
-    },
-    ...(canCreateMockServer
-      ? [
-          {
-            id: 'new-mock-server',
-            name: 'Mock Server',
-            scope: 'mock-server' as WorkspaceScope,
-            icon: 'server' as IconName,
-            action: createNewMockServer,
-          },
-        ]
-      : []),
-    {
-      id: 'new-environment',
-      name: 'Environment',
-      scope: 'environment',
-      icon: 'code',
-      action: createNewGlobalEnvironment,
-    },
-  ];
+  const createInProjectActionList: ProjectActionItem[] = createWorkspaceActionItems({
+    createCollection: createNewCollection,
+    createDocument: createNewDocument,
+    createMcpClient: createNewMcpClient,
+    createMockServer: createNewMockServer,
+    createEnvironment: createNewGlobalEnvironment,
+    canCreateMockServer: Boolean(canCreateMockServer),
+  });
 
   const projectDropdownActions: {
     name: string;

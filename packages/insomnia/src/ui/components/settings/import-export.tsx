@@ -11,8 +11,8 @@ import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-re
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
 import type { Organization } from 'insomnia-api';
-import type { BaseModel, Environment, Project, Workspace } from 'insomnia-data';
-import { database, models, services } from 'insomnia-data';
+import type { BaseModel, Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
@@ -145,11 +145,11 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      const baseEnvironments = await database.find<Environment>(models.environment.type, {
+      const baseEnvironments = await services.environment.list({
         parentId: { $in: workspacesForActiveProject.map(w => w._id) },
       });
 
-      const subEnvironments = await database.find<Environment>(models.environment.type, {
+      const subEnvironments = await services.environment.list({
         parentId: { $in: baseEnvironments.map(w => w._id) },
       });
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -262,11 +262,9 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
     return;
   }
 
-  const baseEnvironments = await database.find<Environment>(models.environment.type, {
-    parentId: workspace._id,
-  });
+  const baseEnvironments = await services.environment.listByParentId(workspace._id);
 
-  const subEnvironments = await database.find<Environment>(models.environment.type, {
+  const subEnvironments = await services.environment.list({
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -305,13 +303,9 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           requests.push(request);
         }
       }
-      const [baseEnvironment] = await database.find<Environment>(models.environment.type, {
-        parentId: workspaceId,
-      });
+      const baseEnvironment = await services.environment.getByParentId(workspaceId);
 
-      const subEnvironments = await database.find<Environment>(models.environment.type, {
-        parentId: baseEnvironment?._id,
-      });
+      const subEnvironments = baseEnvironment ? await services.environment.listByParentId(baseEnvironment._id) : [];
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
       let shouldExportPrivateEnvironments = false;
       if (shouldPrompt) {
@@ -415,13 +409,13 @@ export async function exportWorkspaceData({
 }
 
 export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
-  const workspaces = await database.find<Workspace>(models.workspace.type);
+  const workspaces = await services.workspace.list();
 
-  const baseEnvironments = await database.find<Environment>(models.environment.type, {
+  const baseEnvironments = await services.environment.list({
     parentId: { $in: workspaces.map(w => w._id) },
   });
 
-  const subEnvironments = await database.find<Environment>(models.environment.type, {
+  const subEnvironments = await services.environment.list({
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -492,7 +486,7 @@ const UntrackedProject = ({
                   );
                 }
 
-                return <Fragment>{selectedItem.display_name}</Fragment>;
+                return <Fragment>{selectedItem.name}</Fragment>;
               }}
             </SelectValue>
             <Icon icon="caret-down" />
@@ -513,7 +507,7 @@ const UntrackedProject = ({
                 >
                   {({ isSelected }) => (
                     <Fragment>
-                      {item.display_name}
+                      {item.name}
                       {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                     </Fragment>
                   )}
@@ -681,7 +675,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
   const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
+    organizationData?.organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);

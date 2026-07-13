@@ -6,7 +6,7 @@ import { createFetcherLoadHook } from '~/ui/utils/router';
 
 export async function clientLoader() {
   const { accountId } = await services.userSession.get();
-  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
   const allProjects = await services.project.listByOrganizationIds(organizations.map(o => o.id));
 
   const organizationMap = Object.fromEntries(organizations.map(o => [o.id, o]));
