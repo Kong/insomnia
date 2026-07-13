@@ -278,6 +278,13 @@ const ProjectNavigationSidebarInner = (
   const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
   // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
   const isFetchingUnsyncedFilesRef = useRef(false);
+  const [workspaceCacheVersion, setWorkspaceCacheVersion] = useState(0);
+
+  const clearWorkspaceCaches = useCallback(() => {
+    cachedWorkspacesRef.current.clear();
+    cachedCollectionChildrenAndMetaRef.current.clear();
+    setWorkspaceCacheVersion(version => version + 1);
+  }, []);
 
   const syncKonnectProjectsAndNotifyRef = useRef<(konnectOrganizationId?: string | null) => Promise<void>>(
     async () => {},
@@ -488,18 +495,18 @@ const ProjectNavigationSidebarInner = (
   useEffect(() => {
     getAllRemoteFilesByProjectId();
     const updateUnsyncedFiles = () => {
+      clearWorkspaceCaches();
       getAllRemoteFilesByProjectId();
     };
     // Subscribe to changes in unsynced workspace files to keep the sidebar up to date.
     // The subscribe is triggered in insomnia-event-stream-context when cloud sync files is changed remotely
     return uiEventBus.on(CLOUD_SYNC_FILE_CHANGE, updateUnsyncedFiles);
-  }, [getAllRemoteFilesByProjectId, organizationId]);
+  }, [clearWorkspaceCaches, getAllRemoteFilesByProjectId, organizationId]);
 
   useEffect(() => {
     // clear caches on any router data change to avoid showing stale data
-    cachedWorkspacesRef.current.clear();
-    cachedCollectionChildrenAndMetaRef.current.clear();
-  }, [projectLoaderData]);
+    clearWorkspaceCaches();
+  }, [clearWorkspaceCaches, projectLoaderData]);
 
   useEffect(() => {
     const tryToGetWorkspacesFromCache = async (projectIds: string[]) => {
@@ -785,6 +792,7 @@ const ProjectNavigationSidebarInner = (
     localWorkspaceOrders,
     organizationId,
     projectsWithPresence,
+    workspaceCacheVersion,
     unsyncedFilesByProjectId,
   ]);
 
