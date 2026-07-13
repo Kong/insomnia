@@ -355,16 +355,16 @@ test('Template tag sandbox: manifest grants a non-baseline module and is shown i
   await expect.soft(page.getByTestId('plugin-permission-warning-insomnia-plugin-events-malformed')).toBeVisible();
 });
 
-// Tag-object source factories (composed into a plugin's templateTags array below). Each reports its
-// result, or the bridge's error message if the capability was denied.
-// A storage round-trip (set then get) — needs the `storage` capability.
+// Tag-object source factories (composed into a plugin's templateTags array below).
+// A storage round-trip (set then get) — needs the `storage` capability. Under C2 an ungranted
+// plugin has no `context.store` branch at all, so it feature-detects and reports that rather than
+// throwing — the idiomatic graceful-degradation pattern.
 const storageTagObject = (tagName: string) => `{
   name: '${tagName}', displayName: '${tagName}', args: [],
   async run(context) {
-    try {
-      await context.store.setItem('cap_k', 'cap-storage-ok');
-      return await context.store.getItem('cap_k');
-    } catch (err) { return err.message; }
+    if (!context.store) { return 'no-storage-capability'; }
+    await context.store.setItem('cap_k', 'cap-storage-ok');
+    return await context.store.getItem('cap_k');
   }
 }`;
 // A util.render call — baseline (no manifest needed).
@@ -375,7 +375,7 @@ const renderTagObject = (tagName: string) => `{
   }
 }`;
 
-test('Template tag sandbox: host capabilities are gated by the manifest (C1)', async ({
+test('Template tag sandbox: host capabilities are gated by the manifest (C1 + C2)', async ({
   page,
   app,
   dataPath,
@@ -421,8 +421,8 @@ test('Template tag sandbox: host capabilities are gated by the manifest (C1)', a
 
   // Declared `storage` → the set/get round-trip flows end-to-end through the gated bridge.
   await assertTagPreview('{% capstorage', 'cap-storage-ok');
-  // Undeclared → the exact denial naming the capability (tells the author what to add).
-  await assertTagPreview('{% capdenied', "Capability 'storage' not granted");
+  // Undeclared → `context.store` is absent (C2), so the plugin feature-detects and degrades.
+  await assertTagPreview('{% capdenied', 'no-storage-capability');
   // Baseline `render` still works for the same no-manifest plugin — gating is per-capability.
   await assertTagPreview('{% capbaseline', 'baseline-ok');
 });
