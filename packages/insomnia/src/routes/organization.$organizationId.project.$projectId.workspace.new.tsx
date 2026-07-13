@@ -208,6 +208,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       const requestCreatedProperties = {
         requestType: 'HTTP',
+        request_url_length: 0,
         ...(workspaceData.source && { source: workspaceData.source }),
       };
       window.main.trackAnalyticsEvent({
