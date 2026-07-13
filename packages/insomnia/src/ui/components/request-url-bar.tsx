@@ -32,7 +32,7 @@ import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
-import { MethodDropdown } from './dropdowns/method-dropdown';
+import { MethodSelector } from './dropdowns/method-selector';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showModal } from './modals';
 import { AlertModal } from './modals/alert-modal';
@@ -301,8 +301,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const isCancellable = currentInterval || currentTimeout || isEventStreamOpen || isGraphQLSubscriptionOpen;
     return (
       <div className="flex w-full items-stretch justify-between self-stretch">
-        <div className="flex items-center">
-          <MethodDropdown
+        <div className="flex items-stretch p-1">
+          <MethodSelector
+            className="self-stretch"
             ref={methodDropdownRef}
             onChange={method => patchRequest(requestId, { method })}
             method={method}

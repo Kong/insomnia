@@ -354,3 +354,75 @@ test('Template tag sandbox: manifest grants a non-baseline module and is shown i
     .toContainText('baseline access');
   await expect.soft(page.getByTestId('plugin-permission-warning-insomnia-plugin-events-malformed')).toBeVisible();
 });
+
+// Tag-object source factories (composed into a plugin's templateTags array below). Each reports its
+// result, or the bridge's error message if the capability was denied.
+// A storage round-trip (set then get) — needs the `storage` capability.
+const storageTagObject = (tagName: string) => `{
+  name: '${tagName}', displayName: '${tagName}', args: [],
+  async run(context) {
+    try {
+      await context.store.setItem('cap_k', 'cap-storage-ok');
+      return await context.store.getItem('cap_k');
+    } catch (err) { return err.message; }
+  }
+}`;
+// A util.render call — baseline (no manifest needed).
+const renderTagObject = (tagName: string) => `{
+  name: '${tagName}', displayName: '${tagName}', args: [],
+  async run(context) {
+    try { return await context.util.render('baseline-ok'); } catch (err) { return err.message; }
+  }
+}`;
+
+test('Template tag sandbox: host capabilities are gated by the manifest (C1)', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // Plugin A declares the `storage` capability; plugin B declares nothing. B also exposes a baseline
+  // tag (util.render) to prove gating is per-capability, not all-or-nothing.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-cap-granted',
+    { permissions: { capabilities: ['storage'] } },
+    `module.exports.templateTags = [${storageTagObject('capstorage')}];`,
+  );
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-cap-baseline',
+    {},
+    `module.exports.templateTags = [${storageTagObject('capdenied')}, ${renderTagObject('capbaseline')}];`,
+  );
+
+  await clearPluginToast(page);
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  const fixture = await loadFixture('sandbox-capability-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await enableSandbox(page);
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Capability Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  const assertTagPreview = async (tagPrefix: string, expected: string) => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    await expect.soft(modal.getByLabel('Live Preview')).toContainText(expected);
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+  };
+
+  // Declared `storage` → the set/get round-trip flows end-to-end through the gated bridge.
+  await assertTagPreview('{% capstorage', 'cap-storage-ok');
+  // Undeclared → the exact denial naming the capability (tells the author what to add).
+  await assertTagPreview('{% capdenied', "Capability 'storage' not granted");
+  // Baseline `render` still works for the same no-manifest plugin — gating is per-capability.
+  await assertTagPreview('{% capbaseline', 'baseline-ok');
+});

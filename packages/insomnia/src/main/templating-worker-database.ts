@@ -141,21 +141,34 @@ export const runPluginTagInSandbox = async (
   // Registry-module names the plugin may require(). Defaults to the baseline floor; callers pass the
   // plugin's manifest-resolved grant (baseline ∪ insomnia.permissions.modules).
   grantedModules?: string[],
+  // Capability groups the plugin may reach through the host bridge. Defaults to the baseline floor;
+  // callers pass baseline ∪ insomnia.permissions.capabilities (bundle plugins pass ALL_CAPABILITIES).
+  grantedCapabilities?: string[],
 ): Promise<string> => {
   const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
-  const { createMapBridge } = await import('../templating/sandbox/host-bridge');
+  const { createMapBridge, filterByCapabilities, TEMPLATE_TAG_BASELINE_CAPABILITIES } = await import(
+    '../templating/sandbox/host-bridge'
+  );
   const { TEMPLATE_TAG_BASELINE_MODULES } = await import('../templating/sandbox/module-registry');
   const { pluginName, tagName, args, context: originContext } = body;
   const { meta, renderPurpose, context } = originContext;
-  const bridge = createMapBridge({
-    ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
-    // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
-    // (including its own) by handing util.render a string containing "{% tagName %}".
-    'util.render': async (b: { str: string; context: Record<string, any> }) => {
-      const { render } = await import('../templating');
-      return render(b.str, { context: b.context, allowTags: false });
-    },
-  });
+  const capabilities = grantedCapabilities ?? [...TEMPLATE_TAG_BASELINE_CAPABILITIES];
+  // Gate the handler map by capability before building the bridge: an ungranted path rejects at the
+  // bridge with a message naming the missing capability, rather than silently running.
+  const bridge = createMapBridge(
+    filterByCapabilities(
+      {
+        ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
+        // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
+        // (including its own) by handing util.render a string containing "{% tagName %}".
+        'util.render': async (b: { str: string; context: Record<string, any> }) => {
+          const { render } = await import('../templating');
+          return render(b.str, { context: b.context, allowTags: false });
+        },
+      },
+      capabilities,
+    ),
+  );
   return runTagInSandbox({
     pluginSource,
     tagName,
@@ -185,6 +198,7 @@ export const runPluginTagInSandbox = async (
       pluginName,
       renderDepth: 0,
       grantedModules: grantedModules ?? [...TEMPLATE_TAG_BASELINE_MODULES],
+      grantedCapabilities: capabilities,
     },
   });
 };
@@ -411,7 +425,15 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       if (targetTag) {
         const settings = await services.settings.get();
         if (settings.templateTagSandboxEnabled) {
-          return runPluginTagInSandbox(getPluginEntrySource({ directory: '', name: pluginName }), body);
+          const { ALL_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
+          const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
+          // Bundle plugins are first-party and trusted: grant every module + capability.
+          return runPluginTagInSandbox(
+            getPluginEntrySource({ directory: '', name: pluginName }),
+            body,
+            [...ALL_SANDBOX_MODULES],
+            [...ALL_CAPABILITIES],
+          );
         }
         return runPluginTag(targetTag.run, body);
       }
@@ -451,10 +473,12 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       const settings = await services.settings.get();
       if (settings.templateTagSandboxEnabled) {
         const { resolveTemplateTagModules } = await import('../templating/sandbox/module-registry');
+        const { resolveTemplateTagCapabilities } = await import('../templating/sandbox/host-bridge');
         return runPluginTagInSandbox(
           getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
           body,
           resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
+          resolveTemplateTagCapabilities(targetTag.plugin.permissions?.capabilities),
         );
       }
       return runPluginTag(targetTag.templateTag.run, body);

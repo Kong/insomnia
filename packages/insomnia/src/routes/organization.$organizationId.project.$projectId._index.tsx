@@ -141,8 +141,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner = Boolean(organization?.is_owner);
-  const greetingName = userSession.firstName || userSession.email.split('@')[0] || 'there';
+  const isUserOwner = organization && userSession.accountId && Boolean(organization.is_owner);
   const collectionItems = useMemo(
     () =>
       localFiles
@@ -368,11 +367,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         <div className="px-4 pt-4">
           {activeSidebarTab === 'projects' && (
             <FirstRequestCreation
-              greetingName={greetingName}
               collectionItems={collectionItems}
               selectedCollectionId={selectedCollectionId}
               onSelectedCollectionChange={setSelectedCollectionId}
-              onCreateDesignDocument={() => createNewDocument('first-request-pane')}
               onCreateCollection={() => {
                 setNewWorkspaceModalState({
                   scope: 'collection',

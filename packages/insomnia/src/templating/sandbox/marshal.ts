@@ -27,6 +27,12 @@ export interface ContextEnvelope {
    * `TEMPLATE_TAG_BASELINE_MODULES` baseline.
    */
   grantedModules: string[];
+  /**
+   * Capability groups the plugin may reach through the host bridge (axis 2, default-deny; see
+   * `host-bridge.ts`). The bridge is gated host-side (C1); C2 reads this to omit ungranted branches
+   * from the rebuilt `context`.
+   */
+  grantedCapabilities: string[];
 }
 
 /**

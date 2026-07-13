@@ -1122,30 +1122,6 @@ const Debug = () => {
                     </GridList>
                   </div>
                 </div>
-                {isImportModalOpen && (
-                  <ImportModal
-                    onHide={() => setIsImportModalOpen(false)}
-                    from={{ type: 'file' }}
-                    projectName={activeProject.name ?? getProductName()}
-                    workspaceName={activeWorkspace.name}
-                    organizationId={organizationId}
-                    defaultProjectId={projectId}
-                    defaultWorkspaceId={workspaceId}
-                  />
-                )}
-                {isPasteCurlModalOpen && (
-                  <PasteCurlModal
-                    onImport={req => {
-                      createRequest({
-                        requestType: 'From Curl',
-                        parentId: workspaceId,
-                        req,
-                      });
-                    }}
-                    defaultValue={pastedCurl}
-                    onHide={() => setPasteCurlModalOpen(false)}
-                  />
-                )}
               </div>
             </Panel>
             <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
@@ -1220,6 +1196,30 @@ const Debug = () => {
           </PanelGroup>
         </Panel>
       </PanelGroup>
+      {isImportModalOpen && (
+        <ImportModal
+          onHide={() => setIsImportModalOpen(false)}
+          from={{ type: 'file' }}
+          projectName={activeProject.name ?? getProductName()}
+          workspaceName={activeWorkspace.name}
+          organizationId={organizationId}
+          defaultProjectId={projectId}
+          defaultWorkspaceId={workspaceId}
+        />
+      )}
+      {isPasteCurlModalOpen && (
+        <PasteCurlModal
+          onImport={req => {
+            createRequest({
+              requestType: 'From Curl',
+              parentId: workspaceId,
+              req,
+            });
+          }}
+          defaultValue={pastedCurl}
+          onHide={() => setPasteCurlModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

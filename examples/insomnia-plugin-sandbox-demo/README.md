@@ -38,3 +38,10 @@ a frozen `process` stub, and Web-Crypto `crypto.getRandomValues`/`crypto.subtle`
 present (not manifest-gated) as pure-JS or host-backed safe equivalents, and render identically to
 the legacy main-process path: `{% stdlibprobe 'buffer' %}`, `{% stdlibprobe 'url' %}`,
 `{% stdlibprobe 'platform' %}`.
+
+The `capabilityprobe` tag demos **manifest-gated host capabilities** (C1): this plugin declares
+`insomnia.permissions.capabilities: ["storage"]`, so `{% capabilityprobe %}` completes a `context.store`
+set/get round-trip and renders `storage-ok`. A plugin that did not declare `storage` would get
+`Capability 'storage' not granted — add it to insomnia.permissions.capabilities`. Baseline
+capabilities (`render`, `models.read`, `util`, `crypto`) need no declaration; network / storage /
+fs-read / credentials / app do.

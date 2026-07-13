@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getEncryptionKeys, getUserProfile } from '../user';
+import { getEncryptionKeys, getOnboardingState, getUserProfile } from '../user';
 
 const { mockFetch } = vi.hoisted(() => ({
   mockFetch: vi.fn(),
@@ -111,5 +111,29 @@ describe('getEncryptionKeys', () => {
       path: '/v3/users/me/encryption-keys',
       sessionId: 'sess_xyz',
     });
+  });
+});
+
+describe('getOnboardingState', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('GETs the onboarding endpoint with the sessionId', async () => {
+    mockFetch.mockResolvedValue({ first_request_treatment: 'treatment_a', is_new_signup: true });
+
+    const result = await getOnboardingState({ sessionId: 'sess_xyz' });
+
+    expect(mockFetch).toHaveBeenCalledWith({ method: 'GET', path: '/v3/users/me/onboarding', sessionId: 'sess_xyz' });
+    expect(result.first_request_treatment).toBe('treatment_a');
+    expect(result.is_new_signup).toBe(true);
+  });
+
+  it('passes a null treatment through as-is', async () => {
+    mockFetch.mockResolvedValue({ first_request_treatment: null, is_new_signup: false });
+
+    const result = await getOnboardingState({ sessionId: 'sess_xyz' });
+
+    expect(result).toEqual({ first_request_treatment: null, is_new_signup: false });
   });
 });
