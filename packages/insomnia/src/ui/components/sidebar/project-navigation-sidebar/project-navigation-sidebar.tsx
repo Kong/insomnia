@@ -278,12 +278,10 @@ const ProjectNavigationSidebarInner = (
   const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
   // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
   const isFetchingUnsyncedFilesRef = useRef(false);
-  const [workspaceCacheVersion, setWorkspaceCacheVersion] = useState(0);
 
   const clearWorkspaceCaches = useCallback(() => {
     cachedWorkspacesRef.current.clear();
     cachedCollectionChildrenAndMetaRef.current.clear();
-    setWorkspaceCacheVersion(version => version + 1);
   }, []);
 
   const syncKonnectProjectsAndNotifyRef = useRef<(konnectOrganizationId?: string | null) => Promise<void>>(
@@ -792,7 +790,6 @@ const ProjectNavigationSidebarInner = (
     localWorkspaceOrders,
     organizationId,
     projectsWithPresence,
-    workspaceCacheVersion,
     unsyncedFilesByProjectId,
   ]);
 
