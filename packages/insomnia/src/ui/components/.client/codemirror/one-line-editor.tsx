@@ -17,7 +17,6 @@ import React, {
 import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
-import { getAppBundlePlugins } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
 import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
