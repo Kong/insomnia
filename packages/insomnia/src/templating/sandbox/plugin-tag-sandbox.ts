@@ -3,7 +3,7 @@ import type { QuickJSContext, QuickJSHandle } from 'quickjs-emscripten';
 import type { HostBridge } from './host-bridge';
 import { IN_SANDBOX_BOOTSTRAP, RUNNER, wrapPluginSource } from './in-sandbox-bootstrap';
 import { type ContextEnvelope, encodeBridgeFailure, encodeBridgeSuccess } from './marshal';
-import { MODULE_REGISTRY_SOURCE } from './module-registry';
+import { buildModuleRegistrySource } from './module-registry';
 import { SANDBOX_GLOBALS_SOURCE } from './sandbox-globals';
 
 /**
@@ -68,7 +68,8 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     // appInfo (platform/arch) is injected as its own global for the process stub to read + delete.
     setGlobalString(ctx, '__sandboxAppInfoJSON', JSON.stringify(envelope.appInfo ?? {}));
     evalOrThrow(ctx, SANDBOX_GLOBALS_SOURCE, '<sandbox-globals>');
-    evalOrThrow(ctx, MODULE_REGISTRY_SOURCE, '<sandbox-modules>');
+    // Only register heavy vendored libs the plugin was granted, so unrelated renders don't parse them.
+    evalOrThrow(ctx, buildModuleRegistrySource(envelope.grantedModules), '<sandbox-modules>');
     evalOrThrow(ctx, wrapPluginSource(pluginSource), '<plugin>');
     evalOrThrow(ctx, RUNNER, '<runner>');
 
