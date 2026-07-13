@@ -65,6 +65,8 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     responseFilterHistory.unshift(responseFilter);
     patchRequestMeta(requestId, { responseFilterHistory });
   };
+
+  // Check if the request is sending by fetcher key
   const requestSendingFetcher = useFetcher({ key: `send-request-${activeRequest._id}` });
   const isRequestSending = requestSendingFetcher.state !== 'idle';
 
