@@ -134,6 +134,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     project_id: projectId,
     collection_id: workspaceId,
     request_key_id: activeRequestId,
+    request_url_length: req?.url?.length || 0,
     has_prescript: !!req?.preRequestScript,
     has_postscript: !!req?.afterResponseScript,
     request_header_names: req?.headers?.map(h => h.name) || [],
