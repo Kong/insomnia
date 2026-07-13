@@ -611,7 +611,7 @@ export const FirstRequestCreation = ({
               primary
               size="md"
               className="h-6.5 rounded-sm px-2 text-[12px]/[18px] font-[590]"
-              isDisabled={isCreatingRequest}
+              isDisabled={isCreatingRequest || createWorkspaceFetcher.state !== 'idle'}
               onPress={() => handleCreateRequest()}
             >
               <span>{createButtonLabel}</span>
