@@ -114,22 +114,6 @@ export const ALL_CAPABILITIES: Capability[] = [
 export const TEMPLATE_TAG_BASELINE_CAPABILITIES: Capability[] = ['render', 'models.read', 'util', 'crypto'];
 
 /**
- * Resolve the capability set a template-tag plugin gets: the baseline floor plus whatever known
- * capabilities it declared in `insomnia.permissions.capabilities`. Unknown names are dropped (they
- * map to no bridge path), so the resolved set only ever contains real `Capability` values — which
- * keeps the envelope clean for the P1 profile-ceiling intersection.
- */
-export const resolveTemplateTagCapabilities = (declaredCapabilities: string[] = []): string[] => {
-  const resolved: string[] = [...TEMPLATE_TAG_BASELINE_CAPABILITIES];
-  for (const name of declaredCapabilities) {
-    if (ALL_CAPABILITIES.includes(name as Capability) && !resolved.includes(name as Capability)) {
-      resolved.push(name);
-    }
-  }
-  return resolved;
-};
-
-/**
  * Wrap a `pluginToMainAPI`-shaped handler map so each path rejects unless its capability is granted.
  * This is the host-side gate (defense at the bridge); C2 additionally omits ungranted branches from
  * the in-sandbox `context` so the API surface itself reflects the grant. A path with no capability

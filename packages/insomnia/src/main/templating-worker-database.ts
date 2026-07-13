@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { app, clipboard, dialog, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -124,6 +124,43 @@ export const getPluginEntrySource = ({ directory, name }: { directory: string; n
     throw new Error(
       `Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`,
     );
+  }
+};
+
+// Plugins we've already shown the migration warning for this session — deduped by name so the toast
+// fires at most once per plugin per session, no matter how many times its tags render (P1).
+const warnedManifestlessPlugins = new Set<string>();
+
+export const _testOnlyResetMigrationWarnings = () => warnedManifestlessPlugins.clear();
+
+// When a plugin with no valid permissions manifest (absent or malformed → permissionsDeclared
+// false) is denied a non-baseline module under the
+// sandbox, surface a one-time, actionable migration toast naming the exact grant to add — so a
+// pre-sandbox third-party plugin fails loudly-but-helpfully instead of silently. Only the module
+// require-gate produces a host-visible denial ("Module 'X' not permitted by manifest"); ungranted
+// capabilities are absent branches (C2) that a plugin feature-detects, so there's no toast for those.
+export const maybeWarnMissingManifest = (
+  plugin: { name: string; permissionsDeclared: boolean },
+  err: unknown,
+): void => {
+  if (plugin.permissionsDeclared || warnedManifestlessPlugins.has(plugin.name)) {
+    return;
+  }
+  const message = err instanceof Error ? err.message : String(err);
+  const match = /Module '([^']+)' not permitted by manifest/.exec(message);
+  if (!match) {
+    return;
+  }
+  const missingModule = match[1];
+  warnedManifestlessPlugins.add(plugin.name);
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('show-toast', {
+      content: {
+        title: 'Plugin needs a permissions manifest',
+        description: `"${plugin.name}" tried to require "${missingModule}" but has no valid permissions manifest. Add insomnia.permissions.modules: ["${missingModule}"] to its package.json to run it under the template-tag sandbox.`,
+        status: 'warning',
+      },
+    });
   }
 };
 
@@ -472,14 +509,21 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (targetTag) {
       const settings = await services.settings.get();
       if (settings.templateTagSandboxEnabled) {
-        const { resolveTemplateTagModules } = await import('../templating/sandbox/module-registry');
-        const { resolveTemplateTagCapabilities } = await import('../templating/sandbox/host-bridge');
-        return runPluginTagInSandbox(
-          getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
-          body,
-          resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
-          resolveTemplateTagCapabilities(targetTag.plugin.permissions?.capabilities),
+        const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+          '../templating/sandbox/surface-profiles'
         );
+        try {
+          return await runPluginTagInSandbox(
+            getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
+            body,
+            resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
+            resolveTemplateTagCapabilities(targetTag.plugin.permissions?.capabilities),
+          );
+        } catch (err) {
+          // Surface a one-time migration hint for manifest-less plugins, then let the denial through.
+          maybeWarnMissingManifest(targetTag.plugin, err);
+          throw err;
+        }
       }
       return runPluginTag(targetTag.templateTag.run, body);
     }

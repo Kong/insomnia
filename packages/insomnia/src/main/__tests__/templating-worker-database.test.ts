@@ -4,7 +4,18 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('electron', () => ({ app: { getVersion: () => '1.0.0' }, clipboard: {}, dialog: {}, shell: {} }));
+const sentToasts: any[] = [];
+vi.mock('electron', () => ({
+  app: { getVersion: () => '1.0.0' },
+  clipboard: {},
+  dialog: {},
+  shell: {},
+  BrowserWindow: {
+    getAllWindows: () => [
+      { webContents: { send: (channel: string, payload: any) => sentToasts.push({ channel, payload }) } },
+    ],
+  },
+}));
 vi.mock('insomnia-data', () => ({
   services: {
     request: { getById: vi.fn() },
@@ -21,12 +32,50 @@ vi.mock('insomnia-data', () => ({
 vi.mock('~/plugins', () => ({ getPluginCommonContext: vi.fn(), getTemplateTags: vi.fn().mockResolvedValue([]) }));
 vi.mock('~/common/cookies', () => ({ jarFromCookies: vi.fn() }));
 vi.mock('../common/database', () => ({ database: {} }));
-vi.mock('../network/network', () => ({ fetchRequestData: vi.fn(), sendCurlAndWriteTimeline: vi.fn(), tryToInterpolateRequest: vi.fn() }));
+vi.mock('../network/network', () => ({
+  fetchRequestData: vi.fn(),
+  sendCurlAndWriteTimeline: vi.fn(),
+  tryToInterpolateRequest: vi.fn(),
+}));
 vi.mock('../network/libcurl-promise', () => ({ curlRequest: vi.fn() }));
 vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
-import { getPluginEntrySource, runPluginTagInSandbox } from '../templating-worker-database';
+import {
+  _testOnlyResetMigrationWarnings,
+  getPluginEntrySource,
+  maybeWarnMissingManifest,
+  runPluginTagInSandbox,
+} from '../templating-worker-database';
+
+describe('maybeWarnMissingManifest (P1 migration warning)', () => {
+  beforeEach(() => {
+    sentToasts.length = 0;
+    _testOnlyResetMigrationWarnings();
+  });
+
+  const denial = new Error("Module 'events' not permitted by manifest");
+
+  it('warns once per manifest-less plugin, naming the missing module', () => {
+    const plugin = { name: 'insomnia-plugin-legacy', permissionsDeclared: false };
+    maybeWarnMissingManifest(plugin, denial);
+    maybeWarnMissingManifest(plugin, denial); // second render — must not re-toast
+    expect(sentToasts).toHaveLength(1);
+    expect(sentToasts[0].channel).toBe('show-toast');
+    expect(sentToasts[0].payload.content.description).toContain('events');
+    expect(sentToasts[0].payload.content.description).toContain('insomnia.permissions.modules');
+  });
+
+  it('does not warn a plugin that declared a permissions manifest', () => {
+    maybeWarnMissingManifest({ name: 'insomnia-plugin-declared', permissionsDeclared: true }, denial);
+    expect(sentToasts).toHaveLength(0);
+  });
+
+  it('does not warn on a non-denial error', () => {
+    maybeWarnMissingManifest({ name: 'insomnia-plugin-legacy', permissionsDeclared: false }, new Error('kaboom'));
+    expect(sentToasts).toHaveLength(0);
+  });
+});
 
 describe('getPluginEntrySource', () => {
   let dir: string;

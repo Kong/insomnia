@@ -426,3 +426,64 @@ test('Template tag sandbox: host capabilities are gated by the manifest (C1 + C2
   // Baseline `render` still works for the same no-manifest plugin — gating is per-capability.
   await assertTagPreview('{% capbaseline', 'baseline-ok');
 });
+
+test('Template tag sandbox: surface profile enforces the ceiling and warns manifest-less plugins (P1)', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // A manifest-less plugin that requires a non-baseline module — the classic pre-sandbox plugin.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-legacy-migrate',
+    {},
+    `module.exports.templateTags = [{
+      name: 'migrateprobe', displayName: 'migrateprobe', args: [],
+      async run() { return typeof require('events').EventEmitter; }
+    }];`,
+  );
+  // A plugin that DECLARES the credentials capability — which is above the template-tag profile
+  // ceiling, so it is never granted; the cloudCredential context branch stays absent.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-ceiling',
+    { permissions: { capabilities: ['credentials'] } },
+    `module.exports.templateTags = [{
+      name: 'ceilingprobe', displayName: 'ceilingprobe', args: [],
+      async run(context) { return 'cloudCredential=' + typeof (context.util.models && context.util.models.cloudCredential); }
+    }];`,
+  );
+
+  await clearPluginToast(page);
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  const fixture = await loadFixture('sandbox-profile-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await enableSandbox(page);
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Profile Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  const assertTagPreview = async (tagPrefix: string, expected: string) => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    await expect.soft(modal.getByLabel('Live Preview')).toContainText(expected);
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+  };
+
+  // Manifest-less plugin requiring a non-baseline module is denied with the exact require message…
+  await assertTagPreview('{% migrateprobe', "Module 'events' not permitted by manifest");
+  // …and a one-time migration toast surfaces the fix (naming the module + the manifest field).
+  await expect.soft(page.getByText('Plugin needs a permissions manifest')).toBeVisible();
+
+  // Ceiling: `credentials` is declared but above the template-tag profile ceiling, so it is not
+  // granted — the cloudCredential branch is absent (a manifest can't self-escalate past the surface).
+  await assertTagPreview('{% ceilingprobe', 'cloudCredential=undefined');
+});
