@@ -96,4 +96,16 @@ module.exports.templateTags = [
       }
     },
   },
+  {
+    name: 'vendoredprobe',
+    displayName: 'Vendored Lib Probe',
+    description: 'Demos a vetted npm library (M3): this plugin declares insomnia.permissions.modules ["uuid"]',
+    args: [],
+    async run() {
+      // Works because package.json declares the `uuid` grant; uuid is bundled + pinned by Insomnia.
+      // eslint-disable-next-line no-undef, unicorn/prefer-node-protocol -- CJS plugin requiring a vetted registry lib
+      const uuid = require('uuid');
+      return 'uuid=' + (uuid.validate(uuid.v4()) ? 'ok' : 'bad');
+    },
+  },
 ];

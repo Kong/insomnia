@@ -22,6 +22,7 @@
     "build": "react-router build && esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:react-router": "react-router build",
     "generate:schema": "esr --cache ./scripts/generate-schema.ts",
+    "generate:sandbox-vendored": "esr ./scripts/generate-sandbox-vendored.ts",
     "build:electron-entrypoints": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",

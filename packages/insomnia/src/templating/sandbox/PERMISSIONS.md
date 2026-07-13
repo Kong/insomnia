@@ -22,8 +22,11 @@ Names you may `require()` inside the sandbox. Each resolves to a **vetted safe e
 by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw Node builtin.
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
-- **Grantable:** any other module in the sandbox registry (e.g. `events`). Declaring one adds it to
-  your grant.
+- **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
+  - Pure-JS reimplementations: `events` (and more via M2).
+  - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
+    libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
+    New libs are added deliberately via `scripts/generate-sandbox-vendored.ts` (see its checklist).
 - `require('X')` where `X` isn't granted → **`Module 'X' not permitted by manifest`**.
 - `require('X')` where `X` is granted but Insomnia doesn't ship it → **`Module 'X' not available in
   sandbox`** (ask for it to be added to the registry).
