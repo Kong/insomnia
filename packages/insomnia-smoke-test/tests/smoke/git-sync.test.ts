@@ -182,6 +182,46 @@ test.describe('Git Sync', () => {
     // After discarding all changes the staging modal auto-closes
     await expect.soft(page.getByLabel('Unstaged changes')).toBeHidden();
   });
+
+  // Regression test for a24b1b0: editing only the Name field auto-mirrors it into the
+  // (git-only) File name field. That auto-derived value must NOT count as a second
+  // real unsaved change on top of the Name edit itself — the modal's guard only
+  // prompts once more than one field has genuinely changed (changedFieldCount > 1).
+  test('Editing only the collection name does not trigger the unsaved changes prompt', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
+    await page.getByRole('textbox', { name: 'Name', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Name Only Collection');
+
+    // Only Name was touched. Pre-fix, the auto-mirrored File name field also counted
+    // as changed, pushing changedFieldCount to 2 and wrongly triggering this prompt.
+    await page.keyboard.press('Escape');
+    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    await expect.soft(page.getByRole('heading', { name: 'Unsaved changes' })).toBeHidden();
+
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
+    await page.getByRole('textbox', { name: 'Name', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Two Real Edits Collection');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('manually_edited_file_name');
+
+    // Now Name AND File name were both genuinely edited to distinct values, so
+    // changedFieldCount is 2 and the prompt should appear as expected.
+    await page.keyboard.press('Escape');
+    await expect.soft(page.getByRole('heading', { name: 'Unsaved changes' })).toBeVisible();
+    await page.getByRole('button', { name: 'No' }).click();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Yes' }).click();
+    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+  });
 });
 
 async function addAccessTokenGitCredential(insomnia: InsomniaApp) {
