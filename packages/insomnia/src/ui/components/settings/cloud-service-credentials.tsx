@@ -235,16 +235,18 @@ export const CloudServiceCredentialList = () => {
       )}
       <div>
         <h2 className="z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Cloud Secret Config</h2>
-        <div className="form-row items-end justify-between">
-          <NumberSetting
-            label="Secret Cache Duration(min)"
-            setting="vaultSecretCacheDuration"
-            help="Enter the amount of time in minutes external vault secrets are cached in Insomnia. Enter 0 to disable cache. Click the Reset Cache button to clear all cache."
-            min={0}
-            max={720}
-          />
+        <div className="flex items-end gap-(--padding-sm)">
+          <div className="grow">
+            <NumberSetting
+              label="Secret Cache Duration (min)"
+              setting="vaultSecretCacheDuration"
+              help="Enter the amount of time in minutes external vault secrets are cached in Insomnia. Enter 0 to disable cache. Click the Reset Cache button to clear all cache."
+              min={0}
+              max={720}
+            />
+          </div>
           <button
-            className="pointer mb-(--padding-sm) ml-(--padding-sm) flex h-(--line-height-xs) shrink-0 min-w-32 items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-center whitespace-nowrap hover:bg-(--hl-xs)"
+            className="pointer mb-(--padding-sm) flex h-(--line-height-xs) min-w-32 shrink-0 items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-center whitespace-nowrap hover:bg-(--hl-xs)"
             onClick={async () =>
               await pluginsBridge.executePluginMainAction({
                 pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
