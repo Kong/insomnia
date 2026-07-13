@@ -246,6 +246,7 @@ export const FirstRequestCreation = ({
 
   const handleCreateRequest = async () => {
     if (!trimmedInput) {
+      handleCreateBlankRequest();
       return;
     }
     const workspaceId = await ensureWorkspaceId();
@@ -301,6 +302,13 @@ export const FirstRequestCreation = ({
     setSelectOpen(false);
   }, [selectedCollectionId]);
 
+  // Focus the request input whenever the pane is (re-)shown for a project. A plain
+  // `autoFocus` attribute only fires on the input's initial DOM mount, so it misses
+  // client-side navigations between projects that reuse this component instance.
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [projectId]);
+
   // Load the lifetime created-request count, used to decide when to latch the
   // server-side graduation threshold (see maybeLatchRequestThreshold for how the
   // device-wide count is scoped back down to this account).
@@ -324,18 +332,20 @@ export const FirstRequestCreation = ({
   useEffect(() => {
     let isActive = true;
 
-    getCurrentSessionId()
-      .then(sessionId => (sessionId ? getOnboardingState({ sessionId }) : null))
-      .catch(error => {
+    const loadOnboardingState = async () => {
+      let state: UserOnboarding | null = null;
+      try {
+        const sessionId = await getCurrentSessionId();
+        state = sessionId ? await getOnboardingState({ sessionId }) : null;
+      } catch (error) {
         console.error('Failed to load onboarding state', error);
-        return null;
-      })
-      .then(state => {
-        if (isActive) {
-          setOnboarding(state);
-          setOnboardingLoaded(true);
-        }
-      });
+      }
+      if (isActive) {
+        setOnboarding(state);
+        setOnboardingLoaded(true);
+      }
+    };
+    loadOnboardingState();
 
     return () => {
       isActive = false;
@@ -543,7 +553,6 @@ export const FirstRequestCreation = ({
             <MethodSelector method={method} onChange={setMethod} className="h-6.5" />
             <input
               ref={inputRef}
-              autoFocus
               aria-label="Request endpoint or cURL input"
               className="h-6.5 min-w-0 flex-1 bg-transparent text-[12px]/[18px] font-normal"
               placeholder="Enter a URL or paste cURL"
@@ -602,7 +611,7 @@ export const FirstRequestCreation = ({
               primary
               size="md"
               className="h-6.5 rounded-sm px-2 text-[12px]/[18px] font-[590]"
-              isDisabled={!trimmedInput || isCreatingRequest}
+              isDisabled={isCreatingRequest || createWorkspaceFetcher.state !== 'idle'}
               onPress={() => handleCreateRequest()}
             >
               <span>{createButtonLabel}</span>
