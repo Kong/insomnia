@@ -306,15 +306,15 @@ export class Variables {
 
   /**
    * Sets a local variable with the specified name and value.
-   * If the provided value is `null`, a warning is logged and the variable is not set.
+   * If the provided value is `null` or `undefined`, a warning is logged and the variable is not set.
    *
    * @param variableName - The name of the variable to set.
    * @param variableValue - The value to assign to the variable. Can be a boolean, number, string, undefined, or null.
-   *                        If `null`, the variable will not be set and a warning will be logged.
+   *                        If `null` or `undefined`, the variable will not be set and a warning will be logged.
    */
   set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
-    if (variableValue === null) {
-      getExistingConsole().warn(`Variable "${variableName}" has a null value`);
+    if (variableValue === null || variableValue === undefined) {
+      getExistingConsole().warn(`Variable "${variableName}" has a null or undefined value`);
       return;
     }
 

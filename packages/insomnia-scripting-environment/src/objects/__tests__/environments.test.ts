@@ -1,6 +1,7 @@
 import { validate } from 'uuid';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { getExistingConsole } from '../console';
 import { Environment, Variables } from '../environments';
 import { Folder, ParentFolders } from '../folders';
 import { Url } from '../urls';
@@ -124,5 +125,33 @@ describe('Environment serialization', () => {
   it('serializes its key-values when logged instead of an empty Map', () => {
     const environment = new Environment('Base Environment', { user_id: 'abc', count: 1 });
     expect(JSON.stringify(environment)).toEqual(JSON.stringify({ user_id: 'abc', count: 1 }));
+  });
+});
+
+describe('set rejects null/undefined', () => {
+  it('Environment.set warns and skips on null', () => {
+    const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
+    const env = new Environment('test', {});
+    env.set('key', null);
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null value');
+    expect(env.has('key')).toBe(false);
+    warnSpy.mockRestore();
+  });
+
+  it.each([null, undefined])('Variables.set warns and skips on %s', value => {
+    const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
+    const variables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', {}),
+      globalVars: new Environment('globals', {}),
+      environmentVars: new Environment('environments', {}),
+      collectionVars: new Environment('baseEnvironment', {}),
+      iterationDataVars: new Environment('iterationData', {}),
+      folderLevelVars: [],
+      localVars: new Environment('local', {}),
+    });
+    variables.set('key', value);
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null or undefined value');
+    expect(variables.get('key')).toBeUndefined();
+    warnSpy.mockRestore();
   });
 });
