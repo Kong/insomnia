@@ -1,7 +1,7 @@
 import type { QuickJSContext, QuickJSHandle } from 'quickjs-emscripten';
 
 import type { HostBridge } from './host-bridge';
-import { IN_SANDBOX_BOOTSTRAP, RUNNER, wrapPluginSource } from './in-sandbox-bootstrap';
+import { IN_SANDBOX_BOOTSTRAP, RUNNER } from './in-sandbox-bootstrap';
 import { type ContextEnvelope, encodeBridgeFailure, encodeBridgeSuccess } from './marshal';
 import { buildModuleRegistrySource } from './module-registry';
 import { SANDBOX_GLOBALS_SOURCE } from './sandbox-globals';
@@ -20,8 +20,12 @@ export interface HostCrypto {
 }
 
 export interface RunTagInSandboxOptions {
-  /** Raw CommonJS source of the plugin module that exports `templateTags`. */
-  pluginSource: string;
+  /**
+   * Raw CommonJS source of the plugin's entry module. Convenience for single-file plugins/tests;
+   * synthesized into `envelope.moduleFiles` as `index.js`. Ignored when the envelope already carries
+   * a module map (multi-file plugins, M4).
+   */
+  pluginSource?: string;
   /** Name of the tag within the module to execute. */
   tagName: string;
   /** Bulk-copied state passed to the rebuilt in-sandbox context. */
@@ -48,6 +52,16 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
   const ctx = QuickJS.newContext();
   const deadline = Date.now() + timeoutMs;
 
+  // Single-file convenience: synthesize a one-entry module map from pluginSource when the caller
+  // didn't pass a multi-file map. The in-sandbox loader always resolves the entry from the map.
+  const hasMap = !!envelope.moduleFiles && Object.keys(envelope.moduleFiles).length > 0;
+  if (!hasMap && pluginSource === undefined) {
+    throw new Error('runTagInSandbox requires either pluginSource or envelope.moduleFiles');
+  }
+  const fullEnvelope: ContextEnvelope = hasMap
+    ? { ...envelope, entryModuleKey: envelope.entryModuleKey ?? 'index.js' }
+    : { ...envelope, moduleFiles: { 'index.js': pluginSource as string }, entryModuleKey: 'index.js' };
+
   try {
     // Polled during synchronous execution so a tight sync loop in plugin code can't bypass the timeout.
     ctx.runtime.setInterruptHandler(() => Date.now() > deadline);
@@ -60,7 +74,7 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     // The envelope/tag globals are injected BEFORE the bootstrap, which captures them into closure
     // state and deletes the globals — so plugin top-level code can't rewrite grantedModules (or any
     // other envelope field) before __invoke() runs.
-    setGlobalString(ctx, '__envelopeJSON', JSON.stringify(envelope));
+    setGlobalString(ctx, '__envelopeJSON', JSON.stringify(fullEnvelope));
     setGlobalString(ctx, '__tagName', tagName);
     evalOrThrow(ctx, IN_SANDBOX_BOOTSTRAP, '<sandbox-bootstrap>');
     // Ambient globals (Buffer/process/crypto/URL) depend on the bootstrap's encoders and the host
@@ -69,8 +83,9 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     setGlobalString(ctx, '__sandboxAppInfoJSON', JSON.stringify(envelope.appInfo ?? {}));
     evalOrThrow(ctx, SANDBOX_GLOBALS_SOURCE, '<sandbox-globals>');
     // Only register heavy vendored libs the plugin was granted, so unrelated renders don't parse them.
-    evalOrThrow(ctx, buildModuleRegistrySource(envelope.grantedModules), '<sandbox-modules>');
-    evalOrThrow(ctx, wrapPluginSource(pluginSource), '<plugin>');
+    evalOrThrow(ctx, buildModuleRegistrySource(fullEnvelope.grantedModules), '<sandbox-modules>');
+    // Plugin source travels as envelope DATA (moduleFiles) and is compiled by the in-sandbox loader
+    // when __invoke() loads the entry — no host-side eval of plugin code.
     evalOrThrow(ctx, RUNNER, '<runner>');
 
     return await drivePromiseToString(ctx, timeoutMs);

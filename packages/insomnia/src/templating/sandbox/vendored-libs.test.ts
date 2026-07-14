@@ -15,8 +15,16 @@ import { UUID_FACTORY_SOURCE } from './vendored/uuid.generated';
 // in the dedicated <name>.regression.test.ts files alongside this one — kept separate since they're
 // larger and scoped to one library each.
 const nodeHostCrypto: HostCrypto = {
-  hash: (a, d, i, o) => nodeCrypto.createHash(a).update(d, i as nodeCrypto.Encoding).digest(o as nodeCrypto.BinaryToTextEncoding),
-  hmac: (a, k, d, o) => nodeCrypto.createHmac(a, k).update(d, 'utf8').digest(o as nodeCrypto.BinaryToTextEncoding),
+  hash: (a, d, i, o) =>
+    nodeCrypto
+      .createHash(a)
+      .update(d, i as nodeCrypto.Encoding)
+      .digest(o as nodeCrypto.BinaryToTextEncoding),
+  hmac: (a, k, d, o) =>
+    nodeCrypto
+      .createHmac(a, k)
+      .update(d, 'utf8')
+      .digest(o as nodeCrypto.BinaryToTextEncoding),
   randomBytes: n => nodeCrypto.randomBytes(n).toString('base64'),
   randomUUID: () => nodeCrypto.randomUUID(),
 };

@@ -33,6 +33,16 @@ export interface ContextEnvelope {
    * from the rebuilt `context`.
    */
   grantedCapabilities: string[];
+  /**
+   * The plugin's own source files (M4), keyed by POSIX path relative to the plugin directory —
+   * read host-side within the plugin dir only (never `node_modules`). The in-sandbox loader resolves
+   * relative `require()`s against this map; bare specifiers still go through the grant-gated registry.
+   * `runTagInSandbox` fills these in from a single-file `pluginSource` when not provided, so
+   * single-module callers/tests need not construct a map.
+   */
+  moduleFiles?: Record<string, string>;
+  /** Key into `moduleFiles` for the plugin's entry module (from package.json `main`). */
+  entryModuleKey?: string;
 }
 
 /**
