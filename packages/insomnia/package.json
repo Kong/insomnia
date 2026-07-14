@@ -22,7 +22,6 @@
     "build": "react-router build && esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:react-router": "react-router build",
     "generate:schema": "esr --cache ./scripts/generate-schema.ts",
-    "generate:sandbox-vendored": "esr ./scripts/generate-sandbox-vendored.ts",
     "build:electron-entrypoints": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
@@ -36,7 +35,12 @@
     "test": "vitest run",
     "type-check": "react-router typegen && tsc --project tsconfig.json",
     "type-check:watch": "npm run type-check -- --watch",
-    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
+    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/",
+    "sandbox:vendored:ci": "npm ci --prefix src/templating/sandbox/vendored/pkg && npm run sandbox:vendored:guardrail",
+    "sandbox:vendored:generate": "esr ./scripts/generate-sandbox-vendored.ts",
+    "sandbox:vendored:guardrail": "esr ./scripts/check-sandbox-vendor-guardrail.ts",
+    "sandbox:vendored:upgrade": "esr ./scripts/upgrade-sandbox-vendored.ts",
+    "sandbox:vendored:test-regression": "vitest run --config vitest.sandbox-vendored-regression.config.ts"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
@@ -186,6 +190,7 @@
     "@types/papaparse": "^5.3.15",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
+    "@types/semver": "^7.7.1",
     "@types/shell-quote": "^1.7.5",
     "@types/swagger-ui-dist": "3.30.5",
     "@types/tough-cookie": "^4.0.5",
@@ -202,6 +207,7 @@
     "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "openapi-types": "^12.1.3",
+    "semver": "^7.7.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^4.1.17",
     "type-fest": "^4.40.0",
