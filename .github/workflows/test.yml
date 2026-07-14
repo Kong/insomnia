@@ -86,9 +86,11 @@ jobs:
       - name: Check for sandbox-vendored changes
         id: vendor-changed
         if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          git fetch origin ${{ github.event.pull_request.base.sha }} --depth=1
-          if git diff --name-only ${{ github.event.pull_request.base.sha }}...HEAD | grep -qE '^packages/insomnia/src/templating/sandbox/(vendored/(pkg/|.*\.generated\.ts$)|module-registry\.ts$)'; then
+          git fetch origin "$BASE_SHA" --depth=1
+          if git diff --name-only "$BASE_SHA"...HEAD | grep -qE '^packages/insomnia/src/templating/sandbox/(vendored/(pkg/|.*\.generated\.ts$)|module-registry\.ts$)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
