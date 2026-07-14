@@ -14,6 +14,7 @@ import { jarFromCookies } from '~/common/cookies';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
 import { getPluginCommonContext, getTemplateTags } from '~/plugins';
+import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
@@ -127,32 +128,38 @@ export const getPluginEntrySource = ({ directory, name }: { directory: string; n
   }
 };
 
-// Plugins we've already shown the migration warning for this session — deduped by name so the toast
-// fires at most once per plugin per session, no matter how many times its tags render (P1).
+// (plugin name, module) pairs we've already toasted for this session — so a repeat denial for the
+// SAME missing module doesn't re-toast, but a plugin missing two different grants still gets a
+// distinct hint for each one it actually hits (P1).
 const warnedManifestlessPlugins = new Set<string>();
+const manifestWarningKey = (pluginName: string, moduleName: string) => JSON.stringify([pluginName, moduleName]);
 
 export const _testOnlyResetMigrationWarnings = () => warnedManifestlessPlugins.clear();
 
-// When a plugin with no valid permissions manifest (absent or malformed → permissionsDeclared
-// false) is denied a non-baseline module under the
-// sandbox, surface a one-time, actionable migration toast naming the exact grant to add — so a
-// pre-sandbox third-party plugin fails loudly-but-helpfully instead of silently. Only the module
-// require-gate produces a host-visible denial ("Module 'X' not permitted by manifest"); ungranted
-// capabilities are absent branches (C2) that a plugin feature-detects, so there's no toast for those.
+// A manifest-less plugin denied a non-baseline module gets a one-time migration toast naming the
+// grant to add. Ungranted capabilities are absent branches (C2), not host-visible denials, so
+// there's no toast for those.
 export const maybeWarnMissingManifest = (
   plugin: { name: string; permissionsDeclared: boolean },
   err: unknown,
 ): void => {
-  if (plugin.permissionsDeclared || warnedManifestlessPlugins.has(plugin.name)) {
+  if (plugin.permissionsDeclared) {
     return;
   }
-  const message = err instanceof Error ? err.message : String(err);
-  const match = /Module '([^']+)' not permitted by manifest/.exec(message);
-  if (!match) {
+  // Type-only import — no runtime dependency on the WASM-backed sandbox module.
+  const isModuleNotPermitted =
+    err instanceof Error &&
+    (err as Partial<SandboxModuleDenialError>).code === 'SANDBOX_MODULE_NOT_PERMITTED' &&
+    typeof (err as Partial<SandboxModuleDenialError>).moduleName === 'string';
+  if (!isModuleNotPermitted) {
     return;
   }
-  const missingModule = match[1];
-  warnedManifestlessPlugins.add(plugin.name);
+  const missingModule = (err as SandboxModuleDenialError).moduleName;
+  const key = manifestWarningKey(plugin.name, missingModule);
+  if (warnedManifestlessPlugins.has(key)) {
+    return;
+  }
+  warnedManifestlessPlugins.add(key);
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('show-toast', {
       content: {

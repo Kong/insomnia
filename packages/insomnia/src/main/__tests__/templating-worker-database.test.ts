@@ -41,6 +41,8 @@ vi.mock('../network/libcurl-promise', () => ({ curlRequest: vi.fn() }));
 vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
+import { parsePluginPermissions } from '~/common/plugins/permissions';
+
 import {
   _testOnlyResetMigrationWarnings,
   getPluginEntrySource,
@@ -54,7 +56,10 @@ describe('maybeWarnMissingManifest (P1 migration warning)', () => {
     _testOnlyResetMigrationWarnings();
   });
 
-  const denial = new Error("Module 'events' not permitted by manifest");
+  const denial = Object.assign(new Error("Module 'events' not permitted by manifest"), {
+    code: 'SANDBOX_MODULE_NOT_PERMITTED',
+    moduleName: 'events',
+  });
 
   it('warns once per manifest-less plugin, naming the missing module', () => {
     const plugin = { name: 'insomnia-plugin-legacy', permissionsDeclared: false };
@@ -71,8 +76,43 @@ describe('maybeWarnMissingManifest (P1 migration warning)', () => {
     expect(sentToasts).toHaveLength(0);
   });
 
+  it('warns separately for a second, distinct missing module on the same plugin', () => {
+    // Dedup is keyed by (plugin, module) — a plugin denied two different grants in the same session
+    // must still get a distinct, actionable toast for each one it actually hits, not just the first.
+    const plugin = { name: 'insomnia-plugin-legacy', permissionsDeclared: false };
+    const otherDenial = Object.assign(new Error("Module 'stream' not permitted by manifest"), {
+      code: 'SANDBOX_MODULE_NOT_PERMITTED',
+      moduleName: 'stream',
+    });
+    maybeWarnMissingManifest(plugin, denial);
+    maybeWarnMissingManifest(plugin, otherDenial);
+    expect(sentToasts).toHaveLength(2);
+    expect(sentToasts[0].payload.content.description).toContain('events');
+    expect(sentToasts[1].payload.content.description).toContain('stream');
+  });
+
   it('does not warn on a non-denial error', () => {
     maybeWarnMissingManifest({ name: 'insomnia-plugin-legacy', permissionsDeclared: false }, new Error('kaboom'));
+    expect(sentToasts).toHaveLength(0);
+  });
+
+  it('does not warn on a granted-but-unregistered module (not a manifest problem)', () => {
+    const unavailable = Object.assign(new Error("Module 'left-pad' not available in sandbox"), {
+      code: 'SANDBOX_MODULE_NOT_AVAILABLE',
+      moduleName: 'left-pad',
+    });
+    maybeWarnMissingManifest({ name: 'insomnia-plugin-legacy', permissionsDeclared: false }, unavailable);
+    expect(sentToasts).toHaveLength(0);
+  });
+
+  it('does not show the migration toast for a manifest with a malformed axis (own warning path instead)', () => {
+    // parsePluginPermissions returns declared:true when the permissions object itself is present but
+    // one axis is malformed (e.g. non-array modules) — that plugin already has a per-card warning in
+    // Preferences → Plugins, so it must not also get the "add insomnia.permissions.modules" toast,
+    // which would be actively misleading (it already has a permissions block).
+    const parsed = parsePluginPermissions({ permissions: { modules: 'events' } });
+    expect(parsed.declared).toBe(true);
+    maybeWarnMissingManifest({ name: 'insomnia-plugin-malformed', permissionsDeclared: parsed.declared }, denial);
     expect(sentToasts).toHaveLength(0);
   });
 });
