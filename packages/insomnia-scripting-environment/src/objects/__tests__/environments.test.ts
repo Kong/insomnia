@@ -142,7 +142,7 @@ describe('Environment serialization', () => {
   });
 });
 
-describe('set rejects null/undefined', () => {
+describe('set rejects null/undefined/NaN', () => {
   it('Environment.set warns and skips on null', () => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const env = new Environment('test', {});
@@ -164,7 +164,7 @@ describe('set rejects null/undefined', () => {
       localVars: new Environment('local', {}),
     });
     variables.set('key', value);
-    expect(warnSpy).toHaveBeenCalledWith('Variable \"key\" has a null, undefined, or NaN value');
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null, undefined, or NaN value');
     expect(variables.get('key')).toBeUndefined();
     warnSpy.mockRestore();
   });
