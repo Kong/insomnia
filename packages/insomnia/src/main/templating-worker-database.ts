@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { app, clipboard, dialog, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -14,6 +14,7 @@ import { jarFromCookies } from '~/common/cookies';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
 import { getPluginCommonContext, getTemplateTags } from '~/plugins';
+import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
@@ -124,6 +125,49 @@ export const getPluginEntrySource = ({ directory, name }: { directory: string; n
     throw new Error(
       `Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`,
     );
+  }
+};
+
+// (plugin name, module) pairs we've already toasted for this session — so a repeat denial for the
+// SAME missing module doesn't re-toast, but a plugin missing two different grants still gets a
+// distinct hint for each one it actually hits (P1).
+const warnedManifestlessPlugins = new Set<string>();
+const manifestWarningKey = (pluginName: string, moduleName: string) => JSON.stringify([pluginName, moduleName]);
+
+export const _testOnlyResetMigrationWarnings = () => warnedManifestlessPlugins.clear();
+
+// A manifest-less plugin denied a non-baseline module gets a one-time migration toast naming the
+// grant to add. Ungranted capabilities are absent branches (C2), not host-visible denials, so
+// there's no toast for those.
+export const maybeWarnMissingManifest = (
+  plugin: { name: string; permissionsDeclared: boolean },
+  err: unknown,
+): void => {
+  if (plugin.permissionsDeclared) {
+    return;
+  }
+  // Type-only import — no runtime dependency on the WASM-backed sandbox module.
+  const isModuleNotPermitted =
+    err instanceof Error &&
+    (err as Partial<SandboxModuleDenialError>).code === 'SANDBOX_MODULE_NOT_PERMITTED' &&
+    typeof (err as Partial<SandboxModuleDenialError>).moduleName === 'string';
+  if (!isModuleNotPermitted) {
+    return;
+  }
+  const missingModule = (err as SandboxModuleDenialError).moduleName;
+  const key = manifestWarningKey(plugin.name, missingModule);
+  if (warnedManifestlessPlugins.has(key)) {
+    return;
+  }
+  warnedManifestlessPlugins.add(key);
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('show-toast', {
+      content: {
+        title: 'Plugin needs a permissions manifest',
+        description: `"${plugin.name}" tried to require "${missingModule}" but has no valid permissions manifest. Add insomnia.permissions.modules: ["${missingModule}"] to its package.json to run it under the template-tag sandbox.`,
+        status: 'warning',
+      },
+    });
   }
 };
 
@@ -472,14 +516,21 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (targetTag) {
       const settings = await services.settings.get();
       if (settings.templateTagSandboxEnabled) {
-        const { resolveTemplateTagModules } = await import('../templating/sandbox/module-registry');
-        const { resolveTemplateTagCapabilities } = await import('../templating/sandbox/host-bridge');
-        return runPluginTagInSandbox(
-          getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
-          body,
-          resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
-          resolveTemplateTagCapabilities(targetTag.plugin.permissions?.capabilities),
+        const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+          '../templating/sandbox/surface-profiles'
         );
+        try {
+          return await runPluginTagInSandbox(
+            getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
+            body,
+            resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
+            resolveTemplateTagCapabilities(targetTag.plugin.permissions?.capabilities),
+          );
+        } catch (err) {
+          // Surface a one-time migration hint for manifest-less plugins, then let the denial through.
+          maybeWarnMissingManifest(targetTag.plugin, err);
+          throw err;
+        }
       }
       return runPluginTag(targetTag.templateTag.run, body);
     }
