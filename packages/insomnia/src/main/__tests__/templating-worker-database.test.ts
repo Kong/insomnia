@@ -54,7 +54,10 @@ describe('maybeWarnMissingManifest (P1 migration warning)', () => {
     _testOnlyResetMigrationWarnings();
   });
 
-  const denial = new Error("Module 'events' not permitted by manifest");
+  const denial = Object.assign(new Error("Module 'events' not permitted by manifest"), {
+    code: 'SANDBOX_MODULE_NOT_PERMITTED',
+    moduleName: 'events',
+  });
 
   it('warns once per manifest-less plugin, naming the missing module', () => {
     const plugin = { name: 'insomnia-plugin-legacy', permissionsDeclared: false };
@@ -73,6 +76,15 @@ describe('maybeWarnMissingManifest (P1 migration warning)', () => {
 
   it('does not warn on a non-denial error', () => {
     maybeWarnMissingManifest({ name: 'insomnia-plugin-legacy', permissionsDeclared: false }, new Error('kaboom'));
+    expect(sentToasts).toHaveLength(0);
+  });
+
+  it('does not warn on a granted-but-unregistered module (not a manifest problem)', () => {
+    const unavailable = Object.assign(new Error("Module 'left-pad' not available in sandbox"), {
+      code: 'SANDBOX_MODULE_NOT_AVAILABLE',
+      moduleName: 'left-pad',
+    });
+    maybeWarnMissingManifest({ name: 'insomnia-plugin-legacy', permissionsDeclared: false }, unavailable);
     expect(sentToasts).toHaveLength(0);
   });
 });
