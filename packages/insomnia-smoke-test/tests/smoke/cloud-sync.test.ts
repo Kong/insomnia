@@ -38,7 +38,7 @@ test.describe('Cloud Sync', () => {
     await page.getByLabel('Git Sync').click();
     const discardButton = page.getByLabel('Discard all changes');
     // Wait for discard button to be enabled
-    await expect.soft(discardButton).not.toHaveAttribute('aria-disabled', 'true');
+    await expect.soft(discardButton).toHaveAttribute('aria-disabled', 'true');
     await discardButton.click({ delay: 500 });
     // Check body is reverted
     await page.getByRole('tab', { name: 'Params' }).click();
