@@ -58,7 +58,9 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['github'], ['line'], ['junit', { outputFile: 'test-results.xml' }]] : [['dot']],
+  reporter: process.env.CI
+    ? [['github'], ['line'], ['junit', { outputFile: 'test-results.xml', includeRetries: true }]]
+    : [['dot']],
   timeout: process.env.CI || isWindows ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',
