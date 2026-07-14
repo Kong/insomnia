@@ -79,5 +79,12 @@ describe('surface profiles (P1)', () => {
       // unregistered name has no factory so it grants no code regardless.
       expect(resolveTemplateTagModules(['left-pad'])).toEqual([...TEMPLATE_TAG_BASELINE_MODULES, 'left-pad']);
     });
+    it('relies on moduleCeiling === the full registry — tripwire for narrowing it later', () => {
+      // resolveTemplateTagModules never intersects with TEMPLATE_TAG_PROFILE.moduleCeiling; that's
+      // only safe because the ceiling equals the full module registry today. If a future change ever
+      // narrows this profile's moduleCeiling below the full registry, resolveTemplateTagModules must
+      // be updated to enforce it — this test fails first as a signal to do that.
+      expect([...TEMPLATE_TAG_PROFILE.moduleCeiling].sort()).toEqual([...ALL_SANDBOX_MODULES].sort());
+    });
   });
 });

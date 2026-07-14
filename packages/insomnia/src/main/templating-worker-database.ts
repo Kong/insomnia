@@ -128,9 +128,11 @@ export const getPluginEntrySource = ({ directory, name }: { directory: string; n
   }
 };
 
-// Plugins we've already shown the migration warning for this session — deduped by name so the toast
-// fires at most once per plugin per session, no matter how many times its tags render (P1).
+// (plugin name, module) pairs we've already toasted for this session — so a repeat denial for the
+// SAME missing module doesn't re-toast, but a plugin missing two different grants still gets a
+// distinct hint for each one it actually hits (P1).
 const warnedManifestlessPlugins = new Set<string>();
+const manifestWarningKey = (pluginName: string, moduleName: string) => JSON.stringify([pluginName, moduleName]);
 
 export const _testOnlyResetMigrationWarnings = () => warnedManifestlessPlugins.clear();
 
@@ -141,7 +143,7 @@ export const maybeWarnMissingManifest = (
   plugin: { name: string; permissionsDeclared: boolean },
   err: unknown,
 ): void => {
-  if (plugin.permissionsDeclared || warnedManifestlessPlugins.has(plugin.name)) {
+  if (plugin.permissionsDeclared) {
     return;
   }
   // Type-only import — no runtime dependency on the WASM-backed sandbox module.
@@ -153,7 +155,11 @@ export const maybeWarnMissingManifest = (
     return;
   }
   const missingModule = (err as SandboxModuleDenialError).moduleName;
-  warnedManifestlessPlugins.add(plugin.name);
+  const key = manifestWarningKey(plugin.name, missingModule);
+  if (warnedManifestlessPlugins.has(key)) {
+    return;
+  }
+  warnedManifestlessPlugins.add(key);
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('show-toast', {
       content: {
