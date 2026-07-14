@@ -38,7 +38,7 @@ test.describe('Cloud Sync', () => {
     await page.getByLabel('Git Sync').click();
     const discardButton = page.getByLabel('Discard all changes');
     // Wait for discard button to be enabled
-    await expect.soft(discardButton).toHaveAttribute('aria-disabled', 'true');
+    await expect.soft(discardButton).not.toHaveAttribute('aria-disabled', 'true');
     await discardButton.click({ delay: 500 });
     // Check body is reverted
     await page.getByRole('tab', { name: 'Params' }).click();
@@ -48,7 +48,7 @@ test.describe('Cloud Sync', () => {
 
     // Set body and commit change
     await page.getByRole('tab', { name: 'Body' }).click();
-    await page.getByRole('tabpanel').getByTestId('CodeEditor').getByRole('textbox').first().fill('value=changed');
+    await page.getByRole('tabpanel').getByTestId('CodeEditor123').getByRole('textbox').first().fill('value=changed');
     // Click push
     await page.getByLabel('Git Sync').click();
     await page.getByLabel('Commit').click({ delay: 500 });
