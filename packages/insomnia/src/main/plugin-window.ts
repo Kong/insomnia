@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { app, BrowserWindow, ipcMain } from 'electron';
 
-import { requestPromptFromRenderer } from './prompt-bridge';
+import { type PromptRequestOptions, requestPromptFromRenderer } from './prompt-bridge';
 import { getMainWindow } from './window-utils';
 
 let pluginWindow: BrowserWindow | null = null;
@@ -107,7 +107,7 @@ function ensureIpcListeners() {
     if (event.sender !== pluginWindow?.webContents) {
       return null;
     }
-    return requestPromptFromRenderer(options as { title: string; label?: string; defaultValue?: string });
+    return requestPromptFromRenderer(options as unknown as PromptRequestOptions);
   });
 
   ipcMain.on(

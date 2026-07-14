@@ -8,6 +8,7 @@ import packageJson from '../../../package.json';
 import { resolveArg } from './resolve-arg';
 import { tokenizeArgs } from './tokenize-args';
 import type {
+  AppPromptOptions,
   BaseRenderContext,
   NodeCurlRequestOptions,
   PluginTemplateTag,
@@ -81,10 +82,8 @@ export function createLiquidTagWorker(
           alert: async (title: string, message?: string) =>
             fetchFromTemplateWorkerDatabase('app.alert', { title, message }),
           dialog: async (title: string) => fetchFromTemplateWorkerDatabase('app.dialog', { title }),
-          prompt: async (
-            title: string,
-            options?: { label?: string; defaultValue?: string; submitName?: string; inputType?: string },
-          ) => fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
+          prompt: async (title: string, options?: AppPromptOptions) =>
+            fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
           getPath: async (name: string) => fetchFromTemplateWorkerDatabase('app.getPath', { name }),
           getInfo: () => ({ version: packageJson.version, platform }),
           showSaveDialog: async (options?: { defaultPath?: string }) =>
