@@ -6,5 +6,9 @@ export const prompt: AppRuntime['prompt'] = async (title, options) => {
     ...options,
     title,
   });
-  return value ?? options?.defaultValue ?? '';
+  if (value === null) {
+    throw new Error('Prompt cancelled');
+  }
+
+  return value;
 };
