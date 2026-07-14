@@ -48,7 +48,7 @@ test.describe('Cloud Sync', () => {
 
     // Set body and commit change
     await page.getByRole('tab', { name: 'Body' }).click();
-    await page.getByRole('tabpanel').getByTestId('CodeEditor123').getByRole('textbox').first().fill('value=changed');
+    await page.getByRole('tabpanel').getByTestId('CodeEditor').getByRole('textbox').first().fill('value=changed');
     // Click push
     await page.getByLabel('Git Sync').click();
     await page.getByLabel('Commit').click({ delay: 500 });
