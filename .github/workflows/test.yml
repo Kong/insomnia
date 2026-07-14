@@ -72,6 +72,32 @@ jobs:
             exit 1
           fi
 
+      - name: Install sandbox-vendored packages and check pins never exceed app versions
+        run: npm run sandbox:vendored:ci -w insomnia
+
+      - name: Check sandbox-vendored bundles are up to date
+        run: |
+          npm run sandbox:vendored:generate -w insomnia
+          if ! git diff --exit-code packages/insomnia/src/templating/sandbox/vendored/*.generated.ts; then
+            echo "::error::Sandbox-vendored bundles are out of date or hand-edited. Run 'npm run sandbox:vendored:ci -w insomnia && npm run sandbox:vendored:generate -w insomnia' and commit the result."
+            exit 1
+          fi
+
+      - name: Check for sandbox-vendored changes
+        id: vendor-changed
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch origin "$BASE_SHA" --depth=1
+          if git diff --name-only "$BASE_SHA"...HEAD | grep -qE '^packages/insomnia/src/templating/sandbox/(vendored/(pkg/|.*\.generated\.ts$)|module-registry\.ts$)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sandbox-vendored regression suite
+        if: github.event_name != 'pull_request' || steps.vendor-changed.outputs.changed == 'true'
+        run: npm run sandbox:vendored:test-regression -w insomnia
+
       - name: Checkout base branch (cycle comparison)
         if: github.event_name == 'pull_request' && always()
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

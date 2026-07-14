@@ -1,7 +1,7 @@
 import nodeCrypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
-import { version as installedAjvVersion } from 'ajv/package.json';
-import { version as installedUuidVersion } from 'uuid/package.json';
 import { describe, expect, it } from 'vitest';
 
 import { type HostBridge } from './host-bridge';
@@ -9,8 +9,9 @@ import { type ContextEnvelope } from './marshal';
 import { buildModuleRegistrySource, VENDORED_LIB_VERSIONS } from './module-registry';
 import { type HostCrypto, runTagInSandbox } from './plugin-tag-sandbox';
 
-// Vetted vendored npm libraries (M3): each is a real bundle running inside QuickJS. These smoke a
-// representative API per lib — bundling can subtly break a library, so we exercise it end-to-end.
+// Vetted vendored npm libraries (M3): registry-wiring tests only. Per-lib API-surface exercises live
+// in the dedicated <name>.regression.test.ts files alongside this one — kept separate since they're
+// larger and scoped to one library each.
 const nodeHostCrypto: HostCrypto = {
   hash: (a, d, i, o) => nodeCrypto.createHash(a).update(d, i as nodeCrypto.Encoding).digest(o as nodeCrypto.BinaryToTextEncoding),
   hmac: (a, k, d, o) => nodeCrypto.createHmac(a, k).update(d, 'utf8').digest(o as nodeCrypto.BinaryToTextEncoding),
@@ -18,8 +19,8 @@ const nodeHostCrypto: HostCrypto = {
   randomUUID: () => nodeCrypto.randomUUID(),
 };
 
-const noBridge: HostBridge = async path => {
-  throw new Error(`unexpected bridge call: ${path}`);
+const noBridge: HostBridge = async bridgePath => {
+  throw new Error(`unexpected bridge call: ${bridgePath}`);
 };
 
 const envelope = (grantedModules: string[]): ContextEnvelope => ({
@@ -43,11 +44,20 @@ const runTag = (source: string, grantedModules: string[]) =>
     hostCrypto: nodeHostCrypto,
   });
 
+// The isolated, exact-pinned install's own manifest — the source of truth for what's vetted, wholly
+// independent of the app's ambient node_modules (see vendored/pkg/package.json for the invariant:
+// this pin must never exceed the app's own resolved version for the same lib).
+const vendoredPkgJson = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'vendored', 'pkg', 'package.json'), 'utf8'),
+) as { dependencies: Record<string, string> };
+
 describe('vendored libraries (M3)', () => {
-  it('records the pinned version matching the installed dependency (regen drift guard)', () => {
-    // If a dep is bumped without re-running generate:sandbox-vendored, these diverge and this fails.
-    expect(VENDORED_LIB_VERSIONS.uuid).toBe(installedUuidVersion);
-    expect(VENDORED_LIB_VERSIONS.ajv).toBe(installedAjvVersion);
+  it('the checked-in generated bundle matches the checked-in isolated-install pin (freshness guard)', () => {
+    // Catches a hand-edited .generated.ts (or a forgotten regen after bumping vendored/pkg's pin)
+    // independent of CI's regenerate-and-diff step. Anchored to the isolated pkg's own pin, not the
+    // app's ambient node_modules — the sandbox is deliberately allowed to lag the app's own version.
+    expect(VENDORED_LIB_VERSIONS.uuid).toBe(vendoredPkgJson.dependencies.uuid);
+    expect(VENDORED_LIB_VERSIONS.ajv).toBe(vendoredPkgJson.dependencies.ajv);
   });
 
   it('registers a heavy lib only when granted', () => {
@@ -55,31 +65,6 @@ describe('vendored libraries (M3)', () => {
     expect(buildModuleRegistrySource(['path', 'crypto', 'uuid'])).toContain('__registerModule("uuid"');
     // ajv stays out unless it too is granted.
     expect(buildModuleRegistrySource(['path', 'crypto', 'uuid'])).not.toContain('__registerModule("ajv"');
-  });
-
-  it('uuid.v4() returns a v4 UUID', async () => {
-    const source = "module.exports.templateTags = [{ name: 't', run: function () { return require('uuid').v4(); } }];";
-    const actual = await runTag(source, ['path', 'crypto', 'uuid']);
-    expect(actual).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-  });
-
-  it('uuid.validate agrees with a generated v4 (stateful round-trip)', async () => {
-    const source = `module.exports.templateTags = [{ name: 't', run: function () {
-      var uuid = require('uuid');
-      var id = uuid.v4();
-      return uuid.validate(id) + ':' + uuid.version(id);
-    } }];`;
-    expect(await runTag(source, ['path', 'crypto', 'uuid'])).toBe('true:4');
-  });
-
-  it('ajv compiles a schema and validates two payloads (exercises compiled-validator state)', async () => {
-    const source = `module.exports.templateTags = [{ name: 't', run: function () {
-      var Ajv = require('ajv');
-      var ajv = new Ajv();
-      var validate = ajv.compile({ type: 'object', properties: { n: { type: 'number' } }, required: ['n'] });
-      return (validate({ n: 1 }) ? 'valid' : 'invalid') + ',' + (validate({ n: 'x' }) ? 'valid' : 'invalid');
-    } }];`;
-    expect(await runTag(source, ['path', 'crypto', 'ajv'])).toBe('valid,invalid');
   });
 
   it('denies a heavy lib that was not granted with the manifest message', async () => {
