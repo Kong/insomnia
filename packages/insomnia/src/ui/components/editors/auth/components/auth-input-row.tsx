@@ -3,6 +3,7 @@ import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { Tooltip } from '~/ui/components/tooltip';
 
 import { toKebabCase } from '../../../../../common/misc';
 import {
@@ -114,13 +115,21 @@ export const AuthInputRow: FC<Props> = ({
         getAutocompleteConstants={getAutocompleteConstants}
       />
       {canBeMasked ? (
-        <button className="btn btn--super-super-compact pointer" onClick={toggleMask} disabled={disabled}>
-          {isMasked ? (
-            <i className="fa fa-eye" data-testid="reveal-password-icon" />
-          ) : (
-            <i className="fa fa-eye-slash" data-testid="mask-password-icon" />
-          )}
-        </button>
+        <Tooltip message={isMasked ? 'Show Value' : 'Hide Value'} position="top">
+          <button
+            type="button"
+            className={`btn btn--super-super-compact pointer${disabled ? ' pointer-events-none' : ''}`}
+            onClick={toggleMask}
+            disabled={disabled}
+            aria-label={isMasked ? 'Show Value' : 'Hide Value'}
+          >
+            {isMasked ? (
+              <i className="fa fa-eye" data-testid="reveal-password-icon" />
+            ) : (
+              <i className="fa fa-eye-slash" data-testid="mask-password-icon" />
+            )}
+          </button>
+        </Tooltip>
       ) : null}
       {copyBtn && (
         <button className="btn btn--super-super-compact pointer btn--forever-enabled" onClick={onCopy}>
