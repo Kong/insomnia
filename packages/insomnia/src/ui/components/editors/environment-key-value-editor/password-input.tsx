@@ -42,6 +42,7 @@ export const PasswordInput = (props: PasswordInputProps) => {
         ) : (
           <OneLineEditor
             id={`environment-kv-editor-value-${itemId}`}
+            historyKey={`environment-kv-editor-value-${itemId}`}
             placeholder={placeholder}
             defaultValue={value}
             readOnly={!enabled}

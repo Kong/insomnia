@@ -294,6 +294,7 @@ export const MockRouteRoute = () => {
               <CodeEditor
                 id="mock-response-body-editor"
                 key={mockRoute._id}
+                historyKey={`mock-response-body-editor::${mockRoute._id}`}
                 showPrettifyButton
                 defaultValue={mockRoute.body}
                 onChange={body => patchMockRoute(mockRoute._id, { body })}

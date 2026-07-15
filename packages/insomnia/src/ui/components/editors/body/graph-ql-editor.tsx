@@ -215,7 +215,7 @@ interface Props {
   request: Request;
   environmentId: string;
   className?: string;
-  uniquenessKey?: string;
+  historyKey?: string;
   workspaceId: string;
 }
 
@@ -229,14 +229,7 @@ interface State {
   operationType?: OperationTypeNode;
 }
 
-export const GraphQLEditor: FC<Props> = ({
-  request,
-  environmentId,
-  onChange,
-  className,
-  uniquenessKey,
-  workspaceId,
-}) => {
+export const GraphQLEditor: FC<Props> = ({ request, environmentId, onChange, className, historyKey, workspaceId }) => {
   let requestBody: GraphQLBody;
   try {
     requestBody = JSON.parse(request.body.text || '');
@@ -731,7 +724,7 @@ export const GraphQLEditor: FC<Props> = ({
             ref={editorRef}
             dynamicHeight
             showPrettifyButton
-            uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
+            historyKey={historyKey ? historyKey + '::query' : undefined}
             defaultValue={requestBody.query || ''}
             className={className}
             onChange={changeQuery}
@@ -760,7 +753,7 @@ export const GraphQLEditor: FC<Props> = ({
               id="graphql-editor-variables"
               dynamicHeight
               enableNunjucks
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+              historyKey={historyKey ? historyKey + '::variables' : undefined}
               showPrettifyButton={false}
               defaultValue={jsonPrettify(requestBody.variables)}
               className={className}

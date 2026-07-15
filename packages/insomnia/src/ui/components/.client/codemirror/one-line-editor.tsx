@@ -61,7 +61,7 @@ export interface OneLineEditorProps {
   onBlur?: (e: FocusEvent) => void;
   eventListeners?: EditorEventListener<keyof EditorEventMap>[];
   // NOTE: stable key for caching/restoring undo history across remounts
-  uniquenessKey?: string;
+  historyKey?: string;
   autoFocus?: boolean;
   // Called once when the editor focuses itself due to `autoFocus`. Lets callers clear a one-shot flag.
   onAutoFocus?: () => void;
@@ -90,7 +90,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       onPaste,
       onBlur,
       eventListeners,
-      uniquenessKey,
+      historyKey,
       autoFocus,
       onAutoFocus,
     },
@@ -258,7 +258,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       // Restore undo/redo history saved before the previous unmount so undo
       // survives remounts (the value is re-seeded from defaultValue above, which
       // matches the persisted model value, so the restored history stays consistent)
-      const cachedState = uniquenessKey ? getCachedEditorState(uniquenessKey) : undefined;
+      const cachedState = historyKey ? getCachedEditorState(historyKey) : undefined;
       if (cachedState?.history) {
         codeMirror.current?.setHistory(cachedState.history);
       }
@@ -289,14 +289,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       settings.showVariableSourceAndValue,
       eventListeners,
       id,
-      uniquenessKey,
+      historyKey,
     ]);
 
     const persistState = useCallback(() => {
-      if (uniquenessKey && codeMirror.current) {
-        setCachedEditorState(uniquenessKey, { history: codeMirror.current.getHistory() });
+      if (historyKey && codeMirror.current) {
+        setCachedEditorState(historyKey, { history: codeMirror.current.getHistory() });
       }
-    }, [uniquenessKey]);
+    }, [historyKey]);
 
     const cleanUpEditor = useCallback(() => {
       codeMirror.current?.toTextArea();
@@ -394,20 +394,20 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     // remounting via a volatile `key`, which would otherwise blur the editor and
     // drop undo history mid-edit. In-progress typing (focused) is never clobbered.
     //
-    // Gated on `uniquenessKey`: it marks the editors we deliberately moved off
+    // Gated on `historyKey`: it marks the editors we deliberately moved off
     // volatile-key remounting onto stable-key + in-place updates (URL bar,
     // key-value rows). Other OneLineEditor instances keep their original
     // uncontrolled-after-mount behaviour, so this stays an opt-in.
     useEffect(() => {
       const cm = codeMirror.current;
-      if (cm && uniquenessKey !== undefined && !cm.hasFocus() && (defaultValue || '') !== cm.getValue()) {
+      if (cm && historyKey !== undefined && !cm.hasFocus() && (defaultValue || '') !== cm.getValue()) {
         const cursor = cm.getCursor();
         cm.setValue(defaultValue || '');
         cm.setCursor(cursor);
         // value baseline changed externally, so the old history no longer applies
         cm.clearHistory();
       }
-    }, [defaultValue, uniquenessKey]);
+    }, [defaultValue, historyKey]);
 
     useEffect(() => {
       // Prevent these things if we're type === "password"
