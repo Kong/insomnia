@@ -502,10 +502,37 @@ const ProjectNavigationSidebarInner = (
   }, [projectLoaderData]);
 
   useEffect(() => {
+    const summarizeWorkspaces = (workspaces: WorkspaceWithSyncStatus[]) =>
+      workspaces.map(({ _id, name, scope, parentId }) => ({ _id, name, scope, parentId }));
+
     const tryToGetWorkspacesFromCache = async (projectIds: string[]) => {
       const uncachedProjectIds = projectIds.filter(id => !cachedWorkspacesRef.current.has(id));
+      console.log(
+        '[ProjectNavigationSidebar] workspace cache state',
+        JSON.stringify({
+          projectIds,
+          uncachedProjectIds,
+          cachedWorkspacesByProjectId: Object.fromEntries(
+            projectIds.map(projectId => [
+              projectId,
+              summarizeWorkspaces(cachedWorkspacesRef.current.get(projectId) || []),
+            ]),
+          ),
+        }),
+      );
       if (uncachedProjectIds.length > 0) {
         const workspacesByProjectId = await getWorkspacesByProjectIds(uncachedProjectIds);
+        console.log(
+          '[ProjectNavigationSidebar] fetched workspaces for uncached projects',
+          JSON.stringify(
+            Object.fromEntries(
+              [...workspacesByProjectId.entries()].map(([projectId, workspaces]) => [
+                projectId,
+                summarizeWorkspaces(workspaces),
+              ]),
+            ),
+          ),
+        );
         for (const [projectId, workspaces] of workspacesByProjectId.entries()) {
           cachedWorkspacesRef.current.set(projectId, workspaces);
         }
@@ -558,6 +585,7 @@ const ProjectNavigationSidebarInner = (
           hidden: false,
         });
         const workspaces = workspacesByProject.get(projectId) || [];
+        console.log('workspaces for project', JSON.stringify(workspaces));
         const workspaceOrder = projectWorkspaceSortOrder[projectId] || 'type-manual';
         let sortedWorkspaces: Workspace[] = [];
         if (workspaceOrder === 'type-manual') {
