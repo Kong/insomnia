@@ -12,6 +12,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import electron from 'electron';
 import { BrowserWindow } from 'electron';
+import { models, services } from 'insomnia-data';
 import { Agent } from 'undici';
 import { v4 as uuidV4 } from 'uuid';
 
@@ -27,7 +28,7 @@ import {
   unsupportedMethodPrefix,
 } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import type {
   CommonMcpOptions,
   McpClient,
@@ -40,7 +41,6 @@ import type {
   OpenMcpClientConnectionOptions,
 } from '~/main/mcp/types';
 import { insecureReadFile } from '~/main/secure-read-file';
-import { invariant } from '~/utils/invariant';
 
 interface ConnectingState {
   status: 'connecting';

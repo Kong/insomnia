@@ -1,9 +1,9 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { GitRemoteProviderType } from 'insomnia-data';
 import { href } from 'react-router';
 
-import type { GitRemoteProviderType } from '~/insomnia-data';
 import { showToast } from '~/ui/components/toast-notification';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git-credentials.complete-sign-in';
 

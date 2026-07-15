@@ -1,5 +1,6 @@
-import type { GitCredentials, GitRepository } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import type { GitCredentials, GitRepository } from 'insomnia-data';
+import { models } from 'insomnia-data';
+
 import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;

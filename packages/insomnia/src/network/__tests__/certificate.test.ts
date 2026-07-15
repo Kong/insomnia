@@ -1,6 +1,6 @@
+import type { ClientCertificate } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import type { ClientCertificate } from '~/insomnia-data';
 
 import { filterClientCertificates } from '../certificate';
 
@@ -18,7 +18,7 @@ describe('filterClientCertificates', () => {
       disabled: false,
       isPrivate: true,
       modified: 0,
-      type: '',
+      type: models.clientCertificate.type,
       created: 0,
       name: '',
     },
@@ -33,13 +33,13 @@ describe('filterClientCertificates', () => {
       disabled: false,
       isPrivate: true,
       modified: 0,
-      type: '',
+      type: models.clientCertificate.type,
       created: 0,
       name: '',
     },
   ];
 
-  const clientCertificatesOnlyMatchHost = [
+  const clientCertificatesOnlyMatchHost: ClientCertificate[] = [
     {
       host: 'https://www.example.com',
       _id: '',
@@ -51,7 +51,7 @@ describe('filterClientCertificates', () => {
       disabled: false,
       isPrivate: true,
       modified: 0,
-      type: '',
+      type: models.clientCertificate.type,
       created: 0,
       name: '',
     },

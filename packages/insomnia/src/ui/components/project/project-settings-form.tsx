@@ -1,4 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
+import type { GitCredentials, GitRepository, Project, ProviderEmail } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { platform } from 'insomnia-data/common';
 import type { FC } from 'react';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
@@ -19,9 +22,8 @@ import { useParams } from 'react-router';
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
-import type { GitCredentials, GitRepository, Project, ProviderEmail } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useGitProjectRelocateActionFetcher } from '~/routes/git.relocate';
 import { useGitValidateCredentialsFetcher } from '~/routes/git.validate-credentials';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
@@ -31,11 +33,12 @@ import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { useActiveView } from '~/ui/components/project/utils';
+import { deriveRepoName, useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
-import { platform } from '../../../common/platform';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
@@ -67,6 +70,7 @@ interface Props {
   onSuccessUpdate?(): void;
   credentials: GitCredentials[];
   providers: GitProviderOption[];
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -78,6 +82,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   onSuccessUpdate,
   credentials,
   providers,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -116,11 +121,20 @@ export const ProjectSettingsForm: FC<Props> = ({
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
   const validateCredentialsFetcher = useGitValidateCredentialsFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
+  const relocateFetcher = useGitProjectRelocateActionFetcher();
 
   const insomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
       : [];
+
+  const changedFieldCount = [
+    projectData.name !== project?.name,
+    isSwitchingStorageType(project!, storageType),
+    project?.gitRepositoryId && projectData.uri !== gitRepository?.uri,
+    project?.gitRepositoryId && projectData.credentialsId !== gitRepository?.credentialsId,
+    project?.gitRepositoryId && projectData.selectedAuthorEmail !== gitRepository?.selectedAuthorEmail,
+  ].filter(Boolean).length;
 
   useEffect(() => {
     if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success && onSuccessUpdate) {
@@ -133,6 +147,21 @@ export const ProjectSettingsForm: FC<Props> = ({
       setError(updateProjectFetcher.data.error);
     }
   }, [updateProjectFetcher.data, updateProjectFetcher.state]);
+
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [onDirtyChange, changedFieldCount]);
+
+  useEffect(() => {
+    if (
+      relocateFetcher.state === 'idle' &&
+      relocateFetcher.data &&
+      'errors' in relocateFetcher.data &&
+      relocateFetcher.data.errors
+    ) {
+      setError(relocateFetcher.data.errors.join(', '));
+    }
+  }, [relocateFetcher.data, relocateFetcher.state]);
 
   const onUpsertProject = () => {
     if (project) {
@@ -165,9 +194,37 @@ export const ProjectSettingsForm: FC<Props> = ({
     project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
     Boolean(gitRepository?._id);
 
-  const repoPath = showRepoPath
-    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository!._id)
-    : '';
+  // Relocation goes through a route action (declared above with the other
+  // fetchers) so loaders revalidate afterwards. `relocatedDir` from the action
+  // result shows the new path immediately, before the revalidated
+  // `gitRepository` prop arrives.
+  const isRelocating = relocateFetcher.state !== 'idle';
+  const relocatedDir =
+    relocateFetcher.data && 'directory' in relocateFetcher.data ? relocateFetcher.data.directory : null;
+  const repoPath = showRepoPath ? relocatedDir || resolveGitRepoBaseDir(gitRepository!) : '';
+
+  const onRelocateRepo = async () => {
+    if (!project || !gitRepository) {
+      return;
+    }
+    const picked = await selectFileOrFolder({
+      itemTypes: ['directory'],
+      defaultPath: window.app.getPath('home'),
+    });
+    if (picked.canceled || !picked.filePath) {
+      return;
+    }
+    // Move into `<chosen-parent>/<repo-name>`, matching the clone flow.
+    const folderName = deriveRepoName(gitRepository.uri) || gitRepository._id;
+    const newDirectory = window.path.join(picked.filePath, folderName);
+
+    setError(null);
+    relocateFetcher.submit({
+      gitRepositoryId: gitRepository._id,
+      projectId: project._id,
+      newDirectory,
+    });
+  };
 
   const showGitRepoForm =
     storageType === 'git' &&
@@ -248,11 +305,25 @@ export const ProjectSettingsForm: FC<Props> = ({
               className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             />
           </TextField>
-          <ProjectTypeSelect
-            storageRules={storageRules}
-            value={storageType}
-            onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
-          />
+          {project?.konnectControlPlaneId ? (
+            <div className="flex flex-col gap-2">
+              <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                Type
+              </Label>
+              <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
+                <div className="flex items-center gap-2">
+                  <Icon icon="laptop" />
+                  <span>Synced from Konnect</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ProjectTypeSelect
+              storageRules={storageRules}
+              value={storageType}
+              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+            />
+          )}
           <ProjectTypeWarning
             isGitSyncEnabled={isGitSyncEnabled}
             storageType={storageType}
@@ -360,6 +431,25 @@ export const ProjectSettingsForm: FC<Props> = ({
                       Open in file system
                     </Tooltip>
                   </TooltipTrigger>
+                  <TooltipTrigger>
+                    <Button
+                      onPress={onRelocateRepo}
+                      isDisabled={isRelocating}
+                      className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                      aria-label="Move repository to another folder"
+                    >
+                      <Icon
+                        icon={isRelocating ? 'spinner' : 'pen-to-square'}
+                        className={`size-4 ${isRelocating ? 'animate-spin' : ''}`}
+                      />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+                    >
+                      Move to another folder
+                    </Tooltip>
+                  </TooltipTrigger>
                 </div>
               </div>
             </>
@@ -371,7 +461,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               <GitConnectionInfo
                 gitRepository={gitRepository}
                 providerInfo={selectedProvider}
-                authorName={selectedCredential?.author.name || selectedCredential?.author.email}
+                authorName={selectedCredential?.author?.name || selectedCredential?.author?.email}
                 projectId={project!._id}
               />
               <GitOauthAuthBanner
@@ -392,7 +482,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                       onOpenChange={setIsEmailSelectOpen}
                       isOpen={isEmailSelectOpen}
                       aria-label="Author Email"
-                      selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+                      selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author?.email}
                       onSelectionChange={email => {
                         setProjectData(prev => ({
                           ...prev,
@@ -413,7 +503,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                               );
                             }
                             return (
-                              projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email'
+                              projectData.selectedAuthorEmail || selectedCredential?.author?.email || 'Select an email'
                             );
                           }}
                         </SelectValue>
@@ -452,17 +542,17 @@ export const ProjectSettingsForm: FC<Props> = ({
                       <div className="flex">
                         <div className="w-[110px] font-semibold">Author Email</div>
                         <div>
-                          {projectData.selectedAuthorEmail || selectedCredential?.author.email || 'No email available'}
+                          {projectData.selectedAuthorEmail || selectedCredential?.author?.email || 'No email available'}
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
-              ) : selectedCredential?.author.email && !credentialsValidationErrors?.length ? (
+              ) : selectedCredential?.author?.email && !credentialsValidationErrors?.length ? (
                 <div className="text-[12px]">
                   <div className="flex">
                     <div className="w-[110px] font-semibold">Author Email</div>
-                    <div>{selectedCredential?.author.email}</div>
+                    <div>{selectedCredential?.author?.email}</div>
                   </div>
                 </div>
               ) : null}
@@ -516,9 +606,9 @@ export const ProjectSettingsForm: FC<Props> = ({
                 }
                 form={FORMID}
                 type="submit"
-                className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
-                Scan for files
+                <span>Scan for files</span>
               </Button>
             ) : (
               <Button

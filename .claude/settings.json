@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(packages/insomnia/bin/yarn-standalone.js)",
+      "Edit(packages/insomnia/bin/yarn-standalone.js)",
+      "Write(packages/insomnia/bin/yarn-standalone.js)"
+    ]
+  }
+}

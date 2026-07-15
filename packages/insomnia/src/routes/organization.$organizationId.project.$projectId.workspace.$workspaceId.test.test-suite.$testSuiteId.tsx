@@ -1,3 +1,5 @@
+import type { Request, UnitTest, UnitTestSuite } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { Fragment, useRef, useState } from 'react';
 import {
   Button,
@@ -17,8 +19,7 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { documentationLinks } from '~/common/documentation';
-import type { Request, UnitTest, UnitTestSuite } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 import { useTestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
 import { useTestRunActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
@@ -31,7 +32,6 @@ import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
 
@@ -142,6 +142,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                             POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                             HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                             OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                            QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                             DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                             PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                             PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
@@ -194,6 +195,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                               POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
                               HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
                               OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                              QUERY: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
                               DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
                               PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
                               PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',

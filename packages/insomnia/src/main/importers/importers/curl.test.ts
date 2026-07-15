@@ -1,14 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
-
-import { services } from '~/insomnia-data';
+import { describe, expect, it } from 'vitest';
 
 import { convert } from './curl';
 
 describe('curl', () => {
-  afterEach(async () => {
-    await services.settings.patch({ disableAppVersionUserAgent: false });
-  });
-
   const testCases = [
     // --data flags with urlencoded content type
     {
@@ -193,46 +187,51 @@ describe('curl', () => {
       curl: "curl -X POST https://example.com -d 'key=value'",
       expected: { body: { text: 'key=value' } },
     },
+    {
+      // https://github.com/Kong/insomnia/issues/9412
+      name: 'should preserve a token with multiple equals signs as raw text body',
+      curl: "curl -X POST https://example.com -d 'token=abc==123==xyz'",
+      expected: { body: { text: 'token=abc==123==xyz' } },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/6731
+      name: 'should drop the ;type= modifier from a --form file value',
+      curl: "curl -X POST https://example.com -F 'data=@/tmp/dex.json;type=application/json'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'data', fileName: '/tmp/dex.json', type: 'file' }],
+        },
+      },
+    },
 
     // -H flags
     {
       name: 'should handle -H with space after colon',
       curl: "curl https://example.com -H 'X-Host: example.com'",
       expected: {
-        headers: [
-          { name: 'X-Host', value: 'example.com' },
-          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
-        ],
+        headers: [{ name: 'X-Host', value: 'example.com' }],
       },
     },
     {
       name: 'should handle -H with no space after colon',
       curl: "curl https://example.com -H 'X-Host:example.com'",
       expected: {
-        headers: [
-          { name: 'X-Host', value: 'example.com' },
-          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
-        ],
+        headers: [{ name: 'X-Host', value: 'example.com' }],
       },
     },
     {
       name: 'should handle -H for Content-Type',
       curl: "curl https://example.com -H 'Content-Type:application/x-www-form-urlencoded'",
       expected: {
-        headers: [
-          { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
-          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
-        ],
+        headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
       },
     },
     {
       name: 'should handle -H with leading spaces before flag',
       curl: "curl https://example.com    -H 'Content-Type:application/x-www-form-urlencoded'",
       expected: {
-        headers: [
-          { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
-          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
-        ],
+        headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
       },
     },
     // auth
@@ -251,7 +250,7 @@ describe('curl', () => {
       curl: `curl http://httpbin.org/get -H 'Authorization: Bearer mytoken123'`,
       expected: {
         authentication: { type: 'bearer', token: 'mytoken123' },
-        headers: [{ name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) }],
+        headers: [],
       },
     },
     {
@@ -259,33 +258,91 @@ describe('curl', () => {
       curl: `curl http://httpbin.org/get -H 'x-foo: x-bar' -H 'Authorization: Bearer mytoken123' `,
       expected: {
         authentication: { type: 'bearer', token: 'mytoken123' },
-        headers: [
-          { name: 'x-foo', value: 'x-bar' },
-          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
-        ],
+        headers: [{ name: 'x-foo', value: 'x-bar' }],
       },
     },
-    // User-Agent injection
+    // User-Agent passthrough
     {
-      name: 'should inject default User-Agent when none is provided',
+      name: 'should not inject a default User-Agent when none is provided',
       curl: 'curl https://example.com',
-      expected: {
-        headers: [{ name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) }],
-      },
+      expected: { headers: [] },
     },
     {
-      name: 'should not override an explicit User-Agent header',
+      name: 'should preserve an explicit User-Agent header',
       curl: "curl https://example.com -H 'User-Agent: my-agent/1.0'",
       expected: {
         headers: [{ name: 'User-Agent', value: 'my-agent/1.0' }],
       },
     },
     {
-      name: 'should not override a lowercased user-agent header',
+      name: 'should preserve a lowercased user-agent header',
       curl: "curl https://example.com -H 'user-agent: my-agent/1.0'",
       expected: {
         headers: [{ name: 'user-agent', value: 'my-agent/1.0' }],
       },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/4530
+      name: 'should preserve a trailing slash on a non-root path',
+      curl: "curl 'https://example.com/foo/bar/'",
+      expected: { url: 'https://example.com/foo/bar/' },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/8838
+      name: 'should decode shell-escaped query brackets',
+      curl: "curl 'https://example.com/?test\\[\\]=1234'",
+      expected: {
+        url: 'https://example.com',
+        parameters: [{ name: 'test[]', value: '1234', disabled: false }],
+      },
+    },
+    {
+      name: 'adds an Accept-Encoding header for --compressed',
+      curl: "curl --compressed 'https://rest.rodeo/pokemon/vaporeon'",
+      expected: {
+        url: 'https://rest.rodeo/pokemon/vaporeon',
+        method: 'GET',
+        headers: [{ name: 'Accept-Encoding', value: 'deflate, gzip' }],
+      },
+    },
+    {
+      name: 'does not swallow the URL when -G immediately precedes it',
+      curl: "curl -G https://example.com -d 'a=b'",
+      expected: {
+        url: 'https://example.com',
+        method: 'GET',
+        parameters: [{ name: 'a', value: 'b' }],
+      },
+    },
+    // https://github.com/Kong/developer.konghq.com/issues/3805
+    {
+      name: 'detects the URL when -o precedes it',
+      curl: 'curl -o file.csv.gzip https://example.com/data',
+      expected: { url: 'https://example.com/data', method: 'GET' },
+    },
+    {
+      name: 'detects the URL when --output precedes it',
+      curl: 'curl --output file.csv.gzip https://example.com/data',
+      expected: { url: 'https://example.com/data', method: 'GET' },
+    },
+    {
+      name: 'imports with -o option without losing the URL, params or auth',
+      curl: "curl -o file.csv.gzip --location 'https://blabla.net/whatever?country=us&format=csv&' --header 'Accept-Encoding: gzip' --header 'Authorization: Bearer blabla'",
+      expected: {
+        url: 'https://blabla.net/whatever',
+        method: 'GET',
+        parameters: [
+          { name: 'country', value: 'us', disabled: false },
+          { name: 'format', value: 'csv', disabled: false },
+        ],
+        headers: [{ name: 'Accept-Encoding', value: 'gzip' }],
+        authentication: { type: 'bearer', token: 'blabla' },
+      },
+    },
+    {
+      name: 'does not skip the URL for an unsupported boolean flag like --location',
+      curl: 'curl --location https://example.com/data',
+      expected: { url: 'https://example.com/data', method: 'GET' },
     },
   ];
 
@@ -294,15 +351,20 @@ describe('curl', () => {
     expect(result).toMatchObject([expected]);
   });
 
-  it('should skip default User-Agent injection when disableAppVersionUserAgent is true', async () => {
-    await services.settings.patch({ disableAppVersionUserAgent: true });
-    const result = await convert('curl https://example.com');
-    expect(result).toMatchObject([{ headers: [] }]);
+  // https://github.com/Kong/insomnia/issues/9151
+  it('returns null for non-curl input (e.g. Postman JSON) instead of throwing', async () => {
+    const postmanJson =
+      '{"info":{"name":"My Collection","schema":"https://schema.getpostman.com/json/collection/v2.1.0"},"item":[]}';
+    const result = await convert(postmanJson);
+    expect(result).toBeNull();
   });
 
-  it('should preserve an explicit User-Agent even when disableAppVersionUserAgent is true', async () => {
-    await services.settings.patch({ disableAppVersionUserAgent: true });
-    const result = await convert("curl https://example.com -H 'User-Agent: my-agent/1.0'");
-    expect(result).toMatchObject([{ headers: [{ name: 'User-Agent', value: 'my-agent/1.0' }] }]);
+  it('prefers an explicit Authorization header over -u basic auth', async () => {
+    const result = await convert("curl https://example.com -u user:pass -H 'Authorization: Basic custom'");
+    expect(result).toMatchObject([{ headers: [{ name: 'Authorization', value: 'Basic custom' }] }]);
+    if (!Array.isArray(result)) {
+      throw new TypeError('Expected curl import to return requests');
+    }
+    expect(result[0]?.authentication).toEqual({});
   });
 });

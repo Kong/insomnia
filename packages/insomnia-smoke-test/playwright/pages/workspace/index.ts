@@ -2,6 +2,7 @@ import type { ElectronApplication, Page } from '@playwright/test';
 
 import { mockSaveDialogForFile } from '../../utils';
 import { BasePage } from '../base-page';
+import { NavigationSidebar } from '../components/navigation-sidebar';
 
 /**
  * Page Object for the **workspace page** (debug view).
@@ -13,11 +14,14 @@ import { BasePage } from '../base-page';
  * - Export operations (from workspace dropdown)
  */
 export class WorkspacePage extends BasePage {
+  readonly navigationSidebar: NavigationSidebar;
+
   constructor(
     readonly page: Page,
     readonly app: ElectronApplication,
   ) {
     super(page);
+    this.navigationSidebar = new NavigationSidebar(page);
   }
 
   /** The root workspace container. */
@@ -34,7 +38,11 @@ export class WorkspacePage extends BasePage {
    * Navigates back to the project page using the breadcrumb back button.
    */
   async goBackToProject(): Promise<void> {
-    await this.page.getByTestId('project').click();
+    await this.page.keyboard.press('Escape');
+    await this.page.getByTestId('workspace-breadcrumb-level-0').getByRole('link').click();
+    await this.page.waitForURL(/\/organization\/[^/]+\/project\/[^/]+$/, { timeout: 30_000, waitUntil: 'commit' });
+    await this.page.getByTestId('workspace-page').waitFor({ state: 'hidden' });
+    await this.page.getByRole('grid', { name: 'Files' }).waitFor({ state: 'visible' });
   }
 
   // ===========================================================================
@@ -42,28 +50,24 @@ export class WorkspacePage extends BasePage {
   // ===========================================================================
 
   /**
-   * Opens the workspace dropdown menu.
-   */
-  private async openWorkspaceDropdown(): Promise<void> {
-    await this.page.getByTestId('workspace-context-dropdown').click();
-  }
-
-  /**
    * Exports the workspace from the workspace dropdown.
    * Note: After calling this method, use waitForExportFiles() utility to ensure the file is written.
    * @param exportPath - The absolute path where the file should be exported
    * @param format - The export format ('yaml' or 'har')
    */
-  async exportWorkspaceFromDropdown(exportPath: string, format: 'yaml' | 'har' = 'yaml'): Promise<void> {
+  async exportWorkspaceFromDropdown(
+    workspaceName: string,
+    exportPath: string,
+    format: 'yaml' | 'har' = 'yaml',
+  ): Promise<void> {
     // Mock the save dialog first
     await mockSaveDialogForFile(this.app, exportPath);
 
-    // Open workspace dropdown
-    await this.openWorkspaceDropdown();
-
-    // Click Export option
-    const exportMenuItem = this.page.getByRole('menuitemradio', { name: 'Export' });
-    await exportMenuItem.click();
+    // Open workspace dropdown and select Export option
+    await this.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Export',
+      workspaceName,
+    });
 
     // Click Export button in the export requests modal (all requests selected by default)
     await this.page.getByRole('dialog').getByRole('button', { name: 'Export' }).click();

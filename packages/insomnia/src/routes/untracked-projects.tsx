@@ -1,8 +1,8 @@
 import type { Organization } from 'insomnia-api';
+import type { Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
-import type { Project, Workspace } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/untracked-projects';
 
@@ -13,17 +13,16 @@ export interface UntrackedProjectsLoaderData {
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { accountId } = await services.userSession.get();
-  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
   const listOfOrganizationIds = [...organizations.map(o => o.id), models.organization.SCRATCHPAD_ORGANIZATION_ID];
 
-  const projects = await database.find<Project>('Project', {
+  const projects = await services.project.list({
     parentId: { $nin: listOfOrganizationIds },
   });
-
   const untrackedProjects = [];
 
   for (const project of projects) {
-    const workspacesCount = await database.count('Workspace', {
+    const workspacesCount = await services.workspace.count({
       parentId: project._id,
     });
 
@@ -33,7 +32,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     });
   }
 
-  const untrackedWorkspaces = await database.find<Workspace>('Workspace', {
+  const untrackedWorkspaces = await services.workspace.list({
     parentId: null,
   });
 

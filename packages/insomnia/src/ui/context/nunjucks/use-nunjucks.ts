@@ -1,17 +1,19 @@
+import { services } from 'insomnia-data';
 import { useCallback } from 'react';
 
 import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import type { HandleRender, RenderContextOptions } from '~/common/templating/types';
+import { getKeys } from '~/common/templating/utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
-import type { HandleRender, RenderContextOptions } from '~/templating/types';
-import { getKeys } from '~/templating/utils';
 
 let getRenderContextPromiseCache: any = {};
 
 export interface UseNunjucksOptions {
-  renderContext: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo'>;
+  renderContext?: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo'>;
+  requestId?: string;
 }
 export const initializeNunjucksRenderPromiseCache = () => {
   getRenderContextPromiseCache = {};
@@ -30,11 +32,11 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
   const workspaceData = useWorkspaceLoaderData();
 
   const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(
-      requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace,
-    );
+    const overrideRequest = options?.requestId ? await services.request.getById(options.requestId) : null;
+    const base = overrideRequest || requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace;
+    const ancestors = await getRenderContextAncestors(base);
     return getRenderContext({
-      request: requestData?.activeRequest || undefined,
+      request: overrideRequest || requestData?.activeRequest || undefined,
       environment: workspaceData?.activeEnvironment._id,
       ancestors,
       ...options?.renderContext,
@@ -44,6 +46,7 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
     workspaceData?.activeWorkspace,
     workspaceData?.activeEnvironment._id,
     options?.renderContext,
+    options?.requestId,
     activeRequestGroup,
   ]);
 

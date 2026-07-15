@@ -13,13 +13,11 @@
  * - Legacy migration support
  *
  */
+import fs from 'node:fs';
 import path from 'node:path';
 
-import { app } from 'electron/main';
+import { app, BrowserWindow } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type PromiseFsClient } from 'isomorphic-git';
-import YAML, { parse } from 'yaml';
-
 import type {
   BaseModel,
   GitProject,
@@ -28,8 +26,12 @@ import type {
   Workspace,
   WorkspaceMeta,
   WorkspaceScope,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
+import YAML, { parse } from 'yaml';
+
+import { invariant } from '~/common/utils/invariant';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -61,11 +63,10 @@ import GitVCS, {
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
-import { createElectronNotifier, RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
+import { RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
-import { invariant } from '../utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 
@@ -79,6 +80,21 @@ initializeGitRemoteProviders();
  * does not appear on top of the interactive resolver.
  */
 const suppressedConflictRepos = new Set<string>();
+
+function createElectronNotifier(): WatcherNotifier {
+  return {
+    onDbSynced: () => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.db-synced');
+      }
+    },
+    onProblemsChanged: payload => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.file-problems-changed', payload);
+      }
+    },
+  };
+}
 
 const _electronNotifier = createElectronNotifier();
 const conflictFilteringNotifier: WatcherNotifier = {
@@ -216,7 +232,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   }
 
   invariant(projectId, 'Project ID is required');
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(models.project.isConnectedGitProject(project), 'Project is not linked to a git repository');
   const repoId = models.project.getEffectiveRepoId(project);
@@ -231,7 +247,7 @@ function toPosixRelPath(relPath: string) {
 }
 
 async function getProjectWorkspacesWithMeta(projectId: string) {
-  const workspaces = await services.workspace.findByParentId(projectId);
+  const workspaces = await services.workspace.listByParentId(projectId);
   const metas = await Promise.all(
     workspaces.map(async workspace => ({
       workspace,
@@ -290,7 +306,7 @@ export async function getProjectGitFileIssues({
   workspaceId,
   gitRepositoryId,
 }: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project || !models.project.isConnectedGitProject(project)) {
     return [];
   }
@@ -306,6 +322,35 @@ export async function getProjectGitFileIssues({
     metas: await getProjectWorkspacesWithMeta(projectId),
     workspaceId,
   });
+}
+
+/**
+ * Return the current import problem message for the project's Spectral
+ * ruleset (`.spectral.yaml`), or null if the ruleset is valid/absent. Used by
+ * the spec page to passively surface a git-imported ruleset that was rejected
+ * as invalid.
+ */
+export async function getProjectRulesetImportIssue({
+  projectId,
+  gitRepositoryId,
+}: {
+  projectId: string;
+  gitRepositoryId: string;
+}): Promise<string | null> {
+  const project = await services.project.getById(projectId);
+  if (!project || !models.project.isConnectedGitProject(project)) {
+    return null;
+  }
+
+  const effectiveRepoId = models.project.getEffectiveRepoId(project);
+  if (effectiveRepoId !== gitRepositoryId) {
+    return null;
+  }
+
+  const issue = repoFileWatcherRegistry
+    .getProblems(effectiveRepoId)
+    .find(problem => problem.relPath === '.spectral.yaml');
+  return issue?.message ?? null;
 }
 
 export interface BranchRemoteInfo {
@@ -342,28 +387,80 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
 }
 
 /**
+ * Resolves the absolute base directory where a Git repository's working tree and
+ * .git directory live on disk.
+ *
+ * - When the repository has a user-chosen `directory`, that path is used as-is
+ *   (the user owns it; Insomnia must not delete it on project removal).
+ * - Otherwise the repository lives in the app-managed location
+ *   `{INSOMNIA_DATA_PATH || userData}/version-control/git/{id}`.
+ *
+ * This is the single source of truth for repo paths. Callers that already have
+ * the GitRepository document should pass `directory` to avoid a DB lookup;
+ * otherwise the directory is resolved from the database by id.
+ */
+async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null): Promise<string> {
+  let dir = directory;
+  if (dir === undefined) {
+    const repo = await services.gitRepository.getById(gitRepositoryId);
+    dir = repo?.directory ?? null;
+  }
+
+  if (dir) {
+    return dir;
+  }
+
+  return path.join(
+    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+    `version-control/git/${gitRepositoryId}`,
+  );
+}
+
+/**
+ * Delete a repository's on-disk folder, but ONLY when Insomnia owns it.
+ *
+ * Insomnia owns the app-managed location (`directory === null`). A user-chosen
+ * `directory` belongs to the user and must never be deleted when the project is
+ * removed. Failures are logged, not thrown — losing a project record should not be blocked by a stale folder.
+ */
+async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 'directory'>) {
+  if (repo.directory) {
+    // User-owned folder — leave it on disk.
+    return;
+  }
+
+  const baseDir = await getRepoBaseDir(repo._id, null);
+  try {
+    await fs.promises.rm(baseDir, { recursive: true, force: true });
+  } catch (e) {
+    console.warn('[git] Failed to remove managed repo folder', baseDir, e);
+  }
+}
+
+/**
  * Creates a file system client for Git operations
  * Returns different clients based on whether we're working with a workspace or project
  *
  * @param projectId - The project ID
  * @param workspaceId - Optional workspace ID (if provided, uses workspace-specific client)
  * @param gitRepositoryId - The Git repository ID
+ * @param directory - Optional user-chosen repo directory (resolved from DB when omitted)
  * @returns File system client configured for the appropriate context
  */
+
 async function getGitFSClient({
   projectId,
   workspaceId,
   gitRepositoryId,
+  directory,
 }: {
   projectId: string;
   workspaceId?: string;
   gitRepositoryId: string;
+  directory?: string | null;
 }) {
   // Base directory where Git data is stored
-  const baseDir = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}`,
-  );
+  const baseDir = await getRepoBaseDir(gitRepositoryId, directory);
 
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
@@ -497,13 +594,39 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
-    const baseDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-      `version-control/git/${gitRepository._id}`,
-    );
+    const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
+
+    // For a user-owned folder, detect that it has been moved/renamed/deleted (or
+    // its drive unmounted) BEFORE creating the FS client — `fsClient` auto-creates
+    // its base dir, which would silently resurrect a deleted folder as empty and
+    // let the watcher wipe the database. We surface an "unavailable" state and let
+    // the user re-locate or remove the project; we never auto-remove it.
+    if (gitRepository.directory) {
+      let isAvailable = false;
+      try {
+        isAvailable = (await fs.promises.stat(gitRepository.directory)).isDirectory();
+      } catch {
+        isAvailable = false;
+      }
+      if (!isAvailable) {
+        return {
+          errors: [
+            `Repository folder not found at "${gitRepository.directory}". It may have been moved, renamed, or deleted, or its drive may not be mounted.`,
+          ],
+          repositoryUnavailable: true,
+          directory: gitRepository.directory,
+          gitRepository,
+        };
+      }
+    }
 
     const bufferId = await database.bufferChanges();
-    const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
+    const fsClient = await getGitFSClient({
+      gitRepositoryId: gitRepository._id,
+      projectId,
+      workspaceId,
+      directory: gitRepository.directory,
+    });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
       let legacyInsomniaWorkspace;
@@ -535,6 +658,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         directory: GIT_CLONE_DIR,
         fs: fsClient,
         gitDirectory: GIT_INTERNAL_DIR,
+        repoPath: baseDir,
       });
 
       await services.gitRepository.update(gitRepository, {
@@ -549,6 +673,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         gitDirectory: GIT_INTERNAL_DIR,
         credentialsId,
         legacyDiff: Boolean(workspaceId),
+        repoPath: baseDir,
       });
 
       // GitVCS.init() opens the local repo without a network call, so explicitly
@@ -1067,6 +1192,7 @@ export const cloneGitRepoAction = async ({
   uri,
   ref,
   selectedAuthorEmail,
+  directory,
 }: {
   organizationId: string;
   projectId?: string;
@@ -1076,6 +1202,11 @@ export const cloneGitRepoAction = async ({
   uri: string;
   ref?: string;
   selectedAuthorEmail?: string | null;
+  /**
+   * Optional absolute path to a user-chosen folder to clone into. When omitted,
+   * the repository is stored in the app-managed location.
+   */
+  directory?: string | null;
 }) => {
   try {
     const repoSettingsPatch: Partial<GitRepository> = {};
@@ -1084,6 +1215,24 @@ export const cloneGitRepoAction = async ({
     repoSettingsPatch.credentialsId = credentialsId;
     if (selectedAuthorEmail !== undefined) {
       repoSettingsPatch.selectedAuthorEmail = selectedAuthorEmail;
+    }
+
+    // When a user-chosen clone location is provided, validate it and guard
+    // against two projects targeting the same folder.
+    if (directory) {
+      if (!path.isAbsolute(directory)) {
+        return { errors: ['Clone location must be an absolute path.'] };
+      }
+      const resolvedDirectory = path.resolve(directory);
+
+      const existing = await services.gitRepository.getByDirectory(resolvedDirectory);
+      if (existing) {
+        return {
+          errors: [`A project is already connected to this folder: ${resolvedDirectory}`],
+        };
+      }
+
+      repoSettingsPatch.directory = resolvedDirectory;
     }
 
     let provider = 'custom';
@@ -1141,7 +1290,7 @@ export const cloneGitRepoAction = async ({
 
       if (insomniaFilesIds.length > 0) {
         // Check for existing workspaces with the same IDs (currently commented out)
-        const existingWorkspaces = await database.find(models.workspace.type, {
+        const existingWorkspaces = await services.workspace.list({
           _id: { $in: insomniaFilesIds },
         });
 
@@ -1157,7 +1306,7 @@ export const cloneGitRepoAction = async ({
 
       async function getProject() {
         if (cloneIntoProjectId) {
-          const project = await services.project.get(cloneIntoProjectId);
+          const project = await services.project.getById(cloneIntoProjectId);
           invariant(project, 'Project not found');
 
           await services.project.update(project, {
@@ -1179,7 +1328,13 @@ export const cloneGitRepoAction = async ({
 
       const project = await getProject();
 
-      const fsClient = await getGitFSClient({ projectId: project._id, gitRepositoryId: gitRepository._id });
+      const fsClient = await getGitFSClient({
+        projectId: project._id,
+        gitRepositoryId: gitRepository._id,
+        directory: gitRepository.directory,
+      });
+
+      const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
 
       if (gitRepository.needsFullClone) {
         await GitVCS.initFromClone({
@@ -1190,6 +1345,7 @@ export const cloneGitRepoAction = async ({
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
           ref,
+          repoPath: repoBaseDir,
         });
 
         await services.gitRepository.update(gitRepository, {
@@ -1203,6 +1359,7 @@ export const cloneGitRepoAction = async ({
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
           credentialsId: gitRepository.credentialsId,
+          repoPath: repoBaseDir,
         });
       }
 
@@ -1215,10 +1372,17 @@ export const cloneGitRepoAction = async ({
       }
 
       // Start watcher — it automatically imports all YAML files during creation
-      const cloneBaseDir = path.join(
-        process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-        `version-control/git/${gitRepository._id}`,
-      );
+      const cloneBaseDir = repoBaseDir;
+
+      // If the project already has a ruleset in the DB (e.g. cloud → git migration),
+      // write it to disk now so its mtime is newer than the cloned file. This ensures
+      // the cloud ruleset is preserved and it shows up as a diff in the commit modal rather than being silently replaced by the repo's file.
+      const existingRuleset = await services.projectLintRuleset.getByParentId(project._id);
+      if (existingRuleset) {
+        const rulesetPath = path.join(cloneBaseDir, '.spectral.yaml');
+        await fs.promises.writeFile(rulesetPath, existingRuleset.rulesetContent, 'utf8');
+      }
+
       await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
 
       const updateRepository = await services.gitRepository.getById(gitRepository._id);
@@ -1242,7 +1406,7 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
@@ -1359,7 +1523,7 @@ export const cloneGitRepoAction = async ({
       const existingWorkspace = await services.workspace.getById(workspace._id);
 
       if (existingWorkspace) {
-        const project = await services.project.get(existingWorkspace.parentId);
+        const project = await services.project.getById(existingWorkspace.parentId);
         if (!project) {
           return {
             errors: [
@@ -1391,6 +1555,7 @@ export const cloneGitRepoAction = async ({
         workspaceId,
         gitRepositoryId: gitRepository._id,
       });
+      const wsRepoBaseDir = await getRepoBaseDir(gitRepository._id);
 
       // Configure basic info
       if (gitRepository.needsFullClone) {
@@ -1401,6 +1566,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: routableFS,
           gitDirectory: GIT_INTERNAL_DIR,
+          repoPath: wsRepoBaseDir,
         });
 
         await services.gitRepository.update(gitRepository, {
@@ -1415,6 +1581,7 @@ export const cloneGitRepoAction = async ({
           gitDirectory: GIT_INTERNAL_DIR,
           credentialsId: gitRepository.credentialsId,
           legacyDiff: true,
+          repoPath: wsRepoBaseDir,
         });
       }
 
@@ -1443,6 +1610,263 @@ export const cloneGitRepoAction = async ({
   }
 };
 
+/**
+ * Open/adopt an existing local folder as a Git project.
+ *
+ * Unlike {@link cloneGitRepoAction} this performs no network clone — it points
+ * Insomnia at a folder already on disk:
+ *   - If the folder is not yet a git repo, `GitVCS.init` runs `git init`.
+ *   - Existing Insomnia YAML is imported by the watcher; a repo with no Insomnia
+ *     data simply yields an empty project ready to populate.
+ *   - Two projects may not target the same folder.
+ */
+export const openGitRepoAction = async ({
+  organizationId,
+  name,
+  directory,
+  credentialsId = null,
+}: {
+  organizationId: string;
+  name?: string;
+  directory: string;
+  /**
+   * Optional Git credentials to associate with the adopted repository so it can
+   * fetch/push to its remote. Null when the user opens a local-only folder or
+   * defers credentials to the project settings.
+   */
+  credentialsId?: string | null;
+}) => {
+  try {
+    if (!directory || !path.isAbsolute(directory)) {
+      return { errors: ['A valid absolute folder path is required.'] };
+    }
+    const resolvedDirectory = path.resolve(directory);
+
+    // Validate the folder exists, is a directory and is readable/writable.
+    try {
+      const stats = await fs.promises.stat(resolvedDirectory);
+      if (!stats.isDirectory()) {
+        return { errors: [`Not a folder: ${resolvedDirectory}`] };
+      }
+      await fs.promises.access(resolvedDirectory, fs.constants.R_OK | fs.constants.W_OK);
+    } catch {
+      return {
+        errors: [`Folder is not accessible (check it exists and you have read/write permission): ${resolvedDirectory}`],
+      };
+    }
+
+    // Hard-block if another project already owns this folder.
+    const existing = await services.gitRepository.getByDirectory(resolvedDirectory);
+    if (existing) {
+      return { errors: [`A project is already connected to this folder: ${resolvedDirectory}`] };
+    }
+
+    const bufferId = await database.bufferChanges();
+
+    const gitRepository = await services.gitRepository.create({
+      uri: '',
+      credentialsId,
+      needsFullClone: false,
+      directory: resolvedDirectory,
+    });
+
+    const project = await services.project.create({
+      name: name || path.basename(resolvedDirectory) || 'New Git Project',
+      parentId: organizationId,
+      gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
+    });
+
+    const fsClient = await getGitFSClient({
+      projectId: project._id,
+      gitRepositoryId: gitRepository._id,
+      directory: resolvedDirectory,
+    });
+
+    // Opens the existing repo, or runs `git init` when there is no .git yet.
+    await GitVCS.init({
+      repoId: gitRepository._id,
+      uri: '',
+      directory: GIT_CLONE_DIR,
+      fs: fsClient,
+      gitDirectory: GIT_INTERNAL_DIR,
+      credentialsId,
+    });
+
+    await GitVCS.setAuthor();
+
+    // Adopt the folder's existing origin remote (if any) as the repo URI so
+    // future fetch/push targets the right place.
+    let originUri = '';
+    try {
+      const remotes = await GitVCS.listRemotes();
+      originUri = remotes.find(remote => remote.remote === 'origin')?.url || '';
+    } catch {
+      // No remotes configured — a local-only repository.
+    }
+    if (originUri) {
+      await services.gitRepository.update(gitRepository, { uri: parseGitToHttpsURL(originUri) });
+    }
+
+    // Migrate a legacy `.insomnia/` directory if one is present on disk.
+    const hasLegacyInsomniaDir = await containsLegacyInsomniaDir({ fsClient });
+    if (hasLegacyInsomniaDir) {
+      await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
+    }
+
+    // Start the watcher — it imports any existing Insomnia YAML from disk into NeDB.
+    await repoFileWatcherRegistry.startWatcher(gitRepository._id, resolvedDirectory, project._id);
+
+    const updateRepository = await services.gitRepository.getById(gitRepository._id);
+    invariant(updateRepository, 'Git Repository not found');
+
+    let currentBranch: string | null = null;
+    try {
+      currentBranch = await GitVCS.getCurrentBranch();
+    } catch {
+      // A freshly-initialised repo may not have an active branch yet.
+    }
+    await services.gitRepository.update(updateRepository, {
+      cachedGitLastCommitTime: Date.now(),
+      cachedGitRepositoryBranch: currentBranch,
+    });
+
+    await database.flushChanges(bufferId);
+
+    trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+      ...vcsEventProperties('git', 'clone'),
+      providerName: 'custom',
+      repoId: gitRepository._id,
+    });
+
+    return { organizationId, projectId: project._id };
+  } catch (e) {
+    return { errors: [e instanceof Error ? e.message : String(e)] };
+  }
+};
+
+/**
+ * Release a Git repository's runtime/disk resources when its project is being
+ * deleted (called from the renderer delete flow). Stops the file watcher and
+ * deletes the on-disk folder only when Insomnia owns it — user-chosen folders
+ * are left untouched.
+ *
+ * The DB document removal stays in the renderer action so it participates in the
+ * same buffered change-set; this only handles the main-process-only concerns.
+ */
+export const cleanupGitRepoStorageAction = async ({ gitRepositoryId }: { gitRepositoryId: string }) => {
+  const repo = await services.gitRepository.getById(gitRepositoryId);
+  repoFileWatcherRegistry.stopWatcher(gitRepositoryId);
+  clearConflictSuppression(gitRepositoryId);
+  if (repo) {
+    await deleteManagedRepoFolderIfOwned(repo);
+  }
+  return {};
+};
+
+/**
+ * Move a Git project's on-disk repository to a user-chosen folder and record the
+ * new location on `GitRepository.directory`.
+ *
+ * The whole repository (working tree + `.git`) is moved, so history and
+ * uncommitted changes are preserved. If the previous location was the managed
+ * folder it is left empty by the move (rename) or removed (cross-device copy).
+ */
+export const relocateGitRepoAction = async ({
+  gitRepositoryId,
+  projectId,
+  newDirectory,
+}: {
+  gitRepositoryId: string;
+  projectId: string;
+  newDirectory: string;
+}) => {
+  if (!newDirectory || !path.isAbsolute(newDirectory)) {
+    return { errors: ['A valid absolute folder path is required.'] };
+  }
+  const targetDir = path.resolve(newDirectory);
+
+  const repo = await services.gitRepository.getById(gitRepositoryId);
+  invariant(repo, 'Git Repository not found');
+
+  const currentBaseDir = await getRepoBaseDir(repo._id, repo.directory);
+  if (path.resolve(currentBaseDir) === targetDir) {
+    return { errors: ['The repository is already in that folder.'] };
+  }
+
+  // Hard-block if another project already owns the target.
+  const existing = await services.gitRepository.getByDirectory(targetDir);
+  if (existing && existing._id !== repo._id) {
+    return { errors: [`A project is already connected to this folder: ${targetDir}`] };
+  }
+
+  // Refuse to move onto an existing path — never clobber user data.
+  try {
+    await fs.promises.stat(targetDir);
+    return { errors: [`That folder already exists: ${targetDir}. Choose a folder that does not exist yet.`] };
+  } catch {
+    // Good — the destination does not exist.
+  }
+
+  // The destination's parent must exist and be writable.
+  try {
+    await fs.promises.access(path.dirname(targetDir), fs.constants.W_OK);
+  } catch {
+    return { errors: [`Cannot write to ${path.dirname(targetDir)}. Choose a different location.`] };
+  }
+
+  // Stop the watcher before touching files on disk.
+  repoFileWatcherRegistry.stopWatcher(repo._id);
+
+  try {
+    let currentExists = false;
+    try {
+      currentExists = (await fs.promises.stat(currentBaseDir)).isDirectory();
+    } catch {
+      // Nothing on disk yet (e.g. an empty managed repo) — just create the target.
+    }
+
+    if (currentExists) {
+      try {
+        await fs.promises.rename(currentBaseDir, targetDir);
+      } catch (e) {
+        // Cross-device moves (e.g. to an external drive) can't be renamed.
+        if ((e as NodeJS.ErrnoException)?.code === 'EXDEV') {
+          await fs.promises.cp(currentBaseDir, targetDir, { recursive: true });
+          await fs.promises.rm(currentBaseDir, { recursive: true, force: true });
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      await fs.promises.mkdir(targetDir, { recursive: true });
+    }
+  } catch (e) {
+    // Move failed — leave the repo where it was and resume watching it.
+    await repoFileWatcherRegistry.startWatcher(repo._id, currentBaseDir, projectId);
+    return { errors: [`Failed to move repository: ${e instanceof Error ? e.message : String(e)}`] };
+  }
+
+  // Persist the new location and re-point the in-memory VCS + watcher at it.
+  await services.gitRepository.update(repo, { directory: targetDir });
+
+  const newFsClient = await getGitFSClient({ projectId, gitRepositoryId: repo._id, directory: targetDir });
+  // Re-init only when this repo is the one currently loaded in the singleton VCS;
+  // otherwise the next loadGitRepository will initialise it at the new location.
+  if (GitVCS.isInitializedForRepo(repo._id)) {
+    await GitVCS.init({
+      repoId: repo._id,
+      uri: repo.uri,
+      directory: GIT_CLONE_DIR,
+      fs: newFsClient,
+      gitDirectory: GIT_INTERNAL_DIR,
+      credentialsId: repo.credentialsId,
+    });
+  }
+  await repoFileWatcherRegistry.startWatcher(repo._id, targetDir, projectId);
+
+  return { directory: targetDir };
+};
+
 export const updateGitRepoAction = async ({
   projectId,
   workspaceId,
@@ -1469,7 +1893,7 @@ export const updateGitRepoAction = async ({
       const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
       gitRepositoryId = workspaceMeta?.gitRepositoryId;
     } else if (projectId) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       gitRepositoryId = project.gitRepositoryId;
     }
@@ -1497,7 +1921,7 @@ export const updateGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
       });
     } else if (projectId) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       await services.project.update(project, {
         gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
@@ -1513,6 +1937,7 @@ export const updateGitRepoAction = async ({
       credentialsId: credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
+      repoPath: await getRepoBaseDir(gitRepository._id, gitRepository.directory),
     });
 
     await GitVCS.setAuthor();
@@ -1557,7 +1982,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
       gitRepositoryId: null,
     });
   } else if (projectId) {
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
     await services.project.update(project, {
       gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
@@ -1568,6 +1993,8 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   // Stop the file watcher for this repository (project-scoped flow only).
   repoFileWatcherRegistry.stopWatcher(repo._id);
   clearConflictSuppression(repo._id);
+  // Remove the on-disk folder only when Insomnia owns it (never a user folder).
+  await deleteManagedRepoFolderIfOwned(repo);
 
   await database.flushChanges(flushId);
 
@@ -2436,7 +2863,10 @@ export const discardChangesAction = async ({
 
     await GitVCS.discardChanges(files);
 
-    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Discarding an untracked, never-committed workspace deletes its YAML from disk.
+    // Remove the orphaned workspace from the DB instead of resurrecting it, otherwise
+    // the discarded change reappears immediately.
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id, { removeLocalOnlyOrphans: true });
 
     await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
@@ -2679,7 +3109,7 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
 
   if (project && models.project.isEmptyGitProject(project)) {
     return {
@@ -2852,7 +3282,7 @@ async function getGitProviderEmails({ credentialsId }: { credentialsId: string }
 
     const emails = await provider.fetchUserEmails(credentials);
 
-    if (credentials.credentials) {
+    if (credentials.provider !== 'native' && credentials.credentials) {
       await services.gitCredentials.update(credentials, {
         credentials: {
           ...credentials.credentials,
@@ -2926,11 +3356,19 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
         logs.push(`${ts()} [${level.toUpperCase()}] ["${project.name}"] ${message}`);
       };
 
-      const allowedBase = path.resolve(baseDataPath);
-      const baseDir = path.resolve(allowedBase, 'version-control', 'git', repoId);
-      if (!baseDir.startsWith(allowedBase + path.sep)) {
-        logger('warn', `Skipping repo with unsafe path — repoId may contain path traversal: ${repoId}`);
-        return;
+      let baseDir: string;
+      if (gitRepository.directory) {
+        // User-located repos are created in the new on-disk layout, so the
+        // legacy-structure migration is a no-op for them. Use their directory
+        // directly — the managed-path traversal guard does not apply.
+        baseDir = gitRepository.directory;
+      } else {
+        const allowedBase = path.resolve(baseDataPath);
+        baseDir = path.resolve(allowedBase, 'version-control', 'git', repoId);
+        if (!baseDir.startsWith(allowedBase + path.sep)) {
+          logger('warn', `Skipping repo with unsafe path — repoId may contain path traversal: ${repoId}`);
+          return;
+        }
       }
 
       const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
@@ -2947,7 +3385,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     failedProjects.map(async ({ id, name }) => {
       logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
       try {
-        const project = await services.project.get(id);
+        const project = await services.project.getById(id);
         if (!project || !models.project.isConnectedGitProject(project)) {
           logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
           return;
@@ -2973,6 +3411,42 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   return { logs, failedProjects, totalProjects: migratedCount };
 }
 
+/**
+ * Look up whether a folder is already adopted by an existing Git project. Used
+ * by the project creation form to warn the user at folder-pick time (before they
+ * try to open it) and to offer opening the existing project instead.
+ */
+export const checkGitRepoDirectoryAction = async ({
+  directory,
+}: {
+  directory: string;
+}): Promise<{ project: { _id: string; name: string; organizationId: string } | null }> => {
+  try {
+    if (!directory || !path.isAbsolute(directory)) {
+      return { project: null };
+    }
+    const resolvedDirectory = path.resolve(directory);
+    const existing = await services.gitRepository.getByDirectory(resolvedDirectory);
+    if (!existing) {
+      return { project: null };
+    }
+
+    const projects = await database.find<GitProject>('Project', {});
+    const project = projects.find(
+      p => models.project.isConnectedGitProject(p) && models.project.getEffectiveRepoId(p) === existing._id,
+    );
+    if (!project) {
+      return { project: null };
+    }
+
+    return {
+      project: { _id: project._id, name: project.name, organizationId: project.parentId },
+    };
+  } catch {
+    return { project: null };
+  }
+};
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -2982,6 +3456,10 @@ export interface GitServiceAPI {
   canPushLoader: typeof canPushLoader;
   initGitRepoClone: typeof initGitRepoCloneAction;
   cloneGitRepo: typeof cloneGitRepoAction;
+  openGitRepo: typeof openGitRepoAction;
+  checkGitRepoDirectory: typeof checkGitRepoDirectoryAction;
+  cleanupGitRepoStorage: typeof cleanupGitRepoStorageAction;
+  relocateGitRepo: typeof relocateGitRepoAction;
   updateGitRepo: typeof updateGitRepoAction;
   resetGitRepo: typeof resetGitRepoAction;
   commitToGitRepo: typeof commitToGitRepoAction;
@@ -3007,6 +3485,7 @@ export interface GitServiceAPI {
   validateGitRepositoryCredentials: typeof validateGitRepositoryCredentials;
   validateGitCredentialById: typeof validateGitCredentialById;
   getProjectGitFileIssues: typeof getProjectGitFileIssues;
+  getProjectRulesetImportIssue: typeof getProjectRulesetImportIssue;
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
@@ -3037,6 +3516,9 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.getProjectGitFileIssues', (_, options: Parameters<typeof getProjectGitFileIssues>[0]) =>
     getProjectGitFileIssues(options),
   );
+  ipcMainHandle('git.getProjectRulesetImportIssue', (_, options: Parameters<typeof getProjectRulesetImportIssue>[0]) =>
+    getProjectRulesetImportIssue(options),
+  );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
   ipcMainHandle('git.gitChangesLoader', (_, options: Parameters<typeof gitChangesLoader>[0]) =>
@@ -3045,6 +3527,16 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.canPushLoader', (_, options: Parameters<typeof canPushLoader>[0]) => canPushLoader(options));
   ipcMainHandle('git.cloneGitRepo', (_, options: Parameters<typeof cloneGitRepoAction>[0]) =>
     cloneGitRepoAction(options),
+  );
+  ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) => openGitRepoAction(options));
+  ipcMainHandle('git.checkGitRepoDirectory', (_, options: Parameters<typeof checkGitRepoDirectoryAction>[0]) =>
+    checkGitRepoDirectoryAction(options),
+  );
+  ipcMainHandle('git.cleanupGitRepoStorage', (_, options: Parameters<typeof cleanupGitRepoStorageAction>[0]) =>
+    cleanupGitRepoStorageAction(options),
+  );
+  ipcMainHandle('git.relocateGitRepo', (_, options: Parameters<typeof relocateGitRepoAction>[0]) =>
+    relocateGitRepoAction(options),
   );
   ipcMainHandle('git.initGitRepoClone', (_, options: Parameters<typeof initGitRepoCloneAction>[0]) =>
     initGitRepoCloneAction(options),

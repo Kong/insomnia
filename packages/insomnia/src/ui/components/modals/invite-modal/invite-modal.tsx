@@ -3,12 +3,10 @@ import {
   type Collaborator,
   deleteOrganizationMember,
   type FeatureList,
-  getOrganizationDetail,
   getOrganizationFeatures,
   getOrganizationMemberRoles,
   getOrganizationRoles,
   getOrgUserPermissions,
-  type Organization,
   type Permission,
   revokeInvitation,
   type Role,
@@ -29,20 +27,21 @@ import {
 } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 
-import { getAccountId, getCurrentSessionId } from '~/account/session';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { debounce } from '~/common/misc';
+import { invariant } from '~/common/utils/invariant';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
 import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
 import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
 import { useCollaboratorsCheckSeatsLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-check-seats';
 import { useOrganizationMemberRolesActionFetcher } from '~/routes/organization.$organizationId.members.$userId.roles';
+import { getAccountId, getCurrentSessionId } from '~/ui/account/session';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { showModal } from '~/ui/components/modals/index';
-import { invariant } from '~/utils/invariant';
 
 import { InviteForm } from './invite-form';
 import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
@@ -155,7 +154,7 @@ const InviteModal: FC<{
       isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-(--color-bg) pt-[70px]"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30 pt-[70px]"
     >
       <Modal className="theme--dialog flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-[900px] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
         <Dialog className="relative flex h-full flex-1 flex-col overflow-hidden outline-hidden">
@@ -598,14 +597,15 @@ export const InviteModalContainer: FC<{
 }> = ({ isOpen, setIsOpen }) => {
   const [loadingOrgInfo, setLoadingOrgInfo] = useState(true);
   const { organizationId } = useParams();
+  const organizationData = useOrganizationLoaderData();
+  const currentOrg = organizationData?.organizations.find(o => o.id === organizationId);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
   const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<Organization | null>(null);
 
-  const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
+  const isCurrentUserOrganizationOwner = Boolean(currentOrg?.is_owner);
 
   async function getBaseInfo(organizationId: string) {
     const sessionId = await getCurrentSessionId();
@@ -622,10 +622,6 @@ export const InviteModalContainer: FC<{
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
-      getOrganizationDetail({
-        organizationId,
-        sessionId,
-      }).then(setCurrentOrgInfo),
     ]);
   }
 
@@ -708,11 +704,6 @@ export async function getCurrentUserRoleInOrg(organizationId: string): Promise<R
   }).catch(() => {
     throw new Error('Failed to fetch member roles');
   });
-}
-
-export interface OrganizationBranding {
-  logo_url: string;
-  colors: string[];
 }
 
 async function unlinkTeam(organizationId: string, collaboratorId: string) {

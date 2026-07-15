@@ -1,16 +1,16 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { getSyncItems, remoteBackendProjectsCache, remoteBranchesCache, remoteCompareCache } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook, createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherLoadHook, createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId } = params;
   try {
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
     const { syncItems } = await getSyncItems({ workspaceId });
@@ -68,7 +68,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.remoteId, 'Project is not remote');
 

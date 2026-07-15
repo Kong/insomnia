@@ -2,11 +2,11 @@ import path from 'node:path';
 
 import type { Change } from 'diff';
 import { diffLines } from 'diff';
+import type { GitAuthor, GitRemoteConfig } from 'insomnia-data';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import type { GitAuthor, GitRemoteConfig } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
@@ -56,6 +56,7 @@ interface InitOptions {
   uri?: string;
   repoId: string;
   ref?: string;
+  repoPath?: string;
   // If enabled git-vcs will only diff files inside a .insomnia directory
   legacyDiff?: boolean;
 }
@@ -68,6 +69,7 @@ interface InitFromCloneOptions {
   gitDirectory: string;
   ref?: string;
   repoId: string;
+  repoPath?: string;
 }
 
 export type GitFileStatus = 'untracked' | 'added' | 'modified' | 'deleted' | 'clean' | 'unknown';
@@ -133,6 +135,7 @@ interface BaseOpts {
   onAuth: git.AuthCallback;
   uri: string;
   repoId: string;
+  repoPath?: string;
   legacyDiff?: boolean;
   ref?: string;
 }
@@ -147,11 +150,21 @@ export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, credentialsId, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
+  async init({
+    directory,
+    fs,
+    gitDirectory,
+    credentialsId,
+    uri = '',
+    repoId,
+    legacyDiff = false,
+    ref,
+    repoPath,
+  }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
-      ...gitCallbacks(credentialsId),
+      ...gitCallbacks(credentialsId, repoPath),
       gitdir: gitDirectory,
       fs,
       http: httpClient,
@@ -159,6 +172,7 @@ export class GitVCS {
       repoId,
       legacyDiff,
       ref,
+      repoPath,
     };
 
     if (await this.repoExists()) {
@@ -202,15 +216,25 @@ export class GitVCS {
     }
   }
 
-  async initFromClone({ repoId, url, credentialsId, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
+  async initFromClone({
+    repoId,
+    url,
+    credentialsId,
+    directory,
+    fs,
+    gitDirectory,
+    ref,
+    repoPath,
+  }: InitFromCloneOptions) {
     this._baseOpts = {
       ...this._baseOpts,
-      ...gitCallbacks(credentialsId),
+      ...gitCallbacks(credentialsId, repoPath),
       dir: directory,
       gitdir: gitDirectory,
       fs,
       http: httpClient,
       repoId,
+      repoPath,
     };
 
     const initRef = ref || this._baseOpts.ref;
@@ -474,8 +498,15 @@ export class GitVCS {
             return null;
           }
         } else {
-          // If the path is a file with an extension different than yaml we don't want to check it
-          if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
+          // We want to inspect the repo root '.', directories (so the walk keeps
+          // recursing into them), and yaml files. Skip files with a non-yaml
+          // extension and dotfiles such as .gitignore/.DS_Store (whose extension
+          // is empty) — but keep yaml dotfiles like .spectral.yaml.
+          const ext = path.extname(filepath).toLowerCase();
+          const base = path.basename(filepath);
+          const isYamlFile = ext === '.yaml';
+          const isDotfile = base !== '.' && base.startsWith('.');
+          if (!isYamlFile && (ext || isDotfile)) {
             return null;
           }
         }
@@ -631,8 +662,15 @@ export class GitVCS {
             return null;
           }
         } else {
-          // If the path is a file with an extension different than yaml we don't want to check it
-          if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
+          // We want to inspect the repo root '.', directories (so the walk keeps
+          // recursing into them), and yaml files. Skip files with a non-yaml
+          // extension and dotfiles such as .gitignore/.DS_Store (whose extension
+          // is empty) — but keep yaml dotfiles like .spectral.yaml.
+          const ext = path.extname(filepath).toLowerCase();
+          const base = path.basename(filepath);
+          const isYamlFile = ext === '.yaml';
+          const isDotfile = base !== '.' && base.startsWith('.');
+          if (!isYamlFile && (ext || isDotfile)) {
             return null;
           }
         }
@@ -1101,7 +1139,7 @@ export class GitVCS {
       name = author.name;
       email = author.email;
     } else {
-      const author = await getAuthorFromGitRepository(this._baseOpts.repoId);
+      const author = await getAuthorFromGitRepository(this._baseOpts.repoId, this._baseOpts.repoPath);
       name = author.name;
       email = author.email;
     }
@@ -1192,6 +1230,22 @@ export class GitVCS {
     // NOTE: Response can be ok and have errors so we check this in the end to make sure we throw an error if there are any.
     if (response.ok) {
       console.log('[git] Push successful');
+      // Set up upstream tracking for the current branch. When linking to an empty repo,
+      // init() never configures tracking, so a later native git pull via CLI fails with "no tracking information".
+      // The push just created origin/<branch>, so this is the point where tracking becomes valid.
+      // We only write when tracking is missing - so steady-state pushes do no config writes, an existing
+      // user-set upstream is never clobbered, and already-linked repos self-heal on their next push.
+      try {
+        const branch = await this.getCurrentBranch();
+        const trackingRemote = await this.getBranchTrackingRemote(branch);
+        if (!trackingRemote) {
+          await git.setConfig({ ...this._baseOpts, path: `branch.${branch}.remote`, value: 'origin' });
+          await git.setConfig({ ...this._baseOpts, path: `branch.${branch}.merge`, value: `refs/heads/${branch}` });
+        }
+      } catch (err) {
+        console.log('[git] Failed to set upstream tracking after push', err);
+      }
+
       return;
     }
 

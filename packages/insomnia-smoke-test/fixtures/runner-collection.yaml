@@ -392,6 +392,28 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: "{{ _.base_url }}/delay/seconds/10"
+    name: delaySkip
+    meta:
+      id: req_aa11bb22cc33dd44ee55ff6600000002
+      sortKey: 201
+    method: GET
+    scripts:
+      afterResponse: |-
+        insomnia.test('delaySkip-post-check', () => {
+          insomnia.expect(200).to.eql(200);
+        });
+  - url: http://127.0.0.1:4010/echo
+    name: fastAfterSkip
+    meta:
+      id: req_aa11bb22cc33dd44ee55ff6600000003
+      sortKey: 202
+    method: POST
+    scripts:
+      afterResponse: |-
+        insomnia.test('fastAfterSkip-post-check', () => {
+          insomnia.expect(200).to.eql(200);
+        });
 cookieJar:
   name: Default Jar
   meta:
@@ -408,6 +430,7 @@ environments:
   data:
     scope: collection_base
     value: collection_base
+    base_url: http://127.0.0.1:4010
   subEnvironments:
     - name: Sub Env
       meta:

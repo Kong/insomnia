@@ -1,14 +1,15 @@
+import type { RequestParameter, Settings } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { deconstructQueryStringToParams, getContentTypeFromHeaders } from 'insomnia-data/common';
 import React, { type FC, Fragment, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { RequestParameter, Settings } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { extractQueryStringFromUrl } from '~/common/utils/url/querystring';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import { getContentTypeFromHeaders } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
@@ -16,7 +17,6 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../../ui/analytics';
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -104,7 +104,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
             key={requestId}
-            uniquenessKey={uniqueKey}
+            // Stable cache key for the URL bar editor's undo history (survives remounts).
+            uniquenessKey={`request-url-bar::${requestId}`}
             handleAutocompleteUrls={() =>
               services.helpers.queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)
             }
@@ -120,7 +121,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
             id="params"
           >
             <span>Params</span>
@@ -131,7 +132,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
             id="content-type"
           >
             <span>Body</span>
@@ -142,7 +143,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
             id="auth"
           >
             <span>Auth</span>
@@ -154,7 +155,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
             id="headers"
           >
             <span>Headers</span>
@@ -165,7 +166,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
             id="scripts"
           >
             <span>Scripts</span>
@@ -176,7 +177,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             )}
           </Tab>
           <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
             id="docs"
           >
             <span>Docs</span>
@@ -208,7 +209,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         handleImportQueryFromUrl();
                         window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsImportFromURLClicked });
                       }}
-                      className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
+                      className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
                     >
                       Import from URL
                     </Button>
@@ -220,7 +221,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsBulkEditToggled });
                       }}
                       isSelected={settings.useBulkParametersEditor}
-                      className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                      className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     >
                       {({ isSelected }) => (
                         <Fragment>
@@ -306,6 +307,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 bulk={settings.useBulkHeaderEditor}
                 headers={activeRequest.headers}
                 requestType="Request"
+                disableUserAgentHeader={activeRequest.disableUserAgentHeader}
                 onDescriptionToggle={() => {
                   window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersDescriptionToggled });
                 }}
@@ -334,7 +336,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               aria-label="Request scripts tabs"
             >
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
                 id="pre-request"
               >
                 <div className="flex flex-1 items-center gap-2">
@@ -348,7 +350,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 )}
               </Tab>
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise) data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-(--hl-md)"
                 id="after-response"
               >
                 <div className="flex flex-1 items-center gap-2">
@@ -368,7 +370,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   uniquenessKey={`${activeRequest._id}:pre-request-script`}
                   defaultValue={activeRequest.preRequestScript || ''}
                   onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
-                  settings={settings}
                   onSnippetAdded={snippetName => {
                     window.main.trackAnalyticsEvent({
                       event: AnalyticsEvent.requestScriptsPreScriptSnippetAdded,
@@ -384,7 +385,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   uniquenessKey={`${activeRequest._id}:after-response-script`}
                   defaultValue={activeRequest.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
-                  settings={settings}
                   onSnippetAdded={snippetName => {
                     window.main.trackAnalyticsEvent({
                       event: AnalyticsEvent.requestScriptsPostScriptSnippetAdded,

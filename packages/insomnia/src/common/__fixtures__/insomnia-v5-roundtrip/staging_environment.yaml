@@ -1,0 +1,17 @@
+type: environment.insomnia.rest/5.0
+schema_version: "5.1"
+name: Staging Environment
+meta:
+  id: wrk_ecddfb22aa874848b5c074758e70bbd3
+  created: 1778268347052
+  modified: 1778268347052
+  description: ""
+environments:
+  name: Staging
+  meta:
+    id: env_fd4df06d094a0ae36506ef56850c97d10a978188
+    created: 1778268347067
+    modified: 1778513255096
+    isPrivate: false
+  data:
+    base_url: https://insomnia-airlines-api.onrender.com

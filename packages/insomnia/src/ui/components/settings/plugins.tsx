@@ -12,14 +12,14 @@ import {
   TextField,
 } from 'react-aria-components';
 
+import type { SerializablePlugin } from '~/common/plugins/bridge-types';
+import { validatePluginName } from '~/common/utils/plugin-name';
 import { useRootLoaderData } from '~/root';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
+import { reload } from '~/ui/templating/renderer-safe';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import type { Plugin } from '../../../plugins/index';
-import { getPlugins } from '../../../plugins/index';
-import { reload } from '../../../templating/index';
-import { validatePluginName } from '../../../utils/plugin';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -47,7 +47,7 @@ const getNpmRegistryUrlValidationError = (url: string): string | null => {
 };
 
 interface State {
-  plugins: Plugin[];
+  plugins: SerializablePlugin[];
   npmPluginValue: string;
   error: Error | null;
   installPluginErrMsg: string;
@@ -107,8 +107,9 @@ export const Plugins: FC = () => {
 
   async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
-    // Get and reload plugins
-    const plugins = (await getPlugins(true)).filter(
+    await pluginsBridge.reloadPlugins();
+    const allPlugins = (await pluginsBridge.getPlugins()) as SerializablePlugin[];
+    const plugins = allPlugins.filter(
       // Filter out pre-bundled plugins
       p => p.directory,
     );
@@ -123,34 +124,10 @@ export const Plugins: FC = () => {
   return (
     <div>
       <p className="notice info no-margin-top">
-        Plugins is still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
+        Plugins are built and maintained by third-party developers. Thank you! Insomnia does not review, endorse, or
+        support any particular plugin unless explicitly noted. Plugins are still an experimental feature. See{' '}
+        <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
-
-      <div className="notice warning margin-bottom text-left">
-        <div className="selectable force-pre-wrap flex flex-col gap-2">
-          <p>
-            Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
-            disabled.
-          </p>
-          <Checkbox
-            aria-label="Allow elevated access for plugins"
-            slot={null}
-            isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
-            onChange={isSelected => {
-              patchSettings({ pluginsAllowElevatedAccess: isSelected });
-            }}
-            className="group flex h-full items-center gap-2 p-0"
-          >
-            <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-              <Icon
-                icon="check"
-                className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
-              />
-            </div>
-            <span className="text-sm font-semibold">Allow elevated access for plugins</span>
-          </Checkbox>
-        </div>
-      </div>
 
       <div className="flex flex-col gap-6">
         {(error || installPluginErrMsg) && (
@@ -202,7 +179,7 @@ export const Plugins: FC = () => {
                   />
                 </TextField>
                 <Button
-                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
+                  className="flex h-full min-w-[13ch] shrink-0 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
                   isDisabled={isInstallingFromNpm}
                   type="submit"
                   onPress={async () => {
@@ -456,7 +433,7 @@ export const Plugins: FC = () => {
                             acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
                             return acc;
                           },
-                          {} as Record<string, Plugin['config']>,
+                          {} as Record<string, SerializablePlugin['config']>,
                         );
 
                         patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });
@@ -504,6 +481,23 @@ export const Plugins: FC = () => {
                   ? PLUGIN_HUB_BASE
                   : NPM_PACKAGE_BASE + '/' + plugin.name;
 
+                // Summarize the plugin's declared sandbox permissions (C3). No declaration means it
+                // runs on the baseline grant; a declared block lists its requested modules/capabilities.
+                const { modules, capabilities } = plugin.permissions ?? { modules: [], capabilities: [] };
+                const permissionParts: string[] = [];
+                if (modules.length > 0) {
+                  permissionParts.push(`modules: ${modules.join(', ')}`);
+                }
+                if (capabilities.length > 0) {
+                  permissionParts.push(`capabilities: ${capabilities.join(', ')}`);
+                }
+                const permissionLabel =
+                  permissionParts.length > 0
+                    ? permissionParts.join(' · ')
+                    : plugin.permissionsDeclared
+                      ? 'Declared empty permissions (baseline access)'
+                      : 'No permissions declared (baseline access)';
+
                 return (
                   <GridListItem
                     textValue={plugin.name}
@@ -538,6 +532,23 @@ export const Plugins: FC = () => {
                           <HelpTooltip info className="space-left">
                             {plugin.description}
                           </HelpTooltip>
+                        )}
+                        <span
+                          data-testid={`plugin-permissions-${plugin.name}`}
+                          className="truncate text-xs text-(--hl)"
+                          title={permissionLabel}
+                        >
+                          {permissionLabel}
+                        </span>
+                        {plugin.permissionWarnings && plugin.permissionWarnings.length > 0 && (
+                          <span
+                            data-testid={`plugin-permission-warning-${plugin.name}`}
+                            className="text-(--color-warning)"
+                          >
+                            <HelpTooltip info={false} className="space-left text-(--color-warning)">
+                              {plugin.permissionWarnings.join(' ')}
+                            </HelpTooltip>
+                          </span>
                         )}
                       </div>
                     </div>

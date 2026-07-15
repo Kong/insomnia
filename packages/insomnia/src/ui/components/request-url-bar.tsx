@@ -1,11 +1,11 @@
+import { models, services } from 'insomnia-data';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
-import type { Request, RequestGroup } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -17,23 +17,22 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { clearPendingFocusUrlBar, shouldFocusUrlBar } from '~/ui/components/request-url-bar-focus';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
+import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
-import { database as db } from '../../common/database';
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../ui/analytics';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
-import { MethodDropdown } from './dropdowns/method-dropdown';
+import { MethodSelector } from './dropdowns/method-selector';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showModal } from './modals';
 import { AlertModal } from './modals/alert-modal';
@@ -42,7 +41,6 @@ import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
-const { isRequestGroup } = models.requestGroup;
 const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
@@ -65,7 +63,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
     const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
     const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
-    if (searchParams.has('error')) {
+
+    useEffect(() => {
+      if (!searchParams.has('error')) {
+        return;
+      }
+
       if (searchParams.has('envVariableMissing') && searchParams.get('undefinedEnvironmentVariables')) {
         setShowEnvVariableMissingModal(true);
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
@@ -103,10 +106,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         });
       }
 
-      // clean up params
-      searchParams.delete('error');
       setSearchParams({});
-    }
+    }, [searchParams, setSearchParams]);
 
     const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
     const { settings } = useRootLoaderData()!;
@@ -128,6 +129,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       }
     }, [inputRef]);
 
+    // Focus the URL bar when this mounts for a freshly created request (flag set by the create flow).
+    // Read (not consumed) during render; the editor clears the flag once it actually focuses, which is
+    // robust to React StrictMode's double-mount and to the request pane keying by requestId.
+    const focusUrlOnMount = shouldFocusUrlBar();
+
     const setUrl = useCallback(
       (url: string) => {
         if (inputRef.current) {
@@ -142,7 +148,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
     const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
     const connectRequestFetcher = useRequestConnectActionFetcher();
-    const sendRequestFetcher = useDebugRequestSendActionFetcher();
+    // Add a key here for other components to track the send action state
+    const sendRequestFetcher = useDebugRequestSendActionFetcher({ key: `send-request-${activeRequest._id}` });
 
     const { updateTabById } = useInsomniaTabContext();
 
@@ -190,24 +197,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           const startListening = async () => {
             const environmentId = activeEnvironment._id;
             const workspaceId = activeWorkspace._id;
-            // Render any nunjucks tags in the url/headers/authentication settings/cookies
-            const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-
-            const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type]);
-            // check for authentication overrides in parent folders
-            const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-            activeRequest.authentication = getOrInheritAuthentication({ request: activeRequest, requestGroups });
-            activeRequest.headers = getOrInheritHeaders({ request: activeRequest, requestGroups });
-            const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+            const rendered = await renderRealtimeConnectPayload({
               request: activeRequest,
               environmentId,
-              payload: {
-                url: activeRequest.url,
-                headers: activeRequest.headers,
-                authentication: activeRequest.authentication,
-                parameters: activeRequest.parameters.filter(p => !p.disabled),
-                workspaceCookieJar,
-              },
+              workspaceId,
             });
             rendered &&
               connect({
@@ -217,13 +210,31 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 cookieJar: rendered.workspaceCookieJar,
                 suppressUserAgent: rendered.suppressUserAgent,
               });
+            rendered &&
+              recordProjectRecentRequest({
+                projectId,
+                requestId,
+                workspaceId: activeWorkspace._id,
+              });
           };
           startListening();
           return;
         }
 
         try {
-          send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
+          recordProjectRecentRequest({
+            projectId,
+            requestId,
+            workspaceId: activeWorkspace._id,
+          });
+
+          send({
+            requestId,
+            workspaceId: activeWorkspace._id,
+            projectId,
+            shouldPromptForPathAfterResponse,
+            ignoreUndefinedEnvVariable,
+          });
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : String(err);
           showModal(AlertModal, {
@@ -239,7 +250,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           });
         }
       },
-      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById],
+      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById, projectId],
     );
 
     useEffect(() => {
@@ -291,8 +302,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const isCancellable = currentInterval || currentTimeout || isEventStreamOpen || isGraphQLSubscriptionOpen;
     return (
       <div className="flex w-full items-stretch justify-between self-stretch">
-        <div className="flex items-center">
-          <MethodDropdown
+        <div className="flex items-stretch p-1">
+          <MethodSelector
+            className="self-stretch"
             ref={methodDropdownRef}
             onChange={method => patchRequest(requestId, { method })}
             method={method}
@@ -301,9 +313,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         <div className="flex flex-1 items-center p-1">
           <OneLineEditor
             id="request-url-bar"
-            key={uniquenessKey}
+            // Remount on request switch or environment change (switch/edit) so nunjucks
+            // previews refresh. Excludes the response id / sync versions that churn on
+            // send and local edits, which used to remount and blur the editor mid-edit.
+            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}`}
+            // Stable across that remount, so undo history is restored from the cache.
+            uniquenessKey={uniquenessKey}
             ref={inputRef}
             type="text"
+            autoFocus={focusUrlOnMount}
+            onAutoFocus={clearPendingFocusUrlBar}
             getAutocompleteConstants={handleAutocompleteUrls}
             placeholder="https://api.myproduct.com/v1/users"
             defaultValue={url}
@@ -374,7 +393,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="code"
                           label="Generate Client Code"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestSendMenuGenerateCodeClicked });
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuGenerateCodeClicked,
+                            });
                             showModal(GenerateCodeModal, { request: activeRequest });
                           }}
                         />
@@ -386,7 +407,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="clock-o"
                           label="Send After Delay"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestSendMenuSendAfterDelayClicked });
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuSendAfterDelayClicked,
+                            });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send After Delay',

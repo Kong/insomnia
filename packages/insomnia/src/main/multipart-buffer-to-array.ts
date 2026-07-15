@@ -7,7 +7,7 @@ export interface Part {
   title: string;
   name: string;
   bytes: number;
-  value: Buffer;
+  value: Uint8Array;
   filename: string | null;
   headers: { name: string; value: string }[];
 }
@@ -15,7 +15,7 @@ export function multipartBufferToArray({
   bodyBuffer,
   contentType,
 }: {
-  bodyBuffer: Buffer | null;
+  bodyBuffer: Uint8Array | null;
   contentType: string;
 }): Promise<Part[]> {
   return new Promise((resolve, reject) => {

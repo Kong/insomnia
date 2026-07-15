@@ -1,3 +1,5 @@
+import type { GitCredentials, ProviderEmail } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { type FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
@@ -12,32 +14,37 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import type { GitCredentials, ProviderEmail } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitValidateCredentialFetcher } from '~/routes/git.validate-credential';
 import type { GitProviderOption } from '~/sync/git/providers/types';
+import { ensureGitRepoUrlSuffix } from '~/sync/git/url-utils';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
+import { MiddleTruncate } from '~/ui/components/base/middle-truncate';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
 import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { ErrorBoundary } from '../error-boundary';
-import type { ActiveView, ProjectData } from './utils';
-
-const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined) => {
-  if (!fullUri) return '';
-  if (prefix && fullUri.startsWith(prefix)) {
-    return fullUri.slice(prefix.length);
-  }
-  return fullUri;
-};
+import { type ActiveView, deriveRepoName, getLastCloneParentDir, type ProjectData, setLastCloneParentDir } from './utils';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
+
+const validateRepoUrl = (value: string): string | null => {
+  try {
+    const { protocol } = new URL(value.trim());
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      return 'Enter a valid URL to a remote git repo';
+    }
+    return null;
+  } catch {
+    return 'Enter a valid URL to a remote git repo';
+  }
+};
 
 const getCredentialEmails = (credential: GitCredentials | undefined) => {
   if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {
@@ -85,12 +92,6 @@ export const GitRepoForm: FC<Props> = ({
   const selectedCredential = credentials.find(c => c._id === selectedCredentialsId);
   const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
   const needToSetupCredentials = credentials.length === 0;
-  const baseURI =
-    (selectedCredential &&
-      isGitCredentialsV2(selectedCredential) &&
-      selectedCredential.provider === 'custom' &&
-      selectedCredential.credentials?.baseURI) ||
-    '';
 
   const availableEmails = getCredentialEmails(selectedCredential);
   const showEmailSelector = availableEmails.length > 1;
@@ -129,10 +130,8 @@ export const GitRepoForm: FC<Props> = ({
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
             const credentialsId = formData.get('credentialsId') as string;
-            const uri = formData.get('uri') as string;
             const ref = formData.get('branch') as string;
-            const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
-            const fullUri = prefix ? `${prefix}${uri}` : uri;
+            const fullUri = ensureGitRepoUrlSuffix((formData.get('uri') as string) || '');
             setProjectData({
               ...projectData,
               credentialsId,
@@ -161,8 +160,8 @@ export const GitRepoForm: FC<Props> = ({
             }}
             defaultSelectedKey={credentials?.[0]?._id}
           >
-            <Label className="mb-2 px-0.5 pt-0 text-sm">Authorized as</Label>
-            <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+            <Label className="mb-1 pt-0 text-sm">Authorized as</Label>
+            <Button className="flex h-(--line-height-xs) w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
               <SelectValue<GitCredentials> className="flex items-center justify-center gap-2 truncate">
                 {({ selectedItem }) => {
                   if (selectedItem) {
@@ -173,7 +172,7 @@ export const GitRepoForm: FC<Props> = ({
                         {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
                         <span>{provider?.displayName}</span>
                         <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-                        <span className="truncate">{selectedItem.author.name}</span>
+                        <span className="truncate">{selectedItem.author?.name}</span>
                       </Fragment>
                     );
                   }
@@ -202,7 +201,7 @@ export const GitRepoForm: FC<Props> = ({
                           {provider?.iconName && <Icon icon={provider.iconName} className="size-4" />}
                           <span>{provider?.displayName}</span>
                           <Separator orientation="vertical" className="mx-2 h-4 border-l border-(--color-font)" />
-                          <span className="truncate">{item.author.name}</span>
+                          <span className="truncate">{item.author?.name}</span>
                           {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                         </Fragment>
                       );
@@ -249,7 +248,7 @@ export const GitRepoForm: FC<Props> = ({
               onOpenChange={setIsEmailSelectOpen}
               isOpen={isEmailSelectOpen}
               aria-label="Author Email"
-              selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+              selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author?.email}
               onSelectionChange={email => {
                 setProjectData(prev => ({
                   ...prev,
@@ -257,8 +256,8 @@ export const GitRepoForm: FC<Props> = ({
                 }));
               }}
             >
-              <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
-              <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+              <Label className="mb-1 pt-0 text-sm">Author Email</Label>
+              <Button className="flex h-(--line-height-xs) w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
                 <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
                   {({ selectedItem }) => {
                     if (selectedItem) {
@@ -269,7 +268,7 @@ export const GitRepoForm: FC<Props> = ({
                         </Fragment>
                       );
                     }
-                    return projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email';
+                    return projectData.selectedAuthorEmail || selectedCredential?.author?.email || 'Select an email';
                   }}
                 </SelectValue>
                 <Icon icon="caret-down" />
@@ -316,17 +315,17 @@ export const GitRepoForm: FC<Props> = ({
               ) : (
                 <Input
                   label="Repository URL"
-                  description={'Note: Some repo should include ".git" at the end of the path.'}
-                  prefix={baseURI}
+                  description={'Enter the URL to the remote repo that includes ".git" at the end.'}
                   key={selectedCredentialsId}
-                  defaultValue={getDisplayValue(projectData.uri, baseURI)}
+                  defaultValue={projectData.uri}
                   name="uri"
-                  type={baseURI ? 'text' : 'url'}
+                  type="url"
                   isRequired
-                  onChange={async v => {
-                    const prefix = baseURI ? baseURI.replace(/\/+$/, '') + '/' : '';
-                    const fullUri = prefix ? `${prefix}${v}` : v;
-                    setProjectData(prev => ({ ...prev, uri: fullUri }));
+                  placeholder="e.g. https://github.com/organization/repo-name.git"
+                  validate={validateRepoUrl}
+                  errorMessage="Enter a valid URL to a remote git repo"
+                  onChange={v => {
+                    setProjectData(prev => ({ ...prev, uri: ensureGitRepoUrlSuffix(v) }));
                   }}
                 />
               )}
@@ -339,6 +338,52 @@ export const GitRepoForm: FC<Props> = ({
               url={projectData.uri || ''}
               isDisabled={false}
             />
+          </div>
+
+          <div className={isCredentialInvalid ? 'hidden' : 'flex flex-col gap-2 px-0.5'}>
+            <Label className="text-sm text-(--color-font)">Clone location</Label>
+            <div className="flex items-center gap-2">
+              {projectData.cloneParentDir ? (
+                <MiddleTruncate
+                  value={window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))}
+                  className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
+                />
+              ) : (
+                <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
+                  Managed by Insomnia (default location)
+                </div>
+              )}
+              <Button
+                type="button"
+                onPress={async () => {
+                  const defaultPath =
+                    projectData.cloneParentDir ||
+                    getLastCloneParentDir() ||
+                    window.path.join(window.app.getPath('home'), 'Insomnia');
+                  const { canceled, filePath } = await selectFileOrFolder({
+                    itemTypes: ['directory'],
+                    defaultPath,
+                  });
+                  if (canceled || !filePath) {
+                    return;
+                  }
+                  setLastCloneParentDir(filePath);
+                  setProjectData(prev => ({ ...prev, cloneParentDir: filePath }));
+                }}
+                className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+              >
+                Choose folder…
+              </Button>
+              {projectData.cloneParentDir && (
+                <Button
+                  type="button"
+                  onPress={() => setProjectData(prev => ({ ...prev, cloneParentDir: undefined }))}
+                  className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+                >
+                  Use default
+                </Button>
+              )}
+            </div>
           </div>
         </Form>
       )}

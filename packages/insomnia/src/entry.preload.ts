@@ -1,14 +1,26 @@
-import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils as webUtilities } from 'electron';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from '~/insomnia-data';
+import type {
+  ApplyRequestHooksArgs,
+  ApplyResponseHooksArgs,
+  ExecutePluginActionArgs,
+  ExecutePluginMainActionArgs,
+  PluginsBridgeAPI,
+  RunTemplateTagActionArgs,
+} from '~/common/plugins/bridge-types';
+import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
+import type { RenderedRequest } from '~/common/templating/types';
+import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
-import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
+import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
+import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
@@ -17,9 +29,18 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
-import type { RenderedRequest } from './templating/types';
-import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
+
+type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
+  ? Awaited<ReturnType<PluginsBridgeAPI[T]>>
+  : never;
+
+const invokePluginBridgeMethod = <T extends PluginInvokeMethod>(
+  method: T,
+  args?: unknown,
+): Promise<PluginMethodResult<T>> => {
+  return invokeWithNormalizedError(`plugins.${method}`, args) as Promise<PluginMethodResult<T>>;
+};
 
 const webSocket: WebSocketBridgeAPI = {
   open: options => invokeWithNormalizedError('webSocket.open', options),
@@ -95,6 +116,15 @@ const mcp: McpBridgeAPI = {
   },
 };
 
+const cookies: CookiesBridgeAPI = {
+  fromJSON: cookie => invokeWithNormalizedError('cookies.fromJSON', cookie),
+  parse: cookie => invokeWithNormalizedError('cookies.parse', cookie),
+  toString: cookie => invokeWithNormalizedError('cookies.toString', cookie),
+  getCookiesForUrl: args => invokeWithNormalizedError('cookies.getCookiesForUrl', args),
+  addSetCookies: args => invokeWithNormalizedError('cookies.addSetCookies', args),
+  getResponseCookiesFromHeaders: headers => invokeWithNormalizedError('cookies.getResponseCookiesFromHeaders', headers),
+};
+
 const grpc: gRPCBridgeAPI = {
   start: options => ipcRenderer.send('grpc.start', options),
   sendMessage: options => ipcRenderer.send('grpc.sendMessage', options),
@@ -104,6 +134,7 @@ const grpc: gRPCBridgeAPI = {
   loadMethods: options => invokeWithNormalizedError('grpc.loadMethods', options),
   loadMethodsFromReflection: options => invokeWithNormalizedError('grpc.loadMethodsFromReflection', options),
   writeProtoFile: protoFileId => invokeWithNormalizedError('grpc.writeProtoFile', protoFileId),
+  validateProtoFile: filePath => invokeWithNormalizedError('grpc.validateProtoFile', filePath),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
@@ -152,6 +183,7 @@ const sync: SyncBridgeAPI = {
   pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
   push: (...args) => invokeSyncMethod('push', ...args),
   remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
+  remoteBackendProjectsOfTeam: (...args) => invokeSyncMethod('remoteBackendProjectsOfTeam', ...args),
   removeBackendProjectsForRoot: (...args) => invokeSyncMethod('removeBackendProjectsForRoot', ...args),
   removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
   removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),
@@ -165,10 +197,6 @@ const sync: SyncBridgeAPI = {
     invokeSyncMethod('switchAndCreateBackendProjectIfNotExist', ...args),
   takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
   unstage: (...args) => invokeSyncMethod('unstage', ...args),
-  on: (channel, listener) => {
-    ipcRenderer.on(channel, listener);
-    return () => ipcRenderer.removeListener(channel, listener);
-  },
 };
 
 const git: GitServiceAPI = {
@@ -176,6 +204,7 @@ const git: GitServiceAPI = {
   getGitBranches: options => invokeWithNormalizedError('git.getGitBranches', options),
   fetchGitRemoteBranches: options => invokeWithNormalizedError('git.fetchGitRemoteBranches', options),
   getProjectGitFileIssues: options => invokeWithNormalizedError('git.getProjectGitFileIssues', options),
+  getProjectRulesetImportIssue: options => invokeWithNormalizedError('git.getProjectRulesetImportIssue', options),
   validateGitRepositoryCredentials: options =>
     invokeWithNormalizedError('git.validateGitRepositoryCredentials', options),
   validateGitCredentialById: options => invokeWithNormalizedError('git.validateGitCredentialById', options),
@@ -184,6 +213,10 @@ const git: GitServiceAPI = {
   gitChangesLoader: options => invokeWithNormalizedError('git.gitChangesLoader', options),
   canPushLoader: options => invokeWithNormalizedError('git.canPushLoader', options),
   cloneGitRepo: options => invokeWithNormalizedError('git.cloneGitRepo', options),
+  openGitRepo: options => invokeWithNormalizedError('git.openGitRepo', options),
+  checkGitRepoDirectory: options => invokeWithNormalizedError('git.checkGitRepoDirectory', options),
+  cleanupGitRepoStorage: options => invokeWithNormalizedError('git.cleanupGitRepoStorage', options),
+  relocateGitRepo: options => invokeWithNormalizedError('git.relocateGitRepo', options),
   initGitRepoClone: options => invokeWithNormalizedError('git.initGitRepoClone', options),
   updateGitRepo: options => invokeWithNormalizedError('git.updateGitRepo', options),
   resetGitRepo: options => invokeWithNormalizedError('git.resetGitRepo', options),
@@ -238,12 +271,14 @@ const main: Window['main'] = {
   completeExecutionStep: options => ipcRenderer.send('completeExecutionStep', options),
   updateLatestStepName: options => ipcRenderer.send('updateLatestStepName', options),
   getExecution: options => invokeWithNormalizedError('getExecution', options),
-  loginStateChange: () => ipcRenderer.send('loginStateChange'),
+  loginStateChange: options => ipcRenderer.send('loginStateChange', options),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
   openDeepLink: options => ipcRenderer.send('openDeepLink', options),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
+  applyUpdateAndRestart: () => ipcRenderer.send('applyUpdateAndRestart'),
+  getUpdateStatus: () => ipcRenderer.sendSync('getUpdateStatus'),
   backup: () => invokeWithNormalizedError('backup'),
   restoreBackup: options => invokeWithNormalizedError('restoreBackup', options),
   authorizeUserInWindow: options => invokeWithNormalizedError('authorizeUserInWindow', options),
@@ -255,10 +290,14 @@ const main: Window['main'] = {
   multipartBufferToArray: options => invokeWithNormalizedError('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
+  createPlugin: options => invokeWithNormalizedError('createPlugin', options),
   initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
+  runTests: src => invokeWithNormalizedError('run-tests', src),
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => invokeWithNormalizedError('writeFile', options),
+  deleteCompiledRuleset: options => invokeWithNormalizedError('deleteCompiledRuleset', options),
+  refreshCompiledRuleset: options => invokeWithNormalizedError('refreshCompiledRuleset', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
   getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
     invokeWithNormalizedError('getAuthHeader', renderedRequest, url),
@@ -275,10 +314,17 @@ const main: Window['main'] = {
   readDir: options => invokeWithNormalizedError('readDir', options),
   readOrCreateDataDir: options => invokeWithNormalizedError('readOrCreateDataDir', options),
   lintSpec: options => invokeWithNormalizedError('lintSpec', options),
+  bundleSpectralRuleset: options => invokeWithNormalizedError('bundleSpectralRuleset', options),
   on: (channel, listener) => {
-    ipcRenderer.on(channel, listener);
-    return () => ipcRenderer.removeListener(channel, listener);
+    // Under contextIsolation the IpcRendererEvent can't be cloned across the
+    // contextBridge; no listener uses it, so drop it and forward only the
+    // (cloneable) payload args.
+    const handler = (_event: IpcRendererEvent, ...args: unknown[]) =>
+      (listener as (event: unknown, ...args: unknown[]) => void)(undefined, ...args);
+    ipcRenderer.on(channel, handler);
+    return () => ipcRenderer.removeListener(channel, handler);
   },
+  cookies,
   webSocket,
   socketIO,
   mcp,
@@ -319,6 +365,32 @@ const main: Window['main'] = {
         port.postMessage({ ...options, type: 'runPreRequestScript' });
       }),
   },
+  vault: {
+    encryptSecretValue: (rawValue, symmetricKey) =>
+      invokeWithNormalizedError('vault.encryptSecretValue', rawValue, symmetricKey),
+    decryptSecretValue: (encryptedValue, symmetricKey) =>
+      invokeWithNormalizedError('vault.decryptSecretValue', encryptedValue, symmetricKey),
+  },
+  crypt: {
+    encryptRSAWithJWK: (publicKeyJWK: JsonWebKey, plaintext: string) =>
+      invokeWithNormalizedError('crypt.encryptRSAWithJWK', publicKeyJWK, plaintext),
+    decryptRSAWithJWK: (privateJWK: JsonWebKey, encryptedBlob: string) =>
+      invokeWithNormalizedError('crypt.decryptRSAWithJWK', privateJWK, encryptedBlob),
+    encryptAESBuffer: (jwkOrKey: string | JsonWebKey, buff: number[], additionalData?: string) =>
+      invokeWithNormalizedError('crypt.encryptAESBuffer', jwkOrKey, buff, additionalData),
+    encryptAES: (jwkOrKey: string | JsonWebKey, plaintext: string, additionalData?: string) =>
+      invokeWithNormalizedError('crypt.encryptAES', jwkOrKey, plaintext, additionalData),
+    decryptAES: (jwkOrKey: string | JsonWebKey, encryptedResult: object) =>
+      invokeWithNormalizedError('crypt.decryptAES', jwkOrKey, encryptedResult),
+    decryptAESToBuffer: (jwkOrKey: string | JsonWebKey, encryptedResult: object) =>
+      invokeWithNormalizedError('crypt.decryptAESToBuffer', jwkOrKey, encryptedResult),
+    generateAES256Key: () => invokeWithNormalizedError('crypt.generateAES256Key'),
+  },
+  sealedBox: {
+    keyPair: () => invokeWithNormalizedError('sealedbox.keyPair'),
+    open: (sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array) =>
+      invokeWithNormalizedError('sealedbox.open', sealedbox, pk, sk),
+  },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),
@@ -340,10 +412,50 @@ const main: Window['main'] = {
       useDynamicMockResponses,
       mockServerAdditionalFiles,
     ),
+  generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
+    invokeWithNormalizedError('generateCodeSnippet', options),
+  getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
+  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean }) =>
+    invokeWithNormalizedError('exportHarWithRequest', options),
+  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) =>
+    invokeWithNormalizedError('exportHarRequest', options),
+  exportHarCurrentRequest: (options: { requestId: string; responseId: string }) =>
+    invokeWithNormalizedError('exportHarCurrentRequest', options),
+  exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) =>
+    invokeWithNormalizedError('exportRequestsHAR', options),
+  exportWorkspacesHAR: (options: { workspaces: any[]; includePrivateDocs?: boolean }) =>
+    invokeWithNormalizedError('exportWorkspacesHAR', options),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
     invokeWithNormalizedError('generateMcpSamplingResponse', parameters),
+  plugins: {
+    getThemes: () => invokePluginBridgeMethod('getThemes'),
+    getPlugins: () => invokePluginBridgeMethod('getPlugins'),
+    getActivePlugins: () => invokePluginBridgeMethod('getActivePlugins'),
+    reloadPlugins: () => invokePluginBridgeMethod('reloadPlugins'),
+    getRequestActions: () => invokePluginBridgeMethod('getRequestActions'),
+    getRequestGroupActions: () => invokePluginBridgeMethod('getRequestGroupActions'),
+    getWorkspaceActions: () => invokePluginBridgeMethod('getWorkspaceActions'),
+    getDocumentActions: () => invokePluginBridgeMethod('getDocumentActions'),
+    executeAction: (args: ExecutePluginActionArgs) => invokePluginBridgeMethod('executeAction', args),
+    getTemplateTags: () => invokePluginBridgeMethod('getTemplateTags'),
+    runTemplateTagAction: (args: RunTemplateTagActionArgs) => invokePluginBridgeMethod('runTemplateTagAction', args),
+    getBundlePlugins: () => invokePluginBridgeMethod('getBundlePlugins'),
+    executePluginMainAction: (args: ExecutePluginMainActionArgs) =>
+      invokePluginBridgeMethod('executePluginMainAction', args),
+    hasRequestHooks: () => invokePluginBridgeMethod('hasRequestHooks'),
+    hasResponseHooks: () => invokePluginBridgeMethod('hasResponseHooks'),
+    applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
+    applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
+    getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
+  },
+  notifyPromptResult: (id: string, value: string | null) => ipcRenderer.send('ui.promptResult', { id, value }),
+  timeline: {
+    getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
+    appendToFile: (options: { timelinePath: string; data: string }) =>
+      invokeWithNormalizedError('timeline.appendToFile', options),
+  },
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
@@ -364,10 +476,9 @@ const dialog: Window['dialog'] = {
 const app: Window['app'] = {
   getPath: options => ipcRenderer.sendSync('getPath', options),
   getAppPath: () => ipcRenderer.sendSync('getAppPath'),
+  // platform is constant; expose a plain value so it survives contextBridge cloning (getters are not preserved).
   process: {
-    get platform() {
-      return process.platform as NodeJS.Platform;
-    },
+    platform: process.platform as NodeJS.Platform,
   },
 };
 const shell: Window['shell'] = {
@@ -386,6 +497,45 @@ const database: Window['database'] = {
   invoke: (fnName, ...args) => invokeWithNormalizedError('database.invoke', fnName, ...args),
 };
 
+const env: Window['env'] = {
+  // GitLab OAuth — redirect URI, client ID, and API URL allow dev/enterprise overrides
+  INSOMNIA_GITLAB_REDIRECT_URI: process.env.INSOMNIA_GITLAB_REDIRECT_URI,
+  INSOMNIA_GITLAB_CLIENT_ID: process.env.INSOMNIA_GITLAB_CLIENT_ID,
+  INSOMNIA_GITLAB_API_URL: process.env.INSOMNIA_GITLAB_API_URL,
+  // E2E sentinel: switches analytics to dev keys and forces vertical layout in settings
+  PLAYWRIGHT_TEST: process.env.PLAYWRIGHT_TEST,
+  // E2E fixtures: pre-seed auth state so tests bypass login/key-derivation UI
+  INSOMNIA_SKIP_ONBOARDING: process.env.INSOMNIA_SKIP_ONBOARDING,
+  INSOMNIA_SESSION: process.env.INSOMNIA_SESSION,
+  INSOMNIA_SECRET_KEY: process.env.INSOMNIA_SECRET_KEY,
+  INSOMNIA_PUBLIC_KEY: process.env.INSOMNIA_PUBLIC_KEY,
+  // E2E vault fixtures: pre-seed deterministic salt/key/SRP secret
+  INSOMNIA_VAULT_SALT: process.env.INSOMNIA_VAULT_SALT,
+  INSOMNIA_VAULT_KEY: process.env.INSOMNIA_VAULT_KEY,
+  INSOMNIA_VAULT_SRP_SECRET: process.env.INSOMNIA_VAULT_SRP_SECRET,
+  // App environment: gates dev features and selects analytics keys
+  INSOMNIA_ENV: process.env.INSOMNIA_ENV,
+  // Injected at build time; shown in the About screen
+  BUILD_DATE: process.env.BUILD_DATE,
+  // Windows portable binary sentinel: presence disables auto-updates
+  PORTABLE_EXECUTABLE_DIR: process.env.PORTABLE_EXECUTABLE_DIR,
+  // Dev override: presence re-enables auto-updates in development mode
+  ALLOW_UPDATES_IN_DEV: process.env.ALLOW_UPDATES_IN_DEV,
+  // OAuth flow URL overrides for dev/staging environments
+  OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL,
+  OAUTH_RELAY_URL: process.env.OAUTH_RELAY_URL,
+  // Service URL overrides: allow dev/CI to target local or staging backends
+  INSOMNIA_API_URL: process.env.INSOMNIA_API_URL,
+  INSOMNIA_MOCK_API_URL: process.env.INSOMNIA_MOCK_API_URL,
+  INSOMNIA_AI_URL: process.env.INSOMNIA_AI_URL,
+  KONNECT_API_URL: process.env.KONNECT_API_URL,
+  KONNECT_API_REGIONS: process.env.KONNECT_API_REGIONS,
+  INSOMNIA_APP_WEBSITE_URL: process.env.INSOMNIA_APP_WEBSITE_URL,
+  // GitHub API URL overrides for GitHub Enterprise targets
+  INSOMNIA_GITHUB_REST_API_URL: process.env.INSOMNIA_GITHUB_REST_API_URL,
+  INSOMNIA_GITHUB_API_URL: process.env.INSOMNIA_GITHUB_API_URL,
+};
+
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
@@ -395,7 +545,14 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('webUtils', webUtils);
   contextBridge.exposeInMainWorld('path', path);
   contextBridge.exposeInMainWorld('database', database);
-  contextBridge.exposeInMainWorld('_dataServices', servicesProxy);
+  // A Proxy cannot be cloned across the contextBridge, so expose a flat invoke
+  // function and rebuild the services Proxy in the isolated renderer world.
+  contextBridge.exposeInMainWorld(
+    '_dataServicesInvoke',
+    (serviceName: string, methodName: string, ...args: unknown[]) =>
+      invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args),
+  );
+  contextBridge.exposeInMainWorld('env', env);
 } else {
   window.main = main;
   window.dialog = dialog;
@@ -406,4 +563,5 @@ if (process.contextIsolated) {
   window.path = path;
   window.database = database;
   window._dataServices = servicesProxy;
+  window.env = env;
 }

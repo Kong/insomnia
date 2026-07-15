@@ -22,6 +22,7 @@ There are a few more technologies and tools worth mentioning:
 Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true) to manage multiple npm packages within a single repository. There are currently the following package locations:
 
 - `/packages` contains related packages that are consumed by `insomnia` or externally.
+- `/packages/insomnia-data` contains shared data models, model services, database adapters, and common data utilities used by the app and CLI.
 
 Insomnia Inso CLI is built using a series of steps
 
@@ -61,7 +62,6 @@ There are a few notable directories inside it:
 - `/src/ui` React components and styling.
 - `/src/common` Utilities used across both main and render processes.
 - `/src/plugins` Logic around installation and usage of plugins.
-- `/src/insomnia-data` Data models, services and database for managing application state.
 - `/src/network` Sending requests and performing auth (e.g. OAuth 2).
 - `/src/templating` Nunjucks and rendering related code.
 - `/src/sync` and `/src/account` Team sync and account stuff.

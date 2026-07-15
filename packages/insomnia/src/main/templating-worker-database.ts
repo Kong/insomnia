@@ -1,29 +1,27 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 
-import { shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
+import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import type {
-  AllTypes,
-  CloudProviderCredential,
-  Request as DBRequest,
-  RequestGroup,
-  Response,
-  Workspace,
-} from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { type Plugin, type TemplateTag } from '~/common/plugins/types';
+import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
+import { getPluginCommonContext, getTemplateTags } from '~/plugins';
+import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
-import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
@@ -40,8 +38,15 @@ export const resolveDbByKey = async (request: Request) => {
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
   );
   const urlHostLowerCase = url.host.toLowerCase();
+  // Own-property + function check so a key like "constructor" can't resolve to an inherited member.
+  const handler = Object.prototype.hasOwnProperty.call(withLowercasedKeys, urlHostLowerCase)
+    ? withLowercasedKeys[urlHostLowerCase]
+    : undefined;
   try {
-    const result = await withLowercasedKeys[urlHostLowerCase](body);
+    if (typeof handler !== 'function') {
+      throw new TypeError(`No host bridge handler registered for "${urlHostLowerCase}"`);
+    }
+    const result = await handler(body);
     return new Response(JSON.stringify(result));
   } catch (err) {
     console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
@@ -67,6 +72,179 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
     }
   }
   return {};
+};
+
+// Run a resolved plugin template tag with a freshly-built common context. Shared by the bundle
+// and user-plugin execute handlers so both build context (incl. renderPurpose) identically.
+const runPluginTag = (
+  run: (context: any, ...args: any[]) => any,
+  body: {
+    args: any[];
+    pluginName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  },
+) => {
+  const { pluginName, args, context: originContext } = body;
+  const { meta, renderPurpose, context } = originContext;
+  const commonContext = getPluginCommonContext({ plugin: { name: pluginName }, renderPurpose });
+  return run({ meta, renderPurpose, context, ...commonContext }, ...args);
+};
+
+// Read a plugin's entry-point source as text so it can be evaluated inside the QuickJS sandbox.
+// User plugins resolve via their on-disk directory + package.json "main"; we avoid require.resolve
+// because the bundled main process shims it via createRequire(import.meta.url) where import.meta.url
+// is undefined, which throws "filename ... Received undefined". Bundle plugins (no directory) fall
+// back to require.resolve by name.
+export const getPluginEntrySource = ({ directory, name }: { directory: string; name: string }): string => {
+  try {
+    let entryPath: string;
+    if (directory) {
+      const base = path.resolve(directory);
+      const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf8'));
+      // Contain the entry point inside the plugin's own directory — a hostile "main" must not be
+      // able to read (and then execute) a file outside the plugin folder.
+      entryPath = path.resolve(base, pkg.main || 'index.js');
+      const relative = path.relative(base, entryPath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+      }
+      // Re-check after resolving symlinks, since a symlinked entry can point outside `base`.
+      const realRelative = path.relative(fs.realpathSync(base), fs.realpathSync(entryPath));
+      if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
+        throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+      }
+    } else {
+      // Bundle plugins resolve by bare package name only — never a path.
+      if (name.includes('..') || path.isAbsolute(name)) {
+        throw new Error(`invalid bundled plugin name: ${name}`);
+      }
+      entryPath = require.resolve(name);
+    }
+    return fs.readFileSync(entryPath, 'utf8');
+  } catch (err) {
+    throw new Error(
+      `Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+};
+
+// (plugin name, module) pairs we've already toasted for this session — so a repeat denial for the
+// SAME missing module doesn't re-toast, but a plugin missing two different grants still gets a
+// distinct hint for each one it actually hits (P1).
+const warnedManifestlessPlugins = new Set<string>();
+const manifestWarningKey = (pluginName: string, moduleName: string) => JSON.stringify([pluginName, moduleName]);
+
+export const _testOnlyResetMigrationWarnings = () => warnedManifestlessPlugins.clear();
+
+// A manifest-less plugin denied a non-baseline module gets a one-time migration toast naming the
+// grant to add. Ungranted capabilities are absent branches (C2), not host-visible denials, so
+// there's no toast for those.
+export const maybeWarnMissingManifest = (
+  plugin: { name: string; permissionsDeclared: boolean },
+  err: unknown,
+): void => {
+  if (plugin.permissionsDeclared) {
+    return;
+  }
+  // Type-only import — no runtime dependency on the WASM-backed sandbox module.
+  const isModuleNotPermitted =
+    err instanceof Error &&
+    (err as Partial<SandboxModuleDenialError>).code === 'SANDBOX_MODULE_NOT_PERMITTED' &&
+    typeof (err as Partial<SandboxModuleDenialError>).moduleName === 'string';
+  if (!isModuleNotPermitted) {
+    return;
+  }
+  const missingModule = (err as SandboxModuleDenialError).moduleName;
+  const key = manifestWarningKey(plugin.name, missingModule);
+  if (warnedManifestlessPlugins.has(key)) {
+    return;
+  }
+  warnedManifestlessPlugins.add(key);
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('show-toast', {
+      content: {
+        title: 'Plugin needs a permissions manifest',
+        description: `"${plugin.name}" tried to require "${missingModule}" but has no valid permissions manifest. Add insomnia.permissions.modules: ["${missingModule}"] to its package.json to run it under the template-tag sandbox.`,
+        status: 'warning',
+      },
+    });
+  }
+};
+
+// Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
+// process. The host bridge reuses the existing pluginToMainAPI handlers verbatim, plus a util.render
+// handler that recurses through main templating. Gated behind the templateTagSandboxEnabled setting.
+export const runPluginTagInSandbox = async (
+  pluginSource: string,
+  body: {
+    args: any[];
+    pluginName: string;
+    tagName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  },
+  // Registry-module names the plugin may require(). Defaults to the baseline floor; callers pass the
+  // plugin's manifest-resolved grant (baseline ∪ insomnia.permissions.modules).
+  grantedModules?: string[],
+  // Capability groups the plugin may reach through the host bridge. Defaults to the baseline floor;
+  // callers pass baseline ∪ insomnia.permissions.capabilities (bundle plugins pass ALL_CAPABILITIES).
+  grantedCapabilities?: string[],
+): Promise<string> => {
+  const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
+  const { createMapBridge, filterByCapabilities, TEMPLATE_TAG_BASELINE_CAPABILITIES } = await import(
+    '../templating/sandbox/host-bridge'
+  );
+  const { TEMPLATE_TAG_BASELINE_MODULES } = await import('../templating/sandbox/module-registry');
+  const { pluginName, tagName, args, context: originContext } = body;
+  const { meta, renderPurpose, context } = originContext;
+  const capabilities = grantedCapabilities ?? [...TEMPLATE_TAG_BASELINE_CAPABILITIES];
+  // Gate the handler map by capability before building the bridge: an ungranted path rejects at the
+  // bridge with a message naming the missing capability, rather than silently running.
+  const bridge = createMapBridge(
+    filterByCapabilities(
+      {
+        ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
+        // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
+        // (including its own) by handing util.render a string containing "{% tagName %}".
+        'util.render': async (b: { str: string; context: Record<string, any> }) => {
+          const { render } = await import('../templating');
+          return render(b.str, { context: b.context, allowTags: false });
+        },
+      },
+      capabilities,
+    ),
+  );
+  return runTagInSandbox({
+    pluginSource,
+    tagName,
+    bridge,
+    // node:crypto is synchronous and available in main, so back the sandbox's require('crypto')
+    // shim with it via sync host functions rather than the async bridge.
+    hostCrypto: {
+      hash: (algo, data, inputEncoding, outputEncoding) =>
+        crypto
+          .createHash(algo)
+          .update(data, inputEncoding as crypto.Encoding)
+          .digest(outputEncoding as BinaryToTextEncoding),
+      hmac: (algo, key, data, outputEncoding) =>
+        crypto
+          .createHmac(algo, key)
+          .update(data, 'utf8')
+          .digest(outputEncoding as BinaryToTextEncoding),
+      randomBytes: (size: number) => crypto.randomBytes(size).toString('base64'),
+      randomUUID: () => crypto.randomUUID(),
+    },
+    envelope: {
+      args: args || [],
+      context: (context as Record<string, any>) || {},
+      meta,
+      renderPurpose,
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
+      pluginName,
+      renderDepth: 0,
+      grantedModules: grantedModules ?? [...TEMPLATE_TAG_BASELINE_MODULES],
+      grantedCapabilities: capabilities,
+    },
+  });
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
@@ -109,12 +287,15 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
     const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
     const jar = jarFromCookies(cookies.cookies);
-    return jar.getCookiesSync(body.url);
+    return jar.getCookiesSync(body.url).map(c => c.toJSON());
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
-  'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
+  'response.getBodyBuffer': async (body: {
+    response?: { bodyPath?: string; bodyCompression?: any };
+    readFailureValue?: string;
+  }) => {
     return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
@@ -261,6 +442,9 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
           config: {
             disabled: false,
           },
+          permissions: { modules: [], capabilities: [] },
+          permissionWarnings: [],
+          permissionsDeclared: false,
           module,
         },
         templateTag: tt,
@@ -276,18 +460,79 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     tagName: string;
     context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
   }) => {
-    const { tagName, pluginName, args, context: originContext } = body;
-    const { meta, renderPurpose, context } = originContext;
+    const { tagName, pluginName } = body;
     const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
     if (appBundlePluginNames.includes(pluginName)) {
       const module = getBundlePluginModule(pluginName);
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
-        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
-        // @ts-expect-error -- TSCONVERSION: Bundle plugin tag context do not have node functions in utils
-        return targetTag.run({ meta, renderPurpose, context, ...commonContext }, ...args);
+        const settings = await services.settings.get();
+        if (settings.templateTagSandboxEnabled) {
+          const { ALL_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
+          const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
+          // Bundle plugins are first-party and trusted: grant every module + capability.
+          return runPluginTagInSandbox(
+            getPluginEntrySource({ directory: '', name: pluginName }),
+            body,
+            [...ALL_SANDBOX_MODULES],
+            [...ALL_CAPABILITIES],
+          );
+        }
+        return runPluginTag(targetTag.run, body);
       }
+    }
+    throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
+  },
+  // generate the template tags for user-installed plugins and send back to the web worker.
+  // Bundle plugins are handled separately by `plugin.getBundlePluginTemplateTags`.
+  'plugin.getUserPluginTemplateTags': async () => {
+    const tags = await getTemplateTags();
+    // Bundle plugins have an empty `directory`; everything else is user-installed.
+    return tags
+      .filter(({ plugin }) => plugin.directory !== '')
+      .map(({ plugin, templateTag }) => ({
+        plugin: {
+          name: plugin.name,
+          description: plugin.description,
+          version: plugin.version,
+          directory: plugin.directory,
+          config: plugin.config,
+        },
+        templateTag,
+      }));
+  },
+  // execute a user-installed plugin tag with the given parameters, in the main process where
+  // Node built-ins (e.g. crypto) the plugin requires are available.
+  'plugin.executeUserPluginTag': async (body: {
+    args: any[];
+    pluginName: string;
+    tagName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  }) => {
+    const { tagName, pluginName } = body;
+    const tags = await getTemplateTags();
+    const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
+    if (targetTag) {
+      const settings = await services.settings.get();
+      if (settings.templateTagSandboxEnabled) {
+        const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+          '../templating/sandbox/surface-profiles'
+        );
+        try {
+          return await runPluginTagInSandbox(
+            getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
+            body,
+            resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
+            resolveTemplateTagCapabilities(targetTag.plugin.permissions?.capabilities),
+          );
+        } catch (err) {
+          // Surface a one-time migration hint for manifest-less plugins, then let the denial through.
+          maybeWarnMissingManifest(targetTag.plugin, err);
+          throw err;
+        }
+      }
+      return runPluginTag(targetTag.templateTag.run, body);
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
   },
@@ -310,5 +555,34 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       }
     }
     throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
+  },
+  'app.alert': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.dialog': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
+    return requestPromptFromRenderer({
+      title: body.title,
+      label: body.options?.label ?? body.title,
+      defaultValue: body.options?.defaultValue ?? '',
+    });
+  },
+  'app.getPath': async (body: { name: string }) => {
+    return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
+  },
+  'app.showSaveDialog': async (body: { options?: { defaultPath?: string } }) => {
+    const result = await dialog.showSaveDialog(body.options ?? {});
+    return result.canceled ? null : result.filePath;
+  },
+  'app.clipboard.readText': async () => {
+    return clipboard.readText();
+  },
+  'app.clipboard.writeText': async (body: { text: string }) => {
+    clipboard.writeText(body.text);
+  },
+  'app.clipboard.clear': async () => {
+    clipboard.clear();
   },
 };

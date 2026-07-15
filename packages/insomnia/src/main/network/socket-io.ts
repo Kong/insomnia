@@ -5,24 +5,25 @@ import tls from 'node:tls';
 import electron, { BrowserWindow } from 'electron';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
-import { v4 as uuidV4 } from 'uuid';
-
-import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import type {
   BaseSocketIORequest,
   CookieJar,
   RequestAuthentication,
   RequestHeader,
   SocketIOResponse,
-} from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
+import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
+import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import { filterClientCertificates } from '../../network/certificate';
-import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
@@ -95,6 +96,15 @@ const protocolName = 'socketIO';
 const getEventNotificationChannel = (responseId: string) =>
   `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 
+const sendToOpenWindows = (channel: string, ...args: unknown[]) => {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue;
+    }
+    window.webContents.send(channel, ...args);
+  }
+};
+
 const writeEventLogAndNotify = ({
   requestId,
   data,
@@ -105,17 +115,17 @@ const writeEventLogAndNotify = ({
   clearRequestIdMap?: boolean;
 }) => {
   eventLogFileStreams.get(requestId)?.write(data, () => {
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (!resId) {
+      return;
+    }
+
     // notify all renderers of new event has been received
-    for (const window of BrowserWindow.getAllWindows()) {
-      const resId = requestIdToResponseIdMap.get(requestId);
-      if (resId) {
-        const notifyChannel = getEventNotificationChannel(resId);
-        notifyChannel && window.webContents.send(notifyChannel);
-        if (clearRequestIdMap) {
-          // clean up maps after last event has been written to file
-          requestIdToResponseIdMap.delete(requestId);
-        }
-      }
+    const notifyChannel = getEventNotificationChannel(resId);
+    sendToOpenWindows(notifyChannel);
+    if (clearRequestIdMap) {
+      // clean up maps after last event has been written to file
+      requestIdToResponseIdMap.delete(requestId);
     }
   });
 };
@@ -139,6 +149,7 @@ interface OpenSocketIORequestOptions {
   cookieJar: CookieJar;
   path?: string;
   initialPayload?: string;
+  suppressUserAgent?: boolean;
 }
 
 const getCertificates = async ({
@@ -277,9 +288,13 @@ const openSocketIOConnection = async (
     const headers = options.headers;
     const url = options.url;
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
 
     // attach cookies to the request
     if (request.settingSendCookies && options.cookieJar.cookies.length) {
@@ -329,9 +344,7 @@ const openSocketIOConnection = async (
     const openedEvents = request.eventListeners.filter(event => event.isOpen && event.eventName);
 
     socket.on('connect', async () => {
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, socket.connected);
-      }
+      sendToOpenWindows(readyStateChannel, socket.connected);
 
       const openEvent: SocketIOpenEvent = {
         _id: uuidV4(),
@@ -385,9 +398,7 @@ const openSocketIOConnection = async (
         timestamp: Date.now(),
       };
       deleteRequestMaps(request._id, reason, closeEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, socket.connected);
-      }
+      sendToOpenWindows(readyStateChannel, socket.connected);
     });
 
     socket.on('connect_error', error => {

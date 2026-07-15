@@ -1,10 +1,10 @@
+import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type FC, type InputHTMLAttributes, useCallback, useState } from 'react';
 import { ListBox, ListBoxItem } from 'react-aria-components';
 
+import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
-import { invariant } from '~/utils/invariant';
 
-import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';

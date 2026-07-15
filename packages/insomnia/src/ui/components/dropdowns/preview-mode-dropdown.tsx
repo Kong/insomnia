@@ -1,18 +1,17 @@
+import { models, services } from 'insomnia-data';
+import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from 'insomnia-data/common';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
-import { models, services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { LARGE_RESPONSE_MB } from '~/common/constants';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 
-import { getPreviewModeName, LARGE_RESPONSE_MB, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { showToast } from '../toast-notification';
 
 interface Props {
   download: (pretty: boolean) => any;
@@ -38,7 +37,10 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+    const data = await window.main.exportHarCurrentRequest({
+      requestId: activeRequest._id,
+      responseId: activeResponse._id,
+    });
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({
@@ -79,33 +81,16 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    if (filePath) {
-      try {
-        let body: Buffer;
-        if (activeResponse.bodyBuffer) {
-          body = activeResponse.bodyBuffer;
-        } else if (activeResponse.bodyPath) {
-          const raw = await getBodyBuffer(activeResponse);
-          body = typeof raw === 'string' ? Buffer.from(raw) : raw;
-        } else {
-          body = Buffer.alloc(0);
-        }
-        await window.main.writeFile({
-          path: filePath,
-          content: headers + '\n' + body.toString('utf8'),
-        });
-      } catch (error) {
-        console.error('Failed to read response body for debug export', error);
-        showToast({
-          icon: 'circle-exclamation',
-          title: 'Export failed',
-          description: 'Could not read the response body from disk.',
-          status: 'error',
-        });
-      }
+    if (filePath && activeResponse.bodyBuffer) {
+      await window.main.writeFile({
+        path: filePath,
+        content: headers + '\n' + bodyBufferToUtf8(activeResponse.bodyBuffer) || '',
+      });
     }
   }, [activeRequest, activeResponse]);
-  const isJsonResponse = activeResponse?.contentType.includes('json');
+  const shouldPrettifyOption = activeResponse?.contentType.includes('json');
+  // Prettifying and the debug export both need the whole body as a string in renderer memory, so
+  // they stay bounded. The raw export has no such limit: it streams from disk in the main process.
   const isLargeResponse = activeResponse
     ? Math.max(activeResponse.bytesContent ?? 0, activeResponse.bytesRead ?? 0) > LARGE_RESPONSE_MB * 1024 * 1024
     : false;
@@ -139,13 +124,11 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
           <ItemContent icon="save" label="Export raw response" onClick={handleDownloadNormal} />
         </DropdownItem>
         <DropdownItem aria-label="Export prettified response">
-          {isJsonResponse && (
+          {shouldPrettifyOption && (
             <ItemContent
               icon="save"
               label={
-                isLargeResponse
-                  ? `Export prettified response (must be <${LARGE_RESPONSE_MB}MB)`
-                  : 'Export prettified response'
+                isLargeResponse ? `Export prettified response (must be <${LARGE_RESPONSE_MB}MB)` : 'Export prettified response'
               }
               isDisabled={isLargeResponse}
               className={isLargeResponse ? 'opacity-50' : ''}
@@ -154,7 +137,13 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
           )}
         </DropdownItem>
         <DropdownItem aria-label="Export HTTP debug">
-          <ItemContent icon="bug" label="Export HTTP debug" onClick={exportDebugFile} />
+          <ItemContent
+            icon="bug"
+            label={isLargeResponse ? `Export HTTP debug (must be <${LARGE_RESPONSE_MB}MB)` : 'Export HTTP debug'}
+            isDisabled={isLargeResponse}
+            className={isLargeResponse ? 'opacity-50' : ''}
+            onClick={exportDebugFile}
+          />
         </DropdownItem>
         <DropdownItem aria-label="Export as HAR">
           <ItemContent icon="save" label="Export as HAR" onClick={exportAsHAR} />

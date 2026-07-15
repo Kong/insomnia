@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can make socket.io connection', async ({ app, page }) => {
+test('can make socket.io connection', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
@@ -18,7 +18,7 @@ test('can make socket.io connection', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByLabel('Request Collection').getByTestId('Socket.IO Request').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('Socket.IO Request');
   await expect.soft(page.locator('.app')).toContainText('http://localhost:4020');
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('Connected', { ignoreCase: true });

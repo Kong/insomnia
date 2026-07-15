@@ -10,29 +10,21 @@ test('can send ipv6 requests', async ({ page, insomnia }) => {
 
   await insomnia.projectPage.importFixture('ipv6-collection.yaml');
 
-  await page.getByLabel('Request Collection')
-    .getByTestId('send JSON request').press('Enter');
-  await expect.soft(page.getByTestId('request-pane')
-    .getByTestId('OneLineEditor')
-    .getByText('http://[::1]:4010/pets/1')
-  ).toBeVisible();
+  await insomnia.navigationSidebar.clickRequestOrFolder('send JSON request');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText('http://[::1]:4010/pets/1'))
+    .toBeVisible();
 
-  await page.getByTestId('request-pane')
-    .getByRole('button', { name: 'Send' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('"id": "1"');
 
-  await page
-    .getByLabel('Request Collection')
-    .getByTestId('sends dummy.csv request and shows rich response')
-    .press('Enter');
-  await expect.soft(page.getByTestId('request-pane')
-    .getByTestId('OneLineEditor')
-    .getByText('http://[::1]:4010/file/dummy.csv')
-  ).toBeVisible();
+  await insomnia.navigationSidebar.clickRequestOrFolder('sends dummy.csv request and shows rich response');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText('http://[::1]:4010/file/dummy.csv'))
+    .toBeVisible();
 
-  await page.getByTestId('request-pane')
-    .getByRole('button', { name: 'Send' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();

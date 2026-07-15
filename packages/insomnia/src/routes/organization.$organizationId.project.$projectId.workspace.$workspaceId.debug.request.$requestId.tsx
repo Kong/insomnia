@@ -1,6 +1,3 @@
-import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
-
-import { database } from '~/common/database';
 import type {
   BaseModel,
   GrpcRequest,
@@ -19,8 +16,11 @@ import type {
   SocketIOResponse,
   WebSocketRequest,
   WebSocketResponse,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
+
+import { database } from '~/common/database';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
@@ -173,7 +173,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     // Oversized repsonses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
       const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
-      activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+      activeResponse.bodyBuffer = typeof buffer === 'string' ? undefined : buffer;
     }
   }
 

@@ -1,3 +1,4 @@
+import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
 
 import { useRootLoaderData } from '~/root';
@@ -12,9 +13,6 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { isMac } from '../../../common/platform';
-import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
-import { strings } from '../../../common/strings';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';
@@ -159,12 +157,6 @@ export const General: FC = () => {
         <div>
           <BooleanSetting label="Disable JS in HTML preview" setting="disableHtmlPreviewJs" />
           <BooleanSetting label="Disable links in response viewer" setting="disableResponsePreviewLinks" />
-
-          <BooleanSetting
-            label="Disable default User-Agent on new requests"
-            setting="disableAppVersionUserAgent"
-            help="If checked, disables adding the default User-Agent header on newly created requests."
-          />
         </div>
       </div>
 
@@ -252,7 +244,7 @@ export const General: FC = () => {
       {updatesSupported() && (
         <Fragment>
           <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Software Updates</h2>
-          <div className="flex w-full justify-between gap-2">
+          <div className="flex w-full items-center justify-between gap-2">
             <BooleanSetting
               label="Automatically download and install updates"
               setting="updateAutomatically"

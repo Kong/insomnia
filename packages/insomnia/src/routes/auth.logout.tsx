@@ -1,7 +1,7 @@
 import { href, redirect } from 'react-router';
 
-import { logout } from '~/account/session';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { logout } from '~/ui/account/session';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/auth.logout';
 

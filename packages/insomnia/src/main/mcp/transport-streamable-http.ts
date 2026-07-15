@@ -7,10 +7,10 @@ import {
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
+import type { McpResponse, RequestHeader } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { Dispatcher } from 'undici';
 
-import type { McpResponse, RequestHeader } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';

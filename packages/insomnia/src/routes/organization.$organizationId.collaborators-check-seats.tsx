@@ -1,9 +1,9 @@
 import { checkSeats } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
-import { services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators-check-seats';
 

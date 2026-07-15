@@ -1,3 +1,5 @@
+import type { Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import {
@@ -7,10 +9,8 @@ import {
   importResourcesToProject,
   importResourcesToWorkspace,
 } from '~/common/import';
-import type { Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/import.resources';
 
@@ -35,7 +35,7 @@ export const importScannedResources = async ({
   invariant(organizationId && typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(projectId && typeof projectId === 'string', 'ProjectId is required.');
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found.');
 
   return await (typeof workspaceId === 'string' && workspaceId

@@ -6,10 +6,10 @@ import {
   getResourceUsage,
   getTrialEligibility,
 } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 async function getCurrentEnterprise(sessionId: string) {
   const enterprises = await getOwnEnterprises({ sessionId });

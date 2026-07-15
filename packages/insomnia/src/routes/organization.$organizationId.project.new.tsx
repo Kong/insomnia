@@ -1,15 +1,13 @@
 import { createTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
-import type { Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.new';
 
@@ -26,12 +24,17 @@ export interface CreateProjectData {
   connectRepositoryLater?: boolean;
   ref?: string;
   selectedAuthorEmail?: string | null;
+  /** Optional absolute path to a user-chosen folder to clone the repo into. */
+  directory?: string | null;
+  /**
+   * When set, adopt this existing local folder as a Git project instead of
+   * cloning from a URL.
+   */
+  openExistingDirectory?: string;
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
-  const projects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  });
+  const projects = await services.project.listByOrganizationIds(organizationId);
   const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
   const gitProjectsCount = gitRepositoryIds.length;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -78,6 +81,23 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       return project._id;
     }
 
+    // Adopt an existing local folder rather than cloning from a URL.
+    if (newProjectData.openExistingDirectory) {
+      const { projectId, errors } = await window.main.git.openGitRepo({
+        organizationId,
+        name: newProjectData.name,
+        directory: newProjectData.openExistingDirectory,
+        credentialsId: newProjectData.credentialsId,
+      });
+
+      if (errors) {
+        throw new Error(errors.join(', '));
+      }
+      reportGitProjectCount(organizationId, sessionId);
+
+      return projectId;
+    }
+
     invariant(newProjectData.credentialsId, 'Credentials ID is required for Git project creation');
     const { projectId, errors } = await window.main.git.cloneGitRepo({
       organizationId,
@@ -86,6 +106,7 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       name: newProjectData.name,
       ref: newProjectData.ref || '',
       selectedAuthorEmail: newProjectData.selectedAuthorEmail,
+      directory: newProjectData.directory,
     });
 
     if (errors) {
@@ -146,6 +167,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     properties: {
       storage: newProjectData.storageType,
       git_provider,
+      project_id: newProjectId,
     },
   });
 

@@ -1,7 +1,7 @@
+import type { RequestTestResult } from 'insomnia-data';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import type { RequestTestResult } from '../../../../../insomnia-scripting-environment/src/objects';
 import { fuzzyMatch } from '../../../common/misc';
 
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
@@ -24,7 +24,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
 }: RequestTestResultRowsProps) => {
   if (requestTestResults.length === 0) {
     return (
-      <div className="my-3 w-full pl-3 text-sm text-neutral-400">
+      <div className="my-2 w-full pl-3 text-sm text-neutral-400">
         No test was detected, add test cases in scripts to see results.
       </div>
     );
@@ -100,13 +100,13 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
         // stable & unique key avoids rendering quirks.
         // Ref: https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key
         <div key={index} data-testid="test-result-row">
-          <div className="my-3 flex w-full text-base">
-            <div className="m-auto mx-1 leading-4">
+          <div className="mt-5 flex w-full items-start text-base">
+            <div className="mx-1 leading-4">
               <span className="mr-2 ml-2">{statusTag}</span>
             </div>
             <div className="mr-2 leading-4">
-              <div className="my-1 mr-2 w-auto text-nowrap">{message}</div>
-              <div className="my-1 text-sm text-neutral-400">
+              <div className="mt-1 mr-2 w-auto text-nowrap">{message}</div>
+              <div className="mt-1 text-sm text-neutral-400">
                 {`${testCategory} (`}
                 {executionTime}
                 {' ms)'}

@@ -8,6 +8,17 @@ import { isDevelopment } from '../common/constants';
 log.initialize();
 
 export const initializeLogging = () => {
+  // EPIPE is emitted asynchronously on process.stdout when the read end of the
+  // pipe is closed (e.g. launched from a desktop entry, or `app | head -0`).
+  // It surfaces as an 'error' event after the write is dispatched, so it
+  // escapes any try/catch around the console.log call itself.  Without a
+  // handler it becomes an uncaught exception that crashes the main process.
+  process.stdout.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code !== 'EPIPE') {
+      throw err;
+    }
+  });
+
   if (isDevelopment()) {
     // Disable file logging during development
     log.transports.file.level = false;

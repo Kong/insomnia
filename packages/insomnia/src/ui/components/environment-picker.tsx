@@ -1,4 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import { models } from 'insomnia-data';
 import { Fragment } from 'react';
 import {
   Button,
@@ -14,9 +15,9 @@ import {
 } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
+import { Tooltip } from '~/ui/components/tooltip';
 
 import { fuzzyMatch } from '../../common/misc';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -53,7 +54,9 @@ export const EnvironmentPicker = ({
   };
 
   const { features } = useOrganizationPermissions();
-  const isUsingInsomniaCloudSync = Boolean(models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
@@ -91,10 +94,10 @@ export const EnvironmentPicker = ({
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
       <Button
         aria-label="Manage Environments"
-        className="flex max-w-full flex-col items-start gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+        className="flex max-w-full items-start gap-2 truncate rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
       >
         {activeGlobalEnvironment && activeGlobalBaseEnvironment && (
-          <div className="flex w-full flex-col">
+          <div className="flex w-full">
             <div className="flex w-full items-center gap-2">
               <Icon
                 icon={
@@ -109,40 +112,33 @@ export const EnvironmentPicker = ({
                 style={{ color: activeGlobalEnvironment.color || '' }}
                 className="w-5 shrink-0"
               />
-              <span className="truncate">{activeGlobalEnvironment.name}</span>
-            </div>
-            <div className="flex w-full items-center gap-2">
-              <Icon icon="0" className="invisible w-5 shrink-0" />
-              <span className="shrink truncate text-xs text-(--hl)">{activeGlobalBaseEnvironment.workspaceName}</span>
+              <Tooltip position="top" message="active global environment">
+                <span className="truncate">{activeGlobalEnvironment.name}</span>
+              </Tooltip>
+              <Icon icon="plus" className="w-3 shrink-0 text-(--hl)" />
             </div>
           </div>
         )}
         <div className="flex w-full flex-1 items-center gap-2">
           <Icon
-            icon={
-              activeEnvironment.isPrivate
-                ? 'lock'
-                : isUsingGitSync
-                  ? ['fab', 'git-alt']
-                  : isUsingInsomniaCloudSync
-                    ? 'globe-americas'
-                    : 'file-arrow-down'
-            }
+            icon={activeEnvironment.isPrivate ? 'lock' : 'code'}
             style={{ color: activeEnvironment.color || '' }}
             className="w-5 shrink-0"
           />
-          <span className="truncate">
-            {activeSubEnvironment ? activeSubEnvironment.name : activeBaseEnvironment.name}
-          </span>
+          <Tooltip position="top" message="active collection environment">
+            <span className="truncate">
+              {activeSubEnvironment ? activeSubEnvironment.name : activeBaseEnvironment.name}
+            </span>
+          </Tooltip>
         </div>
       </Button>
       <Popover className="z-10! flex max-h-[90vh] min-w-max flex-col" placement="bottom start" offset={8}>
         <Dialog className="grid h-full w-full auto-cols-[min(260px,calc(40vw))_min(260px,calc(40vw))] grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden">
           <div className="relative flex h-full w-full flex-1 flex-col overflow-hidden">
             <Heading className="flex h-(--line-height-sm) shrink-0 items-center justify-between gap-2 px-3 py-1 text-sm font-bold text-(--hl)">
-              <span>Global Environments</span>
+              <span>Project Environments</span>
               <Button
-                aria-label="Manage global environment"
+                aria-label="Manage project environment"
                 onPress={() =>
                   selectedGlobalBaseEnvironment &&
                   navigate(
@@ -156,7 +152,7 @@ export const EnvironmentPicker = ({
             </Heading>
             <div>
               <ComboBox
-                aria-label="Global Environment"
+                aria-label="Project Environment"
                 shouldFocusWrap
                 allowsCustomValue={false}
                 menuTrigger="focus"
@@ -180,11 +176,11 @@ export const EnvironmentPicker = ({
                 defaultInputValue={
                   selectedGlobalBaseEnvironment?.workspaceName ||
                   selectedGlobalBaseEnvironment?.name ||
-                  'No Global Environment'
+                  'No Project Environment'
                 }
                 selectedKey={selectedGlobalBaseEnvironmentId || ''}
                 defaultItems={[
-                  { id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' },
+                  { id: '', icon: 'cancel', name: 'No Project Environment', textValue: 'No Project Environment' },
                   ...globalBaseEnvironments.map(baseEnv => {
                     return {
                       id: baseEnv._id,
@@ -197,8 +193,8 @@ export const EnvironmentPicker = ({
               >
                 <div className="group mx-2 my-2 flex items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                   <Input
-                    aria-label="Global Environment"
-                    placeholder="Choose a global environment"
+                    aria-label="Project Environment"
+                    placeholder="Choose a project environment"
                     className="w-full py-1 pr-7 pl-2 placeholder:italic"
                   />
                   <Button className="flex aspect-square items-center justify-center gap-2 truncate rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">

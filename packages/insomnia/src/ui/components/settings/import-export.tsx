@@ -1,10 +1,8 @@
 import { format } from 'date-fns';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
-import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
-import { strings } from 'insomnia/src/common/strings';
 import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -13,12 +11,13 @@ import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-re
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
 import type { Organization } from 'insomnia-api';
+import type { BaseModel, Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
-import type { BaseModel, Environment, Project, Workspace } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -146,11 +145,11 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      const baseEnvironments = await database.find<Environment>(models.environment.type, {
+      const baseEnvironments = await services.environment.list({
         parentId: { $in: workspacesForActiveProject.map(w => w._id) },
       });
 
-      const subEnvironments = await database.find<Environment>(models.environment.type, {
+      const subEnvironments = await services.environment.list({
         parentId: { $in: baseEnvironments.map(w => w._id) },
       });
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -170,10 +169,10 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             if (!fileName) {
               return;
             }
-            const stringifiedExport = await exportWorkspacesHAR(
-              workspacesForActiveProject,
-              shouldExportPrivateEnvironments,
-            );
+            const stringifiedExport = await window.main.exportWorkspacesHAR({
+              workspaces: workspacesForActiveProject,
+              includePrivateDocs: shouldExportPrivateEnvironments,
+            });
 
             await writeExportedFileToFileSystem(fileName, stringifiedExport);
 
@@ -263,11 +262,9 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
     return;
   }
 
-  const baseEnvironments = await database.find<Environment>(models.environment.type, {
-    parentId: workspace._id,
-  });
+  const baseEnvironments = await services.environment.listByParentId(workspace._id);
 
-  const subEnvironments = await database.find<Environment>(models.environment.type, {
+  const subEnvironments = await services.environment.list({
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -306,13 +303,9 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           requests.push(request);
         }
       }
-      const [baseEnvironment] = await database.find<Environment>(models.environment.type, {
-        parentId: workspaceId,
-      });
+      const baseEnvironment = await services.environment.getByParentId(workspaceId);
 
-      const subEnvironments = await database.find<Environment>(models.environment.type, {
-        parentId: baseEnvironment?._id,
-      });
+      const subEnvironments = baseEnvironment ? await services.environment.listByParentId(baseEnvironment._id) : [];
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
       let shouldExportPrivateEnvironments = false;
       if (shouldPrompt) {
@@ -332,7 +325,10 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
       try {
         switch (selectedFormat) {
           case VALUE_HAR: {
-            stringifiedExport = await exportRequestsHAR(requests, shouldExportPrivateEnvironments);
+            stringifiedExport = await window.main.exportRequestsHAR({
+              requests,
+              includePrivateDocs: shouldExportPrivateEnvironments,
+            });
             break;
           }
 
@@ -413,13 +409,13 @@ export async function exportWorkspaceData({
 }
 
 export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
-  const workspaces = await database.find<Workspace>(models.workspace.type);
+  const workspaces = await services.workspace.list();
 
-  const baseEnvironments = await database.find<Environment>(models.environment.type, {
+  const baseEnvironments = await services.environment.list({
     parentId: { $in: workspaces.map(w => w._id) },
   });
 
-  const subEnvironments = await database.find<Environment>(models.environment.type, {
+  const subEnvironments = await services.environment.list({
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -490,7 +486,7 @@ const UntrackedProject = ({
                   );
                 }
 
-                return <Fragment>{selectedItem.display_name}</Fragment>;
+                return <Fragment>{selectedItem.name}</Fragment>;
               }}
             </SelectValue>
             <Icon icon="caret-down" />
@@ -511,7 +507,7 @@ const UntrackedProject = ({
                 >
                   {({ isSelected }) => (
                     <Fragment>
-                      {item.display_name}
+                      {item.name}
                       {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                     </Fragment>
                   )}
@@ -679,7 +675,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
   const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
+    organizationData?.organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
@@ -698,7 +694,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
   const showImportButtons =
-    !isScratchPadWorkspace && (activeProject || features.bulkImport.enabled || isEnterprisePlan);
+    !isScratchPadWorkspace && (activeProject || features.bulkImport?.enabled || isEnterprisePlan);
   if (!isScratchPadWorkspace && !isLoggedIn) {
     return (
       <Button
@@ -840,7 +836,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   {`Import to the "${projectName}" ${strings.project.singular}`}
                 </Button>
               )}
-              {features.bulkImport.enabled ? (
+              {features.bulkImport?.enabled ? (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={

@@ -1,11 +1,12 @@
+import { models, services } from 'insomnia-data';
+
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { models, services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { getMainVCS } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
 } from '~/sync/vcs/initialize-backend-project';
-import { invariant } from '~/utils/invariant';
 
 export const initializeWorkspaceBackendProject = async ({ workspaceId }: { workspaceId: string }) => {
   const workspace = await services.workspace.getById(workspaceId);
@@ -32,7 +33,7 @@ export const syncNewWorkspaceIfNeeded = async ({ workspaceId }: { workspaceId: s
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const project = await services.project.get(workspace.parentId);
+  const project = await services.project.getById(workspace.parentId);
   invariant(project, 'Project not found');
 
   const userSession = await services.userSession.get();

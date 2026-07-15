@@ -1,9 +1,9 @@
+import { services } from 'insomnia-data';
 import { Breadcrumb, Breadcrumbs, Button } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, NavLink, redirect, useParams } from 'react-router';
 
 import { Icon } from '~/basic-components/icon';
-import { services } from '~/insomnia-data';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -14,7 +14,7 @@ import { useWorkspaceLoaderData } from './organization.$organizationId.project.$
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId, organizationId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));

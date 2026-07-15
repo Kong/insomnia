@@ -8,7 +8,8 @@
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",
-    "type-check": "tsc --project tsconfig.json"
+    "type-check": "tsc --project tsconfig.json",
+    "generate:autocomplete": "esr scripts/generate-autocomplete.ts"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/Kong/insomnia#readme",
   "dependencies": {
+    "liquidjs": "^10.27.0",
     "@types/deep-equal": "^1.0.4",
     "@types/tv4": "^1.2.33",
     "@types/xml2js": "^0.4.14",
@@ -29,7 +31,7 @@
     "chai": "^4.3.4",
     "cheerio": "^1.0.0-rc.12",
     "crypto-js": "^4.2.0",
-    "csv-parse": "^5.5.5",
+    "csv-parse": "^6.2.1",
     "deep-equal": "2.2.3",
     "es-toolkit": "^1.39.8",
     "moment": "^2.30.1",

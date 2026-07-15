@@ -1,16 +1,18 @@
+// @ts-nocheck
 import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { models, services } from 'insomnia-data';
+import { HttpVersions } from 'insomnia-data/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { models, services } from '~/insomnia-data';
-
+import { version } from '../../../package.json';
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
-import { HttpVersions } from '../../common/settings';
-import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _parseHeaders, curlRequest, getHttpVersion } from '../../main/network/libcurl-promise';
 import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
 import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
@@ -141,7 +143,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -214,7 +216,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -318,7 +320,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -386,7 +388,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         UPLOAD: 1,
         URL: 'http://localhost/',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -482,7 +484,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
         UPLOAD: 1,
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -526,7 +528,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -569,7 +571,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost:3000/foo/bar',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -612,7 +614,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://unix:3000/my/path',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -657,7 +659,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         NETRC: CurlNetrc.Required,
         URL: '',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -776,7 +778,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         SSL_VERIFYPEER: 0, // should disable SSL
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -1079,6 +1081,32 @@ describe('getCurrentUrl for tough-cookie', () => {
     ];
     const finalUrl = 'http://mergemyshit.dev';
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
+  });
+});
+
+describe('getOrInheritAuthentication', () => {
+  it('should prefer the closest parent folder auth over higher-level folder auth', () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'basic', username: 'closest', password: 'closest-pass' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({
+      type: 'basic',
+      username: 'closest',
+      password: 'closest-pass',
+    });
+  });
+
+  it("should stop inheritance when the closest parent folder auth is { type: 'none' }", () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'none' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
   });
 });
 

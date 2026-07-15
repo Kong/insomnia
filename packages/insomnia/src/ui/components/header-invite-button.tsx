@@ -2,9 +2,9 @@ import { getOrgUserPermissions, type Permission } from 'insomnia-api';
 import React, { useEffect, useState } from 'react';
 import { Button, Heading, Link, Radio, RadioGroup } from 'react-aria-components';
 
-import { getCurrentSessionId } from '~/account/session';
 import { Modal } from '~/basic-components/modal';
 import { getAppWebsiteBaseURL } from '~/common/constants';
+import { getCurrentSessionId } from '~/ui/account/session';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Tooltip } from '~/ui/components/tooltip';
 
@@ -119,7 +119,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
     onClose?.();
   };
   return (
-    <Modal title="Missing someone?" isOpen={isOpen} onClose={handleClose} isDismissable>
+    <Modal title="Missing someone?" isOpen={isOpen} onClose={handleClose} isDismissable centered>
       <p className="mt-8">
         You're on a paid plan, so please contact your company's Insomnia admins to get anyone added to this account.
       </p>

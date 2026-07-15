@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
-
-import type { ClientCertificate, RequestHeader, Settings } from '~/insomnia-data';
+import type { ClientCertificate, RequestHeader, RequestTestResult, Settings } from 'insomnia-data';
 
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';
@@ -16,8 +15,8 @@ import { RequestInfo } from './request-info';
 import type { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
-import { type RequestTestResult, skip, test, type TestHandler } from './test';
-import { toUrlObject } from './urls';
+import { skip, test, type TestHandler } from './test';
+import { resolveProtocolForProxy, toUrlObject } from './urls';
 import { checkIfUrlIncludesTag } from './utils';
 
 export class InsomniaObject {
@@ -232,7 +231,7 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
 
   const reqUrl = toUrlObject(rawObj.request.url);
   const proxy = transformToSdkProxyOptions(
-    reqUrl.protocol,
+    resolveProtocolForProxy(rawObj.request.url),
     rawObj.settings.httpProxy,
     rawObj.settings.httpsProxy,
     rawObj.settings.proxyEnabled,

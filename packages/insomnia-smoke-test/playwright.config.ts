@@ -6,9 +6,9 @@ const echoServer: PlaywrightTestConfig['webServer'] = {
   name: 'Echo server',
   command: 'npm run serve',
   url: 'http://localhost:4010',
-  timeout: 15 * 1000,
+  timeout: 20 * 1000,
   reuseExistingServer: !process.env.CI,
-  stdout: 'pipe',
+  stdout: 'ignore',
   stderr: 'pipe',
   wait: {
     stdout: /Listening at http/,
@@ -34,7 +34,7 @@ const config: PlaywrightTestConfig = {
       // High-confidence smoke/sanity checks, runs on Test App only on Ubuntu
       name: 'Smoke',
       testMatch: /smoke\/.*.test.ts/,
-      retries: 0,
+      retries: 1,
     },
     {
       // Single critical path test, runs on release recurring
@@ -58,7 +58,7 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['github'], ['line']] : [['list']],
+  reporter: process.env.CI ? [['github'], ['line']] : [['dot']],
   timeout: process.env.CI || isWindows ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',

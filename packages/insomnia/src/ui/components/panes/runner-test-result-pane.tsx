@@ -1,9 +1,8 @@
+import type { BaseRunnerTestResult, RunnerResultPerRequest } from 'insomnia-data';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import type { BaseRunnerTestResult, RunnerResultPerRequest } from '~/insomnia-data';
-
-import { RequestTestResultRows } from './request-test-result-pane';
+import { RequestResultCard } from './request-result-card';
 
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
@@ -39,20 +38,16 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
     const key = `runner-test-result-iteration-${i + 1}`;
 
     if (Array.isArray(iterationResults)) {
-      const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, i: number) => {
-        const key = `request-test-result-${i}`;
+      const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, reqIndex: number) => {
+        const key = `request-test-result-${reqIndex}`;
         return (
-          <div key={key}>
-            <div className="pl-3">
-              <span>{requestTestResult.requestName}</span>
-              <span className="text-sm text-neutral-400">{` - ${requestTestResult.requestUrl}`}</span>
-            </div>
-            <RequestTestResultRows
-              requestTestResults={requestTestResult.results}
-              resultFilter={resultFilter}
-              targetTests={targetTests}
-            />
-          </div>
+          <RequestResultCard
+            key={key}
+            item={requestTestResult}
+            resultFilter={resultFilter}
+            targetTests={targetTests}
+            testId={key}
+          />
         );
       });
 

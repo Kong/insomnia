@@ -1,9 +1,9 @@
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import type { OAuth2AuthorizationStatusType } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 
-import { invariant } from '../../../utils/invariant';
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../event-bus';
 import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

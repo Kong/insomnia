@@ -12,11 +12,6 @@
  *
  */
 
-import { parse, stringify } from 'yaml';
-
-import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
-import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import type {
   ApiSpec,
   BaseModel,
@@ -38,10 +33,15 @@ import type {
   WebSocketRequest,
   Workspace,
   WorkspaceScope,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { maskVaultEnvironmentData } from '~/utils/environment-utils';
-import { invariant } from '~/utils/invariant';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { parse, stringify } from 'yaml';
+
+import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
+import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
+import { maskVaultEnvironmentData } from '~/common/utils/environment-utils';
+import { invariant } from '~/common/utils/invariant';
 
 import { database } from './database';
 import {
@@ -558,6 +558,7 @@ function getCollection(
             afterResponseScript: item.scripts?.afterResponse || '',
             pathParameters: item.pathParameters || [],
             metaSortKey: item.meta?.sortKey ?? 0,
+            disableUserAgentHeader: false,
           };
 
           resources.push(request);
@@ -584,6 +585,7 @@ function getCollection(
               module: '',
             },
             protoFileId: item.protoFileId || '',
+            disableUserAgentHeader: false,
           };
 
           resources.push(grpcRequest);
@@ -611,6 +613,7 @@ function getCollection(
               settingSendCookies: data.settings.cookies.send,
               settingStoreCookies: data.settings.cookies.store,
               pathParameters: data.pathParameters || [],
+              disableUserAgentHeader: false,
             };
 
             resources.push(websocketRequest);
@@ -639,6 +642,7 @@ function getCollection(
                 settingPath: data.settings.path,
                 pathParameters: data.pathParameters || [],
                 eventListeners: data.eventListeners || [],
+                disableUserAgentHeader: false,
               };
 
               resources.push(socketIO);
@@ -676,6 +680,7 @@ function getMcpRequest(file: InsomniaFile): WithExportType<McpRequest>[] {
     roots: [],
     subscribeResources: [],
     sslValidation: true,
+    disableUserAgentHeader: false,
   };
 
   if ('mcpRequest' in file && file.mcpRequest) {

@@ -1,3 +1,10 @@
+import type {
+  ResponseTimelineEntry,
+  RunnerResultPerRequest,
+  RunnerTestResult,
+  UserUploadEnvironment,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -22,11 +29,8 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
-import type { RunnerResultPerRequest, RunnerTestResult, UserUploadEnvironment } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
-import type { TimingStep } from '~/main/network/request-timing';
-import { cancelRequestById } from '~/network/cancellation';
+import { buildRunnerItemKey, type RunnerItemStatus, type RunnerLiveItem } from '~/common/runner-feedback';
+import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -42,9 +46,9 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CLIPreviewModal } from '~/ui/components/modals/cli-preview-modal';
 import { UploadDataModal, type UploadDataType } from '~/ui/components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
+import { RunnerLiveProgressPane } from '~/ui/components/panes/runner-live-progress-pane';
 import { RunnerResultHistoryPane } from '~/ui/components/panes/runner-result-history-pane';
 import { RunnerTestResultPane } from '~/ui/components/panes/runner-test-result-pane';
-import { ResponseTimer } from '~/ui/components/response-timer';
 import { getTimeAndUnit } from '~/ui/components/tags/time-tag';
 import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
@@ -52,8 +56,19 @@ import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
-import { moveAfter, moveBefore } from '~/utils';
-import { invariant } from '~/utils/invariant';
+import {
+  cancelExecution,
+  finishExecution,
+  getExecution,
+  getRunnerLiveItems,
+  isExecutionCanceled,
+  isItemSkipped,
+  skipRunnerItem,
+  startExecution,
+  updateExecution,
+  upsertLiveItem,
+} from '~/ui/runner-execution-store';
+import { moveAfter, moveBefore } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 
@@ -338,13 +353,13 @@ export const Runner: FC = () => {
     readResults();
   }, [runnerId]);
 
-  const [timingSteps, setTimingSteps] = useState<TimingStep[]>([]);
   const [totalTime, setTotalTime] = useState({
     duration: 0,
     unit: 'ms',
   });
 
   const [executionResult, setExecutionResult] = useState<RunnerTestResult | null>(null);
+  const [liveItems, setLiveItems] = useState<RunnerLiveItem[]>([]);
   const [timelines, setTimelines] = useState<ResponseTimelineEntry[]>([]);
   const gotoExecutionResult = useCallback(
     async (executionId: string) => {
@@ -394,7 +409,6 @@ export const Runner: FC = () => {
     if (isRunning) {
       const duration = Date.now() - latestTimingSteps[latestTimingSteps.length - 1].startedAt;
       const { number: durationNumber, unit: durationUnit } = getTimeAndUnit(duration);
-      setTimingSteps(latestTimingSteps);
       setTotalTime({
         duration: durationNumber,
         unit: durationUnit,
@@ -427,6 +441,19 @@ export const Runner: FC = () => {
     isRunning ? 1000 : null,
   );
 
+  reactUse.useInterval(
+    () => {
+      setLiveItems(getRunnerLiveItems(runnerId));
+    },
+    isRunning ? 250 : null,
+  );
+
+  useEffect(() => {
+    if (isRunning) {
+      setLiveItems(getRunnerLiveItems(runnerId));
+    }
+  }, [isRunning, runnerId]);
+
   useEffect(() => {
     refreshPanes();
   }, [refreshPanes]);
@@ -454,10 +481,9 @@ export const Runner: FC = () => {
     return { passedTestCount, totalTestCount, testResultCountTagColor };
   }, [executionResult, isRunning]);
 
-  const [selectedTab, setSelectedTab] = React.useState<Key>('test-results');
-  const gotoTestResultsTab = useCallback(() => {
-    setSelectedTab('test-results');
-  }, [setSelectedTab]);
+  const [selectedTab, setSelectedTab] = React.useState<Key>('results');
+  const [canceledRun, setCanceledRun] = useState(false);
+  const activeTab = isRunning ? 'results' : selectedTab;
 
   const allKeys = reqList.map(item => item.id);
   const disabledKeys = useMemo(() => {
@@ -691,7 +717,11 @@ export const Runner: FC = () => {
                           <span className={`ml-2 text-xs uppercase http-method-${item.method}`}>{item.method}</span>
                           <span
                             className="ml-2 cursor-pointer text-(--hl) hover:underline"
-                            onClick={() => goToRequest(item.id)}
+                            onPointerDown={e => e.stopPropagation()}
+                            onClick={e => {
+                              e.stopPropagation();
+                              goToRequest(item.id);
+                            }}
                           >
                             {item.name}
                           </span>
@@ -802,7 +832,7 @@ export const Runner: FC = () => {
           </Heading>
         </PaneHeader>
         <Tabs
-          selectedKey={selectedTab}
+          selectedKey={activeTab}
           onSelectionChange={setSelectedTab}
           aria-label="Request group tabs"
           className="flex h-full w-full flex-1 flex-col"
@@ -813,10 +843,10 @@ export const Runner: FC = () => {
           >
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="test-results"
+              id="results"
             >
               <div>
-                <span>Tests</span>
+                <span>Results</span>
                 <span
                   className={`test-result-count ml-1 rounded-xs px-1 ${testResultCountTagColor}`}
                   style={{ color: 'white' }}
@@ -829,7 +859,7 @@ export const Runner: FC = () => {
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="history"
             >
-              History
+              Test History
             </Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
@@ -845,25 +875,32 @@ export const Runner: FC = () => {
             <RunnerResultHistoryPane
               history={testHistory.filter(item => !deletedItems.includes(item._id))}
               gotoExecutionResult={gotoExecutionResult}
-              gotoTestResultsTab={gotoTestResultsTab}
+              gotoTestResultsTab={() => {
+                setSelectedTab('results');
+              }}
               deleteHistoryItem={deleteHistoryItem}
             />
           </TabPanel>
-          <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="test-results">
-            {isRunning && (
-              <div className="flex h-full w-full items-center">
-                <ResponseTimer
-                  handleCancel={() => cancelExecution(runnerId)}
-                  activeRequestId={runnerId}
-                  steps={timingSteps}
+          <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="results">
+            <ErrorBoundary showAlert>
+              {isRunning || canceledRun ? (
+                <RunnerLiveProgressPane
+                  items={liveItems}
+                  isRunning={isRunning}
+                  handleCancel={() => {
+                    cancelExecution(runnerId);
+                    setCanceledRun(true);
+                    setLiveItems(getRunnerLiveItems(runnerId));
+                  }}
+                  handleSkip={key => {
+                    skipRunnerItem(runnerId, key);
+                    setLiveItems(getRunnerLiveItems(runnerId));
+                  }}
                 />
-              </div>
-            )}
-            {!isRunning && (
-              <ErrorBoundary showAlert>
+              ) : (
                 <RunnerTestResultPane result={executionResult} />
-              </ErrorBoundary>
-            )}
+              )}
+            </ErrorBoundary>
           </TabPanel>
         </Tabs>
       </Panel>
@@ -873,39 +910,6 @@ export const Runner: FC = () => {
 
 export default Runner;
 
-// This is required for tracking the active request for one runner execution
-// Then in runner cancellation, both the active request and the runner execution will be canceled
-// TODO(george): Potentially it could be merged with maps in request-timing.ts and cancellation.ts
-interface ExecutionInfo {
-  activeRequestId?: string;
-  error?: string;
-}
-const runnerExecutions = new Map<string, ExecutionInfo>();
-function startExecution(workspaceId: string) {
-  runnerExecutions.set(workspaceId, {});
-}
-
-function updateExecution(workspaceId: string, executionInfo: ExecutionInfo) {
-  const info = runnerExecutions.get(workspaceId);
-  runnerExecutions.set(workspaceId, {
-    ...info,
-    ...executionInfo,
-  });
-}
-
-function getExecution(workspaceId: string) {
-  return runnerExecutions.get(workspaceId) || {};
-}
-
-function cancelExecution(workspaceId: string) {
-  const { activeRequestId } = getExecution(workspaceId);
-  if (activeRequestId) {
-    cancelRequestById(activeRequestId);
-    window.main.completeExecutionStep({ requestId: activeRequestId });
-    window.main.updateLatestStepName({ requestId: workspaceId, stepName: 'Done' });
-    window.main.completeExecutionStep({ requestId: workspaceId });
-  }
-}
 const wrapAroundIterationOverIterationData = (
   list?: UserUploadEnvironment[],
   currentIteration?: number,
@@ -970,6 +974,21 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   });
   startExecution(runnerId);
 
+  const initialLiveItems: RunnerLiveItem[] = [];
+  for (let i = 0; i < iterationCount; i++) {
+    requests.forEach((req, index) => {
+      initialLiveItems.push({
+        key: buildRunnerItemKey(i + 1, index, req.id),
+        iteration: i + 1,
+        requestId: req.id,
+        requestName: req.name,
+        requestUrl: req.url,
+        status: 'pending',
+      });
+    });
+  }
+  updateExecution(runnerId, { liveItems: initialLiveItems });
+
   const noLogRuntime = {
     appendTimeline: async (_timelinePath: string, _logs: string[]) => {}, // no op
   };
@@ -985,22 +1004,60 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       let j = 0;
       while (j < requests.length) {
-        // TODO: we might find a better way to do runner cancellation
-        if (getExecution(runnerId) === undefined) {
-          throw new Error('Runner has been stopped');
+        if (isExecutionCanceled(runnerId)) {
+          throw new Error('Runner has been canceled');
         }
 
         const targetRequest = requests[j];
+        const liveItemKey = buildRunnerItemKey(i + 1, j, targetRequest.id);
+        const interruptStatus = (): RunnerItemStatus | null =>
+          isExecutionCanceled(runnerId) ? 'canceled' : isItemSkipped(runnerId, liveItemKey) ? 'skipped' : null;
+
+        if (isItemSkipped(runnerId, liveItemKey)) {
+          upsertLiveItem(runnerId, liveItemKey, { status: 'skipped' });
+          testResultsForOneIteration = [
+            ...testResultsForOneIteration,
+            {
+              requestName: targetRequest.name,
+              requestUrl: targetRequest.url,
+              responseCode: 0,
+              results: [],
+              skipped: true,
+            },
+          ];
+          j++;
+          continue;
+        }
+
         const resultCollector = {
           requestId: targetRequest.id,
           requestName: targetRequest.name,
           requestUrl: targetRequest.url,
           statusCode: 0,
+          statusMessage: '',
           duration: 0,
           size: 0,
           results: [],
           responseId: '',
         };
+        const buildResult = () => ({
+          requestName: targetRequest.name,
+          requestUrl: resultCollector.requestUrl,
+          responseCode: resultCollector.statusCode,
+          responseMessage: resultCollector.statusMessage,
+          responseTime: resultCollector.duration,
+          responseSize: resultCollector.size,
+          results: resultCollector.results,
+        });
+        const buildLivePatch = (status: RunnerLiveItem['status']) => ({
+          status,
+          requestUrl: resultCollector.requestUrl,
+          statusCode: resultCollector.statusCode,
+          statusMessage: resultCollector.statusMessage,
+          responseTime: resultCollector.duration,
+          responseSize: resultCollector.size,
+          results: resultCollector.results,
+        });
 
         const isNextRequest = (targetRequest: RequestRow, nextRequestIdOrName: string) => {
           const matchId = targetRequest.id === nextRequestIdOrName;
@@ -1017,13 +1074,17 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               // reset nextRequestIdOrName when request name or id meets;
               nextRequestIdOrName = '';
             } else {
+              upsertLiveItem(runnerId, liveItemKey, buildLivePatch('skipped'));
+              testResultsForOneIteration = [...testResultsForOneIteration, { ...buildResult(), skipped: true }];
               continue;
             }
           }
 
           updateExecution(runnerId, {
             activeRequestId: targetRequest.id,
+            activeRequestKey: liveItemKey,
           });
+          upsertLiveItem(runnerId, liveItemKey, { status: 'running' });
           window.main.updateLatestStepName({
             requestId: runnerId,
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
@@ -1035,6 +1096,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           invariant(activeRequestMeta, 'Request meta not found');
 
           await new Promise(resolve => setTimeout(resolve, delay));
+
+          const beforeSend = interruptStatus();
+          if (beforeSend) {
+            upsertLiveItem(runnerId, liveItemKey, { status: beforeSend });
+            continue;
+          }
 
           const execution = await sendActionImplementation({
             requestId: targetRequest.id,
@@ -1051,14 +1118,20 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             nextRequestIdOrName = execution.nextRequestIdOrName || '';
           }
 
-          const requestResults: RunnerResultPerRequest = {
-            requestName: targetRequest.name,
-            requestUrl: targetRequest.url,
-            responseCode: resultCollector.statusCode,
-            results: resultCollector.results,
-          };
+          if (execution?.skipped) {
+            upsertLiveItem(runnerId, liveItemKey, buildLivePatch('skipped'));
+            testResultsForOneIteration = [...testResultsForOneIteration, { ...buildResult(), skipped: true }];
+            continue;
+          }
 
-          testResultsForOneIteration = [...testResultsForOneIteration, requestResults];
+          const afterSend = interruptStatus();
+          if (afterSend) {
+            upsertLiveItem(runnerId, liveItemKey, { status: afterSend });
+            continue;
+          }
+
+          upsertLiveItem(runnerId, liveItemKey, buildLivePatch('completed'));
+          testResultsForOneIteration = [...testResultsForOneIteration, buildResult()];
           testCtx = {
             ...testCtx,
             duration: testCtx.duration + resultCollector.duration,
@@ -1072,14 +1145,15 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             ],
           };
         } catch (e) {
-          const requestResults: RunnerResultPerRequest = {
-            requestName: targetRequest.name,
-            requestUrl: targetRequest.url,
-            responseCode: resultCollector.statusCode,
-            results: resultCollector.results,
-          };
-
-          testResultsForOneIteration = [...testResultsForOneIteration, requestResults];
+          const interrupted = interruptStatus();
+          upsertLiveItem(runnerId, liveItemKey, {
+            ...buildLivePatch(interrupted ?? 'failed'),
+            errorMessage: e.message || e.error || String(e),
+          });
+          testResultsForOneIteration = [
+            ...testResultsForOneIteration,
+            { ...buildResult(), skipped: interrupted === 'skipped' },
+          ];
           testCtx = {
             ...testCtx,
             responsesInfo: [
@@ -1120,12 +1194,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     window.main.updateLatestStepName({ requestId: runnerId, stepName: 'Done' });
     window.main.completeExecutionStep({ requestId: runnerId });
   } catch (e) {
-    // the error could be from third party
-    const errMsg = e.message || e.error || e;
-    updateExecution(runnerId, { error: errMsg });
+    if (!isExecutionCanceled(runnerId)) {
+      const errMsg = e.message || e.error || e;
+      updateExecution(runnerId, { error: errMsg });
+    }
     return null;
   } finally {
-    cancelExecution(runnerId);
+    finishExecution(runnerId);
 
     await services.runnerTestResult.create({
       parentId: runnerId,

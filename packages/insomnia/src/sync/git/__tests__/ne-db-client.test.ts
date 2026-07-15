@@ -8,10 +8,9 @@
 import path from 'node:path';
 
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { models, services } from 'insomnia-data';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
-
-import { models, services } from '~/insomnia-data';
 
 import { database as db } from '../../../common/database';
 import { workspaceModelSchema } from '../../__schemas__/model-schemas';

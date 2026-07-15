@@ -47,14 +47,30 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Check renderer Node import baseline
-        run: npm run check:renderer-node-imports
-
       - name: Type checks
         run: npm run type-check
 
       - name: Unit Tests
         run: npm test
+
+      - name: Check autocomplete snippets are up to date
+        run: |
+          npm run generate:autocomplete -w insomnia-scripting-environment
+          if ! git diff --exit-code packages/insomnia-scripting-environment/src/autocomplete-snippets.json; then
+            echo "::error::autocomplete-snippets.json is out of date. Run 'npm run generate:autocomplete -w insomnia-scripting-environment' and commit the result."
+            exit 1
+          fi
+
+      - name: Check Insomnia JSON schema is up to date
+        run: |
+          npm run generate:schema -w insomnia
+          # `git add -N` marks any newly-generated versioned file (e.g. after a
+          # schema version bump) as intent-to-add so `git diff` flags it too.
+          git add -N schemas/
+          if ! git diff --exit-code schemas/; then
+            echo "::error::schemas/ is out of date. Run 'npm run generate:schema -w insomnia' and commit the result."
+            exit 1
+          fi
 
       - name: Checkout base branch (cycle comparison)
         if: github.event_name == 'pull_request' && always()

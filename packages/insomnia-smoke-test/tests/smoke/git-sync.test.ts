@@ -3,13 +3,15 @@ import { expect } from '@playwright/test';
 import type { InsomniaApp } from '../../playwright/pages';
 import { test } from '../../playwright/test';
 
+const GIT_PROJECT_NAME = 'Git Sync Test Project';
+
 test.describe('Git Sync', () => {
   test.slow();
 
   test.beforeEach(async ({ insomnia, request }) => {
     await request.post('http://127.0.0.1:4010/v1/test-utils/git/setup');
     await addAccessTokenGitCredential(insomnia);
-    await insomnia.projectPage.createGitSyncProject();
+    await insomnia.projectPage.createGitSyncProject(GIT_PROJECT_NAME);
   });
 
   test.afterEach(async ({ request }) => {
@@ -29,14 +31,17 @@ test.describe('Git Sync', () => {
 
   // Creates a collection to produce an unstaged change, stages it, commits with message "1",
   // then opens History and verifies the commit appears in the log.
-  test('Commit and check history', async ({ page }) => {
-    await page.getByRole('button', { name: 'New request collection' }).click();
+  test('Commit and check history', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Collection 1');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('collection_1');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('git-dropdown').click();
     await expect.soft(page.getByRole('menuitemradio', { name: 'Commit' })).toBeVisible();
@@ -47,6 +52,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'Message' }).click();
     await page.getByRole('textbox', { name: 'Message' }).fill('1');
     await page.getByRole('button', { name: 'Commit', exact: true }).click();
+    await page.getByRole('heading', { name: 'Commit Changes' }).waitFor({ state: 'hidden' });
     await page.getByTestId('git-dropdown').click();
     await page.getByText('History').click();
     await expect.soft(page.getByLabel('1', { exact: true }).getByRole('rowheader')).toContainText('1');
@@ -54,7 +60,10 @@ test.describe('Git Sync', () => {
 
   // Creates branch1, commits a new collection on it, switches back to master,
   // merges branch1 into master, and verifies the collection is visible on master.
-  test('Merge branch and verify changes on the other branch has been merged into current branch', async ({ page }) => {
+  test('Merge branch and verify changes on the other branch has been merged into current branch', async ({
+    page,
+    insomnia,
+  }) => {
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Branches' }).click();
     await page.getByRole('textbox', { name: 'New branch name:' }).click();
@@ -63,43 +72,50 @@ test.describe('Git Sync', () => {
     await expect.soft(page.getByText('branch1 *')).toBeVisible();
     await page.getByTestId('close-git-project-branches-modal').click();
     await page.getByTestId('git-project-branches-modal-overlay').waitFor({ state: 'hidden' });
-    await page.getByRole('button', { name: 'New request collection' }).click();
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('collection 1');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('collection_1');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByTestId('project').click();
+    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    await insomnia.navigationSidebar.selectProject(GIT_PROJECT_NAME);
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();
     await page.locator('button[name="Stage all changes"]').click();
     await page.getByRole('textbox', { name: 'Message' }).click();
     await page.getByRole('textbox', { name: 'Message' }).fill('commit 1');
     await page.getByRole('button', { name: 'Commit', exact: true }).click();
+    await page.getByRole('heading', { name: 'Commit Changes' }).waitFor({ state: 'hidden' });
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'master' }).click();
-    await page.locator('html').click();
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Branches' }).click();
     await page.getByLabel('branch1').getByRole('button', { name: 'Merge' }).click();
     await page.getByRole('button', { name: ' Confirm' }).click();
     await page.getByTestId('close-git-project-branches-modal').click();
     await page.getByTestId('git-project-branches-modal-overlay').waitFor({ state: 'hidden' });
-    await expect.soft(page.getByText('collection 1')).toBeVisible();
+    await expect.soft(page.getByTestId('workspace-node-collection 1')).toBeVisible();
   });
 
   // Creates a collection, commits it, then pushes to the remote git server.
   // Verifies the "Push completed" toast appears, confirming a successful push.
-  test('Push committed changes to remote', async ({ page }) => {
-    await page.getByRole('button', { name: 'New request collection' }).click();
+  test('Push committed changes to remote', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Push Test Collection');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('push_test_collection');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('push_test_collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
     await page.getByTestId('git-dropdown').click();
@@ -140,25 +156,71 @@ test.describe('Git Sync', () => {
   // Creates a collection to produce an unstaged change, opens the staging modal,
   // clicks "Discard all changes" and confirms. Verifies the modal auto-closes,
   // indicating all changes were discarded.
-  test('Discard all unstaged changes', async ({ page }) => {
-    await page.getByRole('button', { name: 'New request collection' }).click();
+  test('Discard all unstaged changes', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Discard Test Collection');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).click();
-    await page.getByRole('textbox', { name: 'File name my_collection' }).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'File name my_collection' }).fill('discard_test_collection');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('discard_test_collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
 
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();
-    await expect.soft(page.getByLabel('Unstaged changes').locator('span')).toContainText('discard_test_collection.yaml');
+    await expect
+      .soft(page.getByLabel('Unstaged changes').locator('span'))
+      .toContainText('discard_test_collection.yaml');
 
     await page.locator('button[name="Discard all changes"]').click();
     await page.getByTestId('discard-changes-confirm-button').click();
 
     // After discarding all changes the staging modal auto-closes
     await expect.soft(page.getByLabel('Unstaged changes')).toBeHidden();
+  });
+
+  // Regression test for a24b1b0: editing only the Name field auto-mirrors it into the
+  // (git-only) File name field. That auto-derived value must NOT count as a second
+  // real unsaved change on top of the Name edit itself — the modal's guard only
+  // prompts once more than one field has genuinely changed (changedFieldCount > 1).
+  test('Editing only the collection name does not trigger the unsaved changes prompt', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
+    await page.getByRole('textbox', { name: 'Name', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Name Only Collection');
+
+    // Only Name was touched. Pre-fix, the auto-mirrored File name field also counted
+    // as changed, pushing changedFieldCount to 2 and wrongly triggering this prompt.
+    await page.keyboard.press('Escape');
+    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    await expect.soft(page.getByRole('heading', { name: 'Unsaved changes' })).toBeHidden();
+
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
+    await page.getByRole('textbox', { name: 'Name', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Two Real Edits Collection');
+    await page.getByRole('textbox', { name: 'File name' }).click();
+    await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
+    await page.getByRole('textbox', { name: 'File name' }).fill('manually_edited_file_name');
+
+    // Now Name AND File name were both genuinely edited to distinct values, so
+    // changedFieldCount is 2 and the prompt should appear as expected.
+    await page.keyboard.press('Escape');
+    await expect.soft(page.getByRole('heading', { name: 'Unsaved changes' })).toBeVisible();
+    await page.getByRole('button', { name: 'No' }).click();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Yes' }).click();
+    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
   });
 });
 

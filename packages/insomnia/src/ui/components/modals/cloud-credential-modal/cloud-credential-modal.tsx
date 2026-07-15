@@ -1,13 +1,13 @@
+import type { CloudProviderCredential } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
-import type { CloudProviderCredential } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
-import { executePluginMainAction } from '../../../../plugins';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
@@ -66,12 +66,12 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       const parsedURL = new URL(manulInputUrl);
       const code = parsedURL.searchParams.get('code');
       if (code && typeof code === 'string') {
-        const authResult = await executePluginMainAction({
+        const authResult = await plugins.executePluginMainAction({
           pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
           actionName: 'exchangeCode',
           params: { provider: 'azure', code },
         });
-        const { success, result, error } = authResult;
+        const { success, result, error } = authResult as any;
         if (success) {
           const { account, uniqueId } = result!;
           handleFormSubmit({

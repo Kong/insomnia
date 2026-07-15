@@ -1,5 +1,6 @@
 import { type RJSFSchema } from '@rjsf/utils';
 import type { EditorChange } from 'codemirror';
+import type { Environment, EnvironmentKvPairData, McpPayload } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -7,7 +8,6 @@ import { useLatest } from 'react-use';
 
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
-import type { Environment, EnvironmentKvPairData, McpPayload } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
@@ -45,6 +45,23 @@ const PaneReadOnlyBanner = () => {
       <p className="notice info no-margin-top no-margin-bottom">
         This section is now locked since the connection has already been established. To change these settings, please
         disconnect first.
+      </p>
+    </div>
+  );
+};
+
+const ModifyHostHeaderBanner = () => {
+  return (
+    <div
+      style={{
+        paddingTop: 'var(--padding-md)',
+        paddingLeft: 'var(--padding-md)',
+        paddingRight: 'var(--padding-md)',
+      }}
+    >
+      <p className="notice warning no-margin-top no-margin-bottom">
+        You are adding a new <strong>Host</strong> header which will override the default behavior. Remove or disable
+        the new header to return to default behavior.
       </p>
     </div>
   );
@@ -94,7 +111,9 @@ export const McpRequestPane: FC<Props> = ({
   const requestId = activeRequest._id;
   const isStdio = activeRequest.transportType === 'stdio';
 
-  const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyHttpPairs.length;
+  const activeRequestHeaders = activeRequest.headers.filter(h => !h.disabled);
+  const headersCount = activeRequestHeaders.length + readOnlyHttpPairs.length;
+  const isModifyingHostHeader = activeRequestHeaders.some(h => h.name.toLowerCase() === 'host');
   const patchRequest = useRequestPatcher();
   const mcpPayloadPatcher = useRequestPayloadPatcher();
   const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
@@ -397,12 +416,14 @@ export const McpRequestPane: FC<Props> = ({
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
           {!isDisconnected && <PaneReadOnlyBanner />}
+          {isDisconnected && isModifyingHostHeader && <ModifyHostHeaderBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
             headers={activeRequest.headers}
             bulk={false}
             isDisabled={!isDisconnected}
             requestType="McpRequest"
+            disableUserAgentHeader={activeRequest.disableUserAgentHeader}
             onDescriptionToggle={() => {
               window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestHeadersDescriptionToggled });
             }}

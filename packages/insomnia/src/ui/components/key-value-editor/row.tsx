@@ -2,6 +2,7 @@ import classnames from 'classnames';
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
+import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { describeByteSize } from '../../../common/misc';
@@ -78,7 +79,7 @@ export const Row: FC<Props> = ({
 
   const isFile = pair.type === 'file';
   const isMultiline = pair.type === 'text' && pair.multiline;
-  const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+  const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
 
   return (
     <li onKeyDown={onKeydown} onClick={onClick} className={classes}>
@@ -90,6 +91,7 @@ export const Row: FC<Props> = ({
         >
           <OneLineEditor
             id={'key-value-editor__name' + pair.id}
+            uniquenessKey={'key-value-editor__name' + pair.id}
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
@@ -131,6 +133,7 @@ export const Row: FC<Props> = ({
           ) : (
             <OneLineEditor
               id={'key-value-editor__value' + pair.id}
+              uniquenessKey={'key-value-editor__value' + pair.id}
               onBlur={onBlur}
               type="text"
               readOnly={readOnly}
@@ -149,6 +152,7 @@ export const Row: FC<Props> = ({
           >
             <OneLineEditor
               id={'key-value-editor__description' + pair.id}
+              uniquenessKey={'key-value-editor__description' + pair.id}
               readOnly={readOnly}
               placeholder={descriptionPlaceholder || 'Description'}
               defaultValue={pair.description || ''}

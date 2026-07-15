@@ -1,1 +1,1 @@
-export { database, type ChangeBufferEvent, type ChangeType, type Operation } from '~/insomnia-data';
+export { database, type ChangeBufferEvent, type ChangeType, type Operation } from 'insomnia-data';

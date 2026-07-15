@@ -1,27 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getBodyBuffer } from '../../../../models/helpers/response-operations';
-import { showToast } from '../../../../ui/components/toast-notification';
 import { downloadResponseBody } from '../response-pane-utils';
-
-vi.mock('../../../../models/helpers/response-operations', () => ({
-  getBodyBuffer: vi.fn(),
-}));
-
-vi.mock('../../../../ui/components/toast-notification', () => ({
-  showToast: vi.fn(),
-}));
-
-const mockGetBodyBuffer = vi.mocked(getBodyBuffer);
-const mockShowToast = vi.mocked(showToast);
 
 const mockWriteFile = vi.fn();
 const mockShowSaveDialog = vi.fn();
+const mockWriteResponseBodyToFile = vi.fn();
 
 beforeEach(() => {
   vi.stubGlobal('window', {
     dialog: { showSaveDialog: mockShowSaveDialog },
-    main: { writeFile: mockWriteFile },
+    main: { writeFile: mockWriteFile, writeResponseBodyToFile: mockWriteResponseBodyToFile },
   });
 });
 
@@ -45,7 +33,11 @@ describe('downloadResponseBody', () => {
     it('warns and skips the dialog when activeRequest is null', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      await downloadResponseBody(null, { contentType: 'application/json', bodyBuffer: Buffer.from('{}') }, false);
+      await downloadResponseBody(
+        null,
+        { contentType: 'application/json', bodyBuffer: new TextEncoder().encode('{}') },
+        false,
+      );
 
       expect(warnSpy).toHaveBeenCalledWith('Nothing to download');
       expect(mockShowSaveDialog).not.toHaveBeenCalled();
@@ -59,7 +51,7 @@ describe('downloadResponseBody', () => {
 
       await downloadResponseBody(
         { name: 'My Request' },
-        { contentType: 'application/json', bodyBuffer: Buffer.from('{}') },
+        { contentType: 'application/json', bodyBuffer: new TextEncoder().encode('{}') },
         false,
       );
 
@@ -69,20 +61,20 @@ describe('downloadResponseBody', () => {
   });
 
   describe('prettify branch (prettify=true, JSON content-type)', () => {
-    it('writes a prettified JSON string, not a Buffer', async () => {
+    it('writes a prettified JSON string, not raw bytes', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
       const rawJson = '{"b":2,"a":1}';
 
       await downloadResponseBody(
         { name: 'My Request' },
-        { contentType: 'application/json', bodyBuffer: Buffer.from(rawJson) },
+        { contentType: 'application/json', bodyBuffer: new TextEncoder().encode(rawJson) },
         true,
       );
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { path, content } = mockWriteFile.mock.calls[0][0];
       expect(path).toBe('/tmp/out.json');
-      // content must be a formatted string, not a Buffer
+      // content must be a formatted string, not raw bytes
       expect(typeof content).toBe('string');
       expect(content).toContain('"b": 2');
       expect(content).toContain('"a": 1');
@@ -90,33 +82,33 @@ describe('downloadResponseBody', () => {
   });
 
   describe('raw-bytes branch (default)', () => {
-    it('writes the raw Buffer when prettify is false, preserving binary content', async () => {
+    it('writes raw bytes when prettify is false, preserving binary content', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.png' });
       // PNG magic bytes — would be corrupted by a UTF-8 round-trip
-      const binaryData = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      const binaryData = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
       await downloadResponseBody({ name: 'My Request' }, { contentType: 'image/png', bodyBuffer: binaryData }, false);
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { path, content } = mockWriteFile.mock.calls[0][0];
       expect(path).toBe('/tmp/out.png');
-      expect(Buffer.isBuffer(content)).toBe(true);
+      expect(content).toBeInstanceOf(Uint8Array);
       expect(content).toEqual(binaryData);
     });
 
-    it('writes the raw Buffer when prettify is true but the content-type is not JSON', async () => {
+    it('writes raw bytes when prettify is true but the content-type is not JSON', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.txt' });
-      const textData = Buffer.from('Hello, World!');
+      const textData = new TextEncoder().encode('Hello, World!');
 
       await downloadResponseBody({ name: 'My Request' }, { contentType: 'text/plain', bodyBuffer: textData }, true);
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { content } = mockWriteFile.mock.calls[0][0];
-      expect(Buffer.isBuffer(content)).toBe(true);
+      expect(content).toBeInstanceOf(Uint8Array);
       expect(content).toEqual(textData);
     });
 
-    it('writes an empty Buffer when bodyBuffer is null', async () => {
+    it('writes empty bytes when bodyBuffer is null', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.bin' });
 
       await downloadResponseBody(
@@ -127,76 +119,130 @@ describe('downloadResponseBody', () => {
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { content } = mockWriteFile.mock.calls[0][0];
-      expect(Buffer.isBuffer(content)).toBe(true);
+      expect(content).toBeInstanceOf(Uint8Array);
       expect(content.length).toBe(0);
     });
   });
 
-  describe('large response fallback (bodyBuffer undefined, reads from disk)', () => {
-    it('reads from disk via getBodyBuffer when bodyBuffer is undefined and writes raw Buffer', async () => {
-      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
-      const diskBody = Buffer.from('{"large": true}');
-      mockGetBodyBuffer.mockResolvedValue(diskBody);
+  describe('large responses (bodyBuffer absent, body on disk)', () => {
+    it('copies the body from disk instead of writing an empty file', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/large.json' });
 
+      // The loader leaves bodyBuffer undefined above LARGE_RESPONSE_MB; before this fix that
+      // produced a 0-byte export.
       await downloadResponseBody(
         { name: 'My Request' },
-        { contentType: 'application/json', bodyPath: '/fake/body.response', bodyCompression: null },
+        { contentType: 'application/json', bodyPath: '/responses/abc.response' },
         false,
       );
 
-      expect(mockGetBodyBuffer).toHaveBeenCalledOnce();
-      expect(mockWriteFile).toHaveBeenCalledOnce();
-      const { content } = mockWriteFile.mock.calls[0][0];
-      expect(Buffer.isBuffer(content)).toBe(true);
-      expect(content).toEqual(diskBody);
-    });
-
-    it('writes empty Buffer when getBodyBuffer returns an empty buffer', async () => {
-      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.bin' });
-      mockGetBodyBuffer.mockResolvedValue(Buffer.alloc(0));
-
-      await downloadResponseBody(
-        { name: 'My Request' },
-        { contentType: 'application/octet-stream', bodyPath: '/fake/body.response', bodyCompression: null },
-        false,
-      );
-
-      expect(mockWriteFile).toHaveBeenCalledOnce();
-      const { content } = mockWriteFile.mock.calls[0][0];
-      expect(Buffer.isBuffer(content)).toBe(true);
-      expect(content.length).toBe(0);
-    });
-
-    it('does not crash and does not write when getBodyBuffer rejects, and shows an error toast', async () => {
-      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.bin' });
-      mockGetBodyBuffer.mockRejectedValue(new Error('disk read failed'));
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      await downloadResponseBody(
-        { name: 'My Request' },
-        { contentType: 'application/octet-stream', bodyPath: '/fake/body.response', bodyCompression: null },
-        false,
-      );
-
-      expect(errorSpy).toHaveBeenCalledWith('Failed to read response body for export', expect.any(Error));
-      expect(mockShowToast).toHaveBeenCalledOnce();
+      expect(mockWriteResponseBodyToFile).toHaveBeenCalledWith({
+        sourcePath: '/responses/abc.response',
+        destinationPath: '/tmp/large.json',
+        bodyCompression: null,
+      });
       expect(mockWriteFile).not.toHaveBeenCalled();
     });
 
-    it('handles getBodyBuffer returning a string by converting to Buffer', async () => {
-      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.txt' });
-      mockGetBodyBuffer.mockResolvedValue('string response body');
+    it('forwards zip compression so the copy is gunzipped', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/large.json' });
 
       await downloadResponseBody(
         { name: 'My Request' },
-        { contentType: 'text/plain', bodyPath: '/fake/body.response', bodyCompression: null },
+        { contentType: 'application/json', bodyPath: '/responses/abc.response', bodyCompression: 'zip' },
         false,
       );
 
-      expect(mockWriteFile).toHaveBeenCalledOnce();
+      expect(mockWriteResponseBodyToFile).toHaveBeenCalledWith(
+        expect.objectContaining({ bodyCompression: 'zip' }),
+      );
+    });
+
+    it('treats __NEEDS_MIGRATION__ compression as uncompressed', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/large.json' });
+
+      await downloadResponseBody(
+        {
+          name: 'My Request',
+        },
+        {
+          contentType: 'application/json',
+          bodyPath: '/responses/abc.response',
+          bodyCompression: '__NEEDS_MIGRATION__',
+        },
+        false,
+      );
+
+      expect(mockWriteResponseBodyToFile).toHaveBeenCalledWith(expect.objectContaining({ bodyCompression: null }));
+    });
+
+    it('prefers the streaming copy over an in-memory buffer for the raw export', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
+
+      await downloadResponseBody(
+        { name: 'My Request' },
+        {
+          contentType: 'application/json',
+          bodyBuffer: new TextEncoder().encode('{}'),
+          bodyPath: '/responses/abc.response',
+        },
+        false,
+      );
+
+      expect(mockWriteResponseBodyToFile).toHaveBeenCalledOnce();
+      expect(mockWriteFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('prettify falls back to reading the body from disk', () => {
+    it('prettifies a disk-backed body via getBodyBuffer', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
+      const getBodyBuffer = vi.fn().mockResolvedValue(new TextEncoder().encode('{"b":2,"a":1}'));
+
+      await downloadResponseBody(
+        { name: 'My Request' },
+        { contentType: 'application/json', bodyPath: '/responses/abc.response' },
+        true,
+        getBodyBuffer,
+      );
+
+      expect(getBodyBuffer).toHaveBeenCalledOnce();
+      expect(mockWriteResponseBodyToFile).not.toHaveBeenCalled();
       const { content } = mockWriteFile.mock.calls[0][0];
-      expect(Buffer.isBuffer(content)).toBe(true);
-      expect(content.toString('utf8')).toBe('string response body');
+      expect(typeof content).toBe('string');
+      expect(content).toContain('"b": 2');
+    });
+
+    it('throws the read-failure message when getBodyBuffer returns a string', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
+      const getBodyBuffer = vi.fn().mockResolvedValue('Failed to read response body');
+
+      await expect(
+        downloadResponseBody(
+          { name: 'My Request' },
+          { contentType: 'application/json', bodyPath: '/responses/abc.response' },
+          true,
+          getBodyBuffer,
+        ),
+      ).rejects.toThrow('Failed to read response body');
+
+      expect(mockWriteFile).not.toHaveBeenCalled();
+    });
+
+    it('throws rather than writing an empty file when the disk read yields nothing', async () => {
+      mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
+      const getBodyBuffer = vi.fn().mockResolvedValue(null);
+
+      await expect(
+        downloadResponseBody(
+          { name: 'My Request' },
+          { contentType: 'application/json', bodyPath: '/responses/abc.response' },
+          true,
+          getBodyBuffer,
+        ),
+      ).rejects.toThrow('Failed to read response body from filesystem');
+
+      expect(mockWriteFile).not.toHaveBeenCalled();
     });
   });
 });

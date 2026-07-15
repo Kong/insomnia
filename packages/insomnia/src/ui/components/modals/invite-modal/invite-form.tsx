@@ -17,7 +17,6 @@ import { useParams, useSearchParams } from 'react-router';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { debounce } from '~/common/misc';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
@@ -125,10 +124,7 @@ export const InviteForm = ({
   const { userSession } = useRootLoaderData()!;
   const organizationData = useOrganizationLoaderData();
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner =
-    organization &&
-    userSession.accountId &&
-    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const isUserOwner = Boolean(organization?.is_owner);
   const sessionId = userSession.id;
 
   const [loading, setLoading] = useState(false);

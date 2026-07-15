@@ -1,7 +1,5 @@
 // NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
-import { invariant } from '../../utils/invariant';
-invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
@@ -15,13 +13,15 @@ import {
   CurlHttpVersion,
   CurlInfoDebug,
   CurlNetrc,
+  CurlProxy,
   CurlSslOpt,
 } from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
 import electron from 'electron';
+import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { ClientCertificate, RequestHeader, ResponseHeader } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
@@ -68,12 +68,6 @@ interface SettingsUsedHere {
   dataFolders: string[];
 }
 
-export interface ResponseTimelineEntry {
-  name: keyof typeof CurlInfoDebug;
-  timestamp: number;
-  value: string;
-}
-
 export interface CurlRequestOutput {
   patch: ResponsePatch;
   debugTimeline: ResponseTimelineEntry[];
@@ -105,7 +99,7 @@ export interface ResponsePatch {
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
-export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]();
+export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]?.();
 export const curlRequest = (options: CurlRequestOptions) =>
   new Promise<CurlRequestOutput>(async resolve => {
     try {
@@ -126,10 +120,11 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
-      // allow reading the file as the caCert is chosen by user
+
+      invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
-      const { curl, debugTimeline } = createConfiguredCurlInstance({
+      const { curl, debugTimeline } = await createConfiguredCurlInstance({
         req,
         finalUrl,
         settings,
@@ -244,6 +239,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
           url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
         };
         curl.isOpen && curl.close();
+        delete cancelCurlRequestHandlers[requestId];
         await waitForStreamToFinish(responseBodyWriteStream);
 
         const headerResults = _parseHeaders(rawHeaders);
@@ -254,6 +250,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       curl.on('error', async (err, code) => {
         const elapsedTime = (curl.getInfo(Curl.info.TOTAL_TIME) as number) * 1000;
         curl.isOpen && curl.close();
+        delete cancelCurlRequestHandlers[requestId];
         await waitForStreamToFinish(responseBodyWriteStream);
 
         // If libcurl can't decompress the response, retry without decompression
@@ -290,7 +287,61 @@ export const curlRequest = (options: CurlRequestOptions) =>
     }
   });
 
-export const createConfiguredCurlInstance = ({
+/**
+ * Parse a PAC-format proxy string (from Electron's session.resolveProxy) into
+ * a curl proxy URL and type.  Returns null when DIRECT.
+ * Format: "PROXY host:port", "HTTPS host:port", "SOCKS host:port", etc.
+ * https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
+ */
+export function parseResolvedProxy(pacString: string | undefined): { proxyUrl: string; proxyType: CurlProxy } | null {
+  if (!pacString) {
+    return null;
+  }
+  // only the first proxy specified will be used
+  const proxy = pacString
+    .trim()
+    .split(/\s*;\s*/g)
+    .find(Boolean);
+  if (!proxy) {
+    return null;
+  }
+  const parts = proxy.split(/\s+/);
+  const proxyType = parts[0];
+  if (proxyType === 'DIRECT') {
+    return null;
+  }
+  const proxyAddr = parts[1];
+  if (!proxyAddr) {
+    return null;
+  }
+  let curlProxyType: CurlProxy;
+  switch (proxyType) {
+    case 'PROXY':
+    case 'HTTP': {
+      curlProxyType = CurlProxy.Http;
+      break;
+    }
+    case 'HTTPS': {
+      curlProxyType = CurlProxy.Https;
+      break;
+    }
+    case 'SOCKS':
+    case 'SOCKS4': {
+      curlProxyType = CurlProxy.Socks4;
+      break;
+    }
+    case 'SOCKS5': {
+      curlProxyType = CurlProxy.Socks5;
+      break;
+    }
+    default: {
+      return null;
+    }
+  }
+  return { proxyUrl: proxyAddr, proxyType: curlProxyType };
+}
+
+export const createConfiguredCurlInstance = async ({
   req,
   finalUrl,
   settings,
@@ -369,17 +420,32 @@ export const createConfiguredCurlInstance = ({
   }
 
   if (!settings.proxyEnabled) {
-    curl.setOpt(Curl.option.PROXY, '');
+    // When proxy is not explicitly configured, fall back to system proxy
+    let resolved: ReturnType<typeof parseResolvedProxy> = null;
+    try {
+      const systemProxy = await electron.session.defaultSession.resolveProxy(finalUrl);
+      resolved = parseResolvedProxy(systemProxy);
+    } catch {
+      // If resolveProxy fails (e.g. invalid URL, session issues), fall back to direct connection
+    }
+    if (resolved) {
+      curl.setOpt(Curl.option.PROXYTYPE, resolved.proxyType);
+      curl.setOpt(Curl.option.PROXY, resolved.proxyUrl);
+      debugTimeline.push({ value: `Using system proxy: ${resolved.proxyUrl}`, name: 'Text', timestamp: Date.now() });
+    } else {
+      curl.setOpt(Curl.option.PROXY, '');
+    }
   } else {
-    const { protocol } = urlParse(req.url);
+    const { protocol, hostname } = urlParse(req.url);
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : '';
-    debugTimeline.push({ value: `Using proxy: ${proxy}`, name: 'Text', timestamp: Date.now() });
+    const proxy = !shouldBypassProxyForHost(hostname, noProxy) && proxyHost ? setDefaultProtocol(proxyHost) : '';
+    curl.setOpt(Curl.option.PROXY, proxy);
     if (proxy) {
-      curl.setOpt(Curl.option.PROXY, proxy);
+      debugTimeline.push({ value: `Using proxy: ${proxy}`, name: 'Text', timestamp: Date.now() });
       curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
     }
+    // also pass the raw list to curl, which still correctly handles IP/CIDR entries (e.g. "192.168.0.0/16")
     if (noProxy) {
       curl.setOpt(Curl.option.NOPROXY, noProxy);
     }
@@ -537,7 +603,7 @@ async function waitForStreamToFinish(stream: Readable | Writable) {
 }
 const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
   const isUrlEncodedForm = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
+  const expectsBody = ['POST', 'PUT', 'PATCH', 'QUERY'].includes(method.toUpperCase());
   const hasMimetypeAndUpdateMethod = typeof body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();
@@ -585,6 +651,26 @@ export const getHttpVersion = (preferredHttpVersion: string) => {
     }
   }
 };
+
+// workaround for a curl 7.86 bug: https://github.com/curl/curl/issues/10122
+export function shouldBypassProxyForHost(hostname: string | null, noProxy: string): boolean {
+  if (!hostname || !noProxy) {
+    return false;
+  }
+
+  const normalizedHostname = hostname.toLowerCase();
+
+  return noProxy
+    .split(',')
+    .map(entry => entry.trim().toLowerCase())
+    .filter(Boolean)
+    .some(entry => {
+      if (entry.startsWith('.')) {
+        return normalizedHostname === entry.slice(1) || normalizedHostname.endsWith(entry);
+      }
+      return normalizedHostname === entry;
+    });
+}
 
 export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   const trimmedUrl = url.trim();

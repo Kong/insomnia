@@ -1,10 +1,8 @@
 import { getUserFiles, type Organization, type RemoteFile } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { database } from '~/common/database';
-import type { Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/remote-files';
 
@@ -35,14 +33,14 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   try {
     const remoteFiles = await getUserFiles({ sessionId });
 
-    const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
 
     const allRemoteFilesOrganizationIds = remoteFiles.map(file => file.organizationId);
     const allRemoteFilesProjectIds = remoteFiles.map(file => file.teamProjectId);
 
     const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.includes(org.id));
 
-    const projects = await database.find<Project>(models.project.type, {
+    const projects = await services.project.list({
       remoteId: {
         $in: allRemoteFilesProjectIds,
       },
@@ -60,7 +58,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
           : '',
         name: file.name,
         item: { ...file, teamProjectLocalId: parentProject?._id || '', scope: 'unsynced' as const },
-        organizationName: organizations.find(org => org.id === file.organizationId)?.display_name || '',
+        organizationName: organizations.find(org => org.id === file.organizationId)?.name || '',
         projectName: parentProject?.name || '',
       };
     });

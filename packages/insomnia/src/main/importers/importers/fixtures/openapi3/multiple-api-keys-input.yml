@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  description: "This is a sample server Petstore server."
+  description: 'This is a sample server Petstore server.'
   version: 1.0.2
   title: Swagger Petstore
   termsOfService: http://swagger.io/terms/
@@ -21,20 +21,20 @@ paths:
       tags:
         - pet
       summary: Add a new pet to the store
-      description: ""
+      description: ''
       operationId: addPet
       responses:
-        "200":
+        '200':
           description: successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Pet"
+                  $ref: '#/components/schemas/Pet'
       security:
         - apiKey: []
-          appId:  []
+          appId: []
         - appSecret: []
   /pet/findByStatus:
     get:
@@ -59,19 +59,19 @@ paths:
                 - sold
               default: available
       responses:
-        "200":
+        '200':
           description: successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Pet"
-        "400":
+                  $ref: '#/components/schemas/Pet'
+        '400':
           description: Invalid status value
       security:
         - apiKey: []
-        - appId:  []
+        - appId: []
         - appSecret: []
 externalDocs:
   description: Find out more about Swagger
@@ -123,7 +123,7 @@ components:
           type: integer
           format: int64
         category:
-          $ref: "#/components/schemas/Category"
+          $ref: '#/components/schemas/Category'
         name:
           type: string
           example: doggie
@@ -140,7 +140,7 @@ components:
             name: tag
             wrapped: true
           items:
-            $ref: "#/components/schemas/Tag"
+            $ref: '#/components/schemas/Tag'
         status:
           type: string
           description: pet status in the store

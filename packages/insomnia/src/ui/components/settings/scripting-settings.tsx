@@ -2,7 +2,13 @@ import { Switch } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
 
-import { type ASTRule, blockedPropertyRules, blockedRootRules, maskRules, type ThreatRule } from '../../../scripting/script-security-policy';
+import {
+  type ASTRule,
+  blockedPropertyRules,
+  blockedRootRules,
+  maskRules,
+  type ThreatRule,
+} from '../../../scripting/script-security-rules';
 import { useSettingsPatcher } from '../../hooks/use-request';
 
 const DISABLED_TOOLTIP = 'Enable the script sandbox to configure individual rules';
@@ -105,7 +111,9 @@ const RuleCard = ({
         const allEnabled = groupNames.every(n => !disabledNames.includes(n));
         return (
           <div key={group.title} className="flex flex-col gap-3">
-            <h4 className="border-b border-solid border-(--hl-sm) pb-1 text-xs font-semibold uppercase tracking-wide text-(--color-font)">{group.title}</h4>
+            <h4 className="border-b border-solid border-(--hl-sm) pb-1 text-xs font-semibold tracking-wide text-(--color-font) uppercase">
+              {group.title}
+            </h4>
             <RuleToggle
               description={group.description}
               isEnabled={allEnabled}
@@ -114,7 +122,10 @@ const RuleCard = ({
             />
             <div className="flex flex-wrap gap-1 pl-0.5">
               {group.rules.map(r => (
-                <span key={r.name} className="rounded border border-solid border-(--hl-sm) bg-(--color-bg) px-1.5 py-0.5 font-mono text-xs text-(--hl)">
+                <span
+                  key={r.name}
+                  className="rounded border border-solid border-(--hl-sm) bg-(--color-bg) px-1.5 py-0.5 font-mono text-xs text-(--hl)"
+                >
                   {r.name}
                 </span>
               ))}
@@ -132,21 +143,28 @@ export const ScriptingSettings = () => {
 
   const sandboxEnabled = settings.scriptSandboxEnabled !== false;
   const strictModeEnabled = settings.scriptStrictModeEnabled !== false;
+  const templateTagSandboxEnabled = settings.templateTagSandboxEnabled === true;
   const disabledRules = settings.disabledSecurityRules ?? [];
   const disabledProperties = settings.disabledBlockedProperties ?? [];
   const disabledRoots = settings.disabledBlockedRoots ?? [];
 
   const GROUPED_MASK_NAMES = new Set([
-    'globalThis', 'global', 'process',
-    'setImmediate', 'queueMicrotask',
-    'Proxy', 'Reflect',
-    'Function', 'WebAssembly',
+    'globalThis',
+    'global',
+    'process',
+    'setImmediate',
+    'queueMicrotask',
+    'Proxy',
+    'Reflect',
+    'Function',
+    'WebAssembly',
   ]);
 
   const maskRuleGroups: RuleGroup[] = [
     {
       title: 'Global & Node.js Internals',
-      description: 'References to the global scope and Node.js process information such as environment variables and runtime state.',
+      description:
+        'References to the global scope and Node.js process information such as environment variables and runtime state.',
       rules: maskRules.filter(r => ['globalThis', 'global', 'process'].includes(r.name)),
     },
     {
@@ -156,7 +174,8 @@ export const ScriptingSettings = () => {
     },
     {
       title: 'Runtime APIs',
-      description: 'Used for meta-programming (Proxy, Reflect), creating functions dynamically from strings (Function), and running compiled binary modules (WebAssembly).',
+      description:
+        'Used for meta-programming (Proxy, Reflect), creating functions dynamically from strings (Function), and running compiled binary modules (WebAssembly).',
       rules: maskRules.filter(r => ['Proxy', 'Reflect', 'Function', 'WebAssembly'].includes(r.name)),
     },
   ];
@@ -166,43 +185,82 @@ export const ScriptingSettings = () => {
   const STANDALONE_PROPERTY_NAMES = new Set(['mainModule', 'constructor']);
 
   const GROUPED_PROPERTY_NAMES = new Set([
-    'prototype', '__proto__', 'getPrototypeOf', 'setPrototypeOf',
-    'getFunction', 'getThis', 'prepareStackTrace', 'captureStackTrace',
-    '__defineGetter__', '__defineSetter__', '__lookupGetter__', '__lookupSetter__',
-    'defineProperty', 'defineProperties', 'getOwnPropertyDescriptor', 'getOwnPropertyDescriptors',
+    'prototype',
+    '__proto__',
+    'getPrototypeOf',
+    'setPrototypeOf',
+    'getFunction',
+    'getThis',
+    'prepareStackTrace',
+    'captureStackTrace',
+    '__defineGetter__',
+    '__defineSetter__',
+    '__lookupGetter__',
+    '__lookupSetter__',
+    'defineProperty',
+    'defineProperties',
+    'getOwnPropertyDescriptor',
+    'getOwnPropertyDescriptors',
   ]);
 
   const blockedPropertyGroups: RuleGroup[] = [
     {
       title: 'Prototype Mutation',
-      description: 'Used to access and modify an object\'s prototype chain.',
-      rules: blockedPropertyRules.filter(r => ['prototype', '__proto__', 'getPrototypeOf', 'setPrototypeOf'].includes(r.name)),
+      description: "Used to access and modify an object's prototype chain.",
+      rules: blockedPropertyRules.filter(r =>
+        ['prototype', '__proto__', 'getPrototypeOf', 'setPrototypeOf'].includes(r.name),
+      ),
     },
     {
       title: 'Stack Inspection',
       description: 'Used to inspect and format JavaScript call stack information.',
-      rules: blockedPropertyRules.filter(r => ['prepareStackTrace', 'captureStackTrace', 'getFunction', 'getThis'].includes(r.name)),
+      rules: blockedPropertyRules.filter(r =>
+        ['prepareStackTrace', 'captureStackTrace', 'getFunction', 'getThis'].includes(r.name),
+      ),
     },
     {
       title: 'Accessor Helpers',
       description: 'Legacy methods for defining and looking up getter and setter functions on objects.',
-      rules: blockedPropertyRules.filter(r => ['__defineGetter__', '__defineSetter__', '__lookupGetter__', '__lookupSetter__', 'defineProperty', 'defineProperties', 'getOwnPropertyDescriptor', 'getOwnPropertyDescriptors'].includes(r.name)),
+      rules: blockedPropertyRules.filter(r =>
+        [
+          '__defineGetter__',
+          '__defineSetter__',
+          '__lookupGetter__',
+          '__lookupSetter__',
+          'defineProperty',
+          'defineProperties',
+          'getOwnPropertyDescriptor',
+          'getOwnPropertyDescriptors',
+        ].includes(r.name),
+      ),
     },
   ];
 
   const standaloneBlockedPropertyRules = blockedPropertyRules.filter(r => STANDALONE_PROPERTY_NAMES.has(r.name));
-  const ungroupedBlockedPropertyRules = blockedPropertyRules.filter(r => !GROUPED_PROPERTY_NAMES.has(r.name) && !STANDALONE_PROPERTY_NAMES.has(r.name));
+  const ungroupedBlockedPropertyRules = blockedPropertyRules.filter(
+    r => !GROUPED_PROPERTY_NAMES.has(r.name) && !STANDALONE_PROPERTY_NAMES.has(r.name),
+  );
 
   const GROUPED_ROOT_NAMES = new Set([
-    'globalThis', 'global', 'window', 'self', 'frames',
-    'process', 'module', 'exports', 'Buffer',
-    'this', 'constructor', 'arguments',
+    'globalThis',
+    'global',
+    'window',
+    'self',
+    'frames',
+    'process',
+    'module',
+    'exports',
+    'Buffer',
+    'this',
+    'constructor',
+    'arguments',
   ]);
 
   const blockedRootGroups: RuleGroup[] = [
     {
       title: 'Global Object Aliases',
-      description: 'Different ways to reference the global object depending on the JavaScript environment (browser, Node.js, Web Worker).',
+      description:
+        'Different ways to reference the global object depending on the JavaScript environment (browser, Node.js, Web Worker).',
       rules: blockedRootRules.filter(r => ['globalThis', 'global', 'window', 'self', 'frames'].includes(r.name)),
     },
     {
@@ -219,7 +277,8 @@ export const ScriptingSettings = () => {
 
   const ungroupedBlockedRootRules = blockedRootRules.filter(r => !GROUPED_ROOT_NAMES.has(r.name));
 
-  const makeToggler = (field: 'disabledSecurityRules' | 'disabledBlockedProperties' | 'disabledBlockedRoots', current: string[]) =>
+  const makeToggler =
+    (field: 'disabledSecurityRules' | 'disabledBlockedProperties' | 'disabledBlockedRoots', current: string[]) =>
     (names: string[], enabled: boolean) => {
       const nameSet = new Set(names);
       const next = enabled ? current.filter(n => !nameSet.has(n)) : [...new Set([...current, ...names])];
@@ -257,6 +316,27 @@ export const ScriptingSettings = () => {
               onChange={enabled => patchSettings({ scriptStrictModeEnabled: enabled })}
             />
           </div>
+        </div>
+      </div>
+
+      <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-(--color-font)">Run template tags in sandbox (experimental)</span>
+            <p className="text-xs text-(--hl)">
+              Execute plugin template tags inside the QuickJS-WASM sandbox instead of directly in the main process.
+            </p>
+          </div>
+          <Switch
+            data-testid="toggle-template-tag-sandbox"
+            isSelected={templateTagSandboxEnabled}
+            onChange={enabled => patchSettings({ templateTagSandboxEnabled: enabled })}
+            className="group flex items-center gap-2"
+          >
+            <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-selected:bg-(--color-surprise)">
+              <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+            </div>
+          </Switch>
         </div>
       </div>
 

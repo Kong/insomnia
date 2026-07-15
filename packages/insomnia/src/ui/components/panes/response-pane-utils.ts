@@ -1,22 +1,21 @@
 import { extension as mimeExtension } from 'mime-types';
 
-import type { Compression } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
-import { showToast } from '~/ui/components/toast-notification';
-import { jsonPrettify } from '~/utils/prettify/json';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 export async function downloadResponseBody(
   activeRequest: { name: string } | null | undefined,
   activeResponse:
     | {
         contentType: string;
-        bodyBuffer?: Buffer | null;
+        bodyBuffer?: Uint8Array | null;
         bodyPath?: string;
-        bodyCompression?: Compression;
+        bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__';
       }
     | null
     | undefined,
   prettify: boolean,
+  getBodyBuffer?: () => Promise<Uint8Array | string | null>,
 ) {
   if (!activeResponse || !activeRequest) {
     console.warn('Nothing to download');
@@ -35,34 +34,40 @@ export async function downloadResponseBody(
     return;
   }
 
-  let body: Buffer;
-  try {
-    if (activeResponse.bodyBuffer) {
-      body = activeResponse.bodyBuffer;
-    } else if (activeResponse.bodyPath) {
-      const raw = await getBodyBuffer(activeResponse);
-      body = typeof raw === 'string' ? Buffer.from(raw) : raw;
-    } else {
-      console.warn('Response has no bodyBuffer or bodyPath; writing empty file');
-      body = Buffer.alloc(0);
-    }
-  } catch (error) {
-    console.error('Failed to read response body for export', error);
-    showToast({
-      icon: 'circle-exclamation',
-      title: 'Export failed',
-      description: 'Could not read the response body from disk.',
-      status: 'error',
+  // The loader only populates bodyBuffer for responses under LARGE_RESPONSE_MB, so reading it
+  // here would write an empty file for exactly the large responses this export needs to handle.
+  // Copy from disk in the main process instead, which also keeps the body out of renderer memory.
+  if (!prettify && activeResponse.bodyPath) {
+    await window.main.writeResponseBodyToFile({
+      sourcePath: activeResponse.bodyPath,
+      destinationPath: outputPath,
+      bodyCompression: activeResponse.bodyCompression === 'zip' ? 'zip' : null,
     });
     return;
   }
 
-  if (prettify && activeResponse.bodyBuffer && contentType.includes('json')) {
+  let bodyBuffer = activeResponse.bodyBuffer ?? null;
+
+  if (!bodyBuffer && getBodyBuffer) {
+    const diskBodyBuffer = await getBodyBuffer();
+    if (typeof diskBodyBuffer === 'string') {
+      throw new TypeError(diskBodyBuffer);
+    }
+    if (diskBodyBuffer) {
+      bodyBuffer = diskBodyBuffer;
+    }
+  }
+
+  if (!bodyBuffer && activeResponse.bodyPath) {
+    throw new Error('Failed to read response body from filesystem');
+  }
+
+  if (prettify && contentType.includes('json')) {
     await window.main.writeFile({
       path: outputPath,
-      content: jsonPrettify(body.toString('utf8')) || '',
+      content: jsonPrettify(bodyBufferToUtf8(bodyBuffer)) || '',
     });
     return;
   }
-  await window.main.writeFile({ path: outputPath, content: body });
+  await window.main.writeFile({ path: outputPath, content: bodyBuffer ?? new Uint8Array(0) });
 }

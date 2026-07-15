@@ -1,0 +1,1137 @@
+[
+  {
+    "displayValue": "insomnia.environment.has()",
+    "name": "insomnia.environment.has()",
+    "value": "insomnia.environment.has()"
+  },
+  {
+    "displayValue": "insomnia.environment.get()",
+    "name": "insomnia.environment.get()",
+    "value": "insomnia.environment.get()"
+  },
+  {
+    "displayValue": "insomnia.environment.set()",
+    "name": "insomnia.environment.set()",
+    "value": "insomnia.environment.set()"
+  },
+  {
+    "displayValue": "insomnia.environment.unset()",
+    "name": "insomnia.environment.unset()",
+    "value": "insomnia.environment.unset()"
+  },
+  {
+    "displayValue": "insomnia.environment.clear()",
+    "name": "insomnia.environment.clear()",
+    "value": "insomnia.environment.clear()"
+  },
+  {
+    "displayValue": "insomnia.environment.replaceIn()",
+    "name": "insomnia.environment.replaceIn()",
+    "value": "insomnia.environment.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.environment.toObject()",
+    "name": "insomnia.environment.toObject()",
+    "value": "insomnia.environment.toObject()"
+  },
+  {
+    "displayValue": "insomnia.collectionVariables.has()",
+    "name": "insomnia.collectionVariables.has()",
+    "value": "insomnia.collectionVariables.has()"
+  },
+  {
+    "displayValue": "insomnia.collectionVariables.get()",
+    "name": "insomnia.collectionVariables.get()",
+    "value": "insomnia.collectionVariables.get()"
+  },
+  {
+    "displayValue": "insomnia.collectionVariables.set()",
+    "name": "insomnia.collectionVariables.set()",
+    "value": "insomnia.collectionVariables.set()"
+  },
+  {
+    "displayValue": "insomnia.collectionVariables.unset()",
+    "name": "insomnia.collectionVariables.unset()",
+    "value": "insomnia.collectionVariables.unset()"
+  },
+  {
+    "displayValue": "insomnia.collectionVariables.clear()",
+    "name": "insomnia.collectionVariables.clear()",
+    "value": "insomnia.collectionVariables.clear()"
+  },
+  {
+    "displayValue": "insomnia.collectionVariables.replaceIn()",
+    "name": "insomnia.collectionVariables.replaceIn()",
+    "value": "insomnia.collectionVariables.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.collectionVariables.toObject()",
+    "name": "insomnia.collectionVariables.toObject()",
+    "value": "insomnia.collectionVariables.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.globalVars.has()",
+    "name": "insomnia.variables.globalVars.has()",
+    "value": "insomnia.variables.globalVars.has()"
+  },
+  {
+    "displayValue": "insomnia.variables.globalVars.get()",
+    "name": "insomnia.variables.globalVars.get()",
+    "value": "insomnia.variables.globalVars.get()"
+  },
+  {
+    "displayValue": "insomnia.variables.globalVars.set()",
+    "name": "insomnia.variables.globalVars.set()",
+    "value": "insomnia.variables.globalVars.set()"
+  },
+  {
+    "displayValue": "insomnia.variables.globalVars.unset()",
+    "name": "insomnia.variables.globalVars.unset()",
+    "value": "insomnia.variables.globalVars.unset()"
+  },
+  {
+    "displayValue": "insomnia.variables.globalVars.clear()",
+    "name": "insomnia.variables.globalVars.clear()",
+    "value": "insomnia.variables.globalVars.clear()"
+  },
+  {
+    "displayValue": "insomnia.variables.globalVars.replaceIn()",
+    "name": "insomnia.variables.globalVars.replaceIn()",
+    "value": "insomnia.variables.globalVars.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.variables.globalVars.toObject()",
+    "name": "insomnia.variables.globalVars.toObject()",
+    "value": "insomnia.variables.globalVars.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.baseGlobalVars.has()",
+    "name": "insomnia.variables.baseGlobalVars.has()",
+    "value": "insomnia.variables.baseGlobalVars.has()"
+  },
+  {
+    "displayValue": "insomnia.variables.baseGlobalVars.get()",
+    "name": "insomnia.variables.baseGlobalVars.get()",
+    "value": "insomnia.variables.baseGlobalVars.get()"
+  },
+  {
+    "displayValue": "insomnia.variables.baseGlobalVars.set()",
+    "name": "insomnia.variables.baseGlobalVars.set()",
+    "value": "insomnia.variables.baseGlobalVars.set()"
+  },
+  {
+    "displayValue": "insomnia.variables.baseGlobalVars.unset()",
+    "name": "insomnia.variables.baseGlobalVars.unset()",
+    "value": "insomnia.variables.baseGlobalVars.unset()"
+  },
+  {
+    "displayValue": "insomnia.variables.baseGlobalVars.clear()",
+    "name": "insomnia.variables.baseGlobalVars.clear()",
+    "value": "insomnia.variables.baseGlobalVars.clear()"
+  },
+  {
+    "displayValue": "insomnia.variables.baseGlobalVars.replaceIn()",
+    "name": "insomnia.variables.baseGlobalVars.replaceIn()",
+    "value": "insomnia.variables.baseGlobalVars.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.variables.baseGlobalVars.toObject()",
+    "name": "insomnia.variables.baseGlobalVars.toObject()",
+    "value": "insomnia.variables.baseGlobalVars.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.collectionVars.has()",
+    "name": "insomnia.variables.collectionVars.has()",
+    "value": "insomnia.variables.collectionVars.has()"
+  },
+  {
+    "displayValue": "insomnia.variables.collectionVars.get()",
+    "name": "insomnia.variables.collectionVars.get()",
+    "value": "insomnia.variables.collectionVars.get()"
+  },
+  {
+    "displayValue": "insomnia.variables.collectionVars.set()",
+    "name": "insomnia.variables.collectionVars.set()",
+    "value": "insomnia.variables.collectionVars.set()"
+  },
+  {
+    "displayValue": "insomnia.variables.collectionVars.unset()",
+    "name": "insomnia.variables.collectionVars.unset()",
+    "value": "insomnia.variables.collectionVars.unset()"
+  },
+  {
+    "displayValue": "insomnia.variables.collectionVars.clear()",
+    "name": "insomnia.variables.collectionVars.clear()",
+    "value": "insomnia.variables.collectionVars.clear()"
+  },
+  {
+    "displayValue": "insomnia.variables.collectionVars.replaceIn()",
+    "name": "insomnia.variables.collectionVars.replaceIn()",
+    "value": "insomnia.variables.collectionVars.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.variables.collectionVars.toObject()",
+    "name": "insomnia.variables.collectionVars.toObject()",
+    "value": "insomnia.variables.collectionVars.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.environmentVars.has()",
+    "name": "insomnia.variables.environmentVars.has()",
+    "value": "insomnia.variables.environmentVars.has()"
+  },
+  {
+    "displayValue": "insomnia.variables.environmentVars.get()",
+    "name": "insomnia.variables.environmentVars.get()",
+    "value": "insomnia.variables.environmentVars.get()"
+  },
+  {
+    "displayValue": "insomnia.variables.environmentVars.set()",
+    "name": "insomnia.variables.environmentVars.set()",
+    "value": "insomnia.variables.environmentVars.set()"
+  },
+  {
+    "displayValue": "insomnia.variables.environmentVars.unset()",
+    "name": "insomnia.variables.environmentVars.unset()",
+    "value": "insomnia.variables.environmentVars.unset()"
+  },
+  {
+    "displayValue": "insomnia.variables.environmentVars.clear()",
+    "name": "insomnia.variables.environmentVars.clear()",
+    "value": "insomnia.variables.environmentVars.clear()"
+  },
+  {
+    "displayValue": "insomnia.variables.environmentVars.replaceIn()",
+    "name": "insomnia.variables.environmentVars.replaceIn()",
+    "value": "insomnia.variables.environmentVars.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.variables.environmentVars.toObject()",
+    "name": "insomnia.variables.environmentVars.toObject()",
+    "value": "insomnia.variables.environmentVars.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.iterationDataVars.has()",
+    "name": "insomnia.variables.iterationDataVars.has()",
+    "value": "insomnia.variables.iterationDataVars.has()"
+  },
+  {
+    "displayValue": "insomnia.variables.iterationDataVars.get()",
+    "name": "insomnia.variables.iterationDataVars.get()",
+    "value": "insomnia.variables.iterationDataVars.get()"
+  },
+  {
+    "displayValue": "insomnia.variables.iterationDataVars.set()",
+    "name": "insomnia.variables.iterationDataVars.set()",
+    "value": "insomnia.variables.iterationDataVars.set()"
+  },
+  {
+    "displayValue": "insomnia.variables.iterationDataVars.unset()",
+    "name": "insomnia.variables.iterationDataVars.unset()",
+    "value": "insomnia.variables.iterationDataVars.unset()"
+  },
+  {
+    "displayValue": "insomnia.variables.iterationDataVars.clear()",
+    "name": "insomnia.variables.iterationDataVars.clear()",
+    "value": "insomnia.variables.iterationDataVars.clear()"
+  },
+  {
+    "displayValue": "insomnia.variables.iterationDataVars.replaceIn()",
+    "name": "insomnia.variables.iterationDataVars.replaceIn()",
+    "value": "insomnia.variables.iterationDataVars.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.variables.iterationDataVars.toObject()",
+    "name": "insomnia.variables.iterationDataVars.toObject()",
+    "value": "insomnia.variables.iterationDataVars.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVars.has()",
+    "name": "insomnia.variables.localVars.has()",
+    "value": "insomnia.variables.localVars.has()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVars.get()",
+    "name": "insomnia.variables.localVars.get()",
+    "value": "insomnia.variables.localVars.get()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVars.set()",
+    "name": "insomnia.variables.localVars.set()",
+    "value": "insomnia.variables.localVars.set()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVars.unset()",
+    "name": "insomnia.variables.localVars.unset()",
+    "value": "insomnia.variables.localVars.unset()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVars.clear()",
+    "name": "insomnia.variables.localVars.clear()",
+    "value": "insomnia.variables.localVars.clear()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVars.replaceIn()",
+    "name": "insomnia.variables.localVars.replaceIn()",
+    "value": "insomnia.variables.localVars.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVars.toObject()",
+    "name": "insomnia.variables.localVars.toObject()",
+    "value": "insomnia.variables.localVars.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.has()",
+    "name": "insomnia.variables.has()",
+    "value": "insomnia.variables.has()"
+  },
+  {
+    "displayValue": "insomnia.variables.get()",
+    "name": "insomnia.variables.get()",
+    "value": "insomnia.variables.get()"
+  },
+  {
+    "displayValue": "insomnia.variables.set()",
+    "name": "insomnia.variables.set()",
+    "value": "insomnia.variables.set()"
+  },
+  {
+    "displayValue": "insomnia.variables.replaceIn()",
+    "name": "insomnia.variables.replaceIn()",
+    "value": "insomnia.variables.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.variables.toObject()",
+    "name": "insomnia.variables.toObject()",
+    "value": "insomnia.variables.toObject()"
+  },
+  {
+    "displayValue": "insomnia.variables.localVarsToObject()",
+    "name": "insomnia.variables.localVarsToObject()",
+    "value": "insomnia.variables.localVarsToObject()"
+  },
+  {
+    "displayValue": "insomnia.request.",
+    "name": "insomnia.request.id",
+    "value": "insomnia.request.id"
+  },
+  {
+    "displayValue": "insomnia.request.",
+    "name": "insomnia.request.name",
+    "value": "insomnia.request.name"
+  },
+  {
+    "displayValue": "insomnia.request.false",
+    "name": "insomnia.request.disabled",
+    "value": "insomnia.request.disabled"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.toString()",
+    "name": "insomnia.request.url.urlObject.toString()",
+    "value": "insomnia.request.url.urlObject.toString()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.http://placeholder.com/",
+    "name": "insomnia.request.url.urlObject.href",
+    "value": "insomnia.request.url.urlObject.href"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.http://placeholder.com",
+    "name": "insomnia.request.url.urlObject.origin",
+    "value": "insomnia.request.url.urlObject.origin"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.http:",
+    "name": "insomnia.request.url.urlObject.protocol",
+    "value": "insomnia.request.url.urlObject.protocol"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.",
+    "name": "insomnia.request.url.urlObject.username",
+    "value": "insomnia.request.url.urlObject.username"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.",
+    "name": "insomnia.request.url.urlObject.password",
+    "value": "insomnia.request.url.urlObject.password"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.placeholder.com",
+    "name": "insomnia.request.url.urlObject.host",
+    "value": "insomnia.request.url.urlObject.host"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.placeholder.com",
+    "name": "insomnia.request.url.urlObject.hostname",
+    "value": "insomnia.request.url.urlObject.hostname"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.",
+    "name": "insomnia.request.url.urlObject.port",
+    "value": "insomnia.request.url.urlObject.port"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject./",
+    "name": "insomnia.request.url.urlObject.pathname",
+    "value": "insomnia.request.url.urlObject.pathname"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.",
+    "name": "insomnia.request.url.urlObject.search",
+    "value": "insomnia.request.url.urlObject.search"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.0",
+    "name": "insomnia.request.url.urlObject.searchParams.size",
+    "value": "insomnia.request.url.urlObject.searchParams.size"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.append()",
+    "name": "insomnia.request.url.urlObject.searchParams.append()",
+    "value": "insomnia.request.url.urlObject.searchParams.append()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.delete()",
+    "name": "insomnia.request.url.urlObject.searchParams.delete()",
+    "value": "insomnia.request.url.urlObject.searchParams.delete()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.get()",
+    "name": "insomnia.request.url.urlObject.searchParams.get()",
+    "value": "insomnia.request.url.urlObject.searchParams.get()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.getAll()",
+    "name": "insomnia.request.url.urlObject.searchParams.getAll()",
+    "value": "insomnia.request.url.urlObject.searchParams.getAll()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.has()",
+    "name": "insomnia.request.url.urlObject.searchParams.has()",
+    "value": "insomnia.request.url.urlObject.searchParams.has()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.set()",
+    "name": "insomnia.request.url.urlObject.searchParams.set()",
+    "value": "insomnia.request.url.urlObject.searchParams.set()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.sort()",
+    "name": "insomnia.request.url.urlObject.searchParams.sort()",
+    "value": "insomnia.request.url.urlObject.searchParams.sort()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.entries()",
+    "name": "insomnia.request.url.urlObject.searchParams.entries()",
+    "value": "insomnia.request.url.urlObject.searchParams.entries()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.forEach()",
+    "name": "insomnia.request.url.urlObject.searchParams.forEach()",
+    "value": "insomnia.request.url.urlObject.searchParams.forEach()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.keys()",
+    "name": "insomnia.request.url.urlObject.searchParams.keys()",
+    "value": "insomnia.request.url.urlObject.searchParams.keys()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.values()",
+    "name": "insomnia.request.url.urlObject.searchParams.values()",
+    "value": "insomnia.request.url.urlObject.searchParams.values()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.searchParams.toString()",
+    "name": "insomnia.request.url.urlObject.searchParams.toString()",
+    "value": "insomnia.request.url.urlObject.searchParams.toString()"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.",
+    "name": "insomnia.request.url.urlObject.hash",
+    "value": "insomnia.request.url.urlObject.hash"
+  },
+  {
+    "displayValue": "insomnia.request.url.urlObject.toJSON()",
+    "name": "insomnia.request.url.urlObject.toJSON()",
+    "value": "insomnia.request.url.urlObject.toJSON()"
+  },
+  {
+    "displayValue": "insomnia.request.url.http://placeholder.com",
+    "name": "insomnia.request.url.origin",
+    "value": "insomnia.request.url.origin"
+  },
+  {
+    "displayValue": "insomnia.request.GET",
+    "name": "insomnia.request.method",
+    "value": "insomnia.request.method"
+  },
+  {
+    "displayValue": "insomnia.request.headers.typeClass()",
+    "name": "insomnia.request.headers.typeClass()",
+    "value": "insomnia.request.headers.typeClass()"
+  },
+  {
+    "displayValue": "insomnia.request.auth.",
+    "name": "insomnia.request.auth.id",
+    "value": "insomnia.request.auth.id"
+  },
+  {
+    "displayValue": "insomnia.request.auth.",
+    "name": "insomnia.request.auth.name",
+    "value": "insomnia.request.auth.name"
+  },
+  {
+    "displayValue": "insomnia.request.auth.false",
+    "name": "insomnia.request.auth.disabled",
+    "value": "insomnia.request.auth.disabled"
+  },
+  {
+    "displayValue": "insomnia.request.auth.noauth",
+    "name": "insomnia.request.auth.type",
+    "value": "insomnia.request.auth.type"
+  },
+  {
+    "displayValue": "insomnia.cookies.typeClass()",
+    "name": "insomnia.cookies.typeClass()",
+    "value": "insomnia.cookies.typeClass()"
+  },
+  {
+    "displayValue": "insomnia.cookies.cookieJar.",
+    "name": "insomnia.cookies.cookieJar.jarName",
+    "value": "insomnia.cookies.cookieJar.jarName"
+  },
+  {
+    "displayValue": "insomnia.info.prerequest",
+    "name": "insomnia.info.eventName",
+    "value": "insomnia.info.eventName"
+  },
+  {
+    "displayValue": "insomnia.info.1",
+    "name": "insomnia.info.iteration",
+    "value": "insomnia.info.iteration"
+  },
+  {
+    "displayValue": "insomnia.info.1",
+    "name": "insomnia.info.iterationCount",
+    "value": "insomnia.info.iterationCount"
+  },
+  {
+    "displayValue": "insomnia.info.",
+    "name": "insomnia.info.requestName",
+    "value": "insomnia.info.requestName"
+  },
+  {
+    "displayValue": "insomnia.info.",
+    "name": "insomnia.info.requestId",
+    "value": "insomnia.info.requestId"
+  },
+  {
+    "displayValue": "insomnia.info.toObject()",
+    "name": "insomnia.info.toObject()",
+    "value": "insomnia.info.toObject()"
+  },
+  {
+    "displayValue": "insomnia.response.",
+    "name": "insomnia.response.id",
+    "value": "insomnia.response.id"
+  },
+  {
+    "displayValue": "insomnia.response.",
+    "name": "insomnia.response.name",
+    "value": "insomnia.response.name"
+  },
+  {
+    "displayValue": "insomnia.response.false",
+    "name": "insomnia.response.disabled",
+    "value": "insomnia.response.disabled"
+  },
+  {
+    "displayValue": "insomnia.response.{\"key\": 888}",
+    "name": "insomnia.response.body",
+    "value": "insomnia.response.body"
+  },
+  {
+    "displayValue": "insomnia.response.200",
+    "name": "insomnia.response.code",
+    "value": "insomnia.response.code"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.",
+    "name": "insomnia.response.cookies.list.id",
+    "value": "insomnia.response.cookies.list.id"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.",
+    "name": "insomnia.response.cookies.list.name",
+    "value": "insomnia.response.cookies.list.name"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.false",
+    "name": "insomnia.response.cookies.list.disabled",
+    "value": "insomnia.response.cookies.list.disabled"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.header1",
+    "name": "insomnia.response.cookies.list.cookie.key",
+    "value": "insomnia.response.cookies.list.cookie.key"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.val1",
+    "name": "insomnia.response.cookies.list.cookie.value",
+    "value": "insomnia.response.cookies.list.cookie.value"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.Infinity",
+    "name": "insomnia.response.cookies.list.cookie.expires",
+    "value": "insomnia.response.cookies.list.cookie.expires"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.false",
+    "name": "insomnia.response.cookies.list.cookie.secure",
+    "value": "insomnia.response.cookies.list.cookie.secure"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.false",
+    "name": "insomnia.response.cookies.list.cookie.httpOnly",
+    "value": "insomnia.response.cookies.list.cookie.httpOnly"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.toString()",
+    "name": "insomnia.response.cookies.list.toString()",
+    "value": "insomnia.response.cookies.list.toString()"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.valueOf()",
+    "name": "insomnia.response.cookies.list.valueOf()",
+    "value": "insomnia.response.cookies.list.valueOf()"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.toJSON()",
+    "name": "insomnia.response.cookies.list.toJSON()",
+    "value": "insomnia.response.cookies.list.toJSON()"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.",
+    "name": "insomnia.response.cookies.list.id",
+    "value": "insomnia.response.cookies.list.id"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.",
+    "name": "insomnia.response.cookies.list.name",
+    "value": "insomnia.response.cookies.list.name"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.false",
+    "name": "insomnia.response.cookies.list.disabled",
+    "value": "insomnia.response.cookies.list.disabled"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.header2",
+    "name": "insomnia.response.cookies.list.cookie.key",
+    "value": "insomnia.response.cookies.list.cookie.key"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.val2",
+    "name": "insomnia.response.cookies.list.cookie.value",
+    "value": "insomnia.response.cookies.list.cookie.value"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.Infinity",
+    "name": "insomnia.response.cookies.list.cookie.expires",
+    "value": "insomnia.response.cookies.list.cookie.expires"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.false",
+    "name": "insomnia.response.cookies.list.cookie.secure",
+    "value": "insomnia.response.cookies.list.cookie.secure"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.cookie.false",
+    "name": "insomnia.response.cookies.list.cookie.httpOnly",
+    "value": "insomnia.response.cookies.list.cookie.httpOnly"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.toString()",
+    "name": "insomnia.response.cookies.list.toString()",
+    "value": "insomnia.response.cookies.list.toString()"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.valueOf()",
+    "name": "insomnia.response.cookies.list.valueOf()",
+    "value": "insomnia.response.cookies.list.valueOf()"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.list.toJSON()",
+    "name": "insomnia.response.cookies.list.toJSON()",
+    "value": "insomnia.response.cookies.list.toJSON()"
+  },
+  {
+    "displayValue": "insomnia.response.cookies.typeClass()",
+    "name": "insomnia.response.cookies.typeClass()",
+    "value": "insomnia.response.cookies.typeClass()"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.",
+    "name": "insomnia.response.headers.list.id",
+    "value": "insomnia.response.headers.list.id"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.",
+    "name": "insomnia.response.headers.list.name",
+    "value": "insomnia.response.headers.list.name"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.header1",
+    "name": "insomnia.response.headers.list.key",
+    "value": "insomnia.response.headers.list.key"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.val1",
+    "name": "insomnia.response.headers.list.value",
+    "value": "insomnia.response.headers.list.value"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.",
+    "name": "insomnia.response.headers.list.id",
+    "value": "insomnia.response.headers.list.id"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.",
+    "name": "insomnia.response.headers.list.name",
+    "value": "insomnia.response.headers.list.name"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.header2",
+    "name": "insomnia.response.headers.list.key",
+    "value": "insomnia.response.headers.list.key"
+  },
+  {
+    "displayValue": "insomnia.response.headers.list.val2",
+    "name": "insomnia.response.headers.list.value",
+    "value": "insomnia.response.headers.list.value"
+  },
+  {
+    "displayValue": "insomnia.response.headers.typeClass()",
+    "name": "insomnia.response.headers.typeClass()",
+    "value": "insomnia.response.headers.typeClass()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.",
+    "name": "insomnia.response.originalRequest.id",
+    "value": "insomnia.response.originalRequest.id"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.",
+    "name": "insomnia.response.originalRequest.name",
+    "value": "insomnia.response.originalRequest.name"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.false",
+    "name": "insomnia.response.originalRequest.disabled",
+    "value": "insomnia.response.originalRequest.disabled"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.toString()",
+    "name": "insomnia.response.originalRequest.url.urlObject.toString()",
+    "value": "insomnia.response.originalRequest.url.urlObject.toString()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.http://placeholder.com/",
+    "name": "insomnia.response.originalRequest.url.urlObject.href",
+    "value": "insomnia.response.originalRequest.url.urlObject.href"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.http://placeholder.com",
+    "name": "insomnia.response.originalRequest.url.urlObject.origin",
+    "value": "insomnia.response.originalRequest.url.urlObject.origin"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.http:",
+    "name": "insomnia.response.originalRequest.url.urlObject.protocol",
+    "value": "insomnia.response.originalRequest.url.urlObject.protocol"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.",
+    "name": "insomnia.response.originalRequest.url.urlObject.username",
+    "value": "insomnia.response.originalRequest.url.urlObject.username"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.",
+    "name": "insomnia.response.originalRequest.url.urlObject.password",
+    "value": "insomnia.response.originalRequest.url.urlObject.password"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.placeholder.com",
+    "name": "insomnia.response.originalRequest.url.urlObject.host",
+    "value": "insomnia.response.originalRequest.url.urlObject.host"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.placeholder.com",
+    "name": "insomnia.response.originalRequest.url.urlObject.hostname",
+    "value": "insomnia.response.originalRequest.url.urlObject.hostname"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.",
+    "name": "insomnia.response.originalRequest.url.urlObject.port",
+    "value": "insomnia.response.originalRequest.url.urlObject.port"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject./",
+    "name": "insomnia.response.originalRequest.url.urlObject.pathname",
+    "value": "insomnia.response.originalRequest.url.urlObject.pathname"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.",
+    "name": "insomnia.response.originalRequest.url.urlObject.search",
+    "value": "insomnia.response.originalRequest.url.urlObject.search"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.0",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.size",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.size"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.append()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.append()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.append()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.delete()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.delete()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.delete()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.get()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.get()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.get()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.getAll()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.getAll()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.getAll()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.has()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.has()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.has()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.set()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.set()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.set()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.sort()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.sort()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.sort()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.entries()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.entries()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.entries()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.forEach()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.forEach()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.forEach()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.keys()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.keys()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.keys()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.values()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.values()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.values()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.searchParams.toString()",
+    "name": "insomnia.response.originalRequest.url.urlObject.searchParams.toString()",
+    "value": "insomnia.response.originalRequest.url.urlObject.searchParams.toString()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.",
+    "name": "insomnia.response.originalRequest.url.urlObject.hash",
+    "value": "insomnia.response.originalRequest.url.urlObject.hash"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.urlObject.toJSON()",
+    "name": "insomnia.response.originalRequest.url.urlObject.toJSON()",
+    "value": "insomnia.response.originalRequest.url.urlObject.toJSON()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.url.http://placeholder.com",
+    "name": "insomnia.response.originalRequest.url.origin",
+    "value": "insomnia.response.originalRequest.url.origin"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.GET",
+    "name": "insomnia.response.originalRequest.method",
+    "value": "insomnia.response.originalRequest.method"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.headers.typeClass()",
+    "name": "insomnia.response.originalRequest.headers.typeClass()",
+    "value": "insomnia.response.originalRequest.headers.typeClass()"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.auth.",
+    "name": "insomnia.response.originalRequest.auth.id",
+    "value": "insomnia.response.originalRequest.auth.id"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.auth.",
+    "name": "insomnia.response.originalRequest.auth.name",
+    "value": "insomnia.response.originalRequest.auth.name"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.auth.false",
+    "name": "insomnia.response.originalRequest.auth.disabled",
+    "value": "insomnia.response.originalRequest.auth.disabled"
+  },
+  {
+    "displayValue": "insomnia.response.originalRequest.auth.noauth",
+    "name": "insomnia.response.originalRequest.auth.type",
+    "value": "insomnia.response.originalRequest.auth.type"
+  },
+  {
+    "displayValue": "insomnia.response.100",
+    "name": "insomnia.response.responseTime",
+    "value": "insomnia.response.responseTime"
+  },
+  {
+    "displayValue": "insomnia.response.OK",
+    "name": "insomnia.response.status",
+    "value": "insomnia.response.status"
+  },
+  {
+    "displayValue": "insomnia.response.0",
+    "name": "insomnia.response.bytesRead",
+    "value": "insomnia.response.bytesRead"
+  },
+  {
+    "displayValue": "insomnia.execution.location.p",
+    "name": "insomnia.execution.location.0",
+    "value": "insomnia.execution.location.0"
+  },
+  {
+    "displayValue": "insomnia.execution.location.a",
+    "name": "insomnia.execution.location.1",
+    "value": "insomnia.execution.location.1"
+  },
+  {
+    "displayValue": "insomnia.execution.location.t",
+    "name": "insomnia.execution.location.2",
+    "value": "insomnia.execution.location.2"
+  },
+  {
+    "displayValue": "insomnia.execution.location.h",
+    "name": "insomnia.execution.location.3",
+    "value": "insomnia.execution.location.3"
+  },
+  {
+    "displayValue": "insomnia.execution.skipRequest()",
+    "name": "insomnia.execution.skipRequest()",
+    "value": "insomnia.execution.skipRequest()"
+  },
+  {
+    "displayValue": "insomnia.execution.setNextRequest()",
+    "name": "insomnia.execution.setNextRequest()",
+    "value": "insomnia.execution.setNextRequest()"
+  },
+  {
+    "displayValue": "insomnia.execution.toObject()",
+    "name": "insomnia.execution.toObject()",
+    "value": "insomnia.execution.toObject()"
+  },
+  {
+    "displayValue": "insomnia.vault.has()",
+    "name": "insomnia.vault.has()",
+    "value": "insomnia.vault.has()"
+  },
+  {
+    "displayValue": "insomnia.vault.get()",
+    "name": "insomnia.vault.get()",
+    "value": "insomnia.vault.get()"
+  },
+  {
+    "displayValue": "insomnia.vault.set()",
+    "name": "insomnia.vault.set()",
+    "value": "insomnia.vault.set()"
+  },
+  {
+    "displayValue": "insomnia.vault.unset()",
+    "name": "insomnia.vault.unset()",
+    "value": "insomnia.vault.unset()"
+  },
+  {
+    "displayValue": "insomnia.vault.clear()",
+    "name": "insomnia.vault.clear()",
+    "value": "insomnia.vault.clear()"
+  },
+  {
+    "displayValue": "insomnia.vault.replaceIn()",
+    "name": "insomnia.vault.replaceIn()",
+    "value": "insomnia.vault.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.vault.toObject()",
+    "name": "insomnia.vault.toObject()",
+    "value": "insomnia.vault.toObject()"
+  },
+  {
+    "displayValue": "insomnia.iterationData.has()",
+    "name": "insomnia.iterationData.has()",
+    "value": "insomnia.iterationData.has()"
+  },
+  {
+    "displayValue": "insomnia.iterationData.get()",
+    "name": "insomnia.iterationData.get()",
+    "value": "insomnia.iterationData.get()"
+  },
+  {
+    "displayValue": "insomnia.iterationData.set()",
+    "name": "insomnia.iterationData.set()",
+    "value": "insomnia.iterationData.set()"
+  },
+  {
+    "displayValue": "insomnia.iterationData.unset()",
+    "name": "insomnia.iterationData.unset()",
+    "value": "insomnia.iterationData.unset()"
+  },
+  {
+    "displayValue": "insomnia.iterationData.clear()",
+    "name": "insomnia.iterationData.clear()",
+    "value": "insomnia.iterationData.clear()"
+  },
+  {
+    "displayValue": "insomnia.iterationData.replaceIn()",
+    "name": "insomnia.iterationData.replaceIn()",
+    "value": "insomnia.iterationData.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.iterationData.toObject()",
+    "name": "insomnia.iterationData.toObject()",
+    "value": "insomnia.iterationData.toObject()"
+  },
+  {
+    "displayValue": "insomnia.globals.has()",
+    "name": "insomnia.globals.has()",
+    "value": "insomnia.globals.has()"
+  },
+  {
+    "displayValue": "insomnia.globals.get()",
+    "name": "insomnia.globals.get()",
+    "value": "insomnia.globals.get()"
+  },
+  {
+    "displayValue": "insomnia.globals.set()",
+    "name": "insomnia.globals.set()",
+    "value": "insomnia.globals.set()"
+  },
+  {
+    "displayValue": "insomnia.globals.unset()",
+    "name": "insomnia.globals.unset()",
+    "value": "insomnia.globals.unset()"
+  },
+  {
+    "displayValue": "insomnia.globals.clear()",
+    "name": "insomnia.globals.clear()",
+    "value": "insomnia.globals.clear()"
+  },
+  {
+    "displayValue": "insomnia.globals.replaceIn()",
+    "name": "insomnia.globals.replaceIn()",
+    "value": "insomnia.globals.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.globals.toObject()",
+    "name": "insomnia.globals.toObject()",
+    "value": "insomnia.globals.toObject()"
+  },
+  {
+    "displayValue": "insomnia.baseGlobals.has()",
+    "name": "insomnia.baseGlobals.has()",
+    "value": "insomnia.baseGlobals.has()"
+  },
+  {
+    "displayValue": "insomnia.baseGlobals.get()",
+    "name": "insomnia.baseGlobals.get()",
+    "value": "insomnia.baseGlobals.get()"
+  },
+  {
+    "displayValue": "insomnia.baseGlobals.set()",
+    "name": "insomnia.baseGlobals.set()",
+    "value": "insomnia.baseGlobals.set()"
+  },
+  {
+    "displayValue": "insomnia.baseGlobals.unset()",
+    "name": "insomnia.baseGlobals.unset()",
+    "value": "insomnia.baseGlobals.unset()"
+  },
+  {
+    "displayValue": "insomnia.baseGlobals.clear()",
+    "name": "insomnia.baseGlobals.clear()",
+    "value": "insomnia.baseGlobals.clear()"
+  },
+  {
+    "displayValue": "insomnia.baseGlobals.replaceIn()",
+    "name": "insomnia.baseGlobals.replaceIn()",
+    "value": "insomnia.baseGlobals.replaceIn()"
+  },
+  {
+    "displayValue": "insomnia.baseGlobals.toObject()",
+    "name": "insomnia.baseGlobals.toObject()",
+    "value": "insomnia.baseGlobals.toObject()"
+  },
+  {
+    "displayValue": "insomnia.parentFolders.get()",
+    "name": "insomnia.parentFolders.get()",
+    "value": "insomnia.parentFolders.get()"
+  },
+  {
+    "displayValue": "insomnia.parentFolders.getById()",
+    "name": "insomnia.parentFolders.getById()",
+    "value": "insomnia.parentFolders.getById()"
+  },
+  {
+    "displayValue": "insomnia.parentFolders.getByName()",
+    "name": "insomnia.parentFolders.getByName()",
+    "value": "insomnia.parentFolders.getByName()"
+  },
+  {
+    "displayValue": "insomnia.parentFolders.findValue()",
+    "name": "insomnia.parentFolders.findValue()",
+    "value": "insomnia.parentFolders.findValue()"
+  },
+  {
+    "displayValue": "insomnia.parentFolders.toObject()",
+    "name": "insomnia.parentFolders.toObject()",
+    "value": "insomnia.parentFolders.toObject()"
+  },
+  {
+    "displayValue": "insomnia.parentFolders.getEnvironments()",
+    "name": "insomnia.parentFolders.getEnvironments()",
+    "value": "insomnia.parentFolders.getEnvironments()"
+  },
+  {
+    "displayValue": "insomnia.test()",
+    "name": "insomnia.test()",
+    "value": "insomnia.test()"
+  },
+  {
+    "displayValue": "insomnia.pushRequestTestResult()",
+    "name": "insomnia.pushRequestTestResult()",
+    "value": "insomnia.pushRequestTestResult()"
+  },
+  {
+    "displayValue": "insomnia.expect()",
+    "name": "insomnia.expect()",
+    "value": "insomnia.expect()"
+  },
+  {
+    "displayValue": "insomnia.toObject()",
+    "name": "insomnia.toObject()",
+    "value": "insomnia.toObject()"
+  }
+]

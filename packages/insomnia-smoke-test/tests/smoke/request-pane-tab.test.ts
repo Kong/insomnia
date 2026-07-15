@@ -19,15 +19,14 @@ test('Request tabs', async ({ page }) => {
   await page.getByRole('tab', { name: 'Preview' }).click();
 });
 
-test('WS tabs', async ({ page }) => {
+test('WS tabs', async ({ page, insomnia }) => {
   // Create new collection
   await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-  await page.getByLabel('Create in collection').click();
+  await insomnia.navigationSidebar.openWorkspaceActionsDropdown('My first collection');
   await page.getByRole('menuitemradio', { name: 'WebSocket Request' }).click();
   // ensure that the websocket request is created
-  const newWebSocketRequest = page.getByLabel('Request Collection').getByRole('row', { name: 'New WebSocket Request' });
-  await expect.soft(newWebSocketRequest.first().locator('[data-selected="true"]').first()).toBeVisible();
+  await insomnia.navigationSidebar.clickRequestOrFolder('New WebSocket Request');
   await page.getByRole('tab', { name: 'Body' }).click();
   await page.getByRole('button', { name: 'JSON' }).click();
   await page.getByRole('option', { name: 'JSON' }).click();

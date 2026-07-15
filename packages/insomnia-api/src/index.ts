@@ -6,6 +6,7 @@ export * from './project';
 export * from './collaborators';
 export * from './invite';
 export * from './organizations';
+export * from './spaces';
 export * from './mock';
 export * from './vcs';
 

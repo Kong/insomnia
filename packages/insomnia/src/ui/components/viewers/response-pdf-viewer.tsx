@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 interface Props {
-  body: Buffer;
+  body: Uint8Array;
 }
 
 export const ResponsePDFViewer = ({ body }: Props) => {

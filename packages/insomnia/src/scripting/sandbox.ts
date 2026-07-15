@@ -1,5 +1,5 @@
 import * as acorn from 'acorn';
-import * as walk from "acorn-walk";
+import * as walk from 'acorn-walk';
 
 import {
   getNewConsole,
@@ -7,9 +7,15 @@ import {
   type RequestContext,
   waitForAllTestsDone,
 } from '../../../insomnia-scripting-environment/src/objects';
-import { blockedPropertyRules, blockedRootRules, interceptorRules, maskRules, type ThreatRule } from './script-security-policy';
+import {
+  blockedPropertyRules,
+  blockedRootRules,
+  interceptorRules,
+  maskRules,
+  type ThreatRule,
+} from './script-security-policy';
 
-// Frozen, pre-bound references to the bridge lifecycle methods 
+// Frozen, pre-bound references to the bridge lifecycle methods
 export interface BridgeOps {
   resetAsyncTasks: () => void;
   stopMonitorAsyncTasks: () => void;
@@ -40,7 +46,7 @@ function getMemberRoot(node: any): string | null {
   return null;
 }
 
- // Returns MemberExpression property name. 
+// Returns MemberExpression property name.
 function getMemberPropertyName(node: acorn.MemberExpression): string | null {
   if (!node.computed && node.property.type === 'Identifier') {
     return (node.property as acorn.Identifier).name;
@@ -56,7 +62,7 @@ function deepFreeze<T>(obj: T): T {
   const propNames = Object.getOwnPropertyNames(obj);
   for (const name of propNames) {
     const value = (obj as any)[name];
-    if (value && typeof value === "object") {
+    if (value && typeof value === 'object') {
       deepFreeze(value);
     }
   }
@@ -79,7 +85,7 @@ export function checkSandboxViolations(
       // try next sourceType
     }
   }
-  // We should evenutally drop non-valid JavaScript.   
+  // We should evenutally drop non-valid JavaScript.
   if (!tree) {
     // throw new Error();
     return;
@@ -146,7 +152,7 @@ export function checkSandboxViolations(
       if (node.object.type === 'ThisExpression' && blockedRoots.has('this')) {
         throw new Error(
           `The script was blocked because it used 'this'.\n` +
-          `If this is intended, disable it via Settings → Scripting → Blocked roots.`,
+            `If this is intended, disable it via Settings → Scripting → Blocked roots.`,
         );
       }
 
@@ -155,7 +161,7 @@ export function checkSandboxViolations(
       if (root && blocked.has(root)) {
         throw new Error(
           `The script was blocked because it used ${label(root)}.\n` +
-          `If this is intended, disable ${ruleHint(root)} via Settings → Scripting → Blocked roots.`,
+            `If this is intended, disable ${ruleHint(root)} via Settings → Scripting → Blocked roots.`,
         );
       }
 
@@ -164,7 +170,7 @@ export function checkSandboxViolations(
       if (prop && blockedProperties.has(prop)) {
         throw new Error(
           `The script was blocked because it used the property '${prop}'.\n` +
-          `If this is intended, disable '${prop}' via Settings → Scripting → Blocked properties.`,
+            `If this is intended, disable '${prop}' via Settings → Scripting → Blocked properties.`,
         );
       }
 
@@ -176,28 +182,25 @@ export function checkSandboxViolations(
       ) {
         throw new Error(
           `The script was blocked because it used Symbol.species.\n` +
-          `If this is intended, disable 'species' via Settings → Scripting → Blocked properties.`,
+            `If this is intended, disable 'species' via Settings → Scripting → Blocked properties.`,
         );
       }
     },
     VariableDeclarator(node: acorn.VariableDeclarator) {
       if (node.id.type !== 'ObjectPattern') return;
       // Destructuring declaration: const { require } = globalThis
-      if (
-        node.init?.type === 'Identifier' &&
-        blocked.has((node.init as acorn.Identifier).name)
-      ) {
+      if (node.init?.type === 'Identifier' && blocked.has((node.init as acorn.Identifier).name)) {
         const initName = (node.init as acorn.Identifier).name;
         throw new Error(
           `The script was blocked because it destructured from ${label(initName)}.\n` +
-          `If this is intended, disable ${ruleHint(initName)} via Settings → Scripting → Blocked roots.`,
+            `If this is intended, disable ${ruleHint(initName)} via Settings → Scripting → Blocked roots.`,
         );
       }
       // Destructuring from this: const { process } = this
       if (node.init?.type === 'ThisExpression' && blockedRoots.has('this')) {
         throw new Error(
           `The script was blocked because it destructured from 'this'.\n` +
-          `If this is intended, disable it via Settings → Scripting → Blocked roots.`,
+            `If this is intended, disable it via Settings → Scripting → Blocked roots.`,
         );
       }
     },
@@ -211,14 +214,14 @@ export function checkSandboxViolations(
         const rightName = (node.right as acorn.Identifier).name;
         throw new Error(
           `The script was blocked because it destructured from ${label(rightName)}.\n` +
-          `If this is intended, disable ${ruleHint(rightName)} via Settings → Scripting → Blocked roots.`,
+            `If this is intended, disable ${ruleHint(rightName)} via Settings → Scripting → Blocked roots.`,
         );
       }
       // Destructuring assignment from this: ({ process } = this)
       if (node.left.type === 'ObjectPattern' && node.right.type === 'ThisExpression' && blockedRoots.has('this')) {
         throw new Error(
           `The script was blocked because it destructured from 'this'.\n` +
-          `If this is intended, disable it via Settings → Scripting → Blocked roots.`,
+            `If this is intended, disable it via Settings → Scripting → Blocked roots.`,
         );
       }
     },
@@ -226,27 +229,24 @@ export function checkSandboxViolations(
     ImportDeclaration(_node: acorn.ImportDeclaration) {
       throw new Error(
         `The script was blocked because it used a static import declaration.\n` +
-        `If this is intended, disable 'eval-intercept' via Settings → Scripting → Enable script sandbox.`,
+          `If this is intended, disable 'eval-intercept' via Settings → Scripting → Enable script sandbox.`,
       );
     },
     // Dynamic import(): import('node:child_process')
     ImportExpression(_node: acorn.Node) {
       throw new Error(
         `The script was blocked because it used a dynamic import().\n` +
-        `If this is intended, disable 'eval-intercept' via Settings → Scripting → Enable script sandbox.`,
+          `If this is intended, disable 'eval-intercept' via Settings → Scripting → Enable script sandbox.`,
       );
     },
     // Direct call of a blocked identifier: constructor('return process')()
     // Not caught by MemberExpression since there is no property access involved.
     CallExpression(node: acorn.CallExpression) {
-      if (
-        node.callee.type === 'Identifier' &&
-        blocked.has((node.callee as acorn.Identifier).name)
-      ) {
+      if (node.callee.type === 'Identifier' && blocked.has((node.callee as acorn.Identifier).name)) {
         const calleeName = (node.callee as acorn.Identifier).name;
         throw new Error(
           `The script was blocked because it called ${label(calleeName)}.\n` +
-          `If this is intended, disable ${ruleHint(calleeName)} via Settings → Scripting → Blocked roots.`,
+            `If this is intended, disable ${ruleHint(calleeName)} via Settings → Scripting → Blocked roots.`,
         );
       }
     },
@@ -258,29 +258,28 @@ export function checkSandboxViolations(
 export class ScriptSecurityPolicy {
   constructor(private readonly rules: ThreatRule[]) {}
 
-  // returns a policy with `rule` appended (immutable). 
+  // returns a policy with `rule` appended (immutable).
   withRule(rule: ThreatRule): ScriptSecurityPolicy {
     return new ScriptSecurityPolicy([...this.rules, rule]);
   }
 
-  // returns a policy with the named rule removed (immutable). 
+  // returns a policy with the named rule removed (immutable).
   withoutRule(name: string): ScriptSecurityPolicy {
     return new ScriptSecurityPolicy(this.rules.filter(r => r.name !== name));
   }
 
   // returns parallel `names` / `values` arrays for all rules that carry a runtime mask.
   // Pass `violationCheck` to forward the caller's filtered checker (e.g. to eval-intercept).
-  buildMaskScope(violationCheck: (script: string) => void = checkSandboxViolations): { names: string[]; values: unknown[] } {
+  buildMaskScope(violationCheck: (script: string) => void = checkSandboxViolations): {
+    names: string[];
+    values: unknown[];
+  } {
     const names: string[] = [];
     const values: unknown[] = [];
     for (const rule of this.rules) {
       if (rule.maskName !== undefined) {
         names.push(rule.maskName);
-        values.push(
-          rule.buildMaskValue !== undefined
-            ? rule.buildMaskValue(violationCheck)
-            : rule.maskValue,
-        );
+        values.push(rule.buildMaskValue !== undefined ? rule.buildMaskValue(violationCheck) : rule.maskValue);
       }
     }
     return { names, values };
@@ -288,10 +287,7 @@ export class ScriptSecurityPolicy {
 }
 
 // Default policy (runtime interceptors and masks).
-export const defaultSecurityPolicy = new ScriptSecurityPolicy([
-  ...interceptorRules,
-  ...maskRules,
-]);
+export const defaultSecurityPolicy = new ScriptSecurityPolicy([...interceptorRules, ...maskRules]);
 
 // runs all pre-execution security checks and initialises the script environment.
 //  1. AST blockes globals, dangerous properties, aliasing, destructuring, dynamic import, and symbol.species.
@@ -330,17 +326,12 @@ export async function prepareSandbox(
     const disabledRules = (context.settings.disabledSecurityRules ?? []).filter(
       name => !ALWAYS_ON_INTERCEPTORS.has(name),
     );
-    const activePolicy = disabledRules.reduce(
-      (policy, ruleName) => policy.withoutRule(ruleName),
-      securityPolicy,
-    );
+    const activePolicy = disabledRules.reduce((policy, ruleName) => policy.withoutRule(ruleName), securityPolicy);
     ({ names: maskNames, values: maskValues } = activePolicy.buildMaskScope(activeSandboxCheck));
   } else {
     console.warn('[sandbox] script sandbox is disabled — running script without security checks');
     // Even with the sandbox off, always apply the require/window/eval interceptors.
-    const alwaysOnPolicy = new ScriptSecurityPolicy(
-      interceptorRules.filter(r => ALWAYS_ON_INTERCEPTORS.has(r.name)),
-    );
+    const alwaysOnPolicy = new ScriptSecurityPolicy(interceptorRules.filter(r => ALWAYS_ON_INTERCEPTORS.has(r.name)));
     ({ names: maskNames, values: maskValues } = alwaysOnPolicy.buildMaskScope(checkSandboxViolations));
   }
 

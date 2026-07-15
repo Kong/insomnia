@@ -405,7 +405,7 @@ export const RequestSchema = z.object({
             value: z.string().optional(),
             description: z.string().optional(),
             disabled: z.boolean().optional(),
-            multiline: z.boolean().optional(),
+            multiline: z.union([z.boolean(), z.string()]).optional(),
             fileName: z.string().optional(),
             type: z.string().optional(),
           }),

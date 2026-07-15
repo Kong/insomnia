@@ -1,22 +1,14 @@
 import type { Organization } from 'insomnia-api';
+import type { GrpcRequest, Request, RequestGroup, WebSocketRequest } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 
 import { fuzzyMatch } from '~/common/misc';
-import type {
-  Environment,
-  GrpcRequest,
-  Project,
-  Request,
-  RequestGroup,
-  WebSocketRequest,
-  Workspace,
-} from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/commands';
 
-const { environment, grpcRequest, project, request, requestGroup, workspace } = models;
+const { grpcRequest, project, request, requestGroup } = models;
 
 export async function clientLoader(args: Route.ClientLoaderArgs) {
   const searchParams = new URL(args.request.url).searchParams;
@@ -40,19 +32,17 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 
   const { accountId } = await services.userSession.get();
 
-  const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
 
   const allOrganizationsIds = models.organization.isScratchpadOrganizationId(organizationId)
     ? [organizationId]
     : allOrganizations.map(org => org.id);
 
-  const allProjects = await database.find<Project>(project.type, {
-    parentId: { $in: allOrganizationsIds },
-  });
+  const allProjects = await services.project.listByOrganizationIds(allOrganizationsIds);
 
   const allProjectIds = allProjects.map(project => project._id);
 
-  const allOrganizationWorkspaces = await database.find<Workspace>(workspace.type, {
+  const allOrganizationWorkspaces = await services.workspace.list({
     parentId: { $in: allProjectIds },
   });
 
@@ -173,13 +163,9 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 
   const allRequests = [...requests, ...grpcRequests, ...webSocketRequests];
 
-  const [baseEnvironment] = await database.find<Environment>(environment.type, {
-    parentId: workspaceId,
-  });
+  const baseEnvironment = workspaceId ? await services.environment.getByParentId(workspaceId) : undefined;
 
-  const subEnvironments = await database.find<Environment>(environment.type, {
-    parentId: baseEnvironment?._id,
-  });
+  const subEnvironments = baseEnvironment ? await services.environment.listByParentId(baseEnvironment._id) : [];
 
   const environments = baseEnvironment ? [baseEnvironment, ...subEnvironments] : [];
 
@@ -213,7 +199,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
             name: item.name,
             item,
-            organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+            organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
             projectName: allProjects.find(project => project._id === projectId)?.name || '',
             workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
             organizationId,
@@ -233,7 +219,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             ...workspace,
             teamProjectId: parentProject && project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
-          organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+          organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
           projectName: allProjects.find(project => project._id === projectId)?.name || '',
           organizationId,
           projectId,
@@ -254,7 +240,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
             name: item.name,
             item,
-            organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+            organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
             projectName: allProjects.find(project => project._id === projectId)?.name || '',
             workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
             organizationId,
@@ -274,7 +260,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
             ...workspace,
             teamProjectId: parentProject && project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
-          organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+          organizationName: allOrganizations.find(org => org.id === organizationId)?.name || '',
           projectName: allProjects.find(project => project._id === projectId)?.name || '',
           organizationId,
           projectId,

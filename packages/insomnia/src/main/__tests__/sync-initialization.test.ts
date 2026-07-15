@@ -1,7 +1,7 @@
+import { models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { models, services } from '~/insomnia-data';
 import { getMainVCS } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -14,13 +14,13 @@ vi.mock('~/common/organization-storage-rules', () => ({
   fetchAndCacheOrganizationStorageRule: vi.fn(),
 }));
 
-vi.mock('~/insomnia-data', () => ({
+vi.mock('insomnia-data', () => ({
   services: {
     workspace: {
       getById: vi.fn(),
     },
     project: {
-      get: vi.fn(),
+      getById: vi.fn(),
     },
     userSession: {
       get: vi.fn(),
@@ -68,7 +68,7 @@ describe('sync-initialization', () => {
     vi.clearAllMocks();
 
     vi.mocked(services.workspace.getById).mockResolvedValue(workspace);
-    vi.mocked(services.project.get).mockResolvedValue(project);
+    vi.mocked(services.project.getById).mockResolvedValue(project);
     vi.mocked(services.userSession.get).mockResolvedValue({ id: 'sess_123' } as any);
     vi.mocked(services.workspaceMeta.getOrCreateByParentId).mockResolvedValue({ gitRepositoryId: null } as any);
     vi.mocked(services.environment.getOrCreateForParentId).mockResolvedValue({} as any);

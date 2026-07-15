@@ -1,14 +1,13 @@
+import type { CloudProviderCredential, CloudProviderName } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
-import type { CloudProviderCredential, CloudProviderName } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import { executePluginMainAction } from '../../../plugins';
-import { getBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
@@ -64,7 +63,7 @@ export const CloudServiceCredentialList = () => {
   const deleteCredentialFetcher = useDeleteCloudCredentialActionFetcher();
   useEffect(() => {
     const checkVaultPlugin = async () => {
-      const plugins = await getBundlePlugins();
+      const plugins = await pluginsBridge.getBundlePlugins();
       const vaultPlugin = plugins.find(p => p.name === EXTERNAL_VAULT_PLUGIN_NAME);
       setIsVaultPluginInstalled(!!vaultPlugin);
     };
@@ -98,11 +97,11 @@ export const CloudServiceCredentialList = () => {
 
   const handleCreateCloudServiceCredential = async (key: CloudProviderName) => {
     if (key === 'azure') {
-      const { authUrl, error } = await executePluginMainAction({
+      const { authUrl, error } = (await pluginsBridge.executePluginMainAction({
         pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
         actionName: 'openAuthUrl',
         params: { provider: 'azure' },
-      });
+      })) as any;
       // show error modal if no authUrl generated
       if (!authUrl) {
         console.error('Failed to open Azure auth url', error);
@@ -236,18 +235,20 @@ export const CloudServiceCredentialList = () => {
       )}
       <div>
         <h2 className="z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Cloud Secret Config</h2>
-        <div className="form-row items-end justify-between">
-          <NumberSetting
-            label="Secret Cache Duration(min)"
-            setting="vaultSecretCacheDuration"
-            help="Enter the amount of time in minutes external vault secrets are cached in Insomnia. Enter 0 to disable cache. Click the Reset Cache button to clear all cache."
-            min={0}
-            max={720}
-          />
+        <div className="flex items-end gap-(--padding-sm)">
+          <div className="grow">
+            <NumberSetting
+              label="Secret Cache Duration (min)"
+              setting="vaultSecretCacheDuration"
+              help="Set how long external vault secrets are cached in Insomnia (minutes). Use 0 to disable caching. Click Reset Cache to clear all cached secrets."
+              min={0}
+              max={720}
+            />
+          </div>
           <button
-            className="pointer mb-(--padding-sm) ml-(--padding-sm) flex h-(--line-height-xs) w-32 items-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
+            className="pointer mb-(--padding-sm) flex h-(--line-height-xs) min-w-32 shrink-0 items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-center whitespace-nowrap hover:bg-(--hl-xs)"
             onClick={async () =>
-              await executePluginMainAction({
+              await pluginsBridge.executePluginMainAction({
                 pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
                 actionName: 'clearCache',
               })

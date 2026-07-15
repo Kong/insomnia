@@ -4,18 +4,18 @@ import type { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
+import type { CookieJar, RequestAuthentication, RequestHeader, Response } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import type { CookieJar, RequestAuthentication, RequestHeader, Response } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import { filterClientCertificates } from '../../network/certificate';
 import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
-import { invariant } from '../../utils/invariant';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { createConfiguredCurlInstance } from './libcurl-promise';
 
@@ -150,16 +150,17 @@ const openCurlConnection = async (
   const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
   try {
-    if (!options.url) {
-      throw new Error('URL is required');
-    }
+    invariant(options.url, 'URL must be defined');
+    invariant(!options.url.startsWith('file://'), 'Local file URIs are not supported');
+
     const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const settings = await services.settings.get();
     const start = performance.now();
     const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
-    const { curl, debugTimeline } = createConfiguredCurlInstance({
+
+    const { curl, debugTimeline } = await createConfiguredCurlInstance({
       req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
       finalUrl: options.url,
       settings,

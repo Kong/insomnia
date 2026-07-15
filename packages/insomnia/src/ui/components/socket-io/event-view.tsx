@@ -1,6 +1,5 @@
+import { services } from 'insomnia-data';
 import React, { type FC } from 'react';
-
-import { services } from '~/insomnia-data';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import type { SocketIOEvent, SocketIOMessageEvent } from '../../../main/network/socket-io';

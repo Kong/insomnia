@@ -1,9 +1,8 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import type { Workspace } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync';
 
@@ -13,7 +12,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(typeof projectId === 'string', 'Project Id is required');
 
   try {
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
@@ -32,7 +31,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     });
 
     // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
+    const workspacesWithBackendProjects = await services.workspace.list({
       _id: {
         $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(
           p => p.rootDocumentId,

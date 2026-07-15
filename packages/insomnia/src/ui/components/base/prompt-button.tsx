@@ -41,9 +41,8 @@ export const PromptButton = <T,>({
   // Create flag to store the state value.
   const [state, setState] = useState<PromptStateEnum>('default');
 
-  // Timeout instancies
-  const doneTimeout = useRef<NodeJS.Timeout | null>(null);
-  const triggerTimeout = useRef<NodeJS.Timeout | null>(null);
+  const doneTimeout = useRef<number | null>(null);
+  const triggerTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -59,9 +58,7 @@ export const PromptButton = <T,>({
       event.stopPropagation();
       // Toggle the confirmation notice
       setState('ask');
-      // Set a timeout to hide the confirmation
-      // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-      triggerTimeout.current = global.setTimeout(() => {
+      triggerTimeout.current = window.setTimeout(() => {
         setState('default');
       }, 2000);
     }
@@ -73,14 +70,10 @@ export const PromptButton = <T,>({
       // Fire the click handler
       const retVal: any = onClick?.(event);
       if (!referToOnClickReturnValue) {
-        // Set the state to done (but delay a bit to not alarm user)
-        // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-        doneTimeout.current = global.setTimeout(() => {
+        doneTimeout.current = window.setTimeout(() => {
           setState('done');
         }, 100);
-        // Set a timeout to hide the confirmation
-        // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-        triggerTimeout.current = global.setTimeout(() => {
+        triggerTimeout.current = window.setTimeout(() => {
           setState('default');
         }, 2000);
       } else {
@@ -91,7 +84,7 @@ export const PromptButton = <T,>({
               setState('done');
             })
             .finally(() => {
-              triggerTimeout.current = global.setTimeout(() => {
+              triggerTimeout.current = window.setTimeout(() => {
                 setState('default');
               }, 1000);
             });

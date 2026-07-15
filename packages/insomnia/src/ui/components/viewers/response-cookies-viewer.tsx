@@ -1,8 +1,21 @@
 import React, { type FC, useState } from 'react';
-import { Cookie } from 'tough-cookie';
 
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
+
+const parseSetCookieHeader = (headerValue: string) => {
+  const [nameValue = ''] = headerValue.split(';');
+  const separatorIndex = nameValue.indexOf('=');
+
+  if (separatorIndex === -1) {
+    return null;
+  }
+
+  return {
+    key: nameValue.slice(0, separatorIndex).trim(),
+    value: nameValue.slice(separatorIndex + 1).trim(),
+  };
+};
 
 interface Props {
   cookiesSent?: boolean | null;
@@ -13,10 +26,10 @@ interface Props {
 export const ResponseCookiesViewer: FC<Props> = props => {
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const renderRow = (h: any, i: number) => {
-    let cookie: Cookie | undefined | null = null;
+    let cookie: ReturnType<typeof parseSetCookieHeader> = null;
 
     try {
-      cookie = h ? Cookie.parse(h.value || '', { loose: true }) : null;
+      cookie = h ? parseSetCookieHeader(h.value || '') : null;
     } catch {
       console.warn('Failed to parse set-cookie header', h);
     }

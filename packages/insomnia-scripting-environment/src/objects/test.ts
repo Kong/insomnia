@@ -1,3 +1,7 @@
+import type { RequestTestResult } from 'insomnia-data';
+
+const NativePromise = Promise;
+
 /** @ignore */
 export async function test(msg: string, fn: () => Promise<void>, log: (testResult: RequestTestResult) => void) {
   const wrapFn = async () => {
@@ -31,9 +35,15 @@ export async function test(msg: string, fn: () => Promise<void>, log: (testResul
 }
 
 let testPromises = new Array<Promise<void>>();
+
+/** @ignore */
+export function resetTestPromises() {
+  testPromises = [];
+}
+
 /** ignore */
 export async function waitForAllTestsDone() {
-  await Promise.allSettled(testPromises);
+  await NativePromise.allSettled(testPromises);
   testPromises = [];
 }
 function startTestObserver(promise: Promise<void>) {
@@ -48,20 +58,6 @@ export async function skip(msg: string, _: () => Promise<void>, log: (testResult
     executionTime: 0,
     category: 'unknown',
   });
-}
-
-/** ignore */
-export type TestStatus = 'passed' | 'failed' | 'skipped';
-/** ignore */
-export type TestCategory = 'unknown' | 'pre-request' | 'after-response';
-
-/** ignore */
-export interface RequestTestResult {
-  testCase: string;
-  status: TestStatus;
-  executionTime: number; // milliseconds
-  errorMessage?: string;
-  category: TestCategory;
 }
 
 /** ignore */

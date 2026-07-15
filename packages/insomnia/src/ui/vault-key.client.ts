@@ -1,10 +1,9 @@
 import * as srp from '@getinsomnia/srp-js';
 import { createVault, resetVault, verifyVaultA, verifyVaultM1 } from 'insomnia-api';
+import type { UserSession } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
-import type { UserSession } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-
-import { base64encode, saveVaultKeyIfNecessary } from '../utils/vault';
+import { base64encode, saveVaultKeyIfNecessary } from '~/common/utils/vault';
 
 const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
 

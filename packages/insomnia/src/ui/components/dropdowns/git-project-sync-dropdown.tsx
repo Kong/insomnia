@@ -1,4 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { GitProject, GitRepository } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -15,8 +17,6 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { GitProject, GitRepository } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
@@ -30,6 +30,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import type { MergeConflict } from '../../../sync/types';
 import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
@@ -324,6 +325,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const isGitSyncDropdownDisabled = isSyncing || isPulling || isPushing;
 
   const isSynced = Boolean(gitRepository?.uri && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
+  const isLoadingGitRepo = Boolean(gitRepository?.uri && !gitRepoDataFetcher.data);
 
   const { branches, branch: currentBranch } =
     gitRepoDataFetcher.data && 'branches' in gitRepoDataFetcher.data
@@ -569,9 +571,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       ]
     : [];
 
-  const repoPath = gitRepository?._id
-    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
-    : '';
+  const repoPath = gitRepository?._id ? resolveGitRepoBaseDir(gitRepository) : '';
 
   const gitSyncActions: {
     id: string;
@@ -655,7 +655,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           </Button>
         </div>
       )}
-      {!isSynced ? (
+      {isLoadingGitRepo ? (
+        <div className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) opacity-60">
+          <Icon icon={icon} className="size-4" />
+          <Separator orientation="vertical" className="h-4 border border-solid border-(--hl-sm) bg-(--color-bg)" />
+          <Icon icon="spinner" className="w-3 animate-spin" />
+          <span className="truncate">Connecting...</span>
+        </div>
+      ) : !isSynced ? (
         <div className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-100 aria-pressed:bg-(--hl-sm)">
           <Icon icon={icon} className="size-4" />
           <Separator orientation="vertical" className="h-4 border border-solid border-(--hl-sm) bg-(--color-bg)" />

@@ -86,6 +86,8 @@ export enum AnalyticsEvent {
   aiFeatureEnabled = 'AI Feature Enabled',
   aiFeatureDisabled = 'AI Feature Disabled',
   installPlugin = 'Plugin Installed',
+  AppMenuPreferencesClicked = 'App Menu Preferences Clicked',
+  keyboardShortcutUsed = 'Keyboard Shortcut Used',
 
   homepageFiltered = 'homepage-filtered',
   quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',
@@ -131,6 +133,15 @@ export enum AnalyticsEvent {
   kongKonnectSyncCompleted = 'kong-konnect-sync-completed',
   emptyStateSendRequestClicked = 'empty-state-send-request-clicked',
   emptyStateCreateDocumentClicked = 'empty-state-create-document-clicked',
+  projectListFiltered = 'project-list-filtered',
+  projectSwitched = 'project-switched',
+  organizationSwitched = 'organization-switched',
+  uploadLintRulesetClicked = 'upload-lint-ruleset-clicked',
+  firstRequestPaneExampleClicked = 'first-request-pane-example-clicked',
+  firstRequestPaneCollectionChanged = 'first-request-pane-collection-changed',
+  // Generic experiment-assignment event (reusable across experiments). Emitted on
+  // each assignment change; feeds the warehouse `experiment_assignments` model.
+  experimentAssigned = 'Experiment Assigned',
 }
 
 export enum InsoEvent {

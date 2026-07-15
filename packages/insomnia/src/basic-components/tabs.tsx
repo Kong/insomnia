@@ -33,9 +33,9 @@ interface CustomTabsProps<T> extends Omit<TabsProps, keyof TabListProps<T>> {
 
 export const Tabs = ({ items, ...props }: CustomTabsProps<TabItem>) => {
   return (
-    <RaTabs className="flex data-[orientation=vertical]:flex-row data-[orientation=horizontal]:flex-col" {...props}>
+    <RaTabs className="flex data-[orientation=horizontal]:flex-col data-[orientation=vertical]:flex-row" {...props}>
       <TabList
-        className="flex border-(--hl-md) data-[orientation=horizontal]:mb-2 data-[orientation=vertical]:mr-2 data-[orientation=vertical]:flex-col data-[orientation=horizontal]:border-b data-[orientation=vertical]:border-r"
+        className="flex border-(--hl-md) data-[orientation=horizontal]:mb-2 data-[orientation=horizontal]:border-b data-[orientation=vertical]:mr-2 data-[orientation=vertical]:flex-col data-[orientation=vertical]:border-r"
         aria-label="Insomnia tabs"
         items={items}
       >

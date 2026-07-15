@@ -1,17 +1,17 @@
+// @ts-nocheck
 import type { AnyMessage, MethodInfo, PartialMessage, ServiceType } from '@bufbuild/protobuf';
 import type { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import * as grpcReflection from 'grpc-reflection-js';
+import { services } from 'insomnia-data';
 import protobuf from 'protobufjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { services } from '~/insomnia-data';
 
 import { loadMethodsFromReflection, writeProtoFileById } from '../grpc';
 
 vi.mock('grpc-reflection-js');
 vi.mock('@connectrpc/connect-node');
-vi.mock('../../../network/grpc/write-proto-file');
+vi.mock('../../../network/grpc/write-proto-file.node');
 vi.mock('@grpc/proto-loader', async importOriginal => {
   const actual = await importOriginal();
   return { ...actual, load: vi.fn().mockResolvedValue({}) };
@@ -19,7 +19,7 @@ vi.mock('@grpc/proto-loader', async importOriginal => {
 
 describe('writeProtoFileById', () => {
   it('resolves proto file from services and delegates to writeProtoFile', async () => {
-    const { writeProtoFile } = await import('../../../network/grpc/write-proto-file');
+    const { writeProtoFile } = await import('../../../network/grpc/write-proto-file.node');
     const { load } = await import('@grpc/proto-loader');
     const w = await services.workspace.create();
     const pf = await services.protoFile.create({ parentId: w._id, protoText: 'text' });

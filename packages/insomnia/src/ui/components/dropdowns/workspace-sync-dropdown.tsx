@@ -1,6 +1,6 @@
+import { models } from 'insomnia-data';
 import React, { type FC } from 'react';
 
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';

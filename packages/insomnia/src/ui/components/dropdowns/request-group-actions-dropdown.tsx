@@ -1,26 +1,21 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { Project, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { Request, RequestGroup } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { RequestGroupAction } from '../../../plugins';
-import { getRequestGroupActions } from '../../../plugins';
-import * as pluginApp from '../../../plugins/context/app';
-import * as pluginData from '../../../plugins/context/data';
-import * as pluginNetwork from '../../../plugins/context/network';
-import * as pluginStore from '../../../plugins/context/store';
-import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { CreateRequestType } from '../../hooks/use-request';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -33,16 +28,25 @@ import { RequestGroupSettingsModal } from '../modals/request-group-settings-moda
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
   isOpen: boolean;
-  triggerRef: React.RefObject<HTMLDivElement>;
+  triggerRef?: React.RefObject<HTMLDivElement>;
+  activeProject: Project;
+  activeWorkspace: Workspace;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
 }
 
-export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, onOpenChange, onRename }: Props) => {
-  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
+export const RequestGroupActionsDropdown = ({
+  requestGroup,
+  triggerRef,
+  isOpen,
+  onOpenChange,
+  onRename,
+  activeProject,
+  activeWorkspace,
+}: Props) => {
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
-  const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
+  const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
 
@@ -53,10 +57,10 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
 
   const tabNavigate = useTabNavigate();
 
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const workspaceId = activeWorkspace._id;
+  const projectId = activeProject._id;
+  const { organizationId } = useParams() as {
     organizationId: string;
-    projectId: string;
-    workspaceId: string;
   };
 
   const createRequest = ({
@@ -75,10 +79,13 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
       requestType,
       parentId,
       req,
+      metrics: {
+        source: 'sidebar',
+      },
     });
 
   const onOpen = async () => {
-    const actionPlugins = await getRequestGroupActions();
+    const actionPlugins = await plugins.getRequestGroupActions();
     setActionPlugins(actionPlugins);
   };
 
@@ -119,21 +126,18 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
     });
   };
 
-  const handlePluginClick = async ({ label, plugin, action }: RequestGroupAction) => {
+  const handlePluginClick = async ({ label, pluginName }: SerializableActionMeta) => {
     setLoadingActions({ ...loadingActions, [label]: true });
 
     try {
-      const context = {
-        ...(pluginApp.init() as Record<string, any>),
-        ...pluginData.init(activeProject._id),
-        ...(pluginStore.init(plugin) as Record<string, any>),
-        ...(pluginNetwork.init() as Record<string, any>),
-      };
       const requests = await services.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
-      await action(context, {
-        requestGroup,
-        requests,
+      await plugins.executeAction({
+        type: 'requestGroup',
+        pluginName,
+        label,
+        projectId: activeProject._id,
+        domainData: { requestGroup, requests },
       });
     } catch (err) {
       showError({
@@ -195,6 +199,27 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
       icon: 'plus',
       items: [
         {
+          id: 'New Folder',
+          name: 'New Folder',
+          icon: 'folder',
+          action: () =>
+            showModal(PromptModal, {
+              title: 'New Folder',
+              defaultValue: 'My Folder',
+              submitName: 'Create',
+              label: 'Name',
+              selectText: true,
+              onComplete: name =>
+                newRequestGroupFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  parentId: requestGroup._id,
+                  name,
+                }),
+            }),
+        },
+        {
           id: 'HTTP',
           name: 'HTTP Request',
           icon: 'plus-circle',
@@ -253,27 +278,6 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
             createRequest({
               requestType: 'SocketIO',
               parentId: requestGroup._id,
-            }),
-        },
-        {
-          id: 'New Folder',
-          name: 'New Folder',
-          icon: 'folder',
-          action: () =>
-            showModal(PromptModal, {
-              title: 'New Folder',
-              defaultValue: 'My Folder',
-              submitName: 'Create',
-              label: 'Name',
-              selectText: true,
-              onComplete: name =>
-                newRequestGroupFetcher.submit({
-                  organizationId,
-                  projectId,
-                  workspaceId,
-                  parentId: requestGroup._id,
-                  name,
-                }),
             }),
         },
       ],
@@ -363,16 +367,11 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
         <Button
           data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
           aria-label="Request Group Actions"
-          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-hover:flex group-focus:flex hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:flex aria-pressed:bg-(--hl-sm) data-focused:flex"
+          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
-          <Icon icon="caret-down" />
+          <Icon icon="ellipsis" />
         </Button>
-        <Popover
-          className="flex min-w-max flex-col overflow-y-hidden"
-          triggerRef={triggerRef}
-          placement="bottom end"
-          offset={5}
-        >
+        <Popover className="flex min-w-max flex-col overflow-y-hidden" placement="bottom end" triggerRef={triggerRef}>
           <Menu
             aria-label="Request Group Actions Menu"
             selectionMode="single"
