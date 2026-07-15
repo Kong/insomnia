@@ -106,6 +106,7 @@ export const AuthInputRow: FC<Props> = ({
       <OneLineEditor
         ref={editorRef}
         id={id}
+        historyKey={`auth::${_id}::${property}`}
         type={isMasked ? 'password' : 'text'}
         onChange={onChange}
         readOnly={disabled}

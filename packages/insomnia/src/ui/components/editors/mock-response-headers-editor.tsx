@@ -76,6 +76,7 @@ export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur 
       <div className="tall">
         <CodeEditor
           id="request-headers-editor"
+          historyKey={`mock-response-headers-editor::${mockRouteId}`}
           onChange={handleBulkUpdate}
           defaultValue={headersString}
           enableNunjucks

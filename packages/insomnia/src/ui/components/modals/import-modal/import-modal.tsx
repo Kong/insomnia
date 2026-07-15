@@ -394,7 +394,7 @@ export const ImportModal: FC<ImportModalProps> = ({
                 workspaceId:
                   hasApiSpecScanResult || newProjectName
                     ? undefined
-                    : selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
+                    : selectedWorkspaceId || undefined,
                 endpoint: from.endpoint,
                 operationId: from.operationId,
                 skipImportIfDuplicate: autoScan,
@@ -645,7 +645,6 @@ const ImportResourcesForm = ({
     workspaceId: string;
   };
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
-  const isSingleRequest = scanResults.length === 1 && (scanResults[0].requests?.length || 0) === 1;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || '');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
@@ -679,7 +678,7 @@ const ImportResourcesForm = ({
         .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
         .filter(isNotNullOrUndefined)
         .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
-  const shouldShowWorkspaceSelect = isSingleRequest && workspacesForActiveProject.length > 0;
+  const shouldShowWorkspaceSelect = workspacesForActiveProject.length > 0;
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
@@ -693,7 +692,10 @@ const ImportResourcesForm = ({
                   aria-label="Select Project"
                   name="projectId"
                   value={selectedProjectId}
-                  onChange={e => setSelectedProjectId(e.target.value)}
+                  onChange={e => {
+                    setSelectedProjectId(e.target.value);
+                    setSelectedWorkspaceId('');
+                  }}
                 >
                   <option value="">-- New Project --</option>
                   {workspacesFetcher?.data?.projects.map(w => (
