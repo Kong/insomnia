@@ -41,9 +41,9 @@ vi.mock('../network/libcurl-promise', () => ({ curlRequest: vi.fn() }));
 vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
-import { requestPromptFromRenderer } from '../prompt-bridge';
 import { parsePluginPermissions } from '~/common/plugins/permissions';
 
+import { requestPromptFromRenderer } from '../prompt-bridge';
 import {
   _testOnlyResetMigrationWarnings,
   getPluginEntrySource,
