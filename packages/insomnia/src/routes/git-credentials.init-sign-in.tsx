@@ -7,12 +7,15 @@ import type { Route } from './+types/git-credentials.init-sign-in';
 
 interface InitSignInData {
   provider: GitRemoteProviderType;
+  /** When reauthorizing an existing credential, its ID — so completion updates that exact credential instead of creating a new one. */
+  credentialId?: string;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
-  const { provider } = (await request.json()) as InitSignInData;
+  const { provider, credentialId } = (await request.json()) as InitSignInData;
   return await window.main.git.initSignInToGitProvider({
     provider,
+    credentialId,
   });
 }
 
