@@ -10,7 +10,7 @@ in https://konghq.atlassian.net/wiki/spaces/~712020f987dca73e964e60aafab91ddc862
 - **Colors** use repo CSS variables (`token-(--var)`, e.g. `text-(--color-font)`, `bg-(--hl-sm)`).
   Everything else (size/spacing/radius/font) uses native Tailwind utilities — do NOT use
   `--padding-*` / `--radius-*` / `--font-size-*`. Hardcode a color only if no repo variable fits, with a `FIXME`.
-- **Variants** use `tailwind-variants` (`tv`); non-variant components use `cn()` (tailwind-merge).
+- **Variants** use `tailwind-variants` (`tv`); non-variant components use `cls()` (tailwind-merge).
 - **Preserve `theme--*` scope classes** (`theme--dialog`, `theme--tooltip`, `theme--dropdown__menu`,
   `theme--link`, …) on the matching component root — they are the per-component theming contract
   (`src/ui/plugins/misc.ts`). Dropping them silently breaks user theme customization.
