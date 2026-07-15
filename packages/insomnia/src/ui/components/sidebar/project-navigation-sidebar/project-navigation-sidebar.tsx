@@ -2,6 +2,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import type { RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 import {
   type Dispatch,
   type ForwardedRef,
@@ -31,7 +32,6 @@ import * as reactUse from 'react-use';
 
 import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
-import { fuzzyMatchAll } from '~/common/misc';
 import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';

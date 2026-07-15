@@ -13,9 +13,9 @@ import type {
 } from 'insomnia-data';
 import type { BaseModel } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 
 import { database } from '~/common/database';
-import { fuzzyMatchAll } from '~/common/misc';
 import { sortMethodMap } from '~/common/sorting';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 

@@ -1,6 +1,7 @@
+import type { CommandSearchResult } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
-import React, { memo, useEffect, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import {
   Button,
@@ -24,7 +25,6 @@ import { useNavigate, useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useRootLoaderData } from '~/root';
-import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useRemoteFilesLoaderFetcher } from '~/routes/remote-files';
@@ -36,6 +36,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useCommandSearch } from '~/ui/hooks/use-command-search';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
@@ -116,19 +117,25 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
   const accountId = userSession.accountId;
 
-  const commandsLoader = useCommandsLoaderFetcher();
-
   const remoteFilesLoader = useRemoteFilesLoaderFetcher();
 
-  useEffect(() => {
-    if (!commandsLoader.data && commandsLoader.state === 'idle') {
-      commandsLoader.load({
-        organizationId,
-        projectId,
-        workspaceId,
-      });
-    }
-  }, [commandsLoader, organizationId, projectId, workspaceId]);
+  const {
+    results: searchResults,
+    isSearching,
+    inputValue,
+    search,
+    abort,
+  } = useCommandSearch({
+    accountId,
+    organizationId,
+    projectId,
+    workspaceId,
+  });
+
+  const closeWithAbort = useCallback(() => {
+    abort();
+    close();
+  }, [abort, close]);
 
   useEffect(() => {
     if (!remoteFilesLoader.data && remoteFilesLoader.state === 'idle') {
@@ -136,9 +143,9 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     }
   }, [remoteFilesLoader]);
 
-  const isLoadingComboboxItems = commandsLoader.state !== 'idle' || remoteFilesLoader.state !== 'idle';
+  const isLoadingComboboxItems = isSearching || remoteFilesLoader.state !== 'idle';
 
-  type CommandRequest = NonNullable<typeof commandsLoader.data>['current']['requests'][number];
+  type CommandRequest = CommandSearchResult['current']['requests'][number];
 
   const getRequestHandlers = (request: CommandRequest) => {
     const navigateInfo = {
@@ -169,14 +176,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           shouldNavigate: true,
           withTab,
         });
-        close();
+        closeWithAbort();
       },
     };
   };
 
-  type CommandFile =
-    | NonNullable<typeof commandsLoader.data>['current']['files'][number]
-    | NonNullable<typeof commandsLoader.data>['other']['files'][number];
+  type CommandFile = CommandSearchResult['current']['files'][number] | CommandSearchResult['other']['files'][number];
 
   const getFileHandlers = (file: CommandFile) => {
     const navigationInfo = {
@@ -205,7 +210,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           shouldNavigate: true,
           withTab,
         });
-        close();
+        closeWithAbort();
       },
     };
   };
@@ -230,17 +235,20 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   }[] = [];
 
   const currentRequests =
-    commandsLoader.data?.current.requests.map(request => ({
+    searchResults?.current.requests.map(request => ({
       ...request,
       ...getRequestHandlers(request),
     })) || [];
 
   const remoteFiles = remoteFilesLoader.data?.files || [];
+  const remoteFileMatchesFilter = (file: { name: string }) =>
+    !inputValue || file.name.toLowerCase().includes(inputValue.toLowerCase());
 
-  const currentFilesData = commandsLoader.data?.current.files || [];
+  const currentFilesData = searchResults?.current.files || [];
   const currentRemoteFilesData = remoteFiles
     .filter(file => file.item.teamProjectLocalId === projectId)
-    .filter(file => !currentFilesData.some(f => f.id === file.item.id));
+    .filter(file => !currentFilesData.some(f => f.id === file.item.id))
+    .filter(remoteFileMatchesFilter);
 
   const currentLocalFiles =
     currentFilesData?.map(file => ({
@@ -259,14 +267,14 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         });
 
         navigate(file.url);
-        close();
+        closeWithAbort();
       },
     })) || [];
 
   const currentFiles = [...currentLocalFiles, ...currentRemoteFiles];
 
   const currentEnvironments =
-    commandsLoader.data?.current.environments.map(environment => ({
+    searchResults?.current.environments.map(environment => ({
       ...environment,
       id: environment._id,
       action: async () => {
@@ -280,15 +288,16 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     })) || [];
 
   const otherRequests =
-    commandsLoader.data?.other.requests.map(request => ({
+    searchResults?.other.requests.map(request => ({
       ...request,
       ...getRequestHandlers(request),
     })) || [];
 
-  const otherFilesData = commandsLoader.data?.other.files || [];
+  const otherFilesData = searchResults?.other.files || [];
   const otherRemoteFilesData = remoteFiles
     .filter(file => file.item.teamProjectLocalId !== projectId)
-    .filter(file => !otherFilesData.some(f => f.id === file.item.id));
+    .filter(file => !otherFilesData.some(f => f.id === file.item.id))
+    .filter(remoteFileMatchesFilter);
 
   const otherLocalFiles =
     otherFilesData.map(file => ({
@@ -307,7 +316,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         });
 
         navigate(file.url);
-        close();
+        closeWithAbort();
       },
     })) || [];
 
@@ -517,11 +526,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         });
       }
 
-      close();
+      closeWithAbort();
     }
 
     prevPullFetcherState.current = pullFileFetcher.state;
-  }, [close, pullFileFetcher]);
+  }, [closeWithAbort, pullFileFetcher]);
 
   // Close the dialog when the environment is set
   // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
@@ -529,11 +538,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   const prevEnvFetcherState = useRef(setActiveEnvironmentFetcher.state);
   useEffect(() => {
     if (setActiveEnvironmentFetcher.state === 'idle' && prevEnvFetcherState.current !== 'idle') {
-      close();
+      closeWithAbort();
     }
 
     prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
-  }, [close, setActiveEnvironmentFetcher.state]);
+  }, [closeWithAbort, setActiveEnvironmentFetcher.state]);
 
   const isPullingFile = pullFileFetcher.state !== 'idle';
   const pullingFileBackedProjectId = pullFileFetcher.formData?.get('backendProjectId');
@@ -548,18 +557,14 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       allowsCustomValue={false}
       menuTrigger="focus"
       shouldFocusWrap
-      onInputChange={filter => {
-        commandsLoader.load({
-          organizationId,
-          projectId,
-          workspaceId,
-          filter,
-        });
-      }}
+      inputValue={inputValue}
+      defaultFilter={() => true}
+      allowsEmptyCollection
+      onInputChange={search}
       // By default, Escape would just clear the input field. We need to press twice to close the dialog.
       onKeyDown={e => {
         if (e.key === 'Escape') {
-          close();
+          closeWithAbort();
         }
       }}
       onSelectionChange={itemId => {
@@ -601,12 +606,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                   )}
                   <Input
                     slot="input"
-                    readOnly={isLoadingComboboxItems}
-                    placeholder={
-                      isLoadingComboboxItems
-                        ? 'Loading...'
-                        : 'Search and switch between requests, collections and documents'
-                    }
+                    placeholder="Search and switch between requests, collections and documents"
                     className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
                   />
                 </>
