@@ -238,8 +238,9 @@ export async function commandSearch(params: {
       }
     }
 
-    const currentRequests = allRequests.filter(req => safeParent(req.parentId)?.workspaceId === workspaceId);
-    const otherRequests = allRequests.filter(req => safeParent(req.parentId)?.workspaceId !== workspaceId);
+    const knownRequests = allRequests.filter(req => safeParent(req.parentId) !== undefined);
+    const currentRequests = knownRequests.filter(req => safeParent(req.parentId)?.workspaceId === workspaceId);
+    const otherRequests = knownRequests.filter(req => safeParent(req.parentId)?.workspaceId !== workspaceId);
 
     const currentFiles = allOrganizationWorkspaces.filter(ws => ws.parentId === projectId);
     const otherFiles = allOrganizationWorkspaces.filter(ws => ws.parentId !== projectId);

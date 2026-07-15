@@ -62,7 +62,7 @@ export function useCommandSearch({
           setIsSearching(false);
           hasReceivedResultsRef.current = true;
         } else if (!hasReceivedResultsRef.current) {
-          // Warm baseline — React Aria's contains filter handles client-side filtering.
+          // Warm baseline — CommandPalette sets defaultFilter={() => true}, so filtering is done server-side via fuzzy match.
           setResults(result);
           hasReceivedResultsRef.current = true;
         }

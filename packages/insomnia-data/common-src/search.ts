@@ -30,7 +30,7 @@ export function fuzzyMatchAll(searchString: string, allText: string[], options: 
   for (const term of terms) {
     let matchedTerm = false;
 
-    for (const text of allText.filter(t => !t || t.trim())) {
+    for (const text of allText.filter(t => t && t.trim())) {
       const result = fuzzysort.single(term, text);
 
       if (!result) {
