@@ -63,7 +63,7 @@ describe('serializeValue / deserializeValue', () => {
     expect(serializeValue(42)).toBe(42);
     expect(serializeValue('str')).toBe('str');
     expect(serializeValue(null)).toBe(null);
-    expect(serializeValue(undefined)).toBe(undefined);
+    // @ts-expect-error for testing
+    expect(serializeValue()).toBe(undefined);
   });
 });
-
