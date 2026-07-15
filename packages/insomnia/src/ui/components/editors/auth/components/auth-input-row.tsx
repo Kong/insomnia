@@ -117,9 +117,11 @@ export const AuthInputRow: FC<Props> = ({
       {canBeMasked ? (
         <Tooltip message={isMasked ? 'Show Value' : 'Hide Value'} position="top">
           <button
-            className="btn btn--super-super-compact pointer"
+            type="button"
+            className={`btn btn--super-super-compact pointer${disabled ? ' pointer-events-none' : ''}`}
             onClick={toggleMask}
             disabled={disabled}
+            aria-label={isMasked ? 'Show Value' : 'Hide Value'}
           >
             {isMasked ? (
               <i className="fa fa-eye" data-testid="reveal-password-icon" />
