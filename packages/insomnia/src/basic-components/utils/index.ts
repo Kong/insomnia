@@ -10,7 +10,7 @@ export function getSizeClasses(size: Size) {
 }
 
 export function getStateClasses() {
-  return 'box-border data-[focus-visible=true]:ring-2 disabled:cursor-not-allowed';
+  return 'box-border data-focus-visible:ring-2 disabled:cursor-not-allowed';
 }
 
 export function getTextColorClasses(color: ButtonColor) {
