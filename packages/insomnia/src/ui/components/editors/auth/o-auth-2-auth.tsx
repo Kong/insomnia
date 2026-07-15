@@ -380,6 +380,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const [sessionCleared, setSessionCleared] = useState(false);
 
   const { basic, advanced } = getFieldsForGrantType(authentication as AuthTypeOAuth2);
 
@@ -426,9 +427,13 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
                 <div className="pad-top text-right">
                   <button
                     className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
-                    onClick={clearOAuthWindowSessionId}
+                    onClick={async () => {
+                      await clearOAuthWindowSessionId();
+                      setSessionCleared(true);
+                      setTimeout(() => setSessionCleared(false), 1000);
+                    }}
                   >
-                    Clear OAuth 2 session
+                    {sessionCleared ? '✓ Session Cleared' : 'Clear OAuth 2 session'}
                   </button>
                 </div>
               </td>

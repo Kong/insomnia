@@ -844,7 +844,10 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const authHeader = await getRuntime().network.getAuthHeader(renderedRequest, finalUrl);
+  const { header: authHeader, timeline: authTimeline } = await getRuntime().network.getAuthHeader(renderedRequest, finalUrl);
+  if (authTimeline?.length) {
+    timeline.push(...authTimeline);
+  }
   const requestOptions = {
     requestId,
     req: renderedRequest,

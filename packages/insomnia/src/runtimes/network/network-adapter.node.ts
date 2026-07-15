@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import clone from 'clone';
-import type { Cookie, RequestHeader } from 'insomnia-data';
+import type { Cookie, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
 import type { RenderedRequest } from '~/common/templating/types';
 
@@ -38,7 +38,7 @@ export const appendToTimelineOnError = (timelinePath: string, data: string): Pro
 export const appendTimelineLines = (timelinePath: string, logs: string[]): Promise<void> =>
   fs.promises.appendFile(timelinePath, logs.join('\n'));
 
-export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHeader | undefined> =>
+export const getAuthHeader = (r: RenderedRequest, u: string): Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }> =>
   getAuthHeaderFromMain(r, u);
 
 export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> => curlRequest(options);

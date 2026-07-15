@@ -1,4 +1,4 @@
-import type { AESMessage, Cookie, RequestHeader } from 'insomnia-data';
+import type { AESMessage, Cookie, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
 import type { RenderedRequest, RenderInputType } from '~/common/templating/types';
 
@@ -16,7 +16,7 @@ export interface NetworkRuntime {
   getTimelinePath: (responseId: string) => Promise<string>;
   appendToTimelineOnError: (timelinePath: string, data: string) => Promise<void>;
   appendTimelineLines: (timelinePath: string, logs: string[]) => Promise<void>;
-  getAuthHeader: (request: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
+  getAuthHeader: (request: RenderedRequest, url: string) => Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }>;
   executeCurlRequest: (options: CurlRequestOptions) => Promise<CurlRequestOutput | CurlRequestErrorOutput>;
   extractCookies: (options: {
     setCookieStrings: string[];
