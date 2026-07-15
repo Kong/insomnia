@@ -13,7 +13,6 @@ import {
   CurlHttpVersion,
   CurlInfoDebug,
   CurlNetrc,
-  CurlProxy,
   CurlSslOpt,
 } from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
@@ -124,7 +123,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
-      const { curl, debugTimeline } = await createConfiguredCurlInstance({
+      const { curl, debugTimeline } = createConfiguredCurlInstance({
         req,
         finalUrl,
         settings,
@@ -287,61 +286,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
     }
   });
 
-/**
- * Parse a PAC-format proxy string (from Electron's session.resolveProxy) into
- * a curl proxy URL and type.  Returns null when DIRECT.
- * Format: "PROXY host:port", "HTTPS host:port", "SOCKS host:port", etc.
- * https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
- */
-export function parseResolvedProxy(pacString: string | undefined): { proxyUrl: string; proxyType: CurlProxy } | null {
-  if (!pacString) {
-    return null;
-  }
-  // only the first proxy specified will be used
-  const proxy = pacString
-    .trim()
-    .split(/\s*;\s*/g)
-    .find(Boolean);
-  if (!proxy) {
-    return null;
-  }
-  const parts = proxy.split(/\s+/);
-  const proxyType = parts[0];
-  if (proxyType === 'DIRECT') {
-    return null;
-  }
-  const proxyAddr = parts[1];
-  if (!proxyAddr) {
-    return null;
-  }
-  let curlProxyType: CurlProxy;
-  switch (proxyType) {
-    case 'PROXY':
-    case 'HTTP': {
-      curlProxyType = CurlProxy.Http;
-      break;
-    }
-    case 'HTTPS': {
-      curlProxyType = CurlProxy.Https;
-      break;
-    }
-    case 'SOCKS':
-    case 'SOCKS4': {
-      curlProxyType = CurlProxy.Socks4;
-      break;
-    }
-    case 'SOCKS5': {
-      curlProxyType = CurlProxy.Socks5;
-      break;
-    }
-    default: {
-      return null;
-    }
-  }
-  return { proxyUrl: proxyAddr, proxyType: curlProxyType };
-}
-
-export const createConfiguredCurlInstance = async ({
+export const createConfiguredCurlInstance = ({
   req,
   finalUrl,
   settings,
@@ -420,21 +365,7 @@ export const createConfiguredCurlInstance = async ({
   }
 
   if (!settings.proxyEnabled) {
-    // When proxy is not explicitly configured, fall back to system proxy
-    let resolved: ReturnType<typeof parseResolvedProxy> = null;
-    try {
-      const systemProxy = await electron.session.defaultSession.resolveProxy(finalUrl);
-      resolved = parseResolvedProxy(systemProxy);
-    } catch {
-      // If resolveProxy fails (e.g. invalid URL, session issues), fall back to direct connection
-    }
-    if (resolved) {
-      curl.setOpt(Curl.option.PROXYTYPE, resolved.proxyType);
-      curl.setOpt(Curl.option.PROXY, resolved.proxyUrl);
-      debugTimeline.push({ value: `Using system proxy: ${resolved.proxyUrl}`, name: 'Text', timestamp: Date.now() });
-    } else {
-      curl.setOpt(Curl.option.PROXY, '');
-    }
+    curl.setOpt(Curl.option.PROXY, '');
   } else {
     const { protocol, hostname } = urlParse(req.url);
     const { httpProxy, httpsProxy, noProxy } = settings;

@@ -152,15 +152,14 @@ const openCurlConnection = async (
   try {
     invariant(options.url, 'URL must be defined');
     invariant(!options.url.startsWith('file://'), 'Local file URIs are not supported');
-
+    
     const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const settings = await services.settings.get();
     const start = performance.now();
     const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
-
-    const { curl, debugTimeline } = await createConfiguredCurlInstance({
+    const { curl, debugTimeline } = createConfiguredCurlInstance({
       req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
       finalUrl: options.url,
       settings,
