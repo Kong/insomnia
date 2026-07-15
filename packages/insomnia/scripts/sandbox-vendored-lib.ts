@@ -49,6 +49,7 @@ export const bundleLib = async (entry: string): Promise<string> => {
     target: 'es2020', // classic QuickJS supports ~es2020
     define: { 'process.env.NODE_ENV': '"production"' },
     legalComments: 'none',
+    minify: true, // re-parsed + re-evaluated fresh on every render (no context reuse) — keep it small
     write: false,
   });
   return result.outputFiles[0].text;
