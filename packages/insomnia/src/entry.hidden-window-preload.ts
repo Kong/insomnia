@@ -60,18 +60,14 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
   resetAsyncTasks,
 };
 
-if (process.contextIsolated) {
-  contextBridge.exposeInMainWorld('bridge', bridge);
-  contextBridge.exposeInMainWorld('Promise', ProxiedPromise);
-} else {
-  window.bridge = bridge;
-  window.Promise = ProxiedPromise;
-}
-
 const rpc = attachDataPortRpc('hidden-window-preload');
 
 if (process.contextIsolated) {
+  contextBridge.exposeInMainWorld('bridge', bridge);
+  contextBridge.exposeInMainWorld('Promise', ProxiedPromise);
   contextBridge.exposeInMainWorld('invokeDataPort', rpc);
 } else {
+  window.bridge = bridge;
+  window.Promise = ProxiedPromise;
   window.invokeDataPort = rpc;
 }

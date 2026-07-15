@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import type { UtilityProcess } from 'electron';
 import { BrowserWindow, MessageChannelMain, utilityProcess } from 'electron';
-import type { ChangeListener } from 'insomnia-data';
+import type { ChangeBufferEvent, ChangeListener } from 'insomnia-data';
 
 import { isDevelopment } from '../common/constants';
 import { PortRpc } from './port-rpc';
@@ -10,9 +10,14 @@ import { PortRpc } from './port-rpc';
 let child: UtilityProcess | null = null;
 
 const mainProcessChangeListeners: ChangeListener[] = [];
+let deepLinkHandler: ((uri: string) => void) | null = null;
 
 export function registerMainProcessChangeListener(listener: ChangeListener): void {
   mainProcessChangeListeners.push(listener);
+}
+
+export function registerDeepLinkHandler(handler: (uri: string) => void): void {
+  deepLinkHandler = handler;
 }
 
 function getDataProcessPath(): string {
@@ -76,7 +81,7 @@ export async function spawnDataProcess(dbPath: string): Promise<void> {
   mainRpc.attach(
     m => port2.postMessage(m),
     h => {
-      port2.on('message', (e: Electron.MessageEvent) => h(e.data as any));
+      port2.on('message', (e: Electron.MessageEvent) => h(e.data));
       port2.start();
     },
   );
@@ -88,7 +93,9 @@ export async function spawnDataProcess(dbPath: string): Promise<void> {
       BrowserWindow.getAllWindows().forEach(w => {
         w.webContents.send('db.changes', msg.changes);
       });
-      mainProcessChangeListeners.forEach(listener => listener(msg.changes as any));
+      mainProcessChangeListeners.forEach(listener => listener(msg.changes as ChangeBufferEvent[]));
+    } else if (msg.type === 'deep-link' && deepLinkHandler) {
+      deepLinkHandler(msg.uri as string);
     }
   });
 

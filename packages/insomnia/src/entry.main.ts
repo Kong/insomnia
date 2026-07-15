@@ -12,7 +12,7 @@ import { models, services } from 'insomnia-data';
 import { isMac } from 'insomnia-data/common';
 
 import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
-import { issuePort, mainRpc, registerMainProcessChangeListener, spawnDataProcess } from '~/data-process/data-process-manager';
+import { issuePort, mainRpc, registerDeepLinkHandler, registerMainProcessChangeListener, spawnDataProcess } from '~/data-process/data-process-manager';
 import { initDataBridge } from '~/data-process/init-data-bridge';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
@@ -142,6 +142,7 @@ app.on('ready', async () => {
     if (window) issuePort(window);
   });
   await spawnDataProcess(dataPath);
+  registerDeepLinkHandler(uri => openDeepLinkUrl(uri));
   await initDataBridge(mainRpc.invoke, {
     database: { init: async () => {}, onChange: listener => registerMainProcessChangeListener(listener) },
   });
