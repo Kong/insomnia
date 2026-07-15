@@ -15,7 +15,7 @@ import { ResponseHeadersViewer } from './response-headers-viewer';
 import { ResponseViewer } from './response-viewer';
 
 interface Props {
-  download: (...args: any[]) => any;
+  download: (prettify: boolean) => void;
   responseId: string;
   bodyBuffer: Uint8Array | null;
   contentType: string;
