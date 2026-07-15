@@ -1,12 +1,14 @@
 import { ipcRenderer } from 'electron';
 
-// Provide window.app so plugin-loading code (which checks __IS_RENDERER__) can resolve the userData path without needing the main renderer's full preload.
+import { attachDataPortRpc } from './data-process/data-port-preload';
+
 window.app = {
   getPath: (name: string) => ipcRenderer.sendSync('getPath', name) as string,
   getAppPath: () => ipcRenderer.sendSync('getAppPath') as string,
   process: { platform: process.platform as NodeJS.Platform },
 };
 
+window.invokeDataPort = attachDataPortRpc('plugin-window-preload');
 // Bridge plugin UI calls to the main renderer window via IPC.
 // The plugin window has no visible DOM; these methods forward to the main renderer.
 window.showAlert = (options?: Record<string, any>) => {

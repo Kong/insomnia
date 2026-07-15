@@ -41,6 +41,20 @@
       "timeout": 60000
     },
     {
+      "name": "Electron: data-process",
+      "type": "node",
+      "request": "attach",
+      "protocol": "inspector",
+      "sourceMaps": true,
+      "presentation": {
+        "hidden": true,
+        "group": "Insomnia",
+        "order": 3
+      },
+      "port": 9229,
+      "timeout": 60000
+    },
+    {
       "type": "node",
       "request": "launch",
       "protocol": "inspector",
@@ -98,7 +112,7 @@
       },
       "stopAll": true,
       "preLaunchTask": "Insomnia: Compile (Watch)",
-      "configurations": ["Electron: main", "Electron: renderer"]
+      "configurations": ["Electron: main", "Electron: renderer", "Electron: data-process"]
     }
   ]
 }

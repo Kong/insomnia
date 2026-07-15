@@ -1,9 +1,8 @@
 /// <reference types="vite/client" />
 import type { HiddenBrowserWindowToMainBridgeAPI } from '../src/hidden-window-preload';
 import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
-import type { DatabaseBridgeAPI } from '../src/main/ipc/database';
+import type { InvokeFn } from '../src/data-process/port-rpc';
 import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
-import type { Services } from 'insomnia-data';
 
 type RendererEnv = {
   INSOMNIA_GITLAB_REDIRECT_URI: string | undefined;
@@ -38,11 +37,7 @@ declare global {
     env: RendererEnv;
     main: RendererToMainBridgeAPI;
     bridge: HiddenBrowserWindowToMainBridgeAPI;
-    database: DatabaseBridgeAPI;
-    // This is a temporary measure to provide access to services on the global window object. It will be removed in the future once all usages are updated to import services directly from the insomnia-data package.
-    _dataServices?: Services;
-    // Under contextIsolation the services Proxy can't cross the bridge; the preload exposes this flat invoke instead and the renderer rebuilds the Proxy.
-    _dataServicesInvoke?: (serviceName: string, methodName: string, ...args: unknown[]) => Promise<unknown>;
+    invokeDataPort: InvokeFn;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'> & { process: { platform: NodeJS.Platform } };
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;

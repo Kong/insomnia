@@ -18,7 +18,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, TestResults } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
@@ -398,18 +398,6 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
-  });
-  ipcMainHandle('services.invoke', async (_, serviceName: string, methodName: string, ...args: unknown[]) => {
-    const service = services[serviceName as keyof Services];
-    if (!service) {
-      throw new TypeError(`Unknown service: ${serviceName}`);
-    }
-    const fn = service[methodName as keyof typeof service];
-    if (typeof fn !== 'function') {
-      throw new TypeError(`Unknown service method: ${serviceName}.${methodName}`);
-    }
-    const result = await (fn as (...args: unknown[]) => unknown).call(service, ...args);
-    return Buffer.isBuffer(result) ? new Uint8Array(result) : result;
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);

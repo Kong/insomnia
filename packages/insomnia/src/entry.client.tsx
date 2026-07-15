@@ -2,19 +2,18 @@ import './ui/renderer-listeners';
 import './ui/log';
 
 import { configureFetch } from 'insomnia-api';
-import { initDatabase, initServices, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { setTemplatingDbAuthToken } from '~/common/templating/liquid-extension-worker';
+import { initDataBridge } from '~/data-process/init-data-bridge';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
-import { database as clientDatabase } from '~/ui/database.client';
 import { applyColorScheme } from '~/ui/plugins/misc';
-import { createServicesProxy } from '~/ui/services-proxy';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { getInitialEntry } from '~/ui/utils/router';
 
@@ -33,19 +32,9 @@ initializeSentry();
 // Fetch the templating-db auth token once so it's available for every templating call in this window.
 setTemplatingDbAuthToken(await window.main.templatingDb.getAuthToken());
 
-// Initialize database for renderer process
-await initDatabase(clientDatabase);
-// Initialize services for renderer process.
-// With contextIsolation the preload exposes a flat invoke (a Proxy can't cross
-// the bridge), so rebuild the Proxy here. Without it, the Proxy is on window directly.
-const dataServices =
-  window._dataServices ?? (window._dataServicesInvoke ? createServicesProxy(window._dataServicesInvoke) : undefined);
-if (!dataServices) {
-  throw new Error(
-    'Services bridge is not available. This entrypoint must run in an environment with the preload bridge.',
-  );
-}
-initServices(dataServices);
+await initDataBridge(window.invokeDataPort, {
+  database: { init: async () => {}, onChange: () => {} },
+});
 initRuntime(rendererRuntime);
 
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));

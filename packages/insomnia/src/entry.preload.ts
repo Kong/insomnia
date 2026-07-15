@@ -12,11 +12,11 @@ import type {
 import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
 import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
+import { attachDataPortRpc } from '~/data-process/data-port-preload';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
-import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
@@ -29,7 +29,10 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
+
 const ports = new Map<'hiddenWindowPort', MessagePort>();
+
+const invokeDataPort = attachDataPortRpc('preload');
 
 type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
   ? Awaited<ReturnType<PluginsBridgeAPI[T]>>
@@ -496,10 +499,6 @@ const clipboard: Window['clipboard'] = {
 const webUtils: Window['webUtils'] = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),
 };
-const database: Window['database'] = {
-  invoke: (fnName, ...args) => invokeWithNormalizedError('database.invoke', fnName, ...args),
-};
-
 const env: Window['env'] = {
   // GitLab OAuth — redirect URI, client ID, and API URL allow dev/enterprise overrides
   INSOMNIA_GITLAB_REDIRECT_URI: process.env.INSOMNIA_GITLAB_REDIRECT_URI,
@@ -547,14 +546,7 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('clipboard', clipboard);
   contextBridge.exposeInMainWorld('webUtils', webUtils);
   contextBridge.exposeInMainWorld('path', path);
-  contextBridge.exposeInMainWorld('database', database);
-  // A Proxy cannot be cloned across the contextBridge, so expose a flat invoke
-  // function and rebuild the services Proxy in the isolated renderer world.
-  contextBridge.exposeInMainWorld(
-    '_dataServicesInvoke',
-    (serviceName: string, methodName: string, ...args: unknown[]) =>
-      invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args),
-  );
+  contextBridge.exposeInMainWorld('invokeDataPort', invokeDataPort);
   contextBridge.exposeInMainWorld('env', env);
 } else {
   window.main = main;
@@ -564,7 +556,6 @@ if (process.contextIsolated) {
   window.clipboard = clipboard;
   window.webUtils = webUtils;
   window.path = path;
-  window.database = database;
-  window._dataServices = servicesProxy;
+  window.invokeDataPort = invokeDataPort;
   window.env = env;
 }

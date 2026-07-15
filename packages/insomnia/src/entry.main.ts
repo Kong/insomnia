@@ -8,12 +8,12 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 import type { Stats } from 'insomnia-data';
-import { initDatabase, initServices, models, services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { isMac } from 'insomnia-data/common';
-import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
-import { mainDatabase } from '~/main/database.main';
+import { issuePort, mainRpc, registerMainProcessChangeListener, spawnDataProcess } from '~/data-process/data-process-manager';
+import { initDataBridge } from '~/data-process/init-data-bridge';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
@@ -31,7 +31,7 @@ import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
 import { registerCookieHandlers } from './main/ipc/cookies';
-import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
+import { ipcMainHandle, ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -137,10 +137,14 @@ app.on('ready', async () => {
     }
   }
 
-  // Init some important things first
-  await initDatabase(mainDatabase);
-  // Initialize services for main process
-  initServices(servicesNodeImpl);
+  ipcMainHandle('data-process.request-port', event => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (window) issuePort(window);
+  });
+  await spawnDataProcess(dataPath);
+  await initDataBridge(mainRpc.invoke, {
+    database: { init: async () => {}, onChange: listener => registerMainProcessChangeListener(listener) },
+  });
   initRuntime(nodeRuntime);
   await _createModelInstances();
   // proxy has to be set up before backup's net.fetch below

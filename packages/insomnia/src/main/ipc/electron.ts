@@ -42,7 +42,6 @@ export type HandleChannels =
   | 'createPlugin'
   | 'curlRequest'
   | 'database.caCertificate.create'
-  | 'services.invoke'
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'generateCommitsFromDiff'
   | 'generateMockRouteDataFromSpec'
@@ -206,7 +205,8 @@ export type HandleChannels =
   | 'cookies.toString'
   | 'cookies.getCookiesForUrl'
   | 'cookies.addSetCookies'
-  | 'cookies.getResponseCookiesFromHeaders';
+  | 'cookies.getResponseCookiesFromHeaders'
+  | 'data-process.request-port';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -269,6 +269,7 @@ export type MainOnChannels =
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
+  | 'data-process.restarting'
   | 'db.changes'
   | 'edit:undo'
   | 'edit:redo'

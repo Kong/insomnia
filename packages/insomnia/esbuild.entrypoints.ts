@@ -123,6 +123,21 @@ export default async function build(options: Options) {
     },
   };
 
+  const dataBuildOptions: BuildOptions = {
+    entryPoints: ['./src/entry.data.ts'],
+    outfile: path.join(outdir, 'entry.data.min.js'),
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    plugins: [rendererToNodePlugin],
+    define: {
+      ...env,
+      '__IS_RENDERER__': JSON.stringify(false),
+    },
+    external: [...Object.keys(builtinModules), 'electron']
+  };
+
   const mainBuildOptions: BuildOptions = {
     entryPoints: ['./src/entry.main.ts'],
     outfile: path.join(outdir, 'entry.main.min.js'),
@@ -194,10 +209,10 @@ export default async function build(options: Options) {
         build.onEnd(() => {
           buildCount++;
           // first build after main/preload/hiddenWindows/pluginWindows is built
-          if (buildCount === 6) {
+          if (buildCount === 7) {
             console.log('[Dev Build] Build complete, start Electron');
             startElectron();
-          } else if (buildCount > 6) {
+          } else if (buildCount > 7) {
             console.log(`[Dev Build] Finish rebuilding ${scriptName}, restarting Electron`);
             restartElectronProcess();
           } else {
@@ -230,6 +245,10 @@ export default async function build(options: Options) {
       ...pluginWindowPreloadBuildOptions,
       plugins: [restartElectronPlugin('plugin-window-preload')],
     });
+    const dataContext = await esbuild.context({
+      ...dataBuildOptions,
+      plugins: [restartElectronPlugin('data')],
+    });
 
     const restartElectronProcess = () => {
       console.log('[Dev Build] Start restarting Electron');
@@ -251,6 +270,7 @@ export default async function build(options: Options) {
     const hiddenWindowPreloadWatch = await hiddenPreloadContext.watch();
     const pluginWindowWatch = await pluginWindowContext.watch();
     const pluginWindowPreloadWatch = await pluginWindowPreloadContext.watch();
+    const dataWatch = await dataContext.watch();
     return Promise.all([
       preloadWatch,
       hiddenWindowPreloadWatch,
@@ -258,6 +278,7 @@ export default async function build(options: Options) {
       hiddenWindowWatch,
       pluginWindowWatch,
       pluginWindowPreloadWatch,
+      dataWatch,
     ]);
   }
   const preload = esbuild.build(preloadBuildOptions);
@@ -266,6 +287,7 @@ export default async function build(options: Options) {
   const pluginWindow = esbuild.build(pluginWindowBuildOptions);
   const pluginWindowPreload = esbuild.build(pluginWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
+  const data = esbuild.build(dataBuildOptions);
   return Promise.all([
     main,
     preload,
@@ -273,6 +295,7 @@ export default async function build(options: Options) {
     hiddenBrowserWindowPreload,
     pluginWindow,
     pluginWindowPreload,
+    data,
   ]).catch(err => {
     console.error('[Build] Build failed:', err);
   });

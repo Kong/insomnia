@@ -6,12 +6,12 @@
  */
 
 import { initDatabase, models, services as insoservices } from 'insomnia-data';
+import { createNedbDatabase } from 'insomnia-data/node';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // eslint-disable-next-line no-restricted-imports
 import { resetV4Counter } from '../../../../insomnia-data/__mocks__/uuid';
 import { database as db } from '../../common/database';
-import { mainDatabase } from '../../main/database.main';
 import type { KonnectControlPlane, KonnectRoute, KonnectService } from '../api';
 import { syncKonnect } from '../sync';
 
@@ -114,7 +114,7 @@ const trackAnalyticsEvent = vi.fn();
 
 beforeEach(async () => {
   // Re-init with fresh in-memory NeDB buckets — clean slate for every test.
-  await initDatabase(mainDatabase, { inMemoryOnly: true }, true);
+  await initDatabase(createNedbDatabase(), { inMemoryOnly: true }, true);
   resetV4Counter();
   vi.stubGlobal('window', { main: { trackAnalyticsEvent } });
 });

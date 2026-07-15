@@ -3,8 +3,6 @@ import * as fs from 'node:fs';
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { Compression } from 'insomnia-data';
 
-import { servicesProxy } from '~/ui/renderer-services-proxy';
-
 import {
   asyncTasksAllSettled,
   OriginalPromise,
@@ -13,6 +11,7 @@ import {
   resetAsyncTasks,
   stopMonitorAsyncTasks,
 } from '../../insomnia-scripting-environment/src/objects';
+import { attachDataPortRpc } from './data-process/data-port-preload';
 // this will also import lots of node_modules into the preload script, consider moving this file insomnia-scripting-environment
 import { requireInterceptor } from './scripting/require-interceptor';
 
@@ -64,9 +63,15 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('bridge', bridge);
   contextBridge.exposeInMainWorld('Promise', ProxiedPromise);
-  contextBridge.exposeInMainWorld('_dataServices', servicesProxy);
 } else {
   window.bridge = bridge;
   window.Promise = ProxiedPromise;
-  window._dataServices = servicesProxy;
+}
+
+const rpc = attachDataPortRpc('hidden-window-preload');
+
+if (process.contextIsolated) {
+  contextBridge.exposeInMainWorld('invokeDataPort', rpc);
+} else {
+  window.invokeDataPort = rpc;
 }
