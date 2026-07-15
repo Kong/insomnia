@@ -16,6 +16,8 @@ interface Props {
   environmentInfo: EnvironmentInfo;
   onBlur?: () => void;
   onChange?: (value: EnvironmentInfo) => void;
+  // Stable per-environment key so undo/redo history survives editor remounts.
+  historyKey?: string;
 }
 
 export interface EnvironmentEditorHandle {
@@ -24,7 +26,7 @@ export interface EnvironmentEditorHandle {
 }
 
 export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
-  ({ environmentInfo, onBlur, onChange }, ref) => {
+  ({ environmentInfo, onBlur, onChange, historyKey }, ref) => {
     const editorRef = useRef<CodeEditorHandle>(null);
     const editorErrorRef = useRef('');
     const [error, setError] = useState('');
@@ -79,6 +81,7 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
       <div className="environment-editor">
         <CodeEditor
           id="environment-editor"
+          historyKey={historyKey}
           ref={editorRef}
           autoPrettify
           enableNunjucks

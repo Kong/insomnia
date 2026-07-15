@@ -13,10 +13,12 @@ interface Props {
   className?: string;
   mode?: string;
   tall?: boolean;
+  // Stable per-entity key so undo/redo history survives editor remounts.
+  historyKey?: string;
 }
 
 export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
-  ({ mode, placeholder, tall, defaultValue, onChange }, ref): ReactElement => {
+  ({ mode, placeholder, tall, defaultValue, onChange, historyKey }, ref): ReactElement => {
     // default value is added here to capture the original class component's behavior, but this way cuts the flow of prop change event after the initial rendering
     const [markdown, setMarkdown] = useState(defaultValue);
 
@@ -60,6 +62,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
             <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
               <CodeEditor
                 id="markdown-editor"
+                historyKey={historyKey}
                 ref={ref}
                 hideGutters
                 hideLineNumbers

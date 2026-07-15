@@ -321,6 +321,7 @@ export const EnvironmentKVEditor = ({
               }
             }}
             id={`environment-kv-editor-name-${id}`}
+            historyKey={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
             defaultValue={name}
             readOnly={!enabled || disabled}
@@ -356,6 +357,7 @@ export const EnvironmentKVEditor = ({
           {type === EnvironmentKvPairDataType.STRING && (
             <OneLineEditor
               id={`environment-kv-editor-value-${id}`}
+              historyKey={`environment-kv-editor-value-${id}`}
               placeholder={'Input Value'}
               defaultValue={value.toString()}
               readOnly={!enabled || disabled}
