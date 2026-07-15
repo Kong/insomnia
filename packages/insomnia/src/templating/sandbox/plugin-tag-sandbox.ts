@@ -215,7 +215,13 @@ const evalOrThrow = (ctx: QuickJSContext, code: string, filename: string): void 
 /** Rebuild a real Error from the dumped VM error so callers (e.g. translateLiquidError) see a normal Error. */
 const toError = (data: unknown): Error => {
   if (data && typeof data === 'object' && 'message' in data) {
-    const { message, name, stack } = data as { message?: string; name?: string; stack?: string };
+    const { message, name, stack, code, moduleName } = data as {
+      message?: string;
+      name?: string;
+      stack?: string;
+      code?: SandboxModuleDenialError['code'];
+      moduleName?: string;
+    };
     const err = new Error(message ?? 'Sandbox error');
     if (name) {
       err.name = name;
@@ -223,7 +229,19 @@ const toError = (data: unknown): Error => {
     if (stack) {
       err.stack = stack;
     }
+    if (code) {
+      (err as SandboxModuleDenialError).code = code;
+    }
+    if (moduleName) {
+      (err as SandboxModuleDenialError).moduleName = moduleName;
+    }
     return err;
   }
   return new Error(typeof data === 'string' ? data : JSON.stringify(data));
 };
+
+/** Thrown by `__require` in the sandbox when a module is denied; `moduleName` is the requested specifier. */
+export interface SandboxModuleDenialError extends Error {
+  code: 'SANDBOX_MODULE_NOT_PERMITTED' | 'SANDBOX_MODULE_NOT_AVAILABLE';
+  moduleName: string;
+}

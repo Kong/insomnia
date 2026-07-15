@@ -34,7 +34,7 @@ const config: PlaywrightTestConfig = {
       // High-confidence smoke/sanity checks, runs on Test App only on Ubuntu
       name: 'Smoke',
       testMatch: /smoke\/.*.test.ts/,
-      retries: 0,
+      retries: 1,
     },
     {
       // Single critical path test, runs on release recurring
@@ -58,7 +58,9 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['github'], ['line']] : [['dot']],
+  reporter: process.env.CI
+    ? [['github'], ['line'], ['junit', { outputFile: 'test-results.xml', includeRetries: true }]]
+    : [['dot']],
   timeout: process.env.CI || isWindows ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',

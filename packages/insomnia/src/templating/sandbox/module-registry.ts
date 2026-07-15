@@ -123,27 +123,16 @@ export const SANDBOX_MODULES: SandboxModuleDefinition[] = [
  */
 export const TEMPLATE_TAG_BASELINE_MODULES: string[] = ['path', 'crypto'];
 
-/**
- * Resolve the module set a template-tag plugin may `require()`: the baseline floor plus whatever the
- * plugin declared in `insomnia.permissions.modules`. Unknown declared names are harmless here —
- * they simply fail at require time with "not available in sandbox" (parse and grant are separate
- * concerns). Profile-ceiling intersection is added in P1.
- */
+/** Every registered module name — the trusted grant for first-party bundle plugins. */
+export const ALL_SANDBOX_MODULES: string[] = SANDBOX_MODULES.map(m => m.name);
+
 // alias -> canonical (e.g. "node:events" -> "events"); a Map so keys like "__proto__" stay literal.
 const canonicalModuleName = new Map<string, string>(
   SANDBOX_MODULES.flatMap(m => [[m.name, m.name], ...(m.aliases ?? []).map(a => [a, m.name] as [string, string])]),
 );
 
-export const resolveTemplateTagModules = (declaredModules: string[] = []): string[] => {
-  const resolved = [...TEMPLATE_TAG_BASELINE_MODULES];
-  for (const name of declaredModules) {
-    const canonical = canonicalModuleName.get(name) ?? name;
-    if (!resolved.includes(canonical)) {
-      resolved.push(canonical);
-    }
-  }
-  return resolved;
-};
+/** Resolve a declared module specifier to its canonical registry name (e.g. `node:events` → `events`). */
+export const canonicalizeModule = (name: string): string => canonicalModuleName.get(name) ?? name;
 
 /**
  * JS evaluated inside the sandbox immediately after the bootstrap. Populates the registry the

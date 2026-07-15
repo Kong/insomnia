@@ -8,7 +8,7 @@ module.exports.templateTags = [
     async run(context, label = 'hello') {
       // The sandbox sets INSOMNIA_TEMPLATE_SANDBOX; the legacy main-process path does not. (Both now
       // have `process` — the sandbox provides a stub since M2 — so it can't be the discriminator.)
-      // eslint-disable-next-line no-undef -- sandbox-only global; guarded by typeof
+
       const ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'sandbox' : 'main-process';
 
       // Exercise an async host bridge — proves __hostBridge + the executePendingJobs driver loop
@@ -78,6 +78,22 @@ module.exports.templateTags = [
       }
       // eslint-disable-next-line no-undef -- Buffer is a sandbox-provided ambient global
       return Buffer.from('hi 👋').toString('base64');
+    },
+  },
+  {
+    name: 'capabilityprobe',
+    displayName: 'Capability Probe',
+    description: 'Demos manifest-gated host capabilities (C1): this plugin declares capabilities ["storage"]',
+    args: [],
+    async run(context) {
+      // Works because package.json declares the `storage` capability. A plugin without it would get
+      // "Capability 'storage' not granted — add it to insomnia.permissions.capabilities".
+      try {
+        await context.store.setItem('demo_k', 'storage-ok');
+        return await context.store.getItem('demo_k');
+      } catch (err) {
+        return err.message;
+      }
     },
   },
 ];

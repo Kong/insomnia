@@ -541,6 +541,8 @@ export function registerMainHandlers() {
           console.error('[lint-process] error:', err);
           clearTimeout(timeoutHandle);
           reject({ error: err.toString() });
+          process?.kill();
+          process = null;
         });
 
         process.postMessage({ documentContent, rulesetPath });
