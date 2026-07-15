@@ -873,7 +873,7 @@ export const CodeEditor = memo(
                   </Button>
                 ) : null}
               </Toolbar>
-              {jsonFilterMatchCount !== null && (
+              {mode?.includes('json') && jsonFilterMatchCount !== null && (
                 <span className="pr-3 italic">
                   {jsonFilterMatchCount} {jsonFilterMatchCount === 1 ? 'match' : 'matches'}
                 </span>
