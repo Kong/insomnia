@@ -17,3 +17,40 @@ export function deserializeError(s: SerializedError): Error {
   err.stack = s.stack;
   return err;
 }
+
+const BUFFER_TAG = '__buffer__';
+
+interface TaggedBuffer {
+  [BUFFER_TAG]: true;
+  data: number[];
+}
+
+function isTaggedBuffer(v: unknown): v is TaggedBuffer {
+  return typeof v === 'object' && v !== null && (v as TaggedBuffer)[BUFFER_TAG] === true;
+}
+
+export function serializeValue(v: unknown): unknown {
+  if (Buffer.isBuffer(v)) {
+    return { [BUFFER_TAG]: true, data: Array.from(v) } satisfies TaggedBuffer;
+  }
+  if (Array.isArray(v)) {
+    return v.map(serializeValue);
+  }
+  if (typeof v === 'object' && v !== null) {
+    return Object.fromEntries(Object.entries(v).map(([k, val]) => [k, serializeValue(val)]));
+  }
+  return v;
+}
+
+export function deserializeValue(v: unknown): unknown {
+  if (isTaggedBuffer(v)) {
+    return Buffer.from(v.data);
+  }
+  if (Array.isArray(v)) {
+    return v.map(deserializeValue);
+  }
+  if (typeof v === 'object' && v !== null) {
+    return Object.fromEntries(Object.entries(v).map(([k, val]) => [k, deserializeValue(val)]));
+  }
+  return v;
+}

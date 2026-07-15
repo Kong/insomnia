@@ -1,7 +1,7 @@
 import type { IDatabase } from 'insomnia-data';
 import { database, type Services, services } from 'insomnia-data';
 
-import { type SerializedError, serializeError } from './serialization';
+import { type SerializedError, serializeError, serializeValue } from './serialization';
 
 export interface DataRequest {
   id: string;
@@ -56,7 +56,7 @@ async function handleRequest(port: Electron.MessagePortMain, req: DataRequest): 
   let response: DataResponse;
   try {
     const raw = await dispatch(req);
-    response = { id: req.id, ok: true, result: raw };
+    response = { id: req.id, ok: true, result: serializeValue(raw) };
   } catch (e) {
     response = { id: req.id, ok: false, error: serializeError(e) };
   }

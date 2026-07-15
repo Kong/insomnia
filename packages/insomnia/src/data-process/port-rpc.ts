@@ -1,4 +1,4 @@
-import { deserializeError, type SerializedError } from './serialization';
+import { deserializeError, deserializeValue, type SerializedError } from './serialization';
 
 export type InvokeFn = (namespace: 'services' | 'database', method: string, ...args: unknown[]) => Promise<unknown>;
 
@@ -27,7 +27,7 @@ export class PortRpc {
       const p = this.pending.get(data.id);
       if (!p) return;
       this.pending.delete(data.id);
-      data.ok ? p.resolve(data.result) : p.reject(deserializeError(data.error!));
+      data.ok ? p.resolve(deserializeValue(data.result)) : p.reject(deserializeError(data.error!));
     });
     console.debug('[port-rpc] attached', { pendingCount: this.pending.size });
   }
