@@ -1,10 +1,10 @@
 import { createTV } from 'tailwind-variants';
 
-import { twMergeConfig } from './cn';
+import { twMergeConfig } from './cls';
 
 /**
  * Single tv() instance for the whole library. It reuses the same tailwind-merge config as
- * `cn()` (see utils/cn.ts), so variant and non-variant components resolve class conflicts
+ * `cls()` (see utils/cls.ts), so variant and non-variant components resolve class conflicts
  * identically. Library-internal only — components consume this, business code never imports tv.
  */
 export const tv = createTV({ twMergeConfig });

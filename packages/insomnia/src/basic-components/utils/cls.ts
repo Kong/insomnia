@@ -2,7 +2,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 
 /**
  * The library's single source of truth for tailwind-merge behavior.
- * Both `cn()` (non-variant components) and the shared `tv` instance (utils/variants.ts)
+ * Both `cls()` (non-variant components) and the shared `tv` instance (utils/variants.ts)
  * consume this config, so class-conflict resolution stays consistent library-wide and any
  * future customization (e.g. registering custom class groups) is a one-place change.
  *
@@ -12,4 +12,4 @@ import { extendTailwindMerge } from 'tailwind-merge';
 export const twMergeConfig = {};
 
 /** Merge conditional class names, resolving Tailwind utility conflicts via the shared config. */
-export const cn = extendTailwindMerge(twMergeConfig);
+export const cls = extendTailwindMerge(twMergeConfig);

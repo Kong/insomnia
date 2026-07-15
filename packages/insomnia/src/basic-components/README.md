@@ -34,7 +34,7 @@ free. Existing deep imports (`~/basic-components/button`, ~18 files) are left as
 | `Progress`      | ✅            | `progress.tsx`                                                                          |
 | `Icon`          | ✅            | `icon.tsx` (re-exports `ui/components/icon`, pending consolidation — see mapping below) |
 
-`utils/` helpers (e.g. `utils/cn.ts`, `utils/variants.ts`, `utils/index.ts`) are library-internal (tailwind-merge / tailwind-variants helpers) and are **not** re-exported from the barrel — see [`AGENTS.md`](./AGENTS.md).
+`utils/` helpers (e.g. `utils/cls.ts`, `utils/variants.ts`, `utils/index.ts`) are library-internal (tailwind-merge / tailwind-variants helpers) and are **not** re-exported from the barrel — see [`AGENTS.md`](./AGENTS.md).
 
 ## Migration mapping (old → new)
 
