@@ -140,8 +140,6 @@ function setEditorValueWithTruncation(
   });
 }
 
-// Global object used for storing and persisting editor scroll, lint and folding margin states
-const editorStates: Record<string, EditorState> = {};
 export interface CodeEditorProps {
   autoPrettify?: boolean;
   className?: string;
