@@ -831,7 +831,7 @@ export async function findExistingImportedMcp(projectId?: string, organizationId
     const workspaces = await services.workspace.listByParentId(pid);
     for (const ws of workspaces.filter(models.workspace.isMcp)) {
       const mcpRequest = await services.mcpRequest.getByParentId(ws._id);
-      if (mcpRequest?.url.trim() === incomingUrl) {
+      if (mcpRequest?.url?.trim() === incomingUrl) {
         return { workspace: ws, mcpRequest };
       }
     }
