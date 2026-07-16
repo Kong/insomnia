@@ -20,6 +20,7 @@ import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
 import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import { isCurlCommand } from '~/common/utils/curl';
 import { useRootLoaderData } from '~/root';
 import { showModal } from '~/ui/components/modals';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
@@ -176,9 +177,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
         const isPaste = change.text && change.text.length > 1;
         if (isPaste) {
-          const startsWithCurl = change.text[0].startsWith('curl');
-          const isWhitespace = change.text.join('').trim();
-          if (startsWithCurl || !isWhitespace) {
+          const pastedText = change.text.join('\n');
+          const hasContent = pastedText.trim();
+          if (isCurlCommand(pastedText) || !hasContent) {
             change.cancel();
             return;
           }
@@ -188,8 +189,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       });
       codeMirror.current.on('paste', (_, e: ClipboardEvent) => {
         const text = e.clipboardData?.getData('text/plain');
-        // TODO: watch out for pasting urls that are curl<something>, e.g. curl.se would be picked up here without the space
-        if (onPaste && text && text.startsWith('curl ')) {
+        if (onPaste && text && isCurlCommand(text)) {
           onPaste(text);
         }
       });

@@ -1,4 +1,5 @@
-import React, { forwardRef, useCallback, useState } from 'react';
+import type { Placement } from '@react-types/overlays';
+import { forwardRef, useCallback, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { HTTP_METHODS } from '../../../common/constants';
@@ -39,6 +40,8 @@ interface Props {
   onChange: (method: string) => void;
   /** Extra classes for the trigger button (e.g. sizing/layout in a given context). */
   className?: string;
+  /** Popover placement relative to the trigger. Defaults to the base Dropdown's 'bottom end'. */
+  placement?: Placement;
 }
 
 /**
@@ -48,7 +51,7 @@ interface Props {
  * opens a dropdown to pick another method (plus a custom-method option). Self
  * contained so it can be dropped into any surface that needs method selection.
  */
-export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onChange, className }, ref) => {
+export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onChange, className, placement }, ref) => {
   const [recent, setRecent] = useState(readRecentMethods);
 
   const handleSetCustomMethod = useCallback(() => {
@@ -98,6 +101,8 @@ export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onCha
     <Dropdown
       ref={ref}
       aria-label="Request Method"
+      placement={placement}
+      className="self-stretch"
       triggerButton={
         <Button
           aria-label="Request Method"
