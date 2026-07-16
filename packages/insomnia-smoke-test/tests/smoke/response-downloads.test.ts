@@ -31,7 +31,7 @@ test.describe('Response Downloads', () => {
 
   test('Can export raw response body', async ({ insomnia, app, page }) => {
     await insomnia.projectPage.importFixture(FIXTURE);
-    await page.getByLabel('Request Collection').getByTestId('JSON Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('JSON Request');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
@@ -52,7 +52,7 @@ test.describe('Response Downloads', () => {
 
   test('Can export prettified JSON response', async ({ insomnia, app, page }) => {
     await insomnia.projectPage.importFixture(FIXTURE);
-    await page.getByLabel('Request Collection').getByTestId('JSON Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('JSON Request');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
@@ -74,7 +74,7 @@ test.describe('Response Downloads', () => {
 
   test('Can export HTTP debug file', async ({ insomnia, app, page }) => {
     await insomnia.projectPage.importFixture(FIXTURE);
-    await page.getByLabel('Request Collection').getByTestId('JSON Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('JSON Request');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
@@ -95,7 +95,7 @@ test.describe('Response Downloads', () => {
 
   test('Can export raw large response body', async ({ insomnia, app, page }) => {
     await insomnia.projectPage.importFixture(FIXTURE);
-    await page.getByLabel('Request Collection').getByTestId('Large JSON Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Large JSON Request');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
@@ -117,7 +117,7 @@ test.describe('Response Downloads', () => {
   // exactly the ones with no bodyBuffer, so it has to take the streaming raw path.
   test('Can save a large response via the Save To File button', async ({ insomnia, app, page }) => {
     await insomnia.projectPage.importFixture(FIXTURE);
-    await page.getByLabel('Request Collection').getByTestId('Large JSON Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Large JSON Request');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
@@ -138,7 +138,7 @@ test.describe('Response Downloads', () => {
 
   test('Prettified export is disabled for large JSON response', async ({ insomnia, page }) => {
     await insomnia.projectPage.importFixture(FIXTURE);
-    await page.getByLabel('Request Collection').getByTestId('Large JSON Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Large JSON Request');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
 
