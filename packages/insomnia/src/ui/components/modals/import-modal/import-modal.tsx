@@ -16,6 +16,7 @@ import { Checkbox } from '~/ui/components/base/checkbox';
 
 import {
   clearResourceCache,
+  findExistingImportedMcp,
   findExistingImportedSpec,
   findRequestInExistingWorkspace,
   type ImportSourceType,
@@ -33,7 +34,7 @@ import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
-import { CurlIcon, isApiSpecScanResult, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
+import { CurlIcon, isApiSpecScanResult, requiresNewWorkspace, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 export const Radio: FC<{
   name: string;
@@ -236,11 +237,13 @@ export const ImportModal: FC<ImportModalProps> = ({
   }, [autoScan, from.type, from.defaultValue, scanResourcesFetcher, scanResourcesFetcherData]);
 
   const hasApiSpecScanResult = scanResourcesFetcherData?.some(isApiSpecScanResult);
+  const hasMcpScanResult = scanResourcesFetcherData?.some(r => (r.mcpRequests?.length ?? 0) > 0);
+  const mustCreateNewWorkspace = scanResourcesFetcherData?.some(requiresNewWorkspace);
   const [showForm, setShowForm] = useState(!autoScan);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const dupCheckRef = useRef(false);
   useEffect(() => {
-    if (!autoScan || !hasApiSpecScanResult || !organizationId) return;
+    if (!autoScan || (!hasApiSpecScanResult && !hasMcpScanResult) || !organizationId) return;
     if (!defaultProjectId) {
       setShowForm(true);
       return;
@@ -249,24 +252,38 @@ export const ImportModal: FC<ImportModalProps> = ({
     const valid = scanResourcesFetcherData?.some(({ errors }) => !errors.length);
     if (!valid) return;
     dupCheckRef.current = true;
-    findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
-      if (!existing) return setShowForm(true);
-      findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
+
+    if (hasApiSpecScanResult) {
+      findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
+        if (!existing) return setShowForm(true);
+        findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
+          const targetProjectId = existing.workspace.parentId || defaultProjectId;
+          const path = req
+            ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
+            : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${models.workspace.scopeToActivity(existing.workspace.scope)}`;
+          clearResourceCache();
+          navigate(path);
+          modalRef.current?.hide();
+        });
+      });
+    } else {
+      findExistingImportedMcp(defaultProjectId, organizationId).then(existing => {
+        if (!existing) return setShowForm(true);
         const targetProjectId = existing.workspace.parentId || defaultProjectId;
-        const path = req
-          ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
-          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${models.workspace.scopeToActivity(existing.workspace.scope)}`;
         clearResourceCache();
-        navigate(path);
+        navigate(
+          `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${existing.mcpRequest._id}`,
+        );
         modalRef.current?.hide();
       });
-    });
+    }
   }, [
     autoScan,
     defaultProjectId,
     from.endpoint,
     from.operationId,
     hasApiSpecScanResult,
+    hasMcpScanResult,
     navigate,
     organizationId,
     scanResourcesFetcherData,
@@ -320,7 +337,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       ) || 0
     );
   }, [scanResourcesFetcherData]);
-  const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1 && !hasApiSpecScanResult;
+  const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1 && !mustCreateNewWorkspace;
   // Check if base environment is being imported to existing workspace
   const isImportingBaseEnvironmentToWorkspace =
     shouldImportToWorkspace &&
@@ -356,7 +373,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>{header}</ModalHeader>
-        {autoScan && hasApiSpecScanResult && hasAnyDataToImport && !showForm ? (
+        {autoScan && (hasApiSpecScanResult || hasMcpScanResult) && hasAnyDataToImport && !showForm ? (
           <div className="flex items-center justify-center p-8">
             <i className="fa fa-spinner fa-spin fa-2x" />
           </div>
@@ -366,6 +383,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
+            autoScan={autoScan}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -392,7 +410,7 @@ export const ImportModal: FC<ImportModalProps> = ({
                 organizationId,
                 projectId: targetProjectId,
                 workspaceId:
-                  hasApiSpecScanResult || newProjectName
+                  mustCreateNewWorkspace || newProjectName
                     ? undefined
                     : selectedWorkspaceId || undefined,
                 endpoint: from.endpoint,
@@ -625,6 +643,7 @@ const ImportResourcesForm = ({
   errors,
   disabled,
   loading,
+  autoScan,
   isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
@@ -637,6 +656,7 @@ const ImportResourcesForm = ({
   ) => void;
   disabled: boolean;
   loading: boolean;
+  autoScan: boolean;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -646,7 +666,7 @@ const ImportResourcesForm = ({
   };
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || '');
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(autoScan ? '' : workspaceId || '');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   const [newProjectName, setNewProjectName] = useState(() => {
     for (const result of scanResults) {
@@ -678,7 +698,8 @@ const ImportResourcesForm = ({
         .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
         .filter(isNotNullOrUndefined)
         .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
-  const shouldShowWorkspaceSelect = workspacesForActiveProject.length > 0;
+  const shouldShowWorkspaceSelect =
+    !scanResults.some(requiresNewWorkspace) && workspacesForActiveProject.length > 0;
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">

@@ -804,6 +804,41 @@ export async function findExistingImportedSpec(
   return undefined;
 }
 
+export async function findExistingImportedMcp(projectId?: string, organizationId?: string) {
+  let incomingUrl: string | undefined;
+  for (const cache of resourceCacheList) {
+    const mcpRequest = cache.resources.find(models.mcpRequest.isMcpRequest);
+    if (mcpRequest?.url?.trim()) {
+      incomingUrl = mcpRequest.url.trim();
+      break;
+    }
+  }
+  if (!incomingUrl) return;
+
+  const filteredProjects = organizationId
+    ? await services.project.listByOrganizationIds(organizationId)
+    : await services.project.list();
+
+  const projectIds = new Set<string>();
+  if (projectId) {
+    projectIds.add(projectId);
+  }
+  for (const p of filteredProjects) {
+    projectIds.add(p._id);
+  }
+
+  for (const pid of projectIds) {
+    const workspaces = await services.workspace.listByParentId(pid);
+    for (const ws of workspaces.filter(models.workspace.isMcp)) {
+      const mcpRequest = await services.mcpRequest.getByParentId(ws._id);
+      if (mcpRequest?.url.trim() === incomingUrl) {
+        return { workspace: ws, mcpRequest };
+      }
+    }
+  }
+  return;
+}
+
 export function pathPatternMatches(pattern: string, concretePath: string): boolean {
   if (!pattern || pattern.length > 200) {
     return false;

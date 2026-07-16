@@ -4,6 +4,7 @@ import { href } from 'react-router';
 
 import {
   clearResourceCache,
+  findExistingImportedMcp,
   findExistingImportedSpec,
   findRequestInExistingWorkspace,
   importResourcesToProject,
@@ -62,19 +63,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
     if (!workspaceId && data.skipImportIfDuplicate) {
-      const existing = await findExistingImportedSpec(projectId, organizationId);
-      if (existing) {
-        const matchedRequest = await findRequestInExistingWorkspace(
-          existing.workspace,
-          data.endpoint,
-          data.operationId,
-        );
-        clearResourceCache(); // skipping import to navigate to existing, avoid stale resource cache
+      const existingSpec = await findExistingImportedSpec(projectId, organizationId);
+      const existingMcp = existingSpec ? undefined : await findExistingImportedMcp(projectId, organizationId);
+      const workspace = existingSpec?.workspace ?? existingMcp?.workspace;
+      if (workspace) {
+        const matchedRequest = existingSpec
+          ? await findRequestInExistingWorkspace(workspace, data.endpoint, data.operationId)
+          : existingMcp?.mcpRequest;
+        clearResourceCache();
         return {
           done: true,
-          singleImportedWorkspace: existing.workspace,
+          singleImportedWorkspace: workspace,
           singleImportedRequest: matchedRequest,
-          singleImportedProjectId: existing.workspace.parentId,
+          singleImportedProjectId: workspace.parentId,
         };
       }
     }
