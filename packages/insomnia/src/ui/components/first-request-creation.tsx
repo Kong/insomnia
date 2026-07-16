@@ -84,15 +84,22 @@ const flattenCurlCommand = (value: string) =>
 // Read the HTTP method from a cURL string, for keeping the method dropdown in
 // sync while typing/pasting/importing. Mirrors the real importer's extractMethod
 // (src/main/importers/importers/curl.ts): explicit -X/--request wins (including
-// curl's cuddled short-flag form, e.g. -XPUT), otherwise a body/form flag implies
-// POST, otherwise GET. Always resolves so the preview never goes stale relative
-// to what the actual import would produce.
+// curl's cuddled short-flag form, e.g. -XPUT); otherwise -G/--get combined with a
+// -d/--data flag moves the data into the query string instead of the body (so the
+// method stays GET); otherwise a body/form flag implies POST, otherwise GET.
+// Always resolves so the preview never goes stale relative to what the actual
+// import would produce.
 const extractCurlMethod = (value: string): string => {
   const explicit = value.match(/(?:-X\s*|--request\s+)['"]?([A-Za-z]+)/);
   if (explicit) {
     return explicit[1].toUpperCase();
   }
-  if (/(?:^|\s)(?:-d|--data(?:-raw|-binary|-urlencode|-ascii)?|-F|--form)\b/.test(value)) {
+  const hasGetFlag = /(?:^|\s)(?:-G|--get)\b/.test(value);
+  const hasDataFlag = /(?:^|\s)(?:-d|--data(?:-raw|-binary|-urlencode|-ascii)?)\b/.test(value);
+  if (hasGetFlag && hasDataFlag) {
+    return METHOD_GET;
+  }
+  if (hasDataFlag || /(?:^|\s)(?:-F|--form)\b/.test(value)) {
     return 'POST';
   }
   return METHOD_GET;
