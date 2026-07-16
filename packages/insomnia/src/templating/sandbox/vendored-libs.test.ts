@@ -8,6 +8,8 @@ import { type HostBridge } from './host-bridge';
 import { type ContextEnvelope } from './marshal';
 import { buildModuleRegistrySource, VENDORED_LIB_VERSIONS } from './module-registry';
 import { type HostCrypto, runTagInSandbox } from './plugin-tag-sandbox';
+import { AJV_FACTORY_SOURCE } from './vendored/ajv.generated';
+import { UUID_FACTORY_SOURCE } from './vendored/uuid.generated';
 
 // Vetted vendored npm libraries (M3): registry-wiring tests only. Per-lib API-surface exercises live
 // in the dedicated <name>.regression.test.ts files alongside this one — kept separate since they're
@@ -70,5 +72,10 @@ describe('vendored libraries (M3)', () => {
   it('denies a heavy lib that was not granted with the manifest message', async () => {
     const source = "module.exports.templateTags = [{ name: 't', run: function () { return typeof require('ajv'); } }];";
     await expect(runTag(source, ['path', 'crypto'])).rejects.toThrow("Module 'ajv' not permitted by manifest");
+  });
+
+  it('stays minified (re-parsed fresh on every render, so size directly costs eval time)', () => {
+    expect(AJV_FACTORY_SOURCE.length).toBeLessThan(180_000);
+    expect(UUID_FACTORY_SOURCE.length).toBeLessThan(25_000);
   });
 });
