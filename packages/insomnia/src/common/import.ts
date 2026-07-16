@@ -754,16 +754,7 @@ function getOasTitleAndVersion(content: string): { title: string; version: strin
   }
 }
 
-export async function findExistingImportedSpec(
-  projectId?: string,
-  organizationId?: string,
-): Promise<
-  | {
-      workspace: Workspace;
-      apiSpec: ApiSpec;
-    }
-  | undefined
-> {
+export async function findExistingImportedWorkspace(projectId?: string, organizationId?: string) {
   const filteredProjects = organizationId
     ? await services.project.listByOrganizationIds(organizationId)
     : await services.project.list();
@@ -777,62 +768,42 @@ export async function findExistingImportedSpec(
     projectIds.add(p._id);
   }
 
-  for (const cache of resourceCacheList) {
-    if (!isApiSpecImport(cache.importer)) continue;
-
-    const incoming = getOasTitleAndVersion(cache.content);
-    if (!incoming) continue;
-
-    for (const pid of projectIds) {
-      const workspaces = await services.workspace.listByParentId(pid);
-      const designWorkspaces = workspaces.filter(w => w.scope === 'design');
-
-      for (const ws of designWorkspaces) {
-        const expectedName = `${incoming.title} ${incoming.version}`;
-        if (ws.name !== expectedName) continue;
-
-        const apiSpec = await services.apiSpec.getByParentId(ws._id);
-        if (!apiSpec) continue;
-
-        const stored = getOasTitleAndVersion(apiSpec.contents);
-        if (!stored || stored.title !== incoming.title || stored.version !== incoming.version) continue;
-
-        return { workspace: ws, apiSpec };
-      }
-    }
-  }
-  return undefined;
-}
-
-export async function findExistingImportedMcp(projectId?: string, organizationId?: string) {
-  let incomingUrl: string | undefined;
+  let incomingMcpUrl: string | undefined;
+  let incomingOasTitleAndVersion: { title: string; version: string } | undefined;
   for (const cache of resourceCacheList) {
     const mcpRequest = cache.resources.find(models.mcpRequest.isMcpRequest);
     if (mcpRequest?.url?.trim()) {
-      incomingUrl = mcpRequest.url.trim();
-      break;
+      incomingMcpUrl = mcpRequest?.url?.trim();
     }
-  }
-  if (!incomingUrl) return;
+    if (isApiSpecImport(cache.importer)) {
+      incomingOasTitleAndVersion = getOasTitleAndVersion(cache.content);
+    }
 
-  const filteredProjects = organizationId
-    ? await services.project.listByOrganizationIds(organizationId)
-    : await services.project.list();
+    if (!incomingOasTitleAndVersion && !incomingMcpUrl) continue;
 
-  const projectIds = new Set<string>();
-  if (projectId) {
-    projectIds.add(projectId);
-  }
-  for (const p of filteredProjects) {
-    projectIds.add(p._id);
-  }
+    for (const pid of projectIds) {
+      const workspaces = await services.workspace.listByParentId(pid);
+      for (const ws of workspaces) {
+        // spec/document branch
+        if (incomingOasTitleAndVersion && models.workspace.isDesign(ws)) {
+          const { title, version } = incomingOasTitleAndVersion;
+          const expectedName = `${title} ${version}`;
+          if (ws.name !== expectedName) continue;
 
-  for (const pid of projectIds) {
-    const workspaces = await services.workspace.listByParentId(pid);
-    for (const ws of workspaces.filter(models.workspace.isMcp)) {
-      const mcpRequest = await services.mcpRequest.getByParentId(ws._id);
-      if (mcpRequest?.url?.trim() === incomingUrl) {
-        return { workspace: ws, mcpRequest };
+          const apiSpec = await services.apiSpec.getByParentId(ws._id);
+          if (!apiSpec) continue;
+
+          const stored = getOasTitleAndVersion(apiSpec.contents);
+          if (!stored || stored.title !== title || stored.version !== version) continue;
+          return { workspace: ws, model: apiSpec };
+        }
+        // mcp branch
+        if (incomingMcpUrl && models.workspace.isMcp(ws)) {
+          const mcpRequest = await services.mcpRequest.getByParentId(ws._id);
+          if (mcpRequest?.url?.trim() === incomingMcpUrl) {
+            return { workspace: ws, model: mcpRequest };
+          }
+        }
       }
     }
   }

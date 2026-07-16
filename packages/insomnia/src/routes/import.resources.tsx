@@ -1,11 +1,10 @@
 import type { Workspace } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import {
   clearResourceCache,
-  findExistingImportedMcp,
-  findExistingImportedSpec,
+  findExistingImportedWorkspace,
   findRequestInExistingWorkspace,
   importResourcesToProject,
   importResourcesToWorkspace,
@@ -63,19 +62,17 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
     if (!workspaceId && data.skipImportIfDuplicate) {
-      const existingSpec = await findExistingImportedSpec(projectId, organizationId);
-      const existingMcp = existingSpec ? undefined : await findExistingImportedMcp(projectId, organizationId);
-      const workspace = existingSpec?.workspace ?? existingMcp?.workspace;
-      if (workspace) {
-        const matchedRequest = existingSpec
-          ? await findRequestInExistingWorkspace(workspace, data.endpoint, data.operationId)
-          : existingMcp?.mcpRequest;
+      const existing = await findExistingImportedWorkspace(projectId, organizationId);
+      if (existing) {
+        const matchedRequest = models.apiSpec.isApiSpec(existing.model)
+          ? await findRequestInExistingWorkspace(existing.workspace, data.endpoint, data.operationId)
+          : existing.model;
         clearResourceCache();
         return {
           done: true,
-          singleImportedWorkspace: workspace,
+          singleImportedWorkspace: existing.workspace,
           singleImportedRequest: matchedRequest,
-          singleImportedProjectId: workspace.parentId,
+          singleImportedProjectId: existing.workspace.parentId,
         };
       }
     }

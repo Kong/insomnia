@@ -16,8 +16,7 @@ import { Checkbox } from '~/ui/components/base/checkbox';
 
 import {
   clearResourceCache,
-  findExistingImportedMcp,
-  findExistingImportedSpec,
+  findExistingImportedWorkspace,
   findRequestInExistingWorkspace,
   type ImportSourceType,
   type ScanResult,
@@ -34,7 +33,14 @@ import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
-import { CurlIcon, isApiSpecScanResult, requiresNewWorkspace, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
+import {
+  CurlIcon,
+  isApiSpecScanResult,
+  requiresNewWorkspace,
+  ScanResultsTable,
+  SupportedFormats,
+  validImportExtensions,
+} from './shared';
 
 export const Radio: FC<{
   name: string;
@@ -253,30 +259,24 @@ export const ImportModal: FC<ImportModalProps> = ({
     if (!valid) return;
     dupCheckRef.current = true;
 
-    if (hasApiSpecScanResult) {
-      findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
-        if (!existing) return setShowForm(true);
-        findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
-          const targetProjectId = existing.workspace.parentId || defaultProjectId;
-          const path = req
-            ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
-            : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${models.workspace.scopeToActivity(existing.workspace.scope)}`;
-          clearResourceCache();
-          navigate(path);
-          modalRef.current?.hide();
-        });
-      });
-    } else {
-      findExistingImportedMcp(defaultProjectId, organizationId).then(existing => {
-        if (!existing) return setShowForm(true);
-        const targetProjectId = existing.workspace.parentId || defaultProjectId;
+    findExistingImportedWorkspace(defaultProjectId, organizationId).then(existing => {
+      if (!existing) return setShowForm(true);
+      const { workspace, model } = existing;
+      const targetProjectId = workspace.parentId || defaultProjectId;
+      const navigateTo = (requestId?: string) => {
+        const path = requestId
+          ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/debug/request/${requestId}`
+          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`;
         clearResourceCache();
-        navigate(
-          `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${existing.mcpRequest._id}`,
-        );
+        navigate(path);
         modalRef.current?.hide();
-      });
-    }
+      };
+      if (models.mcpRequest.isMcpRequest(model)) {
+        navigateTo(model._id);
+      } else {
+        findRequestInExistingWorkspace(workspace, from.endpoint, from.operationId).then(req => navigateTo(req?._id));
+      }
+    });
   }, [
     autoScan,
     defaultProjectId,
@@ -409,10 +409,7 @@ export const ImportModal: FC<ImportModalProps> = ({
               importFetcher.submit({
                 organizationId,
                 projectId: targetProjectId,
-                workspaceId:
-                  mustCreateNewWorkspace || newProjectName
-                    ? undefined
-                    : selectedWorkspaceId || undefined,
+                workspaceId: mustCreateNewWorkspace || newProjectName ? undefined : selectedWorkspaceId || undefined,
                 endpoint: from.endpoint,
                 operationId: from.operationId,
                 skipImportIfDuplicate: autoScan,
@@ -698,8 +695,7 @@ const ImportResourcesForm = ({
         .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
         .filter(isNotNullOrUndefined)
         .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
-  const shouldShowWorkspaceSelect =
-    !scanResults.some(requiresNewWorkspace) && workspacesForActiveProject.length > 0;
+  const shouldShowWorkspaceSelect = !scanResults.some(requiresNewWorkspace) && workspacesForActiveProject.length > 0;
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
