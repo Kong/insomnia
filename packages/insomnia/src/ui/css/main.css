@@ -1062,6 +1062,10 @@ select {
   color: inherit;
   font-family: var(--font-family);
 }
+:where(textarea, input, .input, button, select):focus-visible {
+  outline: 2px solid var(--hl-md);
+  outline-offset: 1px;
+}
 textarea::-webkit-input-placeholder,
 input::-webkit-input-placeholder,
 .input::-webkit-input-placeholder,
