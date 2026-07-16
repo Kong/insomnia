@@ -10,7 +10,13 @@ function clearPendingResolverAndRejector() {
   pendingOAuthRejector = null;
 }
 
-export async function authorizeUserInDefaultBrowser({ url }: { url: string }) {
+export async function authorizeUserInDefaultBrowser({
+  url,
+  openDefaultBrowser = true,
+}: {
+  url: string;
+  openDefaultBrowser: boolean;
+}) {
   if (pendingOAuthRejector) {
     pendingOAuthRejector(new Error('Canceled by new OAuth request'));
     clearPendingResolverAndRejector();
@@ -20,10 +26,12 @@ export async function authorizeUserInDefaultBrowser({ url }: { url: string }) {
     pendingOAuthResolver = resolve;
     pendingOAuthRejector = reject;
 
-    shell.openExternal(url).catch((err: Error) => {
-      reject(new Error(`Failed to open default browser: ${err?.message}`));
-      clearPendingResolverAndRejector();
-    });
+    if (openDefaultBrowser) {
+      shell.openExternal(url).catch((err: Error) => {
+        reject(new Error(`Failed to open default browser: ${err?.message}`));
+        clearPendingResolverAndRejector();
+      });
+    }
   });
 }
 
