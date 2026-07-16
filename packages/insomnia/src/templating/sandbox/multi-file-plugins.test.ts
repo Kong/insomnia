@@ -150,4 +150,28 @@ describe('multi-file plugins (M4)', () => {
     );
     expect(actual).toBe('real-uuid');
   });
+
+  // Guards against `in` matching an inherited Object.prototype member instead of failing closed.
+  describe('does not resolve a nonexistent relative specifier that shadows an Object.prototype member', () => {
+    it.each(['constructor', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString'])(
+      'require("./%s") with no such file throws Cannot find module',
+      async name => {
+        await expect(
+          runMap({
+            'index.js':
+              `require('./${name}'); module.exports.templateTags = [{ name: 't', run: function () { return 'x'; } }];`,
+          }),
+        ).rejects.toThrow(new RegExp(`Cannot find module '\\./${name}'`));
+      },
+    );
+  });
+
+  it('still resolves a real file whose name happens to match an Object.prototype member', async () => {
+    const actual = await runMap({
+      'index.js':
+        "var c = require('./constructor'); module.exports.templateTags = [{ name: 't', run: function () { return c.v; } }];",
+      'constructor.js': "module.exports.v = 'real-constructor-file';",
+    });
+    expect(actual).toBe('real-constructor-file');
+  });
 });
