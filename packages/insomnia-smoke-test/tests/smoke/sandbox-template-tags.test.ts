@@ -487,3 +487,64 @@ test('Template tag sandbox: surface profile enforces the ceiling and warns manif
   // granted — the cloudCredential branch is absent (a manifest can't self-escalate past the surface).
   await assertTagPreview('{% ceilingprobe', 'cloudCredential=undefined');
 });
+
+test('Template tag sandbox: vetted npm libraries (uuid, ajv) run when declared (M3)', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // Declares uuid; a second tag requires ajv WITHOUT declaring it (registry presence ≠ grant).
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-m3-uuid',
+    { permissions: { modules: ['uuid'] } },
+    `module.exports.templateTags = [
+      { name: 'uuidprobe', displayName: 'uuidprobe', args: [], async run() {
+        var uuid = require('uuid');
+        return 'uuid=' + (uuid.validate(uuid.v4()) ? 'ok' : 'bad');
+      } },
+      { name: 'ajvungranted', displayName: 'ajvungranted', args: [], async run() { return typeof require('ajv'); } }
+    ];`,
+  );
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-m3-ajv',
+    { permissions: { modules: ['ajv'] } },
+    `module.exports.templateTags = [{ name: 'ajvprobe', displayName: 'ajvprobe', args: [], async run() {
+      var Ajv = require('ajv');
+      var validate = new Ajv().compile({ type: 'object', properties: { n: { type: 'number' } }, required: ['n'] });
+      return (validate({ n: 1 }) ? 'valid' : 'invalid') + ',' + (validate({ n: 'x' }) ? 'valid' : 'invalid');
+    } }];`,
+  );
+
+  await clearPluginToast(page);
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  const fixture = await loadFixture('sandbox-vendored-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await enableSandbox(page);
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Vendored Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  const assertTagPreview = async (tagPrefix: string, expected: string) => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    await expect.soft(modal.getByLabel('Live Preview')).toContainText(expected);
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+  };
+
+  // Declared `uuid` → the bundled lib runs (v4 generated and validated by the same bundle).
+  await assertTagPreview('{% uuidprobe', 'uuid=ok');
+  // Declared `ajv` → schema compiled and both payloads validated by the bundled lib.
+  await assertTagPreview('{% ajvprobe', 'valid,invalid');
+  // ajv is IN the registry but this plugin didn't declare it — registry presence ≠ grant.
+  await assertTagPreview('{% ajvungranted', "Module 'ajv' not permitted by manifest");
+});

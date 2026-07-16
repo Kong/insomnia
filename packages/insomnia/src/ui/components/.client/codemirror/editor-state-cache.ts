@@ -1,6 +1,6 @@
 import type CodeMirror from 'codemirror';
 
-// Persisted CodeMirror state, cached by a stable `uniquenessKey` so it survives
+// Persisted CodeMirror state, cached by a stable `historyKey` so it survives
 // editor remounts (when a parent changes its React `key`). Used by both
 // CodeEditor and OneLineEditor. `history` is the undo/redo stack; the remaining
 // fields are only populated by the richer multi-line CodeEditor.
@@ -21,20 +21,20 @@ const MAX_CACHED_EDITOR_STATES = 100;
 // Map preserves insertion order, so the first key is the least-recently-used.
 const editorStates = new Map<string, CachedEditorState>();
 
-export const getCachedEditorState = (uniquenessKey: string): CachedEditorState | undefined => {
-  const state = editorStates.get(uniquenessKey);
+export const getCachedEditorState = (historyKey: string): CachedEditorState | undefined => {
+  const state = editorStates.get(historyKey);
   if (state) {
     // mark as most-recently-used
-    editorStates.delete(uniquenessKey);
-    editorStates.set(uniquenessKey, state);
+    editorStates.delete(historyKey);
+    editorStates.set(historyKey, state);
   }
   return state;
 };
 
-export const setCachedEditorState = (uniquenessKey: string, state: CachedEditorState): void => {
+export const setCachedEditorState = (historyKey: string, state: CachedEditorState): void => {
   // re-insert at the end so it counts as most-recently-used
-  editorStates.delete(uniquenessKey);
-  editorStates.set(uniquenessKey, state);
+  editorStates.delete(historyKey);
+  editorStates.set(historyKey, state);
   while (editorStates.size > MAX_CACHED_EDITOR_STATES) {
     const lruKey = editorStates.keys().next().value;
     if (lruKey === undefined) {

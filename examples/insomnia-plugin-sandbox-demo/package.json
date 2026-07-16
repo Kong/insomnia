@@ -8,7 +8,8 @@
     "description": "Demo plugin to manually verify the QuickJS template-tag sandbox path",
     "permissions": {
       "modules": [
-        "events"
+        "events",
+        "uuid"
       ],
       "capabilities": [
         "storage"

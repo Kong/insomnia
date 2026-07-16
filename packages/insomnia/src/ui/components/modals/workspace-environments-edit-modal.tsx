@@ -521,6 +521,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                       <EnvironmentEditor
                         ref={environmentEditorRef}
                         key={selectedEnvironment._id}
+                        historyKey={`environment-editor::${selectedEnvironment._id}`}
                         onChange={handleEnvironmentChange}
                         environmentInfo={{
                           object: selectedEnvironment.data,

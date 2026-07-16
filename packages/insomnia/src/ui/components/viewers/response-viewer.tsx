@@ -260,7 +260,7 @@ export const ResponseViewer = ({
         }
         placeholder="..."
         readOnly
-        uniquenessKey={responseId}
+        historyKey={responseId}
         updateFilter={filter => {
           updateFilter?.(filter);
 
@@ -364,7 +364,7 @@ export const ResponseViewer = ({
         noMatchBrackets
         placeholder="..."
         readOnly
-        uniquenessKey={responseId}
+        historyKey={responseId}
       />
     );
   }
@@ -387,7 +387,7 @@ export const ResponseViewer = ({
       }
       placeholder="..."
       readOnly
-      uniquenessKey={responseId}
+      historyKey={responseId}
       updateFilter={filter => {
         updateFilter?.(filter);
 

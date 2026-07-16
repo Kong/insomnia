@@ -109,7 +109,7 @@ export interface CodeEditorProps {
   readOnly?: boolean;
   style?: object;
   // NOTE: for caching scroll and marks
-  uniquenessKey?: string;
+  historyKey?: string;
   updateFilter?: (filter: string) => void;
 }
 
@@ -185,7 +185,7 @@ export const CodeEditor = memo(
         placeholder,
         readOnly,
         style,
-        uniquenessKey,
+        historyKey,
         updateFilter,
       },
       ref,
@@ -302,13 +302,13 @@ export const CodeEditor = memo(
 
       // NOTE: maybe we don't need this anymore? Maybe not.
       const persistState = useCallback(() => {
-        if (uniquenessKey && codeMirror.current) {
+        if (historyKey && codeMirror.current) {
           const scrollInfo = codeMirror.current.getScrollInfo();
           // ignore invalid scroll positions
           if (scrollInfo.height <= 0 || scrollInfo.width <= 0) {
             return;
           }
-          setCachedEditorState(uniquenessKey, {
+          setCachedEditorState(historyKey, {
             scroll: scrollInfo,
             selections: codeMirror.current.listSelections(),
             cursor: codeMirror.current.getCursor(),
@@ -327,7 +327,7 @@ export const CodeEditor = memo(
               }),
           });
         }
-      }, [uniquenessKey, codeMirror]);
+      }, [historyKey, codeMirror]);
 
       const initEditor = useCallback(() => {
         if (!textAreaRef.current) {
@@ -491,7 +491,7 @@ export const CodeEditor = memo(
           codeMirror.current.makeLinksClickable(onClickLink);
         }
         // Restore the state
-        const cachedState = uniquenessKey ? getCachedEditorState(uniquenessKey) : undefined;
+        const cachedState = historyKey ? getCachedEditorState(historyKey) : undefined;
         if (cachedState) {
           const { scroll, selections, cursor, history, marks } = cachedState;
           if (scroll) {
@@ -544,7 +544,7 @@ export const CodeEditor = memo(
         defaultValue,
         filter,
         onClickLink,
-        uniquenessKey,
+        historyKey,
         handleGetRenderContext,
         pinToBottom,
         onPaste,
@@ -774,7 +774,7 @@ export const CodeEditor = memo(
           </div>
           {showFilter || showPrettify ? (
             <div
-              key={uniquenessKey}
+              key={historyKey}
               className="flex h-(--line-height-sm) w-full items-center border-t border-solid border-(--hl-md) text-(--font-size-sm)"
             >
               {showFilter ? (

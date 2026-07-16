@@ -1,6 +1,6 @@
 let v4Counter = 0;
 
-const v4UUIDs = [
+export const v4UUIDs = [
   'cc1dd2ca-4275-747a-a881-99e8efd42403',
   'dd2ccc1a-2745-477a-881a-9e8ef9d42403',
   'e3e96e5f-dd68-4229-8b66-dee1f0940f3d',

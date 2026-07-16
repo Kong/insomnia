@@ -386,7 +386,7 @@ export const McpRequestPane: FC<Props> = ({
                         id="mcp-parameter-overview-editor"
                         showPrettifyButton
                         dynamicHeight
-                        uniquenessKey="mcp-parameter-overview-editor"
+                        historyKey={`mcp-parameter-overview-editor::${requestId}::${primitiveId}`}
                         defaultValue={JSON.stringify(mcpParams[primitiveId] || {}, null, 2)}
                         onChange={handleEditorChange}
                         mode="json"

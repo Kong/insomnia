@@ -174,7 +174,7 @@ export const RequestGroupPane: FC = () => {
             <TabPanel className="w-full flex-1" id="pre-request">
               <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
-                  uniquenessKey={`${activeRequestGroup._id}:pre-request-script`}
+                  historyKey={`${activeRequestGroup._id}:pre-request-script`}
                   defaultValue={activeRequestGroup.preRequestScript || ''}
                   onChange={preRequestScript => patchRequestGroup(activeRequestGroup._id, { preRequestScript })}
                 />
@@ -183,7 +183,7 @@ export const RequestGroupPane: FC = () => {
             <TabPanel className="w-full flex-1" id="after-response">
               <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
-                  uniquenessKey={`${activeRequestGroup._id}:after-response-script`}
+                  historyKey={`${activeRequestGroup._id}:after-response-script`}
                   defaultValue={activeRequestGroup.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequestGroup(activeRequestGroup._id, { afterResponseScript })}
                 />
@@ -243,6 +243,7 @@ export const RequestGroupPane: FC = () => {
                 <EnvironmentEditor
                   ref={environmentEditorRef}
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
+                  historyKey={`environment-editor::${activeRequestGroup ? activeRequestGroup._id : 'n/a'}`}
                   environmentInfo={{
                     object: activeRequestGroup ? activeRequestGroup.environment : {},
                     propertyOrder: (activeRequestGroup && activeRequestGroup.environmentPropertyOrder) ?? null,
@@ -256,6 +257,7 @@ export const RequestGroupPane: FC = () => {
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
             key={uniqueKey}
+            historyKey={`request-group-description::${activeRequestGroup._id}`}
             className="margin-top"
             placeholder="Write a description"
             defaultValue={activeRequestGroup.description}

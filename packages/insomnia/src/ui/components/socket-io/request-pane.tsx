@@ -258,6 +258,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
                               readOnly={disabled}
                               key={activeRequest._id}
                               id={'key-value-editor__name' + pathParameter.name}
+                              historyKey={`path-param::${activeRequest._id}::${pathParameter.name}`}
                               placeholder="Parameter value"
                               defaultValue={pathParameter.value || ''}
                               onChange={name => {
@@ -323,6 +324,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
             key={uniqueKey}
+            historyKey={`socketio-description::${requestId}`}
             placeholder="Write a description"
             defaultValue={activeRequest.description}
             onChange={(description: string) => patchRequest(requestId, { description })}
