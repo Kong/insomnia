@@ -112,6 +112,20 @@ describe('multi-file plugins (M4)', () => {
     ).rejects.toThrow(/Cannot find module '\.\/missing'/);
   });
 
+  it('does not clamp an above-root traversal back into the plugin (treats it as unresolvable)', async () => {
+    // nested/deep/leaf reaches three levels up — above the plugin root. A util.js exists at the root,
+    // but the escaping specifier must NOT resolve to it (Node would look outside the plugin). Clamping
+    // `..` at the root would let an out-of-plugin path masquerade as an in-plugin module.
+    await expect(
+      runMap({
+        'index.js':
+          "require('./nested/deep/leaf'); module.exports.templateTags = [{ name: 't', run: function () { return 'x'; } }];",
+        'nested/deep/leaf.js': "module.exports = require('../../../util');",
+        'util.js': "module.exports = 'root-util';",
+      }),
+    ).rejects.toThrow(/Cannot find module '\.\.\/\.\.\/\.\.\/util'/);
+  });
+
   it('propagates a syntax error in a required relative file (broken plugin)', async () => {
     await expect(
       runMap({

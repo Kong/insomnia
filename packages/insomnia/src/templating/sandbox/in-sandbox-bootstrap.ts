@@ -187,18 +187,23 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '  var __moduleFiles = (__env && __env.moduleFiles) || {};',
   '  var __pluginModuleCache = Object.create(null);',
   '  function __dirOfKey(key) { var i = key.lastIndexOf("/"); return i === -1 ? "" : key.slice(0, i); }',
+  // __normalizeKey returns null when the path traverses above the plugin root (e.g.
+  // require("../../util") from a shallow dir). Node would resolve that outside the plugin; clamping
+  // it back into the root could make an out-of-plugin path masquerade as an in-plugin module, so
+  // treat above-root traversal as unresolvable.
   '  function __normalizeKey(p) {',
   '    var parts = p.split("/"); var out = [];',
   '    for (var i = 0; i < parts.length; i++) {',
   '      var seg = parts[i];',
   '      if (seg === "" || seg === ".") { continue; }',
-  '      if (seg === "..") { if (out.length) { out.pop(); } continue; }',
+  '      if (seg === "..") { if (out.length) { out.pop(); continue; } return null; }',
   '      out.push(seg);',
   '    }',
   '    return out.join("/");',
   '  }',
   '  function __resolveRelative(fromDir, spec) {',
   '    var base = __normalizeKey(fromDir ? fromDir + "/" + spec : spec);',
+  '    if (base === null) { return null; }',
   '    var candidates = [base, base + ".js", base + ".json", (base ? base + "/" : "") + "index.js"];',
   '    for (var i = 0; i < candidates.length; i++) { if (candidates[i] && (candidates[i] in __moduleFiles)) { return candidates[i]; } }',
   '    return null;',
