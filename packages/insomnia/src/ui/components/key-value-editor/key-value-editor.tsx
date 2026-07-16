@@ -109,12 +109,17 @@ export const KeyValueEditor: FC<Props> = ({
   // held in state) so it only changes when the data actually changes. This keeps it in
   // sync with the async data updates - if it flipped eagerly the row the user just typed
   // into would briefly belong to no list and flicker.
+  // A fresh id is minted only once the previous one is committed (found in persistedItems) -
+  // never reused, even after that row is later deleted. Reclaiming a freed numeric slot would
+  // let a deleted row's id land back on the blank row, and since the row's key (and its
+  // OneLineEditor's key) is derived from that id, React would reuse the deleted row's DOM/editor
+  // instance instead of remounting it - leaving stale, uncommitted text on screen.
+  const blankIdRef = useRef(generateId('pair-blank'));
   const blankId = useMemo(() => {
-    let n = 0;
-    while (persistedItems.some(item => item.id === `pair-blank-${n}`)) {
-      n++;
+    if (persistedItems.some(item => item.id === blankIdRef.current)) {
+      blankIdRef.current = generateId('pair-blank');
     }
-    return `pair-blank-${n}`;
+    return blankIdRef.current;
   }, [persistedItems]);
   const blankPair = useMemo<Pair>(
     () => ({ id: blankId, name: '', value: '', description: '', disabled: false }),
