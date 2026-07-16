@@ -9,6 +9,7 @@ import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
 import { getCurrentSessionId } from '~/common/account/session';
 import { METHOD_GET } from '~/common/constants';
+import { isCurlCommand } from '~/common/utils/curl';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -37,7 +38,6 @@ import { Icon } from './icon';
 // isn't emitted twice within an app session (cross-session de-dup uses the cache).
 const emittedAssignments = new Set<string>();
 
-const CURL_COMMAND_PATTERN = /^\s*\$?\s*curl(?:\s|$)/i;
 const NOTION_MCP_SERVER_URL = 'https://mcp.notion.com/mcp';
 
 const parseCurlImportError = (error: unknown) => {
@@ -81,18 +81,28 @@ const flattenCurlCommand = (value: string) =>
     .replace(/\r?\n\s*/g, ' ')
     .trim();
 
-// Best-effort read of the HTTP method from a cURL string, for keeping the method
-// dropdown in sync while typing/pasting. Explicit -X/--request wins; otherwise a
-// body/form flag implies POST (curl's own default), matching what the importer does.
-const extractCurlMethod = (value: string): string | null => {
-  const explicit = value.match(/(?:-X|--request)\s+['"]?([A-Za-z]+)/);
+// Read the HTTP method from a cURL string, for keeping the method dropdown in
+// sync while typing/pasting/importing. Mirrors the real importer's extractMethod
+// (src/main/importers/importers/curl.ts): explicit -X/--request wins (including
+// curl's cuddled short-flag form, e.g. -XPUT); otherwise -G/--get combined with a
+// -d/--data flag moves the data into the query string instead of the body (so the
+// method stays GET); otherwise a body/form flag implies POST, otherwise GET.
+// Always resolves so the preview never goes stale relative to what the actual
+// import would produce.
+const extractCurlMethod = (value: string): string => {
+  const explicit = value.match(/(?:-X\s*|--request\s+)['"]?([A-Za-z]+)/);
   if (explicit) {
     return explicit[1].toUpperCase();
   }
-  if (/(?:^|\s)(?:-d|--data(?:-raw|-binary|-urlencode)?|-F|--form)\b/.test(value)) {
+  const hasGetFlag = /(?:^|\s)(?:-G|--get)\b/.test(value);
+  const hasDataFlag = /(?:^|\s)(?:-d|--data(?:-raw|-binary|-urlencode|-ascii)?)\b/.test(value);
+  if (hasGetFlag && hasDataFlag) {
+    return METHOD_GET;
+  }
+  if (hasDataFlag || /(?:^|\s)(?:-F|--form)\b/.test(value)) {
     return 'POST';
   }
-  return null;
+  return METHOD_GET;
 };
 
 interface CollectionItem {
@@ -204,15 +214,14 @@ export const FirstRequestCreation = ({
   };
 
   // Update the input value, clear any stale error, and keep the method dropdown in
-  // sync when the value is a cURL command.
+  // sync when the value is a cURL command. Only touches the method while the input
+  // is recognized as a cURL command, so a manually-selected method (via the dropdown)
+  // is left alone when typing a plain URL.
   const applyRequestInput = (value: string) => {
     setRequestInput(value);
     setErrorText(null);
-    if (CURL_COMMAND_PATTERN.test(value.trim())) {
-      const curlMethod = extractCurlMethod(value);
-      if (curlMethod) {
-        setMethod(curlMethod);
-      }
+    if (isCurlCommand(value)) {
+      setMethod(extractCurlMethod(value));
     }
   };
 
@@ -255,7 +264,7 @@ export const FirstRequestCreation = ({
     }
 
     try {
-      if (CURL_COMMAND_PATTERN.test(trimmedInput)) {
+      if (isCurlCommand(trimmedInput)) {
         let req: Partial<Request>;
         try {
           req = await parseCurlRequest(trimmedInput);
@@ -547,14 +556,14 @@ export const FirstRequestCreation = ({
   return (
     <>
       <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
-        <div className="flex w-full flex-col rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-6 pt-5 pb-6">
+        <div className="flex w-full flex-col gap-2 rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-5 pt-4 pb-2">
           <h2 className="text-lg font-semibold">New request</h2>
-          <div className="mt-4 flex h-8.5 items-center gap-1.5 rounded-md border border-(--hl-md) bg-(--color-bg) px-1">
-            <MethodSelector method={method} onChange={setMethod} className="h-6.5" />
+          <div className="flex h-(--line-height-sm) items-center gap-1.5 rounded-md border border-(--hl-md) bg-(--color-bg) p-1 focus-within:shadow-[0_0_0_4px_#0044F433]">
+            <MethodSelector method={method} onChange={setMethod} className="h-full" placement="bottom start" />
             <input
               ref={inputRef}
               aria-label="Request endpoint or cURL input"
-              className="h-6.5 min-w-0 flex-1 bg-transparent text-[12px]/[18px] font-normal"
+              className="h-6.5 min-w-0 flex-1 bg-transparent px-1 text-[12px]/[18px] font-normal"
               placeholder="Enter a URL or paste cURL"
               value={requestInput}
               onChange={event => applyRequestInput(event.target.value)}
@@ -562,7 +571,7 @@ export const FirstRequestCreation = ({
                 const pasted = event.clipboardData.getData('text');
                 // Flatten a pasted multi-line cURL into a single line ourselves so it
                 // stays a valid command (the native single-line paste would drop the newlines).
-                if (/\r?\n/.test(pasted) && CURL_COMMAND_PATTERN.test(pasted.trim())) {
+                if (/\r?\n/.test(pasted) && isCurlCommand(pasted)) {
                   event.preventDefault();
                   applyRequestInput(flattenCurlCommand(pasted));
                 }
@@ -575,6 +584,7 @@ export const FirstRequestCreation = ({
               isOpen={selectOpen}
               onOpenChange={isOpen => setSelectOpen(isOpen)}
               ariaLabel="Select target collection"
+              placement="bottom end"
               items={collectionItems}
               selectedKey={selectedCollectionId}
               onSelectionChange={key => {
@@ -590,7 +600,7 @@ export const FirstRequestCreation = ({
                   New Collection
                 </Button>
               }
-              triggerClassName="h-6.5 rounded-md px-3 text-[12px]/[18px] font-[590] data-[focus-visible=true]:!ring-0"
+              triggerClassName="h-full rounded-md px-3 text-[12px]/[18px] font-[590] data-[focus-visible=true]:!ring-0"
               popoverClassName="w-[240px]"
               dialogClassName="w-[240px]"
               renderTrigger={selectedItem => (
@@ -610,28 +620,26 @@ export const FirstRequestCreation = ({
               aria-label="Create request"
               primary
               size="md"
-              className="h-6.5 rounded-sm px-2 text-[12px]/[18px] font-[590]"
+              className="h-full rounded-sm px-2 text-[12px]/[18px] font-[590]"
               isDisabled={isCreatingRequest || createWorkspaceFetcher.state !== 'idle'}
               onPress={() => handleCreateRequest()}
             >
               <span>{createButtonLabel}</span>
             </Button>
           </div>
-          {errorText && (
-            <div className="mt-2 text-xs text-[#FF5631]" role="alert" aria-live="polite">
-              {errorText}
-            </div>
-          )}
+          <div className="min-h-4 text-xs text-[#FF5631]" role="alert" aria-live="polite">
+            {errorText}
+          </div>
 
           {treatment === 'A' && (
-            <div className="mt-6 flex flex-wrap gap-x-10 gap-y-6">
+            <div className="mt-1 flex flex-wrap gap-x-10 gap-y-6">
               <div>
                 <p className="text-sm font-semibold text-(--hl)">Quick actions</p>
-                <div className="mt-3 flex flex-wrap gap-2">{quickActions.map(renderQuickStartButton)}</div>
+                <div className="mt-2 flex flex-wrap gap-2">{quickActions.map(renderQuickStartButton)}</div>
               </div>
               <div>
                 <p className="text-sm font-semibold text-(--hl)">Start with an example</p>
-                <div className="mt-3 flex flex-wrap gap-2">{exampleItems.map(renderQuickStartButton)}</div>
+                <div className="mt-2 flex flex-wrap gap-2">{exampleItems.map(renderQuickStartButton)}</div>
               </div>
             </div>
           )}

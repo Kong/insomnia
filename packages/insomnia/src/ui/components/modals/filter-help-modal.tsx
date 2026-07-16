@@ -76,9 +76,10 @@ export const FilterHelpModal: FC<FilterHelpModalOptions> = ({ isJSON }) => {
       <DialogTrigger>
         <Button
           key="help"
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          aria-label="Filter Help"
+          className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
-          <i className="fa fa-question-circle" />
+          <Icon icon="question-circle" />
         </Button>
         <ModalOverlay
           isDismissable

@@ -308,6 +308,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             ref={methodDropdownRef}
             onChange={method => patchRequest(requestId, { method })}
             method={method}
+            placement="bottom start"
           />
         </div>
         <div className="flex flex-1 items-center p-1">
