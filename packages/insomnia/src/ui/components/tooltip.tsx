@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { type CSSProperties, type ReactNode } from 'react';
+import React, { type CSSProperties, type ReactNode, useEffect } from 'react';
 import { mergeProps, OverlayContainer, useOverlayPosition, useTooltip, useTooltipTrigger } from 'react-aria';
 import { createPortal } from 'react-dom';
 import { useTooltipTriggerState } from 'react-stately';
@@ -73,7 +73,7 @@ export const Tooltip = (props: Props) => {
     state.close(true);
   };
 
-  React.useEffect(() => clearDwellTimeout, []);
+  useEffect(() => clearDwellTimeout, []);
 
   const tooltipClasses = classnames(className, 'tooltip');
   const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
