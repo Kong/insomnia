@@ -184,7 +184,12 @@ export const IN_SANDBOX_BOOTSTRAP = [
   // host-eval\'d code). A bare specifier ("uuid") still routes through the grant-gated __require, so
   // the registry is the only source of third-party modules — the plugin\'s node_modules is never
   // consulted (the "poison" guarantee).
-  '  var __moduleFiles = (__env && __env.moduleFiles) || {};',
+  // Null-prototype copy so `in` below can\'t match an inherited Object.prototype member.
+  '  var __moduleFiles = (function (src) {',
+  '    var out = Object.create(null);',
+  '    for (var k in src) { if (Object.prototype.hasOwnProperty.call(src, k)) { out[k] = src[k]; } }',
+  '    return out;',
+  '  })((__env && __env.moduleFiles) || {});',
   '  var __pluginModuleCache = Object.create(null);',
   '  function __dirOfKey(key) { var i = key.lastIndexOf("/"); return i === -1 ? "" : key.slice(0, i); }',
   // __normalizeKey returns null when the path traverses above the plugin root (e.g.

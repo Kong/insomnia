@@ -165,6 +165,7 @@ export const readPluginModuleMap = ({
     const toKey = (abs: string) => path.relative(base, abs).split(path.sep).join('/');
     const moduleFiles: Record<string, string> = {};
     let totalBytes = 0;
+    let fileCount = 0;
     // Count UTF-8 bytes (not source.length, which is UTF-16 code units and undercounts multi-byte
     // characters) so the limit reflects the real payload shipped into the sandbox envelope.
     const addModule = (key: string, source: string): void => {
@@ -173,6 +174,7 @@ export const readPluginModuleMap = ({
         throw new Error('plugin source exceeds the sandbox size limit');
       }
       moduleFiles[key] = source;
+      fileCount++;
     };
     const walk = (dir: string): void => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -191,7 +193,7 @@ export const readPluginModuleMap = ({
         if (!isContainedIn(base, fs.realpathSync(abs))) {
           continue; // symlink whose target escapes the plugin dir
         }
-        if (Object.keys(moduleFiles).length >= MAX_PLUGIN_MODULE_FILES) {
+        if (fileCount >= MAX_PLUGIN_MODULE_FILES) {
           throw new Error(`plugin has too many source files (> ${MAX_PLUGIN_MODULE_FILES})`);
         }
         addModule(toKey(abs), fs.readFileSync(abs, 'utf8'));
@@ -199,7 +201,7 @@ export const readPluginModuleMap = ({
     };
     walk(base);
     const entryModuleKey = toKey(entryAbs);
-    if (!(entryModuleKey in moduleFiles)) {
+    if (!Object.prototype.hasOwnProperty.call(moduleFiles, entryModuleKey)) {
       // The entry may sit outside the walk (e.g. a custom package.json "main"); still count it
       // against the size limit rather than adding it unbounded.
       addModule(entryModuleKey, fs.readFileSync(entryAbs, 'utf8'));

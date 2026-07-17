@@ -94,6 +94,27 @@ describe('readPluginModuleMap (M4 multi-file plugin reader)', () => {
     fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: '../../../../etc/passwd' }));
     expect(() => readPluginModuleMap({ directory: dir, name: 'p' })).toThrow(/escapes plugin directory/);
   });
+
+  it('rejects a plugin with more than MAX_PLUGIN_MODULE_FILES source files', () => {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    fs.writeFileSync(path.join(dir, 'index.js'), "module.exports = {};");
+    for (let i = 0; i < 500; i++) {
+      fs.writeFileSync(path.join(dir, `f${i}.js`), 'module.exports = {};');
+    }
+    expect(() => readPluginModuleMap({ directory: dir, name: 'p' })).toThrow(/too many source files/);
+  });
+
+  it('reads a custom "main" whose name shadows an Object.prototype member', () => {
+    // An extensionless "main" like "toString" collides with Object.prototype.toString: an `in`
+    // check against a plain {} object would see it as already present and skip reading the real
+    // file, silently dropping the plugin's entry content instead of loading it.
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'toString' }));
+    fs.writeFileSync(path.join(dir, 'toString'), 'module.exports = { real: true };');
+    const { moduleFiles, entryModuleKey } = readPluginModuleMap({ directory: dir, name: 'p' });
+    expect(entryModuleKey).toBe('toString');
+    expect(Object.prototype.hasOwnProperty.call(moduleFiles, 'toString')).toBe(true);
+    expect(moduleFiles['toString']).toBe('module.exports = { real: true };');
+  });
 });
 
 describe('maybeWarnMissingManifest (P1 migration warning)', () => {
