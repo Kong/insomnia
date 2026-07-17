@@ -732,7 +732,9 @@ describe('MCP run deep-link import', () => {
 
   it('imports an MCP url into an MCP workspace and exposes its client', async () => {
     const project = await services.project.create();
-    const scanResult = await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const scanResult = await importUtil.scanResources([
+      { contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' },
+    ]);
 
     expect(scanResult[0].errors).toEqual([]);
     expect(scanResult[0].mcpRequests).toHaveLength(1);
@@ -746,5 +748,32 @@ describe('MCP run deep-link import', () => {
     expect(requests).toHaveLength(1);
     expect(models.mcpRequest.isMcpRequest(requests[0])).toBe(true);
     expect((requests[0] as McpRequest).url).toBe(mcpUrl);
+  });
+
+  it('findExistingImportedWorkspace returns the MCP client with the same URL', async () => {
+    const project = await services.project.create();
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const [workspace] = await importUtil.importResourcesToProject({ projectId: project._id });
+    const existingRequest = await services.mcpRequest.getByParentId(workspace._id);
+    expect(existingRequest?.url).toBe(mcpUrl);
+
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const match = await importUtil.findExistingImportedWorkspace(project._id);
+    expect(match).toEqual({
+      workspace: expect.objectContaining({ _id: workspace._id, scope: 'mcp' }),
+      model: expect.objectContaining({ _id: existingRequest?._id, url: mcpUrl }),
+    });
+  });
+
+  it('findExistingImportedWorkspace returns undefined for a different MCP URL', async () => {
+    const project = await services.project.create();
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    await importUtil.importResourcesToProject({ projectId: project._id });
+
+    await importUtil.scanResources([
+      { contentStr: mcpUrlToInsomniaV5Yaml('https://mcp.example.com/other'), oriFileName: 'mcp' },
+    ]);
+    const match = await importUtil.findExistingImportedWorkspace(project._id);
+    expect(match).toBeUndefined();
   });
 });
