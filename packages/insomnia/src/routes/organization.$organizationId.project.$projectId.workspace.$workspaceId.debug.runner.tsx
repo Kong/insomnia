@@ -41,6 +41,7 @@ import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdo
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 import { Icon } from '~/ui/components/icon';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CLIPreviewModal } from '~/ui/components/modals/cli-preview-modal';
@@ -164,6 +165,7 @@ export const Runner: FC = () => {
     direction: 'vertical' | 'horizontal';
   };
   const [isRunning, setIsRunning] = useState(false);
+  const [canceledRun, setCanceledRun] = useState(false);
 
   // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
@@ -182,7 +184,7 @@ export const Runner: FC = () => {
   const {
     iterationCount = 1,
     delay = 0,
-    selectedKeys = new Set<Key>(),
+    selectedKeys = 'all',
     advancedConfig = defaultAdvancedConfig,
     uploadData = [],
     file,
@@ -283,6 +285,7 @@ export const Runner: FC = () => {
     if (isRunning) {
       return;
     }
+    setCanceledRun(false);
     setIsRunning(true);
 
     window.main.trackAnalyticsEvent({
@@ -482,14 +485,21 @@ export const Runner: FC = () => {
   }, [executionResult, isRunning]);
 
   const [selectedTab, setSelectedTab] = React.useState<Key>('results');
-  const [canceledRun, setCanceledRun] = useState(false);
   const activeTab = isRunning ? 'results' : selectedTab;
 
   const allKeys = reqList.map(item => item.id);
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
   }, [isRunning, allKeys]);
-  const isDisabled = isRunning || Array.from(selectedKeys).length === 0;
+  const isDisabled = isRunning || (selectedKeys !== 'all' && Array.from(selectedKeys).length === 0);
+
+  useDocBodyKeyboardShortcuts({
+    request_send: () => {
+      if (!isDisabled) {
+        onRun();
+      }
+    },
+  });
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
@@ -820,17 +830,15 @@ export const Runner: FC = () => {
         className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
       />
       <Panel id="pane-two" className="pane-two theme--pane">
-        <PaneHeader className="row-spaced">
-          <Heading className="flex h-(--line-height-sm) w-full items-center border-b border-solid border-b-(--hl-md) pl-3">
-            {executionResult?.duration ? (
+        {executionResult?.duration ? (
+          <PaneHeader className="row-spaced">
+            <Heading className="flex h-(--line-height-sm) w-full items-center border-b border-solid border-b-(--hl-md) pl-3">
               <div className="bg-info tag">
                 <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
               </div>
-            ) : (
-              <span className="font-bold">Collection Runner</span>
-            )}
-          </Heading>
-        </PaneHeader>
+            </Heading>
+          </PaneHeader>
+        ) : null}
         <Tabs
           selectedKey={activeTab}
           onSelectionChange={setSelectedTab}
@@ -859,7 +867,7 @@ export const Runner: FC = () => {
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="history"
             >
-              Test History
+              History
             </Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
