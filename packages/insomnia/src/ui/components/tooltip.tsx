@@ -19,10 +19,14 @@ interface Props {
   // (e.g. a text field that fills a whole table cell) - anchoring to the trigger box would
   // place the tooltip relative to the cell, not to whatever the user is actually hovering.
   followCursor?: boolean;
+  // When provided, called on hover to decide whether the tooltip should open at all. Use this
+  // for fields whose content is clipped/truncated, so the tooltip only appears when there's
+  // more content than what's visible.
+  shouldShow?: () => boolean;
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, wide, selectable, delay = 400, position, style, followCursor } = props;
+  const { children, message, className, wide, selectable, delay = 400, position, style, followCursor, shouldShow } = props;
   const triggerRef = React.useRef<HTMLDivElement>(null);
   const overlayRef = React.useRef<HTMLDivElement>(null);
   const dwellTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,6 +60,9 @@ export const Tooltip = (props: Props) => {
 
   const handleMouseEnter = () => {
     clearDwellTimeout();
+    if (shouldShow && !shouldShow()) {
+      return;
+    }
     dwellTimeout.current = setTimeout(() => {
       dwellTimeout.current = null;
       state.open(true);

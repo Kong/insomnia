@@ -519,8 +519,22 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       [],
     );
 
+    const isTruncated = () => {
+      const scrollInfo = codeMirror.current?.getScrollInfo();
+      if (!scrollInfo) {
+        return false;
+      }
+      return scrollInfo.width > scrollInfo.clientWidth;
+    };
+
     return (
-      <Tooltip message={tooltipValue} delay={1000} className="h-full w-full" followCursor>
+      <Tooltip
+        message={tooltipValue}
+        delay={1000}
+        className="h-full w-full"
+        followCursor
+        shouldShow={isTruncated}
+      >
         <div
           className={classnames('editor--single-line', {
             'editor': true,
