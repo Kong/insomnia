@@ -153,17 +153,23 @@ describe('multi-file plugins (M4)', () => {
 
   // Guards against `in` matching an inherited Object.prototype member instead of failing closed.
   describe('does not resolve a nonexistent relative specifier that shadows an Object.prototype member', () => {
-    it.each(['constructor', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString'])(
-      'require("./%s") with no such file throws Cannot find module',
-      async name => {
-        await expect(
-          runMap({
-            'index.js':
-              `require('./${name}'); module.exports.templateTags = [{ name: 't', run: function () { return 'x'; } }];`,
-          }),
-        ).rejects.toThrow(new RegExp(`Cannot find module '\\./${name}'`));
-      },
-    );
+    it.each([
+      'constructor',
+      'toString',
+      'valueOf',
+      'hasOwnProperty',
+      'isPrototypeOf',
+      'propertyIsEnumerable',
+      'toLocaleString',
+    ])('require("./%s") with no such file throws Cannot find module', async name => {
+      await expect(
+        runMap({
+          'index.js': `require('./${name}'); module.exports.templateTags = [{ name: 't', run: function () { return 'x'; } }];`,
+        }),
+        // Substring match (not a RegExp) — the expected message is a fixed string, and building a
+        // RegExp from the interpolated name trips Semgrep's non-literal-regexp / ReDoS rule for no gain.
+      ).rejects.toThrow(`Cannot find module './${name}'`);
+    });
   });
 
   it('still resolves a real file whose name happens to match an Object.prototype member', async () => {
