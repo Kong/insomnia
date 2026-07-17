@@ -26,6 +26,7 @@ import { showModal } from '~/ui/components/modals';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
+import { Tooltip } from '~/ui/components/tooltip';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
@@ -102,6 +103,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
     // We need to track editor version in order to re-apply some effects when the editor is re-initialized.
     const [editorVersion, setEditorVersion] = useState(0);
+    const [tooltipValue, setTooltipValue] = useState<string>(
+      type?.toLowerCase() === 'password' ? '' : defaultValue || '',
+    );
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
@@ -253,6 +257,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
       // Actually set the value
       codeMirror.current?.setValue(defaultValue || '');
+      if (type?.toLowerCase() !== 'password') {
+        setTooltipValue(defaultValue || '');
+      }
       // Clear history so we can't undo the initial set
       codeMirror.current?.clearHistory();
       // Restore undo/redo history saved before the previous unmount so undo
@@ -290,6 +297,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       eventListeners,
       id,
       historyKey,
+      type,
     ]);
 
     const persistState = useCallback(() => {
@@ -406,8 +414,11 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         cm.setCursor(cursor);
         // value baseline changed externally, so the old history no longer applies
         cm.clearHistory();
+        if (type?.toLowerCase() !== 'password') {
+          setTooltipValue(defaultValue || '');
+        }
       }
-    }, [defaultValue, historyKey]);
+    }, [defaultValue, historyKey, type]);
 
     useEffect(() => {
       // Prevent these things if we're type === "password"
@@ -429,10 +440,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         if (onChange) {
           onChange(doc.getValue() || '');
         }
+        if (type?.toLowerCase() !== 'password') {
+          setTooltipValue(doc.getValue() || '');
+        }
       }, DEBOUNCE_MILLIS);
       codeMirror.current?.on('changes', fn);
       return () => codeMirror.current?.off('changes', fn);
-    }, [editorVersion, onChange]);
+    }, [editorVersion, onChange, type]);
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
@@ -506,44 +520,46 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     );
 
     return (
-      <div
-        className={classnames('editor--single-line', {
-          'editor': true,
-          'editor--readonly': readOnly,
-        })}
-        data-editor-type={type || 'text'}
-        data-testid="OneLineEditor"
-        onContextMenu={async event => {
-          if (readOnly) {
-            return;
-          }
-          event.preventDefault();
-          const pluginTemplateTags = await plugins.getTemplateTags();
-          const target = event.target as HTMLElement;
-          // right click on Liquid template tag
-          if (target?.classList?.contains('nunjucks-tag')) {
-            const { clientX, clientY } = event;
-            const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
-            if (nunjucksTag) {
-              // show context menu for Liquid template tag
-              window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
+      <Tooltip message={tooltipValue} delay={1000} className="h-full w-full" followCursor>
+        <div
+          className={classnames('editor--single-line', {
+            'editor': true,
+            'editor--readonly': readOnly,
+          })}
+          data-editor-type={type || 'text'}
+          data-testid="OneLineEditor"
+          onContextMenu={async event => {
+            if (readOnly) {
+              return;
             }
-          } else {
-            window.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
-          }
-        }}
-      >
-        <div ref={editorContainerRef} className="editor__container input editor--single-line">
-          <textarea
-            id={id}
-            ref={textAreaRef}
-            style={{ display: 'none' }}
-            readOnly={readOnly}
-            autoComplete="off"
-            defaultValue=""
-          />
+            event.preventDefault();
+            const pluginTemplateTags = await plugins.getTemplateTags();
+            const target = event.target as HTMLElement;
+            // right click on Liquid template tag
+            if (target?.classList?.contains('nunjucks-tag')) {
+              const { clientX, clientY } = event;
+              const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
+              if (nunjucksTag) {
+                // show context menu for Liquid template tag
+                window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
+              }
+            } else {
+              window.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
+            }
+          }}
+        >
+          <div ref={editorContainerRef} className="editor__container input editor--single-line">
+            <textarea
+              id={id}
+              ref={textAreaRef}
+              style={{ display: 'none' }}
+              readOnly={readOnly}
+              autoComplete="off"
+              defaultValue=""
+            />
+          </div>
         </div>
-      </div>
+      </Tooltip>
     );
   },
 );
