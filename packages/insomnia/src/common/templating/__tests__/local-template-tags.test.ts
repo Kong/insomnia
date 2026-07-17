@@ -269,23 +269,154 @@ describe('response tag', () => {
 });
 
 describe('base64 tag', () => {
-  describe('encoder', () => {
-    const base64EncoderTag = localTemplateTags.find(p => p.templateTag.name === 'base64')?.templateTag;
-    invariant(base64EncoderTag, 'missing tag in localTemplateTags');
-    it('encodes from normal', () => {
-      const encoded = base64EncoderTag.run({} as PluginTemplateTagContext, 'encode', 'normal', 'hello');
-      expect(encoded).toBe('aGVsbG8=');
-    });
-    it('encodes from hex', () => {
-      const encoded = base64EncoderTag.run({} as PluginTemplateTagContext, 'encode', 'hex', 'abc123');
-      expect(encoded).toBe('q8Ej');
-    });
-    it('errors on invalid action', () => {
-      expect(() => base64EncoderTag.run({} as PluginTemplateTagContext, 'transform', 'normal', 'hello')).toThrowError();
-    });
-    it('errors on invalid kind', () => {
-      expect(() => base64EncoderTag.run({} as PluginTemplateTagContext, 'encode', 'klingon', 'hello')).toThrowError();
-    });
+  const base64Tag = localTemplateTags.find(p => p.templateTag.name === 'base64')?.templateTag;
+  invariant(base64Tag, 'missing base64 tag in localTemplateTags');
+
+  it('encodes and decodes normal', () => {
+    const encoded = base64Tag.run({} as PluginTemplateTagContext, 'encode', 'normal', 'hello');
+    const decoded = base64Tag.run({} as PluginTemplateTagContext, 'decode', 'normal', encoded);
+    expect(encoded).toBe('aGVsbG8=');
+    expect(decoded).toBe('hello');
+  });
+
+  it('encodes and decodes hex', () => {
+    const encoded = base64Tag.run({} as PluginTemplateTagContext, 'encode', 'hex', 'abc123');
+    const decoded = base64Tag.run({} as PluginTemplateTagContext, 'decode', 'hex', encoded);
+    expect(encoded).toBe('q8Ej');
+    expect(decoded).toBe('abc123');
+  });
+
+  it('url encoding replaces + with - and strips padding', () => {
+    // '  > ' base64-encodes to 'ICA+IA==', which contains both a '+' and trailing '=',
+    // so this asserts the + -> - substitution and padding removal on a real occurrence.
+    expect(base64Tag.run({} as PluginTemplateTagContext, 'encode', 'normal', '  > ')).toBe('ICA+IA==');
+    expect(base64Tag.run({} as PluginTemplateTagContext, 'encode', 'url', '  > ')).toBe('ICA-IA');
+  });
+
+  it('url encoding replaces / with _', () => {
+    // '  ? ' base64-encodes to 'ICA/IA==', which contains a '/', so this asserts the
+    // / -> _ substitution on a real occurrence.
+    expect(base64Tag.run({} as PluginTemplateTagContext, 'encode', 'normal', '  ? ')).toBe('ICA/IA==');
+    expect(base64Tag.run({} as PluginTemplateTagContext, 'encode', 'url', '  ? ')).toBe('ICA_IA');
+  });
+
+  it('throws on invalid action', () => {
+    expect(() => base64Tag.run({} as PluginTemplateTagContext, 'invalid', 'normal', 'hello')).toThrow();
+  });
+
+  it('throws on invalid kind', () => {
+    expect(() => base64Tag.run({} as PluginTemplateTagContext, 'encode', 'invalid', 'hello')).toThrow();
+  });
+});
+
+describe('hash tag', () => {
+  const hashTag = localTemplateTags.find(p => p.templateTag.name === 'hash')?.templateTag;
+  invariant(hashTag, 'missing hash tag in localTemplateTags');
+
+  it('sha1 hex of "abc" matches known digest', async () => {
+    const result = await hashTag.run({} as PluginTemplateTagContext, 'sha1', 'hex', 'abc');
+    expect(result).toBe('a9993e364706816aba3e25717850c26c9cd0d89d');
+  });
+
+  it('sha512 hex of "abc" matches known digest', async () => {
+    const result = await hashTag.run({} as PluginTemplateTagContext, 'sha512', 'hex', 'abc');
+    expect(result).toBe('ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f');
+  });
+
+  it('sha256 base64 of "abc" matches known digest', async () => {
+    const result = await hashTag.run({} as PluginTemplateTagContext, 'sha256', 'base64', 'abc');
+    expect(result).toBe('ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=');
+  });
+
+  it('throws on invalid encoding', async () => {
+    await expect(
+      hashTag.run({} as PluginTemplateTagContext, 'sha256', 'bogus', 'abc'),
+    ).rejects.toThrow(/Invalid encoding/);
+  });
+
+  it('throws on non-string value', async () => {
+    await expect(
+      hashTag.run({} as PluginTemplateTagContext, 'sha256', 'hex', 123 as any),
+    ).rejects.toThrow(/Cannot hash value/);
+  });
+
+  it('falls back to SHA-256 for an unrecognised algorithm name', async () => {
+    // The tag maps unknown algorithm strings to SHA-256 rather than throwing.
+    // This test documents that behaviour so a future change to throw instead is noticed.
+    const result = await hashTag.run({} as PluginTemplateTagContext, 'MD4' as any, 'hex', 'abc');
+    // SHA-256('abc') = ba7816bf...
+    expect(result).toMatch(/^[0-9a-f]{64}$/);
+    expect((result as string).startsWith('ba7816bf')).toBe(true);
+  });
+});
+
+describe('now tag', () => {
+  const nowTag = localTemplateTags.find(p => p.templateTag.name === 'now')?.templateTag;
+  invariant(nowTag, 'missing now tag in localTemplateTags');
+
+  it('millis returns an all-digits string', () => {
+    const result = nowTag.run({} as PluginTemplateTagContext, 'millis');
+    expect(typeof result).toBe('string');
+    expect(result).toMatch(/^\d+$/);
+  });
+
+  it('unix returns an all-digits string', () => {
+    const result = nowTag.run({} as PluginTemplateTagContext, 'unix') as string;
+    expect(typeof result).toBe('string');
+    expect(result).toMatch(/^\d+$/);
+  });
+
+  it('iso-8601 matches ISO regex', () => {
+    const result = nowTag.run({} as PluginTemplateTagContext, 'iso-8601');
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T.*Z$/);
+  });
+
+  it('custom with format "yyyy" returns the current 4-digit year', () => {
+    const result = nowTag.run({} as PluginTemplateTagContext, 'custom', 'yyyy');
+    expect(result).toBe(String(new Date().getFullYear()));
+  });
+
+  it('throws on invalid dateType', () => {
+    expect(() => nowTag.run({} as PluginTemplateTagContext, 'bogus')).toThrow(/Invalid date type/);
+  });
+});
+
+describe('uuid tag', () => {
+  const uuidTag = localTemplateTags.find(p => p.templateTag.name === 'uuid')?.templateTag;
+  invariant(uuidTag, 'missing uuid tag in localTemplateTags');
+  const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  it('v4 returns a v4-format UUID', () => {
+    const result = uuidTag.run({} as PluginTemplateTagContext, 'v4');
+    expect(result).toMatch(UUID_V4_REGEX);
+  });
+
+  // NOTE: v1 is not actually implemented — the tag always returns crypto.randomUUID() (v4). This test documents current behavior.
+  it('v1 also returns a v4-format UUID (v1 is not implemented)', () => {
+    const result = uuidTag.run({} as PluginTemplateTagContext, 'v1');
+    expect(result).toMatch(UUID_V4_REGEX);
+  });
+});
+
+describe('jsonpath tag - standalone', () => {
+  const jsonpathTag = localTemplateTags.find(p => p.templateTag.name === 'jsonpath')?.templateTag;
+  invariant(jsonpathTag, 'missing jsonpath tag in localTemplateTags');
+
+  it('extracts a value from a small JSON string', async () => {
+    const result = await jsonpathTag.run({} as PluginTemplateTagContext, '{"a": {"b": 42}}', '$.a.b');
+    expect(result).toBe(42);
+  });
+
+  it('throws on invalid JSON', async () => {
+    await expect(
+      jsonpathTag.run({} as PluginTemplateTagContext, '{not valid json', '$.a'),
+    ).rejects.toThrow(/Invalid JSON/);
+  });
+
+  it('throws when query matches no results', async () => {
+    await expect(
+      jsonpathTag.run({} as PluginTemplateTagContext, '{"a": 1}', '$.missing'),
+    ).rejects.toThrow(/JSONPath query returned no results/);
   });
 });
 
@@ -326,40 +457,5 @@ describe('file tag: filesystem access isolation', () => {
     // must cause a failure, not a silent fallback.
     const ctx = { util: {} } as unknown as PluginTemplateTagContext;
     await expect(fileTag.run(ctx, '/some/path')).rejects.toBeDefined();
-  });
-});
-
-describe('hash tag: crypto access isolation', () => {
-  const hashTag = localTemplateTags.find(p => p.templateTag.name === 'hash')?.templateTag;
-  invariant(hashTag, 'missing hash tag in localTemplateTags');
-
-  it('produces a sha256 hex digest using Web Crypto (crypto.subtle)', async () => {
-    // "abc" sha256 = ba7816bf8f01cfea414140de5dae2ec73b00361bbef0469fa72ffd1e7bf1f5d3 (first 8 bytes for brevity)
-    const result = await hashTag.run({} as PluginTemplateTagContext, 'SHA-256', 'hex', 'abc');
-    expect(typeof result).toBe('string');
-    expect(result).toMatch(/^[0-9a-f]{64}$/);
-    expect(result.startsWith('ba7816bf')).toBe(true);
-  });
-
-  it('produces a sha256 base64 digest', async () => {
-    const result = await hashTag.run({} as PluginTemplateTagContext, 'SHA-256', 'base64', 'abc');
-    expect(typeof result).toBe('string');
-    // base64 of a 32-byte hash is always 44 chars with padding
-    expect(result).toHaveLength(44);
-  });
-
-  it('falls back to SHA-256 for an unrecognised algorithm name', async () => {
-    // The tag maps unknown algorithm strings to SHA-256 rather than throwing.
-    // This test documents that behaviour so a future change to throw instead is noticed.
-    const result = await hashTag.run({} as PluginTemplateTagContext, 'MD4' as any, 'hex', 'abc');
-    // SHA-256('abc') = ba7816bf...
-    expect(result).toMatch(/^[0-9a-f]{64}$/);
-    expect((result as string).startsWith('ba7816bf')).toBe(true);
-  });
-
-  it('throws on non-string value', async () => {
-    await expect(
-      hashTag.run({} as PluginTemplateTagContext, 'SHA-256', 'hex', 42 as unknown as string),
-    ).rejects.toThrow();
   });
 });
