@@ -81,12 +81,17 @@ export const EnvironmentKVEditor = ({
   // held in state) so it only changes when the data actually changes. This keeps it in
   // sync with the async data updates - if it flipped eagerly the row the user just typed
   // into would briefly belong to no list and flicker.
+  // A fresh id is minted only once the previous one is committed (found in persistedPairs) -
+  // never reused, even after that row is later deleted. Reclaiming a freed numeric slot would
+  // let a deleted row's id land back on the blank row, and since the row's key (and its
+  // OneLineEditor's key) is derived from that id, React would reuse the deleted row's DOM/editor
+  // instance instead of remounting it - leaving stale, uncommitted text on screen.
+  const blankIdRef = useRef(generateId('envPair-blank'));
   const blankId = useMemo(() => {
-    let n = 0;
-    while (persistedPairs.some(p => p.id === `envPair-blank-${n}`)) {
-      n++;
+    if (persistedPairs.some(p => p.id === blankIdRef.current)) {
+      blankIdRef.current = generateId('envPair-blank');
     }
-    return `envPair-blank-${n}`;
+    return blankIdRef.current;
   }, [persistedPairs]);
   const blankPair: EnvironmentKvPairData = useMemo(
     () => ({ id: blankId, name: '', value: '', type: EnvironmentKvPairDataType.STRING, enabled: true }),
@@ -321,6 +326,7 @@ export const EnvironmentKVEditor = ({
               }
             }}
             id={`environment-kv-editor-name-${id}`}
+            historyKey={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
             defaultValue={name}
             readOnly={!enabled || disabled}
@@ -356,6 +362,7 @@ export const EnvironmentKVEditor = ({
           {type === EnvironmentKvPairDataType.STRING && (
             <OneLineEditor
               id={`environment-kv-editor-value-${id}`}
+              historyKey={`environment-kv-editor-value-${id}`}
               placeholder={'Input Value'}
               defaultValue={value.toString()}
               readOnly={!enabled || disabled}

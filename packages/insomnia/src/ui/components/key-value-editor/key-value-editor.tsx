@@ -109,12 +109,17 @@ export const KeyValueEditor: FC<Props> = ({
   // held in state) so it only changes when the data actually changes. This keeps it in
   // sync with the async data updates - if it flipped eagerly the row the user just typed
   // into would briefly belong to no list and flicker.
+  // A fresh id is minted only once the previous one is committed (found in persistedItems) -
+  // never reused, even after that row is later deleted. Reclaiming a freed numeric slot would
+  // let a deleted row's id land back on the blank row, and since the row's key (and its
+  // OneLineEditor's key) is derived from that id, React would reuse the deleted row's DOM/editor
+  // instance instead of remounting it - leaving stale, uncommitted text on screen.
+  const blankIdRef = useRef(generateId('pair-blank'));
   const blankId = useMemo(() => {
-    let n = 0;
-    while (persistedItems.some(item => item.id === `pair-blank-${n}`)) {
-      n++;
+    if (persistedItems.some(item => item.id === blankIdRef.current)) {
+      blankIdRef.current = generateId('pair-blank');
     }
-    return `pair-blank-${n}`;
+    return blankIdRef.current;
   }, [persistedItems]);
   const blankPair = useMemo<Pair>(
     () => ({ id: blankId, name: '', value: '', description: '', disabled: false }),
@@ -174,6 +179,7 @@ export const KeyValueEditor: FC<Props> = ({
         <div className="relative flex h-full w-full flex-1 px-2">
           <OneLineEditor
             id={'key-value-editor__value' + pair.id}
+            historyKey={'key-value-editor__value' + pair.id}
             placeholder={valuePlaceholder || 'Value'}
             defaultValue={pair.value}
             readOnly
@@ -224,6 +230,7 @@ export const KeyValueEditor: FC<Props> = ({
           <div className="relative flex h-full w-full flex-1 px-2">
             <OneLineEditor
               id={'key-value-editor__name' + pair.id}
+              historyKey={'key-value-editor__name' + pair.id}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
               readOnly
@@ -235,6 +242,7 @@ export const KeyValueEditor: FC<Props> = ({
             <div className="relative flex h-full w-full flex-1 px-2">
               <OneLineEditor
                 id={'key-value-editor__description' + pair.id}
+                historyKey={'key-value-editor__description' + pair.id}
                 placeholder={descriptionPlaceholder || 'Description'}
                 defaultValue={pair.description || ''}
                 readOnly
@@ -335,6 +343,7 @@ export const KeyValueEditor: FC<Props> = ({
             let valueEditor = (
               <OneLineEditor
                 id={'key-value-editor__value' + pair.id}
+                historyKey={'key-value-editor__value' + pair.id}
                 placeholder={valuePlaceholder || 'Value'}
                 defaultValue={pair.value}
                 readOnly
@@ -383,6 +392,7 @@ export const KeyValueEditor: FC<Props> = ({
                 <div>
                   <OneLineEditor
                     id={'key-value-editor__name' + pair.id}
+                    historyKey={'key-value-editor__name' + pair.id}
                     placeholder={namePlaceholder || 'Name'}
                     defaultValue={pair.name}
                     readOnly
@@ -394,6 +404,7 @@ export const KeyValueEditor: FC<Props> = ({
                   <div>
                     <OneLineEditor
                       id={'key-value-editor__description' + pair.id}
+                      historyKey={'key-value-editor__description' + pair.id}
                       placeholder={descriptionPlaceholder || 'Description'}
                       defaultValue={pair.description || ''}
                       readOnly
@@ -454,6 +465,7 @@ export const KeyValueEditor: FC<Props> = ({
             let valueEditor = (
               <OneLineEditor
                 id={'key-value-editor__value' + pair.id}
+                historyKey={'key-value-editor__value' + pair.id}
                 key={'key-value-editor__value' + pair.id + pair.disabled}
                 placeholder={valuePlaceholder || 'Value'}
                 defaultValue={pair.value}
@@ -541,6 +553,7 @@ export const KeyValueEditor: FC<Props> = ({
                   <OneLineEditor
                     ref={isBlank ? blankNameEditorRef : undefined}
                     id={'key-value-editor__name' + pair.id}
+                    historyKey={'key-value-editor__name' + pair.id}
                     key={'key-value-editor__name' + pair.id + pair.disabled}
                     placeholder={namePlaceholder || 'Name'}
                     defaultValue={pair.name}
@@ -562,6 +575,7 @@ export const KeyValueEditor: FC<Props> = ({
                   <div onKeyDownCapture={onKeyDownInner}>
                     <OneLineEditor
                       id={'key-value-editor__description' + pair.id}
+                      historyKey={'key-value-editor__description' + pair.id}
                       key={'key-value-editor__description' + pair.id + pair.disabled}
                       placeholder={descriptionPlaceholder || 'Description'}
                       defaultValue={pair.description || ''}

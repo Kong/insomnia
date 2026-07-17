@@ -15,11 +15,20 @@
  * (same rule as `in-sandbox-bootstrap.ts`).
  */
 
+import { AJV_FACTORY_SOURCE, AJV_FACTORY_VERSION } from './vendored/ajv.generated';
+import { UUID_FACTORY_SOURCE, UUID_FACTORY_VERSION } from './vendored/uuid.generated';
+
 export interface SandboxModuleDefinition {
   /** Canonical registry name — also the name a plugin manifest will declare (C3). */
   name: string;
   /** Alternate request specifiers that resolve to this module (e.g. the `node:` prefixed form). */
   aliases?: string[];
+  /**
+   * Large vendored npm bundles (M3) — only included in the eval'd registry source when the plugin
+   * actually declared them, so a render that doesn't use them never pays to parse hundreds of KB.
+   * Baseline/reimpl modules are small and always registered.
+   */
+  heavy?: boolean;
   /**
    * ES5 function-expression source, evaluated inside the sandbox, that returns the module's
    * exports. Invoked at most once per sandbox context — `__require` caches the exports object.
@@ -114,12 +123,24 @@ export const SANDBOX_MODULES: SandboxModuleDefinition[] = [
   { name: 'path', aliases: ['node:path'], factorySource: PATH_FACTORY },
   { name: 'crypto', aliases: ['node:crypto'], factorySource: CRYPTO_FACTORY },
   { name: 'events', aliases: ['node:events'], factorySource: EVENTS_FACTORY },
+  // Vetted npm libraries (M3), bundled + pinned by scripts/generate-sandbox-vendored.ts. Heavy, so
+  // only included in the eval'd registry source when a plugin declares them.
+  { name: 'uuid', factorySource: UUID_FACTORY_SOURCE, heavy: true },
+  { name: 'ajv', factorySource: AJV_FACTORY_SOURCE, heavy: true },
 ];
 
+/** Pinned versions of the vendored libs — asserted by tests so a regeneration is a deliberate diff. */
+export const VENDORED_LIB_VERSIONS: Record<string, string> = {
+  uuid: UUID_FACTORY_VERSION,
+  ajv: AJV_FACTORY_VERSION,
+};
+
 /**
- * The floor of module access every template-tag plugin receives, even with no manifest. Surface
- * profiles (P1) will intersect the resolved grant with a ceiling; for now the effective grant is
- * simply `baseline ∪ manifest.modules` (see `resolveTemplateTagModules`).
+ * The floor of module access every template-tag plugin receives, even with no manifest. The
+ * effective grant is `baseline ∪ manifest.modules` (see `resolveTemplateTagModules`): module grants
+ * are NOT intersected with a surface ceiling at resolve time — the registry + `__require` are the
+ * gate (an unregistered declared name has no factory, so it grants nothing regardless). Capability
+ * grants, by contrast, do enforce the P1 profile ceiling.
  */
 export const TEMPLATE_TAG_BASELINE_MODULES: string[] = ['path', 'crypto'];
 
@@ -134,20 +155,27 @@ const canonicalModuleName = new Map<string, string>(
 /** Resolve a declared module specifier to its canonical registry name (e.g. `node:events` → `events`). */
 export const canonicalizeModule = (name: string): string => canonicalModuleName.get(name) ?? name;
 
+const registerCall = (m: SandboxModuleDefinition): string => {
+  // name/aliases are JSON-encoded (data); factorySource is interpolated raw (code), so it must be
+  // a trusted literal — see SandboxModuleDefinition.factorySource. Tripwire: reject anything that
+  // isn't a bare function expression, catching accidental non-literal/derived sources.
+  if (!/^function\b/.test(m.factorySource.trim())) {
+    throw new Error(`Sandbox module '${m.name}' factorySource must be a function expression`);
+  }
+  return `globalThis.__registerModule(${JSON.stringify(m.name)}, ${JSON.stringify(m.aliases ?? [])}, ${m.factorySource});`;
+};
+
 /**
- * JS evaluated inside the sandbox immediately after the bootstrap. Populates the registry the
- * bootstrap's `__require` resolves from.
+ * JS evaluated inside the sandbox immediately after the bootstrap to populate the registry that
+ * `__require` resolves from. Non-heavy modules are always registered; a heavy vendored lib (uuid,
+ * ajv) is included only when the plugin's grant names it, so a render that doesn't use it never
+ * parses its (hundreds of KB) bundle. `grantedModules` are canonical names from the envelope.
  */
-export const MODULE_REGISTRY_SOURCE: string = [
-  ...SANDBOX_MODULES.map(m => {
-    // name/aliases are JSON-encoded (data); factorySource is interpolated raw (code), so it must be
-    // a trusted literal — see SandboxModuleDefinition.factorySource. Tripwire: reject anything that
-    // isn't a bare function expression, catching accidental non-literal/derived sources.
-    if (!/^function\b/.test(m.factorySource.trim())) {
-      throw new Error(`Sandbox module '${m.name}' factorySource must be a function expression`);
-    }
-    return `globalThis.__registerModule(${JSON.stringify(m.name)}, ${JSON.stringify(m.aliases ?? [])}, ${m.factorySource});`;
-  }),
-  // Lock the registry once populated — plugin code must not be able to register or replace factories.
-  'delete globalThis.__registerModule;',
-].join('\n');
+export const buildModuleRegistrySource = (grantedModules: string[] = []): string => {
+  const granted = new Set(grantedModules);
+  return [
+    ...SANDBOX_MODULES.filter(m => !m.heavy || granted.has(m.name)).map(registerCall),
+    // Lock the registry once populated — plugin code must not be able to register or replace factories.
+    'delete globalThis.__registerModule;',
+  ].join('\n');
+};

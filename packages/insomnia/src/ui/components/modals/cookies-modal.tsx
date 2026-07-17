@@ -471,6 +471,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Key
                               <OneLineEditor
                                 id="cookie-key"
+                                historyKey={`cookie-key::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.key) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, key: value.trim() })}
                               />
@@ -481,6 +482,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Value
                               <OneLineEditor
                                 id="cookie-value"
+                                historyKey={`cookie-value::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.value) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, value: value.trim() })}
                               />
@@ -493,6 +495,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Domain
                               <OneLineEditor
                                 id="cookie-domain"
+                                historyKey={`cookie-domain::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.domain) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, domain: value.trim() })}
                               />
@@ -503,6 +506,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Path
                               <OneLineEditor
                                 id="cookie-path"
+                                historyKey={`cookie-path::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.path) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, path: value.trim() })}
                               />

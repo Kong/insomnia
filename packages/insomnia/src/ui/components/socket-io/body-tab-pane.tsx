@@ -292,7 +292,7 @@ export const SocketIOBodyContent = ({
                 <CodeEditor
                   id="socket-io-message-editor"
                   showPrettifyButton={!readonly}
-                  uniquenessKey={`${arg.id}:socket-io-payload`}
+                  historyKey={`${arg.id}:socket-io-payload`}
                   mode={arg.mode}
                   readOnly={readonly}
                   ref={ref => editorsRef.current?.set(arg.id, ref)}
@@ -313,7 +313,7 @@ export const SocketIOBodyContent = ({
         <CodeEditor
           id="socket-io-message-editor"
           showPrettifyButton={!readonly}
-          uniquenessKey={`${tabs?.[0]?.id}:socket-io-payload`}
+          historyKey={`${tabs?.[0]?.id}:socket-io-payload`}
           mode={tabs?.[0]?.mode}
           readOnly={readonly}
           ref={ref => editorsRef.current?.set(tabs?.[0]?.id, ref)}
