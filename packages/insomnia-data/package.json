@@ -36,6 +36,7 @@
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
     "deep-equal": "2.2.3",
+    "fuzzysort": "^1.9.0",
     "graphql": "^16.10.0",
     "uuid": "^9.0.1"
   },
