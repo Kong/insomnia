@@ -14,6 +14,7 @@ import { jarFromCookies } from '~/common/cookies';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
 import { getPluginCommonContext, getTemplateTags } from '~/plugins';
+import type { PluginExportManifest } from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
@@ -264,6 +265,44 @@ export const maybeWarnMissingManifest = (
 // module map read from disk (M4 multi-file plugins).
 type PluginModuleSource = string | { moduleFiles: Record<string, string>; entryModuleKey: string };
 
+// node:crypto is synchronous and available in main, so back the sandbox's require('crypto') shim with
+// it via sync host functions rather than the async bridge. Stateless, so shared across sandbox runs.
+const SANDBOX_HOST_CRYPTO = {
+  hash: (algo: string, data: string, inputEncoding: string, outputEncoding: string) =>
+    crypto
+      .createHash(algo)
+      .update(data, inputEncoding as crypto.Encoding)
+      .digest(outputEncoding as BinaryToTextEncoding),
+  hmac: (algo: string, key: string, data: string, outputEncoding: string) =>
+    crypto
+      .createHmac(algo, key)
+      .update(data, 'utf8')
+      .digest(outputEncoding as BinaryToTextEncoding),
+  randomBytes: (size: number) => crypto.randomBytes(size).toString('base64'),
+  randomUUID: () => crypto.randomUUID(),
+};
+
+// Build the capability-gated host bridge shared by tag execution and load-time discovery. The handler
+// map is filtered by capability first, so an ungranted path rejects at the bridge naming the missing
+// capability rather than silently running.
+const buildSandboxBridge = async (capabilities: string[]) => {
+  const { createMapBridge, filterByCapabilities } = await import('../templating/sandbox/host-bridge');
+  return createMapBridge(
+    filterByCapabilities(
+      {
+        ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
+        // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
+        // (including its own) by handing util.render a string containing "{% tagName %}".
+        'util.render': async (b: { str: string; context: Record<string, any> }) => {
+          const { render } = await import('../templating');
+          return render(b.str, { context: b.context, allowTags: false });
+        },
+      },
+      capabilities,
+    ),
+  );
+};
+
 export const runPluginTagInSandbox = async (
   pluginModule: PluginModuleSource,
   body: {
@@ -280,9 +319,7 @@ export const runPluginTagInSandbox = async (
   grantedCapabilities?: string[],
 ): Promise<string> => {
   const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
-  const { createMapBridge, filterByCapabilities, TEMPLATE_TAG_BASELINE_CAPABILITIES } = await import(
-    '../templating/sandbox/host-bridge'
-  );
+  const { TEMPLATE_TAG_BASELINE_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
   const { TEMPLATE_TAG_BASELINE_MODULES } = await import('../templating/sandbox/module-registry');
   const { pluginName, tagName, args, context: originContext } = body;
   const { meta, renderPurpose, context } = originContext;
@@ -291,41 +328,11 @@ export const runPluginTagInSandbox = async (
     typeof pluginModule === 'string'
       ? { moduleFiles: { 'index.js': pluginModule }, entryModuleKey: 'index.js' }
       : pluginModule;
-  // Gate the handler map by capability before building the bridge: an ungranted path rejects at the
-  // bridge with a message naming the missing capability, rather than silently running.
-  const bridge = createMapBridge(
-    filterByCapabilities(
-      {
-        ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
-        // allowTags: false so a sandboxed plugin can't invoke another tag's real, unsandboxed run()
-        // (including its own) by handing util.render a string containing "{% tagName %}".
-        'util.render': async (b: { str: string; context: Record<string, any> }) => {
-          const { render } = await import('../templating');
-          return render(b.str, { context: b.context, allowTags: false });
-        },
-      },
-      capabilities,
-    ),
-  );
+  const bridge = await buildSandboxBridge(capabilities);
   return runTagInSandbox({
     tagName,
     bridge,
-    // node:crypto is synchronous and available in main, so back the sandbox's require('crypto')
-    // shim with it via sync host functions rather than the async bridge.
-    hostCrypto: {
-      hash: (algo, data, inputEncoding, outputEncoding) =>
-        crypto
-          .createHash(algo)
-          .update(data, inputEncoding as crypto.Encoding)
-          .digest(outputEncoding as BinaryToTextEncoding),
-      hmac: (algo, key, data, outputEncoding) =>
-        crypto
-          .createHmac(algo, key)
-          .update(data, 'utf8')
-          .digest(outputEncoding as BinaryToTextEncoding),
-      randomBytes: (size: number) => crypto.randomBytes(size).toString('base64'),
-      randomUUID: () => crypto.randomUUID(),
-    },
+    hostCrypto: SANDBOX_HOST_CRYPTO,
     envelope: {
       args: args || [],
       context: (context as Record<string, any>) || {},
@@ -340,6 +347,39 @@ export const runPluginTagInSandbox = async (
       entryModuleKey,
     },
   });
+};
+
+// L1 load-time discovery: evaluate a user plugin's source inside the sandbox and return a manifest of
+// its exports, instead of nodeRequire-ing it on the host. The plugin's top-level code runs in the
+// sandbox (default-deny require, no host reach), so installing/enabling it can't execute host code.
+export const discoverPluginExportsInSandbox = async (
+  pluginModule: PluginModuleSource,
+  opts: { pluginName: string; grantedModules: string[]; grantedCapabilities: string[] },
+): Promise<PluginExportManifest> => {
+  const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
+  const { moduleFiles, entryModuleKey } =
+    typeof pluginModule === 'string'
+      ? { moduleFiles: { 'index.js': pluginModule }, entryModuleKey: 'index.js' }
+      : pluginModule;
+  const bridge = await buildSandboxBridge(opts.grantedCapabilities);
+  const json = await runTagInSandbox({
+    tagName: '',
+    discover: true,
+    bridge,
+    hostCrypto: SANDBOX_HOST_CRYPTO,
+    envelope: {
+      args: [],
+      context: {},
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
+      pluginName: opts.pluginName,
+      renderDepth: 0,
+      grantedModules: opts.grantedModules,
+      grantedCapabilities: opts.grantedCapabilities,
+      moduleFiles,
+      entryModuleKey,
+    },
+  });
+  return JSON.parse(json);
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
@@ -596,6 +636,24 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         },
         templateTag,
       }));
+  },
+  // L1: discover a user plugin's exports by evaluating its source in the sandbox (no host execution),
+  // returning a serializable manifest. The plugin loader (plugins/index.ts) calls this instead of
+  // nodeRequire-ing the module when the sandbox is enabled.
+  'plugin.discoverUserPluginExports': async (body: {
+    directory: string;
+    name: string;
+    permissions?: { modules?: string[]; capabilities?: string[] };
+  }) => {
+    const { directory, name, permissions } = body;
+    const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+      '../templating/sandbox/surface-profiles'
+    );
+    return discoverPluginExportsInSandbox(readPluginModuleMap({ directory, name }), {
+      pluginName: name,
+      grantedModules: resolveTemplateTagModules(permissions?.modules),
+      grantedCapabilities: resolveTemplateTagCapabilities(permissions?.capabilities),
+    });
   },
   // execute a user-installed plugin tag with the given parameters, in the main process where
   // Node built-ins (e.g. crypto) the plugin requires are available.

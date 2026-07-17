@@ -337,14 +337,47 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
   '  };',
 
+  // --- describe the plugin's exports without running any of them (L1 load-time discovery) ---
+  // Evaluates the plugin entry (its top-level code runs here, in the sandbox — never on the host)
+  // and returns a JSON-serializable manifest of what it exports: template-tag metadata, hook counts,
+  // action labels/icons, and theme data. The host reads this instead of nodeRequire()ing the module,
+  // so installing/enabling a user plugin no longer executes its top-level code with Node privileges.
+  // Only DATA crosses back — function-valued members (tag.run, hook fns, action fns) are dropped;
+  // execution is routed separately (tags already go through __invoke; hooks/actions land in PR 10/11).
+  '  globalThis.__describeExports = function () {',
+  '    var mod = globalThis.__loadPluginEntry() || {};',
+  '    var isObj = function (x) { return !!x && typeof x === "object"; };',
+  '    var mapArr = function (arr, fn) { var out = []; if (arr && arr.length) { for (var i = 0; i < arr.length; i++) { var d = fn(arr[i]); if (d) { out.push(d); } } } return out; };',
+  '    var tagDesc = function (t) { return isObj(t) ? { name: t.name, displayName: t.displayName, description: t.description, args: t.args || [] } : null; };',
+  '    var actionDesc = function (a) { return isObj(a) ? { label: a.label, icon: a.icon } : null; };',
+  '    var themeDesc = function (t) { return isObj(t) ? { name: t.name, displayName: t.displayName, theme: t.theme } : null; };',
+  '    var manifest = {',
+  '      templateTags: mapArr(mod.templateTags, tagDesc),',
+  '      requestHooks: (mod.requestHooks && mod.requestHooks.length) || 0,',
+  '      responseHooks: (mod.responseHooks && mod.responseHooks.length) || 0,',
+  '      requestActions: mapArr(mod.requestActions, actionDesc),',
+  '      requestGroupActions: mapArr(mod.requestGroupActions, actionDesc),',
+  '      workspaceActions: mapArr(mod.workspaceActions, actionDesc),',
+  '      documentActions: mapArr(mod.documentActions, actionDesc),',
+  '      themes: mapArr(mod.themes, themeDesc)',
+  '    };',
+  '    return JSON.stringify(manifest);',
+  '  };',
+
   // --- lock the sandbox-internal globals ---
   // Plugin code runs after this bootstrap; pin these so it can't reassign the require gate or the
   // context/invocation entry points. __registerModule is intentionally left mutable — the module
   // registry source deletes it once the registry is populated.
   '  var __lock = function (n) { Object.defineProperty(globalThis, n, { value: globalThis[n], writable: false, configurable: false }); };',
-  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry");',
+  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry"); __lock("__describeExports");',
   '})();',
 ].join('\n');
 
 /** The runner: kicks off the async invocation and parks the VM promise on `globalThis.__task`. */
 export const RUNNER = 'globalThis.__task = globalThis.__invoke();';
+
+/**
+ * Discovery runner: parks a resolved promise of the export manifest (JSON string) on `globalThis.__task`.
+ * Used at plugin load instead of {@link RUNNER} to enumerate exports without invoking any of them.
+ */
+export const DESCRIBE_RUNNER = 'globalThis.__task = Promise.resolve(globalThis.__describeExports());';

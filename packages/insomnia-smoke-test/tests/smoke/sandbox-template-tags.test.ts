@@ -640,3 +640,72 @@ test('Template tag sandbox: multi-file plugins resolve relative requires and ign
   // The plugin's own node_modules/uuid ('evil') is never consulted — the real vetted uuid runs.
   await assertTagPreview('{% poisonprobe', 'poison-real');
 });
+
+test('Plugin sandbox (L1): installing a user plugin no longer runs its top-level code on the host', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  const SENTINEL_PLUGIN = 'insomnia-plugin-l1-sentinel';
+  const sentinelPath = path.join(dataPath, 'plugins', SENTINEL_PLUGIN, 'sentinel.txt');
+
+  // The plugin's TOP-LEVEL code tries to write a file via a Node built-in. With the sandbox off, the
+  // loader nodeRequire()s the module on the host, so require('fs') works and the sentinel appears.
+  // With the sandbox on, exports are discovered by evaluating the source INSIDE the sandbox, where
+  // require('fs') is default-denied — so the write never happens, yet the tag still enumerates + runs.
+  // The try/catch keeps discovery from failing on the denied require, so the plugin still loads.
+  writePlugin(
+    dataPath,
+    SENTINEL_PLUGIN,
+    {},
+    `
+      try { require('fs').writeFileSync(__dirname + '/sentinel.txt', 'top-level-ran-on-host'); } catch (e) {}
+      module.exports.templateTags = [{
+        name: 'l1probe', displayName: 'L1 Probe', description: 'discovery marker', args: [],
+        async run() { return 'l1-tag-ran'; },
+      }];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-l1-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  // Flag OFF (default): the loader runs the plugin's top-level code on the host (control).
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+  expect.soft(fs.existsSync(sentinelPath), 'sandbox off: top-level code runs on the host').toBe(true);
+
+  // Flag ON: re-discover via the sandbox. Poll delete→reload→check so the just-toggled setting has
+  // time to propagate to the main process before we conclude the write did not recur.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        fs.rmSync(sentinelPath, { force: true });
+        await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+        return fs.existsSync(sentinelPath);
+      },
+      { timeout: 20_000 },
+    )
+    .toBe(false);
+
+  // Discovery still worked without host execution: the tag enumerates and runs in the sandbox.
+  await insomnia.navigationSidebar.clickRequestOrFolder('L1 Probe');
+  await page.getByText('Body', { exact: true }).click();
+  const readTagPreview = async (tagPrefix: string): Promise<string> => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    const preview = modal.getByLabel('Live Preview');
+    await expect.soft(preview).not.toHaveValue('rendering...');
+    const value = (await preview.inputValue()).trim();
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+    return value;
+  };
+  await expect.poll(() => readTagPreview('{% l1probe'), { timeout: 20_000 }).toContain('l1-tag-ran');
+});
