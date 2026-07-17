@@ -142,17 +142,44 @@ describe('Environment serialization', () => {
   });
 });
 
-describe('set rejects null/undefined/NaN', () => {
-  it('Environment.set warns and skips on null', () => {
+describe('set accepts null but rejects undefined/NaN', () => {
+  it('Environment.set accepts null', () => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const env = new Environment('test', {});
     env.set('key', null);
-    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null, undefined, or NaN value');
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(env.has('key')).toBe(true);
+    expect(env.get('key')).toBeNull();
+    warnSpy.mockRestore();
+  });
+
+  it.each([undefined, Number.NaN])('Environment.set warns and skips on %s', value => {
+    const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
+    const env = new Environment('test', {});
+    env.set('key', value);
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has an undefined or NaN value');
     expect(env.has('key')).toBe(false);
     warnSpy.mockRestore();
   });
 
-  it.each([null, undefined, Number.NaN])('Variables.set warns and skips on %s', value => {
+  it('Variables.set accepts null', () => {
+    const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
+    const variables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', {}),
+      globalVars: new Environment('globals', {}),
+      environmentVars: new Environment('environments', {}),
+      collectionVars: new Environment('baseEnvironment', {}),
+      iterationDataVars: new Environment('iterationData', {}),
+      folderLevelVars: [],
+      localVars: new Environment('local', {}),
+    });
+    variables.set('key', null);
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(variables.get('key')).toBeNull();
+    warnSpy.mockRestore();
+  });
+
+  it.each([undefined, Number.NaN])('Variables.set warns and skips on %s', value => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const variables = new Variables({
       baseGlobalVars: new Environment('baseGlobals', {}),
@@ -164,7 +191,7 @@ describe('set rejects null/undefined/NaN', () => {
       localVars: new Environment('local', {}),
     });
     variables.set('key', value);
-    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a null, undefined, or NaN value');
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has an undefined or NaN value');
     expect(variables.get('key')).toBeUndefined();
     warnSpy.mockRestore();
   });
