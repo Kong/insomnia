@@ -54,13 +54,13 @@ export const UnsavedChangesConfirmDialog = ({ isOpen, onConfirm, onDismiss, pare
           </p>
           <div className="flex items-center justify-end gap-2">
             <Button
-              autoFocus
               onPress={onDismiss}
               className="rounded-md border border-solid border-(--hl-md) px-3 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
             >
               No
             </Button>
             <Button
+              autoFocus
               onPress={onConfirm}
               className="rounded-md border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-sm text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90"
             >
