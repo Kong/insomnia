@@ -45,6 +45,44 @@ export interface ContextEnvelope {
   entryModuleKey?: string;
 }
 
+/** A discovered template-tag's serializable metadata (no `run`, no other function members). */
+export interface TemplateTagDescriptor {
+  name?: string;
+  displayName?: string;
+  description?: string;
+  args?: unknown[];
+}
+
+/** A discovered action's serializable metadata (no `action`/`run`). */
+export interface ActionDescriptor {
+  label?: string;
+  icon?: string;
+}
+
+/** A discovered theme (plain data). */
+export interface ThemeDescriptor {
+  name?: string;
+  displayName?: string;
+  theme?: unknown;
+}
+
+/**
+ * What the sandbox returns for a plugin at load time (L1): the shapes of its exports, discovered by
+ * evaluating the entry inside the sandbox instead of `nodeRequire`-ing it on the host. Only data
+ * crosses back — hook/action function bodies never leave the sandbox (hooks are reported as a count;
+ * their execution is routed in a later PR).
+ */
+export interface PluginExportManifest {
+  templateTags: TemplateTagDescriptor[];
+  requestHooks: number;
+  responseHooks: number;
+  requestActions: ActionDescriptor[];
+  requestGroupActions: ActionDescriptor[];
+  workspaceActions: ActionDescriptor[];
+  documentActions: ActionDescriptor[];
+  themes: ThemeDescriptor[];
+}
+
 /**
  * The contract every host-bridge call resolves to. We resolve (never reject) the VM promise with
  * this so the sandbox side can rethrow a real Error without us juggling VM error handles. The

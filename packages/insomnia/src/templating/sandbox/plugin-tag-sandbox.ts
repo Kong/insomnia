@@ -1,7 +1,7 @@
 import type { QuickJSContext, QuickJSHandle } from 'quickjs-emscripten';
 
 import type { HostBridge } from './host-bridge';
-import { IN_SANDBOX_BOOTSTRAP, RUNNER } from './in-sandbox-bootstrap';
+import { DESCRIBE_RUNNER, IN_SANDBOX_BOOTSTRAP, RUNNER } from './in-sandbox-bootstrap';
 import { type ContextEnvelope, encodeBridgeFailure, encodeBridgeSuccess } from './marshal';
 import { buildModuleRegistrySource } from './module-registry';
 import { SANDBOX_GLOBALS_SOURCE } from './sandbox-globals';
@@ -26,8 +26,14 @@ export interface RunTagInSandboxOptions {
    * a module map (multi-file plugins, M4).
    */
   pluginSource?: string;
-  /** Name of the tag within the module to execute. */
+  /** Name of the tag within the module to execute. Ignored (may be '') when `discover` is set. */
   tagName: string;
+  /**
+   * Discovery mode (L1): instead of running a tag, evaluate the plugin entry and return a JSON
+   * string manifest of its exports (template-tag metadata, hook counts, action labels, themes).
+   * The plugin's top-level code still runs — but inside the sandbox, never on the host.
+   */
+  discover?: boolean;
   /** Bulk-copied state passed to the rebuilt in-sandbox context. */
   envelope: ContextEnvelope;
   /** Host side of the async bridge — runs the real work for each `__hostBridge` call. */
@@ -46,7 +52,7 @@ export interface RunTagInSandboxOptions {
  * intermediate handles are reclaimed wholesale.
  */
 export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<string> => {
-  const { pluginSource, tagName, envelope, bridge, onConsole, timeoutMs = 10_000 } = opts;
+  const { pluginSource, tagName, envelope, bridge, onConsole, discover = false, timeoutMs = 10_000 } = opts;
   const { getQuickJSModule } = await import('./quickjs-runtime');
   const QuickJS = await getQuickJSModule();
   const ctx = QuickJS.newContext();
@@ -85,8 +91,8 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     // Only register heavy vendored libs the plugin was granted, so unrelated renders don't parse them.
     evalOrThrow(ctx, buildModuleRegistrySource(fullEnvelope.grantedModules), '<sandbox-modules>');
     // Plugin source travels as envelope DATA (moduleFiles) and is compiled by the in-sandbox loader
-    // when __invoke() loads the entry — no host-side eval of plugin code.
-    evalOrThrow(ctx, RUNNER, '<runner>');
+    // when __invoke()/__describeExports() loads the entry — no host-side eval of plugin code.
+    evalOrThrow(ctx, discover ? DESCRIBE_RUNNER : RUNNER, '<runner>');
 
     return await drivePromiseToString(ctx, timeoutMs);
   } finally {
