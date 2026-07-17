@@ -548,3 +548,95 @@ test('Template tag sandbox: vetted npm libraries (uuid, ajv) run when declared (
   // ajv is IN the registry but this plugin didn't declare it — registry presence ≠ grant.
   await assertTagPreview('{% ajvungranted', "Module 'ajv' not permitted by manifest");
 });
+
+// Write an extra file into an already-installed plugin's directory (for multi-file plugins).
+const writePluginFile = (dataPath: string, pluginName: string, relPath: string, contents: string) => {
+  const abs = path.join(dataPath, 'plugins', pluginName, relPath);
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, contents);
+};
+
+test('Template tag sandbox: multi-file plugins resolve relative requires and ignore their node_modules (M4)', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // A multi-file plugin: entry requires a sibling, a nested file, and a vetted registry lib (uuid).
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-multifile',
+    { permissions: { modules: ['uuid'] } },
+    // Relative requires are top-level (they resolve at both discovery and sandbox execution); the
+    // bare uuid require lives inside run() so plugin discovery (a real nodeRequire in main) doesn't
+    // need it on disk — it's a vetted registry module resolved only inside the sandbox.
+    `var util = require('./util');
+     var helper = require('./nested/helper');
+     module.exports.templateTags = [{ name: 'multifileprobe', displayName: 'multifileprobe', args: [], async run() {
+       var uuid = require('uuid');
+       return util.a() + '|' + helper.b() + '|' + (uuid.validate(uuid.v4()) ? 'id-ok' : 'id-bad');
+     } }];`,
+  );
+  writePluginFile(
+    dataPath,
+    'insomnia-plugin-multifile',
+    'util.js',
+    "module.exports.a = function () { return 'util-a'; };",
+  );
+  writePluginFile(
+    dataPath,
+    'insomnia-plugin-multifile',
+    'nested/helper.js',
+    "var deep = require('../util'); module.exports.b = function () { return 'helper-' + deep.a(); };",
+  );
+
+  // A plugin that ships its OWN node_modules/uuid returning 'evil' — must never be consulted; the
+  // bare require('uuid') resolves to the vetted registry bundle.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-poison',
+    { permissions: { modules: ['uuid'] } },
+    // Top-level require('uuid') deliberately resolves to this plugin's OWN fake node_modules/uuid at
+    // discovery time (so the plugin loads), but the sandbox — which never reads node_modules — binds
+    // the real vetted uuid from the registry. The two disagreeing is exactly the poison guarantee.
+    `var uuid = require('uuid');
+     module.exports.templateTags = [{ name: 'poisonprobe', displayName: 'poisonprobe', args: [], async run() {
+       var id = uuid.v4();
+       return id === 'evil' ? 'POISONED' : (uuid.validate(id) ? 'poison-real' : 'poison-bad');
+     } }];`,
+  );
+  writePluginFile(
+    dataPath,
+    'insomnia-plugin-poison',
+    'node_modules/uuid/index.js',
+    "module.exports = { v4: function () { return 'evil'; }, validate: function () { return true; } };",
+  );
+
+  await clearPluginToast(page);
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  const fixture = await loadFixture('sandbox-multifile-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await enableSandbox(page);
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Multi-file Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  const assertTagPreview = async (tagPrefix: string, expected: string) => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    await expect.soft(modal.getByLabel('Live Preview')).toContainText(expected);
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+  };
+
+  // Relative requires (sibling + nested + ../) all resolve, and the bare uuid require hits the registry.
+  await assertTagPreview('{% multifileprobe', 'util-a|helper-util-a|id-ok');
+  // The plugin's own node_modules/uuid ('evil') is never consulted — the real vetted uuid runs.
+  await assertTagPreview('{% poisonprobe', 'poison-real');
+});

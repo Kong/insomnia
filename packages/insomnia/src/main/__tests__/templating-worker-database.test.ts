@@ -47,8 +47,75 @@ import {
   _testOnlyResetMigrationWarnings,
   getPluginEntrySource,
   maybeWarnMissingManifest,
+  readPluginModuleMap,
   runPluginTagInSandbox,
 } from '../templating-worker-database';
+
+describe('readPluginModuleMap (M4 multi-file plugin reader)', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-map-'));
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reads the plugin dir into a relative-keyed module map (entry + siblings + nested)', () => {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    fs.writeFileSync(path.join(dir, 'index.js'), "require('./util');");
+    fs.writeFileSync(path.join(dir, 'util.js'), 'module.exports = {};');
+    fs.mkdirSync(path.join(dir, 'nested'));
+    fs.writeFileSync(path.join(dir, 'nested', 'helper.js'), 'module.exports = {};');
+    const { moduleFiles, entryModuleKey } = readPluginModuleMap({ directory: dir, name: 'p' });
+    expect(entryModuleKey).toBe('index.js');
+    expect(Object.keys(moduleFiles).sort()).toEqual(['index.js', 'nested/helper.js', 'util.js']);
+  });
+
+  it("never reads the plugin's own node_modules (the poison guarantee)", () => {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    fs.writeFileSync(path.join(dir, 'index.js'), "require('uuid');");
+    fs.mkdirSync(path.join(dir, 'node_modules', 'uuid'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'node_modules', 'uuid', 'index.js'), "module.exports.v4 = () => 'evil';");
+    const { moduleFiles } = readPluginModuleMap({ directory: dir, name: 'p' });
+    expect(Object.keys(moduleFiles)).toEqual(['index.js']);
+    expect(Object.keys(moduleFiles).some(k => k.includes('node_modules'))).toBe(false);
+  });
+
+  it('honors a custom package.json "main" as the entry key', () => {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'src/entry.js' }));
+    fs.mkdirSync(path.join(dir, 'src'));
+    fs.writeFileSync(path.join(dir, 'src', 'entry.js'), 'module.exports = {};');
+    const { entryModuleKey, moduleFiles } = readPluginModuleMap({ directory: dir, name: 'p' });
+    expect(entryModuleKey).toBe('src/entry.js');
+    expect(moduleFiles['src/entry.js']).toBeDefined();
+  });
+
+  it('rejects an entry that escapes the plugin directory', () => {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: '../../../../etc/passwd' }));
+    expect(() => readPluginModuleMap({ directory: dir, name: 'p' })).toThrow(/escapes plugin directory/);
+  });
+
+  it('rejects a plugin with more than MAX_PLUGIN_MODULE_FILES source files', () => {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    fs.writeFileSync(path.join(dir, 'index.js'), "module.exports = {};");
+    for (let i = 0; i < 500; i++) {
+      fs.writeFileSync(path.join(dir, `f${i}.js`), 'module.exports = {};');
+    }
+    expect(() => readPluginModuleMap({ directory: dir, name: 'p' })).toThrow(/too many source files/);
+  });
+
+  it('reads a custom "main" whose name shadows an Object.prototype member', () => {
+    // An extensionless "main" like "toString" collides with Object.prototype.toString: an `in`
+    // check against a plain {} object would see it as already present and skip reading the real
+    // file, silently dropping the plugin's entry content instead of loading it.
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'toString' }));
+    fs.writeFileSync(path.join(dir, 'toString'), 'module.exports = { real: true };');
+    const { moduleFiles, entryModuleKey } = readPluginModuleMap({ directory: dir, name: 'p' });
+    expect(entryModuleKey).toBe('toString');
+    expect(Object.prototype.hasOwnProperty.call(moduleFiles, 'toString')).toBe(true);
+    expect(moduleFiles['toString']).toBe('module.exports = { real: true };');
+  });
+});
 
 describe('maybeWarnMissingManifest (P1 migration warning)', () => {
   beforeEach(() => {

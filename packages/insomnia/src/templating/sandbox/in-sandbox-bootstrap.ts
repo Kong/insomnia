@@ -177,6 +177,68 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return __moduleCache[canonical];',
   '  };',
 
+  // --- relative-module loader over the plugin\'s own files (M4, multi-file plugins) ---',
+  // The host reads the plugin\'s source files (only within its own directory, never node_modules)
+  // into __moduleFiles: { posixRelativeKey -> source }. A relative require ("./util", "../x") is
+  // resolved from that map and compiled here via `new Function` (source is envelope DATA, not
+  // host-eval\'d code). A bare specifier ("uuid") still routes through the grant-gated __require, so
+  // the registry is the only source of third-party modules — the plugin\'s node_modules is never
+  // consulted (the "poison" guarantee).
+  // Null-prototype copy so `in` below can\'t match an inherited Object.prototype member.
+  '  var __moduleFiles = (function (src) {',
+  '    var out = Object.create(null);',
+  '    for (var k in src) { if (Object.prototype.hasOwnProperty.call(src, k)) { out[k] = src[k]; } }',
+  '    return out;',
+  '  })((__env && __env.moduleFiles) || {});',
+  '  var __pluginModuleCache = Object.create(null);',
+  '  function __dirOfKey(key) { var i = key.lastIndexOf("/"); return i === -1 ? "" : key.slice(0, i); }',
+  // __normalizeKey returns null when the path traverses above the plugin root (e.g.
+  // require("../../util") from a shallow dir). Node would resolve that outside the plugin; clamping
+  // it back into the root could make an out-of-plugin path masquerade as an in-plugin module, so
+  // treat above-root traversal as unresolvable.
+  '  function __normalizeKey(p) {',
+  '    var parts = p.split("/"); var out = [];',
+  '    for (var i = 0; i < parts.length; i++) {',
+  '      var seg = parts[i];',
+  '      if (seg === "" || seg === ".") { continue; }',
+  '      if (seg === "..") { if (out.length) { out.pop(); continue; } return null; }',
+  '      out.push(seg);',
+  '    }',
+  '    return out.join("/");',
+  '  }',
+  '  function __resolveRelative(fromDir, spec) {',
+  '    var base = __normalizeKey(fromDir ? fromDir + "/" + spec : spec);',
+  '    if (base === null) { return null; }',
+  '    var candidates = [base, base + ".js", base + ".json", (base ? base + "/" : "") + "index.js"];',
+  '    for (var i = 0; i < candidates.length; i++) { if (candidates[i] && (candidates[i] in __moduleFiles)) { return candidates[i]; } }',
+  '    return null;',
+  '  }',
+  '  function __makePluginRequire(fromDir) {',
+  '    return function (spec) {',
+  '      var s = "" + spec;',
+  '      if (s.charAt(0) === ".") {',
+  '        var key = __resolveRelative(fromDir, s);',
+  '        if (key === null) { var e = new Error("Cannot find module \'" + s + "\'"); e.code = "MODULE_NOT_FOUND"; throw e; }',
+  '        return __loadPluginModule(key);',
+  '      }',
+  '      return globalThis.__require(s);',
+  '    };',
+  '  }',
+  '  function __loadPluginModule(key) {',
+  '    if (key in __pluginModuleCache) { return __pluginModuleCache[key].exports; }',
+  '    var src = __moduleFiles[key];',
+  '    var module = { exports: {} };',
+  '    __pluginModuleCache[key] = module;',
+  '    if (key.slice(-5) === ".json") { module.exports = JSON.parse(src); return module.exports; }',
+  '    var fn = new Function("module", "exports", "require", "__dirname", "__filename", src);',
+  '    var dir = __dirOfKey(key);',
+  '    fn(module, module.exports, __makePluginRequire(dir), dir, key);',
+  '    return module.exports;',
+  '  }',
+  '  globalThis.__loadPluginEntry = function () {',
+  '    return __loadPluginModule(__env.entryModuleKey);',
+  '  };',
+
   // --- rebuild the plugin context over the bulk-copied envelope ---
   // Every branch is built here, then the ones whose capability is not granted are removed below, so
   // `context.network` (etc.) is `undefined` — not a present-but-rejecting stub — when ungated. This
@@ -262,11 +324,11 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return ctx;',
   '  };',
 
-  // --- find the requested tag in the evaluated plugin module and run it ---
+  // --- load the plugin (its entry module, resolving any relative requires) and run the tag ---
   '  globalThis.__invoke = function () {',
   '    var env = __env;',
   '    var ctx = globalThis.__buildContext(env);',
-  '    var mod = globalThis.__pluginModule;',
+  '    var mod = globalThis.__loadPluginEntry();',
   '    var tags = (mod && mod.templateTags) || [];',
   '    var tag = null;',
   '    for (var i = 0; i < tags.length; i++) { if (tags[i].name === __tag) { tag = tags[i]; break; } }',
@@ -280,26 +342,9 @@ export const IN_SANDBOX_BOOTSTRAP = [
   // context/invocation entry points. __registerModule is intentionally left mutable — the module
   // registry source deletes it once the registry is populated.
   '  var __lock = function (n) { Object.defineProperty(globalThis, n, { value: globalThis[n], writable: false, configurable: false }); };',
-  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke");',
+  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry");',
   '})();',
 ].join('\n');
-
-/**
- * Wrap raw plugin source as a CommonJS module, evaluate it, and stash its exports on
- * `globalThis.__pluginModule` for `__invoke()`. The source is concatenated at runtime (not baked
- * into a template literal), so plugin code can contain any characters safely.
- */
-export const wrapPluginSource = (source: string): string =>
-  [
-    'globalThis.__pluginModule = (function () {',
-    '  var module = { exports: {} };',
-    '  var exports = module.exports;',
-    '  (function (module, exports, require, __dirname, __filename) {',
-    source,
-    '  })(module, exports, globalThis.__require, "", "");',
-    '  return module.exports;',
-    '})();',
-  ].join('\n');
 
 /** The runner: kicks off the async invocation and parks the VM promise on `globalThis.__task`. */
 export const RUNNER = 'globalThis.__task = globalThis.__invoke();';

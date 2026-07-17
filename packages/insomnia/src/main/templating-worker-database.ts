@@ -128,6 +128,92 @@ export const getPluginEntrySource = ({ directory, name }: { directory: string; n
   }
 };
 
+// True when `target` is `base` itself or lives inside it (after both are realpath-resolved).
+const isContainedIn = (base: string, target: string): boolean => {
+  const rel = path.relative(base, target);
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+};
+
+// Bounds so a pathological plugin directory can't exhaust memory when read into the module map.
+const MAX_PLUGIN_MODULE_FILES = 500;
+const MAX_PLUGIN_MODULE_BYTES = 10 * 1024 * 1024;
+
+// Read a plugin's own source files into a module map for the sandbox's relative-require loader (M4).
+// Walks ONLY within the plugin's directory — `node_modules` and dot-dirs are skipped and symlinked
+// files whose real path escapes the directory are dropped — so the plugin's own dependencies are
+// never loaded (bare `require('x')` always routes to the vetted registry, never the plugin's copy).
+// Bundle (first-party) plugins have no directory and stay single-file.
+export const readPluginModuleMap = ({
+  directory,
+  name,
+}: {
+  directory: string;
+  name: string;
+}): { moduleFiles: Record<string, string>; entryModuleKey: string } => {
+  if (!directory) {
+    return { moduleFiles: { 'index.js': getPluginEntrySource({ directory: '', name }) }, entryModuleKey: 'index.js' };
+  }
+  try {
+    const base = fs.realpathSync(path.resolve(directory));
+    const pkg = JSON.parse(fs.readFileSync(path.join(base, 'package.json'), 'utf8'));
+    const entryAbs = path.resolve(base, pkg.main || 'index.js');
+    // Check the plain resolved path first (catches traversal even if the target doesn't exist),
+    // then the realpath (catches a symlinked entry pointing outside the dir).
+    if (!isContainedIn(base, entryAbs) || !isContainedIn(base, fs.realpathSync(entryAbs))) {
+      throw new Error(`plugin entry point escapes plugin directory: ${pkg.main}`);
+    }
+    const toKey = (abs: string) => path.relative(base, abs).split(path.sep).join('/');
+    const moduleFiles: Record<string, string> = {};
+    let totalBytes = 0;
+    let fileCount = 0;
+    // Count UTF-8 bytes (not source.length, which is UTF-16 code units and undercounts multi-byte
+    // characters) so the limit reflects the real payload shipped into the sandbox envelope.
+    const addModule = (key: string, source: string): void => {
+      totalBytes += Buffer.byteLength(source, 'utf8');
+      if (totalBytes > MAX_PLUGIN_MODULE_BYTES) {
+        throw new Error('plugin source exceeds the sandbox size limit');
+      }
+      moduleFiles[key] = source;
+      fileCount++;
+    };
+    const walk = (dir: string): void => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === 'node_modules' || entry.name.startsWith('.')) {
+          continue;
+        }
+        const abs = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(abs);
+          continue;
+        }
+        // package.json is plugin metadata, not a requireable module — keep it out of the map.
+        if (!entry.isFile() || entry.name === 'package.json' || !/\.(js|json)$/.test(entry.name)) {
+          continue;
+        }
+        if (!isContainedIn(base, fs.realpathSync(abs))) {
+          continue; // symlink whose target escapes the plugin dir
+        }
+        if (fileCount >= MAX_PLUGIN_MODULE_FILES) {
+          throw new Error(`plugin has too many source files (> ${MAX_PLUGIN_MODULE_FILES})`);
+        }
+        addModule(toKey(abs), fs.readFileSync(abs, 'utf8'));
+      }
+    };
+    walk(base);
+    const entryModuleKey = toKey(entryAbs);
+    if (!Object.prototype.hasOwnProperty.call(moduleFiles, entryModuleKey)) {
+      // The entry may sit outside the walk (e.g. a custom package.json "main"); still count it
+      // against the size limit rather than adding it unbounded.
+      addModule(entryModuleKey, fs.readFileSync(entryAbs, 'utf8'));
+    }
+    return { moduleFiles, entryModuleKey };
+  } catch (err) {
+    throw new Error(
+      `Failed to load sandbox source for plugin '${name}': ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+};
+
 // (plugin name, module) pairs we've already toasted for this session — so a repeat denial for the
 // SAME missing module doesn't re-toast, but a plugin missing two different grants still gets a
 // distinct hint for each one it actually hits (P1).
@@ -174,8 +260,12 @@ export const maybeWarnMissingManifest = (
 // Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
 // process. The host bridge reuses the existing pluginToMainAPI handlers verbatim, plus a util.render
 // handler that recurses through main templating. Gated behind the templateTagSandboxEnabled setting.
+// The plugin's own source, either a single entry string (single-file plugins/tests) or a full
+// module map read from disk (M4 multi-file plugins).
+type PluginModuleSource = string | { moduleFiles: Record<string, string>; entryModuleKey: string };
+
 export const runPluginTagInSandbox = async (
-  pluginSource: string,
+  pluginModule: PluginModuleSource,
   body: {
     args: any[];
     pluginName: string;
@@ -197,6 +287,10 @@ export const runPluginTagInSandbox = async (
   const { pluginName, tagName, args, context: originContext } = body;
   const { meta, renderPurpose, context } = originContext;
   const capabilities = grantedCapabilities ?? [...TEMPLATE_TAG_BASELINE_CAPABILITIES];
+  const { moduleFiles, entryModuleKey } =
+    typeof pluginModule === 'string'
+      ? { moduleFiles: { 'index.js': pluginModule }, entryModuleKey: 'index.js' }
+      : pluginModule;
   // Gate the handler map by capability before building the bridge: an ungranted path rejects at the
   // bridge with a message naming the missing capability, rather than silently running.
   const bridge = createMapBridge(
@@ -214,7 +308,6 @@ export const runPluginTagInSandbox = async (
     ),
   );
   return runTagInSandbox({
-    pluginSource,
     tagName,
     bridge,
     // node:crypto is synchronous and available in main, so back the sandbox's require('crypto')
@@ -243,6 +336,8 @@ export const runPluginTagInSandbox = async (
       renderDepth: 0,
       grantedModules: grantedModules ?? [...TEMPLATE_TAG_BASELINE_MODULES],
       grantedCapabilities: capabilities,
+      moduleFiles,
+      entryModuleKey,
     },
   });
 };
@@ -473,7 +568,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
           const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
           // Bundle plugins are first-party and trusted: grant every module + capability.
           return runPluginTagInSandbox(
-            getPluginEntrySource({ directory: '', name: pluginName }),
+            readPluginModuleMap({ directory: '', name: pluginName }),
             body,
             [...ALL_SANDBOX_MODULES],
             [...ALL_CAPABILITIES],
@@ -521,7 +616,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         );
         try {
           return await runPluginTagInSandbox(
-            getPluginEntrySource({ directory: targetTag.plugin.directory, name: pluginName }),
+            readPluginModuleMap({ directory: targetTag.plugin.directory, name: pluginName }),
             body,
             resolveTemplateTagModules(targetTag.plugin.permissions?.modules),
             resolveTemplateTagCapabilities(targetTag.plugin.permissions?.capabilities),

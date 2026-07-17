@@ -53,35 +53,18 @@ const PATH_FACTORY = [
 ].join('\n');
 
 // crypto is backed by synchronous host functions (real host crypto), so digest()/randomBytes()
-// return values inline — matching node:crypto's synchronous contract.
+// return values inline — matching node:crypto's synchronous contract. The actual createHash/
+// createHmac/randomBytes/randomUUID implementation lives in sandbox-globals.ts's
+// `globalThis.__nodeCryptoExports`, built eagerly in the same scope that captures the raw
+// `__crypto*` host natives — this factory only runs lazily (on the plugin's first `require('crypto')`
+// call), by which point those raw natives are already gone from `globalThis`, so it can't read them
+// directly. It reads `__cryptoExportsCapture` instead — a variable closed over from
+// buildModuleRegistrySource's wrapping IIFE (see below), not `globalThis.__nodeCryptoExports`
+// directly, which is captured-then-deleted there before any plugin code runs.
 const CRYPTO_FACTORY = [
   'function () {',
-  '  if (typeof globalThis.__cryptoHash !== "function") { throw new Error("\'crypto\' is not available in this sandbox"); }',
-  '  var mkDigester = function (compute) {',
-  '    var parts = [];',
-  '    var obj = {',
-  '      update: function (data) { parts.push(typeof data === "string" ? data : String(data)); return obj; },',
-  '      digest: function (enc) { return compute(parts.join(""), enc || "hex"); }',
-  '    };',
-  '    return obj;',
-  '  };',
-  '  return {',
-  '    createHash: function (algo) { return mkDigester(function (data, enc) { return globalThis.__cryptoHash(algo, data, "utf8", enc); }); },',
-  '    createHmac: function (algo, key) { var k = typeof key === "string" ? key : String(key); return mkDigester(function (data, enc) { return globalThis.__cryptoHmac(algo, k, data, enc); }); },',
-  '    randomBytes: function (size) {',
-  '      var b64 = globalThis.__cryptoRandomBytes(size);',
-  '      var binary = atob(b64);',
-  '      return {',
-  '        length: binary.length,',
-  '        toString: function (enc) {',
-  '          if (enc === "base64") { return b64; }',
-  '          if (enc === "latin1" || enc === "binary") { return binary; }',
-  '          var hex = ""; for (var i = 0; i < binary.length; i++) { hex += ("0" + binary.charCodeAt(i).toString(16)).slice(-2); } return hex;',
-  '        }',
-  '      };',
-  '    },',
-  '    randomUUID: function () { return globalThis.__cryptoRandomUUID(); }',
-  '  };',
+  '  if (typeof __cryptoExportsCapture === "undefined") { throw new Error("\'crypto\' is not available in this sandbox"); }',
+  '  return __cryptoExportsCapture;',
   '}',
 ].join('\n');
 
@@ -174,8 +157,16 @@ const registerCall = (m: SandboxModuleDefinition): string => {
 export const buildModuleRegistrySource = (grantedModules: string[] = []): string => {
   const granted = new Set(grantedModules);
   return [
+    '(function(){',
+    // Capture then drop sandbox-globals.ts's hand-off object — this IIFE runs synchronously, once,
+    // before any plugin code (RUNNER evaluates last), so there's no window where a plugin could ever
+    // observe globalThis.__nodeCryptoExports as a bare global. CRYPTO_FACTORY closes over this local
+    // instead, so it stays available whenever require('crypto') is first (lazily) called.
+    '  var __cryptoExportsCapture = globalThis.__nodeCryptoExports;',
+    '  delete globalThis.__nodeCryptoExports;',
     ...SANDBOX_MODULES.filter(m => !m.heavy || granted.has(m.name)).map(registerCall),
     // Lock the registry once populated — plugin code must not be able to register or replace factories.
-    'delete globalThis.__registerModule;',
+    '  delete globalThis.__registerModule;',
+    '})();',
   ].join('\n');
 };
