@@ -351,10 +351,14 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    var tagDesc = function (t) { return isObj(t) ? { name: t.name, displayName: t.displayName, description: t.description, args: t.args || [] } : null; };',
   '    var actionDesc = function (a) { return isObj(a) ? { label: a.label, icon: a.icon } : null; };',
   '    var themeDesc = function (t) { return isObj(t) ? { name: t.name, displayName: t.displayName, theme: t.theme } : null; };',
+  // Report a hook count, not the array itself — but a plugin could export a non-array with a huge
+  // `.length` to make the host allocate `Array.from({length})` (DoS). Coerce to a finite, non-negative
+  // integer and cap it; the host clamps again as defense in depth.
+  '    var hookCount = function (arr) { var n = arr && arr.length; n = (typeof n === "number" && isFinite(n)) ? Math.floor(n) : 0; if (n < 0) { n = 0; } return n > 1000 ? 1000 : n; };',
   '    var manifest = {',
   '      templateTags: mapArr(mod.templateTags, tagDesc),',
-  '      requestHooks: (mod.requestHooks && mod.requestHooks.length) || 0,',
-  '      responseHooks: (mod.responseHooks && mod.responseHooks.length) || 0,',
+  '      requestHooks: hookCount(mod.requestHooks),',
+  '      responseHooks: hookCount(mod.responseHooks),',
   '      requestActions: mapArr(mod.requestActions, actionDesc),',
   '      requestGroupActions: mapArr(mod.requestGroupActions, actionDesc),',
   '      workspaceActions: mapArr(mod.workspaceActions, actionDesc),',

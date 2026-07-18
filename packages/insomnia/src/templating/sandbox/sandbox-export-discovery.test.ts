@@ -12,7 +12,10 @@ const noBridge: HostBridge = async path => {
   throw new Error(`unexpected bridge call: ${path}`);
 };
 
-const envelope = (moduleFiles: Record<string, string>, grantedModules: string[] = ['path', 'crypto']): ContextEnvelope => ({
+const envelope = (
+  moduleFiles: Record<string, string>,
+  grantedModules: string[] = ['path', 'crypto'],
+): ContextEnvelope => ({
   args: [],
   context: {},
   meta: {},
@@ -26,7 +29,10 @@ const envelope = (moduleFiles: Record<string, string>, grantedModules: string[] 
   entryModuleKey: 'index.js',
 });
 
-const discover = async (moduleFiles: Record<string, string>, grantedModules?: string[]): Promise<PluginExportManifest> => {
+const discover = async (
+  moduleFiles: Record<string, string>,
+  grantedModules?: string[],
+): Promise<PluginExportManifest> => {
   const json = await runTagInSandbox({
     tagName: '',
     discover: true,
@@ -68,7 +74,22 @@ describe('sandbox export discovery (L1)', () => {
       'index.js': "module.exports.templateTags = require('./tags');",
       'tags.js': "module.exports = [{ name: 'fromlib', run: function () { return 'x'; } }];",
     });
-    expect(manifest.templateTags).toEqual([{ name: 'fromlib', displayName: undefined, description: undefined, args: [] }]);
+    expect(manifest.templateTags).toEqual([
+      { name: 'fromlib', displayName: undefined, description: undefined, args: [] },
+    ]);
+  });
+
+  it('clamps a hostile hook count so the host cannot be driven into a huge allocation', async () => {
+    // A plugin exports a non-array with a giant `.length`; the manifest count must be clamped, not
+    // passed through, so the host's Array.from({ length }) can't be weaponized into an OOM.
+    const manifest = await discover({
+      'index.js': `
+        module.exports.requestHooks = { length: 1e12 };
+        module.exports.responseHooks = [function () {}, function () {}, function () {}];
+        module.exports.templateTags = [];`,
+    });
+    expect(manifest.requestHooks).toBe(1000);
+    expect(manifest.responseHooks).toBe(3);
   });
 
   it('contains a throwing top-level (surfaced as a rejection, not a host crash)', async () => {
@@ -79,8 +100,8 @@ describe('sandbox export discovery (L1)', () => {
     // A plugin whose top-level does require('child_process') to spawn a process gets nothing: the
     // sandbox require is default-deny, so discovery fails the same way tag execution would — the
     // host is never reached.
-    await expect(discover({ 'index.js': "require('child_process'); module.exports.templateTags = [];" })).rejects.toThrow(
-      /not permitted by manifest/,
-    );
+    await expect(
+      discover({ 'index.js': "require('child_process'); module.exports.templateTags = [];" }),
+    ).rejects.toThrow(/not permitted by manifest/);
   });
 });
