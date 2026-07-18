@@ -87,10 +87,17 @@ function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginE
     icon: a.icon,
     action: notRouted(surface),
   });
+  // The count comes from untrusted sandbox output; clamp to a finite, non-negative, bounded integer
+  // before allocating so a hostile manifest can't drive a huge Array.from allocation (the sandbox
+  // clamps too — this is defense in depth).
+  const hookStubs = (count: number, surface: string) =>
+    Array.from({ length: Number.isFinite(count) && count > 0 ? Math.min(Math.floor(count), 1000) : 0 }, () =>
+      notRouted(surface),
+    );
   return {
     templateTags: manifest.templateTags.map(t => ({ ...t, run: notRouted('template-tag run()') }) as PluginTemplateTag),
-    requestHooks: Array.from({ length: manifest.requestHooks }, () => notRouted('request hooks')),
-    responseHooks: Array.from({ length: manifest.responseHooks }, () => notRouted('response hooks')),
+    requestHooks: hookStubs(manifest.requestHooks, 'request hooks'),
+    responseHooks: hookStubs(manifest.responseHooks, 'response hooks'),
     requestActions: manifest.requestActions.map(toAction('request actions')),
     requestGroupActions: manifest.requestGroupActions.map(toAction('request group actions')),
     workspaceActions: manifest.workspaceActions.map(toAction('workspace actions')),
