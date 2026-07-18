@@ -382,6 +382,25 @@ export const discoverPluginExportsInSandbox = async (
   return JSON.parse(json);
 };
 
+// Discover a user plugin's exports from its on-disk source, resolving the template-tag surface grant
+// from its manifest. Shared by the plugin loader (plugins/index.ts calls this directly when it runs
+// in the main process) and the `plugin.discoverUserPluginExports` bridge handler (renderer path).
+export const discoverUserPluginExportsForLoader = async (body: {
+  directory: string;
+  name: string;
+  permissions?: { modules?: string[]; capabilities?: string[] };
+}): Promise<PluginExportManifest> => {
+  const { directory, name, permissions } = body;
+  const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+    '../templating/sandbox/surface-profiles'
+  );
+  return discoverPluginExportsInSandbox(readPluginModuleMap({ directory, name }), {
+    pluginName: name,
+    grantedModules: resolveTemplateTagModules(permissions?.modules),
+    grantedCapabilities: resolveTemplateTagCapabilities(permissions?.capabilities),
+  });
+};
+
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
@@ -644,17 +663,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     directory: string;
     name: string;
     permissions?: { modules?: string[]; capabilities?: string[] };
-  }) => {
-    const { directory, name, permissions } = body;
-    const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
-      '../templating/sandbox/surface-profiles'
-    );
-    return discoverPluginExportsInSandbox(readPluginModuleMap({ directory, name }), {
-      pluginName: name,
-      grantedModules: resolveTemplateTagModules(permissions?.modules),
-      grantedCapabilities: resolveTemplateTagCapabilities(permissions?.capabilities),
-    });
-  },
+  }) => discoverUserPluginExportsForLoader(body),
   // execute a user-installed plugin tag with the given parameters, in the main process where
   // Node built-ins (e.g. crypto) the plugin requires are available.
   'plugin.executeUserPluginTag': async (body: {
