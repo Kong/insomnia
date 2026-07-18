@@ -15,7 +15,7 @@ export async function authorizeUserInDefaultBrowser({
   openDefaultBrowser = true,
 }: {
   url: string;
-  openDefaultBrowser: boolean;
+  openDefaultBrowser?: boolean;
 }) {
   if (pendingOAuthRejector) {
     pendingOAuthRejector(new Error('Canceled by new OAuth request'));
