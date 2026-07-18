@@ -58,6 +58,35 @@ export async function init() {
 // never called while the sandbox is on. Hook/action invocation isn't sandbox-routed yet, so those
 // function members throw a clear error until that lands (PR 10/11); the plugin's tags/hooks/actions
 // still *enumerate* in the UI from these descriptors.
+// Run sandbox export discovery in the main process (templating worker DB). The call rides the
+// `insomnia-templating-worker-database://` protocol, which can briefly be unavailable while the app
+// re-renders around a settings change (the reload that flips the sandbox on is triggered by exactly
+// such a change), surfacing as a low-level "fetch failed". Retry a few times with a short backoff so
+// a transient readiness race doesn't drop the plugin; a persistent failure still throws to the
+// per-plugin catch below (that plugin logs a load error; others are unaffected).
+async function discoverUserPluginExports(
+  directory: string,
+  name: string,
+  permissions: Plugin['permissions'],
+): Promise<PluginExportManifest> {
+  const body = { directory, name, permissions };
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      return (await fetchFromTemplateWorkerDatabase('plugin.discoverUserPluginExports', body)) as PluginExportManifest;
+    } catch (err) {
+      lastErr = err;
+      // Only a transport-level failure ("fetch failed") is worth retrying; a handler error (denied
+      // require, syntax error) comes back as a resolved 500 with a message and should surface at once.
+      if (!/fetch failed/i.test(err instanceof Error ? err.message : String(err))) {
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100 * (attempt + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginExportManifest): Plugin['module'] {
   const notRouted = (surface: string) => () => {
     throw new Error(
@@ -154,11 +183,7 @@ async function traversePluginPath(
         // never runs its top-level code with host (Node) privileges. Off → legacy in-process require.
         let module: Plugin['module'];
         if (sandboxEnabled) {
-          const manifest = (await fetchFromTemplateWorkerDatabase('plugin.discoverUserPluginExports', {
-            directory: modulePath,
-            name: pluginJson.name,
-            permissions: parsedPermissions.permissions,
-          })) as PluginExportManifest;
+          const manifest = await discoverUserPluginExports(modulePath, pluginJson.name, parsedPermissions.permissions);
           module = buildUserPluginModuleFromManifest(pluginJson.name, manifest);
         } else {
           module = nodeRequire(modulePath);
