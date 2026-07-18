@@ -44,7 +44,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
 
   useEffect(() => {
     (async () => {
-      const workspaces = await services.workspace.findByParentId(selectedProjectId);
+      const workspaces = await services.workspace.listByParentId(selectedProjectId);
       const requestCollections = workspaces.filter(workspace => workspace.scope === 'collection');
       setWorkspaceOptions(requestCollections);
       setSelectedWorkspaceId(requestCollections[0]?._id || '');

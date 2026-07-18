@@ -2,7 +2,10 @@ import type { BaseRunnerTestResult, RunnerResultPerRequest } from 'insomnia-data
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import { RequestTestResultRows } from './request-test-result-pane';
+import { useRootLoaderData } from '~/root';
+import { Hotkey } from '~/ui/components/hotkey';
+
+import { RequestResultCard } from './request-result-card';
 
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
@@ -18,15 +21,30 @@ interface Props {
 export const RunnerTestResultPane: FC<Props> = ({ result }) => {
   const [targetTests, setTargetTests] = useState<TargetTestType>('all');
   const [resultFilter, setResultFilter] = useState('');
+  const { settings } = useRootLoaderData()!;
 
-  const noTestFoundPage = (
-    <div className="mt-5 text-center">
-      <div className="">No test result found</div>
-      <div className="text-sm text-neutral-400">Add test cases in scripts and run them to see results.</div>
-    </div>
-  );
-  if (!result || result.iterationResults.length === 0) {
-    return noTestFoundPage;
+  if (!result) {
+    return (
+      <div className="mt-5 text-center">
+        <div>Run results will appear here</div>
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-sm text-neutral-400">
+          <span>Select requests and press</span>
+          <code>
+            <Hotkey keyBindings={settings.hotKeyRegistry.request_send} useFallbackMessage />
+          </code>
+          <span>to run</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (result.iterationResults.length === 0) {
+    return (
+      <div className="mt-5 text-center">
+        <div>No results from this run</div>
+        <div className="text-sm text-neutral-400">Add test cases in scripts and run them to see results.</div>
+      </div>
+    );
   }
 
   const selectAllTests = () => setTargetTests('all');
@@ -38,20 +56,17 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
     const key = `runner-test-result-iteration-${i + 1}`;
 
     if (Array.isArray(iterationResults)) {
-      const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, i: number) => {
-        const key = `request-test-result-${i}`;
+      const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, reqIndex: number) => {
+        const key = `request-test-result-${reqIndex}`;
         return (
-          <div key={key}>
-            <div className="pl-3">
-              <span>{requestTestResult.requestName}</span>
-              <span className="text-sm text-neutral-400">{` - ${requestTestResult.requestUrl}`}</span>
-            </div>
-            <RequestTestResultRows
-              requestTestResults={requestTestResult.results}
-              resultFilter={resultFilter}
-              targetTests={targetTests}
-            />
-          </div>
+          <RequestResultCard
+            key={key}
+            item={requestTestResult}
+            resultFilter={resultFilter}
+            targetTests={targetTests}
+            testId={key}
+            defaultExpanded
+          />
         );
       });
 

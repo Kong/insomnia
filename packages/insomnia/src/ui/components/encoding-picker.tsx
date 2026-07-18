@@ -1,6 +1,6 @@
+import { fuzzyMatch } from 'insomnia-data/common';
 import { Button, ComboBox, Group, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
-import { fuzzyMatch } from '../../common/misc';
 import { Icon } from './icon';
 
 const BUILT_IN_ENCODINGS = [

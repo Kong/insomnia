@@ -43,13 +43,13 @@ import path from 'node:path';
 
 import type { BaseModel, Workspace, WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import YAML from 'yaml';
 
 import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
+import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -269,7 +269,7 @@ class RepoFileWatcher {
    * `importAllFiles` skips them (they are already up-to-date).
    */
   private async flushNewerDbWorkspacesToDisk(): Promise<void> {
-    const workspaces = await services.workspace.findByParentId(this.projectId);
+    const workspaces = await services.workspace.listByParentId(this.projectId);
 
     await Promise.all(
       workspaces.map(async workspace => {
@@ -341,6 +341,17 @@ class RepoFileWatcher {
    */
   async importAllFiles(options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
     if (this.stopped) {
+      return;
+    }
+
+    // If the whole repo folder is gone (deleted/moved/unmounted), an empty disk
+    // must NOT be read as "every file was deleted" — that would wipe the DB.
+    // Treat the repo as temporarily unavailable and skip syncing.
+    if (!(await this.repoDirIsAvailable())) {
+      console.warn(
+        '[repo-file-watcher] Repo directory unavailable — skipping import to avoid data loss:',
+        this.repoDir,
+      );
       return;
     }
 
@@ -534,6 +545,10 @@ class RepoFileWatcher {
 
     try {
       if (!ruleset) {
+        if (this.hasProblem(absPath)) {
+          return;
+        }
+
         // Ruleset removed from the DB — remove the file if we were tracking it.
         if (this.lastWrittenHash.has(absPath) || this.lastSyncMtime.has(absPath)) {
           await fs.promises.rm(absPath, { force: true });
@@ -541,6 +556,16 @@ class RepoFileWatcher {
           this.lastSyncMtime.delete(absPath);
         }
         return;
+      }
+
+      // A DB ruleset only exists when it was validated (UI upload or a valid
+      // git import), so any problem still recorded for this path is stale —
+      // e.g. a previously-invalid committed file that the user has now replaced
+      // via upload. Clear it here, because the fs.watch echo of the write below
+      // is dedup-skipped and never reaches importFile's clearProblem path.
+      if (this.hasProblem(absPath)) {
+        this.clearProblem(absPath);
+        this.notifyRenderer();
       }
 
       const hash = contentHash(ruleset.rulesetContent);
@@ -601,6 +626,13 @@ class RepoFileWatcher {
   }
 
   private async pollDirectory(dir: string): Promise<void> {
+    // Don't sync when the repo folder is gone — see importAllFiles. This prevents
+    // the deletion-detection loop below from wiping the DB when the folder was
+    // deleted/unmounted rather than its files individually removed.
+    if (!(await this.repoDirIsAvailable())) {
+      return;
+    }
+
     // Check known files for mtime changes or deletions — no readdir
     for (const [absPath, lastMtime] of this.lastSyncMtime) {
       try {
@@ -654,20 +686,6 @@ class RepoFileWatcher {
     );
   }
 
-  private isSpectralRulesetFile(normalisedPath: string, content: string): boolean {
-    if (!this.isSpectralRulesetPath(normalisedPath)) {
-      return false;
-    }
-    try {
-      const parsedContent = YAML.parse(content);
-      return (
-        !!parsedContent && typeof parsedContent === 'object' && ('extends' in parsedContent || 'rules' in parsedContent)
-      );
-    } catch {
-      return false;
-    }
-  }
-
   /**
    * Read a YAML file from disk and import its documents into the DB.
    *
@@ -691,7 +709,21 @@ class RepoFileWatcher {
     this.lastWrittenHash.set(normalised, result.hash);
     this.lastSyncMtime.set(normalised, result.mtimeMs);
 
-    if (this.isSpectralRulesetFile(normalised, result.content)) {
+    if (this.isSpectralRulesetPath(normalised)) {
+      const validation = validateSpectralRuleset(result.content);
+      if (!validation.isValid) {
+        await services.projectLintRuleset.remove(this.projectId);
+        this.addProblem(normalised, {
+          filePath: absPath,
+          relPath: this.toPosixRelPath(absPath),
+          kind: 'parse-error',
+          message: validation.error,
+        });
+        this.notifyRenderer();
+        return;
+      }
+
+      this.clearProblem(normalised);
       await services.projectLintRuleset.upsert(this.projectId, { rulesetContent: result.content });
       this.notifyRenderer();
       return;
@@ -722,7 +754,12 @@ class RepoFileWatcher {
     try {
       fileStat = await fs.promises.lstat(absPath);
     } catch {
-      await this.handleFileDeletion(normalised);
+      // Only treat a missing file as a real deletion when the repo folder itself
+      // still exists. If the whole folder is gone (deleted/unmounted) we must not
+      // remove the workspace from the DB — the repo is unavailable, not emptied.
+      if (await this.repoDirIsAvailable()) {
+        await this.handleFileDeletion(normalised);
+      }
       return null;
     }
 
@@ -952,13 +989,11 @@ class RepoFileWatcher {
     filterIds?: Set<string>,
   ): Promise<{ workspace: Workspace; meta: WorkspaceMeta | undefined }[]> {
     const query = filterIds ? { parentId: this.projectId, _id: { $in: [...filterIds] } } : { parentId: this.projectId };
-    const workspaces = await db.find<Workspace>(models.workspace.type, query as Parameters<typeof db.find>[1]);
+    const workspaces = await services.workspace.list(query);
     if (workspaces.length === 0) {
       return [];
     }
-    const metas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
-      parentId: { $in: workspaces.map(w => w._id) },
-    } as Parameters<typeof db.find>[1]);
+    const metas = await services.workspaceMeta.list({ parentId: { $in: workspaces.map(w => w._id) } });
     const metaByParent = new Map(metas.map(m => [m.parentId, m]));
     return workspaces.map(workspace => ({ workspace, meta: metaByParent.get(workspace._id) }));
   }
@@ -966,6 +1001,23 @@ class RepoFileWatcher {
   private isInGitDir(absPath: string): boolean {
     const rel = path.relative(this.repoDir, absPath);
     return rel.startsWith(GIT_DIR + path.sep) || rel === GIT_DIR;
+  }
+
+  /**
+   * Whether the repository's working-tree directory still exists on disk.
+   *
+   * When the user deletes/moves the folder (or unmounts its drive) the disk
+   * appears empty. We must NOT interpret that as "all files deleted" and wipe the
+   * database — instead we treat the repo as temporarily unavailable and skip
+   * syncing, so the project's collections survive (and re-sync if the folder
+   * returns).
+   */
+  private async repoDirIsAvailable(): Promise<boolean> {
+    try {
+      return (await fs.promises.stat(this.repoDir)).isDirectory();
+    } catch {
+      return false;
+    }
   }
 
   /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping `.git`. */

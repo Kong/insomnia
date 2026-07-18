@@ -160,7 +160,7 @@ describe('importRaw()', () => {
     });
 
     const workspacesCount = await services.workspace.count();
-    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
+    const projectWorkspaces = await services.workspace.listByParentId(projectToImportTo._id);
     const curlRequests = await services.request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);
@@ -247,7 +247,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
+    const projectWorkspaces = await services.workspace.listByParentId(projectToImportTo._id);
 
     const requestGroups = await services.requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await services.request.findByParentId(requestGroups[0]._id);
@@ -325,7 +325,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await services.workspace.findByParentId(projectId);
+    const projectWorkspaces = await services.workspace.listByParentId(projectId);
     const importedWorkspaceId = projectWorkspaces[0]._id;
     const requestBaseEnvironment = await services.environment.getByParentId(importedWorkspaceId);
 
@@ -663,7 +663,7 @@ describe('export/import round-trip is deterministic', () => {
     expect(workspace.scope).toBe('environment');
 
     const importedBase = await services.environment.getByParentId(workspace._id);
-    const subEnvs = await services.environment.findByParentId(importedBase!._id);
+    const subEnvs = await services.environment.listByParentId(importedBase!._id);
     expect(subEnvs).toHaveLength(1);
     expect(subEnvs[0].name).toBe('Dev');
     expect(subEnvs[0].data).toEqual({ base_url: 'http://localhost:8000', auth_token: 'secret-token' });
@@ -732,7 +732,9 @@ describe('MCP run deep-link import', () => {
 
   it('imports an MCP url into an MCP workspace and exposes its client', async () => {
     const project = await services.project.create();
-    const scanResult = await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const scanResult = await importUtil.scanResources([
+      { contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' },
+    ]);
 
     expect(scanResult[0].errors).toEqual([]);
     expect(scanResult[0].mcpRequests).toHaveLength(1);
@@ -746,5 +748,32 @@ describe('MCP run deep-link import', () => {
     expect(requests).toHaveLength(1);
     expect(models.mcpRequest.isMcpRequest(requests[0])).toBe(true);
     expect((requests[0] as McpRequest).url).toBe(mcpUrl);
+  });
+
+  it('findExistingImportedWorkspace returns the MCP client with the same URL', async () => {
+    const project = await services.project.create();
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const [workspace] = await importUtil.importResourcesToProject({ projectId: project._id });
+    const existingRequest = await services.mcpRequest.getByParentId(workspace._id);
+    expect(existingRequest?.url).toBe(mcpUrl);
+
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const match = await importUtil.findExistingImportedWorkspace(project._id);
+    expect(match).toEqual({
+      workspace: expect.objectContaining({ _id: workspace._id, scope: 'mcp' }),
+      model: expect.objectContaining({ _id: existingRequest?._id, url: mcpUrl }),
+    });
+  });
+
+  it('findExistingImportedWorkspace returns undefined for a different MCP URL', async () => {
+    const project = await services.project.create();
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    await importUtil.importResourcesToProject({ projectId: project._id });
+
+    await importUtil.scanResources([
+      { contentStr: mcpUrlToInsomniaV5Yaml('https://mcp.example.com/other'), oriFileName: 'mcp' },
+    ]);
+    const match = await importUtil.findExistingImportedWorkspace(project._id);
+    expect(match).toBeUndefined();
   });
 });

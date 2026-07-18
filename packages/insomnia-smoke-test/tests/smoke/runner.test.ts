@@ -50,15 +50,22 @@ test.describe('runner features tests', () => {
     expect.soft(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
   };
 
+  const selectRunnerRequests = async (page: Page, ...names: string[]) => {
+    await page.getByText('Unselect All').click();
+    for (const name of names) {
+      const row = page.locator(`.runner-request-list-${name}`);
+      await row.waitFor({ state: 'visible' });
+      await row.locator('label[slot="selection"]').click();
+    }
+  };
+
   test('run collection runner', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
 
-    // select requests to test
-    await page.locator('.runner-request-list-req1').click();
-    await page.locator('.runner-request-list-req2').click();
+    await selectRunnerRequests(page, 'req1', 'req2');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -95,6 +102,47 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 6, 1, 8, expectedTestOrder);
   });
 
+  test('shows live progress and cancels an in-progress run', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    await selectRunnerRequests(page, 'delaySkip', 'fastAfterSkip');
+
+    await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+    await expect.soft(page.getByRole('button', { name: 'Cancel all' })).toBeVisible();
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).toContainText('RUNNING');
+    await expect.soft(page.getByTestId('runner-live-item-fastAfterSkip')).toContainText('PENDING');
+
+    // the templated URL is resolved (like the request view's preview) while the request runs
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).toContainText('127.0.0.1:4010/delay/seconds/10');
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).not.toContainText('{{');
+
+    await page.getByRole('button', { name: 'Cancel all' }).click();
+    await expect.soft(page.getByTestId('runner-live-item-delaySkip')).toContainText('CANCELED', { timeout: 8000 });
+  });
+
+  test('skips the in-flight request and continues to the next', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    await selectRunnerRequests(page, 'delaySkip', 'fastAfterSkip');
+
+    await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+    const delayCard = page.getByTestId('runner-live-item-delaySkip');
+    await expect.soft(delayCard).toContainText('RUNNING');
+    await delayCard.getByRole('button', { name: 'Skip' }).click();
+
+    // the fast request lands well under the 10s delay, proving the slow one was actually aborted
+    await expect.soft(page.getByText('fastAfterSkip-post-check')).toBeVisible({ timeout: 8000 });
+    await expect.soft(page.getByText('delaySkip-post-check')).toBeHidden();
+  });
+
   test('run collection runner with data upload', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       actionName: 'Run Collection',
@@ -111,12 +159,7 @@ test.describe('runner features tests', () => {
     // check iteration number match json data length
     await expect.soft(page.locator('input[name="Iterations"]')).toHaveValue('2');
 
-    // select requests to test
-    await page.locator('.runner-request-list-req1').click();
-    await page.locator('.runner-request-list-req2').click();
-    await page.locator('.runner-request-list-req3').click();
-    await page.locator('.runner-request-list-req4').click();
-    await page.locator('.runner-request-list-req5').click();
+    await selectRunnerRequests(page, 'req1', 'req2', 'req3', 'req4', 'req5');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -127,8 +170,8 @@ test.describe('runner features tests', () => {
       const iterationTestResultElement = page.getByTestId(testId);
       await iterationTestResultElement.click();
       await expect.soft(iterationTestResultElement).toBeVisible();
-      // req2 should be skipped from pre-request script
-      await expect.soft(iterationTestResultElement).not.toContainText('req2');
+      await expect.soft(iterationTestResultElement.getByTestId('request-test-result-1')).toContainText('SKIPPED');
+      await expect.soft(iterationTestResultElement.getByTestId('request-test-result-2')).toContainText('SKIPPED');
     }
 
     await verifyResultRows(page, 4, 1, 6, [
@@ -146,7 +189,7 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-req4').click();
+    await selectRunnerRequests(page, 'req4');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -164,7 +207,7 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-await-test').click();
+    await selectRunnerRequests(page, 'await-test');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -182,7 +225,7 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-req5').click();
+    await selectRunnerRequests(page, 'req5');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -200,15 +243,14 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-req0').click();
-    await page.locator('.runner-request-list-req01').click();
-    await page.locator('.runner-request-list-req02').click();
+    await selectRunnerRequests(page, 'req0', 'req01', 'req02');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
 
     // check result
     await page.getByText('1 / 2').first().click();
+    await expect.soft(page.getByTestId('request-test-result-1')).toContainText('SKIPPED');
 
     const expectedTestOrder = [
       'req0-post-check',
@@ -225,8 +267,7 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    await page.locator('.runner-request-list-set-var1').click();
-    await page.locator('.runner-request-list-read-var1').click();
+    await selectRunnerRequests(page, 'set-var1', 'read-var1');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -245,7 +286,7 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    await page.locator('.runner-request-list-async-test').click();
+    await selectRunnerRequests(page, 'async-test');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -335,8 +376,7 @@ test.describe('runner features tests', () => {
     await iterationsInput.clear();
     await expect.soft(iterationsInput).toHaveValue('');
 
-    // select a request and run
-    await page.locator('.runner-request-list-req1').click();
+    await selectRunnerRequests(page, 'req1');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
 
     // should have run 2 iterations (last valid value)
@@ -351,17 +391,11 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    // Select the request via its selection checkbox. The list is a drag-and-drop
-    // GridList, so a plain row click can be read as the start of a drag on slower
-    // CI and swallow the selection toggle — clicking the checkbox is reliable.
-    const printLogsRow = page.locator('.runner-request-list-printLogs');
-    await printLogsRow.waitFor({ state: 'visible' });
-    await printLogsRow.locator('label[slot="selection"]').click();
+    await selectRunnerRequests(page, 'printLogs');
 
     await page.getByRole('tab', { name: 'advanced' }).click();
     await page.locator('input[name="enable-log"]').click();
 
-    // Run becomes enabled only once a request is selected; selecting printLogs above enables it
     const runButton = page.getByRole('button', { name: 'Run', exact: true });
     await expect.soft(runButton).toBeEnabled();
     await runButton.click();

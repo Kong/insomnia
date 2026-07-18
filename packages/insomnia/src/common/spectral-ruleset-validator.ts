@@ -147,7 +147,7 @@ export function validateSpectralRuleset(content: string): SpectralRulesetValidat
   try {
     parsed = YAML.parse(content);
   } catch {
-    return fail(`Ruleset is not valid YAML or JSON`);
+    return fail('Ruleset is not valid YAML or JSON.');
   }
 
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -162,7 +162,7 @@ export function validateSpectralRuleset(content: string): SpectralRulesetValidat
 
   const disallowed = keys.filter(key => !ALLOWED_TOP_LEVEL_PROPERTIES.includes(key));
   if (disallowed.length > 0) {
-    return fail(`Ruleset contains unsupported top-level keys. Only "rules" and "extends" are allowed.`);
+    return fail('Ruleset contains unsupported top-level keys. Only "rules" and "extends" are allowed.');
   }
 
   if ('extends' in ruleset) {

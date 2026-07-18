@@ -1,6 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -28,7 +29,6 @@ import {
   getAppWebsiteBaseURL,
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { fuzzyMatchAll } from '~/common/misc';
 import { getAllLocalFiles, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
@@ -141,11 +141,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
-  const isUserOwner =
-    organization &&
-    userSession.accountId &&
-    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-  const greetingName = userSession.firstName || userSession.email.split('@')[0] || 'there';
+  const isUserOwner = Boolean(organization?.is_owner);
   const collectionItems = useMemo(
     () =>
       localFiles
@@ -371,11 +367,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         <div className="px-4 pt-4">
           {activeSidebarTab === 'projects' && (
             <FirstRequestCreation
-              greetingName={greetingName}
               collectionItems={collectionItems}
               selectedCollectionId={selectedCollectionId}
               onSelectedCollectionChange={setSelectedCollectionId}
-              onCreateDesignDocument={() => createNewDocument('first-request-pane')}
               onCreateCollection={() => {
                 setNewWorkspaceModalState({
                   scope: 'collection',

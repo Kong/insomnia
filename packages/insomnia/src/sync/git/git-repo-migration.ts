@@ -28,8 +28,8 @@ import path from 'node:path';
 
 export type MigrationLogger = (level: 'info' | 'warn' | 'error', message: string) => void;
 
-import type { GitRepository, Workspace, WorkspaceMeta } from 'insomnia-data';
-import { database as db, models } from 'insomnia-data';
+import type { GitRepository, WorkspaceMeta } from 'insomnia-data';
+import { database as db, models, services } from 'insomnia-data';
 
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import { CURRENT_MIGRATION_VERSION } from './git-migration-version';
@@ -289,11 +289,11 @@ export async function migrateRepoStructureIfNeeded(
  * All workspaces are processed in parallel.
  */
 async function flushWorkspacesToDisk(baseDir: string, projectId: string, logger?: MigrationLogger): Promise<void> {
-  const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: projectId });
+  const workspaces = await services.workspace.listByParentId(projectId);
 
   // Batch-fetch all workspace metadata to avoid N+1 queries.
   const workspaceIds = workspaces.map(w => w._id);
-  const allWorkspaceMeta = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
+  const allWorkspaceMeta = await services.workspaceMeta.list({
     parentId: { $in: workspaceIds },
   });
   const metaByWorkspaceId = Object.fromEntries(allWorkspaceMeta.map(m => [m.parentId, m]));
@@ -356,17 +356,15 @@ async function flushWorkspacesToDisk(baseDir: string, projectId: string, logger?
       // the file but crashed before updating the DB.
       try {
         if (workspaceMeta && !workspaceMeta.gitFilePath) {
-          await db.docUpdate<WorkspaceMeta>(workspaceMeta, { gitFilePath });
+          await services.workspaceMeta.update(workspaceMeta, { gitFilePath });
         } else if (!workspaceMeta) {
-          let meta = await db.findOne<WorkspaceMeta>(models.workspaceMeta.type, {
-            parentId: workspace._id,
-          });
+          let meta = await services.workspaceMeta.getByParentId(workspace._id);
           if (!meta) {
-            meta = await db.docCreate<WorkspaceMeta>(models.workspaceMeta.type, {
+            meta = await services.workspaceMeta.create({
               parentId: workspace._id,
             });
           }
-          await db.docUpdate<WorkspaceMeta>(meta, { gitFilePath });
+          await services.workspaceMeta.update(meta, { gitFilePath });
         }
       } catch (err) {
         const metaMsg = err instanceof Error ? err.message : String(err);

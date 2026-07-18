@@ -432,7 +432,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
       isDismissable={true}
       isOpen={isOpen}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-(--color-bg) py-[100px]"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-black/30 py-[100px]"
     >
       <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
         <Dialog className="relative outline-hidden">
@@ -471,6 +471,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Key
                               <OneLineEditor
                                 id="cookie-key"
+                                historyKey={`cookie-key::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.key) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, key: value.trim() })}
                               />
@@ -481,6 +482,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Value
                               <OneLineEditor
                                 id="cookie-value"
+                                historyKey={`cookie-value::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.value) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, value: value.trim() })}
                               />
@@ -493,6 +495,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Domain
                               <OneLineEditor
                                 id="cookie-domain"
+                                historyKey={`cookie-domain::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.domain) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, domain: value.trim() })}
                               />
@@ -503,6 +506,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Path
                               <OneLineEditor
                                 id="cookie-path"
+                                historyKey={`cookie-path::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.path) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, path: value.trim() })}
                               />

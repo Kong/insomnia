@@ -192,7 +192,7 @@ export const NewWorkspaceModal = ({
 
   const changedFieldCount = [
     workspaceData.name !== defaultNameByScope[scope],
-    workspaceData.fileName !== defaultFileName,
+    hasEditedFileName && workspaceData.fileName !== defaultFileName,
     Boolean(workspaceData.folderPath),
     workspaceData.mockServerType !== defaultMockServerType,
     Boolean(workspaceData.mockServerUrl),
@@ -264,12 +264,14 @@ export const NewWorkspaceModal = ({
                     name="name"
                     value={workspaceData.name}
                     isRequired
-                    onChange={name => setWorkspaceData({
-                      ...workspaceData,
-                      name,
-                      // Keep the file name in sync with the name until the user edits it themselves.
-                      ...(hasEditedFileName ? {} : { fileName: name }),
-                    })}
+                    onChange={name =>
+                      setWorkspaceData({
+                        ...workspaceData,
+                        name,
+                        // Keep the file name in sync with the name until the user edits it themselves.
+                        ...(hasEditedFileName ? {} : { fileName: name }),
+                      })
+                    }
                     className="group relative flex flex-col gap-2"
                   >
                     <Label className="text-sm text-(--hl)">Name</Label>

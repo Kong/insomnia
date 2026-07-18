@@ -64,21 +64,21 @@ const encryptedSymmetricKey =
 const cloudSyncProject = [
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae70',
-    name: 'Collection Project',
+    name: 'My Collection R1',
     rootDocumentId: 'wrk_a7132f924ba7451594ba64ec411c9e13',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae71',
-    name: 'Environment Project',
+    name: 'My Environment',
     rootDocumentId: 'wrk_2068a8dfd6914c369073686bb92737ae',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae72',
-    name: 'MCP Project',
+    name: 'My MCP Client',
     rootDocumentId: 'wrk_efab8e758b97459bab2659d8fdcf8627',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,

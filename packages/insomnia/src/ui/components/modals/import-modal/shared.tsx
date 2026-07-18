@@ -188,6 +188,14 @@ export function isApiSpecScanResult(scanResult: ScanResult) {
   );
 }
 
+export function requiresNewWorkspace(scanResult: ScanResult) {
+  return (
+    isApiSpecScanResult(scanResult) ||
+    (scanResult.mcpRequests?.length ?? 0) > 0 ||
+    !!scanResult.workspaces?.some(w => w.scope === 'design' || w.scope === 'mcp')
+  );
+}
+
 function getWorkspaceCountsByScope(workspaces: { scope?: string }[], scanResult: ScanResult) {
   const defaultScope = isApiSpecScanResult(scanResult) ? 'design' : 'collection';
   const counts = new Map<string, number>();

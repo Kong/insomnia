@@ -533,6 +533,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                 <EnvironmentEditor
                   ref={environmentEditorRef}
                   key={selectedEnvironment._id}
+                  historyKey={`environment-editor::${selectedEnvironment._id}`}
                   onChange={debouncedHandleChange}
                   environmentInfo={{
                     object: selectedEnvironment.data,

@@ -73,6 +73,7 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
     return (
       <CodeEditor
         id="request-parameters-editor"
+        historyKey={`request-parameters-editor::${requestId}`}
         className="flex-1"
         onChange={handleBulkUpdate}
         defaultValue={paramsString}

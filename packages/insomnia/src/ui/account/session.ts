@@ -1,10 +1,9 @@
 import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
-import type { GitRepository, WorkspaceMeta } from 'insomnia-data';
+import type { GitRepository } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { getCurrentSessionId, type SessionData, setSessionData, unsetSessionData } from '~/common/account/session';
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '~/common/constants';
-import { database } from '~/common/database';
 import { getRuntime } from '~/runtimes';
 
 // Re-export the isomorphic session core so renderer callers have a single
@@ -104,7 +103,7 @@ async function _removeAllCredentials() {
   const customGitRepos = await services.gitRepository.all();
   for (const repo of customGitRepos) {
     if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
-    removals.push(_removeGitRepository(repo));
+    removals.push(removeGitRepository(repo));
   }
 
   const proxySettings = await services.settings.get();
@@ -131,13 +130,14 @@ async function _removeAllCredentials() {
  * each model instance individually to clear them all out.
  *
  */
-async function _removeGitRepository(repo: GitRepository) {
+
+export async function removeGitRepository(repo: GitRepository) {
   const projects = await services.project.listByGitRepositoryIds(repo._id);
   for (const p of projects) {
     await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
   }
 
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, { gitRepositoryId: repo._id });
+  const workspaceMetas = await services.workspaceMeta.list({ gitRepositoryId: repo._id });
   for (const wsMeta of workspaceMetas) {
     await services.workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }

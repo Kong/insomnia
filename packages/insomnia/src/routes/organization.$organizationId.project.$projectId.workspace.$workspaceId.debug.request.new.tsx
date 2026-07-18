@@ -15,6 +15,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { focusUrlBarOnNextRequest } from '~/ui/components/request-url-bar-focus';
 import { trackCioEvent } from '~/ui/hooks/use-cio';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
+import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 // Request types that are edited in the RequestPane / RequestUrlBar and should focus the URL on create.
@@ -37,7 +38,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     activeRequestId = (
       await services.request.create({
         parentId: parentId || workspaceId,
-        method: METHOD_GET,
+        method: req?.method || METHOD_GET,
         name: req?.name || 'New Request',
         url: req?.url || '',
         headers: [],
@@ -121,6 +122,9 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
   services.stats.incrementCreatedRequests();
+  // Once this install has created enough requests, latch the sticky graduation
+  // bit on the server (fire-and-forget, idempotent — see maybeLatchRequestThreshold).
+  services.stats.get().then(stats => maybeLatchRequestThreshold(stats.createdRequests));
 
   const certificates = await services.clientCertificate.findByParentId(workspaceId);
 
@@ -130,6 +134,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     project_id: projectId,
     collection_id: workspaceId,
     request_key_id: activeRequestId,
+    request_url_length: req?.url?.length || 0,
     has_prescript: !!req?.preRequestScript,
     has_postscript: !!req?.afterResponseScript,
     request_header_names: req?.headers?.map(h => h.name) || [],

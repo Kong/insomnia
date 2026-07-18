@@ -69,6 +69,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
@@ -102,8 +103,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
-  const gitSyncRulesetPath = gitRepositoryId
-    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
+  // Honour user-chosen repo locations: the ruleset lives at the repo root, which
+  // is the GitRepository's `directory` when set, else the managed location.
+  const gitRepository = gitRepositoryId ? await services.gitRepository.getById(gitRepositoryId) : null;
+  const gitSyncRulesetPath = gitRepository
+    ? window.path.join(resolveGitRepoBaseDir(gitRepository), '.spectral.yaml')
     : '';
 
   // The ProjectLintRuleset record is the source of truth for both git and cloud projects.
@@ -111,6 +115,15 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
   const rulesetContent = projectLintRuleset?.rulesetContent || '';
   const rulesetLastCompiledAt = projectLintRuleset?.modified ?? null;
+
+  // For git projects, surface a committed .spectral.yaml that was rejected as
+  // invalid on import (so the user learns it wasn't applied and why, instead of
+  // silently falling back to the default ruleset). Refreshed automatically via
+  // the git.db-synced → revalidate flow in root.tsx.
+  const rulesetImportIssue =
+    isConnectedGitProject && gitRepositoryId
+      ? await window.main.git.getProjectRulesetImportIssue({ projectId, gitRepositoryId })
+      : null;
 
   let parsedSpec: OpenAPIV3.Document | undefined;
 
@@ -125,6 +138,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     parsedSpec,
     rulesetContent,
     rulesetLastCompiledAt,
+    rulesetImportIssue,
   };
 }
 
@@ -212,8 +226,15 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
-  const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec, rulesetContent, rulesetLastCompiledAt } =
-    useLoaderData<typeof clientLoader>();
+  const {
+    apiSpec,
+    gitSyncRulesetPath,
+    isConnectedGitProject,
+    parsedSpec,
+    rulesetContent,
+    rulesetLastCompiledAt,
+    rulesetImportIssue,
+  } = useLoaderData<typeof clientLoader>();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const [expandedLintMessageCodes, setExpandedLintMessageCodes] = useState<string[]>([]);
@@ -607,7 +628,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const generateDisabledKeys = generateActionList.filter(item => item.isDisabled).map(item => item.id);
 
-  const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
+  const historyKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
@@ -636,14 +657,14 @@ const Component = ({ params }: Route.ComponentProps) => {
     <div className="relative flex h-full w-full overflow-hidden">
       <CodeEditor
         id="spec-editor"
-        key={uniquenessKey}
+        key={historyKey}
         showPrettifyButton
         ref={editor}
         lintOptions={lintOptions}
         mode={apiSpec.contents ? 'openapi' : undefined}
         defaultValue={apiSpec.contents || ''}
         onChange={onCodeEditorChange}
-        uniquenessKey={uniquenessKey}
+        historyKey={historyKey}
       />
       {apiSpec.contents ? null : (
         <DesignEmptyState
@@ -772,13 +793,15 @@ const Component = ({ params }: Route.ComponentProps) => {
     </div>
   ) : null;
 
+  const isRulesetInvalid = !!rulesetImportIssue && !rulesetContent;
+
   const lintToolbar = (
     <div
       className={`flex h-(--line-height-sm) items-center gap-2 overflow-hidden border-solid border-(--hl-md) px-(--padding-sm) ${isLintPaneOpen ? 'border-b' : ''}`}
     >
       <div className="inline-flex items-center gap-2">
-        <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-        {selectedRulesetPath ? (
+        <Icon icon={selectedRulesetPath && !isRulesetInvalid ? 'file-circle-check' : 'file-circle-xmark'} />
+        {!isRulesetInvalid && selectedRulesetPath && (
           <>
             <TooltipTrigger delay={0}>
               <Button
@@ -836,9 +859,30 @@ const Component = ({ params }: Route.ComponentProps) => {
               </Tooltip>
             </TooltipTrigger>
           </>
-        ) : (
+        )}
+        {!selectedRulesetPath && (
           <>
             <span>Default OAS Ruleset</span>
+            {isRulesetInvalid && (
+              <TooltipTrigger delay={0}>
+                <Button
+                  aria-label="Invalid ruleset details"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
+                </Button>
+                <Tooltip
+                  placement="top end"
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                >
+                  <p className="mb-2">
+                    The custom ruleset in this project contains invalid content: {rulesetImportIssue}
+                  </p>
+                  <p>Fix the syntax in your connected git repository. The default OAS ruleset is used until then.</p>
+                </Tooltip>
+              </TooltipTrigger>
+            )}
             <TooltipTrigger delay={0}>
               <Button
                 aria-label="Upload custom ruleset"

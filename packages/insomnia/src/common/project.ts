@@ -7,7 +7,6 @@ import {
   type Project,
   services,
   type Workspace,
-  type WorkspaceMeta,
   type WorkspaceScope,
 } from 'insomnia-data';
 
@@ -89,8 +88,8 @@ const lockGenerator = () => {
 export const projectLock = lockGenerator();
 
 export const checkSingleProjectSyncStatus = async (projectId: string) => {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+  const projectWorkspaces = await services.workspace.listByParentId(projectId);
+  const workspaceMetas = await services.workspaceMeta.list({
     parentId: {
       $in: projectWorkspaces.map(w => w._id),
     },
@@ -114,9 +113,9 @@ export const checkAllProjectSyncStatus = async (projects: Project[]) => {
 };
 
 export async function getAllLocalFiles({ projectId }: { projectId: string }) {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
+  const projectWorkspaces = await services.workspace.listByParentId(projectId);
   const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
-    database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    services.workspaceMeta.list({
       parentId: {
         $in: projectWorkspaces.map(w => w._id),
       },

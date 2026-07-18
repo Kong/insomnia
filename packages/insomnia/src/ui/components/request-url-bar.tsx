@@ -32,7 +32,7 @@ import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
-import { MethodDropdown } from './dropdowns/method-dropdown';
+import { MethodSelector } from './dropdowns/method-selector';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showModal } from './modals';
 import { AlertModal } from './modals/alert-modal';
@@ -45,7 +45,7 @@ const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  uniquenessKey: string;
+  historyKey: string;
   onPaste: (text: string) => void;
 }
 
@@ -55,7 +55,7 @@ export interface RequestUrlBarHandle {
 }
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
-  ({ handleAutocompleteUrls, uniquenessKey, onPaste }, ref) => {
+  ({ handleAutocompleteUrls, historyKey, onPaste }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
@@ -148,7 +148,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
     const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
     const connectRequestFetcher = useRequestConnectActionFetcher();
-    const sendRequestFetcher = useDebugRequestSendActionFetcher();
+    // Add a key here for other components to track the send action state
+    const sendRequestFetcher = useDebugRequestSendActionFetcher({ key: `send-request-${activeRequest._id}` });
 
     const { updateTabById } = useInsomniaTabContext();
 
@@ -301,11 +302,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const isCancellable = currentInterval || currentTimeout || isEventStreamOpen || isGraphQLSubscriptionOpen;
     return (
       <div className="flex w-full items-stretch justify-between self-stretch">
-        <div className="flex items-center">
-          <MethodDropdown
+        <div className="flex items-stretch p-1">
+          <MethodSelector
+            className="self-stretch"
             ref={methodDropdownRef}
             onChange={method => patchRequest(requestId, { method })}
             method={method}
+            placement="bottom start"
           />
         </div>
         <div className="flex flex-1 items-center p-1">
@@ -316,7 +319,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             // send and local edits, which used to remount and blur the editor mid-edit.
             key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}`}
             // Stable across that remount, so undo history is restored from the cache.
-            uniquenessKey={uniquenessKey}
+            historyKey={historyKey}
             ref={inputRef}
             type="text"
             autoFocus={focusUrlOnMount}

@@ -1,5 +1,5 @@
-import type { RemoteProject, Workspace } from 'insomnia-data';
-import { database, models } from 'insomnia-data';
+import type { RemoteProject } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 
 import type { VCS } from '~/main/cloud-sync/core/vcs';
 import { interceptAccessError } from '~/sync/access-error';
@@ -28,7 +28,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   // @TODO Revisit the UX for this. What should happen if there are other branches?
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
-    const workspace = await database.update<Workspace>({
+    const workspace = await services.workspace.upsert({
       ...models.workspace.init(),
       _id: backendProject.rootDocumentId,
       name: backendProject.name,

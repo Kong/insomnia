@@ -27,10 +27,10 @@ async function updateProxy() {
       }
 
       // Set proxy rules in the main session https://www.electronjs.org/docs/latest/api/structures/proxy-config
-      // no mode here — it overrides proxyRules ('system' ignores them)
       await session.defaultSession.setProxy({
         proxyRules: proxyRules.join(';'),
         proxyBypassRules: noProxy ?? '',
+        mode: 'fixed_servers',
       });
       return;
     } catch (err) {

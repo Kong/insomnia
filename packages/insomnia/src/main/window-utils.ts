@@ -25,7 +25,7 @@ import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
-import { createPluginWindow, destroyPluginWindow } from './plugin-window';
+import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
@@ -306,14 +306,21 @@ export function createWindow(): ElectronBrowserWindow {
     label: `${MNEMONIC_SYM}Edit`,
     submenu: [
       {
+        // Route through the renderer (see editor-undo.ts) instead of role: 'undo'
+        // so a single app-level handler reconciles CodeMirror's history with the
+        // native undo stack; role: 'undo' only drove the latter.
         label: `${MNEMONIC_SYM}Undo`,
         accelerator: 'CmdOrCtrl+Z',
-        role: 'undo',
+        click: () => {
+          BrowserWindow.getFocusedWindow()?.webContents.send('edit:undo');
+        },
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
         accelerator: 'Shift+CmdOrCtrl+Z',
-        role: 'redo',
+        click: () => {
+          BrowserWindow.getFocusedWindow()?.webContents.send('edit:redo');
+        },
       },
       {
         type: 'separator',
@@ -632,6 +639,41 @@ export function createWindow(): ElectronBrowserWindow {
         click: () => {
           const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
           hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
+        },
+      },
+      {
+        label: 'Show/hide plugin browser window ',
+        click: () => {
+          const pluginWindow = getPluginWindow();
+          invariant(pluginWindow, 'pluginWindow is not defined');
+          pluginWindow.isVisible() ? pluginWindow.hide() : pluginWindow.show();
+        },
+      },
+      {
+        label: 'Stop/start plugin browser window ',
+        click: () => {
+          const pluginWindow = getPluginWindow();
+          pluginWindow ? destroyPluginWindow() : createPluginWindow();
+        },
+      },
+      {
+        // Simulates the OS "Open folder in Insomnia" flow without a packaged build
+        // (Finder association / protocol handler only register for an installed app).
+        label: `${MNEMONIC_SYM}Open folder in Insomnia…`,
+        click: async () => {
+          const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
+          if (!window) {
+            return;
+          }
+          const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+            title: 'Open folder in Insomnia',
+            buttonLabel: 'Open',
+            properties: ['openDirectory'],
+          });
+          if (canceled || !filePaths[0]) {
+            return;
+          }
+          window.webContents.send('shell:open', `insomnia://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
         },
       },
     ],
