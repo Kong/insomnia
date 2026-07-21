@@ -185,14 +185,20 @@ export const ProjectCreateForm: FC<Props> = ({
     setActiveView('git-results');
     setFolderScanFiles(undefined);
     setIsScanningFolder(true);
-    const result = await window.main.git.scanLocalGitFolder({ directory: openExistingDir });
-    setIsScanningFolder(false);
-    if ('errors' in result) {
+    try {
+      const result = await window.main.git.scanLocalGitFolder({ directory: openExistingDir });
+      if ('errors' in result) {
+        setActiveView('project');
+        setError(result.errors[0] || 'Failed to scan the selected folder.');
+        return;
+      }
+      setFolderScanFiles(result.files);
+    } catch (e) {
       setActiveView('project');
-      setError(result.errors[0] || 'Failed to scan the selected folder.');
-      return;
+      setError(e instanceof Error ? e.message : 'Failed to scan the selected folder.');
+    } finally {
+      setIsScanningFolder(false);
     }
-    setFolderScanFiles(result.files);
   };
 
   // Credentials are only required for the clone flow; opening a folder needs none.
@@ -348,7 +354,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 Cancel
               </Button>
             )}
-            {storageType !== 'git' || projectData.connectRepositoryLater ? (
+            {storageType !== 'git' || (projectData.connectRepositoryLater && !isGitOpen) ? (
               <Button
                 onPress={onUpsertProject}
                 isDisabled={!storageType || newProjectFetcher.state !== 'idle'}

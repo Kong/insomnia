@@ -1107,8 +1107,22 @@ const SCAN_SKIP_DIRS = new Set(['.git', 'node_modules']);
 // Same as recursivelyFindInsomniaFiles, but walks a real directory on disk (rather
 // than an in-memory clone) and skips SCAN_SKIP_DIRS.
 const recursivelyFindInsomniaFilesOnDisk = async (dir: string, files: string[] = []): Promise<string[]> => {
-  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  let entries: fs.Dirent[];
+  try {
+    entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  } catch {
+    // Skip subtrees we can't read (permissions, transient IO errors, broken mounts)
+    // instead of aborting the whole scan.
+    return files;
+  }
+
   for (const entry of entries) {
+    // Never follow symlinks: the folder being scanned isn't trusted yet at this
+    // point, and a planted symlink could otherwise be read as if it were a
+    // regular file in the folder.
+    if (entry.isSymbolicLink()) {
+      continue;
+    }
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       if (SCAN_SKIP_DIRS.has(entry.name)) {
