@@ -324,6 +324,125 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return ctx;',
   '  };',
 
+  // --- request-hook API rebuilt in-sandbox over the copied-in renderedRequest (`req`) ---
+  // Mirrors packages/insomnia/src/plugins/context/request.ts. Getters always present; mutators
+  // present only when !readOnly (matching request.ts's delete list, lines 221-258). Header matching
+  // is CASE-INSENSITIVE (misc.filterHeaders, misc.ts:21); parameter matching is CASE-SENSITIVE
+  // (filterParameters, request.ts:11). No host/bridge calls: every method is a sync read/write on req.
+  '  function __buildRequestApi(req, readOnly) {',
+  '    if (!req) { throw new Error("contexts.request initialized without request"); }',
+  '    if (!(req.headers instanceof Array)) { req.headers = []; }',
+  '    if (!(req.parameters instanceof Array)) { req.parameters = []; }',
+  '    if (!(req.cookies instanceof Array)) { req.cookies = []; }',
+  '    if (!req.authentication || typeof req.authentication !== "object") { req.authentication = {}; }',
+  '    if (!req.body || typeof req.body !== "object") { req.body = {}; }',
+  '    function __filterHeaders(name) {',
+  '      if (!(req.headers instanceof Array) || !name || typeof name !== "string") { return []; }',
+  '      var out = [];',
+  '      for (var i = 0; i < req.headers.length; i++) {',
+  '        var h = req.headers[i];',
+  '        if (!h || !h.name || typeof h.name !== "string") { continue; }',
+  '        if (h.name.toLowerCase() === name.toLowerCase()) { out.push(h); }',
+  '      }',
+  '      return out;',
+  '    }',
+  '    function __filterParameters(name) {',
+  '      if (!(req.parameters instanceof Array) || !name) { return []; }',
+  '      var out = [];',
+  '      for (var i = 0; i < req.parameters.length; i++) {',
+  '        var p = req.parameters[i];',
+  '        if (!p || !p.name) { continue; }',
+  '        if (p.name === name) { out.push(p); }',
+  '      }',
+  '      return out;',
+  '    }',
+  '    var api = {',
+  '      getId: function () { return req._id; },',
+  '      getName: function () { return req.name; },',
+  '      getUrl: function () { return req.url; },',
+  '      getMethod: function () { return req.method; },',
+  '      setMethod: function (method) { req.method = method; },',
+  '      setUrl: function (url) { req.url = url; },',
+  '      setCookie: function (name, value) {',
+  '        var cookie = null;',
+  '        for (var i = 0; i < req.cookies.length; i++) { if (req.cookies[i] && req.cookies[i].name === name) { cookie = req.cookies[i]; break; } }',
+  '        if (cookie) { cookie.value = value; } else { req.cookies.push({ name: name, value: value }); }',
+  '      },',
+  '      getEnvironmentVariable: function (name) { return __env.context[name]; },',
+  '      getEnvironment: function () { return __env.context; },',
+  '      settingSendCookies: function (enabled) { req.settingSendCookies = enabled; },',
+  '      settingStoreCookies: function (enabled) { req.settingStoreCookies = enabled; },',
+  '      settingEncodeUrl: function (enabled) { req.settingEncodeUrl = enabled; },',
+  '      settingDisableRenderRequestBody: function (enabled) { req.settingDisableRenderRequestBody = enabled; },',
+  '      settingFollowRedirects: function (enabled) { req.settingFollowRedirects = enabled; },',
+  '      getHeader: function (name) {',
+  '        var headers = __filterHeaders(name);',
+  '        if (headers.length) { var header = headers[headers.length - 1]; return header.value || ""; }',
+  '        return null;',
+  '      },',
+  '      getHeaders: function () {',
+  '        var out = [];',
+  '        for (var i = 0; i < req.headers.length; i++) { out.push({ name: req.headers[i].name, value: req.headers[i].value }); }',
+  '        return out;',
+  '      },',
+  '      hasHeader: function (name) { return this.getHeader(name) !== null; },',
+  '      removeHeader: function (name) {',
+  '        var headers = __filterHeaders(name);',
+  '        var out = [];',
+  '        for (var i = 0; i < req.headers.length; i++) { if (__arrIndexOf(headers, req.headers[i]) === -1) { out.push(req.headers[i]); } }',
+  '        req.headers = out;',
+  '      },',
+  '      setHeader: function (name, value) {',
+  '        var header = __filterHeaders(name)[0];',
+  '        if (header) { header.value = value; } else { this.addHeader(name, value); }',
+  '      },',
+  '      addHeader: function (name, value) {',
+  '        var header = __filterHeaders(name)[0];',
+  '        if (!header) { req.headers.push({ name: name, value: value }); }',
+  '      },',
+  '      getParameter: function (name) {',
+  '        var parameters = __filterParameters(name);',
+  '        if (parameters.length) { var parameter = parameters[parameters.length - 1]; return parameter.value || ""; }',
+  '        return null;',
+  '      },',
+  '      getParameters: function () {',
+  '        var out = [];',
+  '        for (var i = 0; i < req.parameters.length; i++) { out.push({ name: req.parameters[i].name, value: req.parameters[i].value }); }',
+  '        return out;',
+  '      },',
+  '      hasParameter: function (name) { return this.getParameter(name) !== null; },',
+  '      removeParameter: function (name) {',
+  '        var parameters = __filterParameters(name);',
+  '        var out = [];',
+  '        for (var i = 0; i < req.parameters.length; i++) { if (__arrIndexOf(parameters, req.parameters[i]) === -1) { out.push(req.parameters[i]); } }',
+  '        req.parameters = out;',
+  '      },',
+  '      setParameter: function (name, value) {',
+  '        var parameter = __filterParameters(name)[0];',
+  '        if (parameter) { parameter.value = value; } else { this.addParameter(name, value); }',
+  '      },',
+  '      addParameter: function (name, value) {',
+  '        var parameter = __filterParameters(name)[0];',
+  '        if (!parameter) { req.parameters.push({ name: name, value: value }); }',
+  '      },',
+  '      setAuthenticationParameter: function (name, value) { req.authentication[name] = value; },',
+  '      getAuthentication: function () { return req.authentication; },',
+  '      getBody: function () { return req.body; },',
+  '      setBody: function (body) { req.body = body; },',
+  '      getBodyText: function () { console.warn("request.getBodyText() is deprecated. Use request.getBody() instead."); return req.body.text || ""; },',
+  '      setBodyText: function (text) { console.warn("request.setBodyText() is deprecated. Use request.setBody() instead."); req.body.text = text; }',
+  '    };',
+  '    if (readOnly) {',
+  '      delete api.setUrl; delete api.setMethod; delete api.setBodyText; delete api.setCookie;',
+  '      delete api.settingSendCookies; delete api.settingStoreCookies; delete api.settingEncodeUrl;',
+  '      delete api.settingDisableRenderRequestBody; delete api.settingFollowRedirects;',
+  '      delete api.removeHeader; delete api.setHeader; delete api.addHeader;',
+  '      delete api.removeParameter; delete api.setParameter; delete api.addParameter;',
+  '      delete api.setAuthenticationParameter; delete api.setBody;',
+  '    }',
+  '    return api;',
+  '  }',
+
   // --- load the plugin (its entry module, resolving any relative requires) and run the tag ---
   '  globalThis.__invoke = function () {',
   '    var env = __env;',
@@ -335,6 +454,24 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    if (!tag) { throw new Error("Template tag \'" + __tag + "\' not found in plugin module"); }',
   '    var args = [ctx].concat(env.args || []);',
   '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
+  '  };',
+
+  // --- run a request/response hook (H1) and marshal the mutated request/response back out ---
+  // The hook mutates context.request (and context.response) in place, exactly like the in-process
+  // path; we rebuild those APIs over the copied-in envelope data and JSON-return the mutated data so
+  // the host can merge it. The side-effecting surfaces (app/store/network/util) come from
+  // __buildContext and stay capability-gated.
+  '  globalThis.__invokeHook = function () {',
+  '    var env = __env;',
+  '    var ctx = globalThis.__buildContext(env);',
+  '    var mod = globalThis.__loadPluginEntry();',
+  '    var isResponse = env.hookKind === "response";',
+  '    var hooks = (isResponse ? (mod && mod.responseHooks) : (mod && mod.requestHooks)) || [];',
+  '    var hook = hooks[env.hookIndex];',
+  '    if (typeof hook !== "function") { throw new Error("Plugin " + (isResponse ? "response" : "request") + " hook not found at index " + env.hookIndex); }',
+  // Response hooks get a read-only request view (matches pluginRequest.init(..., true)).
+  '    ctx.request = __buildRequestApi(env.hookRequest || {}, isResponse);',
+  '    return Promise.resolve(hook(ctx)).then(function () { return JSON.stringify({ request: env.hookRequest }); });',
   '  };',
 
   // --- describe the plugin's exports without running any of them (L1 load-time discovery) ---
@@ -373,7 +510,7 @@ export const IN_SANDBOX_BOOTSTRAP = [
   // context/invocation entry points. __registerModule is intentionally left mutable — the module
   // registry source deletes it once the registry is populated.
   '  var __lock = function (n) { Object.defineProperty(globalThis, n, { value: globalThis[n], writable: false, configurable: false }); };',
-  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry"); __lock("__describeExports");',
+  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry"); __lock("__describeExports"); __lock("__invokeHook");',
   '})();',
 ].join('\n');
 
@@ -385,3 +522,9 @@ export const RUNNER = 'globalThis.__task = globalThis.__invoke();';
  * Used at plugin load instead of {@link RUNNER} to enumerate exports without invoking any of them.
  */
 export const DESCRIBE_RUNNER = 'globalThis.__task = Promise.resolve(globalThis.__describeExports());';
+
+/**
+ * Hook runner (H1): parks a resolved promise of the mutated request/response (JSON string) on
+ * `globalThis.__task`. Used instead of {@link RUNNER} to run a request/response hook.
+ */
+export const HOOK_RUNNER = 'globalThis.__task = globalThis.__invokeHook();';
