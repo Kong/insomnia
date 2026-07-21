@@ -73,7 +73,12 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     ctx.runtime.setInterruptHandler(() => Date.now() > deadline);
     // Caps the WASM heap so a plugin can't OOM the host by allocating without bound.
     ctx.runtime.setMemoryLimit(32 * 1024 * 1024);
-    installHostBridge(ctx, bridge);
+    // Discovery only ever evaluates plugin top-level code to read its exports — it must stay
+    // side-effect-free even though that same top-level code can reach `__buildContext` (a bare
+    // sandbox global, see SANDBOX_INTERNAL_GLOBALS) and wire up a context of its own. Swapping in a
+    // rejecting bridge here means any such attempt fails inside the sandbox instead of reaching the
+    // real host, no matter how it's invoked.
+    installHostBridge(ctx, discover ? rejectingBridge : bridge);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
 
@@ -98,6 +103,11 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
   } finally {
     ctx.dispose();
   }
+};
+
+/** Installed instead of the real bridge during `discover: true` so a bridge call made from plugin top-level code fails inside the sandbox rather than reaching the host. */
+const rejectingBridge: HostBridge = async path => {
+  throw new Error(`Host bridge is unavailable during discovery (attempted call to "${path}")`);
 };
 
 /** Register `__hostBridge(path, bodyJson)` returning a VM promise resolved from async host work. */

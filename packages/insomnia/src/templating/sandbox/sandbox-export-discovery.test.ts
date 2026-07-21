@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { type HostBridge } from './host-bridge';
 import { type ContextEnvelope, type PluginExportManifest } from './marshal';
 import { runTagInSandbox } from './plugin-tag-sandbox';
+import { buildReachabilityProbeSource } from './sandbox-surface';
 
 // L1 load-time discovery: evaluate a plugin's entry inside the sandbox and return a manifest of its
 // exports, instead of nodeRequire-ing it on the host. The plugin's top-level code runs — but in the
@@ -15,6 +16,7 @@ const noBridge: HostBridge = async path => {
 const envelope = (
   moduleFiles: Record<string, string>,
   grantedModules: string[] = ['path', 'crypto'],
+  grantedCapabilities: string[] = [],
 ): ContextEnvelope => ({
   args: [],
   context: {},
@@ -24,7 +26,7 @@ const envelope = (
   pluginName: 'test-plugin',
   renderDepth: 0,
   grantedModules,
-  grantedCapabilities: [],
+  grantedCapabilities,
   moduleFiles,
   entryModuleKey: 'index.js',
 });
@@ -104,4 +106,60 @@ describe('sandbox export discovery (L1)', () => {
       discover({ 'index.js': "require('child_process'); module.exports.templateTags = [];" }),
     ).rejects.toThrow(/not permitted by manifest/);
   });
+});
+
+describe('sandbox export discovery (L1) — bridge isolation', () => {
+  it('a discovery-time call to the internal context builder never reaches the host bridge', async () => {
+    const calls: { path: string; body: unknown }[] = [];
+    const recordingBridge: HostBridge = async (path, body) => {
+      calls.push({ path, body });
+      return {};
+    };
+
+    // Top-level code (runs during mere discovery, before any tag is ever invoked) reaches for the
+    // internal context builder directly and tries to use it — exactly what a plugin manifest never
+    // declaring anything would still be able to attempt.
+    await runTagInSandbox({
+      tagName: '',
+      discover: true,
+      envelope: envelope(
+        {
+          'index.js': `
+            var ctx = globalThis.__buildContext({ pluginName: 'x', context: {}, meta: {}, renderPurpose: 'preview', appInfo: {} });
+            ctx.app.alert('t', 'm');
+            module.exports.templateTags = [];`,
+        },
+        ['path', 'crypto'],
+        ['app'],
+      ),
+      bridge: recordingBridge,
+    });
+
+    expect(calls).toEqual([]);
+  });
+
+  // Stretch coverage: instead of one hand-picked exploit shape, recursively invoke every
+  // globalThis-reachable function (and whatever it returns) during discovery, watching for any
+  // bridge call anywhere in the tree.
+  it('no globalThis-reachable function reaches the host bridge during discovery, however invoked', async () => {
+    const calls: { path: string; body: unknown }[] = [];
+    const recordingBridge: HostBridge = async (path, body) => {
+      calls.push({ path, body });
+      return {};
+    };
+
+    await runTagInSandbox({
+      tagName: '',
+      discover: true,
+      envelope: envelope(
+        { 'index.js': buildReachabilityProbeSource() },
+        ['path', 'crypto'],
+        ['app', 'storage', 'network', 'fs-read', 'render', 'util', 'credentials', 'models.read'],
+      ),
+      bridge: recordingBridge,
+      timeoutMs: 30_000,
+    });
+
+    expect(calls).toEqual([]);
+  }, 40_000);
 });
