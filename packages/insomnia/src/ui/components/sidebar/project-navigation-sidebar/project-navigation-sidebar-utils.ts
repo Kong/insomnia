@@ -211,9 +211,18 @@ export function flattenCollectionChildren(
   const { isRequestGroup } = models.requestGroup;
   const collection: Child[] = [];
 
+  const seenIds = new Set<string>();
+  const uniqueRequests = allRequests.filter(doc => {
+    if (seenIds.has(doc._id)) {
+      return false;
+    }
+    seenIds.add(doc._id);
+    return true;
+  });
+
   // map of parentId to its direct children requests and request groups
   const requestsByParentId = new Map<string, AllRequestDoc[]>();
-  for (const req of allRequests) {
+  for (const req of uniqueRequests) {
     const allRequestsByParentId = requestsByParentId.get(req.parentId);
     if (allRequestsByParentId) {
       allRequestsByParentId.push(req);
