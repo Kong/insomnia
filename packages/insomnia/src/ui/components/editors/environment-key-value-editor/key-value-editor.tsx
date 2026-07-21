@@ -212,6 +212,16 @@ export const EnvironmentKVEditor = ({
       if (newValue === EnvironmentKvPairDataType.JSON && newPair.value.trim() === '') {
         newPair.value = JSON.stringify({});
       }
+      // Never persist the blank row from a name/value change while it's still empty —
+      // e.g. a blur-flush firing (from the ListBox's autoFocus="last" landing here and
+      // then losing focus, such as when switching to a different environment) without
+      // the user ever having typed. The enabled toggle and type selector are always
+      // deliberate button/menu actions (never blur-triggered), so they should always
+      // commit the row even while name/value are still empty.
+      const isNameOrValueChange = changedPropertyName === 'name' || changedPropertyName === 'value';
+      if (isNameOrValueChange && !newPair.name && !newPair.value) {
+        return;
+      }
       onChange([...persistedPairs, newPair]);
       return;
     }
@@ -480,7 +490,10 @@ export const EnvironmentKVEditor = ({
             doneMessage=""
             ariaLabel="Delete Row"
             tabIndex={-1}
-            disabled={disabled}
+            // The blank row is never part of persistedPairs, so deleting it can never do
+            // anything — always disable it rather than leave a delete button that silently
+            // no-ops when clicked and confirmed.
+            disabled={disabled || isBlank}
             onClick={() => handleDeleteItem(id)}
           >
             <Icon icon="trash-can" />
