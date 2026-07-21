@@ -70,12 +70,16 @@ export const EnvironmentKVEditor = ({
   disabled = false,
 }: EditorProps) => {
   // The persisted pairs (everything that lives in the data model and shows up in diffs).
-  const persistedPairs: EnvironmentKvPairData[] = useMemo(
-    () => [...data],
+  // Deduped by id - react-aria-components' ListBox keys rows by id, and two rows sharing
+  // an id corrupts its internal collection (can hang the tab). Duplicate ids shouldn't occur,
+  // but have been observed with corrupted/legacy persisted data, so guard against it here.
+  const persistedPairs: EnvironmentKvPairData[] = useMemo(() => {
+    const byId = new Map<string, EnvironmentKvPairData>();
+    data.forEach(pair => byId.set(pair.id, pair));
+    return [...byId.values()];
     // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(data)],
-  );
+  }, [JSON.stringify(data)]);
   const blankNameEditorRef = useRef<OneLineEditorHandle | null>(null);
   // The id for the trailing blank row is derived from the persisted pairs (rather than
   // held in state) so it only changes when the data actually changes. This keeps it in
