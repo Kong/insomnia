@@ -55,6 +55,10 @@ import { SyncQueue } from './sync-queue';
 const POLL_INTERVAL_MS = 10_000;
 const DEBOUNCE_MS = 300;
 const GIT_DIR = '.git';
+// Directories never worth walking when collecting YAML files on an adopted folder —
+// node_modules can contain hundreds of thousands of files in a real JS project,
+// making the initial import look hung.
+const YAML_WALK_SKIP_DIRS = new Set([GIT_DIR, 'node_modules']);
 
 export type FileIssueKind = 'conflict' | 'parse-error';
 
@@ -1020,7 +1024,7 @@ class RepoFileWatcher {
     }
   }
 
-  /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping `.git`. */
+  /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping YAML_WALK_SKIP_DIRS. */
   private async collectYamlFiles(dir: string): Promise<string[]> {
     const result: string[] = [];
     let entries: fs.Dirent[];
@@ -1033,7 +1037,7 @@ class RepoFileWatcher {
     for (const entry of entries) {
       const absPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name !== GIT_DIR) {
+        if (!YAML_WALK_SKIP_DIRS.has(entry.name)) {
           subDirectories.push(absPath);
         }
       } else if (entry.isFile() && entry.name.endsWith('.yaml')) {
