@@ -78,15 +78,31 @@ export async function applyRequestHooks(
 ): Promise<RenderedRequest> {
   const newRenderedRequest = applyDefaultHeaders(renderedRequest, renderedContext['DEFAULT_HEADERS']);
   const pluginIndex = await import('../../plugins/index');
+  const { services } = await import('insomnia-data');
+  // H1: with the sandbox on, a user plugin's hook runs in QuickJS (its `hook` here is a throw-stub
+  // from discovery); bundle plugins and the flag-off path run in-process as before.
+  const sandboxEnabled = (await services.settings.get()).templateTagSandboxEnabled;
+  // getRequestHooks flattens each plugin's requestHooks in order, so a per-plugin running counter
+  // recovers the hook's index within its own array (what the sandbox loads by).
+  const hookIndexByPlugin: Record<string, number> = {};
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
-    const context = {
-      ...(pluginApp.init() as Record<string, any>),
-      ...pluginData.init(renderedContext.getProjectId()),
-      ...(pluginStore.init(plugin) as Record<string, any>),
-      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginNetwork.init() as Record<string, any>),
-    };
+    const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);
     try {
+      if (sandboxEnabled && plugin.directory !== '') {
+        const { runRequestHookInSandbox } = await import('../../main/templating-worker-database');
+        // The hook mutates the request in the sandbox; merge the returned fields back so the next
+        // hook (and the send pipeline) sees the mutation, exactly like the in-place path below.
+        const mutated = await runRequestHookInSandbox(plugin, hookIndex, newRenderedRequest, renderedContext);
+        Object.assign(newRenderedRequest, mutated);
+        continue;
+      }
+      const context = {
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(renderedContext.getProjectId()),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
+      };
       await hook(context);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));

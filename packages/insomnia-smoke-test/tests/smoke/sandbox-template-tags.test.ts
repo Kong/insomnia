@@ -709,3 +709,62 @@ test('Plugin sandbox (L1): installing a user plugin no longer runs its top-level
   };
   await expect.poll(() => readTagPreview('{% l1probe'), { timeout: 20_000 }).toContain('l1-tag-ran');
 });
+
+test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox and mutates the request', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // The hook injects two headers: X-Ran-In reports its execution environment (the canary — the
+  // sandbox sets INSOMNIA_TEMPLATE_SANDBOX; the legacy in-process path does not), and X-Sandbox-Hook
+  // is a fixed marker. The request targets the echo server, which reflects request headers into the
+  // response body, so both headers appear there.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-hook-probe',
+    {},
+    `
+      module.exports.requestHooks = [
+        function (context) {
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'sandbox' : 'main-process';
+          context.request.setHeader('X-Ran-In', ranIn);
+          context.request.setHeader('X-Sandbox-Hook', 'sandbox-hook-value');
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-hook-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Hook Request');
+  const responsePane = page.getByTestId('response-pane');
+
+  // Flag OFF (default): the hook runs in-process (control).
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
+  await expect.soft(responsePane).toContainText('main-process');
+
+  // Flag ON: the same hook now runs in the QuickJS sandbox, still mutating the request. Poll the send
+  // so the just-toggled setting has propagated before we assert the sandbox canary.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        return (await responsePane.textContent()) || '';
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('sandbox');
+  // The header mutation round-tripped through the sandbox and reached the wire.
+  await expect.soft(responsePane).toContainText('X-Sandbox-Hook');
+  await expect.soft(responsePane).toContainText('sandbox-hook-value');
+});

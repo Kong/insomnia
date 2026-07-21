@@ -401,6 +401,77 @@ export const discoverUserPluginExportsForLoader = async (body: {
   });
 };
 
+// The serializable RenderedRequest fields a request hook may read or mutate — the subset marshaled
+// into and out of the sandbox (mirrors what plugins/context/request.ts touches on the request).
+const HOOK_REQUEST_FIELDS = [
+  '_id',
+  'name',
+  'url',
+  'method',
+  'headers',
+  'parameters',
+  'authentication',
+  'body',
+  'cookies',
+  'settingSendCookies',
+  'settingStoreCookies',
+  'settingEncodeUrl',
+  'settingDisableRenderRequestBody',
+  'settingFollowRedirects',
+] as const;
+
+const pickHookRequestFields = (req: Record<string, any>): Record<string, any> => {
+  const out: Record<string, any> = {};
+  for (const key of HOOK_REQUEST_FIELDS) {
+    if (req[key] !== undefined) {
+      out[key] = req[key];
+    }
+  }
+  return out;
+};
+
+// H1: run a user plugin's request hook (at hookIndex) inside the sandbox, capability-gated. The hook
+// mutates the request in the sandbox; we marshal the mutated field subset back for the caller to
+// merge onto the request it is building. Reuses the same bridge/grants/crypto as tag execution.
+export const runRequestHookInSandbox = async (
+  plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } },
+  hookIndex: number,
+  renderedRequest: Record<string, any>,
+  renderContext: Record<string, any>,
+): Promise<Record<string, any>> => {
+  const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
+  const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+    '../templating/sandbox/surface-profiles'
+  );
+  const grantedCapabilities = resolveTemplateTagCapabilities(plugin.permissions?.capabilities);
+  const bridge = await buildSandboxBridge(grantedCapabilities);
+  const { moduleFiles, entryModuleKey } = readPluginModuleMap({ directory: plugin.directory, name: plugin.name });
+  const hookRequest = pickHookRequestFields(renderedRequest);
+  const json = await runTagInSandbox({
+    tagName: '',
+    bridge,
+    hostCrypto: SANDBOX_HOST_CRYPTO,
+    envelope: {
+      args: [],
+      context: (renderContext as Record<string, any>) || {},
+      meta: {},
+      renderPurpose: 'send',
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
+      pluginName: plugin.name,
+      renderDepth: 0,
+      grantedModules: resolveTemplateTagModules(plugin.permissions?.modules),
+      grantedCapabilities,
+      moduleFiles,
+      entryModuleKey,
+      hookKind: 'request',
+      hookIndex,
+      hookRequest,
+    },
+  });
+  const result = JSON.parse(json) as { request?: Record<string, any> };
+  return result.request ?? hookRequest;
+};
+
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
@@ -664,6 +735,14 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     name: string;
     permissions?: { modules?: string[]; capabilities?: string[] };
   }) => discoverUserPluginExportsForLoader(body),
+  // H1: run a user plugin's request hook in the sandbox (plugin-window path reaches this over the
+  // templating-worker-database protocol; the node runtime calls runRequestHookInSandbox directly).
+  'plugin.runUserRequestHook': async (body: {
+    plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } };
+    hookIndex: number;
+    renderedRequest: Record<string, any>;
+    renderContext: Record<string, any>;
+  }) => runRequestHookInSandbox(body.plugin, body.hookIndex, body.renderedRequest, body.renderContext),
   // execute a user-installed plugin tag with the given parameters, in the main process where
   // Node built-ins (e.g. crypto) the plugin requires are available.
   'plugin.executeUserPluginTag': async (body: {

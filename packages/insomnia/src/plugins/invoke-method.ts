@@ -6,6 +6,7 @@ import type {
   RunTemplateTagActionArgs,
 } from '~/common/plugins/bridge-types';
 import type { Plugin } from '~/common/plugins/types';
+import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 import { deserializeRenderContext } from '~/common/templating/render-context-serialization';
 
 import * as pluginApp from './context/app';
@@ -193,16 +194,33 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
       const { renderedRequest, projectId, environment } = args as ApplyRequestHooksArgs;
       const newRenderedRequest = { ...renderedRequest };
       const renderedContext = deserializeRenderContext(environment);
+      // H1: with the sandbox on, a user plugin's hook (a throw-stub here after discovery) runs in the
+      // main-process sandbox over the templating-worker-database protocol; bundle plugins and the
+      // flag-off path run in-process. Per-plugin counter recovers the hook's index within its array.
+      const settings = await fetchFromTemplateWorkerDatabase('settings.get', {});
+      const sandboxEnabled = !!settings?.templateTagSandboxEnabled;
+      const hookIndexByPlugin: Record<string, number> = {};
 
       for (const { plugin, hook } of await getRequestHooks()) {
-        const context = {
-          ...pluginApp.init(),
-          ...pluginData.init(projectId),
-          ...(pluginStore.init(plugin) as Record<string, any>),
-          ...(pluginRequest.init(newRenderedRequest as any, renderedContext) as Record<string, any>),
-          ...(pluginNetwork.init() as Record<string, any>),
-        };
+        const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);
         try {
+          if (sandboxEnabled && plugin.directory !== '') {
+            const mutated = await fetchFromTemplateWorkerDatabase('plugin.runUserRequestHook', {
+              plugin: { directory: plugin.directory, name: plugin.name, permissions: plugin.permissions },
+              hookIndex,
+              renderedRequest: newRenderedRequest,
+              renderContext: renderedContext,
+            });
+            Object.assign(newRenderedRequest, mutated);
+            continue;
+          }
+          const context = {
+            ...pluginApp.init(),
+            ...pluginData.init(projectId),
+            ...(pluginStore.init(plugin) as Record<string, any>),
+            ...(pluginRequest.init(newRenderedRequest as any, renderedContext) as Record<string, any>),
+            ...(pluginNetwork.init() as Record<string, any>),
+          };
           await hook(context);
         } catch (err) {
           const error = err instanceof Error ? err : new Error(String(err));
