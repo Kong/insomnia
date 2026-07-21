@@ -138,8 +138,15 @@ test.describe('Environment Editor', () => {
     await waitForSync();
     await page.keyboard.type('kvstring');
 
+    // explicitly blur the value cell (rather than letting the Add Row click do it) so its
+    // commit is its own action we can wait on. Add Row also mutates the row list itself
+    // (inserting the blank row) - if that click blurred the value cell too, the blur-flush
+    // and the insert would be two separate writes fired by one gesture with no way to wait
+    // between them, and the older one landing after the newer one silently drops the value.
+    await page.keyboard.press('Tab');
+    await waitForSync();
+
     // add second row: exampleObject (JSON type)
-    // clicking Add Row blurs the value cell; wait for that commit and the new row before interacting
     await page.getByRole('button', { name: 'Add Row' }).click();
     await waitForSync();
     const secondRow = kvTable.getByRole('option').nth(1);
@@ -158,9 +165,10 @@ test.describe('Environment Editor', () => {
     // wait for the JSON modal before typing
     await page.getByRole('dialog').getByTestId('CodeEditor').waitFor({ state: 'visible' });
     const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
-    await bodyEditor.focus();
-    await page.keyboard.press('ControlOrMeta+a');
-    await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
+    // fill() sets the value in one shot rather than firing an onChange per keystroke,
+    // avoiding a burst of overlapping full-snapshot writes while typing (same pattern as
+    // the JSON edit above)
+    await bodyEditor.fill('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
     
     // submit and wait for the JSON modal to fully close before proceeding
     await page.getByRole('button', { name: 'Modal Submit' }).click();
