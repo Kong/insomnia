@@ -716,10 +716,11 @@ test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox 
   dataPath,
   insomnia,
 }) => {
-  // The hook injects two headers: X-Ran-In reports its execution environment (the canary — the
-  // sandbox sets INSOMNIA_TEMPLATE_SANDBOX; the legacy in-process path does not), and X-Sandbox-Hook
-  // is a fixed marker. The request targets the echo server, which reflects request headers into the
-  // response body, so both headers appear there.
+  // The hook injects two headers, and the request targets the echo server, which reflects request
+  // headers into the response body. We assert on the header *values* (not names) because the echo
+  // lowercases header names but preserves values. X-Ran-In's value is the canary — the sandbox sets
+  // INSOMNIA_TEMPLATE_SANDBOX, the legacy in-process path does not — and the values are chosen so
+  // neither is a substring of the other (or of the marker), keeping the assertions unambiguous.
   writePlugin(
     dataPath,
     'insomnia-plugin-hook-probe',
@@ -727,9 +728,9 @@ test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox 
     `
       module.exports.requestHooks = [
         function (context) {
-          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'sandbox' : 'main-process';
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
           context.request.setHeader('X-Ran-In', ranIn);
-          context.request.setHeader('X-Sandbox-Hook', 'sandbox-hook-value');
+          context.request.setHeader('X-Hook-Marker', 'hook-marker-9k2x');
         },
       ];
     `,
@@ -750,7 +751,7 @@ test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox 
   // Flag OFF (default): the hook runs in-process (control).
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
-  await expect.soft(responsePane).toContainText('main-process');
+  await expect.soft(responsePane).toContainText('ranin-mainprocess');
 
   // Flag ON: the same hook now runs in the QuickJS sandbox, still mutating the request. Poll the send
   // so the just-toggled setting has propagated before we assert the sandbox canary.
@@ -763,8 +764,7 @@ test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox 
       },
       { timeout: 25_000 },
     )
-    .toContain('sandbox');
-  // The header mutation round-tripped through the sandbox and reached the wire.
-  await expect.soft(responsePane).toContainText('X-Sandbox-Hook');
-  await expect.soft(responsePane).toContainText('sandbox-hook-value');
+    .toContain('ranin-sandboxed');
+  // The second header mutation also round-tripped through the sandbox and reached the wire.
+  await expect.soft(responsePane).toContainText('hook-marker-9k2x');
 });
