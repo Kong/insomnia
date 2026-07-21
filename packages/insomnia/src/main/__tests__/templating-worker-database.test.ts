@@ -48,8 +48,8 @@ import {
   _testOnlyResetMigrationWarnings,
   getPluginEntrySource,
   maybeWarnMissingManifest,
-  resolveDbByKey,
   readPluginModuleMap,
+  resolveDbByKey,
   runPluginTagInSandbox,
 } from '../templating-worker-database';
 
