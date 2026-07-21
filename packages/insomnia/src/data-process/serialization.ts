@@ -19,19 +19,32 @@ export function deserializeError(s: SerializedError): Error {
 }
 
 const BUFFER_TAG = '__buffer__';
+const DATE_TAG = '__date__';
 
 interface TaggedBuffer {
   [BUFFER_TAG]: true;
   data: number[];
 }
 
+interface TaggedDate {
+  [DATE_TAG]: true;
+  iso: string;
+}
+
 function isTaggedBuffer(v: unknown): v is TaggedBuffer {
   return typeof v === 'object' && v !== null && (v as TaggedBuffer)[BUFFER_TAG] === true;
+}
+
+function isTaggedDate(v: unknown): v is TaggedDate {
+  return typeof v === 'object' && v !== null && (v as TaggedDate)[DATE_TAG] === true;
 }
 
 export function serializeValue(v: unknown): unknown {
   if (Buffer.isBuffer(v)) {
     return { [BUFFER_TAG]: true, data: Array.from(v) } satisfies TaggedBuffer;
+  }
+  if (v instanceof Date) {
+    return { [DATE_TAG]: true, iso: v.toISOString() } satisfies TaggedDate;
   }
   if (Array.isArray(v)) {
     return v.map(serializeValue);
@@ -45,6 +58,9 @@ export function serializeValue(v: unknown): unknown {
 export function deserializeValue(v: unknown): unknown {
   if (isTaggedBuffer(v)) {
     return Buffer.from(v.data);
+  }
+  if (isTaggedDate(v)) {
+    return new Date(v.iso);
   }
   if (Array.isArray(v)) {
     return v.map(deserializeValue);

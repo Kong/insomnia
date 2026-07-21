@@ -66,4 +66,19 @@ describe('serializeValue / deserializeValue', () => {
     // @ts-expect-error for testing
     expect(serializeValue()).toBe(undefined);
   });
+
+  it('roundtrips a Date', () => {
+    const d = new Date('2024-01-15T12:00:00.000Z');
+    const result = deserializeValue(serializeValue(d));
+    expect(result).toBeInstanceOf(Date);
+    expect((result as Date).toISOString()).toBe(d.toISOString());
+  });
+
+  it('roundtrips a Date nested in an object', () => {
+    const obj = { expires: new Date('2025-06-01T00:00:00.000Z'), name: 'session' };
+    const result = deserializeValue(serializeValue(obj)) as typeof obj;
+    expect(result.expires).toBeInstanceOf(Date);
+    expect(result.expires.toISOString()).toBe(obj.expires.toISOString());
+    expect(result.name).toBe('session');
+  });
 });
