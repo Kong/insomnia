@@ -1092,6 +1092,37 @@ const recursivelyFindInsomniaFiles = async (
   return files;
 };
 
+export interface ScannedInsomniaFile {
+  scope: WorkspaceScope;
+  name: string;
+  path: string;
+}
+
+// Directories that are never worth walking into when scanning a real folder on
+// disk: .git can hold a full history irrelevant to the scan, and node_modules can
+// contain hundreds of thousands of files in an adopted JS project, making the scan
+// look hung.
+const SCAN_SKIP_DIRS = new Set(['.git', 'node_modules']);
+
+// Same as recursivelyFindInsomniaFiles, but walks a real directory on disk (rather
+// than an in-memory clone) and skips SCAN_SKIP_DIRS.
+const recursivelyFindInsomniaFilesOnDisk = async (dir: string, files: string[] = []): Promise<string[]> => {
+  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (SCAN_SKIP_DIRS.has(entry.name)) {
+        continue;
+      }
+      await recursivelyFindInsomniaFilesOnDisk(fullPath, files);
+    } else if (await isInsomniaFile(fullPath, fs)) {
+      files.push(fullPath);
+    }
+  }
+
+  return files;
+};
+
 // Actions
 export const initGitRepoCloneAction = async ({
   uri,
@@ -3447,6 +3478,69 @@ export const checkGitRepoDirectoryAction = async ({
   }
 };
 
+/**
+ * Preview what "Open local folder" will import, without creating anything.
+ * Mirrors the file list initGitRepoCloneAction returns for "Clone from Remote", so
+ * both flows can show the same scan-results screen before the user commits.
+ */
+export const scanLocalGitFolderAction = async ({
+  directory,
+}: {
+  directory: string;
+}): Promise<
+  | {
+      files: ScannedInsomniaFile[];
+    }
+  | {
+      errors: string[];
+    }
+> => {
+  if (!directory || !path.isAbsolute(directory)) {
+    return { errors: ['A valid absolute folder path is required.'] };
+  }
+  const resolvedDirectory = path.resolve(directory);
+
+  try {
+    const stats = await fs.promises.stat(resolvedDirectory);
+    if (!stats.isDirectory()) {
+      return { errors: [`Not a folder: ${resolvedDirectory}`] };
+    }
+  } catch {
+    return {
+      errors: [`Folder is not accessible (check it exists and you have read permission): ${resolvedDirectory}`],
+    };
+  }
+
+  try {
+    const insomniaFilePaths = await recursivelyFindInsomniaFilesOnDisk(resolvedDirectory);
+
+    const files: ScannedInsomniaFile[] = [];
+    for (const filePath of insomniaFilePaths) {
+      const fileContents = await fs.promises.readFile(filePath, 'utf8');
+      const migratedContents = migrateToLatestYaml(fileContents);
+      const yamlDocument = parse(migratedContents);
+      const fileSchemaParser = InsomniaFileSchema.safeParse(yamlDocument);
+      if (fileSchemaParser.success) {
+        const insomniaFile = fileSchemaParser.data;
+        files.push({
+          scope: insomniaSchemaTypeToScope(insomniaFile.type),
+          name: insomniaFile.name || 'Untitled',
+          path: path.relative(resolvedDirectory, filePath),
+        });
+      }
+    }
+
+    const legacyInsomniaFile = await containsLegacyInsomniaDir({ fsClient: fsClient(resolvedDirectory) });
+    if (legacyInsomniaFile) {
+      files.unshift(legacyInsomniaFile);
+    }
+
+    return { files };
+  } catch (e) {
+    return { errors: [e instanceof Error ? e.message : String(e)] };
+  }
+};
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -3458,6 +3552,7 @@ export interface GitServiceAPI {
   cloneGitRepo: typeof cloneGitRepoAction;
   openGitRepo: typeof openGitRepoAction;
   checkGitRepoDirectory: typeof checkGitRepoDirectoryAction;
+  scanLocalGitFolder: typeof scanLocalGitFolderAction;
   cleanupGitRepoStorage: typeof cleanupGitRepoStorageAction;
   relocateGitRepo: typeof relocateGitRepoAction;
   updateGitRepo: typeof updateGitRepoAction;
@@ -3531,6 +3626,9 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) => openGitRepoAction(options));
   ipcMainHandle('git.checkGitRepoDirectory', (_, options: Parameters<typeof checkGitRepoDirectoryAction>[0]) =>
     checkGitRepoDirectoryAction(options),
+  );
+  ipcMainHandle('git.scanLocalGitFolder', (_, options: Parameters<typeof scanLocalGitFolderAction>[0]) =>
+    scanLocalGitFolderAction(options),
   );
   ipcMainHandle('git.cleanupGitRepoStorage', (_, options: Parameters<typeof cleanupGitRepoStorageAction>[0]) =>
     cleanupGitRepoStorageAction(options),

@@ -81,6 +81,7 @@ export type HandleChannels =
   | 'git.multipleCommitToGitRepo'
   | 'git.openGitRepo'
   | 'git.checkGitRepoDirectory'
+  | 'git.scanLocalGitFolder'
   | 'git.pullFromGitRemote'
   | 'git.relocateGitRepo'
   | 'git.pushToGitRemote'
