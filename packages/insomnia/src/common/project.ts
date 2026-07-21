@@ -209,8 +209,18 @@ export async function getAllLocalFiles({ projectId }: { projectId: string }) {
   return files;
 }
 
-export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) =>
-  remoteFiles.filter(remoteFile => !workspaces.find(w => w._id === remoteFile.id));
+export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) => {
+  const seenIds = new Set<string>();
+  const uniqueRemoteFiles = remoteFiles.filter(file => {
+    if (seenIds.has(file.id)) {
+      return false;
+    }
+    seenIds.add(file.id);
+    return true;
+  });
+
+  return uniqueRemoteFiles.filter(remoteFile => !workspaces.some(w => w._id === remoteFile.id));
+};
 
 /**
  * Get all projects for an organization with their associated git repositories
