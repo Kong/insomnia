@@ -524,17 +524,17 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       if (!scrollInfo) {
         return false;
       }
-      return scrollInfo.width > scrollInfo.clientWidth;
+      // CodeMirror's own CSS adds a fixed 30px to the scroller's width to hide the native
+      // scrollbar (see the "magic margin" comment on .CodeMirror-scroll in codemirror.css).
+      // scrollInfo.width always includes this extra 30px, even when the text isn't truncated
+      // at all, so we must subtract it back out before comparing - otherwise every line would
+      // incorrectly look truncated.
+      const CODEMIRROR_SCROLLBAR_MARGIN_PX = 30;
+      return scrollInfo.width > scrollInfo.clientWidth + CODEMIRROR_SCROLLBAR_MARGIN_PX;
     };
 
     return (
-      <Tooltip
-        message={tooltipValue}
-        delay={1000}
-        className="h-full w-full"
-        followCursor
-        shouldShow={isTruncated}
-      >
+      <Tooltip message={tooltipValue} delay={1000} className="h-full w-full" followCursor shouldShow={isTruncated}>
         <div
           className={classnames('editor--single-line', {
             'editor': true,
