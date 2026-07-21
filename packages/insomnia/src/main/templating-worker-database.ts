@@ -12,7 +12,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
-import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
+import type {
+  AppPromptOptions,
+  PluginTemplateTag,
+  PluginTemplateTagContext,
+  PluginToMainAPIPaths,
+} from '~/common/templating/types';
 import { getPluginCommonContext, getTemplateTags } from '~/plugins';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
@@ -657,8 +662,9 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'app.dialog': async (body: { title: string; message?: string }) => {
     await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
   },
-  'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
+  'app.prompt': async (body: { title: string; options?: AppPromptOptions }) => {
     return requestPromptFromRenderer({
+      ...body.options,
       title: body.title,
       label: body.options?.label ?? body.title,
       defaultValue: body.options?.defaultValue ?? '',

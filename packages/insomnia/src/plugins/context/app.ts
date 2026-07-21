@@ -3,6 +3,7 @@ import type { AppContext, RenderPurpose } from 'insomnia/src/common/templating/t
 import { platform } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';
+import { getRuntime } from '~/runtimes';
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext } => ({
   app: {
@@ -20,9 +21,13 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
         });
       }
     },
-    prompt: (title, options) => {
+    prompt: async (title, options) => {
       if (!__IS_RENDERER__) {
-        return Promise.resolve(options?.defaultValue || '');
+        const appRuntime = getRuntime().app;
+        if (appRuntime) {
+          return appRuntime.prompt(title, options);
+        }
+        return options?.defaultValue || '';
       }
       // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
       return new Promise<string>((resolve, reject) => {
