@@ -5,17 +5,18 @@ import { Banner } from '~/basic-components/banner';
 import { Icon } from '~/basic-components/icon';
 import { LearnMoreLink } from '~/basic-components/link';
 import { type ProjectScopeKeys, scopeToIconMap, scopeToLabelMap } from '~/common/get-workspace-label';
-import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import type { ScannedInsomniaFile } from '~/main/git-service';
 
 interface Props {
-  initCloneGitRepositoryFetcher: ReturnType<typeof useGitProjectInitCloneActionFetcher>;
-  insomniaFiles:
-    | Extract<ReturnType<typeof useGitProjectInitCloneActionFetcher>['data'], { files: any }>['files']
-    | undefined;
+  isScanning: boolean;
+  insomniaFiles: ScannedInsomniaFile[] | undefined;
   repoURI?: string;
+  // "Open local folder" doesn't clone from anywhere and doesn't necessarily push
+  // anywhere either, so the copy needs to drop the remote-specific wording.
+  isLocalFolder?: boolean;
 }
 
-export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, insomniaFiles, repoURI }) => {
+export const GitRepoScanResult: FC<Props> = ({ isScanning, insomniaFiles, repoURI, isLocalFolder }) => {
   const fileTypeCountMap: Partial<Record<ProjectScopeKeys, number>> = {};
 
   insomniaFiles?.forEach(({ scope }) => {
@@ -28,13 +29,13 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
   return (
     <>
       <div className="rounded border border-solid border-(--hl-sm) px-4 pt-4 text-left">
-        <h3 className="mb-2 text-lg font-bold text-(--color-font)">Insomnia files in repo</h3>
+        <h3 className="mb-2 text-lg font-bold text-(--color-font)">Insomnia files in {isLocalFolder ? 'folder' : 'repo'}</h3>
         <p className="mb-4 text-(--hl)">{repoURI}</p>
-        {initCloneGitRepositoryFetcher.state !== 'idle' ? (
+        {isScanning ? (
           <div className="flex min-h-[134px] flex-col justify-center">
             <p className="text-center text-base text-(--hl)">
               <Icon icon="circle-notch" className="mr-2 animate-spin" />
-              Scanning remote repo for Insomnia files...
+              {isLocalFolder ? 'Scanning folder for Insomnia files...' : 'Scanning remote repo for Insomnia files...'}
             </p>
           </div>
         ) : insomniaFiles?.length === 0 ? (
@@ -43,8 +44,9 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
               <span className="mb-2 block font-bold text-(--color-font)">
                 No Insomnia files found − let’s start something new!
               </span>
-              There were no Insomnia files in the selected repo or branch, so you’ll begin with a blank project locally.
-              When you commit and push changes, they will be available on the remote repo selected.
+              {isLocalFolder
+                ? 'There were no Insomnia files in the selected folder, so you’ll begin with a blank project.'
+                : 'There were no Insomnia files in the selected repo or branch, so you’ll begin with a blank project locally. When you commit and push changes, they will be available on the remote repo selected.'}
             </p>
           </div>
         ) : (

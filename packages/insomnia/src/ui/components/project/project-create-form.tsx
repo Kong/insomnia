@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
+import type { ScannedInsomniaFile } from '~/main/git-service';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';
@@ -67,6 +68,10 @@ export const ProjectCreateForm: FC<Props> = ({
     name: string;
     organizationId: string;
   } | null>(null);
+  // Preview of what "Open local folder" will import, shown on the same
+  // scan-results screen as "Clone from Remote" before the user commits.
+  const [isScanningFolder, setIsScanningFolder] = useState(false);
+  const [folderScanFiles, setFolderScanFiles] = useState<ScannedInsomniaFile[] | undefined>();
 
   // Local repositories default to the native (system git) credentials, which
   // are always present as a seeded singleton and need no remote configuration.
@@ -85,10 +90,14 @@ export const ProjectCreateForm: FC<Props> = ({
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
   const newProjectFetcher = useProjectNewActionFetcher();
 
-  const insomniaFiles =
-    initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
+  const isGitOpen = storageType === 'git' && gitMode === 'open';
+
+  const insomniaFiles = isGitOpen
+    ? folderScanFiles
+    : initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
       : [];
+  const isScanningResults = isGitOpen ? isScanningFolder : initCloneGitRepositoryFetcher.state !== 'idle';
 
   const changedFieldCount = [
     projectData.name !== defaultProjectName,
@@ -107,8 +116,6 @@ export const ProjectCreateForm: FC<Props> = ({
       setError(newProjectFetcher.data.error);
     }
   }, [newProjectFetcher.data, newProjectFetcher.state]);
-
-  const isGitOpen = storageType === 'git' && gitMode === 'open';
 
   // Preselect native git credentials when adopting a local folder so the user
   // isn't forced to pick before continuing.
@@ -166,6 +173,26 @@ export const ProjectCreateForm: FC<Props> = ({
     // before the user tries to open the folder.
     const { project } = await window.main.git.checkGitRepoDirectory({ directory: filePath });
     setExistingFolderProject(project);
+  };
+
+  // Preview what "Open local folder" will import, mirroring the "Scan for files"
+  // step of the clone flow so the user isn't surprised by what does (or doesn't)
+  // come in.
+  const onScanFolder = async () => {
+    if (!openExistingDir) {
+      return;
+    }
+    setActiveView('git-results');
+    setFolderScanFiles(undefined);
+    setIsScanningFolder(true);
+    const result = await window.main.git.scanLocalGitFolder({ directory: openExistingDir });
+    setIsScanningFolder(false);
+    if ('errors' in result) {
+      setActiveView('project');
+      setError(result.errors[0] || 'Failed to scan the selected folder.');
+      return;
+    }
+    setFolderScanFiles(result.files);
   };
 
   // Credentials are only required for the clone flow; opening a folder needs none.
@@ -300,9 +327,10 @@ export const ProjectCreateForm: FC<Props> = ({
 
         <div className={activeView === 'git-results' ? '' : 'hidden'}>
           <GitRepoScanResult
-            initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+            isScanning={isScanningResults}
             insomniaFiles={insomniaFiles}
-            repoURI={projectData.uri}
+            repoURI={isGitOpen ? openExistingDir : projectData.uri}
+            isLocalFolder={isGitOpen}
           />
         </div>
       </div>
@@ -320,18 +348,22 @@ export const ProjectCreateForm: FC<Props> = ({
                 Cancel
               </Button>
             )}
-            {storageType !== 'git' || projectData.connectRepositoryLater || isGitOpen ? (
+            {storageType !== 'git' || projectData.connectRepositoryLater ? (
               <Button
                 onPress={onUpsertProject}
-                isDisabled={
-                  !storageType ||
-                  newProjectFetcher.state !== 'idle' ||
-                  (isGitOpen && (!openExistingDir || !!existingFolderProject))
-                }
+                isDisabled={!storageType || newProjectFetcher.state !== 'idle'}
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
-                <span>{isGitOpen ? 'Open' : 'Create'}</span>
+                <span>Create</span>
+              </Button>
+            ) : isGitOpen ? (
+              <Button
+                onPress={onScanFolder}
+                isDisabled={!openExistingDir || !!existingFolderProject}
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+              >
+                <span>Scan for files</span>
               </Button>
             ) : (
               <Button
@@ -350,7 +382,7 @@ export const ProjectCreateForm: FC<Props> = ({
       {activeView === 'git-results' && (
         <div className="flex items-center justify-end gap-2">
           <Button
-            isDisabled={newProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
+            isDisabled={newProjectFetcher.state !== 'idle' || isScanningResults}
             onPress={() => {
               setActiveView('project');
               setError(null);
@@ -360,13 +392,13 @@ export const ProjectCreateForm: FC<Props> = ({
             Back
           </Button>
 
-          {initCloneGitRepositoryFetcher.state !== 'idle' ? (
+          {isScanningResults ? (
             <Button
               isDisabled={true}
               type="button"
               className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
             >
-              Create
+              {isGitOpen ? 'Open' : 'Create'}
             </Button>
           ) : (
             <Button
@@ -380,13 +412,13 @@ export const ProjectCreateForm: FC<Props> = ({
                   if (insomniaFiles) {
                     if (insomniaFiles.length > 0) {
                       if (insomniaFiles.some(file => file.path === '.insomnia')) {
-                        return 'Clone and Migrate';
+                        return isGitOpen ? 'Open and Migrate' : 'Clone and Migrate';
                       }
-                      return 'Clone Project';
+                      return isGitOpen ? 'Open Project' : 'Clone Project';
                     }
-                    return 'Create Blank Project';
+                    return isGitOpen ? 'Open Blank Project' : 'Create Blank Project';
                   }
-                  return 'Create';
+                  return isGitOpen ? 'Open' : 'Create';
                 })()}
               </span>
             </Button>

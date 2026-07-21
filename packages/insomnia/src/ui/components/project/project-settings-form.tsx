@@ -575,7 +575,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
         <div className={activeView === 'git-results' ? '' : 'hidden'}>
           <GitRepoScanResult
-            initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+            isScanning={initCloneGitRepositoryFetcher.state !== 'idle'}
             insomniaFiles={insomniaFiles}
             repoURI={projectData.uri}
           />

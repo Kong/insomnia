@@ -996,7 +996,20 @@ const ProjectNavigationSidebarInner = (
   const [isShortcutCreateOpen, setIsShortcutCreateOpen] = useState(false);
   // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
-  const visibleFlatItems = useMemo(() => flatItems.filter(i => !i.hidden), [flatItems]);
+  const visibleFlatItems = useMemo(() => {
+    const seenIds = new Set<string>();
+    // Guard against duplicate doc ids reaching the collection below (e.g. a workspace
+    // that is momentarily listed both as synced locally and as an unsynced remote
+    // file) — React Aria's ListBox/GridList requires unique keys and otherwise crashes
+    // with "Invalid array length" instead of just rendering the item once.
+    return flatItems.filter(item => {
+      if (item.hidden || seenIds.has(item.doc._id)) {
+        return false;
+      }
+      seenIds.add(item.doc._id);
+      return true;
+    });
+  }, [flatItems]);
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
     count: visibleFlatItems.length,
