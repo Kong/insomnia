@@ -149,8 +149,14 @@ test.describe('Environment Editor', () => {
     // add second row: exampleObject (JSON type)
     await page.getByRole('button', { name: 'Add Row' }).click();
     await waitForSync();
+    // A trailing blank row is always present, so merely waiting for "something" at index 1
+    // to be visible can succeed before Add Row's own pair has actually rendered - typing into
+    // it then lands on the still-blank row instead, which commits as a brand new row built
+    // from a stale snapshot that doesn't yet include the row Add Row just created, silently
+    // dropping it. Wait for the row count itself to include the new pair (row1, new pair,
+    // trailing blank = 3) before interacting with it.
+    await expect.soft(kvTable.getByRole('option')).toHaveCount(3);
     const secondRow = kvTable.getByRole('option').nth(1);
-    await secondRow.waitFor({ state: 'visible' });
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleObject');
 
@@ -165,10 +171,9 @@ test.describe('Environment Editor', () => {
     // wait for the JSON modal before typing
     await page.getByRole('dialog').getByTestId('CodeEditor').waitFor({ state: 'visible' });
     const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
-    // fill() sets the value in one shot rather than firing an onChange per keystroke,
-    // avoiding a burst of overlapping full-snapshot writes while typing (same pattern as
-    // the JSON edit above)
-    await bodyEditor.fill('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
+    await bodyEditor.focus();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
     
     // submit and wait for the JSON modal to fully close before proceeding
     await page.getByRole('button', { name: 'Modal Submit' }).click();
