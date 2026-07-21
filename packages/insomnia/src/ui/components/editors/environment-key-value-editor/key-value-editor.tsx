@@ -230,6 +230,13 @@ export const EnvironmentKVEditor = ({
     const changedItemIdx = persistedPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
       const changedItem = persistedPairs[changedItemIdx];
+      // A blur-flush (from clicking into a disabled/read-only row's name or value editor and
+      // then clicking away, e.g. into another row) re-fires onChange with the same, unedited
+      // value. Treat that as a no-op rather than force-enabling a row the user never touched.
+      const isNameOrValueChange = changedPropertyName === 'name' || changedPropertyName === 'value';
+      if (isNameOrValueChange && changedItem[changedPropertyName] === newValue) {
+        return;
+      }
       // enable item since user modifies the item unless manual disable it
       changedItem['enabled'] = true;
       changedItem[changedPropertyName] = newValue;
