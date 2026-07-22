@@ -67,15 +67,18 @@ export const resolveDbByKey = async (request: Request) => {
   }
 };
 
-// Resolves a plugin's on-disk directory from the trusted plugin registry by name, so the two
-// protocol-dispatch handlers below never trust a caller-supplied directory path.
-const resolveTrustedPluginDirectory = async (pluginName: string): Promise<string> => {
+// Resolves a plugin's on-disk directory and manifest-declared permissions from the trusted plugin
+// registry by name, so the two protocol-dispatch handlers below never trust a caller-supplied
+// directory path or permissions object.
+const resolveTrustedPlugin = async (
+  pluginName: string,
+): Promise<{ directory: string; permissions: { modules: string[]; capabilities: string[] } }> => {
   const plugins = await getPlugins();
   const plugin = plugins.find(p => p.name === pluginName);
   if (!plugin) {
     throw new Error(`Unknown plugin: ${pluginName}`);
   }
-  return plugin.directory;
+  return { directory: plugin.directory, permissions: plugin.permissions };
 };
 
 const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
@@ -739,11 +742,14 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     directory: string;
     name: string;
     permissions?: { modules?: string[]; capabilities?: string[] };
-  }) =>
-    discoverUserPluginExportsForLoader({
+  }) => {
+    const trusted = await resolveTrustedPlugin(body.name);
+    return discoverUserPluginExportsForLoader({
       ...body,
-      directory: await resolveTrustedPluginDirectory(body.name),
-    }),
+      directory: trusted.directory,
+      permissions: trusted.permissions,
+    });
+  },
   // H1: run a user plugin's request hook in the sandbox (plugin-window path reaches this over the
   // templating-worker-database protocol; the node runtime calls runRequestHookInSandbox directly).
   'plugin.runUserRequestHook': async (body: {
@@ -751,13 +757,15 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     hookIndex: number;
     renderedRequest: Record<string, any>;
     renderContext: Record<string, any>;
-  }) =>
-    runRequestHookInSandbox(
-      { ...body.plugin, directory: await resolveTrustedPluginDirectory(body.plugin.name) },
+  }) => {
+    const trusted = await resolveTrustedPlugin(body.plugin.name);
+    return runRequestHookInSandbox(
+      { ...body.plugin, directory: trusted.directory, permissions: trusted.permissions },
       body.hookIndex,
       body.renderedRequest,
       body.renderContext,
-    ),
+    );
+  },
   // execute a user-installed plugin tag with the given parameters, in the main process where
   // Node built-ins (e.g. crypto) the plugin requires are available.
   'plugin.executeUserPluginTag': async (body: {

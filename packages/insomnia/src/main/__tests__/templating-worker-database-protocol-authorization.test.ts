@@ -176,17 +176,13 @@ describe('protocol-dispatch handlers resolve `directory` from the trusted regist
   });
 });
 
-// H1-followup finding: F2' resolved `directory` server-side from the trusted registry (getPlugins()),
-// but left `permissions` as a caller-supplied field on the request body for both
-// `plugin.runUserRequestHook` and `plugin.discoverUserPluginExports`. A plugin's *own* declared
-// manifest (what a legitimate caller — the plugin loader, or `invoke-method.ts`'s hook dispatch —
-// would send) is never consulted to cross-check the `permissions` the request body claims. So a
-// caller who can reach this protocol at all (has the auth token) can run any *registered* plugin's
-// hook with a broader capability grant than that plugin's own package.json declares, up to the
-// template-tag profile's ceiling (`surface-profiles.ts`). Not a sandbox escape — the profile ceiling
-// still caps it — but it is the same class of "trust a security-relevant field from the request body
-// instead of the registry" bug F2' fixed for `directory`, left unfixed for `permissions`.
-describe('protocol-dispatch handlers trust caller-supplied `permissions`, not the registry (residual gap from F2\')', () => {
+// H1-followup finding (fixed): F2' resolved `directory` server-side from the trusted registry
+// (getPlugins()), but originally left `permissions` as a caller-supplied field on the request body
+// for both `plugin.runUserRequestHook` and `plugin.discoverUserPluginExports`. Now both handlers
+// resolve `permissions` from the trusted registry the same way they resolve `directory`, so a
+// forged `permissions` in the request body no longer grants a broader capability set than the
+// plugin's own registered manifest declares.
+describe('protocol-dispatch handlers resolve `permissions` from the trusted registry, not the request body', () => {
   let pluginDir: string;
 
   beforeEach(async () => {
@@ -239,13 +235,13 @@ describe('protocol-dispatch handlers trust caller-supplied `permissions`, not th
     expect(hasNetwork).toBe(false);
   });
 
-  // RED: this documents the bug. The plugin's *registered* manifest (mocked above) declares no
-  // capabilities, but the request body's `permissions.capabilities: ['network']` is trusted as-is,
-  // granting `network` anyway. A fix would look up `permissions` from `getPlugins()` by name — the
-  // same trusted-registry pattern F2' already applies to `directory` — rather than the request body.
-  it('a forged `permissions.capabilities` in the request body is granted despite the registry declaring none', async () => {
+  // The plugin's *registered* manifest (mocked above) declares no capabilities. A forged
+  // `permissions.capabilities: ['network']` in the request body must not grant `network` — the
+  // handler resolves `permissions` from `getPlugins()` by name, the same trusted-registry pattern
+  // F2' applies to `directory`, rather than trusting the request body.
+  it('a forged `permissions.capabilities` in the request body is ignored; the registry still denies network', async () => {
     const { hasNetwork } = await runHook({ capabilities: ['network'] });
-    expect(hasNetwork).toBe(true);
+    expect(hasNetwork).toBe(false);
   });
 });
 
