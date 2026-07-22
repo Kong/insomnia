@@ -81,4 +81,36 @@ describe('serializeValue / deserializeValue', () => {
     expect(result.expires.toISOString()).toBe(obj.expires.toISOString());
     expect(result.name).toBe('session');
   });
+
+  it('encodes Buffer as Uint8Array, not number[]', () => {
+    const serialized = serializeValue(Buffer.from([1, 2, 3])) as Record<string, unknown>;
+    expect(serialized.__buffer__).toBe(true);
+    expect(serialized.data).toBeInstanceOf(Uint8Array);
+    expect(Array.isArray(serialized.data)).toBe(false);
+  });
+
+  it('encodes Date as epoch ms, not ISO string', () => {
+    const d = new Date('2024-01-15T12:00:00.000Z');
+    const serialized = serializeValue(d) as Record<string, unknown>;
+    expect(serialized.__date__).toBe(true);
+    expect(typeof serialized.ms).toBe('number');
+    expect(serialized.ms).toBe(d.getTime());
+  });
+
+  it('roundtrips a CookieJar-like document with nested Date and Buffer', () => {
+    const doc = {
+      _id: 'jar_123',
+      type: 'CookieJar',
+      cookies: [
+        { key: 'session', value: 'abc', expires: new Date('2025-12-31T00:00:00.000Z'), creation: new Date('2025-01-01T00:00:00.000Z') },
+      ],
+      bodyBuffer: Buffer.from('response-body'),
+    };
+    const result = deserializeValue(serializeValue(doc)) as typeof doc;
+    expect(result.cookies[0].expires).toBeInstanceOf(Date);
+    expect(result.cookies[0].expires.toISOString()).toBe(doc.cookies[0].expires.toISOString());
+    expect(result.cookies[0].creation).toBeInstanceOf(Date);
+    expect(Buffer.isBuffer(result.bodyBuffer)).toBe(true);
+    expect(result.bodyBuffer.toString()).toBe('response-body');
+  });
 });

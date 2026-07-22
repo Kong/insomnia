@@ -85,4 +85,27 @@ describe('PortRpc', () => {
     // Should not throw
     transport.simulateResponse({ id: 'unknown-id', ok: true, result: null });
   });
+
+  it('serializes Buffer in args and deserializes Buffer in response', async () => {
+    const rpc = new PortRpc();
+    const transport = createMockTransport();
+    rpc.attach(transport.send, transport.onMessage);
+
+    const buf = Buffer.from('hello');
+    const promise = rpc.invoke('database', 'upsert', { _id: 'req_1', body: buf });
+
+    const msg = transport.sent[0] as any;
+    expect(msg.args[0].body.__buffer__).toBe(true);
+    expect(msg.args[0].body.data).toBeInstanceOf(Uint8Array);
+
+    transport.simulateResponse({
+      id: msg.id,
+      ok: true,
+      result: { __buffer__: true, data: new Uint8Array([1, 2, 3]) },
+    });
+
+    const result = await promise;
+    expect(Buffer.isBuffer(result)).toBe(true);
+    expect((result as Buffer).toString()).toBe('\u0001\u0002\u0003');
+  });
 });

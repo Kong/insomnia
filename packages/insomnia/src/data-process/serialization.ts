@@ -18,17 +18,21 @@ export function deserializeError(s: SerializedError): Error {
   return err;
 }
 
+// Buffer and Date degrade across the Electron utilityProcess MessagePort boundary
+// (Buffer -> Uint8Array, Date empirically fails despite HTML spec saying it should survive).
+// Applied at the transport layer by PortRpc and entry.data.ts.
+
 const BUFFER_TAG = '__buffer__';
 const DATE_TAG = '__date__';
 
 interface TaggedBuffer {
   [BUFFER_TAG]: true;
-  data: number[];
+  data: Uint8Array;
 }
 
 interface TaggedDate {
   [DATE_TAG]: true;
-  iso: string;
+  ms: number;
 }
 
 function isTaggedBuffer(v: unknown): v is TaggedBuffer {
@@ -41,10 +45,10 @@ function isTaggedDate(v: unknown): v is TaggedDate {
 
 export function serializeValue(v: unknown): unknown {
   if (Buffer.isBuffer(v)) {
-    return { [BUFFER_TAG]: true, data: Array.from(v) } satisfies TaggedBuffer;
+    return { [BUFFER_TAG]: true, data: new Uint8Array(v) } satisfies TaggedBuffer;
   }
   if (v instanceof Date) {
-    return { [DATE_TAG]: true, iso: v.toISOString() } satisfies TaggedDate;
+    return { [DATE_TAG]: true, ms: v.getTime() } satisfies TaggedDate;
   }
   if (Array.isArray(v)) {
     return v.map(serializeValue);
@@ -60,7 +64,7 @@ export function deserializeValue(v: unknown): unknown {
     return Buffer.from(v.data);
   }
   if (isTaggedDate(v)) {
-    return new Date(v.iso);
+    return new Date(v.ms);
   }
   if (Array.isArray(v)) {
     return v.map(deserializeValue);

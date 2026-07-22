@@ -1,4 +1,4 @@
-import { deserializeError, deserializeValue, type SerializedError } from './serialization';
+import { deserializeError, deserializeValue, type SerializedError, serializeValue } from './serialization';
 
 export type InvokeFn = (namespace: 'services' | 'database', method: string, ...args: unknown[]) => Promise<unknown>;
 
@@ -48,7 +48,7 @@ export class PortRpc {
     const id = crypto.randomUUID();
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
-      this.send!({ id, type: 'invoke', namespace, method, args });
+      this.send!({ id, type: 'invoke', namespace, method, args: serializeValue(args) });
     });
   };
 }

@@ -6,6 +6,7 @@ import type { ChangeBufferEvent, ChangeListener } from 'insomnia-data';
 
 import { isDevelopment } from '../common/constants';
 import { PortRpc } from './port-rpc';
+import { deserializeValue } from './serialization';
 
 let child: UtilityProcess | null = null;
 
@@ -90,10 +91,11 @@ export async function spawnDataProcess(dbPath: string): Promise<void> {
   child.on('message', (event: Electron.MessageEvent) => {
     const msg = msgOf(event);
     if (msg.type === 'db.changes') {
+      const changes = deserializeValue(msg.changes) as ChangeBufferEvent[];
       BrowserWindow.getAllWindows().forEach(w => {
-        w.webContents.send('db.changes', msg.changes);
+        w.webContents.send('db.changes', changes);
       });
-      mainProcessChangeListeners.forEach(listener => listener(msg.changes as ChangeBufferEvent[]));
+      mainProcessChangeListeners.forEach(listener => listener(changes));
     } else if (msg.type === 'deep-link' && deepLinkHandler) {
       deepLinkHandler(msg.uri as string);
     }

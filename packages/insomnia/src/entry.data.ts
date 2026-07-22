@@ -5,6 +5,7 @@ import { createNedbDatabase, flushChangesImpl, servicesNodeImpl } from 'insomnia
 
 import { configureV3ClientDefaults } from './common/configure-v3-client';
 import { insomniaFetch, setFetchImplementation } from './common/insomnia-fetch';
+import { serializeValue } from './data-process/serialization';
 import { startDataProcessServer } from './data-process/server';
 
 process.on('uncaughtException', err => {
@@ -30,7 +31,7 @@ process.parentPort.once('message', async (event: Electron.MessageEvent) => {
       flushChanges: async function (id = 0, fake = false) {
         const changes = await flushChangesImpl(id, fake);
         if (changes) {
-          process.parentPort.postMessage({ type: 'db.changes', changes });
+          process.parentPort.postMessage({ type: 'db.changes', changes: serializeValue(changes) });
         }
       },
     }));
