@@ -30,8 +30,7 @@ import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
 
 initializeSentry();
 
-// F1: fetch the templating-db protocol auth token once, up front, so every templating call in this
-// window (including the ones the dedicated templating Web Worker forwards here) is authenticated.
+// Fetch the templating-db auth token once so it's available for every templating call in this window.
 setTemplatingDbAuthToken(await window.main.templatingDb.getAuthToken());
 
 // Initialize database for renderer process

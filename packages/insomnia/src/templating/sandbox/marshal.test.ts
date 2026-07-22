@@ -4,12 +4,10 @@ import { type HostBridge } from './host-bridge';
 import { type ContextEnvelope, HOOK_REQUEST_FIELDS, type HookResult, mergeHookRequestMutation, stripDangerousKeysReviver } from './marshal';
 import { runTagInSandbox } from './plugin-tag-sandbox';
 
-// H1-HOOK-SANDBOX-SECURITY-REVIEW.md, finding 2: a request hook could plant an own
-// `__proto__`/`constructor`/`prototype` key on nested request data via computed-key JSON
-// construction, and it survived a plain `JSON.parse` of the sandbox's output intact.
-// `DANGEROUS_KEY_SCENARIOS` covers where a hook can plant such a key, and
-// `findDangerousOwnKeyPaths` searches the entire result for survivors, so a new scenario is
-// one array entry rather than a bespoke assertion.
+// Tests that a request hook can't plant an own `__proto__`/`constructor`/`prototype` key on
+// nested request data. `DANGEROUS_KEY_SCENARIOS` covers where a hook can plant such a key, and
+// `findDangerousOwnKeyPaths` searches the entire result for survivors, so a new scenario is one
+// array entry rather than a bespoke assertion.
 
 const noBridge: HostBridge = async path => {
   throw new Error(`unexpected bridge call: ${path}`);

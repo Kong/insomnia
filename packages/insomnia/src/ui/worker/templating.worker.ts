@@ -18,9 +18,7 @@ async function performJob(input: {
 // Listen for messages from the main thread
 self.onmessage = async event => {
   const { id, input, context, path, ignoreUndefinedEnvVariable, authToken } = JSON.parse(event.data);
-  // F1: this Worker is a separate JS realm from the window that spawned it (`templating-handler.ts`),
-  // so it has its own copy of the module-scoped auth token — set it from the message rather than
-  // trying to reach `window.main` (unavailable here).
+  // This Worker has its own copy of the module-scoped auth token, set from the message.
   setTemplatingDbAuthToken(authToken ?? null);
   try {
     const result = await performJob({

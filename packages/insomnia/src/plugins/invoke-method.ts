@@ -212,9 +212,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
               renderedRequest: newRenderedRequest,
               renderContext: renderedContext,
             });
-            // `mergeHookRequestMutation` only copies the allowlisted request fields a hook is
-            // permitted to touch, one at a time — never a blanket `Object.assign` of whatever
-            // keys happen to be in the parsed JSON.
+            // Only copies the allowlisted request fields a hook is permitted to touch.
             mergeHookRequestMutation(newRenderedRequest, mutated);
             continue;
           }

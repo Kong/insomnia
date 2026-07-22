@@ -4,13 +4,10 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The sender-authenticated `plugins.*` ipcMain channels (plugin-window-ipc-authorization.test.ts)
-// only cover one transport. `resolveDbByKey` dispatches the exact same plugin-execution surface
-// (plus the whole DB bridge) over the `insomnia-templating-worker-database://` protocol, and used to
-// have no caller check of its own, resolved a caller-supplied `directory` for hook/discovery dispatch
-// instead of a trusted registry lookup, and applied `stripDangerousKeysReviver` asymmetrically. These
-// guardrails mirror the dynamic-map shape of the ipcMain test: iterate the live `pluginToMainAPI` map
-// so a future path is covered automatically, rather than a hardcoded channel list.
+// Verifies every path in `resolveDbByKey`'s `pluginToMainAPI` map requires a valid auth token,
+// resolves plugin directories from the trusted registry rather than the request body, and
+// strips dangerous keys from sandbox output consistently. Iterates the live map so a future
+// path is covered automatically.
 
 vi.mock('electron', () => ({
   app: { getVersion: () => '1.0.0', getPath: () => '/fake/userData' },
@@ -101,8 +98,6 @@ describe('resolveDbByKey requires a valid protocol auth token', () => {
     }
   });
 
-  // Regression for the specific attack this guards against: the hook-dispatch path, forged, over the
-  // second transport that `plugins.applyRequestHooks`'s ipcMain sender check doesn't cover.
   it('plugin.runUserRequestHook rejects a forged, tokenless call before any hook runs', async () => {
     const { resolveDbByKey } = await import('../templating-worker-database');
     const req = new Request('insomnia-templating-worker-database://plugin.runuserrequesthook', {
@@ -184,9 +179,8 @@ describe('protocol-dispatch handlers resolve `directory` from the trusted regist
 describe('discoverPluginExportsInSandbox strips dangerous JSON keys, symmetric with the hook path', () => {
   it('a plugin export that plants a __proto__ own-key does not survive into the manifest', async () => {
     const { discoverPluginExportsInSandbox } = await import('../templating-worker-database');
-    // `themeDesc` in the in-sandbox bootstrap passes `theme: t.theme` through verbatim (unlike
-    // `actionDesc`, which rebuilds a clean {label, icon} object), the same kind of untrusted,
-    // sandbox-authored nested object the hook-result path already guards.
+    // `themeDesc` passes `theme: t.theme` through verbatim, a nested object that needs the same
+    // dangerous-key stripping as the hook-result path.
     const source = `
       var evilTheme = JSON.parse('{"__proto__": {"polluted": true}, "safe": 1}');
       module.exports.themes = [{ name: "t", displayName: "T", theme: evilTheme }];

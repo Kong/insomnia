@@ -11,9 +11,8 @@ worker.addEventListener('error', event => {
   console.error('Error from worker:', event.message);
 });
 
-// F1: the dedicated templating Worker is its own JS realm with no `window.main`/contextBridge
-// access, so it can't fetch the protocol auth token itself — this (main-window-context) module
-// fetches it once and forwards it in on every postMessage instead.
+// The Worker has no window.main access, so this module fetches the auth token once and forwards
+// it in on every postMessage instead.
 let authTokenPromise: Promise<string> | null = null;
 function getTemplatingDbAuthToken(): Promise<string> {
   if (!authTokenPromise) {

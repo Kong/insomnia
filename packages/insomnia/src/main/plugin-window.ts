@@ -71,23 +71,16 @@ export function getBridgeMetricsSnapshot() {
 
 // --- Sender-checked IPC registration wrappers -------------------------------------------
 //
-// Every `ipcMain.handle`/`ipcMain.on` call in this file MUST go through one of the three
-// wrappers below rather than the raw `ipcMain` API. Each wrapper enforces which window is
-// allowed to be the caller for its direction of traffic; a channel registered any other way
-// has no caller-identity check at all, which is exactly the gap documented as finding 1 in
-// `templating/sandbox/H1-HOOK-SANDBOX-SECURITY-REVIEW.md` (`plugins.applyRequestHooks` used
-// to accept a request from *any* sender, letting anything reach the plugin-dispatch facility
-// with forged data regardless of what capability gating happens once inside it).
-//
-// `plugin-window-ipc-authorization.test.ts` has a static guardrail that fails the build if a
-// bare call to ipcMain's `handle`/`on` methods is ever added to this file outside these three
-// function bodies — so a future new channel is protected automatically, or the build breaks.
+// Every `ipcMain.handle`/`ipcMain.on` call in this file must go through one of the three
+// wrappers below instead of the raw `ipcMain` API, so each channel enforces which window is
+// allowed to be its caller. `plugin-window-ipc-authorization.test.ts` fails the build if a bare
+// `ipcMain` call is added to this file outside these three function bodies.
 
 /**
  * Registers a channel that dispatches a plugin operation into the hidden plugin window
- * (`getThemes`, `applyRequestHooks`, `executeAction`, etc.) — i.e. every channel that takes
- * caller-supplied data and forwards it to `invokeInPluginWindow`. Restricted to the real main
- * app window; any other sender gets a rejected promise instead of a result.
+ * (`getThemes`, `applyRequestHooks`, `executeAction`, etc.), forwarding caller-supplied data to
+ * `invokeInPluginWindow`. Restricted to the real main app window; any other sender gets a
+ * rejected promise instead of a result.
  */
 function handleFromMainWindow<Args = unknown, R = unknown>(
   channel: string,

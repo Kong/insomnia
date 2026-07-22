@@ -34,10 +34,7 @@ import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templ
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
-  // F1: `plugins.applyRequestHooks` and friends are gated to the real main window over ipcMain, but
-  // this protocol has no equivalent caller check of its own — anything able to `fetch()` the scheme
-  // reached every handler below unauthenticated. Reject before doing anything else, including body
-  // parsing, so a forged call never reaches a handler with attacker-supplied data.
+  // Reject before parsing the body, so a forged call never reaches a handler with attacker-supplied data.
   if (!isValidTemplatingDbAuthToken(request.headers.get(TEMPLATING_DB_AUTH_HEADER))) {
     return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid templating database auth token' }), {
       status: 401,
@@ -46,8 +43,6 @@ export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
   let body;
   try {
-    // F3: strip `__proto__`/`constructor`/`prototype` own-keys at the exact point this untrusted
-    // request body re-enters host memory, not just on the sandbox's own hook-result output.
     // We expect this to throw if a db call returns undefined
     body = JSON.parse(await request.text(), stripDangerousKeysReviver);
   } catch {}
@@ -72,12 +67,8 @@ export const resolveDbByKey = async (request: Request) => {
   }
 };
 
-// F2': resolve a plugin's on-disk directory server-side, from the trusted registry the plugin loader
-// itself already built (`getPlugins()`), keyed only by name — the caller-supplied `directory` in the
-// request body is never trusted for the two protocol-dispatch handlers below. Only reachable over the
-// protocol boundary (`plugin.discoverUserPluginExports` / `plugin.runUserRequestHook`); the loader's
-// own direct calls to `discoverUserPluginExportsForLoader`/`readPluginModuleMap` (during the registry
-// scan that populates this very registry) bypass this function entirely, so there's no recursion.
+// Resolves a plugin's on-disk directory from the trusted plugin registry by name, so the two
+// protocol-dispatch handlers below never trust a caller-supplied directory path.
 const resolveTrustedPluginDirectory = async (pluginName: string): Promise<string> => {
   const plugins = await getPlugins();
   const plugin = plugins.find(p => p.name === pluginName);
@@ -411,8 +402,6 @@ export const discoverPluginExportsInSandbox = async (
       entryModuleKey,
     },
   });
-  // F3: this is the same untrusted-sandbox-output boundary `runRequestHookInSandbox` already guards
-  // with `stripDangerousKeysReviver` below — the manifest just hadn't been routed through it yet.
   return JSON.parse(json, stripDangerousKeysReviver);
 };
 
@@ -488,8 +477,7 @@ export const runRequestHookInSandbox = async (
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util.
-// Exported (read-only in practice) so tests can enumerate every registered path — see
-// `templating-worker-database-protocol-authorization.test.ts`.
+// Exported so tests can enumerate every registered path.
 export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
     return secureReadFile(body.path);
@@ -754,9 +742,6 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
   }) =>
     discoverUserPluginExportsForLoader({
       ...body,
-      // F2': the directory to read source from is resolved server-side from the trusted registry,
-      // never taken from the request body — a forged `directory` can no longer point discovery at
-      // an arbitrary folder with a package.json.
       directory: await resolveTrustedPluginDirectory(body.name),
     }),
   // H1: run a user plugin's request hook in the sandbox (plugin-window path reaches this over the
@@ -768,7 +753,6 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     renderContext: Record<string, any>;
   }) =>
     runRequestHookInSandbox(
-      // F2': same trusted-directory resolution as discovery, by name — see above.
       { ...body.plugin, directory: await resolveTrustedPluginDirectory(body.plugin.name) },
       body.hookIndex,
       body.renderedRequest,

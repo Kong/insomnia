@@ -5,10 +5,7 @@ import { getOrCreateTemplatingDbAuthToken } from '../templating-worker-database-
 import { getMainWindow } from '../window-utils';
 import { ipcMainHandle } from './electron';
 
-// The templating-db auth token (F1) is only ever handed out to the two windows that legitimately
-// call the `insomnia-templating-worker-database://` protocol: the main app window and the hidden
-// plugin window. Any other sender (a compromised/forged renderer without the real window's
-// `webContents`) is rejected, mirroring the sender check `plugin-window.ts` uses for `plugins.*`.
+// Only hands the templating db auth token to the main app window or the hidden plugin window.
 export function registerTemplatingDbAuthIpcHandler() {
   ipcMainHandle('templatingDb.getAuthToken', (event: IpcMainInvokeEvent) => {
     const isMainWindow = event.sender === getMainWindow()?.webContents;

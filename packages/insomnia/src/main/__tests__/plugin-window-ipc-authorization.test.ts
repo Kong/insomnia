@@ -3,13 +3,10 @@ import path from 'node:path';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// `plugin-window.ts`'s IPC dispatchers (`plugins.applyRequestHooks` and siblings) used to
-// accept a request from any sender (H1-HOOK-SANDBOX-SECURITY-REVIEW.md, finding 1). The fix
-// routes every `ipcMain.handle`/`.on` registration through one of three sender-checked
-// wrappers (`handleFromMainWindow`, `onFromPluginWindow`, `handleFromPluginWindow`). Two
-// guardrails enforce this: a static source check that no bare `ipcMain` call exists outside
-// those wrappers, and a dynamic check that iterates every channel actually registered at
-// runtime (not a hardcoded name list), so a future channel is covered automatically.
+// Verifies every `plugin-window.ts` IPC channel is registered through one of the three
+// sender-checked wrappers and rejects a forged sender. One test statically checks the source
+// for bare `ipcMain` calls outside those wrappers; the rest iterate every channel actually
+// registered at runtime, so a future channel is covered automatically.
 
 const registeredHandlers = new Map<string, (...args: any[]) => any>();
 const registeredListeners = new Map<string, (...args: any[]) => any>();
@@ -117,7 +114,7 @@ describe('plugin-window.ts IPC dispatch: sender authorization', () => {
     }
   });
 
-  // Regression check for finding 1: a forged sender is rejected before it ever reaches the plugin window.
+  // A forged sender is rejected before it ever reaches the plugin window.
   it('plugins.applyRequestHooks rejects a forged sender', async () => {
     const { registerPluginIpcHandlers } = await import('../plugin-window');
     registerPluginIpcHandlers();
