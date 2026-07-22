@@ -777,3 +777,70 @@ describe('MCP run deep-link import', () => {
     expect(match).toBeUndefined();
   });
 });
+
+describe('requiresNewWorkspace()', () => {
+  const base = { errors: [] as string[] };
+
+  it('returns false for collection-only imports', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        workspaces: [{ scope: 'collection' } as any],
+      }),
+    ).toBe(false);
+  });
+
+  it('returns false for request-only imports without workspaces', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        requests: [{ _id: 'req_1' } as any],
+      }),
+    ).toBe(false);
+  });
+
+  it.each(['mock-server', 'environment', 'design', 'mcp'] as const)(
+    'returns true when a %s workspace is present',
+    scope => {
+      expect(
+        importUtil.requiresNewWorkspace({
+          ...base,
+          workspaces: [{ scope } as any],
+        }),
+      ).toBe(true);
+    },
+  );
+
+  it('returns true when any non-collection workspace is mixed with collections', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        workspaces: [{ scope: 'collection' } as any, { scope: 'environment' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true for OpenAPI / Swagger scan results', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        type: { id: 'openapi3' } as any,
+      }),
+    ).toBe(true);
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        apiSpecs: [{ _id: 'spc_1' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true when mcpRequests are present', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        mcpRequests: [{ _id: 'mcp_1' } as any],
+      }),
+    ).toBe(true);
+  });
+});
