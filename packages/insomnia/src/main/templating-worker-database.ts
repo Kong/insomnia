@@ -479,6 +479,80 @@ export const runRequestHookInSandbox = async (
   return result.request ?? hookRequest;
 };
 
+// The serializable ResponsePatch fields a response hook reads (the body itself lives on disk at
+// bodyPath and is read/written via the response.getBodyBuffer / response.setBody bridge paths).
+const HOOK_RESPONSE_FIELDS = [
+  'parentId',
+  'statusCode',
+  'statusMessage',
+  'bytesRead',
+  'bytesContent',
+  'elapsedTime',
+  'headers',
+  'bodyPath',
+  'bodyCompression',
+  'contentType',
+  'httpVersion',
+  'url',
+  'error',
+  'message',
+] as const;
+
+const pickHookResponseFields = (resp: Record<string, any>): Record<string, any> => {
+  const out: Record<string, any> = {};
+  for (const key of HOOK_RESPONSE_FIELDS) {
+    if (resp[key] !== undefined) {
+      out[key] = resp[key];
+    }
+  }
+  return out;
+};
+
+// H1: run a user plugin's response hook (at hookIndex) inside the sandbox, capability-gated. The hook
+// reads the response (and a read-only request) and may rewrite the body via the response.setBody
+// bridge; we marshal the mutated response fields back for the caller to merge.
+export const runResponseHookInSandbox = async (
+  plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } },
+  hookIndex: number,
+  response: Record<string, any>,
+  renderedRequest: Record<string, any>,
+  renderContext: Record<string, any>,
+): Promise<Record<string, any>> => {
+  const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
+  const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+    '../templating/sandbox/surface-profiles'
+  );
+  const grantedCapabilities = resolveTemplateTagCapabilities(plugin.permissions?.capabilities);
+  const bridge = await buildSandboxBridge(grantedCapabilities);
+  const { moduleFiles, entryModuleKey } = readPluginModuleMap({ directory: plugin.directory, name: plugin.name });
+  const hookResponse = pickHookResponseFields(response);
+  const json = await runTagInSandbox({
+    tagName: '',
+    bridge,
+    hostCrypto: SANDBOX_HOST_CRYPTO,
+    envelope: {
+      args: [],
+      context: (renderContext as Record<string, any>) || {},
+      meta: {},
+      renderPurpose: 'send',
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
+      pluginName: plugin.name,
+      renderDepth: 0,
+      grantedModules: resolveTemplateTagModules(plugin.permissions?.modules),
+      grantedCapabilities,
+      moduleFiles,
+      entryModuleKey,
+      hookKind: 'response',
+      hookIndex,
+      hookRequest: pickHookRequestFields(renderedRequest),
+      hookResponse,
+    },
+  });
+  // Sanitize untrusted sandbox output at the point it re-enters host memory (#10290).
+  const result = JSON.parse(json, stripDangerousKeysReviver) as { response?: Record<string, any> };
+  return result.response ?? hookResponse;
+};
+
 // These are exposed to the templating worker and can be used by plugins from context.util.
 // Exported so tests can enumerate every registered path.
 export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
@@ -530,6 +604,22 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     readFailureValue?: string;
   }) => {
     return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
+  },
+  // H1: a sandboxed response hook's context.response.setBody(). The body arrives base64-encoded (so
+  // the bytes survive the JSON bridge). Contain the write to the responses directory as defense in
+  // depth — bodyPath is host-set, but this handler must never write outside it even if that changes.
+  'response.setBody': async (body: { bodyPath?: string; bodyBase64?: string }) => {
+    if (!body.bodyPath) {
+      throw new Error('Could not set body without existing body path');
+    }
+    const responsesDir = path.resolve(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'responses');
+    const target = path.resolve(body.bodyPath);
+    const relative = path.relative(responsesDir, target);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error('response.setBody path escapes the responses directory');
+    }
+    fs.writeFileSync(target, Buffer.from(body.bodyBase64 || '', 'base64'));
+    return null;
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
     const doc = await services.pluginData.getByKey(body.pluginName, body.key);
@@ -762,6 +852,23 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     return runRequestHookInSandbox(
       { ...body.plugin, directory: trusted.directory, permissions: trusted.permissions },
       body.hookIndex,
+      body.renderedRequest,
+      body.renderContext,
+    );
+  },
+  'plugin.runUserResponseHook': async (body: {
+    plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } };
+    hookIndex: number;
+    response: Record<string, any>;
+    renderedRequest: Record<string, any>;
+    renderContext: Record<string, any>;
+  }) => {
+    // Resolve directory/permissions from the trusted registry, never the caller-supplied body (#10290).
+    const trusted = await resolveTrustedPlugin(body.plugin.name);
+    return runResponseHookInSandbox(
+      { ...body.plugin, directory: trusted.directory, permissions: trusted.permissions },
+      body.hookIndex,
+      body.response,
       body.renderedRequest,
       body.renderContext,
     );
