@@ -314,7 +314,7 @@ async function _updateElementText(
       const con = context.context.getKeysContext();
       const contextForKey = con.keyContext[cleanedStr];
       // Only suffix the title with context, if context is found
-      const valueAndContext = contextForKey ? `${title} (${contextForKey})` : title;
+      const valueAndContext = contextForKey ? `${title} {${contextForKey}}` : title;
 
       // Swap what's shown in the tooltip vs the innerHTML
       innerHTML = showVariableSourceAndValue ? valueAndContext : cleanedStr;

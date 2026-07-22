@@ -58,8 +58,11 @@ export const Tooltip = (props: Props) => {
     }
   };
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (e: React.MouseEvent) => {
     clearDwellTimeout();
+    if (followCursor) {
+      cursorPosRef.current = { x: e.clientX, y: e.clientY };
+    }
     if (shouldShow && !shouldShow()) {
       return;
     }
