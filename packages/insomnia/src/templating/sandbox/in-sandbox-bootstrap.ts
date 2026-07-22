@@ -470,7 +470,9 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    var hook = hooks[env.hookIndex];',
   '    if (typeof hook !== "function") { throw new Error("Plugin " + (isResponse ? "response" : "request") + " hook not found at index " + env.hookIndex); }',
   // Response hooks get a read-only request view (matches pluginRequest.init(..., true)).
-  '    ctx.request = __buildRequestApi(env.hookRequest || {}, isResponse);',
+  // Pass hookRequest through directly (no `|| {}`): __buildRequestApi throws on a missing request,
+  // matching the in-process pluginRequest.init(), and keeps the marshaled-back object === the mutated one.
+  '    ctx.request = __buildRequestApi(env.hookRequest, isResponse);',
   '    return Promise.resolve(hook(ctx)).then(function () { return JSON.stringify({ request: env.hookRequest }); });',
   '  };',
 

@@ -81,7 +81,11 @@ export async function applyRequestHooks(
   const { services } = await import('insomnia-data');
   // H1: with the sandbox on, a user plugin's hook runs in QuickJS (its `hook` here is a throw-stub
   // from discovery); bundle plugins and the flag-off path run in-process as before.
-  const sandboxEnabled = (await services.settings.get()).templateTagSandboxEnabled;
+  // The sandbox host (templating-worker-database) statically imports `electron`, so it can only be
+  // reached from an Electron process. This node runtime also backs the pure-Node inso CLI, which has
+  // no `electron` — there the sandbox is unavailable, so hooks run in-process as they always have.
+  const canSandbox = !!process.type;
+  const sandboxEnabled = canSandbox && (await services.settings.get()).templateTagSandboxEnabled;
   // getRequestHooks flattens each plugin's requestHooks in order, so a per-plugin running counter
   // recovers the hook's index within its own array (what the sandbox loads by).
   const hookIndexByPlugin: Record<string, number> = {};
