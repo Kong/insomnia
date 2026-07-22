@@ -90,6 +90,62 @@ describe('request hooks in the sandbox (H1)', () => {
     ).rejects.toThrow(/sendRequest/i);
   });
 
+  it('runs a response hook: reads response, rewrites the body via the host bridge (base64), request is read-only', async () => {
+    const bridgeCalls: { path: string; body: any }[] = [];
+    const bridge: HostBridge = async (path, body) => {
+      bridgeCalls.push({ path, body });
+      if (path === 'response.getBodyBuffer') {
+        return 'ORIGINAL';
+      }
+      if (path === 'response.setBody') {
+        return null;
+      }
+      throw new Error(`unexpected bridge call: ${path}`);
+    };
+    const envelope: ContextEnvelope = {
+      args: [],
+      context: {},
+      meta: {},
+      renderPurpose: 'send',
+      appInfo: { version: '0.0.0', platform: 'linux', arch: 'x64' },
+      pluginName: 'test-plugin',
+      renderDepth: 0,
+      grantedModules: ['path', 'crypto'],
+      grantedCapabilities: [],
+      moduleFiles: {
+        'index.js': `module.exports.responseHooks = [async function (context) {
+          // read-only request view: mutators are absent, getters work
+          if (typeof context.request.setHeader !== 'undefined') { throw new Error('request should be read-only in a response hook'); }
+          var status = context.response.getStatusCode();
+          var ctype = context.response.getHeader('content-type');
+          var original = await context.response.getBody();
+          context.response.setBody('rewritten:' + status + ':' + ctype + ':' + original);
+        }];`,
+      },
+      entryModuleKey: 'index.js',
+      hookKind: 'response',
+      hookIndex: 0,
+      hookRequest: { url: 'https://x', method: 'GET', headers: [] },
+      hookResponse: {
+        parentId: 'req_1',
+        statusCode: 201,
+        headers: [{ name: 'Content-Type', value: 'text/plain' }],
+        bodyPath: '/tmp/body-1',
+      },
+    };
+    const json = await runTagInSandbox({ tagName: '', envelope, bridge });
+    const result = JSON.parse(json) as HookResult;
+
+    // getBody read went through the existing models.read bridge path.
+    expect(bridgeCalls.some(c => c.path === 'response.getBodyBuffer')).toBe(true);
+    // setBody wrote via the new host path, base64-encoded so the bytes survive the JSON bridge.
+    const setCall = bridgeCalls.find(c => c.path === 'response.setBody');
+    expect(setCall?.body.bodyPath).toBe('/tmp/body-1');
+    expect(Buffer.from(setCall!.body.bodyBase64, 'base64').toString('utf8')).toBe('rewritten:201:text/plain:ORIGINAL');
+    // bytesContent is updated on the response marshaled back to the host.
+    expect((result.response as any)?.bytesContent).toBe('rewritten:201:text/plain:ORIGINAL'.length);
+  });
+
   it('allows a granted capability: context.network is present when the manifest grants network', async () => {
     // With 'network' granted the branch exists; feature-detecting it as an object proves C2 attaches
     // the branch (the actual call would bridge to the host, which the unit test bridge rejects).
