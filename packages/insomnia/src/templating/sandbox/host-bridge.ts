@@ -60,6 +60,11 @@ export const BRIDGE_PATH_CAPABILITIES: Record<string, Capability> = {
   'cookieJar.getCookiesForUrl': 'models.read',
   'response.getLatestForRequestId': 'models.read',
   'response.getBodyBuffer': 'models.read',
+  // A response hook rewriting its own response body (context.response.setBody). Grouped with the
+  // other response operations at baseline: it's a bounded write — the plugin supplies only bytes,
+  // never the path (bodyPath is host-set and can't be redirected), matching the ungated in-process
+  // response-hook behavior. Not a general fs write (there is no fs-write capability).
+  'response.setBody': 'models.read',
   'settings.get': 'models.read',
 
   'nodeOS': 'util',
