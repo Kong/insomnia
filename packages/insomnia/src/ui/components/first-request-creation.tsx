@@ -563,7 +563,7 @@ export const FirstRequestCreation = ({
             <input
               ref={inputRef}
               aria-label="Request endpoint or cURL input"
-              className="h-6.5 min-w-0 flex-1 bg-transparent px-1 text-[12px]/[18px] font-normal"
+              className="h-6.5 min-w-0 flex-1 bg-transparent px-1 text-[12px]/[18px] font-normal outline-none"
               placeholder="Enter a URL or paste cURL"
               value={requestInput}
               onChange={event => applyRequestInput(event.target.value)}
