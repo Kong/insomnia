@@ -124,14 +124,20 @@ describe('protocol-dispatch handlers resolve `directory` from the trusted regist
     fs.writeFileSync(path.join(legitDir, 'package.json'), JSON.stringify({ main: 'index.js' }));
     fs.writeFileSync(
       path.join(legitDir, 'index.js'),
-      'module.exports.templateTags = [{ name: "legit_tag", displayName: "legit", run: function () {} }];',
+      `module.exports.templateTags = [{ name: "legit_tag", displayName: "legit", run: function () {} }];
+       module.exports.requestHooks = [function (context) {
+         context.request.setHeader('X-Plugin-Source', 'legit');
+       }];`,
     );
 
     foreignDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-foreign-'));
     fs.writeFileSync(path.join(foreignDir, 'package.json'), JSON.stringify({ main: 'index.js' }));
     fs.writeFileSync(
       path.join(foreignDir, 'index.js'),
-      'module.exports.templateTags = [{ name: "forged_tag", displayName: "forged", run: function () {} }];',
+      `module.exports.templateTags = [{ name: "forged_tag", displayName: "forged", run: function () {} }];
+       module.exports.requestHooks = [function (context) {
+         context.request.setHeader('X-Plugin-Source', 'foreign');
+       }];`,
     );
 
     const { getPlugins } = await import('~/plugins');
@@ -173,6 +179,31 @@ describe('protocol-dispatch handlers resolve `directory` from the trusted regist
     expect(res.status).toBe(500);
     const json = await res.json();
     expect(json.error).toMatch(/Unknown plugin/);
+  });
+
+  // Mirrors the discoverUserPluginExports case above on the request-hook path — before this branch,
+  // `plugin.discoverUserPluginExports` and `plugin.runUserRequestHook` each trusted their own copy of
+  // `body.(plugin.)directory` independently, so a guard proven on one handler didn't imply the other
+  // was covered (this is exactly how the `permissions` gap in the describe block below went
+  // unnoticed alongside the `directory` fix). Test both handlers explicitly rather than one.
+  it('a forged directory in plugin.runUserRequestHook\'s request body is ignored in favor of the registry-resolved one', async () => {
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://plugin.runuserrequesthook', {
+      method: 'POST',
+      headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
+      body: JSON.stringify({
+        plugin: { name: 'insomnia-plugin-legit', directory: foreignDir },
+        hookIndex: 0,
+        renderedRequest: { _id: 'req_1', url: 'https://example.com', headers: [], body: {} },
+        renderContext: {},
+      }),
+    });
+    const res = await resolveDbByKey(req);
+    expect(res.status).toBe(200);
+    const mutated = await res.json();
+    const source = mutated.headers.find((h: { name: string }) => h.name === 'X-Plugin-Source')?.value;
+    expect(source).toBe('legit');
   });
 });
 
@@ -242,6 +273,58 @@ describe('protocol-dispatch handlers resolve `permissions` from the trusted regi
   it('a forged `permissions.capabilities` in the request body is ignored; the registry still denies network', async () => {
     const { hasNetwork } = await runHook({ capabilities: ['network'] });
     expect(hasNetwork).toBe(false);
+  });
+});
+
+// Symmetric coverage for the other handler that resolves `permissions`: the describe block above
+// only exercises `plugin.runUserRequestHook`. `plugin.discoverUserPluginExports` takes the same
+// `resolveTrustedPlugin(...).permissions` value but on the *module* grant, not the capability grant
+// (discovery evaluates the plugin's top-level code, which can only reach gated `require(...)`, not
+// hook-time `context.*`). Exercising both fields on both handlers is the point: the permissions gap
+// this branch fixed existed specifically because the `directory` fix was verified per-handler but
+// `permissions` wasn't checked on every handler that resolves it.
+describe('plugin.discoverUserPluginExports resolves `permissions.modules` from the trusted registry, not the request body', () => {
+  let pluginDir: string;
+
+  beforeEach(async () => {
+    _testOnlyResetTemplatingDbAuthToken();
+    pluginDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-nomodules-'));
+    fs.writeFileSync(path.join(pluginDir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    fs.writeFileSync(
+      path.join(pluginDir, 'index.js'),
+      // `events` is not in the baseline module grant (`path`/`crypto` only), so a top-level require
+      // of it only succeeds if `permissions.modules` grants it.
+      "require('events'); module.exports.templateTags = [];",
+    );
+
+    // The registry declares no extra modules for this plugin — a real caller (the plugin loader)
+    // would only ever discover this plugin's exports with the baseline module grant.
+    const { getPlugins } = await import('~/plugins');
+    (getPlugins as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { name: 'insomnia-plugin-nomodules', directory: pluginDir, permissions: {} },
+    ]);
+  });
+
+  afterEach(() => {
+    fs.rmSync(pluginDir, { recursive: true, force: true });
+  });
+
+  it('a forged `permissions.modules` in the request body is ignored; the registry still denies the module', async () => {
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://plugin.discoveruserpluginexports', {
+      method: 'POST',
+      headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
+      body: JSON.stringify({
+        name: 'insomnia-plugin-nomodules',
+        permissions: { modules: ['events'] },
+      }),
+    });
+    const res = await resolveDbByKey(req);
+    // Discovery surfaces a denied top-level require as a rejection, not a 200 with an empty manifest.
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toMatch(/not permitted by manifest/);
   });
 });
 
