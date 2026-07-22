@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron';
 import { initDatabase, initServices } from 'insomnia-data';
 
+import { setTemplatingDbAuthToken } from './common/templating/liquid-extension-worker';
 import { pluginWindowDatabase } from './main/database.plugin-window';
 import { invokePluginMethod } from './plugins/invoke-method';
 import { initRuntime } from './runtimes';
@@ -28,6 +29,10 @@ ipcRenderer.on('plugins.invoke', async (_event, { id, method, args }: PluginInvo
 // getPlugins() calls services.settings.get(), which requires this to be done first.
 (async () => {
   try {
+    // F1: this window has its own JS realm (nodeIntegration, no contextBridge) and so its own copy
+    // of the templating-db auth token module state — fetch it directly over IPC before any plugin
+    // code can call `fetchFromTemplateWorkerDatabase`.
+    setTemplatingDbAuthToken(await ipcRenderer.invoke('templatingDb.getAuthToken'));
     await initDatabase(pluginWindowDatabase);
     initServices(servicesProxy);
     initRuntime(rendererRuntime);

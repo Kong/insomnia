@@ -37,9 +37,22 @@ export function decodeEncodingWorker<T>(value: T) {
   return value;
 }
 
+// F1: the `insomnia-templating-worker-database://` protocol has no caller-identity check of its
+// own (unlike the `plugins.*` ipcMain channels), so a per-process secret — handed out only to the
+// trusted main window / plugin window over a sender-checked IPC channel — is attached as a header
+// on every call. Each JS realm that can reach this function (main window, plugin window, the
+// dedicated templating Web Worker) sets its own copy via `setTemplatingDbAuthToken` at startup,
+// since none of those realms share module state with each other.
+let templatingDbAuthToken: string | null = null;
+
+export const setTemplatingDbAuthToken = (token: string | null) => {
+  templatingDbAuthToken = token;
+};
+
 export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths, body: any) => {
   const resp = await fetch('insomnia-templating-worker-database://' + path, {
     method: 'post',
+    headers: templatingDbAuthToken ? { 'x-insomnia-templating-auth': templatingDbAuthToken } : undefined,
     body: JSON.stringify(body),
   });
   let result;

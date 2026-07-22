@@ -8,6 +8,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
+import { setTemplatingDbAuthToken } from '~/common/templating/liquid-extension-worker';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
@@ -28,6 +29,10 @@ import { initializeSentry } from './ui/sentry';
 import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
 
 initializeSentry();
+
+// F1: fetch the templating-db protocol auth token once, up front, so every templating call in this
+// window (including the ones the dedicated templating Web Worker forwards here) is authenticated.
+setTemplatingDbAuthToken(await window.main.templatingDb.getAuthToken());
 
 // Initialize database for renderer process
 await initDatabase(clientDatabase);

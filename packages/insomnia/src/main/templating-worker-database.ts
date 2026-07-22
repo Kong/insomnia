@@ -18,7 +18,7 @@ import type {
   PluginTemplateTagContext,
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
-import { getPluginCommonContext, getTemplateTags } from '~/plugins';
+import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
 import { HOOK_REQUEST_FIELDS, type PluginExportManifest, stripDangerousKeysReviver } from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
@@ -29,15 +29,27 @@ import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } f
 import { curlRequest } from './network/libcurl-promise';
 import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
+import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templating-worker-database-auth';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
+  // F1: `plugins.applyRequestHooks` and friends are gated to the real main window over ipcMain, but
+  // this protocol has no equivalent caller check of its own — anything able to `fetch()` the scheme
+  // reached every handler below unauthenticated. Reject before doing anything else, including body
+  // parsing, so a forged call never reaches a handler with attacker-supplied data.
+  if (!isValidTemplatingDbAuthToken(request.headers.get(TEMPLATING_DB_AUTH_HEADER))) {
+    return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid templating database auth token' }), {
+      status: 401,
+    });
+  }
   const url = new URL(request.url);
   let body;
   try {
+    // F3: strip `__proto__`/`constructor`/`prototype` own-keys at the exact point this untrusted
+    // request body re-enters host memory, not just on the sandbox's own hook-result output.
     // We expect this to throw if a db call returns undefined
-    body = await request.json();
+    body = JSON.parse(await request.text(), stripDangerousKeysReviver);
   } catch {}
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
@@ -58,6 +70,21 @@ export const resolveDbByKey = async (request: Request) => {
     console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
+};
+
+// F2': resolve a plugin's on-disk directory server-side, from the trusted registry the plugin loader
+// itself already built (`getPlugins()`), keyed only by name — the caller-supplied `directory` in the
+// request body is never trusted for the two protocol-dispatch handlers below. Only reachable over the
+// protocol boundary (`plugin.discoverUserPluginExports` / `plugin.runUserRequestHook`); the loader's
+// own direct calls to `discoverUserPluginExportsForLoader`/`readPluginModuleMap` (during the registry
+// scan that populates this very registry) bypass this function entirely, so there's no recursion.
+const resolveTrustedPluginDirectory = async (pluginName: string): Promise<string> => {
+  const plugins = await getPlugins();
+  const plugin = plugins.find(p => p.name === pluginName);
+  if (!plugin) {
+    throw new Error(`Unknown plugin: ${pluginName}`);
+  }
+  return plugin.directory;
 };
 
 const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
@@ -384,7 +411,9 @@ export const discoverPluginExportsInSandbox = async (
       entryModuleKey,
     },
   });
-  return JSON.parse(json);
+  // F3: this is the same untrusted-sandbox-output boundary `runRequestHookInSandbox` already guards
+  // with `stripDangerousKeysReviver` below — the manifest just hadn't been routed through it yet.
+  return JSON.parse(json, stripDangerousKeysReviver);
 };
 
 // Discover a user plugin's exports from its on-disk source, resolving the template-tag surface grant
@@ -458,8 +487,10 @@ export const runRequestHookInSandbox = async (
   return result.request ?? hookRequest;
 };
 
-// These are exposed to the templating worker and can be used by plugins from context.util
-const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
+// These are exposed to the templating worker and can be used by plugins from context.util.
+// Exported (read-only in practice) so tests can enumerate every registered path — see
+// `templating-worker-database-protocol-authorization.test.ts`.
+export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
     return secureReadFile(body.path);
   },
@@ -720,7 +751,14 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     directory: string;
     name: string;
     permissions?: { modules?: string[]; capabilities?: string[] };
-  }) => discoverUserPluginExportsForLoader(body),
+  }) =>
+    discoverUserPluginExportsForLoader({
+      ...body,
+      // F2': the directory to read source from is resolved server-side from the trusted registry,
+      // never taken from the request body — a forged `directory` can no longer point discovery at
+      // an arbitrary folder with a package.json.
+      directory: await resolveTrustedPluginDirectory(body.name),
+    }),
   // H1: run a user plugin's request hook in the sandbox (plugin-window path reaches this over the
   // templating-worker-database protocol; the node runtime calls runRequestHookInSandbox directly).
   'plugin.runUserRequestHook': async (body: {
@@ -728,7 +766,14 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     hookIndex: number;
     renderedRequest: Record<string, any>;
     renderContext: Record<string, any>;
-  }) => runRequestHookInSandbox(body.plugin, body.hookIndex, body.renderedRequest, body.renderContext),
+  }) =>
+    runRequestHookInSandbox(
+      // F2': same trusted-directory resolution as discovery, by name — see above.
+      { ...body.plugin, directory: await resolveTrustedPluginDirectory(body.plugin.name) },
+      body.hookIndex,
+      body.renderedRequest,
+      body.renderContext,
+    ),
   // execute a user-installed plugin tag with the given parameters, in the main process where
   // Node built-ins (e.g. crypto) the plugin requires are available.
   'plugin.executeUserPluginTag': async (body: {
