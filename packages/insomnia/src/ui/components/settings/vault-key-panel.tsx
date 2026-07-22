@@ -155,16 +155,14 @@ export const VaultKeyPanel = () => {
     <div>
       {/* Show Gen Vault button when vault salt does not exist */}
       {!vaultSaltExists && (
-        <div className="form-row pad-top-sm justify-start">
+        <div className="form-row form-row--start pad-top-sm justify-start">
           <Button
-            className={`btn btn--outlined btn--super-compact flex items-center ${isGenerating ? 'w-56' : 'w-48'}`}
+            className="btn btn--outlined btn--super-compact width-auto flex items-center justify-center gap-2"
             onPress={generateVaultKey}
             isDisabled={isGenerating}
             aria-label="Generate Vault Key"
           >
-            {isGenerating && (
-              <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />
-            )}
+            {isGenerating && <Icon icon="spinner" className="inline-block animate-spin text-(--color-font)" />}
             Generate Vault Key
             <HelpTooltip className="space-left">
               Generate an encryption key to save secrets in private environment. This ensures all secrets are securely
@@ -205,9 +203,9 @@ export const VaultKeyPanel = () => {
       )}
       {/* User has not input vault key after re-login */}
       {vaultSaltExists && !vaultKeyExists && (
-        <div className="form-row pad-top-sm justify-start">
+        <div className="form-row form-row--start pad-top-sm justify-start">
           <Button
-            className="btn btn--outlined btn--super-compact flex w-48 items-center"
+            className="btn btn--outlined btn--super-compact width-auto flex items-center justify-center gap-2"
             onPress={() => setShowModal(true)}
           >
             Enter Vault Key
