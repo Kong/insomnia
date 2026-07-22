@@ -176,6 +176,79 @@ describe('protocol-dispatch handlers resolve `directory` from the trusted regist
   });
 });
 
+// H1-followup finding: F2' resolved `directory` server-side from the trusted registry (getPlugins()),
+// but left `permissions` as a caller-supplied field on the request body for both
+// `plugin.runUserRequestHook` and `plugin.discoverUserPluginExports`. A plugin's *own* declared
+// manifest (what a legitimate caller — the plugin loader, or `invoke-method.ts`'s hook dispatch —
+// would send) is never consulted to cross-check the `permissions` the request body claims. So a
+// caller who can reach this protocol at all (has the auth token) can run any *registered* plugin's
+// hook with a broader capability grant than that plugin's own package.json declares, up to the
+// template-tag profile's ceiling (`surface-profiles.ts`). Not a sandbox escape — the profile ceiling
+// still caps it — but it is the same class of "trust a security-relevant field from the request body
+// instead of the registry" bug F2' fixed for `directory`, left unfixed for `permissions`.
+describe('protocol-dispatch handlers trust caller-supplied `permissions`, not the registry (residual gap from F2\')', () => {
+  let pluginDir: string;
+
+  beforeEach(async () => {
+    _testOnlyResetTemplatingDbAuthToken();
+    pluginDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-restricted-'));
+    fs.writeFileSync(path.join(pluginDir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    fs.writeFileSync(
+      path.join(pluginDir, 'index.js'),
+      // Reports whether the `network` capability made it into the hook's context — deleted from
+      // `context` entirely unless granted (in-sandbox-bootstrap.ts `__hasCap`).
+      `module.exports.requestHooks = [function (context) {
+        context.request.setBody({ text: JSON.stringify({ hasNetwork: typeof context.network !== 'undefined' }) });
+      }];`,
+    );
+
+    // The registry's source of truth for this plugin declares NO capabilities (no manifest) —
+    // real callers (the plugin loader, invoke-method.ts) would only ever send this plugin's hook
+    // with baseline capabilities, which do not include `network`.
+    const { getPlugins } = await import('~/plugins');
+    (getPlugins as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { name: 'insomnia-plugin-restricted', directory: pluginDir, permissions: {} },
+    ]);
+  });
+
+  afterEach(() => {
+    fs.rmSync(pluginDir, { recursive: true, force: true });
+  });
+
+  const runHook = async (permissions?: { capabilities?: string[] }) => {
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://plugin.runuserrequesthook', {
+      method: 'POST',
+      headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
+      body: JSON.stringify({
+        plugin: { name: 'insomnia-plugin-restricted', permissions },
+        hookIndex: 0,
+        renderedRequest: { _id: 'req_1', url: 'https://example.com', headers: [], body: {} },
+        renderContext: {},
+      }),
+    });
+    const res = await resolveDbByKey(req);
+    expect(res.status).toBe(200);
+    const mutated = await res.json();
+    return JSON.parse(mutated.body.text) as { hasNetwork: boolean };
+  };
+
+  it('baseline: a request that omits permissions gets the registry-appropriate (no-network) grant', async () => {
+    const { hasNetwork } = await runHook();
+    expect(hasNetwork).toBe(false);
+  });
+
+  // RED: this documents the bug. The plugin's *registered* manifest (mocked above) declares no
+  // capabilities, but the request body's `permissions.capabilities: ['network']` is trusted as-is,
+  // granting `network` anyway. A fix would look up `permissions` from `getPlugins()` by name — the
+  // same trusted-registry pattern F2' already applies to `directory` — rather than the request body.
+  it('a forged `permissions.capabilities` in the request body is granted despite the registry declaring none', async () => {
+    const { hasNetwork } = await runHook({ capabilities: ['network'] });
+    expect(hasNetwork).toBe(true);
+  });
+});
+
 describe('discoverPluginExportsInSandbox strips dangerous JSON keys, symmetric with the hook path', () => {
   it('a plugin export that plants a __proto__ own-key does not survive into the manifest', async () => {
     const { discoverPluginExportsInSandbox } = await import('../templating-worker-database');
