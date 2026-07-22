@@ -164,7 +164,7 @@ export const VaultKeyPanel = () => {
           >
             {isGenerating && <Icon icon="spinner" className="inline-block animate-spin text-(--color-font)" />}
             Generate Vault Key
-            <HelpTooltip className="space-left">
+            <HelpTooltip>
               Generate an encryption key to save secrets in private environment. This ensures all secrets are securely
               stored and encrypted locally.
             </HelpTooltip>
