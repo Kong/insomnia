@@ -8,6 +8,7 @@ import type {
 import type { Plugin } from '~/common/plugins/types';
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 import { deserializeRenderContext } from '~/common/templating/render-context-serialization';
+import { mergeHookRequestMutation } from '~/templating/sandbox/marshal';
 
 import * as pluginApp from './context/app';
 import * as pluginData from './context/data';
@@ -211,7 +212,10 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
               renderedRequest: newRenderedRequest,
               renderContext: renderedContext,
             });
-            Object.assign(newRenderedRequest, mutated);
+            // `mergeHookRequestMutation` only copies the allowlisted request fields a hook is
+            // permitted to touch, one at a time — never a blanket `Object.assign` of whatever
+            // keys happen to be in the parsed JSON.
+            mergeHookRequestMutation(newRenderedRequest, mutated);
             continue;
           }
           const context = {

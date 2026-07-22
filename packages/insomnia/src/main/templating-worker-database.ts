@@ -19,7 +19,7 @@ import type {
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
 import { getPluginCommonContext, getTemplateTags } from '~/plugins';
-import type { PluginExportManifest } from '~/templating/sandbox/marshal';
+import { HOOK_REQUEST_FIELDS, type PluginExportManifest, stripDangerousKeysReviver } from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
@@ -406,25 +406,6 @@ export const discoverUserPluginExportsForLoader = async (body: {
   });
 };
 
-// The serializable RenderedRequest fields a request hook may read or mutate — the subset marshaled
-// into and out of the sandbox (mirrors what plugins/context/request.ts touches on the request).
-const HOOK_REQUEST_FIELDS = [
-  '_id',
-  'name',
-  'url',
-  'method',
-  'headers',
-  'parameters',
-  'authentication',
-  'body',
-  'cookies',
-  'settingSendCookies',
-  'settingStoreCookies',
-  'settingEncodeUrl',
-  'settingDisableRenderRequestBody',
-  'settingFollowRedirects',
-] as const;
-
 const pickHookRequestFields = (req: Record<string, any>): Record<string, any> => {
   const out: Record<string, any> = {};
   for (const key of HOOK_REQUEST_FIELDS) {
@@ -473,7 +454,7 @@ export const runRequestHookInSandbox = async (
       hookRequest,
     },
   });
-  const result = JSON.parse(json) as { request?: Record<string, any> };
+  const result = JSON.parse(json, stripDangerousKeysReviver) as { request?: Record<string, any> };
   return result.request ?? hookRequest;
 };
 

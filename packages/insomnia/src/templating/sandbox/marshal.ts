@@ -65,6 +65,57 @@ export interface HookResult {
   response?: Record<string, unknown>;
 }
 
+// The serializable RenderedRequest fields a request hook may read or mutate — the subset marshaled
+// into and out of the sandbox (mirrors what plugins/context/request.ts touches on the request).
+// Shared between the host side (`main/templating-worker-database.ts`, which marshals a request in
+// and merges the mutation back for the main/CLI runtime) and the renderer side
+// (`plugins/invoke-method.ts`, which does the same for the plugin-window runtime) so both merge
+// call sites enforce the identical allowlist rather than duplicating (and risking drifting) it.
+export const HOOK_REQUEST_FIELDS = [
+  '_id',
+  'name',
+  'url',
+  'method',
+  'headers',
+  'parameters',
+  'authentication',
+  'body',
+  'cookies',
+  'settingSendCookies',
+  'settingStoreCookies',
+  'settingEncodeUrl',
+  'settingDisableRenderRequestBody',
+  'settingFollowRedirects',
+] as const;
+
+// Property names that, if present as an *own* key on an object parsed from untrusted JSON, are a
+// prototype-pollution primitive waiting for a future unsafe consumer ([[Set]]-based merge,
+// `for...in` assignment, etc.) — see H1-HOOK-SANDBOX-SECURITY-REVIEW.md, finding 2. A hook can
+// plant such a key on a nested value (e.g. `context.request.setBody(JSON.parse('{"__proto__":
+// {...}}'))`) using computed-key construction, which survives a plain `JSON.parse` as a real own
+// property rather than the accessor. Dropping it via a reviver (returning `undefined` deletes the
+// key, per the JSON.parse spec) neutralizes it at every depth, at the exact boundary where
+// untrusted sandbox output re-enters trusted host memory.
+const DANGEROUS_JSON_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/** `JSON.parse` reviver that drops `__proto__`/`constructor`/`prototype` own-keys at any depth. */
+export const stripDangerousKeysReviver = (key: string, value: unknown): unknown =>
+  DANGEROUS_JSON_KEYS.has(key) ? undefined : value;
+
+/**
+ * Merges a hook's mutated request fields back onto the live request the host is building, one
+ * allowlisted field at a time — never a blanket `Object.assign`/spread of the parsed object,
+ * which would trust whatever top-level keys happen to be present in `mutated` rather than only
+ * the fields a hook is actually permitted to touch.
+ */
+export const mergeHookRequestMutation = (target: Record<string, any>, mutated: Record<string, any>): void => {
+  for (const key of HOOK_REQUEST_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(mutated, key)) {
+      target[key] = mutated[key];
+    }
+  }
+};
+
 /** A discovered template-tag's serializable metadata (no `run`, no other function members). */
 export interface TemplateTagDescriptor {
   name?: string;
