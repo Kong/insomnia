@@ -57,6 +57,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
+import { dedupeCollectionItems } from '~/ui/utils/dedupe-collection-items';
 import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
 
 import { Icon } from '../../icon';
@@ -74,6 +75,9 @@ import type { FlatItem } from './types';
 import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
+
+const getSidebarGridListItemId = (item: FlatItem): string =>
+  `${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`;
 
 interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
@@ -354,10 +358,11 @@ const ProjectNavigationSidebarInner = (
       for (const file of files) {
         const projectId = remoteIdToProjectIdMap.get(file.teamProjectId);
         if (projectId) {
-          if (!filesByProjectId.has(projectId)) {
-            filesByProjectId.set(projectId, []);
+          const projectFiles = filesByProjectId.get(projectId) ?? [];
+          if (projectFiles.some(f => f.id === file.rootDocumentId)) {
+            continue;
           }
-          filesByProjectId.get(projectId)?.push({
+          projectFiles.push({
             id: file.rootDocumentId,
             name: file.name,
             scope: 'unsynced',
@@ -366,6 +371,7 @@ const ProjectNavigationSidebarInner = (
             created: 0,
             lastModifiedTimestamp: 0,
           });
+          filesByProjectId.set(projectId, projectFiles);
         }
       }
 
@@ -996,13 +1002,16 @@ const ProjectNavigationSidebarInner = (
   const [isShortcutCreateOpen, setIsShortcutCreateOpen] = useState(false);
   // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
-  const visibleFlatItems = useMemo(() => flatItems.filter(i => !i.hidden), [flatItems]);
+  const visibleFlatItems = useMemo(
+    () => dedupeCollectionItems(flatItems.filter(i => !i.hidden), getSidebarGridListItemId),
+    [flatItems],
+  );
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
     count: visibleFlatItems.length,
     estimateSize: useCallback(() => 32, []),
     overscan: 30,
-    getItemKey: index => visibleFlatItems[index].doc._id,
+    getItemKey: index => getSidebarGridListItemId(visibleFlatItems[index]),
   });
   const sidebarDragAndDropHooks = useSidebarDragAndDrop({
     flatItems,
@@ -1245,9 +1254,8 @@ const ProjectNavigationSidebarInner = (
 
                 return (
                   <GridListItem
-                    // Prefix pinned-request to the key and id to ensure pinned items have a different key and id from non-pinned items with the same doc._id
-                    key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
-                    id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
+                    key={getSidebarGridListItemId(item)}
+                    id={getSidebarGridListItemId(item)}
                     textValue={item.doc.name || item.kind}
                     onAuxClick={e => {
                       if (e.button === 1 && item.kind === 'collectionChild') {
