@@ -213,16 +213,13 @@ export const FirstRequestCreation = ({
     handleCreateRequest();
   };
 
-  // Update the input value, clear any stale error, and keep the method dropdown in
-  // sync when the value is a cURL command. Only touches the method while the input
-  // is recognized as a cURL command, so a manually-selected method (via the dropdown)
-  // is left alone when typing a plain URL.
+  // Update the input value and clear any stale error. Doesn't touch the method
+  // dropdown, so typing out a cURL command by hand doesn't flip the method
+  // mid-keystroke — that preview sync only happens when a cURL command is pasted
+  // (see the input's onPaste handler).
   const applyRequestInput = (value: string) => {
     setRequestInput(value);
     setErrorText(null);
-    if (isCurlCommand(value)) {
-      setMethod(extractCurlMethod(value));
-    }
   };
 
   const handleCreateBlankRequest = () => {
@@ -563,7 +560,7 @@ export const FirstRequestCreation = ({
             <input
               ref={inputRef}
               aria-label="Request endpoint or cURL input"
-              className="h-6.5 min-w-0 flex-1 bg-transparent px-1 text-[12px]/[18px] font-normal"
+              className="h-6.5 min-w-0 flex-1 bg-transparent px-1 text-[12px]/[18px] font-normal outline-none"
               placeholder="Enter a URL or paste cURL"
               value={requestInput}
               onChange={event => applyRequestInput(event.target.value)}
@@ -571,9 +568,11 @@ export const FirstRequestCreation = ({
                 const pasted = event.clipboardData.getData('text');
                 // Flatten a pasted multi-line cURL into a single line ourselves so it
                 // stays a valid command (the native single-line paste would drop the newlines).
-                if (/\r?\n/.test(pasted) && isCurlCommand(pasted)) {
+                const value = /\r?\n/.test(pasted) ? flattenCurlCommand(pasted) : pasted;
+                if (isCurlCommand(value)) {
                   event.preventDefault();
-                  applyRequestInput(flattenCurlCommand(pasted));
+                  applyRequestInput(value);
+                  setMethod(extractCurlMethod(value));
                 }
               }}
               onKeyDown={createKeybindingsHandler({
