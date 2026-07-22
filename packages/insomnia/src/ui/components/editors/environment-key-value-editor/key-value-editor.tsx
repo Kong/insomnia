@@ -102,6 +102,12 @@ export const EnvironmentKVEditor = ({
     () => ({ id: blankId, name: '', value: '', type: EnvironmentKvPairDataType.STRING, enabled: true }),
     [blankId],
   );
+  const uncommittedBlankRef = useRef<EnvironmentKvPairData | null>(null);
+  const prevBlankIdRef = useRef(blankId);
+  if (prevBlankIdRef.current !== blankId) {
+    prevBlankIdRef.current = blankId;
+    uncommittedBlankRef.current = null;
+  }
   // The blank row is purely visual - it is not persisted (so it never shows up in
   // diffs) until the user starts typing in it.
   const kvPairs: EnvironmentKvPairData[] = useMemo(() => [...persistedPairs, blankPair], [persistedPairs, blankPair]);
@@ -213,7 +219,8 @@ export const EnvironmentKVEditor = ({
     // Editing the blank row commits it as a real pair. A fresh blank row appears on the
     // next render once the persisted data updates (blankId is derived from it).
     if (id === blankId) {
-      const newPair: EnvironmentKvPairData = { ...blankPair, enabled: true, [changedPropertyName]: newValue };
+      const base = uncommittedBlankRef.current ?? blankPair;
+      const newPair: EnvironmentKvPairData = { ...base, enabled: true, [changedPropertyName]: newValue };
       if (newValue === EnvironmentKvPairDataType.JSON && newPair.value.trim() === '') {
         newPair.value = JSON.stringify({});
       }
@@ -227,6 +234,7 @@ export const EnvironmentKVEditor = ({
       if (isNameOrValueChange && !newPair.name && !newPair.value) {
         return;
       }
+      uncommittedBlankRef.current = newPair;
       onChange([...persistedPairs, newPair]);
       return;
     }
