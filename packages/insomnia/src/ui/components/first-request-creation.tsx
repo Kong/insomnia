@@ -631,7 +631,7 @@ export const FirstRequestCreation = ({
           </div>
 
           {treatment === 'A' && (
-            <div className="mt-1 flex flex-wrap gap-x-10 gap-y-6">
+            <div className="mt-1 mb-3 flex flex-wrap gap-x-10 gap-y-6">
               <div>
                 <p className="text-sm font-semibold text-(--hl)">Quick actions</p>
                 <div className="mt-2 flex flex-wrap gap-2">{quickActions.map(renderQuickStartButton)}</div>
