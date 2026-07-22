@@ -435,20 +435,20 @@ export async function getRenderContext({
     getKeySource(
       rootGlobalEnvironment.data || {},
       inKey,
-      `${rootGlobalEnvironment.name || 'Base Environment'} (Project Base)`,
+      rootGlobalEnvironment.name || 'Base Environment',
     );
   }
 
   if (subGlobalEnvironment) {
-    getKeySource(subGlobalEnvironment.data || {}, inKey, `${subGlobalEnvironment.name || 'Environment'} (Project Sub)`);
+    getKeySource(subGlobalEnvironment.data || {}, inKey, `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`);
   }
 
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, `${rootEnvironment?.name || 'Base Environment'} (Collection Base)`);
+  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment');
 
   // Get Keys from sub environment
   if (subEnvironment) {
-    getKeySource(subEnvironment.data || {}, inKey, `${subEnvironment.name || 'Environment'} (Collection Sub)`);
+    getKeySource(subEnvironment.data || {}, inKey, `${subEnvironment.name || 'Environment'} (Collection Sub-Environment)`);
   }
 
   // Get Keys from ancestors (e.g. Folders)
