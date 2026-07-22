@@ -451,6 +451,9 @@ const main: Window['main'] = {
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
   notifyPromptResult: (id: string, value: string | null) => ipcRenderer.send('ui.promptResult', { id, value }),
+  templatingDb: {
+    getAuthToken: () => invokeWithNormalizedError('templatingDb.getAuthToken'),
+  },
   timeline: {
     getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
     appendToFile: (options: { timelinePath: string; data: string }) =>

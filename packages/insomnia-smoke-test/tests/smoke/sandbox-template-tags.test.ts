@@ -121,7 +121,12 @@ const writePlugin = (dataPath: string, name: string, insomnia: unknown, indexJs:
 };
 
 // Seed the once-only guard for the persistent "Plugin system updated" toast (it intercepts pointer
-// events over the page) and dismiss any toast already in flight, before driving the UI.
+// events over the page) and dismiss any toast already in flight, before driving the UI. The toast
+// can re-render mid-dismiss (its DOM node gets swapped out during its exit transition), which made
+// a plain `.click()` here flake: Playwright's actionability wait would see the button go from
+// stable -> detached and retry forever, eventually blowing the whole test's timeout. `force: true`
+// skips that stability wait (fires the click at whatever is there right now), and the loop is
+// bounded by wall-clock time instead of trusting the button count to reach zero.
 const clearPluginToast = async (page: Page) => {
   await page.getByLabel('Import').waitFor();
   await page.evaluate(() => localStorage.setItem('plugin-system-changes-toast-shown', 'true'));
@@ -130,8 +135,9 @@ const clearPluginToast = async (page: Page) => {
     .first()
     .waitFor({ timeout: 3000 })
     .catch(() => {});
-  while ((await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click();
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline && (await dismissButtons.count()) > 0) {
+    await dismissButtons.first().click({ force: true, timeout: 500 }).catch(() => {});
   }
 };
 
@@ -159,21 +165,7 @@ test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sa
   insomnia,
 }) => {
   installProbePlugin(dataPath);
-
-  // The persistent "Plugin system updated" notification fires from a Root mount effect whenever
-  // user plugins exist on disk, and its toast region intercepts pointer events over the page.
-  // Seed its once-only guard so route remounts can't re-raise it, then clear any toast already
-  // in flight before driving the UI.
-  await page.getByLabel('Import').waitFor();
-  await page.evaluate(() => localStorage.setItem('plugin-system-changes-toast-shown', 'true'));
-  const dismissButtons = page.getByRole('button', { name: 'Dismiss' });
-  await dismissButtons
-    .first()
-    .waitFor({ timeout: 3000 })
-    .catch(() => {});
-  while ((await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click();
-  }
+  await clearPluginToast(page);
 
   // Import a collection whose request body contains the probe tags (the tags render as pills
   // lexically, so importing before the plugin is registered is fine).

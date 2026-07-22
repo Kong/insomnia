@@ -94,10 +94,12 @@ export async function applyRequestHooks(
     try {
       if (sandboxEnabled && plugin.directory !== '') {
         const { runRequestHookInSandbox } = await import('../../main/templating-worker-database');
+        const { mergeHookRequestMutation } = await import('../../templating/sandbox/marshal');
         // The hook mutates the request in the sandbox; merge the returned fields back so the next
         // hook (and the send pipeline) sees the mutation, exactly like the in-place path below.
+        // Only copies the allowlisted request fields a hook is permitted to touch.
         const mutated = await runRequestHookInSandbox(plugin, hookIndex, newRenderedRequest, renderedContext);
-        Object.assign(newRenderedRequest, mutated);
+        mergeHookRequestMutation(newRenderedRequest, mutated);
         continue;
       }
       const context = {

@@ -65,6 +65,44 @@ export interface HookResult {
   response?: Record<string, unknown>;
 }
 
+// The serializable RenderedRequest fields a request hook may read or mutate, marshaled into and
+// out of the sandbox. Shared by the main-process and plugin-window merge call sites so both
+// enforce the same allowlist instead of duplicating it.
+export const HOOK_REQUEST_FIELDS = [
+  '_id',
+  'name',
+  'url',
+  'method',
+  'headers',
+  'parameters',
+  'authentication',
+  'body',
+  'cookies',
+  'settingSendCookies',
+  'settingStoreCookies',
+  'settingEncodeUrl',
+  'settingDisableRenderRequestBody',
+  'settingFollowRedirects',
+] as const;
+
+// A hook can plant one of these as an own key on a nested value via computed-key JSON
+// construction (e.g. `JSON.parse('{"__proto__":{...}}')`), which survives a plain `JSON.parse`
+// as a real own property. `stripDangerousKeysReviver` drops any of them at any depth.
+const DANGEROUS_JSON_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/** `JSON.parse` reviver that drops `__proto__`/`constructor`/`prototype` own-keys at any depth. */
+export const stripDangerousKeysReviver = (key: string, value: unknown): unknown =>
+  DANGEROUS_JSON_KEYS.has(key) ? undefined : value;
+
+/** Merges a hook's mutated request fields back onto the live request, one allowlisted field at a time. */
+export const mergeHookRequestMutation = (target: Record<string, any>, mutated: Record<string, any>): void => {
+  for (const key of HOOK_REQUEST_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(mutated, key)) {
+      target[key] = mutated[key];
+    }
+  }
+};
+
 /** A discovered template-tag's serializable metadata (no `run`, no other function members). */
 export interface TemplateTagDescriptor {
   name?: string;

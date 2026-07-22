@@ -8,6 +8,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
+import { setTemplatingDbAuthToken } from '~/common/templating/liquid-extension-worker';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
@@ -28,6 +29,9 @@ import { initializeSentry } from './ui/sentry';
 import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
 
 initializeSentry();
+
+// Fetch the templating-db auth token once so it's available for every templating call in this window.
+setTemplatingDbAuthToken(await window.main.templatingDb.getAuthToken());
 
 // Initialize database for renderer process
 await initDatabase(clientDatabase);

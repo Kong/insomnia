@@ -37,9 +37,18 @@ export function decodeEncodingWorker<T>(value: T) {
   return value;
 }
 
+// Set by each JS realm that calls fetchFromTemplateWorkerDatabase, since none of them share
+// module state with each other.
+let templatingDbAuthToken: string | null = null;
+
+export const setTemplatingDbAuthToken = (token: string | null) => {
+  templatingDbAuthToken = token;
+};
+
 export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths, body: any) => {
   const resp = await fetch('insomnia-templating-worker-database://' + path, {
     method: 'post',
+    headers: templatingDbAuthToken ? { 'x-insomnia-templating-auth': templatingDbAuthToken } : undefined,
     body: JSON.stringify(body),
   });
   let result;
