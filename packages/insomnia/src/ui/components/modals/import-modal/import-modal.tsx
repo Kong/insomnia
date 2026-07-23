@@ -19,6 +19,8 @@ import {
   findExistingImportedWorkspace,
   findRequestInExistingWorkspace,
   type ImportSourceType,
+  isApiSpecScanResult,
+  requiresNewWorkspace,
   type ScanResult,
 } from '../../../../common/import';
 import {
@@ -33,14 +35,7 @@ import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
-import {
-  CurlIcon,
-  isApiSpecScanResult,
-  requiresNewWorkspace,
-  ScanResultsTable,
-  SupportedFormats,
-  validImportExtensions,
-} from './shared';
+import { CurlIcon, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 export const Radio: FC<{
   name: string;
@@ -383,7 +378,6 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
-            autoScan={autoScan}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -640,7 +634,6 @@ const ImportResourcesForm = ({
   errors,
   disabled,
   loading,
-  autoScan,
   isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
@@ -653,17 +646,15 @@ const ImportResourcesForm = ({
   ) => void;
   disabled: boolean;
   loading: boolean;
-  autoScan: boolean;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
-    workspaceId: string;
   };
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(autoScan ? '' : workspaceId || '');
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   const [newProjectName, setNewProjectName] = useState(() => {
     for (const result of scanResults) {
