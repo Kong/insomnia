@@ -95,7 +95,10 @@ describe('request hooks in the sandbox (H1)', () => {
     const bridge: HostBridge = async (path, body) => {
       bridgeCalls.push({ path, body });
       if (path === 'response.getBodyBuffer') {
-        return 'ORIGINAL';
+        // The real host returns a Node Buffer, which the JSON bridge marshals as
+        // { type: 'Buffer', data: [...] }. Return that exact shape (not a bare string) so the
+        // sandbox getBody() Buffer-revive is actually exercised.
+        return { type: 'Buffer', data: Array.from(Buffer.from('ORIGINAL', 'utf8')) };
       }
       if (path === 'response.setBody') {
         return null;
@@ -118,7 +121,8 @@ describe('request hooks in the sandbox (H1)', () => {
           if (typeof context.request.setHeader !== 'undefined') { throw new Error('request should be read-only in a response hook'); }
           var status = context.response.getStatusCode();
           var ctype = context.response.getHeader('content-type');
-          var original = await context.response.getBody();
+          // getBody() resolves to a (revived) Buffer, exactly like the in-process response API; decode it.
+          var original = (await context.response.getBody()).toString('utf8');
           context.response.setBody('rewritten:' + status + ':' + ctype + ':' + original);
         }];`,
       },
