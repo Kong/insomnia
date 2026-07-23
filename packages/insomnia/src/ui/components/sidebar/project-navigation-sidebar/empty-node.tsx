@@ -7,6 +7,7 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-compone
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { createRequestOrFolderActionItems } from '~/ui/components/dropdowns/actions/create-actions';
 import { showModal } from '~/ui/components/modals';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
@@ -19,6 +20,8 @@ import type { EmptyNodeFlatItem } from './types';
 interface EmptyNodeProps {
   item: EmptyNodeFlatItem;
   storageRules: StorageRules;
+  // Number of ancestor indent levels to strip (see RequestNode) for collection-focus mode.
+  depthOffset?: number;
 }
 
 interface ActionItem {
@@ -29,7 +32,91 @@ interface ActionItem {
   action: () => void;
 }
 
-export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
+// Shared "+ Create" button for a collection: offers creating a folder or a
+// request of any type, mirroring the collection context menu. Used both in the
+// empty-collection/empty-folder rows and in the collection-focus sidebar header
+// so the two stay identical.
+export const CollectionCreateButton = ({
+  organizationId,
+  projectId,
+  workspaceId,
+  parentId,
+  ariaLabel = 'Create request or folder',
+}: {
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
+  parentId?: string;
+  ariaLabel?: string;
+}) => {
+  const newRequestFetcher = useRequestNewActionFetcher();
+  const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
+  const targetParentId = parentId ?? workspaceId;
+
+  const createRequest = (requestType: CreateRequestType) => {
+    newRequestFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestType,
+      parentId: targetParentId,
+    });
+  };
+
+  const createFolder = () => {
+    showModal(PromptModal, {
+      title: 'New Folder',
+      defaultValue: 'My Folder',
+      submitName: 'Create',
+      label: 'Name',
+      selectText: true,
+      onComplete: (name: string) =>
+        newRequestGroupFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          parentId: targetParentId,
+          name,
+        }),
+    });
+  };
+
+  const actions = createRequestOrFolderActionItems({ createRequest, createFolder, folderFirst: true });
+
+  return (
+    <MenuTrigger>
+      <Button
+        aria-label={ariaLabel}
+        className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+      >
+        <Icon icon="plus" /> <span className="hidden md:block">Create</span>
+      </Button>
+      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+        <Menu
+          aria-label={`${ariaLabel} actions`}
+          selectionMode="single"
+          onAction={key => actions.find(action => action.id === key)?.action()}
+          items={actions}
+          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+        >
+          {item => (
+            <MenuItem
+              key={item.id}
+              id={item.id}
+              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+              aria-label={item.name}
+            >
+              <Icon icon={item.icon} className="h-4 w-3" />
+              <span>{item.name}</span>
+            </MenuItem>
+          )}
+        </Menu>
+      </Popover>
+    </MenuTrigger>
+  );
+};
+
+export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProps) => {
   const { organizationId, project, workspace, requestGroup, level = 0, kind } = item;
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
@@ -47,102 +134,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
     setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar' });
   const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar' });
 
-  const newRequestFetcher = useRequestNewActionFetcher();
-  const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
   const parentId = requestGroup?._id || workspace?._id || project._id;
-
-  const createRequest = ({ requestType }: { requestType: CreateRequestType }) => {
-    if (!workspace) return;
-    newRequestFetcher.submit({
-      organizationId,
-      projectId: project._id,
-      workspaceId: workspace._id,
-      requestType,
-      parentId,
-    });
-  };
-
-  const createFolder = () => {
-    if (!workspace) return;
-    showModal(PromptModal, {
-      title: 'New Folder',
-      defaultValue: 'My Folder',
-      submitName: 'Create',
-      label: 'Name',
-      selectText: true,
-      onComplete: (name: string) =>
-        newRequestGroupFetcher.submit({
-          organizationId,
-          projectId: project._id,
-          workspaceId: workspace._id,
-          parentId,
-          name,
-        }),
-    });
-  };
-
-  const createRequestActionItems: ActionItem[] = [
-    {
-      id: 'New Folder',
-      name: 'New Folder',
-      icon: 'folder',
-      action: createFolder,
-    },
-    {
-      id: 'HTTP',
-      name: 'HTTP Request',
-      icon: 'plus-circle',
-      action: () =>
-        createRequest({
-          requestType: 'HTTP',
-        }),
-    },
-    {
-      id: 'Event Stream',
-      name: 'Event Stream Request (SSE)',
-      icon: 'plus-circle',
-      action: () =>
-        createRequest({
-          requestType: 'Event Stream',
-        }),
-    },
-    {
-      id: 'GraphQL Request',
-      name: 'GraphQL Request',
-      icon: 'plus-circle',
-      action: () =>
-        createRequest({
-          requestType: 'GraphQL',
-        }),
-    },
-    {
-      id: 'gRPC Request',
-      name: 'gRPC Request',
-      icon: 'plus-circle',
-      action: () =>
-        createRequest({
-          requestType: 'gRPC',
-        }),
-    },
-    {
-      id: 'WebSocket Request',
-      name: 'WebSocket Request',
-      icon: 'plus-circle',
-      action: () =>
-        createRequest({
-          requestType: 'WebSocket',
-        }),
-    },
-    {
-      id: 'Socket.IO Request',
-      name: 'Socket.IO Request',
-      icon: 'plus-circle',
-      action: () =>
-        createRequest({
-          requestType: 'SocketIO',
-        }),
-    },
-  ];
 
   const createInProjectActionList: ActionItem[] = [
     {
@@ -218,68 +210,87 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
     }
   };
 
-  const paddingLeft = kind === 'emptyProject' ? '2em' : `${level + 3}rem`;
+  const paddingLeft = kind === 'emptyProject' ? '2em' : `${Math.max(level + 3 - depthOffset, 1)}rem`;
 
   return (
     <div className={ROW_CLASS} style={{ paddingLeft }} data-testid={`empty-node-${kind}`}>
       <Button slot="drag" className="hidden" />
-      <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
-      {kind !== 'emptyProject' && <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />}
+      {kind === 'emptyProject' ? (
+        <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
+      ) : (
+        [1.5, 2.5]
+          .map(pos => pos - depthOffset)
+          .filter(pos => pos > 0)
+          .map(pos => (
+            <span
+              key={pos}
+              className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`}
+              style={{ left: `${pos}em` }}
+            />
+          ))
+      )}
       {kind === 'emptyFolder' &&
-        Array.from({ length: level + 2 }, (_, i) => (
-          <span
-            key={i}
-            className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`}
-            style={{ left: `${i + 1.5}em` }}
-          />
-        ))}
+        Array.from({ length: level + 2 }, (_, i) => i)
+          .filter(i => i >= depthOffset)
+          .map(i => (
+            <span
+              key={i}
+              className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`}
+              style={{ left: `${i + 1.5 - depthOffset}em` }}
+            />
+          ))}
       <span className={`${kind === 'emptyFolder' ? 'ml-7' : 'ml-3'} min-w-0 flex-1 truncate text-sm`}>
         {getLabel()}
       </span>
-      <MenuTrigger>
-        <Button
-          aria-label={`Create in ${getAriaLabel()}`}
-          className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-        >
-          <Icon icon="plus" /> <span className="hidden md:block">Create</span>
-        </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden">
-          <Menu
-            aria-label={`Create in ${getAriaLabel()} actions`}
-            selectionMode="single"
-            onAction={key => {
-              const item = (kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems).find(
-                item => item.id === key,
-              );
-              if (item) {
-                item.action();
-              }
-            }}
-            items={kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems}
-            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+      {kind === 'emptyProject' ? (
+        <MenuTrigger>
+          <Button
+            aria-label={`Create in ${getAriaLabel()}`}
+            className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
-            {item => (
-              <MenuItem
-                key={item.id}
-                id={item.id}
-                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                aria-label={item.name}
-              >
-                {item.scope ? (
-                  <div
-                    className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
-                  >
-                    <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
-                  </div>
-                ) : (
-                  <Icon icon={item.icon} className="h-4 w-3" />
-                )}
-                <span>{item.name}</span>
-              </MenuItem>
-            )}
-          </Menu>
-        </Popover>
-      </MenuTrigger>
+            <Icon icon="plus" /> <span className="hidden md:block">Create</span>
+          </Button>
+          <Popover className="flex min-w-max flex-col overflow-y-hidden">
+            <Menu
+              aria-label={`Create in ${getAriaLabel()} actions`}
+              selectionMode="single"
+              onAction={key => createInProjectActionList.find(item => item.id === key)?.action()}
+              items={createInProjectActionList}
+              className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+            >
+              {item => (
+                <MenuItem
+                  key={item.id}
+                  id={item.id}
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                  aria-label={item.name}
+                >
+                  {item.scope ? (
+                    <div
+                      className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                    >
+                      <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                    </div>
+                  ) : (
+                    <Icon icon={item.icon} className="h-4 w-3" />
+                  )}
+                  <span>{item.name}</span>
+                </MenuItem>
+              )}
+            </Menu>
+          </Popover>
+        </MenuTrigger>
+      ) : kind === 'emptyFolder' ? (
+        workspace && (
+          <CollectionCreateButton
+            organizationId={organizationId}
+            projectId={project._id}
+            workspaceId={workspace._id}
+            parentId={parentId}
+            ariaLabel={`Create in ${getAriaLabel()}`}
+          />
+        )
+      ) : null}
       {newWorkspaceModalState?.isOpen && (
         <NewWorkspaceModal
           isOpen
