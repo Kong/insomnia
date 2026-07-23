@@ -22,7 +22,7 @@ vi.mock('insomnia-data', () => ({
     workspace: { getById: vi.fn() },
     oAuth2Token: { getByParentId: vi.fn() },
     cookieJar: { getOrCreateForParentId: vi.fn() },
-    response: { getLatestForRequestId: vi.fn() },
+    response: { getLatestForRequestId: vi.fn(), getByBodyPath: vi.fn() },
     helpers: { getResponseBodyBuffer: vi.fn() },
     pluginData: { getByKey: vi.fn(), upsertByKey: vi.fn(), removeByKey: vi.fn(), removeAll: vi.fn(), all: vi.fn() },
     cloudCredential: { getById: vi.fn(), update: vi.fn() },
@@ -328,27 +328,19 @@ describe('plugin.discoverUserPluginExports resolves `permissions.modules` from t
   });
 });
 
-// New finding (PR #10286, response hooks): `plugin.runUserResponseHook` resolves `directory` and
-// `permissions` from the trusted registry (mirroring the request-hook fix above), but the `response`
-// object — including `bodyPath`, the on-disk file `context.response.setBody()` will write to — is
-// still taken verbatim from the caller-supplied request body. Unlike the request-hook path (which only
-// ever mutates in-memory fields), a response hook's `setBody()` performs a real filesystem write keyed
-// off that `bodyPath`. The host handler for `response.setBody` (templating-worker-database.ts) only
-// checks the resolved path stays *within* the app's `responses/` directory — it never checks that the
-// path belongs to the specific response the caller claims to be processing. So a forged call naming any
-// real, installed plugin that has a response hook can redirect that hook's `setBody()` write to a
-// *different* response's body file elsewhere in the same directory, corrupting data outside the current
-// render entirely. This is the write-side counterpart of the already-documented (read-only) bodyPath
-// trust gap in CROSS-TENANT-DB-ACCESS-FINDINGS.md's Finding 1 — new in kind here because the write
-// primitive (`response.setBody`) did not exist before this PR.
-describe('plugin.runUserResponseHook trusts caller-supplied `response.bodyPath`, not tied to the response being rendered', () => {
+// Fixed finding (PR #10286): a response hook's `setBody()` writes to a caller-supplied `bodyPath`
+// with no persisted `_id` to reload by, so `assertResponseBodyPathOwnership` instead rejects the call
+// if that bodyPath already belongs to a different, already-persisted response's `parentId`. This
+// doesn't close the narrower case of a caller who also knows the victim's real `parentId` — that's
+// the deeper gap tracked in `CROSS-TENANT-DB-ACCESS-FINDINGS.md`.
+describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a different response', () => {
   let pluginDir: string;
   let responsesDir: string;
   let ownBodyPath: string;
   let victimBodyPath: string;
   let previousDataPath: string | undefined;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     _testOnlyResetTemplatingDbAuthToken();
     pluginDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-resphook-'));
     fs.writeFileSync(path.join(pluginDir, 'package.json'), JSON.stringify({ main: 'index.js' }));
@@ -369,6 +361,10 @@ describe('plugin.runUserResponseHook trusts caller-supplied `response.bodyPath`,
 
     previousDataPath = process.env['INSOMNIA_DATA_PATH'];
     process.env['INSOMNIA_DATA_PATH'] = dataDir;
+
+    // Default: neither bodyPath is owned yet; individual tests override to simulate a claimed one.
+    const { services } = await import('insomnia-data');
+    (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -381,7 +377,7 @@ describe('plugin.runUserResponseHook trusts caller-supplied `response.bodyPath`,
     fs.rmSync(path.dirname(responsesDir), { recursive: true, force: true });
   });
 
-  const runResponseHook = async (bodyPath: string) => {
+  const runResponseHook = async (bodyPath: string, parentId = 'req_1') => {
     const token = getOrCreateTemplatingDbAuthToken();
     const { getPlugins } = await import('~/plugins');
     (getPlugins as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
@@ -394,7 +390,7 @@ describe('plugin.runUserResponseHook trusts caller-supplied `response.bodyPath`,
       body: JSON.stringify({
         plugin: { name: 'insomnia-plugin-resphook' },
         hookIndex: 0,
-        response: { parentId: 'res_1', bodyPath },
+        response: { parentId, bodyPath },
         renderedRequest: { url: 'https://example.com', headers: [] },
         renderContext: {},
       }),
@@ -402,23 +398,34 @@ describe('plugin.runUserResponseHook trusts caller-supplied `response.bodyPath`,
     return resolveDbByKey(req);
   };
 
-  it('baseline: setBody writes to the response\'s own bodyPath as intended', async () => {
-    const res = await runResponseHook(ownBodyPath);
+  it('baseline: setBody writes to a not-yet-persisted response\'s own bodyPath as intended', async () => {
+    const res = await runResponseHook(ownBodyPath, 'req_1');
     expect(res.status).toBe(200);
     expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('attacker-controlled-body');
     expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
   });
 
-  // Documents the bug: a forged `response.bodyPath` naming a *different* response's on-disk file
-  // (still contained within the responses directory, so the existing path-traversal guard doesn't
-  // reject it) gets overwritten. This assertion passing is the defect, not the desired behavior —
-  // fixing the handler to tie `bodyPath` to a trusted, caller-independent response identity should
-  // turn this into a rejection (mirroring how the `directory`/`permissions` regression tests above
-  // were written before those fixes landed).
-  it('BUG: a forged `response.bodyPath` naming a different response is overwritten instead of rejected', async () => {
-    const res = await runResponseHook(victimBodyPath);
+  it('allows re-writing a bodyPath that legitimately already belongs to the same parentId', async () => {
+    const { services } = await import('insomnia-data');
+    (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      _id: 'res_own', parentId: 'req_1', bodyPath: ownBodyPath,
+    });
+    const res = await runResponseHook(ownBodyPath, 'req_1');
     expect(res.status).toBe(200);
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('attacker-controlled-body');
+    expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('attacker-controlled-body');
+  });
+
+  it('FIXED: rejects a forged `response.bodyPath` that belongs to a different response, before the hook runs', async () => {
+    const { services } = await import('insomnia-data');
+    (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath,
+    });
+    // The forged call's parentId ('req_1') doesn't match victimBodyPath's real owner ('req_victim').
+    const res = await runResponseHook(victimBodyPath, 'req_1');
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toMatch(/belongs to a different response/);
+    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
     expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('own-original-body');
   });
 
@@ -430,11 +437,36 @@ describe('plugin.runUserResponseHook trusts caller-supplied `response.bodyPath`,
       // The plugin hook doesn't await setBody()'s returned promise (fire-and-forget), so a rejected
       // bridge call never surfaces as a non-200 response here — but the containment check still runs
       // before any write, so the file outside `responses/` is provably never touched either way.
-      await runResponseHook(outsidePath);
+      await runResponseHook(outsidePath, 'req_1');
       expect(fs.readFileSync(outsidePath, 'utf8')).toBe('untouched');
     } finally {
       fs.rmSync(outsideDir, { recursive: true, force: true });
     }
+  });
+
+  // Regression: the ownership check was originally only in the plugin.runUserResponseHook wrapper,
+  // not in response.setBody itself, which is directly dispatchable without going through it.
+  it('rejects a forged bodyPath+parentId sent directly to response.setBody, bypassing the hook wrapper entirely', async () => {
+    const { services } = await import('insomnia-data');
+    (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath,
+    });
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://response.setbody', {
+      method: 'POST',
+      headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
+      body: JSON.stringify({
+        bodyPath: victimBodyPath,
+        bodyBase64: Buffer.from('attacker-controlled-body', 'utf8').toString('base64'),
+        parentId: 'req_1',
+      }),
+    });
+    const res = await resolveDbByKey(req);
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toMatch(/belongs to a different response/);
+    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
   });
 });
 

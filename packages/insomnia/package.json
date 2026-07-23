@@ -42,7 +42,9 @@
     "sandbox:vendored:upgrade": "esr ./scripts/upgrade-sandbox-vendored.ts",
     "sandbox:vendored:test-regression": "vitest run --config vitest.sandbox-vendored-regression.config.ts",
     "sandbox:surface": "vitest run src/templating/sandbox/print-sandbox-surface.test.ts",
-    "sandbox:surface:test": "vitest run src/templating/sandbox/sandbox-surface.test.ts"
+    "sandbox:surface:test": "vitest run src/templating/sandbox/sandbox-surface.test.ts",
+    "sandbox:bridge-trust": "vitest run src/main/__tests__/print-templating-worker-database-surface.test.ts",
+    "sandbox:bridge-trust:test": "vitest run src/main/__tests__/templating-worker-database-surface.test.ts"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",

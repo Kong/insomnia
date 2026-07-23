@@ -465,7 +465,7 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '        if (!resp.bodyPath) { throw new Error("Could not set body without existing body path"); }',
   '        resp.bytesContent = (body && body.length) || 0;',
   '        var b64 = (typeof body === "string") ? Buffer.from(body, "utf8").toString("base64") : Buffer.from(body || []).toString("base64");',
-  '        return __bridge("response.setBody", { bodyPath: resp.bodyPath, bodyBase64: b64 });',
+  '        return __bridge("response.setBody", { bodyPath: resp.bodyPath, bodyBase64: b64, parentId: resp.parentId });',
   '      },',
   '      getHeader: function (name) {',
   '        var headers = resp.headers || [];',
