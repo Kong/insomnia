@@ -135,6 +135,9 @@ async function _highlightNunjucksTags(
       const el = document.createElement('span');
       el.className = `nunjucks-tag ${tok.type}`;
       el.setAttribute('draggable', 'true');
+      // Behavior hook so hover logic can detect tags without coupling to the CSS class name.
+      // See handleEditorMouseMove in one-line-editor.tsx for usage.
+      el.dataset.nunjucksTag = 'true';
       el.dataset.error = 'off';
       el.dataset.template = tok.string;
       el.replaceChildren(document.createElement('label'), document.createTextNode(tok.string));

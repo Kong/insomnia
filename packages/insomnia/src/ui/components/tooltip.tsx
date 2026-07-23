@@ -63,11 +63,13 @@ export const Tooltip = (props: Props) => {
     if (followCursor) {
       cursorPosRef.current = { x: e.clientX, y: e.clientY };
     }
-    if (shouldShow && !shouldShow()) {
-      return;
-    }
     dwellTimeout.current = setTimeout(() => {
       dwellTimeout.current = null;
+      // Re-check right before opening: over the dwell the pointer may have moved to a spot
+      // (e.g. onto a nunjucks tag with its own tooltip) where the tooltip shouldn't show.
+      if (shouldShow && !shouldShow()) {
+        return;
+      }
       state.open(true);
     }, delay);
   };
@@ -75,6 +77,12 @@ export const Tooltip = (props: Props) => {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (followCursor) {
       cursorPosRef.current = { x: e.clientX, y: e.clientY };
+    }
+    // The pointer can move to a spot where the tooltip should no longer show (e.g. from plain
+    // text onto a nunjucks tag with its own tooltip) after it's already open. Re-check and close
+    // so the two tooltips don't double up.
+    if (state.isOpen && shouldShow && !shouldShow()) {
+      state.close(true);
     }
   };
 

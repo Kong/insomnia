@@ -110,6 +110,27 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
 
+    // Update the tooltip value, including rendering the value of a nunjucks tag if necessary
+    const updateTooltipValue = useCallback(
+      async (rawValue: string) => {
+        if (type?.toLowerCase() === 'password') {
+          return;
+        }
+        if (!handleRender || !/{{|{%/.test(rawValue)) {
+          setTooltipValue(rawValue);
+          return;
+        }
+        try {
+          setTooltipValue(await handleRender(rawValue));
+        } catch {
+          // Rendering fails when any tag in the field is invalid. The raw template isn't a useful
+          // preview, so clear it - an empty value suppresses the tooltip via shouldShow.
+          setTooltipValue('');
+        }
+      },
+      [handleRender, type],
+    );
+
     const getKeyMap = useCallback(() => {
       if (!readOnly && settings.enableKeyMapForInlineTextEditors && settings.editorKeyMap) {
         return settings.editorKeyMap;
@@ -257,9 +278,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
       // Actually set the value
       codeMirror.current?.setValue(defaultValue || '');
-      if (type?.toLowerCase() !== 'password') {
-        setTooltipValue(defaultValue || '');
-      }
+      updateTooltipValue(defaultValue || '');
       // Clear history so we can't undo the initial set
       codeMirror.current?.clearHistory();
       // Restore undo/redo history saved before the previous unmount so undo
@@ -297,7 +316,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       eventListeners,
       id,
       historyKey,
-      type,
+      updateTooltipValue,
     ]);
 
     const persistState = useCallback(() => {
@@ -414,11 +433,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         cm.setCursor(cursor);
         // value baseline changed externally, so the old history no longer applies
         cm.clearHistory();
-        if (type?.toLowerCase() !== 'password') {
-          setTooltipValue(defaultValue || '');
-        }
+        updateTooltipValue(defaultValue || '');
       }
-    }, [defaultValue, historyKey, type]);
+    }, [defaultValue, historyKey, type, updateTooltipValue]);
 
     useEffect(() => {
       // Prevent these things if we're type === "password"
@@ -440,13 +457,11 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         if (onChange) {
           onChange(doc.getValue() || '');
         }
-        if (type?.toLowerCase() !== 'password') {
-          setTooltipValue(doc.getValue() || '');
-        }
+        updateTooltipValue(doc.getValue() || '');
       }, DEBOUNCE_MILLIS);
       codeMirror.current?.on('changes', fn);
       return () => codeMirror.current?.off('changes', fn);
-    }, [editorVersion, onChange, type]);
+    }, [editorVersion, onChange, type, updateTooltipValue]);
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
@@ -533,13 +548,23 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       return scrollInfo.width > scrollInfo.clientWidth + CODEMIRROR_SCROLLBAR_MARGIN_PX;
     };
 
+    // Nunjucks tags render their own native (rendered value + source) tooltip on hover. Showing the
+    // whole-field custom tooltip on top of that would double up and only show the raw, unrendered
+    // template text - so suppress the custom tooltip while the pointer is over a tag. This is tracked
+    // per-pointer-position (rather than per-field) so a field mixing plain text and tags still shows
+    // the full-value tooltip when hovering the text portion.
+    const isPointerOverNunjucksTag = useRef(false);
+    const handleEditorMouseMove = (event: React.MouseEvent) => {
+      isPointerOverNunjucksTag.current = Boolean((event.target as HTMLElement)?.closest?.('[data-nunjucks-tag]'));
+    };
+
     return (
       <Tooltip
         message={tooltipValue}
         delay={1000}
         className="h-full w-full"
         followCursor
-        shouldShow={() => Boolean(tooltipValue) && isContentTruncated()}
+        shouldShow={() => Boolean(tooltipValue) && !isPointerOverNunjucksTag.current && isContentTruncated()}
       >
         <div
           className={classnames('editor--single-line', {
@@ -548,6 +573,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           })}
           data-editor-type={type || 'text'}
           data-testid="OneLineEditor"
+          onMouseMove={handleEditorMouseMove}
           onContextMenu={async event => {
             if (readOnly) {
               return;
