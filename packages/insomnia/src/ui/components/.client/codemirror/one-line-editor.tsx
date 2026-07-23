@@ -123,9 +123,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         try {
           setTooltipValue(await handleRender(rawValue));
         } catch {
-          // Rendering fails when any tag in the field is invalid. The raw template isn't a useful
-          // preview, so clear it - an empty value suppresses the tooltip via shouldShow.
-          setTooltipValue('');
+          // Rendering fails when any tag in the field is invalid. Fall back to showing the raw template string that's there.
+          setTooltipValue(rawValue);
         }
       },
       [handleRender, type],
