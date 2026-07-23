@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { findHandlersThatBypassBodyPathOwnership, findUnguardedBodyPathWrites } from '../templating-worker-database-surface';
+import { buildPathNormalizationVariant, findHandlersThatBypassBodyPathOwnership, findUnguardedBodyPathWrites } from '../templating-worker-database-surface';
 
 vi.mock('electron', () => ({
   app: { getVersion: () => '1.0.0', getPath: () => '/fake/userData' },
@@ -163,6 +163,59 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
       attackerParentId: 'req_attacker',
     });
     expect(violations).toEqual([]);
+  });
+
+  // PR #10294 bug class: an ownership check that looks up the caller-supplied bodyPath by exact
+  // string equality (mirroring a real NeDB `findOne({ bodyPath })` lookup), while the write itself
+  // targets `path.resolve(bodyPath)`. A textually different bodyPath that resolves to the identical
+  // absolute file misses the exact-match lookup (no owner found -> no throw) while the write still
+  // lands on the victim file. This is a distinct blind spot from the write-before-check case above:
+  // the check here genuinely runs first and is awaited — it just checks the wrong string.
+  it('detects a fake handler whose ownership check exact-matches bodyPath but writes to the resolved path', async () => {
+    const fakeHandlers = {
+      'fake.checkRawThenWriteResolved': async (body: { bodyPath: string; parentId: string; bodyBase64?: string }) => {
+        const existing = body.bodyPath === victimBodyPath ? { parentId: 'req_victim' } : null;
+        if (existing && existing.parentId !== body.parentId) {
+          throw new Error('body.bodyPath belongs to a different response than the one being processed');
+        }
+        fs.writeFileSync(path.resolve(body.bodyPath), Buffer.from(body.bodyBase64 || '', 'base64'));
+        return null;
+      },
+    };
+    const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
+      victimBodyPath,
+      victimParentId: 'req_victim',
+      attackerParentId: 'req_attacker',
+    });
+    expect(violations).toEqual(['fake.checkRawThenWriteResolved']);
+  });
+
+  // Negative control mirroring the fix: resolving the bodyPath before the ownership lookup (so the
+  // check and the write agree on which file they mean) closes the gap above.
+  it('does not flag a fake handler that resolves the bodyPath before checking ownership', async () => {
+    const fakeHandlers = {
+      'fake.resolveThenCheck': async (body: { bodyPath: string; parentId: string; bodyBase64?: string }) => {
+        const resolved = path.resolve(body.bodyPath);
+        const existing = resolved === victimBodyPath ? { parentId: 'req_victim' } : null;
+        if (existing && existing.parentId !== body.parentId) {
+          throw new Error('body.bodyPath belongs to a different response than the one being processed');
+        }
+        fs.writeFileSync(resolved, Buffer.from(body.bodyBase64 || '', 'base64'));
+        return null;
+      },
+    };
+    const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
+      victimBodyPath,
+      victimParentId: 'req_victim',
+      attackerParentId: 'req_attacker',
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('buildPathNormalizationVariant produces a distinct string that resolves to the same absolute path', () => {
+    const variant = buildPathNormalizationVariant(victimBodyPath);
+    expect(variant).not.toBe(victimBodyPath);
+    expect(path.resolve(variant)).toBe(path.resolve(victimBodyPath));
   });
 });
 

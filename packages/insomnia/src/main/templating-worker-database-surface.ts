@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 // Static detector for the protocol-dispatch/bridge layer (pluginToMainAPI), mirroring
 // sandbox-surface.ts's structured-entry + findX() + formatter pattern but scanning handler source
@@ -71,22 +72,54 @@ export interface BodyPathOwnershipScenario {
   attackerParentId: string;
 }
 
-const bodyPathWriteProbePayloads = (scenario: BodyPathOwnershipScenario): Record<string, unknown>[] => [
-  // Shape used by response.setBody.
-  {
-    bodyPath: scenario.victimBodyPath,
-    parentId: scenario.attackerParentId,
-    bodyBase64: Buffer.from('dynamic-probe-overwrite', 'utf8').toString('base64'),
-  },
-  // Shape used by plugin.runUserResponseHook (bodyPath/parentId nested under `response`).
-  {
-    plugin: { name: '__dynamic-probe-plugin__' },
-    hookIndex: 0,
-    response: { bodyPath: scenario.victimBodyPath, parentId: scenario.attackerParentId },
-    renderedRequest: { url: 'https://example.com', headers: [] },
-    renderContext: {},
-  },
-];
+/**
+ * Builds a bodyPath string that is textually different from the input yet resolves to the exact
+ * same absolute file via `path.resolve()` — which normalizes `.`/`..`/redundant-separator segments
+ * purely lexically, with no filesystem access, so this needs no real directory to exist. Probes for
+ * an ownership check that compares the caller-supplied bodyPath by exact string equality (e.g. an
+ * NeDB `findOne({ bodyPath })` lookup) instead of resolving it first, the same way the path actually
+ * used to perform the write is resolved (PR #10294's `response.setBody` bug class).
+ */
+export const buildPathNormalizationVariant = (bodyPath: string): string => {
+  const dir = path.dirname(bodyPath);
+  const base = path.basename(bodyPath);
+  return `${dir}${path.sep}__insomnia_probe_dir__${path.sep}..${path.sep}${base}`;
+};
+
+const bodyPathWriteProbePayloads = (scenario: BodyPathOwnershipScenario): Record<string, unknown>[] => {
+  const normalizationVariant = buildPathNormalizationVariant(scenario.victimBodyPath);
+  return [
+    // Shape used by response.setBody.
+    {
+      bodyPath: scenario.victimBodyPath,
+      parentId: scenario.attackerParentId,
+      bodyBase64: Buffer.from('dynamic-probe-overwrite', 'utf8').toString('base64'),
+    },
+    // Shape used by plugin.runUserResponseHook (bodyPath/parentId nested under `response`).
+    {
+      plugin: { name: '__dynamic-probe-plugin__' },
+      hookIndex: 0,
+      response: { bodyPath: scenario.victimBodyPath, parentId: scenario.attackerParentId },
+      renderedRequest: { url: 'https://example.com', headers: [] },
+      renderContext: {},
+    },
+    // Path-normalization variant of each shape above: same absolute file, different raw string —
+    // probes for an ownership check whose exact-string lookup misses while the write's own
+    // path.resolve() still lands on the victim file.
+    {
+      bodyPath: normalizationVariant,
+      parentId: scenario.attackerParentId,
+      bodyBase64: Buffer.from('dynamic-probe-overwrite-variant', 'utf8').toString('base64'),
+    },
+    {
+      plugin: { name: '__dynamic-probe-plugin__' },
+      hookIndex: 0,
+      response: { bodyPath: normalizationVariant, parentId: scenario.attackerParentId },
+      renderedRequest: { url: 'https://example.com', headers: [] },
+      renderContext: {},
+    },
+  ];
+};
 
 /**
  * Calls every handler in a pluginToMainAPI-shaped map with a payload that claims ownership of
