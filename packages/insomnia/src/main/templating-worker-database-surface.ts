@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 // Static detector for the protocol-dispatch/bridge layer (pluginToMainAPI), mirroring
 // sandbox-surface.ts's structured-entry + findX() + formatter pattern but scanning handler source
 // text instead of probing a live VM. Scoped to writes only — response.getBodyBuffer's unguarded
@@ -52,3 +54,67 @@ export const formatHandlerSurfaceEntry = (e: HandlerSurfaceEntry): string =>
 
 export const formatHandlerSurfaceEntries = (entries: HandlerSurfaceEntry[]): string[] =>
   entries.map(formatHandlerSurfaceEntry);
+
+// Dynamic counterpart to findUnguardedBodyPathWrites above. The static scan can only see whether a
+// resolveTrusted*/assert*Ownership/assert*Trust call is textually present in a handler's source —
+// it can't see whether that call is actually awaited, or ordered before the write it's meant to
+// gate. A handler that calls a correctly-named trust check but fires the write before/without
+// waiting on it reads as "guarded" to the regex scan while providing zero real protection. This
+// probe instead exercises each handler for real, with a synthetic body-path write it should refuse,
+// and looks at whether the on-disk file actually changed — so it can't be fooled by source shape.
+export interface BodyPathOwnershipScenario {
+  /** Path to a file that a legitimate response, other than the caller's, already owns. */
+  victimBodyPath: string;
+  /** The real owner's parentId, as `services.response.getByBodyPath` would report it. */
+  victimParentId: string;
+  /** The parentId an attacker claims, distinct from victimParentId. */
+  attackerParentId: string;
+}
+
+const bodyPathWriteProbePayloads = (scenario: BodyPathOwnershipScenario): Record<string, unknown>[] => [
+  // Shape used by response.setBody.
+  {
+    bodyPath: scenario.victimBodyPath,
+    parentId: scenario.attackerParentId,
+    bodyBase64: Buffer.from('dynamic-probe-overwrite', 'utf8').toString('base64'),
+  },
+  // Shape used by plugin.runUserResponseHook (bodyPath/parentId nested under `response`).
+  {
+    plugin: { name: '__dynamic-probe-plugin__' },
+    hookIndex: 0,
+    response: { bodyPath: scenario.victimBodyPath, parentId: scenario.attackerParentId },
+    renderedRequest: { url: 'https://example.com', headers: [] },
+    renderContext: {},
+  },
+];
+
+/**
+ * Calls every handler in a pluginToMainAPI-shaped map with a payload that claims ownership of
+ * `scenario.victimBodyPath` under `scenario.attackerParentId`, then checks whether that file's
+ * on-disk contents actually changed. Returns the path of every handler that let the write through.
+ * Handlers that don't recognize the payload shape are expected to throw or no-op — only an actual
+ * change to the victim file counts as a violation, so this needs no knowledge of any given
+ * handler's internals or naming.
+ */
+export const findHandlersThatBypassBodyPathOwnership = async (
+  handlers: Record<string, (...args: any[]) => any>,
+  scenario: BodyPathOwnershipScenario,
+): Promise<string[]> => {
+  const violations: string[] = [];
+  for (const [path, handler] of Object.entries(handlers)) {
+    for (const payload of bodyPathWriteProbePayloads(scenario)) {
+      const before = fs.readFileSync(scenario.victimBodyPath);
+      try {
+        await handler(payload);
+      } catch {
+        // Expected for handlers that reject the shape, or correctly enforce ownership.
+      }
+      const after = fs.readFileSync(scenario.victimBodyPath);
+      if (!before.equals(after)) {
+        violations.push(path);
+        fs.writeFileSync(scenario.victimBodyPath, before);
+      }
+    }
+  }
+  return [...new Set(violations)];
+};

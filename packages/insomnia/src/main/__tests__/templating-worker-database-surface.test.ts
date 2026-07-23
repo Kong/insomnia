@@ -1,8 +1,10 @@
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { findUnguardedBodyPathWrites } from '../templating-worker-database-surface';
+import { findHandlersThatBypassBodyPathOwnership, findUnguardedBodyPathWrites } from '../templating-worker-database-surface';
 
 vi.mock('electron', () => ({
   app: { getVersion: () => '1.0.0', getPath: () => '/fake/userData' },
@@ -74,4 +76,100 @@ function assertFakeOwnership(body: { bodyPath: string }) {
   if (!body.bodyPath) {
     throw new Error('missing bodyPath');
   }
+}
+
+// Dynamic counterpart: findUnguardedBodyPathWrites can only see whether a trust-check call is
+// textually present in a handler's source, not whether it's actually awaited before the write it's
+// meant to gate. These tests exercise the real handlers (and a deliberately tricky fake one) to
+// prove the regex scan has a blind spot the dynamic probe doesn't.
+describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
+  let dataDir: string;
+  let victimBodyPath: string;
+  let previousDataPath: string | undefined;
+
+  beforeEach(async () => {
+    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-data-'));
+    const responsesDir = path.join(dataDir, 'responses');
+    fs.mkdirSync(responsesDir);
+    victimBodyPath = path.join(responsesDir, 'victim-response-body.txt');
+    fs.writeFileSync(victimBodyPath, 'victim-original-body');
+
+    previousDataPath = process.env['INSOMNIA_DATA_PATH'];
+    process.env['INSOMNIA_DATA_PATH'] = dataDir;
+
+    const { services } = await import('insomnia-data');
+    (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (bodyPath: string) =>
+        bodyPath === victimBodyPath ? { _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath } : null,
+    );
+  });
+
+  afterEach(() => {
+    if (previousDataPath === undefined) {
+      delete process.env['INSOMNIA_DATA_PATH'];
+    } else {
+      process.env['INSOMNIA_DATA_PATH'] = previousDataPath;
+    }
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  // Enforced gate: the real handler map's writes must actually be gated at runtime, not just look
+  // gated to the static scan.
+  it('flags nothing in the real pluginToMainAPI handler map', async () => {
+    const { pluginToMainAPI } = await import('../templating-worker-database');
+    const violations = await findHandlersThatBypassBodyPathOwnership(pluginToMainAPI, {
+      victimBodyPath,
+      victimParentId: 'req_victim',
+      attackerParentId: 'req_attacker',
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('regex detector reads a write-before-check handler as guarded; the dynamic probe catches the real bypass', async () => {
+    const fakeHandlers = {
+      'fake.writeBeforeCheck': (body: { bodyPath: string; parentId: string; bodyBase64?: string }) => {
+        fs.writeFileSync(body.bodyPath, Buffer.from(body.bodyBase64 || '', 'base64'));
+        // A real-shaped, correctly-named ownership check -- but its rejection surfaces only after
+        // the write already landed, so it provides no actual protection.
+        return assertFakeOwnershipAsync(body).then(() => null);
+      },
+    };
+
+    // The static scan sees a file write, a body.bodyPath reference, and a correctly-named
+    // assert*Ownership call, so it reports this handler as safe.
+    expect(findUnguardedBodyPathWrites(fakeHandlers)).toEqual([]);
+
+    // The dynamic probe observes the actual write and is not fooled by call order.
+    const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
+      victimBodyPath,
+      victimParentId: 'req_victim',
+      attackerParentId: 'req_attacker',
+    });
+    expect(violations).toEqual(['fake.writeBeforeCheck']);
+  });
+
+  // Negative control: a handler that awaits its ownership check before writing must not be flagged.
+  it('does not flag a fake handler whose ownership check is properly awaited before the write', async () => {
+    const fakeHandlers = {
+      'fake.properlyGuardedWrite': async (body: { bodyPath: string; parentId: string; bodyBase64?: string }) => {
+        await assertFakeOwnershipAsync(body);
+        fs.writeFileSync(body.bodyPath, Buffer.from(body.bodyBase64 || '', 'base64'));
+        return null;
+      },
+    };
+    const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
+      victimBodyPath,
+      victimParentId: 'req_victim',
+      attackerParentId: 'req_attacker',
+    });
+    expect(violations).toEqual([]);
+  });
+});
+
+function assertFakeOwnershipAsync(body: { parentId: string }) {
+  return Promise.resolve().then(() => {
+    if (body.parentId !== 'req_victim') {
+      throw new Error('body.bodyPath belongs to a different response than the one being processed');
+    }
+  });
 }
