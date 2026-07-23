@@ -288,7 +288,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
     const disableLogs = console.log;
-    console.log = () => {};
+    console.log = () => { };
     const scanResult = await importUtil.scanResources([
       {
         contentStr: content,
@@ -840,6 +840,16 @@ describe('requiresNewWorkspace()', () => {
       importUtil.requiresNewWorkspace({
         ...base,
         mcpRequests: [{ _id: 'mcp_1' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true for Postman environment scan results', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        type: { id: 'postman-environment' } as any,
+        environments: [{ _id: '__ENV_1__' } as any],
       }),
     ).toBe(true);
   });

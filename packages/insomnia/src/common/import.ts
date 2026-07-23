@@ -146,6 +146,7 @@ export function isApiSpecScanResult(scanResult: ScanResult) {
 export function requiresNewWorkspace(scanResult: ScanResult) {
   return (
     isApiSpecScanResult(scanResult) ||
+    scanResult.type?.id === postmanEnvImporterId ||
     (scanResult.mcpRequests?.length ?? 0) > 0 ||
     !!scanResult.workspaces?.some(w => w.scope !== 'collection')
   );
