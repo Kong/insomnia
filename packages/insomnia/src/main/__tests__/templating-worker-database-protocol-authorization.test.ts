@@ -328,6 +328,116 @@ describe('plugin.discoverUserPluginExports resolves `permissions.modules` from t
   });
 });
 
+// New finding (PR #10286, response hooks): `plugin.runUserResponseHook` resolves `directory` and
+// `permissions` from the trusted registry (mirroring the request-hook fix above), but the `response`
+// object — including `bodyPath`, the on-disk file `context.response.setBody()` will write to — is
+// still taken verbatim from the caller-supplied request body. Unlike the request-hook path (which only
+// ever mutates in-memory fields), a response hook's `setBody()` performs a real filesystem write keyed
+// off that `bodyPath`. The host handler for `response.setBody` (templating-worker-database.ts) only
+// checks the resolved path stays *within* the app's `responses/` directory — it never checks that the
+// path belongs to the specific response the caller claims to be processing. So a forged call naming any
+// real, installed plugin that has a response hook can redirect that hook's `setBody()` write to a
+// *different* response's body file elsewhere in the same directory, corrupting data outside the current
+// render entirely. This is the write-side counterpart of the already-documented (read-only) bodyPath
+// trust gap in CROSS-TENANT-DB-ACCESS-FINDINGS.md's Finding 1 — new in kind here because the write
+// primitive (`response.setBody`) did not exist before this PR.
+describe('plugin.runUserResponseHook trusts caller-supplied `response.bodyPath`, not tied to the response being rendered', () => {
+  let pluginDir: string;
+  let responsesDir: string;
+  let ownBodyPath: string;
+  let victimBodyPath: string;
+  let previousDataPath: string | undefined;
+
+  beforeEach(() => {
+    _testOnlyResetTemplatingDbAuthToken();
+    pluginDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-resphook-'));
+    fs.writeFileSync(path.join(pluginDir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    fs.writeFileSync(
+      path.join(pluginDir, 'index.js'),
+      `module.exports.responseHooks = [function (context) {
+        context.response.setBody('attacker-controlled-body');
+      }];`,
+    );
+
+    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-data-'));
+    responsesDir = path.join(dataDir, 'responses');
+    fs.mkdirSync(responsesDir);
+    ownBodyPath = path.join(responsesDir, 'own-response-body.txt');
+    victimBodyPath = path.join(responsesDir, 'victim-response-body.txt');
+    fs.writeFileSync(ownBodyPath, 'own-original-body');
+    fs.writeFileSync(victimBodyPath, 'victim-original-body');
+
+    previousDataPath = process.env['INSOMNIA_DATA_PATH'];
+    process.env['INSOMNIA_DATA_PATH'] = dataDir;
+  });
+
+  afterEach(() => {
+    if (previousDataPath === undefined) {
+      delete process.env['INSOMNIA_DATA_PATH'];
+    } else {
+      process.env['INSOMNIA_DATA_PATH'] = previousDataPath;
+    }
+    fs.rmSync(pluginDir, { recursive: true, force: true });
+    fs.rmSync(path.dirname(responsesDir), { recursive: true, force: true });
+  });
+
+  const runResponseHook = async (bodyPath: string) => {
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { getPlugins } = await import('~/plugins');
+    (getPlugins as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { name: 'insomnia-plugin-resphook', directory: pluginDir, permissions: {} },
+    ]);
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://plugin.runuserresponsehook', {
+      method: 'POST',
+      headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
+      body: JSON.stringify({
+        plugin: { name: 'insomnia-plugin-resphook' },
+        hookIndex: 0,
+        response: { parentId: 'res_1', bodyPath },
+        renderedRequest: { url: 'https://example.com', headers: [] },
+        renderContext: {},
+      }),
+    });
+    return resolveDbByKey(req);
+  };
+
+  it('baseline: setBody writes to the response\'s own bodyPath as intended', async () => {
+    const res = await runResponseHook(ownBodyPath);
+    expect(res.status).toBe(200);
+    expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('attacker-controlled-body');
+    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
+  });
+
+  // Documents the bug: a forged `response.bodyPath` naming a *different* response's on-disk file
+  // (still contained within the responses directory, so the existing path-traversal guard doesn't
+  // reject it) gets overwritten. This assertion passing is the defect, not the desired behavior —
+  // fixing the handler to tie `bodyPath` to a trusted, caller-independent response identity should
+  // turn this into a rejection (mirroring how the `directory`/`permissions` regression tests above
+  // were written before those fixes landed).
+  it('BUG: a forged `response.bodyPath` naming a different response is overwritten instead of rejected', async () => {
+    const res = await runResponseHook(victimBodyPath);
+    expect(res.status).toBe(200);
+    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('attacker-controlled-body');
+    expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('own-original-body');
+  });
+
+  it('still rejects a bodyPath that escapes the responses directory entirely', async () => {
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-outside-'));
+    const outsidePath = path.join(outsideDir, 'not-a-response.txt');
+    fs.writeFileSync(outsidePath, 'untouched');
+    try {
+      // The plugin hook doesn't await setBody()'s returned promise (fire-and-forget), so a rejected
+      // bridge call never surfaces as a non-200 response here — but the containment check still runs
+      // before any write, so the file outside `responses/` is provably never touched either way.
+      await runResponseHook(outsidePath);
+      expect(fs.readFileSync(outsidePath, 'utf8')).toBe('untouched');
+    } finally {
+      fs.rmSync(outsideDir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('discoverPluginExportsInSandbox strips dangerous JSON keys, symmetric with the hook path', () => {
   it('a plugin export that plants a __proto__ own-key does not survive into the manifest', async () => {
     const { discoverPluginExportsInSandbox } = await import('../templating-worker-database');
