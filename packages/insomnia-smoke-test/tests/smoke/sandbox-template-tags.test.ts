@@ -121,7 +121,12 @@ const writePlugin = (dataPath: string, name: string, insomnia: unknown, indexJs:
 };
 
 // Seed the once-only guard for the persistent "Plugin system updated" toast (it intercepts pointer
-// events over the page) and dismiss any toast already in flight, before driving the UI.
+// events over the page) and dismiss any toast already in flight, before driving the UI. The toast
+// can re-render mid-dismiss (its DOM node gets swapped out during its exit transition), which made
+// a plain `.click()` here flake: Playwright's actionability wait would see the button go from
+// stable -> detached and retry forever, eventually blowing the whole test's timeout. `force: true`
+// skips that stability wait (fires the click at whatever is there right now), and the loop is
+// bounded by wall-clock time instead of trusting the button count to reach zero.
 const clearPluginToast = async (page: Page) => {
   await page.getByLabel('Import').waitFor();
   await page.evaluate(() => localStorage.setItem('plugin-system-changes-toast-shown', 'true'));
@@ -130,8 +135,9 @@ const clearPluginToast = async (page: Page) => {
     .first()
     .waitFor({ timeout: 3000 })
     .catch(() => {});
-  while ((await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click();
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline && (await dismissButtons.count()) > 0) {
+    await dismissButtons.first().click({ force: true, timeout: 500 }).catch(() => {});
   }
 };
 
@@ -159,21 +165,7 @@ test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sa
   insomnia,
 }) => {
   installProbePlugin(dataPath);
-
-  // The persistent "Plugin system updated" notification fires from a Root mount effect whenever
-  // user plugins exist on disk, and its toast region intercepts pointer events over the page.
-  // Seed its once-only guard so route remounts can't re-raise it, then clear any toast already
-  // in flight before driving the UI.
-  await page.getByLabel('Import').waitFor();
-  await page.evaluate(() => localStorage.setItem('plugin-system-changes-toast-shown', 'true'));
-  const dismissButtons = page.getByRole('button', { name: 'Dismiss' });
-  await dismissButtons
-    .first()
-    .waitFor({ timeout: 3000 })
-    .catch(() => {});
-  while ((await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click();
-  }
+  await clearPluginToast(page);
 
   // Import a collection whose request body contains the probe tags (the tags render as pills
   // lexically, so importing before the plugin is registered is fine).
@@ -708,4 +700,63 @@ test('Plugin sandbox (L1): installing a user plugin no longer runs its top-level
     return value;
   };
   await expect.poll(() => readTagPreview('{% l1probe'), { timeout: 20_000 }).toContain('l1-tag-ran');
+});
+
+test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox and mutates the request', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // The hook injects two headers, and the request targets the echo server, which reflects request
+  // headers into the response body. We assert on the header *values* (not names) because the echo
+  // lowercases header names but preserves values. X-Ran-In's value is the canary — the sandbox sets
+  // INSOMNIA_TEMPLATE_SANDBOX, the legacy in-process path does not — and the values are chosen so
+  // neither is a substring of the other (or of the marker), keeping the assertions unambiguous.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-hook-probe',
+    {},
+    `
+      module.exports.requestHooks = [
+        function (context) {
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+          context.request.setHeader('X-Ran-In', ranIn);
+          context.request.setHeader('X-Hook-Marker', 'hook-marker-9k2x');
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-hook-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Hook Request');
+  const responsePane = page.getByTestId('response-pane');
+
+  // Flag OFF (default): the hook runs in-process (control).
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
+  await expect.soft(responsePane).toContainText('ranin-mainprocess');
+
+  // Flag ON: the same hook now runs in the QuickJS sandbox, still mutating the request. Poll the send
+  // so the just-toggled setting has propagated before we assert the sandbox canary.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        return (await responsePane.textContent()) || '';
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('ranin-sandboxed');
+  // The second header mutation also round-tripped through the sandbox and reached the wire.
+  await expect.soft(responsePane).toContainText('hook-marker-9k2x');
 });

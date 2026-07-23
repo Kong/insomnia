@@ -29,7 +29,11 @@ vi.mock('insomnia-data', () => ({
   },
   models: {},
 }));
-vi.mock('~/plugins', () => ({ getPluginCommonContext: vi.fn(), getTemplateTags: vi.fn().mockResolvedValue([]) }));
+vi.mock('~/plugins', () => ({
+  getPluginCommonContext: vi.fn(),
+  getTemplateTags: vi.fn().mockResolvedValue([]),
+  getPlugins: vi.fn().mockResolvedValue([]),
+}));
 vi.mock('~/common/cookies', () => ({ jarFromCookies: vi.fn() }));
 vi.mock('../common/database', () => ({ database: {} }));
 vi.mock('../network/network', () => ({
@@ -52,6 +56,7 @@ import {
   resolveDbByKey,
   runPluginTagInSandbox,
 } from '../templating-worker-database';
+import { getOrCreateTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from '../templating-worker-database-auth';
 
 describe('readPluginModuleMap (M4 multi-file plugin reader)', () => {
   let dir: string;
@@ -253,10 +258,12 @@ describe('runPluginTagInSandbox — util.render escape', () => {
 describe('resolveDbByKey — app.prompt', () => {
   it('routes prompt requests to the renderer prompt bridge', async () => {
     vi.mocked(requestPromptFromRenderer).mockResolvedValueOnce('typed value');
+    const token = getOrCreateTemplatingDbAuthToken();
 
     const response = await resolveDbByKey(
       new Request('insomnia-templating-worker-database://app.prompt', {
         method: 'post',
+        headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
         body: JSON.stringify({
           title: 'Title',
           options: { label: 'Label', defaultValue: 'cached value', inputType: 'password' },

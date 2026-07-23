@@ -18,8 +18,8 @@ import type {
   PluginTemplateTagContext,
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
-import { getPluginCommonContext, getTemplateTags } from '~/plugins';
-import type { PluginExportManifest } from '~/templating/sandbox/marshal';
+import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
+import { HOOK_REQUEST_FIELDS, type PluginExportManifest, stripDangerousKeysReviver } from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
@@ -29,15 +29,22 @@ import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } f
 import { curlRequest } from './network/libcurl-promise';
 import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
+import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templating-worker-database-auth';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
+  // Reject before parsing the body, so a forged call never reaches a handler with attacker-supplied data.
+  if (!isValidTemplatingDbAuthToken(request.headers.get(TEMPLATING_DB_AUTH_HEADER))) {
+    return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid templating database auth token' }), {
+      status: 401,
+    });
+  }
   const url = new URL(request.url);
   let body;
   try {
     // We expect this to throw if a db call returns undefined
-    body = await request.json();
+    body = JSON.parse(await request.text(), stripDangerousKeysReviver);
   } catch {}
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
@@ -58,6 +65,20 @@ export const resolveDbByKey = async (request: Request) => {
     console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
+};
+
+// Resolves a plugin's on-disk directory and manifest-declared permissions from the trusted plugin
+// registry by name, so the two protocol-dispatch handlers below never trust a caller-supplied
+// directory path or permissions object.
+const resolveTrustedPlugin = async (
+  pluginName: string,
+): Promise<{ directory: string; permissions: { modules: string[]; capabilities: string[] } }> => {
+  const plugins = await getPlugins();
+  const plugin = plugins.find(p => p.name === pluginName);
+  if (!plugin) {
+    throw new Error(`Unknown plugin: ${pluginName}`);
+  }
+  return { directory: plugin.directory, permissions: plugin.permissions };
 };
 
 const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
@@ -384,7 +405,7 @@ export const discoverPluginExportsInSandbox = async (
       entryModuleKey,
     },
   });
-  return JSON.parse(json);
+  return JSON.parse(json, stripDangerousKeysReviver);
 };
 
 // Discover a user plugin's exports from its on-disk source, resolving the template-tag surface grant
@@ -406,8 +427,61 @@ export const discoverUserPluginExportsForLoader = async (body: {
   });
 };
 
-// These are exposed to the templating worker and can be used by plugins from context.util
-const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
+const pickHookRequestFields = (req: Record<string, any>): Record<string, any> => {
+  const out: Record<string, any> = {};
+  for (const key of HOOK_REQUEST_FIELDS) {
+    if (req[key] !== undefined) {
+      out[key] = req[key];
+    }
+  }
+  return out;
+};
+
+// H1: run a user plugin's request hook (at hookIndex) inside the sandbox, capability-gated. The hook
+// mutates the request in the sandbox; we marshal the mutated field subset back for the caller to
+// merge onto the request it is building. Reuses the same bridge/grants/crypto as tag execution.
+export const runRequestHookInSandbox = async (
+  plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } },
+  hookIndex: number,
+  renderedRequest: Record<string, any>,
+  renderContext: Record<string, any>,
+): Promise<Record<string, any>> => {
+  const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
+  const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+    '../templating/sandbox/surface-profiles'
+  );
+  const grantedCapabilities = resolveTemplateTagCapabilities(plugin.permissions?.capabilities);
+  const bridge = await buildSandboxBridge(grantedCapabilities);
+  const { moduleFiles, entryModuleKey } = readPluginModuleMap({ directory: plugin.directory, name: plugin.name });
+  const hookRequest = pickHookRequestFields(renderedRequest);
+  const json = await runTagInSandbox({
+    tagName: '',
+    bridge,
+    hostCrypto: SANDBOX_HOST_CRYPTO,
+    envelope: {
+      args: [],
+      context: (renderContext as Record<string, any>) || {},
+      meta: {},
+      renderPurpose: 'send',
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
+      pluginName: plugin.name,
+      renderDepth: 0,
+      grantedModules: resolveTemplateTagModules(plugin.permissions?.modules),
+      grantedCapabilities,
+      moduleFiles,
+      entryModuleKey,
+      hookKind: 'request',
+      hookIndex,
+      hookRequest,
+    },
+  });
+  const result = JSON.parse(json, stripDangerousKeysReviver) as { request?: Record<string, any> };
+  return result.request ?? hookRequest;
+};
+
+// These are exposed to the templating worker and can be used by plugins from context.util.
+// Exported so tests can enumerate every registered path.
+export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
     return secureReadFile(body.path);
   },
@@ -668,7 +742,30 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     directory: string;
     name: string;
     permissions?: { modules?: string[]; capabilities?: string[] };
-  }) => discoverUserPluginExportsForLoader(body),
+  }) => {
+    const trusted = await resolveTrustedPlugin(body.name);
+    return discoverUserPluginExportsForLoader({
+      ...body,
+      directory: trusted.directory,
+      permissions: trusted.permissions,
+    });
+  },
+  // H1: run a user plugin's request hook in the sandbox (plugin-window path reaches this over the
+  // templating-worker-database protocol; the node runtime calls runRequestHookInSandbox directly).
+  'plugin.runUserRequestHook': async (body: {
+    plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } };
+    hookIndex: number;
+    renderedRequest: Record<string, any>;
+    renderContext: Record<string, any>;
+  }) => {
+    const trusted = await resolveTrustedPlugin(body.plugin.name);
+    return runRequestHookInSandbox(
+      { ...body.plugin, directory: trusted.directory, permissions: trusted.permissions },
+      body.hookIndex,
+      body.renderedRequest,
+      body.renderContext,
+    );
+  },
   // execute a user-installed plugin tag with the given parameters, in the main process where
   // Node built-ins (e.g. crypto) the plugin requires are available.
   'plugin.executeUserPluginTag': async (body: {

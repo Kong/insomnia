@@ -215,8 +215,19 @@ export const findLeakedGatedReferences = (entries: SurfaceEntry[]): string[] =>
  * in particular returns a context wired to the real host bridge; discovery-time safety comes from
  * `runTagInSandbox` substituting a rejecting bridge when `discover: true`, not from hiding this
  * global. Adding a new one here forces a human to re-check that story still holds.
+ *
+ * `__invokeHook` (H1) is in this set: like `__invoke`, it wires a context to the real bridge, but
+ * during discovery the rejecting bridge is installed AND no hook is present to run (hookKind/hookIndex
+ * are unset), so a discovery-time call reaches nothing — re-checked and safe.
  */
-export const SANDBOX_INTERNAL_GLOBALS = ['__buildContext', '__describeExports', '__invoke', '__loadPluginEntry', '__require'];
+export const SANDBOX_INTERNAL_GLOBALS = [
+  '__buildContext',
+  '__describeExports',
+  '__invoke',
+  '__invokeHook',
+  '__loadPluginEntry',
+  '__require',
+];
 
 /** Filters sandbox surface entries down to the bare `globalThis.__*` internals (excluding the `.prototype` sibling lines already in the snapshot). */
 export const findSandboxInternalGlobals = (entries: SurfaceEntry[]): string[] =>
