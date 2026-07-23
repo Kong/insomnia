@@ -457,7 +457,9 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '      getStatusMessage: function () { return resp.statusMessage || ""; },',
   '      getBytesRead: function () { return resp.bytesRead || 0; },',
   '      getTime: function () { return resp.elapsedTime || 0; },',
-  '      getBody: function () { return __bridge("response.getBodyBuffer", { response: { bodyPath: resp.bodyPath, bodyCompression: resp.bodyCompression } }); },',
+  // The host returns a Buffer; the JSON bridge marshals it as { type: "Buffer", data: [...] }. Revive
+  // it to a real (shimmed) Buffer so hooks consume getBody() the same as the in-process response API.
+  '      getBody: function () { return __bridge("response.getBodyBuffer", { response: { bodyPath: resp.bodyPath, bodyCompression: resp.bodyCompression } }).then(function (raw) { if (raw && typeof raw === "object" && raw.type === "Buffer" && raw.data) { return Buffer.from(raw.data); } return raw; }); },',
   '      getBodyStream: function () { throw new Error("response.getBodyStream() is not available in the sandbox; use getBody()"); },',
   '      setBody: function (body) {',
   '        if (!resp.bodyPath) { throw new Error("Could not set body without existing body path"); }',

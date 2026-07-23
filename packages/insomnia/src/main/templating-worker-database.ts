@@ -612,13 +612,18 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     if (!body.bodyPath) {
       throw new Error('Could not set body without existing body path');
     }
+    // A write primitive must never silently truncate: reject a missing/non-string bodyBase64 rather
+    // than defaulting to '' (which would zero the body). An empty string is a valid empty body.
+    if (typeof body.bodyBase64 !== 'string') {
+      throw new TypeError('response.setBody requires a base64-encoded body');
+    }
     const responsesDir = path.resolve(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'responses');
     const target = path.resolve(body.bodyPath);
     const relative = path.relative(responsesDir, target);
     if (relative.startsWith('..') || path.isAbsolute(relative)) {
       throw new Error('response.setBody path escapes the responses directory');
     }
-    fs.writeFileSync(target, Buffer.from(body.bodyBase64 || '', 'base64'));
+    fs.writeFileSync(target, Buffer.from(body.bodyBase64, 'base64'));
     return null;
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
