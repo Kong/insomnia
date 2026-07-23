@@ -34,7 +34,7 @@ import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templ
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
-  // Reject before parsing the body, so a forged call never reaches a handler with attacker-supplied data.
+  // Reject before parsing the body, so an unauthenticated call never reaches a handler.
   if (!isValidTemplatingDbAuthToken(request.headers.get(TEMPLATING_DB_AUTH_HEADER))) {
     return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid templating database auth token' }), {
       status: 401,
@@ -88,13 +88,22 @@ const assertResponseBodyPathOwnership = async (response: Record<string, any>): P
   if (!bodyPath) {
     return;
   }
-  // Resolve before the ownership lookup so it agrees with the resolved path the write itself uses
-  // (response.setBody's `target`) — otherwise a caller-supplied bodyPath that's textually different
-  // from a victim's stored bodyPath but resolves to the identical file (e.g. a redundant `.`/`..`
-  // segment) misses this exact-string lookup entirely and bypasses the check.
+  // Resolve before the ownership lookup so it agrees with the resolved path the write itself uses,
+  // otherwise a textually different bodyPath resolving to the same file misses this exact-string lookup.
   const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
   if (existing && existing.parentId !== response.parentId) {
     throw new Error('response.bodyPath belongs to a different response than the one being processed');
+  }
+};
+
+// Read-side counterpart of assertResponseBodyPathOwnership: rejects a bodyPath that isn't the stored bodyPath of an already-persisted response.
+const assertResponseBodyPathReadOwnership = async (bodyPath: string | undefined): Promise<void> => {
+  if (!bodyPath) {
+    return;
+  }
+  const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
+  if (!existing) {
+    throw new Error('response.bodyPath does not belong to any known response');
   }
 };
 
@@ -620,6 +629,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     response?: { bodyPath?: string; bodyCompression?: any };
     readFailureValue?: string;
   }) => {
+    await assertResponseBodyPathReadOwnership(body.response?.bodyPath);
     return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   // H1: a sandboxed response hook's context.response.setBody(). The body arrives base64-encoded (so

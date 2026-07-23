@@ -3,8 +3,8 @@ import path from 'node:path';
 
 // Static detector for the protocol-dispatch/bridge layer (pluginToMainAPI), mirroring
 // sandbox-surface.ts's structured-entry + findX() + formatter pattern but scanning handler source
-// text instead of probing a live VM. Scoped to writes only — response.getBodyBuffer's unguarded
-// read is a separate, already-tracked issue (CROSS-TENANT-DB-ACCESS-FINDINGS.md Finding 1).
+// text instead of probing a live VM. Covers both writes (findUnguardedBodyPathWrites /
+// findHandlersThatBypassBodyPathOwnership) and reads (findHandlersThatLeakArbitraryBodyPathReads).
 
 /** One protocol-dispatch handler, describing whether it writes to a body-path-derived location without an inline trust check. */
 export interface HandlerSurfaceEntry {
@@ -22,8 +22,7 @@ const FILE_WRITE_CALL_PATTERN =
 
 const BODY_PATH_REFERENCE_PATTERN = /body\.(bodyPath|path|filePath|directory|targetPath)\b/;
 
-// Naming convention (also recorded in SKILL.md): trust checks must be named `resolveTrusted*` or
-// `assert*Ownership`/`assert*Trust` so this detector can recognize them by name.
+// Trust checks must be named `resolveTrusted*` or `assert*Ownership`/`assert*Trust` to be recognized.
 const TRUST_CHECK_CALL_PATTERN = /\b(resolveTrusted\w*|assert\w*(?:Ownership|Trust)\w*)\s*\(/;
 
 /** Describes every handler in a pluginToMainAPI-shaped map by regexing its compiled source. */
@@ -38,7 +37,7 @@ export const describeHandlerSurface = (handlers: Record<string, (...args: any[])
     };
   });
 
-/** Flags handlers that write to a body-path-derived location with no inline trust check (the PR #10286 bug class). */
+/** Flags handlers that write to a body-path-derived location with no inline trust check. */
 export const findUnguardedBodyPathWrites = (
   handlers: Record<string, (...args: any[]) => any>,
 ): { path: string; reason: string }[] =>
@@ -56,30 +55,19 @@ export const formatHandlerSurfaceEntry = (e: HandlerSurfaceEntry): string =>
 export const formatHandlerSurfaceEntries = (entries: HandlerSurfaceEntry[]): string[] =>
   entries.map(formatHandlerSurfaceEntry);
 
-// Dynamic counterpart to findUnguardedBodyPathWrites above. The static scan can only see whether a
-// resolveTrusted*/assert*Ownership/assert*Trust call is textually present in a handler's source —
-// it can't see whether that call is actually awaited, or ordered before the write it's meant to
-// gate. A handler that calls a correctly-named trust check but fires the write before/without
-// waiting on it reads as "guarded" to the regex scan while providing zero real protection. This
-// probe instead exercises each handler for real, with a synthetic body-path write it should refuse,
-// and looks at whether the on-disk file actually changed — so it can't be fooled by source shape.
+// Dynamic counterpart to findUnguardedBodyPathWrites: exercises each handler for real with a
+// synthetic body-path write it should refuse, and judges by whether the file actually changed —
+// so a check that's present in source but not awaited (or ordered after the write) still gets caught.
 export interface BodyPathOwnershipScenario {
-  /** Path to a file that a legitimate response, other than the caller's, already owns. */
-  victimBodyPath: string;
+  /** Path to a file that a response other than the caller's already owns. */
+  otherBodyPath: string;
   /** The real owner's parentId, as `services.response.getByBodyPath` would report it. */
-  victimParentId: string;
-  /** The parentId an attacker claims, distinct from victimParentId. */
-  attackerParentId: string;
+  otherParentId: string;
+  /** The parentId the caller claims, distinct from otherParentId. */
+  callerParentId: string;
 }
 
-/**
- * Builds a bodyPath string that is textually different from the input yet resolves to the exact
- * same absolute file via `path.resolve()` — which normalizes `.`/`..`/redundant-separator segments
- * purely lexically, with no filesystem access, so this needs no real directory to exist. Probes for
- * an ownership check that compares the caller-supplied bodyPath by exact string equality (e.g. an
- * NeDB `findOne({ bodyPath })` lookup) instead of resolving it first, the same way the path actually
- * used to perform the write is resolved (PR #10294's `response.setBody` bug class).
- */
+/** Builds a bodyPath string that is textually different from the input yet resolves to the same absolute file via `path.resolve()`, to probe for an ownership check that compares strings exactly instead of resolving first. */
 export const buildPathNormalizationVariant = (bodyPath: string): string => {
   const dir = path.dirname(bodyPath);
   const base = path.basename(bodyPath);
@@ -87,48 +75,39 @@ export const buildPathNormalizationVariant = (bodyPath: string): string => {
 };
 
 const bodyPathWriteProbePayloads = (scenario: BodyPathOwnershipScenario): Record<string, unknown>[] => {
-  const normalizationVariant = buildPathNormalizationVariant(scenario.victimBodyPath);
+  const normalizationVariant = buildPathNormalizationVariant(scenario.otherBodyPath);
   return [
     // Shape used by response.setBody.
     {
-      bodyPath: scenario.victimBodyPath,
-      parentId: scenario.attackerParentId,
+      bodyPath: scenario.otherBodyPath,
+      parentId: scenario.callerParentId,
       bodyBase64: Buffer.from('dynamic-probe-overwrite', 'utf8').toString('base64'),
     },
     // Shape used by plugin.runUserResponseHook (bodyPath/parentId nested under `response`).
     {
       plugin: { name: '__dynamic-probe-plugin__' },
       hookIndex: 0,
-      response: { bodyPath: scenario.victimBodyPath, parentId: scenario.attackerParentId },
+      response: { bodyPath: scenario.otherBodyPath, parentId: scenario.callerParentId },
       renderedRequest: { url: 'https://example.com', headers: [] },
       renderContext: {},
     },
-    // Path-normalization variant of each shape above: same absolute file, different raw string —
-    // probes for an ownership check whose exact-string lookup misses while the write's own
-    // path.resolve() still lands on the victim file.
+    // Path-normalization variant of each shape above: same absolute file, different raw string.
     {
       bodyPath: normalizationVariant,
-      parentId: scenario.attackerParentId,
+      parentId: scenario.callerParentId,
       bodyBase64: Buffer.from('dynamic-probe-overwrite-variant', 'utf8').toString('base64'),
     },
     {
       plugin: { name: '__dynamic-probe-plugin__' },
       hookIndex: 0,
-      response: { bodyPath: normalizationVariant, parentId: scenario.attackerParentId },
+      response: { bodyPath: normalizationVariant, parentId: scenario.callerParentId },
       renderedRequest: { url: 'https://example.com', headers: [] },
       renderContext: {},
     },
   ];
 };
 
-/**
- * Calls every handler in a pluginToMainAPI-shaped map with a payload that claims ownership of
- * `scenario.victimBodyPath` under `scenario.attackerParentId`, then checks whether that file's
- * on-disk contents actually changed. Returns the path of every handler that let the write through.
- * Handlers that don't recognize the payload shape are expected to throw or no-op — only an actual
- * change to the victim file counts as a violation, so this needs no knowledge of any given
- * handler's internals or naming.
- */
+/** Calls every handler with a payload that claims ownership of `scenario.otherBodyPath`; returns the path of every handler whose write actually changed that file's on-disk contents. */
 export const findHandlersThatBypassBodyPathOwnership = async (
   handlers: Record<string, (...args: any[]) => any>,
   scenario: BodyPathOwnershipScenario,
@@ -136,16 +115,70 @@ export const findHandlersThatBypassBodyPathOwnership = async (
   const violations: string[] = [];
   for (const [path, handler] of Object.entries(handlers)) {
     for (const payload of bodyPathWriteProbePayloads(scenario)) {
-      const before = fs.readFileSync(scenario.victimBodyPath);
+      const before = fs.readFileSync(scenario.otherBodyPath);
       try {
         await handler(payload);
       } catch {
         // Expected for handlers that reject the shape, or correctly enforce ownership.
       }
-      const after = fs.readFileSync(scenario.victimBodyPath);
+      const after = fs.readFileSync(scenario.otherBodyPath);
       if (!before.equals(after)) {
         violations.push(path);
-        fs.writeFileSync(scenario.victimBodyPath, before);
+        fs.writeFileSync(scenario.otherBodyPath, before);
+      }
+    }
+  }
+  return [...new Set(violations)];
+};
+
+// Read-side counterpart: judges each handler by whether its *return value* discloses the contents of a path the caller has no claim to, rather than by whether a file changed.
+export interface BodyPathReadLeakScenario {
+  /** Path to a file whose contents the caller has no ownership claim over. */
+  outsidePath: string;
+  /** The real contents of `outsidePath`, used to detect disclosure in a handler's return value. */
+  outsideContents: string;
+}
+
+const bodyPathReadProbePayloads = (scenario: BodyPathReadLeakScenario): Record<string, unknown>[] => [
+  // Shape used by response.getBodyBuffer.
+  { response: { bodyPath: scenario.outsidePath } },
+  // Flat shape, in case a future handler takes bodyPath directly on the body rather than nested.
+  { bodyPath: scenario.outsidePath },
+];
+
+/** Best-effort stringify of a handler's return value (Buffer, Buffer-shaped JSON, or plain string) for a substring check. */
+const stringifyHandlerResult = (result: unknown): string => {
+  if (typeof result === 'string') {
+    return result;
+  }
+  if (Buffer.isBuffer(result)) {
+    return result.toString('utf8');
+  }
+  if (result && typeof result === 'object' && (result as { type?: string }).type === 'Buffer' && Array.isArray((result as { data?: unknown[] }).data)) {
+    return Buffer.from((result as { data: number[] }).data).toString('utf8');
+  }
+  try {
+    return JSON.stringify(result);
+  } catch {
+    return '';
+  }
+};
+
+/** Calls every handler with a payload pointing at a path the caller has no claim over; returns the path of every handler whose return value discloses its contents. */
+export const findHandlersThatLeakArbitraryBodyPathReads = async (
+  handlers: Record<string, (...args: any[]) => any>,
+  scenario: BodyPathReadLeakScenario,
+): Promise<string[]> => {
+  const violations: string[] = [];
+  for (const [path, handler] of Object.entries(handlers)) {
+    for (const payload of bodyPathReadProbePayloads(scenario)) {
+      try {
+        const result = await handler(payload);
+        if (stringifyHandlerResult(result).includes(scenario.outsideContents)) {
+          violations.push(path);
+        }
+      } catch {
+        // Expected for handlers that reject the shape, or correctly refuse to read it.
       }
     }
   }

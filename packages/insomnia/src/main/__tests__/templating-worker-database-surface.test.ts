@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildPathNormalizationVariant, findHandlersThatBypassBodyPathOwnership, findUnguardedBodyPathWrites } from '../templating-worker-database-surface';
+import { buildPathNormalizationVariant, findHandlersThatBypassBodyPathOwnership, findHandlersThatLeakArbitraryBodyPathReads, findUnguardedBodyPathWrites } from '../templating-worker-database-surface';
 
 vi.mock('electron', () => ({
   app: { getVersion: () => '1.0.0', getPath: () => '/fake/userData' },
@@ -43,18 +43,16 @@ vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
 describe('findUnguardedBodyPathWrites', () => {
-  // Enforced gate: the real handler map must never regress to the bug class found in PR #10286
-  // (a write choke point on a body-path-derived location with no inline trust check).
+  // Enforced gate: the real handler map must never regress to an unguarded write choke point.
   it('flags nothing in the real pluginToMainAPI handler map', async () => {
     const { pluginToMainAPI } = await import('../templating-worker-database');
     expect(findUnguardedBodyPathWrites(pluginToMainAPI)).toEqual([]);
   });
 
-  // Positive control: proves the detector isn't vacuously passing by constructing a small,
-  // intentionally-vulnerable fake handler map and asserting it IS flagged.
+  // Positive control: an unguarded fake handler must be flagged.
   it('flags a fake handler that writes to a body-path-derived location with no trust check', () => {
     const fakeHandlers = {
-      'fake.vulnerableWrite': (body: { bodyPath: string; data: string }) => {
+      'fake.unguardedWrite': (body: { bodyPath: string; data: string }) => {
         fs.writeFileSync(body.bodyPath, body.data);
         return Promise.resolve(null);
       },
@@ -68,7 +66,7 @@ describe('findUnguardedBodyPathWrites', () => {
       },
     };
     const flagged = findUnguardedBodyPathWrites(fakeHandlers);
-    expect(flagged.map(f => f.path)).toEqual(['fake.vulnerableWrite']);
+    expect(flagged.map(f => f.path)).toEqual(['fake.unguardedWrite']);
   });
 });
 
@@ -84,15 +82,15 @@ function assertFakeOwnership(body: { bodyPath: string }) {
 // prove the regex scan has a blind spot the dynamic probe doesn't.
 describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
   let dataDir: string;
-  let victimBodyPath: string;
+  let otherBodyPath: string;
   let previousDataPath: string | undefined;
 
   beforeEach(async () => {
     dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-data-'));
     const responsesDir = path.join(dataDir, 'responses');
     fs.mkdirSync(responsesDir);
-    victimBodyPath = path.join(responsesDir, 'victim-response-body.txt');
-    fs.writeFileSync(victimBodyPath, 'victim-original-body');
+    otherBodyPath = path.join(responsesDir, 'other-response-body.txt');
+    fs.writeFileSync(otherBodyPath, 'other-original-body');
 
     previousDataPath = process.env['INSOMNIA_DATA_PATH'];
     process.env['INSOMNIA_DATA_PATH'] = dataDir;
@@ -100,7 +98,7 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
     const { services } = await import('insomnia-data');
     (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       async (bodyPath: string) =>
-        bodyPath === victimBodyPath ? { _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath } : null,
+        bodyPath === otherBodyPath ? { _id: 'res_other', parentId: 'req_other', bodyPath: otherBodyPath } : null,
     );
   });
 
@@ -118,9 +116,9 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
   it('flags nothing in the real pluginToMainAPI handler map', async () => {
     const { pluginToMainAPI } = await import('../templating-worker-database');
     const violations = await findHandlersThatBypassBodyPathOwnership(pluginToMainAPI, {
-      victimBodyPath,
-      victimParentId: 'req_victim',
-      attackerParentId: 'req_attacker',
+      otherBodyPath,
+      otherParentId: 'req_other',
+      callerParentId: 'req_caller',
     });
     expect(violations).toEqual([]);
   });
@@ -141,9 +139,9 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
 
     // The dynamic probe observes the actual write and is not fooled by call order.
     const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
-      victimBodyPath,
-      victimParentId: 'req_victim',
-      attackerParentId: 'req_attacker',
+      otherBodyPath,
+      otherParentId: 'req_other',
+      callerParentId: 'req_caller',
     });
     expect(violations).toEqual(['fake.writeBeforeCheck']);
   });
@@ -158,23 +156,19 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
       },
     };
     const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
-      victimBodyPath,
-      victimParentId: 'req_victim',
-      attackerParentId: 'req_attacker',
+      otherBodyPath,
+      otherParentId: 'req_other',
+      callerParentId: 'req_caller',
     });
     expect(violations).toEqual([]);
   });
 
-  // PR #10294 bug class: an ownership check that looks up the caller-supplied bodyPath by exact
-  // string equality (mirroring a real NeDB `findOne({ bodyPath })` lookup), while the write itself
-  // targets `path.resolve(bodyPath)`. A textually different bodyPath that resolves to the identical
-  // absolute file misses the exact-match lookup (no owner found -> no throw) while the write still
-  // lands on the victim file. This is a distinct blind spot from the write-before-check case above:
-  // the check here genuinely runs first and is awaited — it just checks the wrong string.
+  // An ownership check that exact-matches bodyPath (mirroring an NeDB `findOne({ bodyPath })`
+  // lookup) while the write itself resolves it first misses a textually different, same-file path.
   it('detects a fake handler whose ownership check exact-matches bodyPath but writes to the resolved path', async () => {
     const fakeHandlers = {
       'fake.checkRawThenWriteResolved': async (body: { bodyPath: string; parentId: string; bodyBase64?: string }) => {
-        const existing = body.bodyPath === victimBodyPath ? { parentId: 'req_victim' } : null;
+        const existing = body.bodyPath === otherBodyPath ? { parentId: 'req_other' } : null;
         if (existing && existing.parentId !== body.parentId) {
           throw new Error('body.bodyPath belongs to a different response than the one being processed');
         }
@@ -183,9 +177,9 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
       },
     };
     const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
-      victimBodyPath,
-      victimParentId: 'req_victim',
-      attackerParentId: 'req_attacker',
+      otherBodyPath,
+      otherParentId: 'req_other',
+      callerParentId: 'req_caller',
     });
     expect(violations).toEqual(['fake.checkRawThenWriteResolved']);
   });
@@ -196,7 +190,7 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
     const fakeHandlers = {
       'fake.resolveThenCheck': async (body: { bodyPath: string; parentId: string; bodyBase64?: string }) => {
         const resolved = path.resolve(body.bodyPath);
-        const existing = resolved === victimBodyPath ? { parentId: 'req_victim' } : null;
+        const existing = resolved === otherBodyPath ? { parentId: 'req_other' } : null;
         if (existing && existing.parentId !== body.parentId) {
           throw new Error('body.bodyPath belongs to a different response than the one being processed');
         }
@@ -205,24 +199,91 @@ describe('findHandlersThatBypassBodyPathOwnership (dynamic, non-regex)', () => {
       },
     };
     const violations = await findHandlersThatBypassBodyPathOwnership(fakeHandlers, {
-      victimBodyPath,
-      victimParentId: 'req_victim',
-      attackerParentId: 'req_attacker',
+      otherBodyPath,
+      otherParentId: 'req_other',
+      callerParentId: 'req_caller',
     });
     expect(violations).toEqual([]);
   });
 
   it('buildPathNormalizationVariant produces a distinct string that resolves to the same absolute path', () => {
-    const variant = buildPathNormalizationVariant(victimBodyPath);
-    expect(variant).not.toBe(victimBodyPath);
-    expect(path.resolve(variant)).toBe(path.resolve(victimBodyPath));
+    const variant = buildPathNormalizationVariant(otherBodyPath);
+    expect(variant).not.toBe(otherBodyPath);
+    expect(path.resolve(variant)).toBe(path.resolve(otherBodyPath));
   });
 });
 
 function assertFakeOwnershipAsync(body: { parentId: string }) {
   return Promise.resolve().then(() => {
-    if (body.parentId !== 'req_victim') {
+    if (body.parentId !== 'req_other') {
       throw new Error('body.bodyPath belongs to a different response than the one being processed');
     }
   });
 }
+
+// Read-side counterpart of findHandlersThatBypassBodyPathOwnership: judges each handler by whether its return value discloses a path's contents.
+describe('findHandlersThatLeakArbitraryBodyPathReads (dynamic, non-regex)', () => {
+  let outsideDir: string;
+  let outsidePath: string;
+  const outsideContents = 'unrelated-file-contents';
+
+  beforeEach(async () => {
+    outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-outside-responses-'));
+    outsidePath = path.join(outsideDir, 'file.txt');
+    fs.writeFileSync(outsidePath, outsideContents);
+
+    const { services } = await import('insomnia-data');
+    (services.helpers.getResponseBodyBuffer as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (response: { bodyPath?: string }) => (response?.bodyPath ? fs.promises.readFile(response.bodyPath) : Buffer.alloc(0)),
+    );
+  });
+
+  afterEach(() => {
+    fs.rmSync(outsideDir, { recursive: true, force: true });
+  });
+
+  // Enforced gate: real reads are restricted at runtime by assertResponseBodyPathReadOwnership.
+  it('flags nothing in the real pluginToMainAPI handler map', async () => {
+    const { pluginToMainAPI } = await import('../templating-worker-database');
+    const violations = await findHandlersThatLeakArbitraryBodyPathReads(pluginToMainAPI, {
+      outsidePath,
+      outsideContents,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  // Positive control: an unrestricted fake handler must be flagged.
+  it('flags a fake handler that returns the raw contents of a caller-supplied bodyPath', async () => {
+    const fakeHandlers = {
+      'fake.unrestrictedRead': async (body: { response?: { bodyPath?: string } }) =>
+        body.response?.bodyPath ? fs.promises.readFile(body.response.bodyPath) : Buffer.alloc(0),
+    };
+    const violations = await findHandlersThatLeakArbitraryBodyPathReads(fakeHandlers, { outsidePath, outsideContents });
+    expect(violations).toEqual(['fake.unrestrictedRead']);
+  });
+
+  // Negative control: a handler that never touches the caller-supplied bodyPath must not be flagged.
+  it('does not flag a fake handler that only reads a caller-independent, pre-resolved path', async () => {
+    const fakeHandlers = {
+      'fake.guardedRead': async () => Buffer.from('unrelated-owned-content'),
+    };
+    const violations = await findHandlersThatLeakArbitraryBodyPathReads(fakeHandlers, { outsidePath, outsideContents });
+    expect(violations).toEqual([]);
+  });
+
+  // Negative control: a handler with its own containment check must not be flagged.
+  it('does not flag a fake handler that enforces containment before reading', async () => {
+    const fakeHandlers = {
+      'fake.containedRead': async (body: { response?: { bodyPath?: string } }) => {
+        const bodyPath = body.response?.bodyPath;
+        const responsesDir = path.join(os.tmpdir(), 'insomnia-fake-responses');
+        if (!bodyPath || !path.resolve(bodyPath).startsWith(path.resolve(responsesDir) + path.sep)) {
+          throw new Error('bodyPath escapes the responses directory');
+        }
+        return fs.promises.readFile(bodyPath);
+      },
+    };
+    const violations = await findHandlersThatLeakArbitraryBodyPathReads(fakeHandlers, { outsidePath, outsideContents });
+    expect(violations).toEqual([]);
+  });
+});

@@ -207,12 +207,9 @@ describe('protocol-dispatch handlers resolve `directory` from the trusted regist
   });
 });
 
-// H1-followup finding (fixed): F2' resolved `directory` server-side from the trusted registry
-// (getPlugins()), but originally left `permissions` as a caller-supplied field on the request body
-// for both `plugin.runUserRequestHook` and `plugin.discoverUserPluginExports`. Now both handlers
-// resolve `permissions` from the trusted registry the same way they resolve `directory`, so a
-// forged `permissions` in the request body no longer grants a broader capability set than the
-// plugin's own registered manifest declares.
+// Both handlers resolve `permissions` from the trusted registry (getPlugins()), the same way they
+// resolve `directory`, so a `permissions` field on the request body doesn't grant a broader
+// capability set than the plugin's own registered manifest declares.
 describe('protocol-dispatch handlers resolve `permissions` from the trusted registry, not the request body', () => {
   let pluginDir: string;
 
@@ -266,23 +263,18 @@ describe('protocol-dispatch handlers resolve `permissions` from the trusted regi
     expect(hasNetwork).toBe(false);
   });
 
-  // The plugin's *registered* manifest (mocked above) declares no capabilities. A forged
-  // `permissions.capabilities: ['network']` in the request body must not grant `network` — the
-  // handler resolves `permissions` from `getPlugins()` by name, the same trusted-registry pattern
-  // F2' applies to `directory`, rather than trusting the request body.
-  it('a forged `permissions.capabilities` in the request body is ignored; the registry still denies network', async () => {
+  // The plugin's registered manifest (mocked above) declares no capabilities, so a
+  // `permissions.capabilities: ['network']` field on the request body must not grant `network` —
+  // the handler resolves `permissions` from `getPlugins()` by name, not the request body.
+  it('a `permissions.capabilities` field on the request body is ignored; the registry still denies network', async () => {
     const { hasNetwork } = await runHook({ capabilities: ['network'] });
     expect(hasNetwork).toBe(false);
   });
 });
 
-// Symmetric coverage for the other handler that resolves `permissions`: the describe block above
-// only exercises `plugin.runUserRequestHook`. `plugin.discoverUserPluginExports` takes the same
-// `resolveTrustedPlugin(...).permissions` value but on the *module* grant, not the capability grant
-// (discovery evaluates the plugin's top-level code, which can only reach gated `require(...)`, not
-// hook-time `context.*`). Exercising both fields on both handlers is the point: the permissions gap
-// this branch fixed existed specifically because the `directory` fix was verified per-handler but
-// `permissions` wasn't checked on every handler that resolves it.
+// Symmetric coverage: `plugin.discoverUserPluginExports` takes the same
+// `resolveTrustedPlugin(...).permissions` value as `plugin.runUserRequestHook` above, but applies it
+// to the module grant rather than the capability grant.
 describe('plugin.discoverUserPluginExports resolves `permissions.modules` from the trusted registry, not the request body', () => {
   let pluginDir: string;
 
@@ -328,16 +320,14 @@ describe('plugin.discoverUserPluginExports resolves `permissions.modules` from t
   });
 });
 
-// Fixed finding (PR #10286): a response hook's `setBody()` writes to a caller-supplied `bodyPath`
-// with no persisted `_id` to reload by, so `assertResponseBodyPathOwnership` instead rejects the call
-// if that bodyPath already belongs to a different, already-persisted response's `parentId`. This
-// doesn't close the narrower case of a caller who also knows the victim's real `parentId` — that's
-// the deeper gap tracked in `CROSS-TENANT-DB-ACCESS-FINDINGS.md`.
+// A response hook's setBody() writes to a caller-supplied bodyPath with no persisted _id to reload
+// by, so assertResponseBodyPathOwnership instead rejects the call if that bodyPath already belongs
+// to a different, already-persisted response's parentId.
 describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a different response', () => {
   let pluginDir: string;
   let responsesDir: string;
   let ownBodyPath: string;
-  let victimBodyPath: string;
+  let otherBodyPath: string;
   let previousDataPath: string | undefined;
 
   beforeEach(async () => {
@@ -347,7 +337,7 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     fs.writeFileSync(
       path.join(pluginDir, 'index.js'),
       `module.exports.responseHooks = [function (context) {
-        context.response.setBody('attacker-controlled-body');
+        context.response.setBody('replacement-body');
       }];`,
     );
 
@@ -355,9 +345,9 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     responsesDir = path.join(dataDir, 'responses');
     fs.mkdirSync(responsesDir);
     ownBodyPath = path.join(responsesDir, 'own-response-body.txt');
-    victimBodyPath = path.join(responsesDir, 'victim-response-body.txt');
+    otherBodyPath = path.join(responsesDir, 'other-response-body.txt');
     fs.writeFileSync(ownBodyPath, 'own-original-body');
-    fs.writeFileSync(victimBodyPath, 'victim-original-body');
+    fs.writeFileSync(otherBodyPath, 'other-original-body');
 
     previousDataPath = process.env['INSOMNIA_DATA_PATH'];
     process.env['INSOMNIA_DATA_PATH'] = dataDir;
@@ -401,8 +391,8 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
   it('baseline: setBody writes to a not-yet-persisted response\'s own bodyPath as intended', async () => {
     const res = await runResponseHook(ownBodyPath, 'req_1');
     expect(res.status).toBe(200);
-    expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('attacker-controlled-body');
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
+    expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('replacement-body');
+    expect(fs.readFileSync(otherBodyPath, 'utf8')).toBe('other-original-body');
   });
 
   it('allows re-writing a bodyPath that legitimately already belongs to the same parentId', async () => {
@@ -412,20 +402,20 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     });
     const res = await runResponseHook(ownBodyPath, 'req_1');
     expect(res.status).toBe(200);
-    expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('attacker-controlled-body');
+    expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('replacement-body');
   });
 
-  it('FIXED: rejects a forged `response.bodyPath` that belongs to a different response, before the hook runs', async () => {
+  it('rejects a `response.bodyPath` that belongs to a different response, before the hook runs', async () => {
     const { services } = await import('insomnia-data');
     (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath,
+      _id: 'res_other', parentId: 'req_other', bodyPath: otherBodyPath,
     });
-    // The forged call's parentId ('req_1') doesn't match victimBodyPath's real owner ('req_victim').
-    const res = await runResponseHook(victimBodyPath, 'req_1');
+    // The call's parentId ('req_1') doesn't match otherBodyPath's real owner ('req_other').
+    const res = await runResponseHook(otherBodyPath, 'req_1');
     expect(res.status).toBe(500);
     const json = await res.json();
     expect(json.error).toMatch(/belongs to a different response/);
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
+    expect(fs.readFileSync(otherBodyPath, 'utf8')).toBe('other-original-body');
     expect(fs.readFileSync(ownBodyPath, 'utf8')).toBe('own-original-body');
   });
 
@@ -449,7 +439,7 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
   it('rejects a forged bodyPath+parentId sent directly to response.setBody, bypassing the hook wrapper entirely', async () => {
     const { services } = await import('insomnia-data');
     (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath,
+      _id: 'res_other', parentId: 'req_other', bodyPath: otherBodyPath,
     });
     const token = getOrCreateTemplatingDbAuthToken();
     const { resolveDbByKey } = await import('../templating-worker-database');
@@ -457,8 +447,8 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
       method: 'POST',
       headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
       body: JSON.stringify({
-        bodyPath: victimBodyPath,
-        bodyBase64: Buffer.from('attacker-controlled-body', 'utf8').toString('base64'),
+        bodyPath: otherBodyPath,
+        bodyBase64: Buffer.from('replacement-body', 'utf8').toString('base64'),
         parentId: 'req_1',
       }),
     });
@@ -466,18 +456,12 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     expect(res.status).toBe(500);
     const json = await res.json();
     expect(json.error).toMatch(/belongs to a different response/);
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
+    expect(fs.readFileSync(otherBodyPath, 'utf8')).toBe('other-original-body');
   });
 
-  // FIXED: assertResponseBodyPathOwnership used to look up `services.response.getByBodyPath` using
-  // the raw, unresolved caller-supplied bodyPath (an exact-string NeDB lookup), while the write
-  // itself targeted `path.resolve(body.bodyPath)`. A bodyPath that was textually different from the
-  // victim's stored bodyPath yet resolved to the exact same absolute file missed the exact-match
-  // lookup entirely (no existing owner found -> no throw), even though the write landed on the
-  // victim's real file — needing no knowledge of the victim's real parentId at all, unlike the
-  // residual "same-parentId" gap tracked in CROSS-TENANT-DB-ACCESS-FINDINGS.md. Now the ownership
-  // check resolves the bodyPath before querying, so it agrees with the write's own resolved target.
-  it('FIXED: a path-normalization variant of a victim bodyPath no longer bypasses the ownership check via the hook wrapper', async () => {
+  // assertResponseBodyPathOwnership resolves the bodyPath before querying, so a textually different
+  // path that resolves to the same absolute file is recognized by the exact-match lookup.
+  it('rejects a path-normalization variant of another response\'s bodyPath via the hook wrapper', async () => {
     const { services } = await import('insomnia-data');
     // Real NeDB does exact-string field matching (`db.findOne(type, { bodyPath })`) -- mirror that
     // here with `mockImplementation` instead of the input-independent `mockResolvedValue` used by
@@ -485,45 +469,44 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     // string the code under test actually queries with.
     (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       async (bodyPath: string) =>
-        bodyPath === victimBodyPath ? { _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath } : null,
+        bodyPath === otherBodyPath ? { _id: 'res_other', parentId: 'req_other', bodyPath: otherBodyPath } : null,
     );
-    const variantOfVictimBodyPath = `${responsesDir}${path.sep}zzz${path.sep}..${path.sep}victim-response-body.txt`;
-    expect(variantOfVictimBodyPath).not.toBe(victimBodyPath);
-    expect(path.resolve(variantOfVictimBodyPath)).toBe(path.resolve(victimBodyPath));
+    const pathVariant = `${responsesDir}${path.sep}zzz${path.sep}..${path.sep}other-response-body.txt`;
+    expect(pathVariant).not.toBe(otherBodyPath);
+    expect(path.resolve(pathVariant)).toBe(path.resolve(otherBodyPath));
 
-    const res = await runResponseHook(variantOfVictimBodyPath, 'req_attacker');
+    const res = await runResponseHook(pathVariant, 'req_second');
 
     expect(res.status).toBe(500);
     const json = await res.json();
     expect(json.error).toMatch(/belongs to a different response/);
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
+    expect(fs.readFileSync(otherBodyPath, 'utf8')).toBe('other-original-body');
   });
 
-  // Same bug, reached by sending the path-normalization variant straight to response.setBody,
-  // bypassing the hook wrapper entirely (same actor as the already-fixed #10286 wrapper bypass).
-  it('FIXED: a path-normalization variant sent directly to response.setBody no longer bypasses the check', async () => {
+  // Same check, reached by sending the path-normalization variant directly to response.setBody.
+  it('rejects a path-normalization variant sent directly to response.setBody', async () => {
     const { services } = await import('insomnia-data');
     (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       async (bodyPath: string) =>
-        bodyPath === victimBodyPath ? { _id: 'res_victim', parentId: 'req_victim', bodyPath: victimBodyPath } : null,
+        bodyPath === otherBodyPath ? { _id: 'res_other', parentId: 'req_other', bodyPath: otherBodyPath } : null,
     );
-    const variantOfVictimBodyPath = `${responsesDir}${path.sep}zzz${path.sep}..${path.sep}victim-response-body.txt`;
+    const pathVariant = `${responsesDir}${path.sep}zzz${path.sep}..${path.sep}other-response-body.txt`;
     const token = getOrCreateTemplatingDbAuthToken();
     const { resolveDbByKey } = await import('../templating-worker-database');
     const req = new Request('insomnia-templating-worker-database://response.setbody', {
       method: 'POST',
       headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
       body: JSON.stringify({
-        bodyPath: variantOfVictimBodyPath,
-        bodyBase64: Buffer.from('attacker-controlled-body', 'utf8').toString('base64'),
-        parentId: 'req_attacker',
+        bodyPath: pathVariant,
+        bodyBase64: Buffer.from('replacement-body', 'utf8').toString('base64'),
+        parentId: 'req_second',
       }),
     });
     const res = await resolveDbByKey(req);
     expect(res.status).toBe(500);
     const json = await res.json();
     expect(json.error).toMatch(/belongs to a different response/);
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
+    expect(fs.readFileSync(otherBodyPath, 'utf8')).toBe('other-original-body');
   });
 });
 
