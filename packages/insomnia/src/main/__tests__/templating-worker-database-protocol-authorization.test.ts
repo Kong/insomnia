@@ -469,15 +469,15 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
   });
 
-  // BUG: assertResponseBodyPathOwnership looks up `services.response.getByBodyPath` using the raw,
-  // unresolved caller-supplied bodyPath (an exact-string NeDB lookup), but the write itself targets
-  // `path.resolve(body.bodyPath)`. A bodyPath that is textually different from the victim's stored
-  // bodyPath yet resolves to the exact same absolute file misses the exact-match lookup entirely
-  // (no existing owner found -> no throw), even though the write lands on the victim's real file.
-  // Unlike the residual "same-parentId" gap already tracked in CROSS-TENANT-DB-ACCESS-FINDINGS.md,
-  // this needs no knowledge of the victim's real parentId at all: the parentId comparison never runs
-  // because `existing` comes back null.
-  it('BUG: a path-normalization variant of a victim bodyPath bypasses the ownership check via the hook wrapper', async () => {
+  // FIXED: assertResponseBodyPathOwnership used to look up `services.response.getByBodyPath` using
+  // the raw, unresolved caller-supplied bodyPath (an exact-string NeDB lookup), while the write
+  // itself targeted `path.resolve(body.bodyPath)`. A bodyPath that was textually different from the
+  // victim's stored bodyPath yet resolved to the exact same absolute file missed the exact-match
+  // lookup entirely (no existing owner found -> no throw), even though the write landed on the
+  // victim's real file — needing no knowledge of the victim's real parentId at all, unlike the
+  // residual "same-parentId" gap tracked in CROSS-TENANT-DB-ACCESS-FINDINGS.md. Now the ownership
+  // check resolves the bodyPath before querying, so it agrees with the write's own resolved target.
+  it('FIXED: a path-normalization variant of a victim bodyPath no longer bypasses the ownership check via the hook wrapper', async () => {
     const { services } = await import('insomnia-data');
     // Real NeDB does exact-string field matching (`db.findOne(type, { bodyPath })`) -- mirror that
     // here with `mockImplementation` instead of the input-independent `mockResolvedValue` used by
@@ -493,13 +493,15 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
 
     const res = await runResponseHook(variantOfVictimBodyPath, 'req_attacker');
 
-    expect(res.status).toBe(200);
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('attacker-controlled-body');
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toMatch(/belongs to a different response/);
+    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
   });
 
   // Same bug, reached by sending the path-normalization variant straight to response.setBody,
   // bypassing the hook wrapper entirely (same actor as the already-fixed #10286 wrapper bypass).
-  it('BUG: a path-normalization variant sent directly to response.setBody also bypasses the check', async () => {
+  it('FIXED: a path-normalization variant sent directly to response.setBody no longer bypasses the check', async () => {
     const { services } = await import('insomnia-data');
     (services.response.getByBodyPath as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       async (bodyPath: string) =>
@@ -518,8 +520,10 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
       }),
     });
     const res = await resolveDbByKey(req);
-    expect(res.status).toBe(200);
-    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('attacker-controlled-body');
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toMatch(/belongs to a different response/);
+    expect(fs.readFileSync(victimBodyPath, 'utf8')).toBe('victim-original-body');
   });
 });
 

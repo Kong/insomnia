@@ -88,7 +88,11 @@ const assertResponseBodyPathOwnership = async (response: Record<string, any>): P
   if (!bodyPath) {
     return;
   }
-  const existing = await services.response.getByBodyPath(bodyPath);
+  // Resolve before the ownership lookup so it agrees with the resolved path the write itself uses
+  // (response.setBody's `target`) — otherwise a caller-supplied bodyPath that's textually different
+  // from a victim's stored bodyPath but resolves to the identical file (e.g. a redundant `.`/`..`
+  // segment) misses this exact-string lookup entirely and bypasses the check.
+  const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
   if (existing && existing.parentId !== response.parentId) {
     throw new Error('response.bodyPath belongs to a different response than the one being processed');
   }
