@@ -140,6 +140,29 @@ input[type='color']::-webkit-color-swatch {
 .new-sidebar {
   z-index: 0;
 }
+
+/* Sidebar focused-collection swipe transitions */
+@keyframes sidebar-focus-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes sidebar-focus-out {
+  from {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .new-sidebar .sidebar {
   display: flex;
   flex-direction: column;
