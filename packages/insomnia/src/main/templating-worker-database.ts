@@ -34,7 +34,7 @@ import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templ
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
-  // Reject before parsing the body, so a forged call never reaches a handler with attacker-supplied data.
+  // Reject before parsing the body, so an unauthenticated call never reaches a handler.
   if (!isValidTemplatingDbAuthToken(request.headers.get(TEMPLATING_DB_AUTH_HEADER))) {
     return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid templating database auth token' }), {
       status: 401,
@@ -79,6 +79,32 @@ const resolveTrustedPlugin = async (
     throw new Error(`Unknown plugin: ${pluginName}`);
   }
   return { directory: plugin.directory, permissions: plugin.permissions };
+};
+
+// The response isn't persisted yet at hook time (no _id to reload by), so instead reject if the
+// claimed bodyPath already belongs to a different, already-persisted response's parentId.
+const assertResponseBodyPathOwnership = async (response: Record<string, any>): Promise<void> => {
+  const bodyPath = response?.bodyPath;
+  if (!bodyPath) {
+    return;
+  }
+  // Resolve before the ownership lookup so it agrees with the resolved path the write itself uses,
+  // otherwise a textually different bodyPath resolving to the same file misses this exact-string lookup.
+  const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
+  if (existing && existing.parentId !== response.parentId) {
+    throw new Error('response.bodyPath belongs to a different response than the one being processed');
+  }
+};
+
+// Read-side counterpart of assertResponseBodyPathOwnership: rejects a bodyPath that isn't the stored bodyPath of an already-persisted response.
+const assertResponseBodyPathReadOwnership = async (bodyPath: string | undefined): Promise<void> => {
+  if (!bodyPath) {
+    return;
+  }
+  const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
+  if (!existing) {
+    throw new Error('response.bodyPath does not belong to any known response');
+  }
 };
 
 const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
@@ -603,12 +629,13 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     response?: { bodyPath?: string; bodyCompression?: any };
     readFailureValue?: string;
   }) => {
+    await assertResponseBodyPathReadOwnership(body.response?.bodyPath);
     return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   // H1: a sandboxed response hook's context.response.setBody(). The body arrives base64-encoded (so
   // the bytes survive the JSON bridge). Contain the write to the responses directory as defense in
   // depth — bodyPath is host-set, but this handler must never write outside it even if that changes.
-  'response.setBody': async (body: { bodyPath?: string; bodyBase64?: string }) => {
+  'response.setBody': async (body: { bodyPath?: string; bodyBase64?: string; parentId?: string }) => {
     if (!body.bodyPath) {
       throw new Error('Could not set body without existing body path');
     }
@@ -617,6 +644,9 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     if (typeof body.bodyBase64 !== 'string') {
       throw new TypeError('response.setBody requires a base64-encoded body');
     }
+    // This handler is directly dispatchable, not only reachable via plugin.runUserResponseHook, so the
+    // ownership check must live at this actual write choke point (#10286 bypass).
+    await assertResponseBodyPathOwnership({ bodyPath: body.bodyPath, parentId: body.parentId });
     const responsesDir = path.resolve(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'responses');
     const target = path.resolve(body.bodyPath);
     const relative = path.relative(responsesDir, target);
@@ -870,6 +900,8 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
   }) => {
     // Resolve directory/permissions from the trusted registry, never the caller-supplied body (#10290).
     const trusted = await resolveTrustedPlugin(body.plugin.name);
+    // Refuse to let setBody() redirect its write onto a different, already-persisted response (#10286).
+    await assertResponseBodyPathOwnership(body.response);
     return runResponseHookInSandbox(
       { ...body.plugin, directory: trusted.directory, permissions: trusted.permissions },
       body.hookIndex,
