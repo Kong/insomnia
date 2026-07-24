@@ -443,6 +443,49 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return api;',
   '  }',
 
+  // --- response-hook API rebuilt in-sandbox over the copied-in response object (`resp`) ---
+  // Mirrors packages/insomnia/src/plugins/context/response.ts. No readOnly variant (response.ts has
+  // none). Header matching is CASE-INSENSITIVE and hand-rolled (NOT misc.filterHeaders); getHeader
+  // returns string | string[] | null exactly as response.ts:91-101. Sync field reads never touch the
+  // host; getBody/setBody route through __bridge (no fs in the sandbox). setBody sends the body as
+  // base64 so the bytes survive the JSON bridge; the host decodes and writes the file.
+  '  function __buildResponseApi(resp) {',
+  '    if (!resp) { throw new Error("contexts.response initialized without response"); }',
+  '    var api = {',
+  '      getRequestId: function () { return resp.parentId || ""; },',
+  '      getStatusCode: function () { return resp.statusCode || 0; },',
+  '      getStatusMessage: function () { return resp.statusMessage || ""; },',
+  '      getBytesRead: function () { return resp.bytesRead || 0; },',
+  '      getTime: function () { return resp.elapsedTime || 0; },',
+  // The host returns a Buffer; the JSON bridge marshals it as { type: "Buffer", data: [...] }. Revive
+  // it to a real (shimmed) Buffer so hooks consume getBody() the same as the in-process response API.
+  '      getBody: function () { return __bridge("response.getBodyBuffer", { response: { bodyPath: resp.bodyPath, bodyCompression: resp.bodyCompression } }).then(function (raw) { if (raw && typeof raw === "object" && raw.type === "Buffer" && raw.data) { return Buffer.from(raw.data); } return raw; }); },',
+  '      getBodyStream: function () { throw new Error("response.getBodyStream() is not available in the sandbox; use getBody()"); },',
+  '      setBody: function (body) {',
+  '        if (!resp.bodyPath) { throw new Error("Could not set body without existing body path"); }',
+  '        resp.bytesContent = (body && body.length) || 0;',
+  '        var b64 = (typeof body === "string") ? Buffer.from(body, "utf8").toString("base64") : Buffer.from(body || []).toString("base64");',
+  '        return __bridge("response.setBody", { bodyPath: resp.bodyPath, bodyBase64: b64, parentId: resp.parentId });',
+  '      },',
+  '      getHeader: function (name) {',
+  '        var headers = resp.headers || [];',
+  '        var matched = [];',
+  '        for (var i = 0; i < headers.length; i++) { if (headers[i].name.toLowerCase() === name.toLowerCase()) { matched.push(headers[i]); } }',
+  '        if (matched.length > 1) { var vals = []; for (var j = 0; j < matched.length; j++) { vals.push(matched[j].value); } return vals; }',
+  '        if (matched.length === 1) { return matched[0].value; }',
+  '        return null;',
+  '      },',
+  '      getHeaders: function () {',
+  '        if (!resp.headers) { return undefined; }',
+  '        var out = [];',
+  '        for (var i = 0; i < resp.headers.length; i++) { out.push({ name: resp.headers[i].name, value: resp.headers[i].value }); }',
+  '        return out;',
+  '      },',
+  '      hasHeader: function (name) { return this.getHeader(name) !== null; }',
+  '    };',
+  '    return api;',
+  '  }',
+
   // --- load the plugin (its entry module, resolving any relative requires) and run the tag ---
   '  globalThis.__invoke = function () {',
   '    var env = __env;',
@@ -469,11 +512,14 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    var hooks = (isResponse ? (mod && mod.responseHooks) : (mod && mod.requestHooks)) || [];',
   '    var hook = hooks[env.hookIndex];',
   '    if (typeof hook !== "function") { throw new Error("Plugin " + (isResponse ? "response" : "request") + " hook not found at index " + env.hookIndex); }',
-  // Response hooks get a read-only request view (matches pluginRequest.init(..., true)).
-  // Pass hookRequest through directly (no `|| {}`): __buildRequestApi throws on a missing request,
-  // matching the in-process pluginRequest.init(), and keeps the marshaled-back object === the mutated one.
+  // Response hooks get a read-only request view (matches pluginRequest.init(..., true)) plus the
+  // response API; request hooks get a mutable request only. Pass hookRequest/hookResponse through
+  // directly (no `|| {}`): __buildRequestApi/__buildResponseApi throw on missing data, matching the
+  // in-process pluginRequest.init()/pluginResponse.init(), and keep the marshaled-back objects === the
+  // ones the hook mutated.
   '    ctx.request = __buildRequestApi(env.hookRequest, isResponse);',
-  '    return Promise.resolve(hook(ctx)).then(function () { return JSON.stringify({ request: env.hookRequest }); });',
+  '    if (isResponse) { ctx.response = __buildResponseApi(env.hookResponse); }',
+  '    return Promise.resolve(hook(ctx)).then(function () { return JSON.stringify({ request: env.hookRequest, response: env.hookResponse }); });',
   '  };',
 
   // --- describe the plugin's exports without running any of them (L1 load-time discovery) ---
