@@ -14,6 +14,7 @@ import {
 } from 'react-aria-components';
 
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
+import { purgeCachedEditorStates } from '~/ui/components/.client/codemirror/editor-state-cache';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { describeByteSize, generateId } from '../../../common/misc';
@@ -657,6 +658,12 @@ export const KeyValueEditor: FC<Props> = ({
                     confirmMessage=""
                     doneMessage=""
                     onClick={() => {
+                      // Drop the deleted row's cached undo history (keyed on pair.id)
+                      // so its ephemeral entries don't linger in the shared cache.
+                      const pairId = pair.id;
+                      if (pairId) {
+                        purgeCachedEditorStates(key => key.includes(pairId));
+                      }
                       onChange(persistedItems.filter(item => item.id !== pair.id));
                     }}
                   >
