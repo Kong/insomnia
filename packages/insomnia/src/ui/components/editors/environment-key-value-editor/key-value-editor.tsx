@@ -70,23 +70,32 @@ export const EnvironmentKVEditor = ({
   disabled = false,
 }: EditorProps) => {
   // The persisted pairs (everything that lives in the data model and shows up in diffs).
-  const persistedPairs: EnvironmentKvPairData[] = useMemo(
-    () => [...data],
+  // Deduped by id - react-aria-components' ListBox keys rows by id, and two rows sharing
+  // an id corrupts its internal collection (can hang the tab). Duplicate ids shouldn't occur,
+  // but have been observed with corrupted/legacy persisted data, so guard against it here.
+  const persistedPairs: EnvironmentKvPairData[] = useMemo(() => {
+    const byId = new Map<string, EnvironmentKvPairData>();
+    data.forEach(pair => byId.set(pair.id, pair));
+    return [...byId.values()];
     // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(data)],
-  );
+  }, [JSON.stringify(data)]);
   const blankNameEditorRef = useRef<OneLineEditorHandle | null>(null);
   // The id for the trailing blank row is derived from the persisted pairs (rather than
   // held in state) so it only changes when the data actually changes. This keeps it in
   // sync with the async data updates - if it flipped eagerly the row the user just typed
   // into would briefly belong to no list and flicker.
+  // A fresh id is minted only once the previous one is committed (found in persistedPairs) -
+  // never reused, even after that row is later deleted. Reclaiming a freed numeric slot would
+  // let a deleted row's id land back on the blank row, and since the row's key (and its
+  // OneLineEditor's key) is derived from that id, React would reuse the deleted row's DOM/editor
+  // instance instead of remounting it - leaving stale, uncommitted text on screen.
+  const blankIdRef = useRef(generateId('envPair-blank'));
   const blankId = useMemo(() => {
-    let n = 0;
-    while (persistedPairs.some(p => p.id === `envPair-blank-${n}`)) {
-      n++;
+    if (persistedPairs.some(p => p.id === blankIdRef.current)) {
+      blankIdRef.current = generateId('envPair-blank');
     }
-    return `envPair-blank-${n}`;
+    return blankIdRef.current;
   }, [persistedPairs]);
   const blankPair: EnvironmentKvPairData = useMemo(
     () => ({ id: blankId, name: '', value: '', type: EnvironmentKvPairDataType.STRING, enabled: true }),
@@ -207,6 +216,16 @@ export const EnvironmentKVEditor = ({
       if (newValue === EnvironmentKvPairDataType.JSON && newPair.value.trim() === '') {
         newPair.value = JSON.stringify({});
       }
+      // Never persist the blank row from a name/value change while it's still empty —
+      // e.g. a blur-flush firing (from the ListBox's autoFocus="last" landing here and
+      // then losing focus, such as when switching to a different environment) without
+      // the user ever having typed. The enabled toggle and type selector are always
+      // deliberate button/menu actions (never blur-triggered), so they should always
+      // commit the row even while name/value are still empty.
+      const isNameOrValueChange = changedPropertyName === 'name' || changedPropertyName === 'value';
+      if (isNameOrValueChange && !newPair.name && !newPair.value) {
+        return;
+      }
       onChange([...persistedPairs, newPair]);
       return;
     }
@@ -215,6 +234,13 @@ export const EnvironmentKVEditor = ({
     const changedItemIdx = persistedPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
       const changedItem = persistedPairs[changedItemIdx];
+      // A blur-flush (from clicking into a disabled/read-only row's name or value editor and
+      // then clicking away, e.g. into another row) re-fires onChange with the same, unedited
+      // value. Treat that as a no-op rather than force-enabling a row the user never touched.
+      const isNameOrValueChange = changedPropertyName === 'name' || changedPropertyName === 'value';
+      if (isNameOrValueChange && changedItem[changedPropertyName] === newValue) {
+        return;
+      }
       // enable item since user modifies the item unless manual disable it
       changedItem['enabled'] = true;
       changedItem[changedPropertyName] = newValue;
@@ -475,7 +501,10 @@ export const EnvironmentKVEditor = ({
             doneMessage=""
             ariaLabel="Delete Row"
             tabIndex={-1}
-            disabled={disabled}
+            // The blank row is never part of persistedPairs, so deleting it can never do
+            // anything — always disable it rather than leave a delete button that silently
+            // no-ops when clicked and confirmed.
+            disabled={disabled || isBlank}
             onClick={() => handleDeleteItem(id)}
           >
             <Icon icon="trash-can" />

@@ -1,9 +1,9 @@
 import type { QuickJSContext, QuickJSHandle } from 'quickjs-emscripten';
 
 import type { HostBridge } from './host-bridge';
-import { IN_SANDBOX_BOOTSTRAP, RUNNER, wrapPluginSource } from './in-sandbox-bootstrap';
+import { DESCRIBE_RUNNER, HOOK_RUNNER, IN_SANDBOX_BOOTSTRAP, RUNNER } from './in-sandbox-bootstrap';
 import { type ContextEnvelope, encodeBridgeFailure, encodeBridgeSuccess } from './marshal';
-import { MODULE_REGISTRY_SOURCE } from './module-registry';
+import { buildModuleRegistrySource } from './module-registry';
 import { SANDBOX_GLOBALS_SOURCE } from './sandbox-globals';
 
 /**
@@ -20,10 +20,20 @@ export interface HostCrypto {
 }
 
 export interface RunTagInSandboxOptions {
-  /** Raw CommonJS source of the plugin module that exports `templateTags`. */
-  pluginSource: string;
-  /** Name of the tag within the module to execute. */
+  /**
+   * Raw CommonJS source of the plugin's entry module. Convenience for single-file plugins/tests;
+   * synthesized into `envelope.moduleFiles` as `index.js`. Ignored when the envelope already carries
+   * a module map (multi-file plugins, M4).
+   */
+  pluginSource?: string;
+  /** Name of the tag within the module to execute. Ignored (may be '') when `discover` is set. */
   tagName: string;
+  /**
+   * Discovery mode (L1): instead of running a tag, evaluate the plugin entry and return a JSON
+   * string manifest of its exports (template-tag metadata, hook counts, action labels, themes).
+   * The plugin's top-level code still runs — but inside the sandbox, never on the host.
+   */
+  discover?: boolean;
   /** Bulk-copied state passed to the rebuilt in-sandbox context. */
   envelope: ContextEnvelope;
   /** Host side of the async bridge — runs the real work for each `__hostBridge` call. */
@@ -42,25 +52,40 @@ export interface RunTagInSandboxOptions {
  * intermediate handles are reclaimed wholesale.
  */
 export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<string> => {
-  const { pluginSource, tagName, envelope, bridge, onConsole, timeoutMs = 10_000 } = opts;
+  const { pluginSource, tagName, envelope, bridge, onConsole, discover = false, timeoutMs = 10_000 } = opts;
   const { getQuickJSModule } = await import('./quickjs-runtime');
   const QuickJS = await getQuickJSModule();
   const ctx = QuickJS.newContext();
   const deadline = Date.now() + timeoutMs;
+
+  // Single-file convenience: synthesize a one-entry module map from pluginSource when the caller
+  // didn't pass a multi-file map. The in-sandbox loader always resolves the entry from the map.
+  const hasMap = !!envelope.moduleFiles && Object.keys(envelope.moduleFiles).length > 0;
+  if (!hasMap && pluginSource === undefined) {
+    throw new Error('runTagInSandbox requires either pluginSource or envelope.moduleFiles');
+  }
+  const fullEnvelope: ContextEnvelope = hasMap
+    ? { ...envelope, entryModuleKey: envelope.entryModuleKey ?? 'index.js' }
+    : { ...envelope, moduleFiles: { 'index.js': pluginSource as string }, entryModuleKey: 'index.js' };
 
   try {
     // Polled during synchronous execution so a tight sync loop in plugin code can't bypass the timeout.
     ctx.runtime.setInterruptHandler(() => Date.now() > deadline);
     // Caps the WASM heap so a plugin can't OOM the host by allocating without bound.
     ctx.runtime.setMemoryLimit(32 * 1024 * 1024);
-    installHostBridge(ctx, bridge);
+    // Discovery only ever evaluates plugin top-level code to read its exports — it must stay
+    // side-effect-free even though that same top-level code can reach `__buildContext` (a bare
+    // sandbox global, see SANDBOX_INTERNAL_GLOBALS) and wire up a context of its own. Swapping in a
+    // rejecting bridge here means any such attempt fails inside the sandbox instead of reaching the
+    // real host, no matter how it's invoked.
+    installHostBridge(ctx, discover ? rejectingBridge : bridge);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
 
     // The envelope/tag globals are injected BEFORE the bootstrap, which captures them into closure
     // state and deletes the globals — so plugin top-level code can't rewrite grantedModules (or any
     // other envelope field) before __invoke() runs.
-    setGlobalString(ctx, '__envelopeJSON', JSON.stringify(envelope));
+    setGlobalString(ctx, '__envelopeJSON', JSON.stringify(fullEnvelope));
     setGlobalString(ctx, '__tagName', tagName);
     evalOrThrow(ctx, IN_SANDBOX_BOOTSTRAP, '<sandbox-bootstrap>');
     // Ambient globals (Buffer/process/crypto/URL) depend on the bootstrap's encoders and the host
@@ -68,14 +93,22 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     // appInfo (platform/arch) is injected as its own global for the process stub to read + delete.
     setGlobalString(ctx, '__sandboxAppInfoJSON', JSON.stringify(envelope.appInfo ?? {}));
     evalOrThrow(ctx, SANDBOX_GLOBALS_SOURCE, '<sandbox-globals>');
-    evalOrThrow(ctx, MODULE_REGISTRY_SOURCE, '<sandbox-modules>');
-    evalOrThrow(ctx, wrapPluginSource(pluginSource), '<plugin>');
-    evalOrThrow(ctx, RUNNER, '<runner>');
+    // Only register heavy vendored libs the plugin was granted, so unrelated renders don't parse them.
+    evalOrThrow(ctx, buildModuleRegistrySource(fullEnvelope.grantedModules), '<sandbox-modules>');
+    // Plugin source travels as envelope DATA (moduleFiles) and is compiled by the in-sandbox loader
+    // when __invoke()/__describeExports()/__invokeHook() loads the entry — no host-side eval.
+    const runner = envelope.hookKind ? HOOK_RUNNER : discover ? DESCRIBE_RUNNER : RUNNER;
+    evalOrThrow(ctx, runner, '<runner>');
 
     return await drivePromiseToString(ctx, timeoutMs);
   } finally {
     ctx.dispose();
   }
+};
+
+/** Installed instead of the real bridge during `discover: true` so a bridge call made from plugin top-level code fails inside the sandbox rather than reaching the host. */
+const rejectingBridge: HostBridge = async path => {
+  throw new Error(`Host bridge is unavailable during discovery (attempted call to "${path}")`);
 };
 
 /** Register `__hostBridge(path, bodyJson)` returning a VM promise resolved from async host work. */

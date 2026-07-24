@@ -135,6 +135,9 @@ async function _highlightNunjucksTags(
       const el = document.createElement('span');
       el.className = `nunjucks-tag ${tok.type}`;
       el.setAttribute('draggable', 'true');
+      // Behavior hook so hover logic can detect tags without coupling to the CSS class name.
+      // See handleEditorMouseMove in one-line-editor.tsx for usage.
+      el.dataset.nunjucksTag = 'true';
       el.dataset.error = 'off';
       el.dataset.template = tok.string;
       el.replaceChildren(document.createElement('label'), document.createTextNode(tok.string));
@@ -313,8 +316,8 @@ async function _updateElementText(
       const context = await renderContext();
       const con = context.context.getKeysContext();
       const contextForKey = con.keyContext[cleanedStr];
-      // Only prefix the title with context, if context is found
-      const valueAndContext = contextForKey ? `{${contextForKey}}: ${title}` : title;
+      // Only suffix the title with context, if context is found
+      const valueAndContext = contextForKey ? `${title} {${contextForKey}}` : title;
 
       // Swap what's shown in the tooltip vs the innerHTML
       innerHTML = showVariableSourceAndValue ? valueAndContext : cleanedStr;

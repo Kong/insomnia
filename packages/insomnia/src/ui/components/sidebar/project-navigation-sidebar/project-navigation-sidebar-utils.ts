@@ -13,11 +13,12 @@ import type {
 } from 'insomnia-data';
 import type { BaseModel } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 
 import { database } from '~/common/database';
-import { fuzzyMatchAll } from '~/common/misc';
 import { sortMethodMap } from '~/common/sorting';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { dedupeCollectionItems } from '~/ui/utils/dedupe-collection-items';
 
 export interface SlimRequestDoc extends BaseModel {
   type: 'Request' | 'GrpcRequest' | 'WebSocketRequest' | 'SocketIORequest' | 'RequestGroup';
@@ -211,9 +212,11 @@ export function flattenCollectionChildren(
   const { isRequestGroup } = models.requestGroup;
   const collection: Child[] = [];
 
+  const uniqueRequests = dedupeCollectionItems(allRequests, doc => doc._id);
+
   // map of parentId to its direct children requests and request groups
   const requestsByParentId = new Map<string, AllRequestDoc[]>();
-  for (const req of allRequests) {
+  for (const req of uniqueRequests) {
     const allRequestsByParentId = requestsByParentId.get(req.parentId);
     if (allRequestsByParentId) {
       allRequestsByParentId.push(req);

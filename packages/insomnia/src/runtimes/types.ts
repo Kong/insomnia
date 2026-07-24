@@ -1,6 +1,6 @@
 import type { AESMessage, Cookie, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
-import type { RenderedRequest, RenderInputType } from '~/common/templating/types';
+import type { AppPromptOptions, RenderedRequest, RenderInputType } from '~/common/templating/types';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { ConvertResult } from '../main/importers/convert';
@@ -62,10 +62,15 @@ export interface ImportRuntime {
   convert: (importEntry: ImportEntry, options?: { importerId?: string }) => Promise<ConvertResult>;
 }
 
+export interface AppRuntime {
+  prompt: (title: string, options?: AppPromptOptions) => Promise<string>;
+}
+
 export interface RuntimeCapabilities {
   network: NetworkRuntime;
   crypto: CryptoRuntime;
   templating: TemplatingRuntime;
   secretStorage: SecretStorageRuntime;
   importer: ImportRuntime;
+  app?: AppRuntime;
 }

@@ -94,6 +94,8 @@ export type PluginToMainAPIPaths =
   | 'plugin.executeBundlePluginMainAction'
   | 'plugin.getUserPluginTemplateTags'
   | 'plugin.executeUserPluginTag'
+  | 'plugin.discoverUserPluginExports'
+  | 'plugin.runUserRequestHook'
   | 'app.alert'
   | 'app.dialog'
   | 'app.prompt'
@@ -264,21 +266,11 @@ export interface BaseRenderContext {
   [key: string]: any;
 }
 
-interface PromptModalOptions {
-  title: string;
+export interface AppPromptOptions {
+  label?: string;
   defaultValue?: string;
   submitName?: string;
-  selectText?: boolean;
-  upperCase?: boolean;
-  hint?: string;
   inputType?: string;
-  placeholder?: string;
-  validate?: (arg0: string) => string;
-  label?: string;
-  hints?: string[];
-  onComplete?: (arg0: string) => Promise<void> | void;
-  onHide?: () => void;
-  onDeleteHint?: (arg0?: string) => void;
 }
 
 export interface AppContext {
@@ -288,10 +280,7 @@ export interface AppContext {
     body: HTMLElement,
     options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean },
   ) => Promise<void>;
-  prompt: (
-    title: string,
-    options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>,
-  ) => Promise<string>;
+  prompt: (title: string, options?: AppPromptOptions) => Promise<string>;
   getPath: (name: string) => Promise<string>;
   getInfo: () => { version: string; platform: NodeJS.Platform };
   showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;

@@ -1,7 +1,7 @@
+import { fuzzyMatch } from 'insomnia-data/common';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
-import { fuzzyMatch } from '~/common/misc';
 import { useGitProviderRepositoriesLoaderFetcher } from '~/routes/git-provider.repositories';
 import type { GitRemoteProviderType } from '~/sync/git/providers/types';
 

@@ -92,7 +92,7 @@ const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix: string;
   selectedFormat: SelectedFormat;
 }) => {
-  const date = format(Date.now(), 'yyyy-MM-dd');
+  const date = format(Date.now(), 'yyyy-MM-dd-HH-mm-ss');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || window.app.getPath('desktop');

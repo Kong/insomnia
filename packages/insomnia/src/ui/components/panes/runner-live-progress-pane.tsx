@@ -38,10 +38,11 @@ export const RunnerLiveProgressPane: FC<Props> = ({ items, isRunning, handleCanc
             .filter(item => item.iteration === iteration)
             .map(item => (
               <RequestResultCard
-                key={item.key}
+                key={`${item.key}-${isRunning}`}
                 item={item}
                 testId={`runner-live-item-${item.requestName}`}
                 onSkip={() => handleSkip(item.key)}
+                defaultExpanded={!isRunning}
               />
             ))}
         </div>

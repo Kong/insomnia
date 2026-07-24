@@ -1,5 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import { models } from 'insomnia-data';
+import { fuzzyMatch } from 'insomnia-data/common';
 import { Fragment } from 'react';
 import {
   Button,
@@ -19,7 +20,6 @@ import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizat
 import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
 import { Tooltip } from '~/ui/components/tooltip';
 
-import { fuzzyMatch } from '../../common/misc';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import uiEventBus from '../event-bus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';

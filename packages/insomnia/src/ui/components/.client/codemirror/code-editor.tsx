@@ -194,6 +194,7 @@ export const CodeEditor = memo(
       const textAreaRef = useRef<HTMLTextAreaElement>(null);
       const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
       const [originalCode, setOriginalCode] = useState('');
+      const [jsonFilterMatchCount, setJsonFilterMatchCount] = useState<number | null>(null);
       const { settings } = useRootLoaderData()!;
       const { isOwner, isEnterprisePlan } = usePlanData();
       const indentSize = settings.editorIndentSize;
@@ -248,9 +249,11 @@ export const CodeEditor = memo(
                 try {
                   const codeObj = JSON.parse(code);
                   const results = JSONPath({ json: codeObj, path: filter.trim() });
+                  setJsonFilterMatchCount(results.length);
                   jsonString = JSON.stringify(results);
                 } catch (err) {
                   console.log('[jsonpath] Error:', err);
+                  setJsonFilterMatchCount(null);
                   jsonString = '[]';
                 }
               }
@@ -803,6 +806,7 @@ export const CodeEditor = memo(
                       if (updateFilter) {
                         updateFilter('');
                       }
+                      setJsonFilterMatchCount(null);
                       maybePrettifyAndSetValue(originalCode, false);
                     }
                   }}
@@ -869,6 +873,11 @@ export const CodeEditor = memo(
                   </Button>
                 ) : null}
               </Toolbar>
+              {mode?.includes('json') && jsonFilterMatchCount !== null && (
+                <span className="pr-3 italic">
+                  {jsonFilterMatchCount} {jsonFilterMatchCount === 1 ? 'match' : 'matches'}
+                </span>
+              )}
             </div>
           ) : null}
         </div>

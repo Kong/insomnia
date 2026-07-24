@@ -1,3 +1,8 @@
+// Multi-file plugin (M4): this entry require()s a sibling file. The sandbox resolves it from the
+// plugin's own source map — see the `multifileprobe` tag below.
+// eslint-disable-next-line no-undef -- CJS plugin requiring a sibling file
+const greeting = require('./lib/greeting');
+
 // eslint-disable-next-line no-undef
 module.exports.templateTags = [
   {
@@ -94,6 +99,27 @@ module.exports.templateTags = [
       } catch (err) {
         return err.message;
       }
+    },
+  },
+  {
+    name: 'vendoredprobe',
+    displayName: 'Vendored Lib Probe',
+    description: 'Demos a vetted npm library (M3): this plugin declares insomnia.permissions.modules ["uuid"]',
+    args: [],
+    async run() {
+      // Works because package.json declares the `uuid` grant; uuid is bundled + pinned by Insomnia.
+      // eslint-disable-next-line no-undef -- CJS plugin requiring a vetted registry lib
+      const uuid = require('uuid');
+      return 'uuid=' + (uuid.validate(uuid.v4()) ? 'ok' : 'bad');
+    },
+  },
+  {
+    name: 'multifileprobe',
+    displayName: 'Multi-file Probe',
+    description: 'Demos multi-file plugins (M4): index.js requires ./lib/greeting, resolved in-sandbox',
+    args: [],
+    async run() {
+      return greeting.greet('sandbox');
     },
   },
 ];
