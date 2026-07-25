@@ -707,6 +707,12 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     if (relative.startsWith('..') || path.isAbsolute(relative)) {
       throw new Error('response.setBody path escapes the responses directory');
     }
+    // Re-check after resolving symlinks, mirroring getPluginEntrySource/readPluginModuleMap: a
+    // symlinked directory entry under responsesDir could otherwise resolve outside it despite the
+    // string-based check above passing.
+    if (!isContainedIn(fs.realpathSync(responsesDir), fs.realpathSync(path.dirname(target)))) {
+      throw new Error('response.setBody path escapes the responses directory');
+    }
     fs.writeFileSync(target, Buffer.from(body.bodyBase64, 'base64'));
     return null;
   },
