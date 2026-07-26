@@ -171,6 +171,13 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'webSocketPayload.update',
   'webSocketRequest.create',
   'webSocketRequestMeta.updateOrCreateByParentId',
+  'workspace.count',
+  'workspace.create',
+  'workspace.getById',
+  'workspace.list',
+  'workspace.listByParentId',
+  'workspace.remove',
+  'workspace.update',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

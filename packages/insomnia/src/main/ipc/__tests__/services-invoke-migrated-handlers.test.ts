@@ -60,6 +60,10 @@ vi.mock('insomnia-data', () => ({
     webSocketPayload: { create: vi.fn(), getByParentId: vi.fn(), update: vi.fn() },
     webSocketRequest: { create: vi.fn() },
     webSocketRequestMeta: { updateOrCreateByParentId: vi.fn() },
+    workspace: {
+      count: vi.fn(), create: vi.fn(), getById: vi.fn(), list: vi.fn(), listByParentId: vi.fn(),
+      remove: vi.fn(), update: vi.fn(),
+    },
   },
 }));
 
@@ -239,6 +243,13 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'webSocketPayloadUpdate', serviceName: 'webSocketPayload', methodName: 'update', args: [{ _id: 'wp1' }, { value: 'x' }] },
   { handlerName: 'webSocketRequestCreate', serviceName: 'webSocketRequest', methodName: 'create', args: [{ parentId: 'w1' }] },
   { handlerName: 'webSocketRequestMetaUpdateOrCreateByParentId', serviceName: 'webSocketRequestMeta', methodName: 'updateOrCreateByParentId', args: ['req1', { expandedTypes: [] }] },
+  { handlerName: 'workspaceCount', serviceName: 'workspace', methodName: 'count', args: [{ parentId: 'proj1' }] },
+  { handlerName: 'workspaceCreate', serviceName: 'workspace', methodName: 'create', args: [{ name: 'w1' }] },
+  { handlerName: 'workspaceGetById', serviceName: 'workspace', methodName: 'getById', args: ['w1'] },
+  { handlerName: 'workspaceList', serviceName: 'workspace', methodName: 'list', args: [{ parentId: 'proj1' }] },
+  { handlerName: 'workspaceListByParentId', serviceName: 'workspace', methodName: 'listByParentId', args: ['proj1'] },
+  { handlerName: 'workspaceRemove', serviceName: 'workspace', methodName: 'remove', args: ['w1'] },
+  { handlerName: 'workspaceUpdate', serviceName: 'workspace', methodName: 'update', args: ['w1', { name: 'renamed' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

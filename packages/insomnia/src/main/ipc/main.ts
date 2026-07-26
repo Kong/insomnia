@@ -211,6 +211,13 @@ import {
   webSocketPayloadUpdate,
   webSocketRequestCreate,
   webSocketRequestMetaUpdateOrCreateByParentId,
+  workspaceCount,
+  workspaceCreate,
+  workspaceGetById,
+  workspaceList,
+  workspaceListByParentId,
+  workspaceRemove,
+  workspaceUpdate,
 } from '~/main/ipc/services-invoke-migrated-handlers';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -730,6 +737,13 @@ export function registerMainHandlers() {
   ipcMainHandle('services.webSocketPayload.update', webSocketPayloadUpdate);
   ipcMainHandle('services.webSocketRequest.create', webSocketRequestCreate);
   ipcMainHandle('services.webSocketRequestMeta.updateOrCreateByParentId', webSocketRequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.workspace.count', workspaceCount);
+  ipcMainHandle('services.workspace.create', workspaceCreate);
+  ipcMainHandle('services.workspace.getById', workspaceGetById);
+  ipcMainHandle('services.workspace.list', workspaceList);
+  ipcMainHandle('services.workspace.listByParentId', workspaceListByParentId);
+  ipcMainHandle('services.workspace.remove', workspaceRemove);
+  ipcMainHandle('services.workspace.update', workspaceUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

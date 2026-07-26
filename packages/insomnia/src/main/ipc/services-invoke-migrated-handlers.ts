@@ -257,3 +257,11 @@ export const webSocketPayloadUpdate = (_: IpcMainInvokeEvent, obj: WebSocketPayl
 export const webSocketRequestCreate = (_: IpcMainInvokeEvent, patch: Partial<WebSocketRequest> = {}) => services.webSocketRequest.create(patch);
 
 export const webSocketRequestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<WebSocketRequestMeta>) => services.webSocketRequestMeta.updateOrCreateByParentId(parentId, patch);
+
+export const workspaceCount = (_: IpcMainInvokeEvent, query?: Query<Workspace>) => services.workspace.count(query);
+export const workspaceCreate = (_: IpcMainInvokeEvent, patch: Partial<Workspace> = {}) => services.workspace.create(patch);
+export const workspaceGetById = (_: IpcMainInvokeEvent, id?: string) => services.workspace.getById(id);
+export const workspaceList = (_: IpcMainInvokeEvent, query?: Query<Workspace>, sort?: Record<string, any>, limit?: number) => services.workspace.list(query, sort, limit);
+export const workspaceListByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.workspace.listByParentId(parentId);
+export const workspaceRemove = (_: IpcMainInvokeEvent, idOrWorkspace: string | Workspace) => services.workspace.remove(idOrWorkspace);
+export const workspaceUpdate = (_: IpcMainInvokeEvent, idOrWorkspace: string | Workspace, patch: Partial<Workspace>) => services.workspace.update(idOrWorkspace, patch);
