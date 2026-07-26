@@ -25,7 +25,11 @@ import type {
   RequestGroupMeta,
   RequestMeta,
   Response,
+  RunnerTestResult,
   Settings,
+  SocketIOPayload,
+  SocketIORequest,
+  SocketIORequestMeta,
   UserSession,
 } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -205,3 +209,15 @@ export const responseCreate = (_: IpcMainInvokeEvent, patch: Partial<Response> =
 export const responseGetByBodyPath = (_: IpcMainInvokeEvent, bodyPath: string) => services.response.getByBodyPath(bodyPath);
 export const responseGetById = (_: IpcMainInvokeEvent, id: string) => services.response.getById(id);
 export const responseGetLatestForRequestId = (_: IpcMainInvokeEvent, requestId: string, environmentId: string | null) => services.response.getLatestForRequestId(requestId, environmentId);
+
+export const runnerTestResultCreate = (_: IpcMainInvokeEvent, patch: Partial<RunnerTestResult> = {}) => services.runnerTestResult.create(patch);
+export const runnerTestResultFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.runnerTestResult.findByParentId(parentId);
+export const runnerTestResultGetById = (_: IpcMainInvokeEvent, id: string) => services.runnerTestResult.getById(id);
+export const runnerTestResultRemove = (_: IpcMainInvokeEvent, item: RunnerTestResult) => services.runnerTestResult.remove(item);
+
+export const socketIOPayloadGetOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.socketIOPayload.getOrCreateByParentId(parentId);
+export const socketIOPayloadUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<SocketIOPayload>) => services.socketIOPayload.updateOrCreateByParentId(parentId, patch);
+
+export const socketIORequestCreate = (_: IpcMainInvokeEvent, patch: Partial<SocketIORequest> = {}) => services.socketIORequest.create(patch);
+
+export const socketIORequestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<SocketIORequestMeta>) => services.socketIORequestMeta.updateOrCreateByParentId(parentId, patch);

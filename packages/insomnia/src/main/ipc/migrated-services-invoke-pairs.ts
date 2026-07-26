@@ -142,6 +142,14 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'response.getByBodyPath',
   'response.getById',
   'response.getLatestForRequestId',
+  'runnerTestResult.create',
+  'runnerTestResult.findByParentId',
+  'runnerTestResult.getById',
+  'runnerTestResult.remove',
+  'socketIOPayload.getOrCreateByParentId',
+  'socketIOPayload.updateOrCreateByParentId',
+  'socketIORequest.create',
+  'socketIORequestMeta.updateOrCreateByParentId',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

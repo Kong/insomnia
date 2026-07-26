@@ -175,10 +175,18 @@ import {
   responseGetByBodyPath,
   responseGetById,
   responseGetLatestForRequestId,
+  runnerTestResultCreate,
+  runnerTestResultFindByParentId,
+  runnerTestResultGetById,
+  runnerTestResultRemove,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
   settingsUpdate,
+  socketIOPayloadGetOrCreateByParentId,
+  socketIOPayloadUpdateOrCreateByParentId,
+  socketIORequestCreate,
+  socketIORequestMetaUpdateOrCreateByParentId,
   userSessionGet,
   userSessionRemove,
   userSessionUpdate,
@@ -672,6 +680,14 @@ export function registerMainHandlers() {
   ipcMainHandle('services.response.getByBodyPath', responseGetByBodyPath);
   ipcMainHandle('services.response.getById', responseGetById);
   ipcMainHandle('services.response.getLatestForRequestId', responseGetLatestForRequestId);
+  ipcMainHandle('services.runnerTestResult.create', runnerTestResultCreate);
+  ipcMainHandle('services.runnerTestResult.findByParentId', runnerTestResultFindByParentId);
+  ipcMainHandle('services.runnerTestResult.getById', runnerTestResultGetById);
+  ipcMainHandle('services.runnerTestResult.remove', runnerTestResultRemove);
+  ipcMainHandle('services.socketIOPayload.getOrCreateByParentId', socketIOPayloadGetOrCreateByParentId);
+  ipcMainHandle('services.socketIOPayload.updateOrCreateByParentId', socketIOPayloadUpdateOrCreateByParentId);
+  ipcMainHandle('services.socketIORequest.create', socketIORequestCreate);
+  ipcMainHandle('services.socketIORequestMeta.updateOrCreateByParentId', socketIORequestMetaUpdateOrCreateByParentId);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

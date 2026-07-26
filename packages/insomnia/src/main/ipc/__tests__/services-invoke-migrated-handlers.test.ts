@@ -45,6 +45,10 @@ vi.mock('insomnia-data', () => ({
     requestMeta: { getByParentId: vi.fn(), getOrCreateByParentId: vi.fn(), update: vi.fn(), updateOrCreateByParentId: vi.fn() },
     requestVersion: { findByParentId: vi.fn(), restore: vi.fn() },
     response: { create: vi.fn(), getByBodyPath: vi.fn(), getById: vi.fn(), getLatestForRequestId: vi.fn() },
+    runnerTestResult: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn() },
+    socketIOPayload: { getOrCreateByParentId: vi.fn(), updateOrCreateByParentId: vi.fn() },
+    socketIORequest: { create: vi.fn() },
+    socketIORequestMeta: { updateOrCreateByParentId: vi.fn() },
   },
 }));
 
@@ -195,6 +199,14 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'responseGetByBodyPath', serviceName: 'response', methodName: 'getByBodyPath', args: ['/path/to/body'] },
   { handlerName: 'responseGetById', serviceName: 'response', methodName: 'getById', args: ['res1'] },
   { handlerName: 'responseGetLatestForRequestId', serviceName: 'response', methodName: 'getLatestForRequestId', args: ['req1', null] },
+  { handlerName: 'runnerTestResultCreate', serviceName: 'runnerTestResult', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'runnerTestResultFindByParentId', serviceName: 'runnerTestResult', methodName: 'findByParentId', args: ['w1'] },
+  { handlerName: 'runnerTestResultGetById', serviceName: 'runnerTestResult', methodName: 'getById', args: ['tr1'] },
+  { handlerName: 'runnerTestResultRemove', serviceName: 'runnerTestResult', methodName: 'remove', args: [{ _id: 'tr1' }] },
+  { handlerName: 'socketIOPayloadGetOrCreateByParentId', serviceName: 'socketIOPayload', methodName: 'getOrCreateByParentId', args: ['req1'] },
+  { handlerName: 'socketIOPayloadUpdateOrCreateByParentId', serviceName: 'socketIOPayload', methodName: 'updateOrCreateByParentId', args: ['req1', { value: 'x' }] },
+  { handlerName: 'socketIORequestCreate', serviceName: 'socketIORequest', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'socketIORequestMetaUpdateOrCreateByParentId', serviceName: 'socketIORequestMeta', methodName: 'updateOrCreateByParentId', args: ['req1', { expandedTypes: [] }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {
