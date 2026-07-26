@@ -15,6 +15,7 @@ import type {
   GrpcRequestMeta,
   MockRoute,
   MockServer,
+  Project,
   Query,
   Settings,
   UserSession,
@@ -140,3 +141,13 @@ export const pluginDataGetByKey = (_: IpcMainInvokeEvent, plugin: string, key: s
 export const pluginDataRemoveAll = (_: IpcMainInvokeEvent, plugin: string) => services.pluginData.removeAll(plugin);
 export const pluginDataRemoveByKey = (_: IpcMainInvokeEvent, plugin: string, key: string) => services.pluginData.removeByKey(plugin, key);
 export const pluginDataUpsertByKey = (_: IpcMainInvokeEvent, plugin: string, key: string, value: string) => services.pluginData.upsertByKey(plugin, key, value);
+
+export const projectCount = (_: IpcMainInvokeEvent, query?: Query<Project>) => services.project.count(query);
+export const projectCreate = (_: IpcMainInvokeEvent, patch: Partial<Project> = {}) => services.project.create(patch);
+export const projectGet = (_: IpcMainInvokeEvent, query?: Query<Project>, sort?: Record<string, any>) => services.project.get(query, sort);
+export const projectGetById = (_: IpcMainInvokeEvent, id: string) => services.project.getById(id);
+export const projectList = (_: IpcMainInvokeEvent, query?: Query<Project>, sort?: Record<string, any>, limit?: number) => services.project.list(query, sort, limit);
+export const projectListByGitRepositoryIds = (_: IpcMainInvokeEvent, gitRepositoryIds: string | string[]) => services.project.listByGitRepositoryIds(gitRepositoryIds);
+export const projectListByOrganizationIds = (_: IpcMainInvokeEvent, organizationIds: string | string[]) => services.project.listByOrganizationIds(organizationIds);
+export const projectRemove = (_: IpcMainInvokeEvent, idOrProject: string | Project) => services.project.remove(idOrProject);
+export const projectUpdate = (_: IpcMainInvokeEvent, idOrProject: string | Project, patch: Partial<Project>) => services.project.update(idOrProject, patch);

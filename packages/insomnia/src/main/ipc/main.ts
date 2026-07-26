@@ -129,6 +129,15 @@ import {
   pluginDataRemoveAll,
   pluginDataRemoveByKey,
   pluginDataUpsertByKey,
+  projectCount,
+  projectCreate,
+  projectGet,
+  projectGetById,
+  projectList,
+  projectListByGitRepositoryIds,
+  projectListByOrganizationIds,
+  projectRemove,
+  projectUpdate,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -580,6 +589,15 @@ export function registerMainHandlers() {
   ipcMainHandle('services.pluginData.removeAll', pluginDataRemoveAll);
   ipcMainHandle('services.pluginData.removeByKey', pluginDataRemoveByKey);
   ipcMainHandle('services.pluginData.upsertByKey', pluginDataUpsertByKey);
+  ipcMainHandle('services.project.count', projectCount);
+  ipcMainHandle('services.project.create', projectCreate);
+  ipcMainHandle('services.project.get', projectGet);
+  ipcMainHandle('services.project.getById', projectGetById);
+  ipcMainHandle('services.project.list', projectList);
+  ipcMainHandle('services.project.listByGitRepositoryIds', projectListByGitRepositoryIds);
+  ipcMainHandle('services.project.listByOrganizationIds', projectListByOrganizationIds);
+  ipcMainHandle('services.project.remove', projectRemove);
+  ipcMainHandle('services.project.update', projectUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

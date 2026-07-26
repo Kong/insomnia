@@ -32,6 +32,10 @@ vi.mock('insomnia-data', () => ({
     mockServer: { findByProjectId: vi.fn(), getById: vi.fn(), getByParentId: vi.fn(), getOrCreateForParentId: vi.fn(), update: vi.fn() },
     organization: { list: vi.fn() },
     pluginData: { all: vi.fn(), getByKey: vi.fn(), removeAll: vi.fn(), removeByKey: vi.fn(), upsertByKey: vi.fn() },
+    project: {
+      count: vi.fn(), create: vi.fn(), get: vi.fn(), getById: vi.fn(), list: vi.fn(),
+      listByGitRepositoryIds: vi.fn(), listByOrganizationIds: vi.fn(), remove: vi.fn(), update: vi.fn(),
+    },
   },
 }));
 
@@ -136,6 +140,15 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'pluginDataRemoveAll', serviceName: 'pluginData', methodName: 'removeAll', args: ['my-plugin'] },
   { handlerName: 'pluginDataRemoveByKey', serviceName: 'pluginData', methodName: 'removeByKey', args: ['my-plugin', 'k'] },
   { handlerName: 'pluginDataUpsertByKey', serviceName: 'pluginData', methodName: 'upsertByKey', args: ['my-plugin', 'k', 'v'] },
+  { handlerName: 'projectCount', serviceName: 'project', methodName: 'count', args: [{ parentId: 'org1' }] },
+  { handlerName: 'projectCreate', serviceName: 'project', methodName: 'create', args: [{ name: 'p1' }] },
+  { handlerName: 'projectGet', serviceName: 'project', methodName: 'get', args: [{ _id: 'proj1' }] },
+  { handlerName: 'projectGetById', serviceName: 'project', methodName: 'getById', args: ['proj1'] },
+  { handlerName: 'projectList', serviceName: 'project', methodName: 'list', args: [{ parentId: 'org1' }] },
+  { handlerName: 'projectListByGitRepositoryIds', serviceName: 'project', methodName: 'listByGitRepositoryIds', args: ['repo1'] },
+  { handlerName: 'projectListByOrganizationIds', serviceName: 'project', methodName: 'listByOrganizationIds', args: ['org1'] },
+  { handlerName: 'projectRemove', serviceName: 'project', methodName: 'remove', args: ['proj1'] },
+  { handlerName: 'projectUpdate', serviceName: 'project', methodName: 'update', args: ['proj1', { name: 'renamed' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {
