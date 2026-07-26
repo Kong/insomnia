@@ -734,7 +734,18 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     originCredential: CloudProviderCredential;
     patch: Partial<CloudProviderCredential>;
   }) => {
-    return await services.cloudCredential.update(body.originCredential, body.patch);
+    // Re-load the real credential by id and strip identity fields from the patch so a caller can't
+    // forge type/_id to write into another collection. Only an existing cloud credential can be updated.
+    const id = String(body.originCredential?._id);
+    const existing = await services.cloudCredential.getById(id);
+    if (!existing) {
+      throw new Error(`Cloud credential '${id}' not found`);
+    }
+    const patch = { ...body.patch };
+    delete (patch as { _id?: unknown })._id;
+    delete (patch as { type?: unknown }).type;
+    delete (patch as { parentId?: unknown }).parentId;
+    return await services.cloudCredential.update(existing, patch);
   },
   'settings.get': async () => {
     return await services.settings.get();

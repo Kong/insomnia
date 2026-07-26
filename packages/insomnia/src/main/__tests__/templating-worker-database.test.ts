@@ -45,6 +45,8 @@ vi.mock('../network/libcurl-promise', () => ({ curlRequest: vi.fn() }));
 vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
+import { services } from 'insomnia-data';
+
 import { parsePluginPermissions } from '~/common/plugins/permissions';
 
 import { requestPromptFromRenderer } from '../prompt-bridge';
@@ -252,6 +254,54 @@ describe('runPluginTagInSandbox — util.render escape', () => {
         context: { meta: {}, renderPurpose: 'send' as const, context: { name: 'kyle' } as any },
       }),
     ).resolves.toBe('hello kyle');
+  });
+});
+
+describe('cloudCredential.update reloads by id and strips identity fields from the patch', () => {
+  const CREDS = ['render', 'models.read', 'util', 'crypto', 'credentials'];
+  const BASELINE = ['render', 'models.read', 'util', 'crypto'];
+  const runTag = (runBody: string, capabilities: string[] = CREDS) =>
+    runPluginTagInSandbox(
+      `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
+      {
+        args: [],
+        pluginName: 'p',
+        tagName: 't',
+        context: { meta: {}, renderPurpose: 'send' as const, context: {} as any },
+      },
+      undefined,
+      capabilities,
+    );
+
+  it('has no cloudCredential branch at all without the credentials capability granted', async () => {
+    const result = await runTag(
+      "return typeof (context.util.models && context.util.models.cloudCredential);",
+      BASELINE,
+    );
+    expect(result).toBe('undefined');
+  });
+
+  it('rejects when the supplied id does not resolve to an existing cloud credential', async () => {
+    (services.cloudCredential.getById as any).mockResolvedValue(null);
+    (services.cloudCredential.update as any).mockClear();
+    await expect(
+      runTag(
+        "return await context.util.models.cloudCredential.update({ _id: 'unknown-id', type: 'Settings', dataFolders: ['/'] }, {});",
+      ),
+    ).rejects.toThrow(/not found/);
+    expect(services.cloudCredential.update).not.toHaveBeenCalled();
+  });
+
+  it('updates the re-loaded credential and drops identity fields from the patch', async () => {
+    const existing = { _id: 'cred1', type: 'CloudProviderCredential', name: 'orig' };
+    (services.cloudCredential.getById as any).mockResolvedValue(existing);
+    (services.cloudCredential.update as any).mockResolvedValue(existing);
+    await runTag(
+      "return await context.util.models.cloudCredential.update({ _id: 'cred1' }, { name: 'new', type: 'Settings', _id: 'other-id', parentId: 'other-parent' });",
+    );
+    const [docArg, patchArg] = (services.cloudCredential.update as any).mock.calls[0];
+    expect(docArg).toBe(existing); // authoritative reloaded doc, not the caller-supplied object
+    expect(patchArg).toEqual({ name: 'new' }); // type/_id/parentId stripped from the patch
   });
 });
 
