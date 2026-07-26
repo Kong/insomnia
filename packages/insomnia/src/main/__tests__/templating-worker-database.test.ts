@@ -25,6 +25,7 @@ vi.mock('insomnia-data', () => ({
     cookieJar: { getOrCreateForParentId: vi.fn() },
     response: { getLatestForRequestId: vi.fn(), getById: vi.fn(), getByBodyPath: vi.fn() },
     helpers: { getResponseBodyBuffer: vi.fn() },
+    pluginData: { getByKey: vi.fn(), upsertByKey: vi.fn(), removeByKey: vi.fn() },
     settings: { get: vi.fn() },
   },
   models: {},
@@ -47,6 +48,7 @@ vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
 import { services } from 'insomnia-data';
 
+import { jarFromCookies } from '~/common/cookies';
 import { parsePluginPermissions } from '~/common/plugins/permissions';
 
 import { requestPromptFromRenderer } from '../prompt-bridge';
@@ -354,6 +356,102 @@ describe('cloudCredential.update reloads by id and strips identity fields from t
     const [docArg, patchArg] = (services.cloudCredential.update as any).mock.calls[0];
     expect(docArg).toBe(existing); // authoritative reloaded doc, not the caller-supplied object
     expect(patchArg).toEqual({ name: 'new' }); // type/_id/parentId stripped from the patch
+  });
+});
+
+// A caller-supplied id/parentId/key shaped like a Mongo query operator (e.g. `{ $ne: null }`) must
+// never reach NeDB unstringified, or it's interpreted as a query operator instead of a literal value
+// — see CROSS-TENANT-DB-ACCESS-FINDINGS.md Finding 6 and templating-worker-database-coercion-surface.ts's
+// static detector, which enforces this for every handler in pluginToMainAPI. These tests drive the
+// real handlers end-to-end through the sandbox and assert the mocked service actually receives a
+// coerced string (`String({ $ne: null })` === '[object Object]'), not merely that the source looks coerced.
+describe('id-like bridge arguments are coerced to String before reaching services.* (Finding 6)', () => {
+  const OPERATOR_PAYLOAD = '{ $ne: null }';
+  const MODELS_READ_CAPABILITIES = ['render', 'models.read', 'util', 'crypto'];
+  const STORAGE_CAPABILITIES = ['render', 'models.read', 'util', 'crypto', 'storage'];
+  const CREDENTIALS_CAPABILITIES = ['render', 'models.read', 'util', 'crypto', 'credentials'];
+
+  const runTag = (runBody: string, capabilities: string[] = MODELS_READ_CAPABILITIES) =>
+    runPluginTagInSandbox(
+      `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
+      {
+        args: [],
+        pluginName: 'p',
+        tagName: 't',
+        context: { meta: {}, renderPurpose: 'send' as const, context: {} as any },
+      },
+      undefined,
+      capabilities,
+    );
+
+  beforeEach(() => {
+    (services.request.getById as any).mockResolvedValue(null);
+    (services.workspace.getById as any).mockResolvedValue(null);
+    (services.oAuth2Token.getByParentId as any).mockResolvedValue(null);
+    (services.cookieJar.getOrCreateForParentId as any).mockResolvedValue({ cookies: [] });
+    (services.response.getLatestForRequestId as any).mockResolvedValue(null);
+    (services.cloudCredential.getById as any).mockResolvedValue(null);
+    (services.pluginData.getByKey as any).mockResolvedValue(null);
+    (services.pluginData.upsertByKey as any).mockResolvedValue(null);
+    (services.pluginData.removeByKey as any).mockResolvedValue(null);
+    vi.mocked(jarFromCookies).mockReturnValue({ getCookiesSync: () => [] } as any);
+  });
+
+  it('request.getById coerces body.id', async () => {
+    await runTag(`return await context.util.models.request.getById(${OPERATOR_PAYLOAD});`);
+    expect(services.request.getById).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('workspace.getById coerces body.id', async () => {
+    await runTag(`return await context.util.models.workspace.getById(${OPERATOR_PAYLOAD});`);
+    expect(services.workspace.getById).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('oAuth2Token.getByRequestId coerces body.parentId', async () => {
+    await runTag(`return await context.util.models.oAuth2Token.getByRequestId(${OPERATOR_PAYLOAD});`);
+    expect(services.oAuth2Token.getByParentId).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('cookieJar.getOrCreateForParentId coerces body.parentId', async () => {
+    await runTag(`return await context.util.models.cookieJar.getOrCreateForParentId(${OPERATOR_PAYLOAD});`);
+    expect(services.cookieJar.getOrCreateForParentId).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('cookieJar.getCookiesForUrl coerces body.parentId', async () => {
+    await runTag(
+      `return await context.util.models.cookieJar.getCookiesForUrl(${OPERATOR_PAYLOAD}, 'https://example.com');`,
+    );
+    expect(services.cookieJar.getOrCreateForParentId).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('response.getLatestForRequestId coerces both body.requestId and body.environmentId', async () => {
+    await runTag(
+      `return await context.util.models.response.getLatestForRequestId(${OPERATOR_PAYLOAD}, ${OPERATOR_PAYLOAD});`,
+    );
+    expect(services.response.getLatestForRequestId).toHaveBeenCalledWith('[object Object]', '[object Object]');
+  });
+
+  it('cloudCredential.getById coerces body.id', async () => {
+    await runTag(
+      `return await context.util.models.cloudCredential.getById(${OPERATOR_PAYLOAD});`,
+      CREDENTIALS_CAPABILITIES,
+    );
+    expect(services.cloudCredential.getById).toHaveBeenCalledWith('[object Object]');
+  });
+
+  it('pluginData.hasItem/getItem/removeItem/setItem coerce body.key', async () => {
+    await runTag(`return await context.store.hasItem(${OPERATOR_PAYLOAD});`, STORAGE_CAPABILITIES);
+    expect(services.pluginData.getByKey).toHaveBeenCalledWith('p', '[object Object]');
+
+    (services.pluginData.getByKey as any).mockClear();
+    await runTag(`return await context.store.getItem(${OPERATOR_PAYLOAD});`, STORAGE_CAPABILITIES);
+    expect(services.pluginData.getByKey).toHaveBeenCalledWith('p', '[object Object]');
+
+    await runTag(`return await context.store.removeItem(${OPERATOR_PAYLOAD});`, STORAGE_CAPABILITIES);
+    expect(services.pluginData.removeByKey).toHaveBeenCalledWith('p', '[object Object]');
+
+    await runTag(`return await context.store.setItem(${OPERATOR_PAYLOAD}, 'v');`, STORAGE_CAPABILITIES);
+    expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('p', '[object Object]', 'v');
   });
 });
 
