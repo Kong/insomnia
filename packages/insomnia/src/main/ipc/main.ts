@@ -106,6 +106,13 @@ import {
   helpersRemoveResponse,
   helpersRemoveResponsesForRequest,
   helpersUpdateRequest,
+  mcpPayloadGetByParentIdAndUrl,
+  mcpPayloadUpdateOrCreateByParentIdAndUrl,
+  mcpRequestCreate,
+  mcpRequestGetById,
+  mcpRequestGetByParentId,
+  mcpResponseGetById,
+  mcpResponseGetLatestForRequestId,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -534,6 +541,13 @@ export function registerMainHandlers() {
   ipcMainHandle('services.helpers.removeResponse', helpersRemoveResponse);
   ipcMainHandle('services.helpers.removeResponsesForRequest', helpersRemoveResponsesForRequest);
   ipcMainHandle('services.helpers.updateRequest', helpersUpdateRequest);
+  ipcMainHandle('services.mcpPayload.getByParentIdAndUrl', mcpPayloadGetByParentIdAndUrl);
+  ipcMainHandle('services.mcpPayload.updateOrCreateByParentIdAndUrl', mcpPayloadUpdateOrCreateByParentIdAndUrl);
+  ipcMainHandle('services.mcpRequest.create', mcpRequestCreate);
+  ipcMainHandle('services.mcpRequest.getById', mcpRequestGetById);
+  ipcMainHandle('services.mcpRequest.getByParentId', mcpRequestGetByParentId);
+  ipcMainHandle('services.mcpResponse.getById', mcpResponseGetById);
+  ipcMainHandle('services.mcpResponse.getLatestForRequestId', mcpResponseGetLatestForRequestId);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

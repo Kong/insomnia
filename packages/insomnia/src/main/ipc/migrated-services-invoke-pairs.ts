@@ -73,6 +73,13 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'helpers.removeResponse',
   'helpers.removeResponsesForRequest',
   'helpers.updateRequest',
+  'mcpPayload.getByParentIdAndUrl',
+  'mcpPayload.updateOrCreateByParentIdAndUrl',
+  'mcpRequest.create',
+  'mcpRequest.getById',
+  'mcpRequest.getByParentId',
+  'mcpResponse.getById',
+  'mcpResponse.getLatestForRequestId',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

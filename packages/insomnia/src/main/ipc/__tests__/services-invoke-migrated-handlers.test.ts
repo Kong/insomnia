@@ -25,6 +25,9 @@ vi.mock('insomnia-data', () => ({
       readCurlResponse: vi.fn(), removeRequest: vi.fn(), removeResponse: vi.fn(), removeResponsesForRequest: vi.fn(),
       updateRequest: vi.fn(),
     },
+    mcpPayload: { getByParentIdAndUrl: vi.fn(), updateOrCreateByParentIdAndUrl: vi.fn() },
+    mcpRequest: { create: vi.fn(), getById: vi.fn(), getByParentId: vi.fn() },
+    mcpResponse: { getById: vi.fn(), getLatestForRequestId: vi.fn() },
   },
 }));
 
@@ -106,6 +109,13 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'helpersRemoveResponse', serviceName: 'helpers', methodName: 'removeResponse', args: [{ _id: 'res1' }] },
   { handlerName: 'helpersRemoveResponsesForRequest', serviceName: 'helpers', methodName: 'removeResponsesForRequest', args: ['req1', 'env1'] },
   { handlerName: 'helpersUpdateRequest', serviceName: 'helpers', methodName: 'updateRequest', args: [{ _id: 'req1' }, { name: 'renamed' }] },
+  { handlerName: 'mcpPayloadGetByParentIdAndUrl', serviceName: 'mcpPayload', methodName: 'getByParentIdAndUrl', args: ['req1', 'https://example.com'] },
+  { handlerName: 'mcpPayloadUpdateOrCreateByParentIdAndUrl', serviceName: 'mcpPayload', methodName: 'updateOrCreateByParentIdAndUrl', args: ['req1', { url: 'https://example.com' }] },
+  { handlerName: 'mcpRequestCreate', serviceName: 'mcpRequest', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'mcpRequestGetById', serviceName: 'mcpRequest', methodName: 'getById', args: ['req1'] },
+  { handlerName: 'mcpRequestGetByParentId', serviceName: 'mcpRequest', methodName: 'getByParentId', args: ['w1'] },
+  { handlerName: 'mcpResponseGetById', serviceName: 'mcpResponse', methodName: 'getById', args: ['res1'] },
+  { handlerName: 'mcpResponseGetLatestForRequestId', serviceName: 'mcpResponse', methodName: 'getLatestForRequestId', args: ['req1', null] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

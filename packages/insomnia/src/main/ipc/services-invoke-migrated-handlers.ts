@@ -103,3 +103,13 @@ export const helpersRemoveRequest = (_: unknown, request: any) => services.helpe
 export const helpersRemoveResponse = (_: unknown, response: Parameters<typeof services.helpers.removeResponse>[0]) => services.helpers.removeResponse(response);
 export const helpersRemoveResponsesForRequest = (_: unknown, requestId: string, environmentId?: string | null) => services.helpers.removeResponsesForRequest(requestId, environmentId);
 export const helpersUpdateRequest = (_: unknown, request: any, patch: any = {}) => services.helpers.updateRequest(request, patch);
+
+export const mcpPayloadGetByParentIdAndUrl = (_: unknown, parentId: string, url: string) => services.mcpPayload.getByParentIdAndUrl(parentId, url);
+export const mcpPayloadUpdateOrCreateByParentIdAndUrl = (_: unknown, parentId: string, patch: Parameters<typeof services.mcpPayload.updateOrCreateByParentIdAndUrl>[1]) => services.mcpPayload.updateOrCreateByParentIdAndUrl(parentId, patch);
+
+export const mcpRequestCreate = (_: unknown, patch: Parameters<typeof services.mcpRequest.create>[0]) => services.mcpRequest.create(patch);
+export const mcpRequestGetById = (_: unknown, id: string) => services.mcpRequest.getById(id);
+export const mcpRequestGetByParentId = (_: unknown, parentId: string) => services.mcpRequest.getByParentId(parentId);
+
+export const mcpResponseGetById = (_: unknown, id: string) => services.mcpResponse.getById(id);
+export const mcpResponseGetLatestForRequestId = (_: unknown, requestId: string, environmentId: string | null) => services.mcpResponse.getLatestForRequestId(requestId, environmentId);
