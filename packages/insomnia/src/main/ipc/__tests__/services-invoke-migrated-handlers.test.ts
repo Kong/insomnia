@@ -16,6 +16,9 @@ vi.mock('insomnia-data', () => ({
     },
     apiSpec: { getByParentId: vi.fn(), getOrCreateForParentId: vi.fn(), update: vi.fn(), updateOrCreateForParentId: vi.fn() },
     cookieJar: { getById: vi.fn(), getOrCreateForParentId: vi.fn(), update: vi.fn() },
+    gitRepository: { all: vi.fn(), getAllByCredentialId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    grpcRequest: { create: vi.fn(), findByProtoFileId: vi.fn() },
+    grpcRequestMeta: { getByParentId: vi.fn(), updateOrCreateByParentId: vi.fn() },
   },
 }));
 
@@ -75,6 +78,15 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'cookieJarGetById', serviceName: 'cookieJar', methodName: 'getById', args: ['jar1'] },
   { handlerName: 'cookieJarGetOrCreateForParentId', serviceName: 'cookieJar', methodName: 'getOrCreateForParentId', args: ['w1'] },
   { handlerName: 'cookieJarUpdate', serviceName: 'cookieJar', methodName: 'update', args: [{ _id: 'jar1' }, { cookies: [] }] },
+  { handlerName: 'gitRepositoryAll', serviceName: 'gitRepository', methodName: 'all', args: [] },
+  { handlerName: 'gitRepositoryGetAllByCredentialId', serviceName: 'gitRepository', methodName: 'getAllByCredentialId', args: ['cred1'] },
+  { handlerName: 'gitRepositoryGetById', serviceName: 'gitRepository', methodName: 'getById', args: ['repo1'] },
+  { handlerName: 'gitRepositoryRemove', serviceName: 'gitRepository', methodName: 'remove', args: [{ _id: 'repo1' }] },
+  { handlerName: 'gitRepositoryUpdate', serviceName: 'gitRepository', methodName: 'update', args: [{ _id: 'repo1' }, { uri: 'x' }] },
+  { handlerName: 'grpcRequestCreate', serviceName: 'grpcRequest', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'grpcRequestFindByProtoFileId', serviceName: 'grpcRequest', methodName: 'findByProtoFileId', args: ['pf1'] },
+  { handlerName: 'grpcRequestMetaGetByParentId', serviceName: 'grpcRequestMeta', methodName: 'getByParentId', args: ['req1'] },
+  { handlerName: 'grpcRequestMetaUpdateOrCreateByParentId', serviceName: 'grpcRequestMeta', methodName: 'updateOrCreateByParentId', args: ['req1', { expandedTypes: [] }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

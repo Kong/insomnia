@@ -84,6 +84,15 @@ import {
   gitCredentialsRemove,
   gitCredentialsRemoveAll,
   gitCredentialsUpdate,
+  gitRepositoryAll,
+  gitRepositoryGetAllByCredentialId,
+  gitRepositoryGetById,
+  gitRepositoryRemove,
+  gitRepositoryUpdate,
+  grpcRequestCreate,
+  grpcRequestFindByProtoFileId,
+  grpcRequestMetaGetByParentId,
+  grpcRequestMetaUpdateOrCreateByParentId,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -490,6 +499,15 @@ export function registerMainHandlers() {
   ipcMainHandle('services.cookieJar.getById', cookieJarGetById);
   ipcMainHandle('services.cookieJar.getOrCreateForParentId', cookieJarGetOrCreateForParentId);
   ipcMainHandle('services.cookieJar.update', cookieJarUpdate);
+  ipcMainHandle('services.gitRepository.all', gitRepositoryAll);
+  ipcMainHandle('services.gitRepository.getAllByCredentialId', gitRepositoryGetAllByCredentialId);
+  ipcMainHandle('services.gitRepository.getById', gitRepositoryGetById);
+  ipcMainHandle('services.gitRepository.remove', gitRepositoryRemove);
+  ipcMainHandle('services.gitRepository.update', gitRepositoryUpdate);
+  ipcMainHandle('services.grpcRequest.create', grpcRequestCreate);
+  ipcMainHandle('services.grpcRequest.findByProtoFileId', grpcRequestFindByProtoFileId);
+  ipcMainHandle('services.grpcRequestMeta.getByParentId', grpcRequestMetaGetByParentId);
+  ipcMainHandle('services.grpcRequestMeta.updateOrCreateByParentId', grpcRequestMetaUpdateOrCreateByParentId);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

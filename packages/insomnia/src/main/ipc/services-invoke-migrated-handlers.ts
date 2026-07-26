@@ -9,6 +9,9 @@ import type {
   Environment,
   GitCredentials,
   GitCredentialsV2,
+  GitRepository,
+  GrpcRequest,
+  GrpcRequestMeta,
   Query,
   Settings,
   UserSession,
@@ -74,3 +77,15 @@ export const apiSpecUpdateOrCreateForParentId = (_: unknown, workspaceId: string
 export const cookieJarGetById = (_: unknown, id: string) => services.cookieJar.getById(id);
 export const cookieJarGetOrCreateForParentId = (_: unknown, parentId: string) => services.cookieJar.getOrCreateForParentId(parentId);
 export const cookieJarUpdate = (_: unknown, cookieJar: CookieJar, patch: Partial<CookieJar> = {}) => services.cookieJar.update(cookieJar, patch);
+
+export const gitRepositoryAll = (_: unknown) => services.gitRepository.all();
+export const gitRepositoryGetAllByCredentialId = (_: unknown, credentialsId: string) => services.gitRepository.getAllByCredentialId(credentialsId);
+export const gitRepositoryGetById = (_: unknown, id: string) => services.gitRepository.getById(id);
+export const gitRepositoryRemove = (_: unknown, repo: GitRepository) => services.gitRepository.remove(repo);
+export const gitRepositoryUpdate = (_: unknown, repo: GitRepository, patch: Partial<GitRepository>) => services.gitRepository.update(repo, patch);
+
+export const grpcRequestCreate = (_: unknown, patch: Partial<GrpcRequest> = {}) => services.grpcRequest.create(patch);
+export const grpcRequestFindByProtoFileId = (_: unknown, protoFileId: string) => services.grpcRequest.findByProtoFileId(protoFileId);
+
+export const grpcRequestMetaGetByParentId = (_: unknown, parentId: string) => services.grpcRequestMeta.getByParentId(parentId);
+export const grpcRequestMetaUpdateOrCreateByParentId = (_: unknown, parentId: string, patch: Partial<GrpcRequestMeta>) => services.grpcRequestMeta.updateOrCreateByParentId(parentId, patch);

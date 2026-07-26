@@ -51,6 +51,15 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'cookieJar.getById',
   'cookieJar.getOrCreateForParentId',
   'cookieJar.update',
+  'gitRepository.all',
+  'gitRepository.getAllByCredentialId',
+  'gitRepository.getById',
+  'gitRepository.remove',
+  'gitRepository.update',
+  'grpcRequest.create',
+  'grpcRequest.findByProtoFileId',
+  'grpcRequestMeta.getByParentId',
+  'grpcRequestMeta.updateOrCreateByParentId',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */
