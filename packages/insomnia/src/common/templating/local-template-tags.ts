@@ -583,6 +583,17 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Could not find request ${id}`);
         }
 
+        // `id` is author-supplied template-tag content, not derived from render context — verify
+        // the resolved request actually belongs to the workspace currently being rendered before
+        // trusting it, so a tag can't read another workspace's response by guessing/knowing its
+        // request id. Reuse the not-found message so a caller can't distinguish "wrong workspace"
+        // from "doesn't exist".
+        const ancestors = await context.util.models.request.getAncestors(request);
+        const requestWorkspace = ancestors.find(doc => doc.type === 'Workspace');
+        if (!context.meta.workspaceId || requestWorkspace?._id !== context.meta.workspaceId) {
+          throw new Error(`Could not find request ${id}`);
+        }
+
         let shouldResend = false;
         const environmentId = context.context.getEnvironmentId?.() || null;
         const globalEnvironmentId = context.context.getGlobalEnvironmentId?.() || null;
