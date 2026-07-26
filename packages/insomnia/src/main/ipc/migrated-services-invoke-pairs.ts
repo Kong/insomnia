@@ -34,6 +34,16 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'userSession.get',
   'userSession.remove',
   'userSession.update',
+  'environment.create',
+  'environment.update',
+  'environment.list',
+  'environment.listByParentId',
+  'environment.getOrCreateForParentId',
+  'environment.getById',
+  'environment.getByParentId',
+  'environment.duplicate',
+  'environment.remove',
+  'environment.removeAllSecrets',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

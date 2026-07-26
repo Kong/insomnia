@@ -4,8 +4,10 @@ import type {
   ClientCertificate,
   CloudProviderCredential,
   CloudProviderName,
+  Environment,
   GitCredentials,
   GitCredentialsV2,
+  Query,
   Settings,
   UserSession,
 } from 'insomnia-data';
@@ -50,3 +52,14 @@ export const gitCredentialsUpdate = (_: unknown, credentials: GitCredentialsV2, 
 export const userSessionGet = (_: unknown) => services.userSession.get();
 export const userSessionRemove = (_: unknown) => services.userSession.remove();
 export const userSessionUpdate = (_: unknown, patch: Partial<UserSession>) => services.userSession.update(patch);
+
+export const environmentCreate = (_: unknown, patch: Partial<Environment> = {}) => services.environment.create(patch);
+export const environmentUpdate = (_: unknown, environment: Environment, patch: Partial<Environment>) => services.environment.update(environment, patch);
+export const environmentList = (_: unknown, query?: Query<Environment>, sort?: Record<string, any>, limit?: number) => services.environment.list(query, sort, limit);
+export const environmentListByParentId = (_: unknown, parentId: string) => services.environment.listByParentId(parentId);
+export const environmentGetOrCreateForParentId = (_: unknown, parentId: string) => services.environment.getOrCreateForParentId(parentId);
+export const environmentGetById = (_: unknown, id: string) => services.environment.getById(id);
+export const environmentGetByParentId = (_: unknown, parentId: string) => services.environment.getByParentId(parentId);
+export const environmentDuplicate = (_: unknown, environment: Environment) => services.environment.duplicate(environment);
+export const environmentRemove = (_: unknown, environment: Environment) => services.environment.remove(environment);
+export const environmentRemoveAllSecrets = (_: unknown, organizationIds: string[]) => services.environment.removeAllSecrets(organizationIds);

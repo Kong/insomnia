@@ -10,6 +10,10 @@ vi.mock('insomnia-data', () => ({
     settings: { get: vi.fn(), getOrCreate: vi.fn(), patch: vi.fn(), update: vi.fn() },
     gitCredentials: { all: vi.fn(), create: vi.fn(), getById: vi.fn(), remove: vi.fn(), removeAll: vi.fn(), update: vi.fn() },
     userSession: { get: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    environment: {
+      create: vi.fn(), update: vi.fn(), list: vi.fn(), listByParentId: vi.fn(), getOrCreateForParentId: vi.fn(),
+      getById: vi.fn(), getByParentId: vi.fn(), duplicate: vi.fn(), remove: vi.fn(), removeAllSecrets: vi.fn(),
+    },
   },
 }));
 
@@ -52,6 +56,16 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'userSessionGet', serviceName: 'userSession', methodName: 'get', args: [] },
   { handlerName: 'userSessionRemove', serviceName: 'userSession', methodName: 'remove', args: [] },
   { handlerName: 'userSessionUpdate', serviceName: 'userSession', methodName: 'update', args: [{ vaultKey: 'x' }] },
+  { handlerName: 'environmentCreate', serviceName: 'environment', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'environmentUpdate', serviceName: 'environment', methodName: 'update', args: [{ _id: 'env1' }, { name: 'renamed' }] },
+  { handlerName: 'environmentList', serviceName: 'environment', methodName: 'list', args: [{ parentId: 'w1' }, { metaSortKey: 1 }, 10] },
+  { handlerName: 'environmentListByParentId', serviceName: 'environment', methodName: 'listByParentId', args: ['w1'] },
+  { handlerName: 'environmentGetOrCreateForParentId', serviceName: 'environment', methodName: 'getOrCreateForParentId', args: ['w1'] },
+  { handlerName: 'environmentGetById', serviceName: 'environment', methodName: 'getById', args: ['env1'] },
+  { handlerName: 'environmentGetByParentId', serviceName: 'environment', methodName: 'getByParentId', args: ['w1'] },
+  { handlerName: 'environmentDuplicate', serviceName: 'environment', methodName: 'duplicate', args: [{ _id: 'env1' }] },
+  { handlerName: 'environmentRemove', serviceName: 'environment', methodName: 'remove', args: [{ _id: 'env1' }] },
+  { handlerName: 'environmentRemoveAllSecrets', serviceName: 'environment', methodName: 'removeAllSecrets', args: [['org1']] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

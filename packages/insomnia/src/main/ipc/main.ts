@@ -61,6 +61,16 @@ import {
   cloudCredentialGetByName,
   cloudCredentialRemove,
   cloudCredentialUpdate,
+  environmentCreate,
+  environmentDuplicate,
+  environmentGetById,
+  environmentGetByParentId,
+  environmentGetOrCreateForParentId,
+  environmentList,
+  environmentListByParentId,
+  environmentRemove,
+  environmentRemoveAllSecrets,
+  environmentUpdate,
   gitCredentialsAll,
   gitCredentialsCreate,
   gitCredentialsGetById,
@@ -456,6 +466,16 @@ export function registerMainHandlers() {
   ipcMainHandle('services.userSession.get', userSessionGet);
   ipcMainHandle('services.userSession.remove', userSessionRemove);
   ipcMainHandle('services.userSession.update', userSessionUpdate);
+  ipcMainHandle('services.environment.create', environmentCreate);
+  ipcMainHandle('services.environment.update', environmentUpdate);
+  ipcMainHandle('services.environment.list', environmentList);
+  ipcMainHandle('services.environment.listByParentId', environmentListByParentId);
+  ipcMainHandle('services.environment.getOrCreateForParentId', environmentGetOrCreateForParentId);
+  ipcMainHandle('services.environment.getById', environmentGetById);
+  ipcMainHandle('services.environment.getByParentId', environmentGetByParentId);
+  ipcMainHandle('services.environment.duplicate', environmentDuplicate);
+  ipcMainHandle('services.environment.remove', environmentRemove);
+  ipcMainHandle('services.environment.removeAllSecrets', environmentRemoveAllSecrets);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
