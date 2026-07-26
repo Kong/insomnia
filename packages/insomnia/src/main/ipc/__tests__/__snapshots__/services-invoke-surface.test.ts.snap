@@ -2,10 +2,10 @@
 
 exports[`describeServicesInvokeSurface (real repo) > matches the current services.invoke surface snapshot 1`] = `
 [
-  "apiSpec.getByParentId: services.invoke (7 call sites)",
-  "apiSpec.getOrCreateForParentId: services.invoke (1 call site)",
-  "apiSpec.update: services.invoke (1 call site)",
-  "apiSpec.updateOrCreateForParentId: services.invoke (1 call site)",
+  "apiSpec.getByParentId: named handler (7 call sites)",
+  "apiSpec.getOrCreateForParentId: named handler (1 call site)",
+  "apiSpec.update: named handler (1 call site)",
+  "apiSpec.updateOrCreateForParentId: named handler (1 call site)",
   "caCertificate.create: named handler (1 call site)",
   "caCertificate.getById: named handler (1 call site)",
   "caCertificate.getByParentId: named handler (4 call sites)",
@@ -22,9 +22,9 @@ exports[`describeServicesInvokeSurface (real repo) > matches the current service
   "cloudCredential.getByName: named handler (1 call site)",
   "cloudCredential.remove: named handler (1 call site)",
   "cloudCredential.update: named handler (4 call sites)",
-  "cookieJar.getById: services.invoke (1 call site)",
-  "cookieJar.getOrCreateForParentId: services.invoke (7 call sites)",
-  "cookieJar.update: services.invoke (2 call sites)",
+  "cookieJar.getById: named handler (1 call site)",
+  "cookieJar.getOrCreateForParentId: named handler (7 call sites)",
+  "cookieJar.update: named handler (2 call sites)",
   "environment.create: named handler (3 call sites)",
   "environment.duplicate: named handler (1 call site)",
   "environment.getById: named handler (7 call sites)",

@@ -1,9 +1,11 @@
 import type {
+  ApiSpec,
   BaseGitCredentialsV2,
   CaCertificate,
   ClientCertificate,
   CloudProviderCredential,
   CloudProviderName,
+  CookieJar,
   Environment,
   GitCredentials,
   GitCredentialsV2,
@@ -63,3 +65,12 @@ export const environmentGetByParentId = (_: unknown, parentId: string) => servic
 export const environmentDuplicate = (_: unknown, environment: Environment) => services.environment.duplicate(environment);
 export const environmentRemove = (_: unknown, environment: Environment) => services.environment.remove(environment);
 export const environmentRemoveAllSecrets = (_: unknown, organizationIds: string[]) => services.environment.removeAllSecrets(organizationIds);
+
+export const apiSpecGetByParentId = (_: unknown, workspaceId: string) => services.apiSpec.getByParentId(workspaceId);
+export const apiSpecGetOrCreateForParentId = (_: unknown, workspaceId: string, patch: Partial<ApiSpec> = {}) => services.apiSpec.getOrCreateForParentId(workspaceId, patch);
+export const apiSpecUpdate = (_: unknown, apiSpec: ApiSpec, patch: Partial<ApiSpec> = {}) => services.apiSpec.update(apiSpec, patch);
+export const apiSpecUpdateOrCreateForParentId = (_: unknown, workspaceId: string, patch: Partial<ApiSpec> = {}) => services.apiSpec.updateOrCreateForParentId(workspaceId, patch);
+
+export const cookieJarGetById = (_: unknown, id: string) => services.cookieJar.getById(id);
+export const cookieJarGetOrCreateForParentId = (_: unknown, parentId: string) => services.cookieJar.getOrCreateForParentId(parentId);
+export const cookieJarUpdate = (_: unknown, cookieJar: CookieJar, patch: Partial<CookieJar> = {}) => services.cookieJar.update(cookieJar, patch);

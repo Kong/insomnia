@@ -14,6 +14,8 @@ vi.mock('insomnia-data', () => ({
       create: vi.fn(), update: vi.fn(), list: vi.fn(), listByParentId: vi.fn(), getOrCreateForParentId: vi.fn(),
       getById: vi.fn(), getByParentId: vi.fn(), duplicate: vi.fn(), remove: vi.fn(), removeAllSecrets: vi.fn(),
     },
+    apiSpec: { getByParentId: vi.fn(), getOrCreateForParentId: vi.fn(), update: vi.fn(), updateOrCreateForParentId: vi.fn() },
+    cookieJar: { getById: vi.fn(), getOrCreateForParentId: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -66,6 +68,13 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'environmentDuplicate', serviceName: 'environment', methodName: 'duplicate', args: [{ _id: 'env1' }] },
   { handlerName: 'environmentRemove', serviceName: 'environment', methodName: 'remove', args: [{ _id: 'env1' }] },
   { handlerName: 'environmentRemoveAllSecrets', serviceName: 'environment', methodName: 'removeAllSecrets', args: [['org1']] },
+  { handlerName: 'apiSpecGetByParentId', serviceName: 'apiSpec', methodName: 'getByParentId', args: ['w1'] },
+  { handlerName: 'apiSpecGetOrCreateForParentId', serviceName: 'apiSpec', methodName: 'getOrCreateForParentId', args: ['w1', {}] },
+  { handlerName: 'apiSpecUpdate', serviceName: 'apiSpec', methodName: 'update', args: [{ _id: 'spec1' }, { contents: 'x' }] },
+  { handlerName: 'apiSpecUpdateOrCreateForParentId', serviceName: 'apiSpec', methodName: 'updateOrCreateForParentId', args: ['w1', { contents: 'x' }] },
+  { handlerName: 'cookieJarGetById', serviceName: 'cookieJar', methodName: 'getById', args: ['jar1'] },
+  { handlerName: 'cookieJarGetOrCreateForParentId', serviceName: 'cookieJar', methodName: 'getOrCreateForParentId', args: ['w1'] },
+  { handlerName: 'cookieJarUpdate', serviceName: 'cookieJar', methodName: 'update', args: [{ _id: 'jar1' }, { cookies: [] }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

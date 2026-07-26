@@ -44,6 +44,13 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'environment.duplicate',
   'environment.remove',
   'environment.removeAllSecrets',
+  'apiSpec.getByParentId',
+  'apiSpec.getOrCreateForParentId',
+  'apiSpec.update',
+  'apiSpec.updateOrCreateForParentId',
+  'cookieJar.getById',
+  'cookieJar.getOrCreateForParentId',
+  'cookieJar.update',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

@@ -45,6 +45,10 @@ import {
 } from '~/main/har';
 import { convert } from '~/main/importers/convert';
 import {
+  apiSpecGetByParentId,
+  apiSpecGetOrCreateForParentId,
+  apiSpecUpdate,
+  apiSpecUpdateOrCreateForParentId,
   caCertificateCreate,
   caCertificateGetById,
   caCertificateGetByParentId,
@@ -61,6 +65,9 @@ import {
   cloudCredentialGetByName,
   cloudCredentialRemove,
   cloudCredentialUpdate,
+  cookieJarGetById,
+  cookieJarGetOrCreateForParentId,
+  cookieJarUpdate,
   environmentCreate,
   environmentDuplicate,
   environmentGetById,
@@ -476,6 +483,13 @@ export function registerMainHandlers() {
   ipcMainHandle('services.environment.duplicate', environmentDuplicate);
   ipcMainHandle('services.environment.remove', environmentRemove);
   ipcMainHandle('services.environment.removeAllSecrets', environmentRemoveAllSecrets);
+  ipcMainHandle('services.apiSpec.getByParentId', apiSpecGetByParentId);
+  ipcMainHandle('services.apiSpec.getOrCreateForParentId', apiSpecGetOrCreateForParentId);
+  ipcMainHandle('services.apiSpec.update', apiSpecUpdate);
+  ipcMainHandle('services.apiSpec.updateOrCreateForParentId', apiSpecUpdateOrCreateForParentId);
+  ipcMainHandle('services.cookieJar.getById', cookieJarGetById);
+  ipcMainHandle('services.cookieJar.getOrCreateForParentId', cookieJarGetOrCreateForParentId);
+  ipcMainHandle('services.cookieJar.update', cookieJarUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
