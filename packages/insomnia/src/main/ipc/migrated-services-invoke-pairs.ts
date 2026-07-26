@@ -178,6 +178,16 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'workspace.listByParentId',
   'workspace.remove',
   'workspace.update',
+  'workspaceMeta.create',
+  'workspaceMeta.getByParentId',
+  'workspaceMeta.getOrCreateByParentId',
+  'workspaceMeta.list',
+  'workspaceMeta.update',
+  'workspaceMeta.updateByParentId',
+  'oAuth2Token.create',
+  'oAuth2Token.getByParentId',
+  'oAuth2Token.remove',
+  'oAuth2Token.update',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

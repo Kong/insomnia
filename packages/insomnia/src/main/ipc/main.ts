@@ -123,6 +123,10 @@ import {
   mockServerGetByParentId,
   mockServerGetOrCreateForParentId,
   mockServerUpdate,
+  oAuth2TokenCreate,
+  oAuth2TokenGetByParentId,
+  oAuth2TokenRemove,
+  oAuth2TokenUpdate,
   organizationList,
   pluginDataAll,
   pluginDataGetByKey,
@@ -216,6 +220,12 @@ import {
   workspaceGetById,
   workspaceList,
   workspaceListByParentId,
+  workspaceMetaCreate,
+  workspaceMetaGetByParentId,
+  workspaceMetaGetOrCreateByParentId,
+  workspaceMetaList,
+  workspaceMetaUpdate,
+  workspaceMetaUpdateByParentId,
   workspaceRemove,
   workspaceUpdate,
 } from '~/main/ipc/services-invoke-migrated-handlers';
@@ -744,6 +754,16 @@ export function registerMainHandlers() {
   ipcMainHandle('services.workspace.listByParentId', workspaceListByParentId);
   ipcMainHandle('services.workspace.remove', workspaceRemove);
   ipcMainHandle('services.workspace.update', workspaceUpdate);
+  ipcMainHandle('services.workspaceMeta.create', workspaceMetaCreate);
+  ipcMainHandle('services.workspaceMeta.getByParentId', workspaceMetaGetByParentId);
+  ipcMainHandle('services.workspaceMeta.getOrCreateByParentId', workspaceMetaGetOrCreateByParentId);
+  ipcMainHandle('services.workspaceMeta.list', workspaceMetaList);
+  ipcMainHandle('services.workspaceMeta.update', workspaceMetaUpdate);
+  ipcMainHandle('services.workspaceMeta.updateByParentId', workspaceMetaUpdateByParentId);
+  ipcMainHandle('services.oAuth2Token.create', oAuth2TokenCreate);
+  ipcMainHandle('services.oAuth2Token.getByParentId', oAuth2TokenGetByParentId);
+  ipcMainHandle('services.oAuth2Token.remove', oAuth2TokenRemove);
+  ipcMainHandle('services.oAuth2Token.update', oAuth2TokenUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

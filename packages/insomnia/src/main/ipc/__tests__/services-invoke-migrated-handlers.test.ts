@@ -64,6 +64,11 @@ vi.mock('insomnia-data', () => ({
       count: vi.fn(), create: vi.fn(), getById: vi.fn(), list: vi.fn(), listByParentId: vi.fn(),
       remove: vi.fn(), update: vi.fn(),
     },
+    workspaceMeta: {
+      create: vi.fn(), getByParentId: vi.fn(), getOrCreateByParentId: vi.fn(), list: vi.fn(),
+      update: vi.fn(), updateByParentId: vi.fn(),
+    },
+    oAuth2Token: { create: vi.fn(), getByParentId: vi.fn(), remove: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -250,6 +255,16 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'workspaceListByParentId', serviceName: 'workspace', methodName: 'listByParentId', args: ['proj1'] },
   { handlerName: 'workspaceRemove', serviceName: 'workspace', methodName: 'remove', args: ['w1'] },
   { handlerName: 'workspaceUpdate', serviceName: 'workspace', methodName: 'update', args: ['w1', { name: 'renamed' }] },
+  { handlerName: 'workspaceMetaCreate', serviceName: 'workspaceMeta', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'workspaceMetaGetByParentId', serviceName: 'workspaceMeta', methodName: 'getByParentId', args: ['w1'] },
+  { handlerName: 'workspaceMetaGetOrCreateByParentId', serviceName: 'workspaceMeta', methodName: 'getOrCreateByParentId', args: ['w1'] },
+  { handlerName: 'workspaceMetaList', serviceName: 'workspaceMeta', methodName: 'list', args: [{ parentId: 'w1' }] },
+  { handlerName: 'workspaceMetaUpdate', serviceName: 'workspaceMeta', methodName: 'update', args: [{ _id: 'meta1' }, { activeRequestId: 'req1' }] },
+  { handlerName: 'workspaceMetaUpdateByParentId', serviceName: 'workspaceMeta', methodName: 'updateByParentId', args: ['w1', { activeRequestId: 'req1' }] },
+  { handlerName: 'oAuth2TokenCreate', serviceName: 'oAuth2Token', methodName: 'create', args: [{ parentId: 'req1' }] },
+  { handlerName: 'oAuth2TokenGetByParentId', serviceName: 'oAuth2Token', methodName: 'getByParentId', args: ['req1'] },
+  { handlerName: 'oAuth2TokenRemove', serviceName: 'oAuth2Token', methodName: 'remove', args: [{ _id: 'token1' }] },
+  { handlerName: 'oAuth2TokenUpdate', serviceName: 'oAuth2Token', methodName: 'update', args: [{ _id: 'token1' }, { accessToken: 'x' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

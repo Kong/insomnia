@@ -15,6 +15,7 @@ import type {
   GrpcRequestMeta,
   MockRoute,
   MockServer,
+  OAuth2Token,
   Project,
   ProjectLintRuleset,
   ProtoDirectory,
@@ -39,6 +40,7 @@ import type {
   WebSocketRequest,
   WebSocketRequestMeta,
   Workspace,
+  WorkspaceMeta,
 } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
@@ -265,3 +267,17 @@ export const workspaceList = (_: IpcMainInvokeEvent, query?: Query<Workspace>, s
 export const workspaceListByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.workspace.listByParentId(parentId);
 export const workspaceRemove = (_: IpcMainInvokeEvent, idOrWorkspace: string | Workspace) => services.workspace.remove(idOrWorkspace);
 export const workspaceUpdate = (_: IpcMainInvokeEvent, idOrWorkspace: string | Workspace, patch: Partial<Workspace>) => services.workspace.update(idOrWorkspace, patch);
+
+export const workspaceMetaCreate = (_: IpcMainInvokeEvent, patch: Partial<WorkspaceMeta> = {}) => services.workspaceMeta.create(patch);
+export const workspaceMetaGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.workspaceMeta.getByParentId(parentId);
+export const workspaceMetaGetOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.workspaceMeta.getOrCreateByParentId(parentId);
+export const workspaceMetaList = (_: IpcMainInvokeEvent, query?: Query<WorkspaceMeta>, sort?: Record<string, any>, limit?: number) => services.workspaceMeta.list(query, sort, limit);
+export const workspaceMetaUpdate = (_: IpcMainInvokeEvent, workspaceMeta: WorkspaceMeta, patch: Partial<WorkspaceMeta> = {}) => services.workspaceMeta.update(workspaceMeta, patch);
+export const workspaceMetaUpdateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<WorkspaceMeta> = {}) => services.workspaceMeta.updateByParentId(parentId, patch);
+
+// Not in the plan's original §4/§5 enumeration (added to the codebase after that snapshot, or missed
+// by the original hand-run grep) — the detector is the live source of truth, so these are migrated too.
+export const oAuth2TokenCreate = (_: IpcMainInvokeEvent, patch: Partial<OAuth2Token> = {}) => services.oAuth2Token.create(patch);
+export const oAuth2TokenGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.oAuth2Token.getByParentId(parentId);
+export const oAuth2TokenRemove = (_: IpcMainInvokeEvent, token: OAuth2Token) => services.oAuth2Token.remove(token);
+export const oAuth2TokenUpdate = (_: IpcMainInvokeEvent, token: OAuth2Token, patch: Partial<OAuth2Token>) => services.oAuth2Token.update(token, patch);
