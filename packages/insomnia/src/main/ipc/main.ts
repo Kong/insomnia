@@ -174,6 +174,7 @@ import {
   requestMetaUpdateOrCreateByParentId,
   requestUpdate,
   requestVersionFindByParentId,
+  requestVersionGetRequest,
   requestVersionRestore,
   responseCreate,
   responseFindByParentId,
@@ -721,6 +722,7 @@ export function registerMainHandlers() {
   ipcMainHandle('services.requestMeta.updateOrCreateByParentId', requestMetaUpdateOrCreateByParentId);
   ipcMainHandle('services.requestVersion.findByParentId', requestVersionFindByParentId);
   ipcMainHandle('services.requestVersion.restore', requestVersionRestore);
+  ipcMainHandle('services.requestVersion.getRequest', requestVersionGetRequest);
   ipcMainHandle('services.response.create', responseCreate);
   ipcMainHandle('services.response.getByBodyPath', responseGetByBodyPath);
   ipcMainHandle('services.response.getById', responseGetById);

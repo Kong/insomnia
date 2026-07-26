@@ -131,6 +131,7 @@ exports[`describeServicesInvokeSurface (real repo) > matches the current service
   "requestMeta.update: named handler (1 call site)",
   "requestMeta.updateOrCreateByParentId: named handler (5 call sites)",
   "requestVersion.findByParentId: named handler (1 call site)",
+  "requestVersion.getRequest: named handler (1 call site)",
   "requestVersion.restore: named handler (2 call sites)",
   "response.create: named handler (3 call sites)",
   "response.findByParentId: named handler (1 call site)",

@@ -176,6 +176,7 @@ export type HandleChannels =
   | 'services.requestMeta.updateOrCreateByParentId'
   | 'services.requestVersion.findByParentId'
   | 'services.requestVersion.restore'
+  | 'services.requestVersion.getRequest'
   | 'services.response.create'
   | 'services.response.getByBodyPath'
   | 'services.response.getById'

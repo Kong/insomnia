@@ -138,6 +138,7 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'requestMeta.updateOrCreateByParentId',
   'requestVersion.findByParentId',
   'requestVersion.restore',
+  'requestVersion.getRequest',
   'response.create',
   'response.getByBodyPath',
   'response.getById',

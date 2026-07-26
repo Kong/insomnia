@@ -25,6 +25,7 @@ import type {
   RequestGroup,
   RequestGroupMeta,
   RequestMeta,
+  RequestVersion,
   Response,
   RunnerTestResult,
   Settings,
@@ -214,6 +215,7 @@ export const requestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, paren
 
 export const requestVersionFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.requestVersion.findByParentId(parentId);
 export const requestVersionRestore = (_: IpcMainInvokeEvent, requestVersionId: string) => services.requestVersion.restore(requestVersionId);
+export const requestVersionGetRequest = (_: IpcMainInvokeEvent, requestVersion: RequestVersion) => services.requestVersion.getRequest(requestVersion);
 
 export const responseCreate = (_: IpcMainInvokeEvent, patch: Partial<Response> = {}, maxResponses?: number) => services.response.create(patch, maxResponses);
 export const responseGetByBodyPath = (_: IpcMainInvokeEvent, bodyPath: string) => services.response.getByBodyPath(bodyPath);

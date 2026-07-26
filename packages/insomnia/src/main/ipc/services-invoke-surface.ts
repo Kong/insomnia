@@ -24,7 +24,11 @@ export interface ServicesInvokePairEntry {
   hasNamedHandler: boolean;
 }
 
-const SERVICE_CALL_PATTERN = /\bservices\.([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\(/;
+// The optional `(?:<[^<>]*>)?` tolerates a single level of explicit generic type arguments between
+// the method name and its call parens (e.g. `services.requestVersion.getRequest<Request | WebSocketRequest>(rv)`)
+// — found missing a real call site because the un-augmented pattern required `(` immediately after
+// the method name.
+const SERVICE_CALL_PATTERN = /\bservices\.([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\s*(?:<[^<>]*>)?\(/;
 const NAMED_HANDLER_PATTERN = /ipcMainHandle\(\s*['"]services\.([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)['"]/;
 
 // Fixture/test scaffolding, generated mocks, and vendored third-party sources aren't real
