@@ -219,6 +219,7 @@ export const responseCreate = (_: IpcMainInvokeEvent, patch: Partial<Response> =
 export const responseGetByBodyPath = (_: IpcMainInvokeEvent, bodyPath: string) => services.response.getByBodyPath(bodyPath);
 export const responseGetById = (_: IpcMainInvokeEvent, id: string) => services.response.getById(id);
 export const responseGetLatestForRequestId = (_: IpcMainInvokeEvent, requestId: string, environmentId: string | null) => services.response.getLatestForRequestId(requestId, environmentId);
+export const responseFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.response.findByParentId(parentId);
 
 export const runnerTestResultCreate = (_: IpcMainInvokeEvent, patch: Partial<RunnerTestResult> = {}) => services.runnerTestResult.create(patch);
 export const runnerTestResultFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.runnerTestResult.findByParentId(parentId);
@@ -231,6 +232,10 @@ export const socketIOPayloadUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, p
 export const socketIORequestCreate = (_: IpcMainInvokeEvent, patch: Partial<SocketIORequest> = {}) => services.socketIORequest.create(patch);
 
 export const socketIORequestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<SocketIORequestMeta>) => services.socketIORequestMeta.updateOrCreateByParentId(parentId, patch);
+
+export const socketIOResponseGetById = (_: IpcMainInvokeEvent, id: string) => services.socketIOResponse.getById(id);
+export const socketIOResponseFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.socketIOResponse.findByParentId(parentId);
+export const socketIOResponseGetLatestForRequestId = (_: IpcMainInvokeEvent, requestId: string, environmentId: string | null) => services.socketIOResponse.getLatestForRequestId(requestId, environmentId);
 
 export const statsGet = (_: IpcMainInvokeEvent) => services.stats.get();
 export const statsIncrementCreatedRequests = (_: IpcMainInvokeEvent) => services.stats.incrementCreatedRequests();
@@ -259,6 +264,10 @@ export const webSocketPayloadUpdate = (_: IpcMainInvokeEvent, obj: WebSocketPayl
 export const webSocketRequestCreate = (_: IpcMainInvokeEvent, patch: Partial<WebSocketRequest> = {}) => services.webSocketRequest.create(patch);
 
 export const webSocketRequestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<WebSocketRequestMeta>) => services.webSocketRequestMeta.updateOrCreateByParentId(parentId, patch);
+
+export const webSocketResponseGetById = (_: IpcMainInvokeEvent, id: string) => services.webSocketResponse.getById(id);
+export const webSocketResponseFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.webSocketResponse.findByParentId(parentId);
+export const webSocketResponseGetLatestForRequestId = (_: IpcMainInvokeEvent, requestId: string, environmentId: string | null) => services.webSocketResponse.getLatestForRequestId(requestId, environmentId);
 
 export const workspaceCount = (_: IpcMainInvokeEvent, query?: Query<Workspace>) => services.workspace.count(query);
 export const workspaceCreate = (_: IpcMainInvokeEvent, patch: Partial<Workspace> = {}) => services.workspace.create(patch);

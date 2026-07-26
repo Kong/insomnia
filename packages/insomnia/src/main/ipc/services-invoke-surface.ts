@@ -76,6 +76,59 @@ export interface ServicesInvokeSurfaceOptions {
 const DEFAULT_RENDERER_ROOT = path.resolve(__dirname, '../..');
 const DEFAULT_MAIN_IPC_DIR = __dirname;
 
+// Real call sites this detector's `services.<x>.<y>(` regex structurally cannot see: a helper
+// (`getResponseOperations` / the inline `responseModel` switch, both in the two route files below)
+// returns `services.<serviceName>` itself, and the caller invokes `.methodName(...)` on the resulting
+// variable — so the pair never appears as a literal `services.<x>.<y>(` token anywhere. Found via a
+// Phase 3 tripwire hit (`services.invoke` throwing for `("response", "findByParentId")` live in the
+// Playwright smoke suite), not by this scanner. Hand-maintained for the same reason
+// MIGRATED_SERVICES_INVOKE_PAIRS is hand-maintained: a fully general data-flow scan of "does this
+// variable trace back to a services.<x> reference" is out of scope for this detector. Only applied
+// when scanning the real repo (default rendererRoot) — never against the fixture trees this file's
+// other tests build, so those stay exact.
+const DYNAMIC_DISPATCH_REAL_REPO_CALL_SITES: { pair: string; callSiteFiles: string[] }[] = [
+  {
+    pair: 'response.findByParentId',
+    callSiteFiles: ['routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx'],
+  },
+  {
+    pair: 'webSocketResponse.getById',
+    callSiteFiles: [
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete.tsx',
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx',
+    ],
+  },
+  {
+    pair: 'webSocketResponse.findByParentId',
+    callSiteFiles: ['routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx'],
+  },
+  {
+    pair: 'webSocketResponse.getLatestForRequestId',
+    callSiteFiles: [
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete.tsx',
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx',
+    ],
+  },
+  {
+    pair: 'socketIOResponse.getById',
+    callSiteFiles: [
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete.tsx',
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx',
+    ],
+  },
+  {
+    pair: 'socketIOResponse.findByParentId',
+    callSiteFiles: ['routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx'],
+  },
+  {
+    pair: 'socketIOResponse.getLatestForRequestId',
+    callSiteFiles: [
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete.tsx',
+      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx',
+    ],
+  },
+];
+
 /** Describes every renderer-reachable `services.<x>.<y>` pair: its call sites, and whether it has migrated off the generic gateway onto a named handler. */
 export const describeServicesInvokeSurface = (
   options: ServicesInvokeSurfaceOptions = {},
@@ -91,6 +144,13 @@ export const describeServicesInvokeSurface = (
       const pair = `${serviceName}.${methodName}`;
       const files = callSitesByPair.get(pair) ?? new Set<string>();
       files.add(path.relative(rendererRoot, file).split(path.sep).join('/'));
+      callSitesByPair.set(pair, files);
+    }
+  }
+  if (options.rendererRoot === undefined) {
+    for (const { pair, callSiteFiles } of DYNAMIC_DISPATCH_REAL_REPO_CALL_SITES) {
+      const files = callSitesByPair.get(pair) ?? new Set<string>();
+      callSiteFiles.forEach(f => files.add(f));
       callSitesByPair.set(pair, files);
     }
   }

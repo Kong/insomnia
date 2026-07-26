@@ -176,6 +176,7 @@ import {
   requestVersionFindByParentId,
   requestVersionRestore,
   responseCreate,
+  responseFindByParentId,
   responseGetByBodyPath,
   responseGetById,
   responseGetLatestForRequestId,
@@ -191,6 +192,9 @@ import {
   socketIOPayloadUpdateOrCreateByParentId,
   socketIORequestCreate,
   socketIORequestMetaUpdateOrCreateByParentId,
+  socketIOResponseFindByParentId,
+  socketIOResponseGetById,
+  socketIOResponseGetLatestForRequestId,
   statsGet,
   statsIncrementCreatedRequests,
   statsIncrementCreatedRequestsForDescendents,
@@ -215,6 +219,9 @@ import {
   webSocketPayloadUpdate,
   webSocketRequestCreate,
   webSocketRequestMetaUpdateOrCreateByParentId,
+  webSocketResponseFindByParentId,
+  webSocketResponseGetById,
+  webSocketResponseGetLatestForRequestId,
   workspaceCount,
   workspaceCreate,
   workspaceGetById,
@@ -718,6 +725,7 @@ export function registerMainHandlers() {
   ipcMainHandle('services.response.getByBodyPath', responseGetByBodyPath);
   ipcMainHandle('services.response.getById', responseGetById);
   ipcMainHandle('services.response.getLatestForRequestId', responseGetLatestForRequestId);
+  ipcMainHandle('services.response.findByParentId', responseFindByParentId);
   ipcMainHandle('services.runnerTestResult.create', runnerTestResultCreate);
   ipcMainHandle('services.runnerTestResult.findByParentId', runnerTestResultFindByParentId);
   ipcMainHandle('services.runnerTestResult.getById', runnerTestResultGetById);
@@ -726,6 +734,9 @@ export function registerMainHandlers() {
   ipcMainHandle('services.socketIOPayload.updateOrCreateByParentId', socketIOPayloadUpdateOrCreateByParentId);
   ipcMainHandle('services.socketIORequest.create', socketIORequestCreate);
   ipcMainHandle('services.socketIORequestMeta.updateOrCreateByParentId', socketIORequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.socketIOResponse.getById', socketIOResponseGetById);
+  ipcMainHandle('services.socketIOResponse.findByParentId', socketIOResponseFindByParentId);
+  ipcMainHandle('services.socketIOResponse.getLatestForRequestId', socketIOResponseGetLatestForRequestId);
   ipcMainHandle('services.stats.get', statsGet);
   ipcMainHandle('services.stats.incrementCreatedRequests', statsIncrementCreatedRequests);
   ipcMainHandle('services.stats.incrementCreatedRequestsForDescendents', statsIncrementCreatedRequestsForDescendents);
@@ -747,6 +758,9 @@ export function registerMainHandlers() {
   ipcMainHandle('services.webSocketPayload.update', webSocketPayloadUpdate);
   ipcMainHandle('services.webSocketRequest.create', webSocketRequestCreate);
   ipcMainHandle('services.webSocketRequestMeta.updateOrCreateByParentId', webSocketRequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.webSocketResponse.getById', webSocketResponseGetById);
+  ipcMainHandle('services.webSocketResponse.findByParentId', webSocketResponseFindByParentId);
+  ipcMainHandle('services.webSocketResponse.getLatestForRequestId', webSocketResponseGetLatestForRequestId);
   ipcMainHandle('services.workspace.count', workspaceCount);
   ipcMainHandle('services.workspace.create', workspaceCreate);
   ipcMainHandle('services.workspace.getById', workspaceGetById);
