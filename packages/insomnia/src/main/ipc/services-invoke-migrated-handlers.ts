@@ -30,7 +30,11 @@ import type {
   SocketIOPayload,
   SocketIORequest,
   SocketIORequestMeta,
+  Stats,
+  UnitTest,
+  UnitTestResult,
   UserSession,
+  Workspace,
 } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
@@ -221,3 +225,17 @@ export const socketIOPayloadUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, p
 export const socketIORequestCreate = (_: IpcMainInvokeEvent, patch: Partial<SocketIORequest> = {}) => services.socketIORequest.create(patch);
 
 export const socketIORequestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<SocketIORequestMeta>) => services.socketIORequestMeta.updateOrCreateByParentId(parentId, patch);
+
+export const statsGet = (_: IpcMainInvokeEvent) => services.stats.get();
+export const statsIncrementCreatedRequests = (_: IpcMainInvokeEvent) => services.stats.incrementCreatedRequests();
+export const statsIncrementCreatedRequestsForDescendents = (_: IpcMainInvokeEvent, doc: Workspace | RequestGroup) => services.stats.incrementCreatedRequestsForDescendents(doc);
+export const statsIncrementDeletedRequests = (_: IpcMainInvokeEvent) => services.stats.incrementDeletedRequests();
+export const statsIncrementDeletedRequestsForDescendents = (_: IpcMainInvokeEvent, doc: Workspace | RequestGroup | Project) => services.stats.incrementDeletedRequestsForDescendents(doc);
+export const statsIncrementExecutedRequests = (_: IpcMainInvokeEvent) => services.stats.incrementExecutedRequests();
+export const statsUpdate = (_: IpcMainInvokeEvent, patch: Partial<Stats>) => services.stats.update(patch);
+
+export const unitTestCreate = (_: IpcMainInvokeEvent, patch: Partial<UnitTest> = {}) => services.unitTest.create(patch);
+export const unitTestRemove = (_: IpcMainInvokeEvent, unitTest: UnitTest) => services.unitTest.remove(unitTest);
+export const unitTestUpdate = (_: IpcMainInvokeEvent, unitTest: UnitTest, patch: Partial<UnitTest> = {}) => services.unitTest.update(unitTest, patch);
+
+export const unitTestResultCreate = (_: IpcMainInvokeEvent, patch: Partial<UnitTestResult> = {}) => services.unitTestResult.create(patch);

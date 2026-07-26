@@ -187,6 +187,17 @@ import {
   socketIOPayloadUpdateOrCreateByParentId,
   socketIORequestCreate,
   socketIORequestMetaUpdateOrCreateByParentId,
+  statsGet,
+  statsIncrementCreatedRequests,
+  statsIncrementCreatedRequestsForDescendents,
+  statsIncrementDeletedRequests,
+  statsIncrementDeletedRequestsForDescendents,
+  statsIncrementExecutedRequests,
+  statsUpdate,
+  unitTestCreate,
+  unitTestRemove,
+  unitTestResultCreate,
+  unitTestUpdate,
   userSessionGet,
   userSessionRemove,
   userSessionUpdate,
@@ -688,6 +699,17 @@ export function registerMainHandlers() {
   ipcMainHandle('services.socketIOPayload.updateOrCreateByParentId', socketIOPayloadUpdateOrCreateByParentId);
   ipcMainHandle('services.socketIORequest.create', socketIORequestCreate);
   ipcMainHandle('services.socketIORequestMeta.updateOrCreateByParentId', socketIORequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.stats.get', statsGet);
+  ipcMainHandle('services.stats.incrementCreatedRequests', statsIncrementCreatedRequests);
+  ipcMainHandle('services.stats.incrementCreatedRequestsForDescendents', statsIncrementCreatedRequestsForDescendents);
+  ipcMainHandle('services.stats.incrementDeletedRequests', statsIncrementDeletedRequests);
+  ipcMainHandle('services.stats.incrementDeletedRequestsForDescendents', statsIncrementDeletedRequestsForDescendents);
+  ipcMainHandle('services.stats.incrementExecutedRequests', statsIncrementExecutedRequests);
+  ipcMainHandle('services.stats.update', statsUpdate);
+  ipcMainHandle('services.unitTest.create', unitTestCreate);
+  ipcMainHandle('services.unitTest.remove', unitTestRemove);
+  ipcMainHandle('services.unitTest.update', unitTestUpdate);
+  ipcMainHandle('services.unitTestResult.create', unitTestResultCreate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

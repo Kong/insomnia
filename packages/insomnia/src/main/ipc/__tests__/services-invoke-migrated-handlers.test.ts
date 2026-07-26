@@ -49,6 +49,13 @@ vi.mock('insomnia-data', () => ({
     socketIOPayload: { getOrCreateByParentId: vi.fn(), updateOrCreateByParentId: vi.fn() },
     socketIORequest: { create: vi.fn() },
     socketIORequestMeta: { updateOrCreateByParentId: vi.fn() },
+    stats: {
+      get: vi.fn(), incrementCreatedRequests: vi.fn(), incrementCreatedRequestsForDescendents: vi.fn(),
+      incrementDeletedRequests: vi.fn(), incrementDeletedRequestsForDescendents: vi.fn(), incrementExecutedRequests: vi.fn(),
+      update: vi.fn(),
+    },
+    unitTest: { create: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    unitTestResult: { create: vi.fn() },
   },
 }));
 
@@ -207,6 +214,17 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'socketIOPayloadUpdateOrCreateByParentId', serviceName: 'socketIOPayload', methodName: 'updateOrCreateByParentId', args: ['req1', { value: 'x' }] },
   { handlerName: 'socketIORequestCreate', serviceName: 'socketIORequest', methodName: 'create', args: [{ parentId: 'w1' }] },
   { handlerName: 'socketIORequestMetaUpdateOrCreateByParentId', serviceName: 'socketIORequestMeta', methodName: 'updateOrCreateByParentId', args: ['req1', { expandedTypes: [] }] },
+  { handlerName: 'statsGet', serviceName: 'stats', methodName: 'get', args: [] },
+  { handlerName: 'statsIncrementCreatedRequests', serviceName: 'stats', methodName: 'incrementCreatedRequests', args: [] },
+  { handlerName: 'statsIncrementCreatedRequestsForDescendents', serviceName: 'stats', methodName: 'incrementCreatedRequestsForDescendents', args: [{ _id: 'w1' }] },
+  { handlerName: 'statsIncrementDeletedRequests', serviceName: 'stats', methodName: 'incrementDeletedRequests', args: [] },
+  { handlerName: 'statsIncrementDeletedRequestsForDescendents', serviceName: 'stats', methodName: 'incrementDeletedRequestsForDescendents', args: [{ _id: 'w1' }] },
+  { handlerName: 'statsIncrementExecutedRequests', serviceName: 'stats', methodName: 'incrementExecutedRequests', args: [] },
+  { handlerName: 'statsUpdate', serviceName: 'stats', methodName: 'update', args: [{ createdRequests: 1 }] },
+  { handlerName: 'unitTestCreate', serviceName: 'unitTest', methodName: 'create', args: [{ parentId: 'suite1' }] },
+  { handlerName: 'unitTestRemove', serviceName: 'unitTest', methodName: 'remove', args: [{ _id: 'ut1' }] },
+  { handlerName: 'unitTestUpdate', serviceName: 'unitTest', methodName: 'update', args: [{ _id: 'ut1' }, { name: 'renamed' }] },
+  { handlerName: 'unitTestResultCreate', serviceName: 'unitTestResult', methodName: 'create', args: [{ parentId: 'ut1' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {
