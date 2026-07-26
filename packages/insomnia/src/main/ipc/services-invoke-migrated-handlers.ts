@@ -1,3 +1,4 @@
+import type { IpcMainInvokeEvent } from 'electron';
 import type {
   ApiSpec,
   BaseGitCredentialsV2,
@@ -21,95 +22,99 @@ import { services } from 'insomnia-data';
 // Named per-pair handlers for services.invoke pairs migrated off the generic reflection-based
 // gateway (see services-invoke-surface.ts, SERVICES-INVOKE-MIGRATION-PLAN.md). Each forwards to the
 // exact same services.* call the generic dispatch made for that pair, with the same arguments — main.ts
-// registers each of these under the literal channel name `services.<serviceName>.<methodName>`.
+// registers each of these under the literal channel name `services.<serviceName>.<methodName>`. The
+// unused first parameter is typed IpcMainInvokeEvent (matching ipcMainHandle's real listener
+// signature) rather than `unknown`, purely for type accuracy — none of these forwarders read it, so
+// this has no security effect on its own; it just keeps the door open for a future handler to add an
+// event.sender check (as templatingDb.getAuthToken already does) without a type change first.
 
-export const caCertificateCreate = (_: unknown, patch: Partial<CaCertificate> = {}) => services.caCertificate.create(patch);
-export const caCertificateGetById = (_: unknown, id: string) => services.caCertificate.getById(id);
-export const caCertificateGetByParentId = (_: unknown, parentId: string) => services.caCertificate.getByParentId(parentId);
-export const caCertificateRemoveWhere = (_: unknown, parentId: string) => services.caCertificate.removeWhere(parentId);
-export const caCertificateUpdate = (_: unknown, cert: CaCertificate, patch: Partial<CaCertificate> = {}) => services.caCertificate.update(cert, patch);
+export const caCertificateCreate = (_: IpcMainInvokeEvent, patch: Partial<CaCertificate> = {}) => services.caCertificate.create(patch);
+export const caCertificateGetById = (_: IpcMainInvokeEvent, id: string) => services.caCertificate.getById(id);
+export const caCertificateGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.caCertificate.getByParentId(parentId);
+export const caCertificateRemoveWhere = (_: IpcMainInvokeEvent, parentId: string) => services.caCertificate.removeWhere(parentId);
+export const caCertificateUpdate = (_: IpcMainInvokeEvent, cert: CaCertificate, patch: Partial<CaCertificate> = {}) => services.caCertificate.update(cert, patch);
 
-export const clientCertificateCreate = (_: unknown, patch: Partial<ClientCertificate> = {}) => services.clientCertificate.create(patch);
-export const clientCertificateFindByParentId = (_: unknown, parentId: string) => services.clientCertificate.findByParentId(parentId);
-export const clientCertificateGetById = (_: unknown, id: string) => services.clientCertificate.getById(id);
-export const clientCertificateRemove = (_: unknown, cert: ClientCertificate) => services.clientCertificate.remove(cert);
-export const clientCertificateUpdate = (_: unknown, cert: ClientCertificate, patch: Partial<ClientCertificate> = {}) => services.clientCertificate.update(cert, patch);
+export const clientCertificateCreate = (_: IpcMainInvokeEvent, patch: Partial<ClientCertificate> = {}) => services.clientCertificate.create(patch);
+export const clientCertificateFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.clientCertificate.findByParentId(parentId);
+export const clientCertificateGetById = (_: IpcMainInvokeEvent, id: string) => services.clientCertificate.getById(id);
+export const clientCertificateRemove = (_: IpcMainInvokeEvent, cert: ClientCertificate) => services.clientCertificate.remove(cert);
+export const clientCertificateUpdate = (_: IpcMainInvokeEvent, cert: ClientCertificate, patch: Partial<ClientCertificate> = {}) => services.clientCertificate.update(cert, patch);
 
-export const cloudCredentialAll = (_: unknown) => services.cloudCredential.all();
-export const cloudCredentialCreate = (_: unknown, patch: Partial<CloudProviderCredential> = {}) => services.cloudCredential.create(patch);
-export const cloudCredentialGetById = (_: unknown, id: string) => services.cloudCredential.getById(id);
-export const cloudCredentialGetByName = (_: unknown, name: string, provider: CloudProviderName) => services.cloudCredential.getByName(name, provider);
-export const cloudCredentialRemove = (_: unknown, credential: CloudProviderCredential) => services.cloudCredential.remove(credential);
-export const cloudCredentialUpdate = (_: unknown, credential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) => services.cloudCredential.update(credential, patch);
+export const cloudCredentialAll = (_: IpcMainInvokeEvent) => services.cloudCredential.all();
+export const cloudCredentialCreate = (_: IpcMainInvokeEvent, patch: Partial<CloudProviderCredential> = {}) => services.cloudCredential.create(patch);
+export const cloudCredentialGetById = (_: IpcMainInvokeEvent, id: string) => services.cloudCredential.getById(id);
+export const cloudCredentialGetByName = (_: IpcMainInvokeEvent, name: string, provider: CloudProviderName) => services.cloudCredential.getByName(name, provider);
+export const cloudCredentialRemove = (_: IpcMainInvokeEvent, credential: CloudProviderCredential) => services.cloudCredential.remove(credential);
+export const cloudCredentialUpdate = (_: IpcMainInvokeEvent, credential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) => services.cloudCredential.update(credential, patch);
 
-export const settingsGet = (_: unknown) => services.settings.get();
-export const settingsGetOrCreate = (_: unknown) => services.settings.getOrCreate();
-export const settingsPatch = (_: unknown, patch: Partial<Settings>) => services.settings.patch(patch);
-export const settingsUpdate = (_: unknown, settings: Settings, patch: Partial<Settings>) => services.settings.update(settings, patch);
+export const settingsGet = (_: IpcMainInvokeEvent) => services.settings.get();
+export const settingsGetOrCreate = (_: IpcMainInvokeEvent) => services.settings.getOrCreate();
+export const settingsPatch = (_: IpcMainInvokeEvent, patch: Partial<Settings>) => services.settings.patch(patch);
+export const settingsUpdate = (_: IpcMainInvokeEvent, settings: Settings, patch: Partial<Settings>) => services.settings.update(settings, patch);
 
-export const gitCredentialsAll = (_: unknown) => services.gitCredentials.all();
-export const gitCredentialsCreate = (_: unknown, patch: BaseGitCredentialsV2) => services.gitCredentials.create(patch);
-export const gitCredentialsGetById = (_: unknown, id: string) => services.gitCredentials.getById(id);
-export const gitCredentialsRemove = (_: unknown, credentials: GitCredentials) => services.gitCredentials.remove(credentials);
-export const gitCredentialsRemoveAll = (_: unknown) => services.gitCredentials.removeAll();
-export const gitCredentialsUpdate = (_: unknown, credentials: GitCredentialsV2, patch: Partial<GitCredentialsV2>) => services.gitCredentials.update(credentials, patch);
+export const gitCredentialsAll = (_: IpcMainInvokeEvent) => services.gitCredentials.all();
+export const gitCredentialsCreate = (_: IpcMainInvokeEvent, patch: BaseGitCredentialsV2) => services.gitCredentials.create(patch);
+export const gitCredentialsGetById = (_: IpcMainInvokeEvent, id: string) => services.gitCredentials.getById(id);
+export const gitCredentialsRemove = (_: IpcMainInvokeEvent, credentials: GitCredentials) => services.gitCredentials.remove(credentials);
+export const gitCredentialsRemoveAll = (_: IpcMainInvokeEvent) => services.gitCredentials.removeAll();
+export const gitCredentialsUpdate = (_: IpcMainInvokeEvent, credentials: GitCredentialsV2, patch: Partial<GitCredentialsV2>) => services.gitCredentials.update(credentials, patch);
 
-export const userSessionGet = (_: unknown) => services.userSession.get();
-export const userSessionRemove = (_: unknown) => services.userSession.remove();
-export const userSessionUpdate = (_: unknown, patch: Partial<UserSession>) => services.userSession.update(patch);
+export const userSessionGet = (_: IpcMainInvokeEvent) => services.userSession.get();
+export const userSessionRemove = (_: IpcMainInvokeEvent) => services.userSession.remove();
+export const userSessionUpdate = (_: IpcMainInvokeEvent, patch: Partial<UserSession>) => services.userSession.update(patch);
 
-export const environmentCreate = (_: unknown, patch: Partial<Environment> = {}) => services.environment.create(patch);
-export const environmentUpdate = (_: unknown, environment: Environment, patch: Partial<Environment>) => services.environment.update(environment, patch);
-export const environmentList = (_: unknown, query?: Query<Environment>, sort?: Record<string, any>, limit?: number) => services.environment.list(query, sort, limit);
-export const environmentListByParentId = (_: unknown, parentId: string) => services.environment.listByParentId(parentId);
-export const environmentGetOrCreateForParentId = (_: unknown, parentId: string) => services.environment.getOrCreateForParentId(parentId);
-export const environmentGetById = (_: unknown, id: string) => services.environment.getById(id);
-export const environmentGetByParentId = (_: unknown, parentId: string) => services.environment.getByParentId(parentId);
-export const environmentDuplicate = (_: unknown, environment: Environment) => services.environment.duplicate(environment);
-export const environmentRemove = (_: unknown, environment: Environment) => services.environment.remove(environment);
-export const environmentRemoveAllSecrets = (_: unknown, organizationIds: string[]) => services.environment.removeAllSecrets(organizationIds);
+export const environmentCreate = (_: IpcMainInvokeEvent, patch: Partial<Environment> = {}) => services.environment.create(patch);
+export const environmentUpdate = (_: IpcMainInvokeEvent, environment: Environment, patch: Partial<Environment>) => services.environment.update(environment, patch);
+export const environmentList = (_: IpcMainInvokeEvent, query?: Query<Environment>, sort?: Record<string, any>, limit?: number) => services.environment.list(query, sort, limit);
+export const environmentListByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.environment.listByParentId(parentId);
+export const environmentGetOrCreateForParentId = (_: IpcMainInvokeEvent, parentId: string) => services.environment.getOrCreateForParentId(parentId);
+export const environmentGetById = (_: IpcMainInvokeEvent, id: string) => services.environment.getById(id);
+export const environmentGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.environment.getByParentId(parentId);
+export const environmentDuplicate = (_: IpcMainInvokeEvent, environment: Environment) => services.environment.duplicate(environment);
+export const environmentRemove = (_: IpcMainInvokeEvent, environment: Environment) => services.environment.remove(environment);
+export const environmentRemoveAllSecrets = (_: IpcMainInvokeEvent, organizationIds: string[]) => services.environment.removeAllSecrets(organizationIds);
 
-export const apiSpecGetByParentId = (_: unknown, workspaceId: string) => services.apiSpec.getByParentId(workspaceId);
-export const apiSpecGetOrCreateForParentId = (_: unknown, workspaceId: string, patch: Partial<ApiSpec> = {}) => services.apiSpec.getOrCreateForParentId(workspaceId, patch);
-export const apiSpecUpdate = (_: unknown, apiSpec: ApiSpec, patch: Partial<ApiSpec> = {}) => services.apiSpec.update(apiSpec, patch);
-export const apiSpecUpdateOrCreateForParentId = (_: unknown, workspaceId: string, patch: Partial<ApiSpec> = {}) => services.apiSpec.updateOrCreateForParentId(workspaceId, patch);
+export const apiSpecGetByParentId = (_: IpcMainInvokeEvent, workspaceId: string) => services.apiSpec.getByParentId(workspaceId);
+export const apiSpecGetOrCreateForParentId = (_: IpcMainInvokeEvent, workspaceId: string, patch: Partial<ApiSpec> = {}) => services.apiSpec.getOrCreateForParentId(workspaceId, patch);
+export const apiSpecUpdate = (_: IpcMainInvokeEvent, apiSpec: ApiSpec, patch: Partial<ApiSpec> = {}) => services.apiSpec.update(apiSpec, patch);
+export const apiSpecUpdateOrCreateForParentId = (_: IpcMainInvokeEvent, workspaceId: string, patch: Partial<ApiSpec> = {}) => services.apiSpec.updateOrCreateForParentId(workspaceId, patch);
 
-export const cookieJarGetById = (_: unknown, id: string) => services.cookieJar.getById(id);
-export const cookieJarGetOrCreateForParentId = (_: unknown, parentId: string) => services.cookieJar.getOrCreateForParentId(parentId);
-export const cookieJarUpdate = (_: unknown, cookieJar: CookieJar, patch: Partial<CookieJar> = {}) => services.cookieJar.update(cookieJar, patch);
+export const cookieJarGetById = (_: IpcMainInvokeEvent, id: string) => services.cookieJar.getById(id);
+export const cookieJarGetOrCreateForParentId = (_: IpcMainInvokeEvent, parentId: string) => services.cookieJar.getOrCreateForParentId(parentId);
+export const cookieJarUpdate = (_: IpcMainInvokeEvent, cookieJar: CookieJar, patch: Partial<CookieJar> = {}) => services.cookieJar.update(cookieJar, patch);
 
-export const gitRepositoryAll = (_: unknown) => services.gitRepository.all();
-export const gitRepositoryGetAllByCredentialId = (_: unknown, credentialsId: string) => services.gitRepository.getAllByCredentialId(credentialsId);
-export const gitRepositoryGetById = (_: unknown, id: string) => services.gitRepository.getById(id);
-export const gitRepositoryRemove = (_: unknown, repo: GitRepository) => services.gitRepository.remove(repo);
-export const gitRepositoryUpdate = (_: unknown, repo: GitRepository, patch: Partial<GitRepository>) => services.gitRepository.update(repo, patch);
+export const gitRepositoryAll = (_: IpcMainInvokeEvent) => services.gitRepository.all();
+export const gitRepositoryGetAllByCredentialId = (_: IpcMainInvokeEvent, credentialsId: string) => services.gitRepository.getAllByCredentialId(credentialsId);
+export const gitRepositoryGetById = (_: IpcMainInvokeEvent, id: string) => services.gitRepository.getById(id);
+export const gitRepositoryRemove = (_: IpcMainInvokeEvent, repo: GitRepository) => services.gitRepository.remove(repo);
+export const gitRepositoryUpdate = (_: IpcMainInvokeEvent, repo: GitRepository, patch: Partial<GitRepository>) => services.gitRepository.update(repo, patch);
 
-export const grpcRequestCreate = (_: unknown, patch: Partial<GrpcRequest> = {}) => services.grpcRequest.create(patch);
-export const grpcRequestFindByProtoFileId = (_: unknown, protoFileId: string) => services.grpcRequest.findByProtoFileId(protoFileId);
+export const grpcRequestCreate = (_: IpcMainInvokeEvent, patch: Partial<GrpcRequest> = {}) => services.grpcRequest.create(patch);
+export const grpcRequestFindByProtoFileId = (_: IpcMainInvokeEvent, protoFileId: string) => services.grpcRequest.findByProtoFileId(protoFileId);
 
-export const grpcRequestMetaGetByParentId = (_: unknown, parentId: string) => services.grpcRequestMeta.getByParentId(parentId);
-export const grpcRequestMetaUpdateOrCreateByParentId = (_: unknown, parentId: string, patch: Partial<GrpcRequestMeta>) => services.grpcRequestMeta.updateOrCreateByParentId(parentId, patch);
+export const grpcRequestMetaGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.grpcRequestMeta.getByParentId(parentId);
+export const grpcRequestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<GrpcRequestMeta>) => services.grpcRequestMeta.updateOrCreateByParentId(parentId, patch);
 
-export const helpersAbortCommandSearch = (_: unknown, requestId: string) => services.helpers.abortCommandSearch(requestId);
-export const helpersCommandSearch = (_: unknown, params: Parameters<typeof services.helpers.commandSearch>[0]) => services.helpers.commandSearch(params);
-export const helpersDuplicateRequest = (_: unknown, request: any, patch: any = {}) => services.helpers.duplicateRequest(request, patch);
-export const helpersFindRequestByParentId = (_: unknown, parentId: string) => services.helpers.findRequestByParentId(parentId);
-export const helpersGetRequestById = (_: unknown, requestId: string) => services.helpers.getRequestById(requestId);
-export const helpersGetResponseBodyBuffer = (_: unknown, response?: Parameters<typeof services.helpers.getResponseBodyBuffer>[0], readFailureValue?: string) => services.helpers.getResponseBodyBuffer(response, readFailureValue);
-export const helpersGetResponseTimeline = (_: unknown, response: Parameters<typeof services.helpers.getResponseTimeline>[0], showBody?: boolean) => services.helpers.getResponseTimeline(response, showBody);
-export const helpersQueryAllWorkspaceUrls = (_: unknown, workspaceId: string, reqType: Parameters<typeof services.helpers.queryAllWorkspaceUrls>[1], reqId?: string) => services.helpers.queryAllWorkspaceUrls(workspaceId, reqType, reqId);
-export const helpersReadCurlResponse = (_: unknown, options: Parameters<typeof services.helpers.readCurlResponse>[0]) => services.helpers.readCurlResponse(options);
-export const helpersRemoveRequest = (_: unknown, request: any) => services.helpers.removeRequest(request);
-export const helpersRemoveResponse = (_: unknown, response: Parameters<typeof services.helpers.removeResponse>[0]) => services.helpers.removeResponse(response);
-export const helpersRemoveResponsesForRequest = (_: unknown, requestId: string, environmentId?: string | null) => services.helpers.removeResponsesForRequest(requestId, environmentId);
-export const helpersUpdateRequest = (_: unknown, request: any, patch: any = {}) => services.helpers.updateRequest(request, patch);
+export const helpersAbortCommandSearch = (_: IpcMainInvokeEvent, requestId: string) => services.helpers.abortCommandSearch(requestId);
+export const helpersCommandSearch = (_: IpcMainInvokeEvent, params: Parameters<typeof services.helpers.commandSearch>[0]) => services.helpers.commandSearch(params);
+export const helpersDuplicateRequest = (_: IpcMainInvokeEvent, request: any, patch: any = {}) => services.helpers.duplicateRequest(request, patch);
+export const helpersFindRequestByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.helpers.findRequestByParentId(parentId);
+export const helpersGetRequestById = (_: IpcMainInvokeEvent, requestId: string) => services.helpers.getRequestById(requestId);
+export const helpersGetResponseBodyBuffer = (_: IpcMainInvokeEvent, response?: Parameters<typeof services.helpers.getResponseBodyBuffer>[0], readFailureValue?: string) => services.helpers.getResponseBodyBuffer(response, readFailureValue);
+export const helpersGetResponseTimeline = (_: IpcMainInvokeEvent, response: Parameters<typeof services.helpers.getResponseTimeline>[0], showBody?: boolean) => services.helpers.getResponseTimeline(response, showBody);
+export const helpersQueryAllWorkspaceUrls = (_: IpcMainInvokeEvent, workspaceId: string, reqType: Parameters<typeof services.helpers.queryAllWorkspaceUrls>[1], reqId?: string) => services.helpers.queryAllWorkspaceUrls(workspaceId, reqType, reqId);
+export const helpersReadCurlResponse = (_: IpcMainInvokeEvent, options: Parameters<typeof services.helpers.readCurlResponse>[0]) => services.helpers.readCurlResponse(options);
+export const helpersRemoveRequest = (_: IpcMainInvokeEvent, request: any) => services.helpers.removeRequest(request);
+export const helpersRemoveResponse = (_: IpcMainInvokeEvent, response: Parameters<typeof services.helpers.removeResponse>[0]) => services.helpers.removeResponse(response);
+export const helpersRemoveResponsesForRequest = (_: IpcMainInvokeEvent, requestId: string, environmentId?: string | null) => services.helpers.removeResponsesForRequest(requestId, environmentId);
+export const helpersUpdateRequest = (_: IpcMainInvokeEvent, request: any, patch: any = {}) => services.helpers.updateRequest(request, patch);
 
-export const mcpPayloadGetByParentIdAndUrl = (_: unknown, parentId: string, url: string) => services.mcpPayload.getByParentIdAndUrl(parentId, url);
-export const mcpPayloadUpdateOrCreateByParentIdAndUrl = (_: unknown, parentId: string, patch: Parameters<typeof services.mcpPayload.updateOrCreateByParentIdAndUrl>[1]) => services.mcpPayload.updateOrCreateByParentIdAndUrl(parentId, patch);
+export const mcpPayloadGetByParentIdAndUrl = (_: IpcMainInvokeEvent, parentId: string, url: string) => services.mcpPayload.getByParentIdAndUrl(parentId, url);
+export const mcpPayloadUpdateOrCreateByParentIdAndUrl = (_: IpcMainInvokeEvent, parentId: string, patch: Parameters<typeof services.mcpPayload.updateOrCreateByParentIdAndUrl>[1]) => services.mcpPayload.updateOrCreateByParentIdAndUrl(parentId, patch);
 
-export const mcpRequestCreate = (_: unknown, patch: Parameters<typeof services.mcpRequest.create>[0]) => services.mcpRequest.create(patch);
-export const mcpRequestGetById = (_: unknown, id: string) => services.mcpRequest.getById(id);
-export const mcpRequestGetByParentId = (_: unknown, parentId: string) => services.mcpRequest.getByParentId(parentId);
+export const mcpRequestCreate = (_: IpcMainInvokeEvent, patch: Parameters<typeof services.mcpRequest.create>[0]) => services.mcpRequest.create(patch);
+export const mcpRequestGetById = (_: IpcMainInvokeEvent, id: string) => services.mcpRequest.getById(id);
+export const mcpRequestGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.mcpRequest.getByParentId(parentId);
 
-export const mcpResponseGetById = (_: unknown, id: string) => services.mcpResponse.getById(id);
-export const mcpResponseGetLatestForRequestId = (_: unknown, requestId: string, environmentId: string | null) => services.mcpResponse.getLatestForRequestId(requestId, environmentId);
+export const mcpResponseGetById = (_: IpcMainInvokeEvent, id: string) => services.mcpResponse.getById(id);
+export const mcpResponseGetLatestForRequestId = (_: IpcMainInvokeEvent, requestId: string, environmentId: string | null) => services.mcpResponse.getLatestForRequestId(requestId, environmentId);
