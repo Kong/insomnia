@@ -31,6 +31,7 @@ vi.mock('insomnia-data', () => ({
     mockRoute: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
     mockServer: { findByProjectId: vi.fn(), getById: vi.fn(), getByParentId: vi.fn(), getOrCreateForParentId: vi.fn(), update: vi.fn() },
     organization: { list: vi.fn() },
+    pluginData: { all: vi.fn(), getByKey: vi.fn(), removeAll: vi.fn(), removeByKey: vi.fn(), upsertByKey: vi.fn() },
   },
 }));
 
@@ -130,6 +131,11 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'mockServerGetOrCreateForParentId', serviceName: 'mockServer', methodName: 'getOrCreateForParentId', args: ['w1', {}] },
   { handlerName: 'mockServerUpdate', serviceName: 'mockServer', methodName: 'update', args: [{ _id: 'server1' }, { name: 'renamed' }] },
   { handlerName: 'organizationList', serviceName: 'organization', methodName: 'list', args: [] },
+  { handlerName: 'pluginDataAll', serviceName: 'pluginData', methodName: 'all', args: ['my-plugin'] },
+  { handlerName: 'pluginDataGetByKey', serviceName: 'pluginData', methodName: 'getByKey', args: ['my-plugin', 'k'] },
+  { handlerName: 'pluginDataRemoveAll', serviceName: 'pluginData', methodName: 'removeAll', args: ['my-plugin'] },
+  { handlerName: 'pluginDataRemoveByKey', serviceName: 'pluginData', methodName: 'removeByKey', args: ['my-plugin', 'k'] },
+  { handlerName: 'pluginDataUpsertByKey', serviceName: 'pluginData', methodName: 'upsertByKey', args: ['my-plugin', 'k', 'v'] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

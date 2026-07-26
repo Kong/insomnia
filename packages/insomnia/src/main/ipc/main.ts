@@ -124,6 +124,11 @@ import {
   mockServerGetOrCreateForParentId,
   mockServerUpdate,
   organizationList,
+  pluginDataAll,
+  pluginDataGetByKey,
+  pluginDataRemoveAll,
+  pluginDataRemoveByKey,
+  pluginDataUpsertByKey,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -570,6 +575,11 @@ export function registerMainHandlers() {
   ipcMainHandle('services.mockServer.getOrCreateForParentId', mockServerGetOrCreateForParentId);
   ipcMainHandle('services.mockServer.update', mockServerUpdate);
   ipcMainHandle('services.organization.list', organizationList);
+  ipcMainHandle('services.pluginData.all', pluginDataAll);
+  ipcMainHandle('services.pluginData.getByKey', pluginDataGetByKey);
+  ipcMainHandle('services.pluginData.removeAll', pluginDataRemoveAll);
+  ipcMainHandle('services.pluginData.removeByKey', pluginDataRemoveByKey);
+  ipcMainHandle('services.pluginData.upsertByKey', pluginDataUpsertByKey);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

@@ -134,3 +134,9 @@ export const mockServerGetOrCreateForParentId = (_: IpcMainInvokeEvent, workspac
 export const mockServerUpdate = (_: IpcMainInvokeEvent, mockServer: MockServer, patch: Partial<MockServer> = {}) => services.mockServer.update(mockServer, patch);
 
 export const organizationList = (_: IpcMainInvokeEvent) => services.organization.list();
+
+export const pluginDataAll = (_: IpcMainInvokeEvent, plugin: string) => services.pluginData.all(plugin);
+export const pluginDataGetByKey = (_: IpcMainInvokeEvent, plugin: string, key: string) => services.pluginData.getByKey(plugin, key);
+export const pluginDataRemoveAll = (_: IpcMainInvokeEvent, plugin: string) => services.pluginData.removeAll(plugin);
+export const pluginDataRemoveByKey = (_: IpcMainInvokeEvent, plugin: string, key: string) => services.pluginData.removeByKey(plugin, key);
+export const pluginDataUpsertByKey = (_: IpcMainInvokeEvent, plugin: string, key: string, value: string) => services.pluginData.upsertByKey(plugin, key, value);
