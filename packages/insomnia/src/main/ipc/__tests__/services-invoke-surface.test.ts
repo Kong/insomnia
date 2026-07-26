@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { MIGRATED_SERVICES_INVOKE_PAIRS } from '../migrated-services-invoke-pairs';
 import {
   describeServicesInvokeSurface,
   findPairsMissingNamedHandler,
@@ -95,5 +96,15 @@ describe('describeServicesInvokeSurface (real repo)', () => {
     const entries = describeServicesInvokeSurface();
     expect(entries.length).toBeGreaterThan(0);
     expect(formatServicesInvokeSurfaceEntries(entries)).toMatchSnapshot();
+  });
+
+  // Keeps the renderer-transport allowlist (migrated-services-invoke-pairs.ts) from drifting out of
+  // sync with what main/ipc/*.ts actually registers: a pair the proxy would route to a named channel
+  // that doesn't exist would hard-fail every call; a pair with a named handler the proxy doesn't know
+  // about would silently keep using the generic gateway.
+  it('has a named handler for every pair the renderer proxy is told to route there, and vice versa', () => {
+    const entries = describeServicesInvokeSurface();
+    const detectedMigrated = new Set(entries.filter(e => e.hasNamedHandler).map(e => e.pair));
+    expect(detectedMigrated).toEqual(new Set(MIGRATED_SERVICES_INVOKE_PAIRS));
   });
 });

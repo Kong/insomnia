@@ -44,6 +44,18 @@ import {
   exportWorkspacesHAR,
 } from '~/main/har';
 import { convert } from '~/main/importers/convert';
+import {
+  caCertificateCreate,
+  caCertificateGetById,
+  caCertificateGetByParentId,
+  caCertificateRemoveWhere,
+  caCertificateUpdate,
+  clientCertificateCreate,
+  clientCertificateFindByParentId,
+  clientCertificateGetById,
+  clientCertificateRemove,
+  clientCertificateUpdate,
+} from '~/main/ipc/services-invoke-migrated-handlers';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
@@ -396,6 +408,16 @@ export function registerMainHandlers() {
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return services.caCertificate.create(options);
   });
+  ipcMainHandle('services.caCertificate.create', caCertificateCreate);
+  ipcMainHandle('services.caCertificate.getById', caCertificateGetById);
+  ipcMainHandle('services.caCertificate.getByParentId', caCertificateGetByParentId);
+  ipcMainHandle('services.caCertificate.removeWhere', caCertificateRemoveWhere);
+  ipcMainHandle('services.caCertificate.update', caCertificateUpdate);
+  ipcMainHandle('services.clientCertificate.create', clientCertificateCreate);
+  ipcMainHandle('services.clientCertificate.findByParentId', clientCertificateFindByParentId);
+  ipcMainHandle('services.clientCertificate.getById', clientCertificateGetById);
+  ipcMainHandle('services.clientCertificate.remove', clientCertificateRemove);
+  ipcMainHandle('services.clientCertificate.update', clientCertificateUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
