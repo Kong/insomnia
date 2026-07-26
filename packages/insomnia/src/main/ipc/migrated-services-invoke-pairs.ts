@@ -105,6 +105,13 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'project.listByOrganizationIds',
   'project.remove',
   'project.update',
+  'projectLintRuleset.getByParentId',
+  'projectLintRuleset.remove',
+  'projectLintRuleset.upsert',
+  'protoDirectory.all',
+  'protoDirectory.create',
+  'protoDirectory.findByParentId',
+  'protoDirectory.remove',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

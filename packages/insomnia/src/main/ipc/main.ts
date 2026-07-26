@@ -133,11 +133,18 @@ import {
   projectCreate,
   projectGet,
   projectGetById,
+  projectLintRulesetGetByParentId,
+  projectLintRulesetRemove,
+  projectLintRulesetUpsert,
   projectList,
   projectListByGitRepositoryIds,
   projectListByOrganizationIds,
   projectRemove,
   projectUpdate,
+  protoDirectoryAll,
+  protoDirectoryCreate,
+  protoDirectoryFindByParentId,
+  protoDirectoryRemove,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -598,6 +605,13 @@ export function registerMainHandlers() {
   ipcMainHandle('services.project.listByOrganizationIds', projectListByOrganizationIds);
   ipcMainHandle('services.project.remove', projectRemove);
   ipcMainHandle('services.project.update', projectUpdate);
+  ipcMainHandle('services.projectLintRuleset.getByParentId', projectLintRulesetGetByParentId);
+  ipcMainHandle('services.projectLintRuleset.remove', projectLintRulesetRemove);
+  ipcMainHandle('services.projectLintRuleset.upsert', projectLintRulesetUpsert);
+  ipcMainHandle('services.protoDirectory.all', protoDirectoryAll);
+  ipcMainHandle('services.protoDirectory.create', protoDirectoryCreate);
+  ipcMainHandle('services.protoDirectory.findByParentId', protoDirectoryFindByParentId);
+  ipcMainHandle('services.protoDirectory.remove', protoDirectoryRemove);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

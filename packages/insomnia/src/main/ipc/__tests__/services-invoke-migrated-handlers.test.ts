@@ -36,6 +36,8 @@ vi.mock('insomnia-data', () => ({
       count: vi.fn(), create: vi.fn(), get: vi.fn(), getById: vi.fn(), list: vi.fn(),
       listByGitRepositoryIds: vi.fn(), listByOrganizationIds: vi.fn(), remove: vi.fn(), update: vi.fn(),
     },
+    projectLintRuleset: { getByParentId: vi.fn(), remove: vi.fn(), upsert: vi.fn() },
+    protoDirectory: { all: vi.fn(), create: vi.fn(), findByParentId: vi.fn(), remove: vi.fn() },
   },
 }));
 
@@ -149,6 +151,13 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'projectListByOrganizationIds', serviceName: 'project', methodName: 'listByOrganizationIds', args: ['org1'] },
   { handlerName: 'projectRemove', serviceName: 'project', methodName: 'remove', args: ['proj1'] },
   { handlerName: 'projectUpdate', serviceName: 'project', methodName: 'update', args: ['proj1', { name: 'renamed' }] },
+  { handlerName: 'projectLintRulesetGetByParentId', serviceName: 'projectLintRuleset', methodName: 'getByParentId', args: ['proj1'] },
+  { handlerName: 'projectLintRulesetRemove', serviceName: 'projectLintRuleset', methodName: 'remove', args: ['proj1'] },
+  { handlerName: 'projectLintRulesetUpsert', serviceName: 'projectLintRuleset', methodName: 'upsert', args: ['proj1', { contents: 'x' }] },
+  { handlerName: 'protoDirectoryAll', serviceName: 'protoDirectory', methodName: 'all', args: [] },
+  { handlerName: 'protoDirectoryCreate', serviceName: 'protoDirectory', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'protoDirectoryFindByParentId', serviceName: 'protoDirectory', methodName: 'findByParentId', args: ['w1'] },
+  { handlerName: 'protoDirectoryRemove', serviceName: 'protoDirectory', methodName: 'remove', args: [{ _id: 'dir1' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

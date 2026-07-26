@@ -16,6 +16,8 @@ import type {
   MockRoute,
   MockServer,
   Project,
+  ProjectLintRuleset,
+  ProtoDirectory,
   Query,
   Settings,
   UserSession,
@@ -151,3 +153,12 @@ export const projectListByGitRepositoryIds = (_: IpcMainInvokeEvent, gitReposito
 export const projectListByOrganizationIds = (_: IpcMainInvokeEvent, organizationIds: string | string[]) => services.project.listByOrganizationIds(organizationIds);
 export const projectRemove = (_: IpcMainInvokeEvent, idOrProject: string | Project) => services.project.remove(idOrProject);
 export const projectUpdate = (_: IpcMainInvokeEvent, idOrProject: string | Project, patch: Partial<Project>) => services.project.update(idOrProject, patch);
+
+export const projectLintRulesetGetByParentId = (_: IpcMainInvokeEvent, projectId: string) => services.projectLintRuleset.getByParentId(projectId);
+export const projectLintRulesetRemove = (_: IpcMainInvokeEvent, projectId: string) => services.projectLintRuleset.remove(projectId);
+export const projectLintRulesetUpsert = (_: IpcMainInvokeEvent, projectId: string, patch: Partial<ProjectLintRuleset> = {}) => services.projectLintRuleset.upsert(projectId, patch);
+
+export const protoDirectoryAll = (_: IpcMainInvokeEvent) => services.protoDirectory.all();
+export const protoDirectoryCreate = (_: IpcMainInvokeEvent, patch: Partial<ProtoDirectory> = {}) => services.protoDirectory.create(patch);
+export const protoDirectoryFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.protoDirectory.findByParentId(parentId);
+export const protoDirectoryRemove = (_: IpcMainInvokeEvent, obj: ProtoDirectory) => services.protoDirectory.remove(obj);
