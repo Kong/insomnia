@@ -145,6 +145,16 @@ import {
   protoDirectoryCreate,
   protoDirectoryFindByParentId,
   protoDirectoryRemove,
+  protoFileAll,
+  protoFileCreate,
+  protoFileFindByParentId,
+  protoFileRemove,
+  protoFileUpdate,
+  requestCreate,
+  requestFindByParentId,
+  requestGetById,
+  requestGetByParentId,
+  requestUpdate,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -612,6 +622,16 @@ export function registerMainHandlers() {
   ipcMainHandle('services.protoDirectory.create', protoDirectoryCreate);
   ipcMainHandle('services.protoDirectory.findByParentId', protoDirectoryFindByParentId);
   ipcMainHandle('services.protoDirectory.remove', protoDirectoryRemove);
+  ipcMainHandle('services.protoFile.all', protoFileAll);
+  ipcMainHandle('services.protoFile.create', protoFileCreate);
+  ipcMainHandle('services.protoFile.findByParentId', protoFileFindByParentId);
+  ipcMainHandle('services.protoFile.remove', protoFileRemove);
+  ipcMainHandle('services.protoFile.update', protoFileUpdate);
+  ipcMainHandle('services.request.create', requestCreate);
+  ipcMainHandle('services.request.findByParentId', requestFindByParentId);
+  ipcMainHandle('services.request.getById', requestGetById);
+  ipcMainHandle('services.request.getByParentId', requestGetByParentId);
+  ipcMainHandle('services.request.update', requestUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

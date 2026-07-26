@@ -38,6 +38,8 @@ vi.mock('insomnia-data', () => ({
     },
     projectLintRuleset: { getByParentId: vi.fn(), remove: vi.fn(), upsert: vi.fn() },
     protoDirectory: { all: vi.fn(), create: vi.fn(), findByParentId: vi.fn(), remove: vi.fn() },
+    protoFile: { all: vi.fn(), create: vi.fn(), findByParentId: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    request: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), getByParentId: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -158,6 +160,16 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'protoDirectoryCreate', serviceName: 'protoDirectory', methodName: 'create', args: [{ parentId: 'w1' }] },
   { handlerName: 'protoDirectoryFindByParentId', serviceName: 'protoDirectory', methodName: 'findByParentId', args: ['w1'] },
   { handlerName: 'protoDirectoryRemove', serviceName: 'protoDirectory', methodName: 'remove', args: [{ _id: 'dir1' }] },
+  { handlerName: 'protoFileAll', serviceName: 'protoFile', methodName: 'all', args: [] },
+  { handlerName: 'protoFileCreate', serviceName: 'protoFile', methodName: 'create', args: [{ parentId: 'dir1' }] },
+  { handlerName: 'protoFileFindByParentId', serviceName: 'protoFile', methodName: 'findByParentId', args: ['dir1'] },
+  { handlerName: 'protoFileRemove', serviceName: 'protoFile', methodName: 'remove', args: [{ _id: 'pf1' }] },
+  { handlerName: 'protoFileUpdate', serviceName: 'protoFile', methodName: 'update', args: [{ _id: 'pf1' }, { protoText: 'x' }] },
+  { handlerName: 'requestCreate', serviceName: 'request', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'requestFindByParentId', serviceName: 'request', methodName: 'findByParentId', args: ['w1'] },
+  { handlerName: 'requestGetById', serviceName: 'request', methodName: 'getById', args: ['req1'] },
+  { handlerName: 'requestGetByParentId', serviceName: 'request', methodName: 'getByParentId', args: ['w1'] },
+  { handlerName: 'requestUpdate', serviceName: 'request', methodName: 'update', args: [{ _id: 'req1' }, { name: 'renamed' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

@@ -18,7 +18,9 @@ import type {
   Project,
   ProjectLintRuleset,
   ProtoDirectory,
+  ProtoFile,
   Query,
+  Request,
   Settings,
   UserSession,
 } from 'insomnia-data';
@@ -162,3 +164,15 @@ export const protoDirectoryAll = (_: IpcMainInvokeEvent) => services.protoDirect
 export const protoDirectoryCreate = (_: IpcMainInvokeEvent, patch: Partial<ProtoDirectory> = {}) => services.protoDirectory.create(patch);
 export const protoDirectoryFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.protoDirectory.findByParentId(parentId);
 export const protoDirectoryRemove = (_: IpcMainInvokeEvent, obj: ProtoDirectory) => services.protoDirectory.remove(obj);
+
+export const protoFileAll = (_: IpcMainInvokeEvent) => services.protoFile.all();
+export const protoFileCreate = (_: IpcMainInvokeEvent, patch: Partial<ProtoFile> = {}) => services.protoFile.create(patch);
+export const protoFileFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.protoFile.findByParentId(parentId);
+export const protoFileRemove = (_: IpcMainInvokeEvent, protoFile: ProtoFile) => services.protoFile.remove(protoFile);
+export const protoFileUpdate = (_: IpcMainInvokeEvent, protoFile: ProtoFile, patch: Partial<ProtoFile> = {}) => services.protoFile.update(protoFile, patch);
+
+export const requestCreate = (_: IpcMainInvokeEvent, patch: Partial<Request> = {}) => services.request.create(patch);
+export const requestFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.request.findByParentId(parentId);
+export const requestGetById = (_: IpcMainInvokeEvent, id: string) => services.request.getById(id);
+export const requestGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.request.getByParentId(parentId);
+export const requestUpdate = (_: IpcMainInvokeEvent, request: Request, patch: Partial<Request>) => services.request.update(request, patch);
