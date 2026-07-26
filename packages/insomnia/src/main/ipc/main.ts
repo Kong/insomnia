@@ -61,10 +61,19 @@ import {
   cloudCredentialGetByName,
   cloudCredentialRemove,
   cloudCredentialUpdate,
+  gitCredentialsAll,
+  gitCredentialsCreate,
+  gitCredentialsGetById,
+  gitCredentialsRemove,
+  gitCredentialsRemoveAll,
+  gitCredentialsUpdate,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
   settingsUpdate,
+  userSessionGet,
+  userSessionRemove,
+  userSessionUpdate,
 } from '~/main/ipc/services-invoke-migrated-handlers';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -438,6 +447,15 @@ export function registerMainHandlers() {
   ipcMainHandle('services.settings.getOrCreate', settingsGetOrCreate);
   ipcMainHandle('services.settings.patch', settingsPatch);
   ipcMainHandle('services.settings.update', settingsUpdate);
+  ipcMainHandle('services.gitCredentials.all', gitCredentialsAll);
+  ipcMainHandle('services.gitCredentials.create', gitCredentialsCreate);
+  ipcMainHandle('services.gitCredentials.getById', gitCredentialsGetById);
+  ipcMainHandle('services.gitCredentials.remove', gitCredentialsRemove);
+  ipcMainHandle('services.gitCredentials.removeAll', gitCredentialsRemoveAll);
+  ipcMainHandle('services.gitCredentials.update', gitCredentialsUpdate);
+  ipcMainHandle('services.userSession.get', userSessionGet);
+  ipcMainHandle('services.userSession.remove', userSessionRemove);
+  ipcMainHandle('services.userSession.update', userSessionUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

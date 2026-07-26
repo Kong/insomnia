@@ -1,4 +1,14 @@
-import type { CaCertificate, ClientCertificate, CloudProviderCredential, CloudProviderName, Settings } from 'insomnia-data';
+import type {
+  BaseGitCredentialsV2,
+  CaCertificate,
+  ClientCertificate,
+  CloudProviderCredential,
+  CloudProviderName,
+  GitCredentials,
+  GitCredentialsV2,
+  Settings,
+  UserSession,
+} from 'insomnia-data';
 import { services } from 'insomnia-data';
 
 // Named per-pair handlers for services.invoke pairs migrated off the generic reflection-based
@@ -29,3 +39,14 @@ export const settingsGet = (_: unknown) => services.settings.get();
 export const settingsGetOrCreate = (_: unknown) => services.settings.getOrCreate();
 export const settingsPatch = (_: unknown, patch: Partial<Settings>) => services.settings.patch(patch);
 export const settingsUpdate = (_: unknown, settings: Settings, patch: Partial<Settings>) => services.settings.update(settings, patch);
+
+export const gitCredentialsAll = (_: unknown) => services.gitCredentials.all();
+export const gitCredentialsCreate = (_: unknown, patch: BaseGitCredentialsV2) => services.gitCredentials.create(patch);
+export const gitCredentialsGetById = (_: unknown, id: string) => services.gitCredentials.getById(id);
+export const gitCredentialsRemove = (_: unknown, credentials: GitCredentials) => services.gitCredentials.remove(credentials);
+export const gitCredentialsRemoveAll = (_: unknown) => services.gitCredentials.removeAll();
+export const gitCredentialsUpdate = (_: unknown, credentials: GitCredentialsV2, patch: Partial<GitCredentialsV2>) => services.gitCredentials.update(credentials, patch);
+
+export const userSessionGet = (_: unknown) => services.userSession.get();
+export const userSessionRemove = (_: unknown) => services.userSession.remove();
+export const userSessionUpdate = (_: unknown, patch: Partial<UserSession>) => services.userSession.update(patch);

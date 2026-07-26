@@ -25,6 +25,15 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'settings.getOrCreate',
   'settings.patch',
   'settings.update',
+  'gitCredentials.all',
+  'gitCredentials.create',
+  'gitCredentials.getById',
+  'gitCredentials.remove',
+  'gitCredentials.removeAll',
+  'gitCredentials.update',
+  'userSession.get',
+  'userSession.remove',
+  'userSession.update',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

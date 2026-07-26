@@ -8,6 +8,8 @@ vi.mock('insomnia-data', () => ({
     clientCertificate: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
     cloudCredential: { all: vi.fn(), create: vi.fn(), getById: vi.fn(), getByName: vi.fn(), remove: vi.fn(), update: vi.fn() },
     settings: { get: vi.fn(), getOrCreate: vi.fn(), patch: vi.fn(), update: vi.fn() },
+    gitCredentials: { all: vi.fn(), create: vi.fn(), getById: vi.fn(), remove: vi.fn(), removeAll: vi.fn(), update: vi.fn() },
+    userSession: { get: vi.fn(), remove: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -41,6 +43,15 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'settingsGetOrCreate', serviceName: 'settings', methodName: 'getOrCreate', args: [] },
   { handlerName: 'settingsPatch', serviceName: 'settings', methodName: 'patch', args: [{ httpProxy: '' }] },
   { handlerName: 'settingsUpdate', serviceName: 'settings', methodName: 'update', args: [{ _id: 'set1' }, { httpProxy: '' }] },
+  { handlerName: 'gitCredentialsAll', serviceName: 'gitCredentials', methodName: 'all', args: [] },
+  { handlerName: 'gitCredentialsCreate', serviceName: 'gitCredentials', methodName: 'create', args: [{ oauth2format: 'github' }] },
+  { handlerName: 'gitCredentialsGetById', serviceName: 'gitCredentials', methodName: 'getById', args: ['cred1'] },
+  { handlerName: 'gitCredentialsRemove', serviceName: 'gitCredentials', methodName: 'remove', args: [{ _id: 'cred1' }] },
+  { handlerName: 'gitCredentialsRemoveAll', serviceName: 'gitCredentials', methodName: 'removeAll', args: [] },
+  { handlerName: 'gitCredentialsUpdate', serviceName: 'gitCredentials', methodName: 'update', args: [{ _id: 'cred1' }, { token: 'x' }] },
+  { handlerName: 'userSessionGet', serviceName: 'userSession', methodName: 'get', args: [] },
+  { handlerName: 'userSessionRemove', serviceName: 'userSession', methodName: 'remove', args: [] },
+  { handlerName: 'userSessionUpdate', serviceName: 'userSession', methodName: 'update', args: [{ vaultKey: 'x' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {
