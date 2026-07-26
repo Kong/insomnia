@@ -107,7 +107,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
     }
 
     case 'executeAction': {
-      const { type, pluginName, label, projectId, domainData } = args as ExecutePluginActionArgs;
+      const { type, pluginName, label, projectId, domainData, workspaceId } = args as ExecutePluginActionArgs;
 
       let allActions: any[];
       switch (type) {
@@ -148,6 +148,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
           actionKind: type,
           actionLabel: label,
           actionDomainData: domainData,
+          workspaceId,
         });
         return null;
       }

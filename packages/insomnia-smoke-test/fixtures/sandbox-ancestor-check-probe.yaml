@@ -1,0 +1,91 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Ancestor Check Probe Collection
+meta:
+  id: wrk_5a5p100000000000000000000000001
+  created: 1751900100000
+  modified: 1751900100000
+collection:
+  - url: localhost:4010/echo
+    name: Tag Probe
+    meta:
+      id: req_5a5p100000000000000000000000002
+      created: 1751900100001
+      modified: 1751900100001
+      isPrivate: false
+      sortKey: -1751900100001
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "PLACEHOLDER_TAG_TEXT"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:4010/echo
+    name: Hook Probe
+    meta:
+      id: req_5a5p100000000000000000000000003
+      created: 1751900100002
+      modified: 1751900100002
+      isPrivate: false
+      sortKey: -1751900100002
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "PLACEHOLDER_BODY_TEXT"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:4010/echo
+    name: Action Probe
+    meta:
+      id: req_5a5p100000000000000000000000004
+      created: 1751900100003
+      modified: 1751900100003
+      isPrivate: false
+      sortKey: -1751900100003
+    method: GET
+    body:
+      mimeType: text/plain
+      text: |
+        {% actionreadback %}
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_5a5p100000000000000000000000005
+    created: 1751900100000
+    modified: 1751900100000
+environments:
+  name: Base Environment
+  meta:
+    id: env_5a5p100000000000000000000000006
+    created: 1751900100000
+    modified: 1751900100000
+    isPrivate: false

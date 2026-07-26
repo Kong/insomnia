@@ -121,6 +121,10 @@ export interface ExecutePluginActionArgs {
   label: string;
   projectId: string;
   domainData: unknown;
+  // The caller's own, host-verified workspace id (e.g. the UI dropdown's `activeWorkspace._id`),
+  // so the sandboxed action's models.read bridge calls can enforce the same workspace-ownership
+  // check template tags already get. Optional because the non-sandboxed legacy action path doesn't use it.
+  workspaceId?: string;
 }
 
 export interface ApplyRequestHooksArgs {

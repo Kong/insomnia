@@ -60,6 +60,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
           label: p.label,
           projectId: project._id,
           domainData: parseApiSpec(apiSpec?.contents || ''),
+          workspaceId: workspace._id,
         });
       } catch (err) {
         showError({
@@ -70,7 +71,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
         stopLoading(p.label);
       }
     },
-    [apiSpec?.contents, project._id, startLoading, stopLoading],
+    [apiSpec?.contents, project._id, startLoading, stopLoading, workspace._id],
   );
 
   const renderPluginDropdownItems: any = useCallback(

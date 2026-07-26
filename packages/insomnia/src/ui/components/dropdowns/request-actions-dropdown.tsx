@@ -125,6 +125,7 @@ export const RequestActionsDropdown = ({
         label,
         projectId: activeProject._id,
         domainData: { request },
+        workspaceId,
       });
     } catch (error) {
       showError({

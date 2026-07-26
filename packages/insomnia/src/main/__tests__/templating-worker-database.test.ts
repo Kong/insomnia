@@ -36,7 +36,8 @@ vi.mock('~/plugins', () => ({
   getPlugins: vi.fn().mockResolvedValue([]),
 }));
 vi.mock('~/common/cookies', () => ({ jarFromCookies: vi.fn() }));
-vi.mock('../common/database', () => ({ database: {} }));
+// vi.mock paths resolve relative to this file, not the module under test.
+vi.mock('../../common/database', () => ({ database: { withAncestors: vi.fn() } }));
 vi.mock('../network/network', () => ({
   fetchRequestData: vi.fn(),
   sendCurlAndWriteTimeline: vi.fn(),
@@ -51,6 +52,7 @@ import { services } from 'insomnia-data';
 import { jarFromCookies } from '~/common/cookies';
 import { parsePluginPermissions } from '~/common/plugins/permissions';
 
+import { database } from '../../common/database';
 import { requestPromptFromRenderer } from '../prompt-bridge';
 import {
   _testOnlyResetMigrationWarnings,
@@ -58,7 +60,9 @@ import {
   maybeWarnMissingManifest,
   readPluginModuleMap,
   resolveDbByKey,
+  runActionInSandbox,
   runPluginTagInSandbox,
+  runRequestHookInSandbox,
 } from '../templating-worker-database';
 import { getOrCreateTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from '../templating-worker-database-auth';
 
@@ -371,6 +375,10 @@ describe('id-like bridge arguments are coerced to String before reaching service
   const STORAGE_CAPABILITIES = ['render', 'models.read', 'util', 'crypto', 'storage'];
   const CREDENTIALS_CAPABILITIES = ['render', 'models.read', 'util', 'crypto', 'credentials'];
 
+  // The ancestor-chain check needs a caller workspace and a resolvable, same-workspace request to
+  // reach the coerced call at all — see recordBelongsToCallerWorkspace in db-trust.ts.
+  const CALLER_WORKSPACE_ID = 'wrk_test';
+
   const runTag = (runBody: string, capabilities: string[] = MODELS_READ_CAPABILITIES) =>
     runPluginTagInSandbox(
       `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
@@ -378,14 +386,22 @@ describe('id-like bridge arguments are coerced to String before reaching service
         args: [],
         pluginName: 'p',
         tagName: 't',
-        context: { meta: {}, renderPurpose: 'send' as const, context: {} as any },
+        context: { meta: { workspaceId: CALLER_WORKSPACE_ID }, renderPurpose: 'send' as const, context: {} as any },
       },
       undefined,
       capabilities,
     );
 
   beforeEach(() => {
-    (services.request.getById as any).mockResolvedValue(null);
+    (services.request.getById as any).mockResolvedValue({
+      _id: 'req_test',
+      type: 'Request',
+      parentId: CALLER_WORKSPACE_ID,
+    });
+    (database.withAncestors as any).mockResolvedValue([
+      { _id: 'req_test', type: 'Request', parentId: CALLER_WORKSPACE_ID },
+      { _id: CALLER_WORKSPACE_ID, type: 'Workspace' },
+    ]);
     (services.workspace.getById as any).mockResolvedValue(null);
     (services.oAuth2Token.getByParentId as any).mockResolvedValue(null);
     (services.cookieJar.getOrCreateForParentId as any).mockResolvedValue({ cookies: [] });
@@ -452,6 +468,218 @@ describe('id-like bridge arguments are coerced to String before reaching service
 
     await runTag(`return await context.store.setItem(${OPERATOR_PAYLOAD}, 'v');`, STORAGE_CAPABILITIES);
     expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('p', '[object Object]', 'v');
+  });
+});
+
+// Every models.read handler must verify the resolved record's Workspace ancestor matches the
+// caller's own workspace before trusting it — see templating-worker-database-ancestor-surface.ts's
+// detector (npm run sandbox:ancestor:test).
+describe('models.read handlers verify caller workspace ownership', () => {
+  const CALLER_WORKSPACE_ID = 'wrk_caller';
+  const OTHER_WORKSPACE_ID = 'wrk_other';
+
+  const runTag = (runBody: string) =>
+    runPluginTagInSandbox(
+      `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
+      {
+        args: [],
+        pluginName: 'p',
+        tagName: 't',
+        context: { meta: { workspaceId: CALLER_WORKSPACE_ID }, renderPurpose: 'send' as const, context: {} as any },
+      },
+      undefined,
+      ['render', 'models.read', 'util', 'crypto'],
+    );
+
+  // A template tag's return value is always coerced to a string (`String(r)`, matching real
+  // rendered-text semantics) — so a handler's real object/array/null return would otherwise collapse
+  // to "[object Object]"/""/"" and lose the distinction these tests need. JSON.stringify inside the
+  // tag body, JSON.parse on the way out, round-trips the real value through that string boundary.
+  const runTagJSON = async (expr: string) => JSON.parse(await runTag(`return JSON.stringify((${expr}) ?? null);`));
+
+  // A request "in" ownerWorkspaceId: services.request.getById resolves it, and its ancestor chain
+  // (via database.withAncestors) reports that workspace.
+  const mockRequestInWorkspace = (ownerWorkspaceId: string) => {
+    const request = { _id: 'req_test', type: 'Request', parentId: 'grp_test' };
+    (services.request.getById as any).mockResolvedValue(request);
+    (database.withAncestors as any).mockResolvedValue([
+      request,
+      { _id: 'grp_test', type: 'RequestGroup', parentId: ownerWorkspaceId },
+      { _id: ownerWorkspaceId, type: 'Workspace' },
+    ]);
+    return request;
+  };
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('request.getById returns null for a real request in a different workspace, the real doc in its own', async () => {
+    const request = mockRequestInWorkspace(OTHER_WORKSPACE_ID);
+    await expect(runTagJSON('await context.util.models.request.getById("req_test")')).resolves.toBeNull();
+
+    mockRequestInWorkspace(CALLER_WORKSPACE_ID);
+    await expect(runTagJSON('await context.util.models.request.getById("req_test")')).resolves.toEqual(request);
+  });
+
+  it('request.getAncestors returns [] for a caller-supplied doc resolving to another workspace, real ancestors for its own', async () => {
+    (database.withAncestors as any).mockResolvedValue([
+      { _id: 'req_forged', type: 'Request', parentId: OTHER_WORKSPACE_ID },
+      { _id: OTHER_WORKSPACE_ID, type: 'Workspace' },
+    ]);
+    await expect(
+      runTagJSON(
+        'await context.util.models.request.getAncestors({ _id: "req_forged", parentId: "' +
+          OTHER_WORKSPACE_ID +
+          '" })',
+      ),
+    ).resolves.toEqual([]);
+
+    (database.withAncestors as any).mockResolvedValue([
+      { _id: 'req_own', type: 'Request', parentId: CALLER_WORKSPACE_ID },
+      { _id: CALLER_WORKSPACE_ID, type: 'Workspace' },
+    ]);
+    await expect(
+      runTagJSON(
+        'await context.util.models.request.getAncestors({ _id: "req_own", parentId: "' +
+          CALLER_WORKSPACE_ID +
+          '" })',
+      ),
+    ).resolves.toEqual([{ _id: CALLER_WORKSPACE_ID, type: 'Workspace' }]);
+  });
+
+  it('workspace.getById returns null for a different workspace id, the real doc for its own', async () => {
+    const otherWorkspace = { _id: OTHER_WORKSPACE_ID, type: 'Workspace' };
+    (services.workspace.getById as any).mockResolvedValue(otherWorkspace);
+    await expect(runTagJSON('await context.util.models.workspace.getById("wrk_other")')).resolves.toBeNull();
+
+    const ownWorkspace = { _id: CALLER_WORKSPACE_ID, type: 'Workspace' };
+    (services.workspace.getById as any).mockResolvedValue(ownWorkspace);
+    await expect(runTagJSON('await context.util.models.workspace.getById("wrk_caller")')).resolves.toEqual(
+      ownWorkspace,
+    );
+  });
+
+  it('oAuth2Token.getByRequestId returns null when the request belongs to another workspace, the token for its own', async () => {
+    const token = { _id: 'tok_test', token: 'secret' };
+    (services.oAuth2Token.getByParentId as any).mockResolvedValue(token);
+
+    mockRequestInWorkspace(OTHER_WORKSPACE_ID);
+    await expect(runTagJSON('await context.util.models.oAuth2Token.getByRequestId("req_test")')).resolves.toBeNull();
+
+    mockRequestInWorkspace(CALLER_WORKSPACE_ID);
+    await expect(runTagJSON('await context.util.models.oAuth2Token.getByRequestId("req_test")')).resolves.toEqual(
+      token,
+    );
+  });
+
+  it('cookieJar.getOrCreateForParentId refuses a request that exists in another workspace, succeeds for its own', async () => {
+    mockRequestInWorkspace(OTHER_WORKSPACE_ID);
+    await expect(
+      runTag('return await context.util.models.cookieJar.getOrCreateForParentId("req_test");'),
+    ).rejects.toThrow(/could not resolve cookie jar/i);
+
+    mockRequestInWorkspace(CALLER_WORKSPACE_ID);
+    await expect(
+      runTagJSON('await context.util.models.cookieJar.getOrCreateForParentId("req_test")'),
+    ).resolves.toEqual({ cookies: [] });
+  });
+
+  it('cookieJar.getCookiesForUrl refuses a request that exists in another workspace, succeeds for its own', async () => {
+    mockRequestInWorkspace(OTHER_WORKSPACE_ID);
+    await expect(
+      runTag('return await context.util.models.cookieJar.getCookiesForUrl("req_test", "https://example.com");'),
+    ).rejects.toThrow(/could not resolve cookie jar/i);
+
+    mockRequestInWorkspace(CALLER_WORKSPACE_ID);
+    await expect(
+      runTagJSON('await context.util.models.cookieJar.getCookiesForUrl("req_test", "https://example.com")'),
+    ).resolves.toEqual([]);
+  });
+
+  it('response.getLatestForRequestId returns null when the request belongs to another workspace, the response for its own', async () => {
+    const response = { _id: 'res_test', statusCode: 200 };
+    (services.response.getLatestForRequestId as any).mockResolvedValue(response);
+
+    mockRequestInWorkspace(OTHER_WORKSPACE_ID);
+    await expect(
+      runTagJSON('await context.util.models.response.getLatestForRequestId("req_test", "env_test")'),
+    ).resolves.toBeNull();
+
+    mockRequestInWorkspace(CALLER_WORKSPACE_ID);
+    await expect(
+      runTagJSON('await context.util.models.response.getLatestForRequestId("req_test", "env_test")'),
+    ).resolves.toEqual(response);
+  });
+});
+
+// Hooks/actions share the same handlers as template tags, so they need the same workspace anchor
+// threaded into the envelope's meta.
+describe('hook/action invocations thread the caller workspace into the sandbox', () => {
+  const CALLER_WORKSPACE_ID = 'wrk_caller';
+  const OTHER_WORKSPACE_ID = 'wrk_other';
+  let pluginDir: string;
+
+  beforeEach(() => {
+    pluginDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-ancestor-check-plugin-'));
+    fs.writeFileSync(path.join(pluginDir, 'package.json'), JSON.stringify({ main: 'index.js' }));
+    // Both stash the models.request.getById result somewhere the test can observe: the hook writes it
+    // onto the request's url (an allowlisted, marshaled-back HOOK_REQUEST_FIELDS entry); the action
+    // (no return channel at all) writes it through context.store, so the mocked pluginData service
+    // call is the observable.
+    fs.writeFileSync(
+      path.join(pluginDir, 'index.js'),
+      [
+        'module.exports.requestHooks = [async function (context) {',
+        '  const req = await context.util.models.request.getById("req_test");',
+        '  context.request.setUrl(JSON.stringify(req));',
+        '}];',
+        'module.exports.requestActions = [{ label: "probe", action: async function (context) {',
+        '  const req = await context.util.models.request.getById("req_test");',
+        '  await context.store.setItem("result", JSON.stringify(req));',
+        '} }];',
+      ].join('\n'),
+    );
+  });
+
+  afterEach(() => {
+    fs.rmSync(pluginDir, { recursive: true, force: true });
+    vi.clearAllMocks();
+  });
+
+  const mockRequestInWorkspace = (ownerWorkspaceId: string) => {
+    const request = { _id: 'req_test', type: 'Request', parentId: ownerWorkspaceId };
+    (services.request.getById as any).mockResolvedValue(request);
+    (database.withAncestors as any).mockResolvedValue([request, { _id: ownerWorkspaceId, type: 'Workspace' }]);
+    return request;
+  };
+
+  it('a request hook cannot read a request belonging to a different workspace than its own render context, but can read its own', async () => {
+    const plugin = { directory: pluginDir, name: 'p', permissions: { modules: [], capabilities: [] } };
+    const renderContext = { getMeta: () => ({ requestId: 'req_own', workspaceId: CALLER_WORKSPACE_ID }) };
+
+    const otherRequest = mockRequestInWorkspace(OTHER_WORKSPACE_ID);
+    const rejected = await runRequestHookInSandbox(plugin, 0, { url: '' }, renderContext as any);
+    expect(JSON.parse(rejected.url)).toBeNull();
+
+    const ownRequest = mockRequestInWorkspace(CALLER_WORKSPACE_ID);
+    const accepted = await runRequestHookInSandbox(plugin, 0, { url: '' }, renderContext as any);
+    expect(JSON.parse(accepted.url)).toEqual(ownRequest);
+    expect(otherRequest).not.toEqual(ownRequest);
+  });
+
+  it("a plugin action cannot read a request belonging to a different workspace than the caller's own, but can read its own", async () => {
+    const plugin = { directory: pluginDir, name: 'p', permissions: { modules: [], capabilities: ['storage'] } };
+    (services.pluginData.upsertByKey as any).mockResolvedValue(null);
+
+    mockRequestInWorkspace(OTHER_WORKSPACE_ID);
+    await runActionInSandbox(plugin, 'request', 'probe', {}, {}, CALLER_WORKSPACE_ID);
+    expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('p', 'result', 'null');
+
+    (services.pluginData.upsertByKey as any).mockClear();
+    const ownRequest = mockRequestInWorkspace(CALLER_WORKSPACE_ID);
+    await runActionInSandbox(plugin, 'request', 'probe', {}, {}, CALLER_WORKSPACE_ID);
+    expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('p', 'result', JSON.stringify(ownRequest));
   });
 });
 
