@@ -23,7 +23,7 @@ vi.mock('insomnia-data', () => ({
     workspace: { getById: vi.fn() },
     oAuth2Token: { getByParentId: vi.fn() },
     cookieJar: { getOrCreateForParentId: vi.fn() },
-    response: { getLatestForRequestId: vi.fn() },
+    response: { getLatestForRequestId: vi.fn(), getById: vi.fn(), getByBodyPath: vi.fn() },
     helpers: { getResponseBodyBuffer: vi.fn() },
     settings: { get: vi.fn() },
   },
@@ -254,6 +254,58 @@ describe('runPluginTagInSandbox — util.render escape', () => {
         context: { meta: {}, renderPurpose: 'send' as const, context: { name: 'kyle' } as any },
       }),
     ).resolves.toBe('hello kyle');
+  });
+});
+
+describe('response.getBodyBuffer reads only the id-resolved response body when an id is supplied', () => {
+  const runTag = (runBody: string) =>
+    runPluginTagInSandbox(
+      `module.exports.templateTags = [{ name: 't', run: async function (context) { ${runBody} } }];`,
+      {
+        args: [],
+        pluginName: 'p',
+        tagName: 't',
+        context: { meta: {}, renderPurpose: 'send' as const, context: {} as any },
+      },
+    );
+
+  beforeEach(() => {
+    (services.helpers.getResponseBodyBuffer as any).mockImplementation(async (resp: any) => `read:${resp?.bodyPath}`);
+  });
+
+  it('ignores a bodyPath belonging to a different response once an id is supplied', async () => {
+    (services.response.getById as any).mockResolvedValue({ _id: 'r1', bodyPath: '/app/r1/body', bodyCompression: null });
+    (services.response.getByBodyPath as any).mockResolvedValue({ _id: 'r2', parentId: 'req2', bodyPath: '/app/r2/body' });
+    const result = await runTag(
+      "return await context.util.models.response.getBodyBuffer({ _id: 'r1', bodyPath: '/app/r2/body' });",
+    );
+    expect(services.response.getById).toHaveBeenCalledWith('r1');
+    expect(result).toBe('read:/app/r1/body');
+  });
+
+  it('returns the read-failure value (never touches disk) when the supplied id is unknown', async () => {
+    (services.response.getById as any).mockResolvedValue(null);
+    (services.helpers.getResponseBodyBuffer as any).mockClear();
+    const result = await runTag(
+      "return await context.util.models.response.getBodyBuffer({ _id: 'unknown', bodyPath: '/app/r2/body' }, 'FAIL');",
+    );
+    expect(result).toBe('FAIL');
+    expect(services.helpers.getResponseBodyBuffer).not.toHaveBeenCalled();
+  });
+
+  it('falls back to bodyPath-ownership verification when no id is supplied (e.g. the pre-persistence hook path)', async () => {
+    (services.response.getByBodyPath as any).mockResolvedValue({ _id: 'r2', parentId: 'req2', bodyPath: '/app/r2/body' });
+    const result = await runTag(
+      "return await context.util.models.response.getBodyBuffer({ bodyPath: '/app/r2/body' });",
+    );
+    expect(result).toBe('read:/app/r2/body');
+  });
+
+  it('rejects a bodyPath that belongs to no known response when no id is supplied', async () => {
+    (services.response.getByBodyPath as any).mockResolvedValue(null);
+    await expect(
+      runTag("return await context.util.models.response.getBodyBuffer({ bodyPath: '/outside/body' });"),
+    ).rejects.toThrow(/does not belong to any known response/);
   });
 });
 

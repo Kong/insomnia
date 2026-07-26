@@ -667,9 +667,21 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: {
-    response?: { bodyPath?: string; bodyCompression?: any };
+    response?: { _id?: string; bodyPath?: string; bodyCompression?: any };
     readFailureValue?: string;
   }) => {
+    const id = body.response?._id;
+    if (id) {
+      // Stronger path: re-load the response by id and read only its own server-owned bodyPath,
+      // ignoring whatever bodyPath the caller supplied alongside the id.
+      const real = await services.response.getById(String(id));
+      if (!real) {
+        return body.readFailureValue ?? '';
+      }
+      return await services.helpers.getResponseBodyBuffer(real, body.readFailureValue);
+    }
+    // No id available (e.g. a response hook running before its response is persisted) — fall back to
+    // verifying the supplied bodyPath belongs to some already-persisted response.
     await assertResponseBodyPathReadOwnership(body.response?.bodyPath);
     return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
