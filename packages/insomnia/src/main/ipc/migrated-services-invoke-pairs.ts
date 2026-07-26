@@ -161,6 +161,16 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'unitTest.remove',
   'unitTest.update',
   'unitTestResult.create',
+  'unitTestSuite.create',
+  'unitTestSuite.findByParentId',
+  'unitTestSuite.getById',
+  'unitTestSuite.remove',
+  'unitTestSuite.update',
+  'webSocketPayload.create',
+  'webSocketPayload.getByParentId',
+  'webSocketPayload.update',
+  'webSocketRequest.create',
+  'webSocketRequestMeta.updateOrCreateByParentId',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

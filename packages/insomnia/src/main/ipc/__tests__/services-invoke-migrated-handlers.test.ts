@@ -56,6 +56,10 @@ vi.mock('insomnia-data', () => ({
     },
     unitTest: { create: vi.fn(), remove: vi.fn(), update: vi.fn() },
     unitTestResult: { create: vi.fn() },
+    unitTestSuite: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    webSocketPayload: { create: vi.fn(), getByParentId: vi.fn(), update: vi.fn() },
+    webSocketRequest: { create: vi.fn() },
+    webSocketRequestMeta: { updateOrCreateByParentId: vi.fn() },
   },
 }));
 
@@ -225,6 +229,16 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'unitTestRemove', serviceName: 'unitTest', methodName: 'remove', args: [{ _id: 'ut1' }] },
   { handlerName: 'unitTestUpdate', serviceName: 'unitTest', methodName: 'update', args: [{ _id: 'ut1' }, { name: 'renamed' }] },
   { handlerName: 'unitTestResultCreate', serviceName: 'unitTestResult', methodName: 'create', args: [{ parentId: 'ut1' }] },
+  { handlerName: 'unitTestSuiteCreate', serviceName: 'unitTestSuite', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'unitTestSuiteFindByParentId', serviceName: 'unitTestSuite', methodName: 'findByParentId', args: ['w1'] },
+  { handlerName: 'unitTestSuiteGetById', serviceName: 'unitTestSuite', methodName: 'getById', args: ['suite1'] },
+  { handlerName: 'unitTestSuiteRemove', serviceName: 'unitTestSuite', methodName: 'remove', args: [{ _id: 'suite1' }] },
+  { handlerName: 'unitTestSuiteUpdate', serviceName: 'unitTestSuite', methodName: 'update', args: [{ _id: 'suite1' }, { name: 'renamed' }] },
+  { handlerName: 'webSocketPayloadCreate', serviceName: 'webSocketPayload', methodName: 'create', args: [{ parentId: 'req1' }] },
+  { handlerName: 'webSocketPayloadGetByParentId', serviceName: 'webSocketPayload', methodName: 'getByParentId', args: ['req1'] },
+  { handlerName: 'webSocketPayloadUpdate', serviceName: 'webSocketPayload', methodName: 'update', args: [{ _id: 'wp1' }, { value: 'x' }] },
+  { handlerName: 'webSocketRequestCreate', serviceName: 'webSocketRequest', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'webSocketRequestMetaUpdateOrCreateByParentId', serviceName: 'webSocketRequestMeta', methodName: 'updateOrCreateByParentId', args: ['req1', { expandedTypes: [] }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

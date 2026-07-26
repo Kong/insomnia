@@ -33,7 +33,11 @@ import type {
   Stats,
   UnitTest,
   UnitTestResult,
+  UnitTestSuite,
   UserSession,
+  WebSocketPayload,
+  WebSocketRequest,
+  WebSocketRequestMeta,
   Workspace,
 } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -239,3 +243,17 @@ export const unitTestRemove = (_: IpcMainInvokeEvent, unitTest: UnitTest) => ser
 export const unitTestUpdate = (_: IpcMainInvokeEvent, unitTest: UnitTest, patch: Partial<UnitTest> = {}) => services.unitTest.update(unitTest, patch);
 
 export const unitTestResultCreate = (_: IpcMainInvokeEvent, patch: Partial<UnitTestResult> = {}) => services.unitTestResult.create(patch);
+
+export const unitTestSuiteCreate = (_: IpcMainInvokeEvent, patch: Partial<UnitTestSuite> = {}) => services.unitTestSuite.create(patch);
+export const unitTestSuiteFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.unitTestSuite.findByParentId(parentId);
+export const unitTestSuiteGetById = (_: IpcMainInvokeEvent, id: string) => services.unitTestSuite.getById(id);
+export const unitTestSuiteRemove = (_: IpcMainInvokeEvent, unitTestSuite: UnitTestSuite) => services.unitTestSuite.remove(unitTestSuite);
+export const unitTestSuiteUpdate = (_: IpcMainInvokeEvent, unitTestSuite: UnitTestSuite, patch: Partial<UnitTestSuite> = {}) => services.unitTestSuite.update(unitTestSuite, patch);
+
+export const webSocketPayloadCreate = (_: IpcMainInvokeEvent, patch: Partial<WebSocketPayload> = {}) => services.webSocketPayload.create(patch);
+export const webSocketPayloadGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.webSocketPayload.getByParentId(parentId);
+export const webSocketPayloadUpdate = (_: IpcMainInvokeEvent, obj: WebSocketPayload, patch: Partial<WebSocketPayload> = {}) => services.webSocketPayload.update(obj, patch);
+
+export const webSocketRequestCreate = (_: IpcMainInvokeEvent, patch: Partial<WebSocketRequest> = {}) => services.webSocketRequest.create(patch);
+
+export const webSocketRequestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<WebSocketRequestMeta>) => services.webSocketRequestMeta.updateOrCreateByParentId(parentId, patch);

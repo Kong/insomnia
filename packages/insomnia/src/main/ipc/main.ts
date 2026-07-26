@@ -197,10 +197,20 @@ import {
   unitTestCreate,
   unitTestRemove,
   unitTestResultCreate,
+  unitTestSuiteCreate,
+  unitTestSuiteFindByParentId,
+  unitTestSuiteGetById,
+  unitTestSuiteRemove,
+  unitTestSuiteUpdate,
   unitTestUpdate,
   userSessionGet,
   userSessionRemove,
   userSessionUpdate,
+  webSocketPayloadCreate,
+  webSocketPayloadGetByParentId,
+  webSocketPayloadUpdate,
+  webSocketRequestCreate,
+  webSocketRequestMetaUpdateOrCreateByParentId,
 } from '~/main/ipc/services-invoke-migrated-handlers';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -710,6 +720,16 @@ export function registerMainHandlers() {
   ipcMainHandle('services.unitTest.remove', unitTestRemove);
   ipcMainHandle('services.unitTest.update', unitTestUpdate);
   ipcMainHandle('services.unitTestResult.create', unitTestResultCreate);
+  ipcMainHandle('services.unitTestSuite.create', unitTestSuiteCreate);
+  ipcMainHandle('services.unitTestSuite.findByParentId', unitTestSuiteFindByParentId);
+  ipcMainHandle('services.unitTestSuite.getById', unitTestSuiteGetById);
+  ipcMainHandle('services.unitTestSuite.remove', unitTestSuiteRemove);
+  ipcMainHandle('services.unitTestSuite.update', unitTestSuiteUpdate);
+  ipcMainHandle('services.webSocketPayload.create', webSocketPayloadCreate);
+  ipcMainHandle('services.webSocketPayload.getByParentId', webSocketPayloadGetByParentId);
+  ipcMainHandle('services.webSocketPayload.update', webSocketPayloadUpdate);
+  ipcMainHandle('services.webSocketRequest.create', webSocketRequestCreate);
+  ipcMainHandle('services.webSocketRequestMeta.updateOrCreateByParentId', webSocketRequestMetaUpdateOrCreateByParentId);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
