@@ -46,7 +46,9 @@
     "sandbox:bridge-trust": "vitest run src/main/__tests__/print-templating-worker-database-surface.test.ts",
     "sandbox:bridge-trust:test": "vitest run src/main/__tests__/templating-worker-database-surface.test.ts",
     "sandbox:coercion": "vitest run src/main/__tests__/print-templating-worker-database-coercion-surface.test.ts",
-    "sandbox:coercion:test": "vitest run src/main/__tests__/templating-worker-database-coercion-surface.test.ts"
+    "sandbox:coercion:test": "vitest run src/main/__tests__/templating-worker-database-coercion-surface.test.ts",
+    "sandbox:liquid-parity": "vitest run src/templating/__tests__/print-liquid-extension-parity-surface.test.ts",
+    "sandbox:liquid-parity:test": "vitest run src/templating/__tests__/liquid-extension-parity-surface.test.ts"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",

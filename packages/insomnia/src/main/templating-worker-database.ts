@@ -19,6 +19,7 @@ import type {
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
 import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
+import { readResponseBodyBufferOwned, reloadCloudCredentialForTrustedUpdate } from '~/templating/db-trust';
 import { HOOK_REQUEST_FIELDS, type PluginExportManifest, stripDangerousKeysReviver } from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
@@ -93,17 +94,6 @@ const assertResponseBodyPathOwnership = async (response: Record<string, any>): P
   const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
   if (existing && existing.parentId !== response.parentId) {
     throw new Error('response.bodyPath belongs to a different response than the one being processed');
-  }
-};
-
-// Read-side counterpart of assertResponseBodyPathOwnership: rejects a bodyPath that isn't the stored bodyPath of an already-persisted response.
-const assertResponseBodyPathReadOwnership = async (bodyPath: string | undefined): Promise<void> => {
-  if (!bodyPath) {
-    return;
-  }
-  const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
-  if (!existing) {
-    throw new Error('response.bodyPath does not belong to any known response');
   }
 };
 
@@ -670,20 +660,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     response?: { _id?: string; bodyPath?: string; bodyCompression?: any };
     readFailureValue?: string;
   }) => {
-    const id = body.response?._id;
-    if (id) {
-      // Stronger path: re-load the response by id and read only its own server-owned bodyPath,
-      // ignoring whatever bodyPath the caller supplied alongside the id.
-      const real = await services.response.getById(String(id));
-      if (!real) {
-        return body.readFailureValue ?? '';
-      }
-      return await services.helpers.getResponseBodyBuffer(real, body.readFailureValue);
-    }
-    // No id available (e.g. a response hook running before its response is persisted) — fall back to
-    // verifying the supplied bodyPath belongs to some already-persisted response.
-    await assertResponseBodyPathReadOwnership(body.response?.bodyPath);
-    return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
+    return await readResponseBodyBufferOwned(body.response, body.readFailureValue);
   },
   // H1: a sandboxed response hook's context.response.setBody(). The body arrives base64-encoded (so
   // the bytes survive the JSON bridge). Contain the write to the responses directory as defense in
@@ -746,17 +723,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     originCredential: CloudProviderCredential;
     patch: Partial<CloudProviderCredential>;
   }) => {
-    // Re-load the real credential by id and strip identity fields from the patch so a caller can't
-    // forge type/_id to write into another collection. Only an existing cloud credential can be updated.
-    const id = String(body.originCredential?._id);
-    const existing = await services.cloudCredential.getById(id);
-    if (!existing) {
-      throw new Error(`Cloud credential '${id}' not found`);
-    }
-    const patch = { ...body.patch };
-    delete (patch as { _id?: unknown })._id;
-    delete (patch as { type?: unknown }).type;
-    delete (patch as { parentId?: unknown }).parentId;
+    const { existing, patch } = await reloadCloudCredentialForTrustedUpdate(body.originCredential, body.patch);
     return await services.cloudCredential.update(existing, patch);
   },
   'settings.get': async () => {
