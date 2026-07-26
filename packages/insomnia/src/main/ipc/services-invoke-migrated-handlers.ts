@@ -21,6 +21,8 @@ import type {
   ProtoFile,
   Query,
   Request,
+  RequestGroup,
+  RequestGroupMeta,
   Settings,
   UserSession,
 } from 'insomnia-data';
@@ -176,3 +178,15 @@ export const requestFindByParentId = (_: IpcMainInvokeEvent, parentId: string) =
 export const requestGetById = (_: IpcMainInvokeEvent, id: string) => services.request.getById(id);
 export const requestGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.request.getByParentId(parentId);
 export const requestUpdate = (_: IpcMainInvokeEvent, request: Request, patch: Partial<Request>) => services.request.update(request, patch);
+
+export const requestGroupCreate = (_: IpcMainInvokeEvent, patch: Partial<RequestGroup> = {}) => services.requestGroup.create(patch);
+export const requestGroupDuplicate = (_: IpcMainInvokeEvent, requestGroup: RequestGroup, patch: Partial<RequestGroup> = {}) => services.requestGroup.duplicate(requestGroup, patch);
+export const requestGroupFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.requestGroup.findByParentId(parentId);
+export const requestGroupGetById = (_: IpcMainInvokeEvent, id: string) => services.requestGroup.getById(id);
+export const requestGroupRemove = (_: IpcMainInvokeEvent, requestGroup: RequestGroup) => services.requestGroup.remove(requestGroup);
+export const requestGroupUpdate = (_: IpcMainInvokeEvent, requestGroup: RequestGroup, patch: Partial<RequestGroup> = {}) => services.requestGroup.update(requestGroup, patch);
+
+export const requestGroupMetaCreate = (_: IpcMainInvokeEvent, patch: Partial<RequestGroupMeta> = {}) => services.requestGroupMeta.create(patch);
+export const requestGroupMetaGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.requestGroupMeta.getByParentId(parentId);
+export const requestGroupMetaUpdate = (_: IpcMainInvokeEvent, requestGroupMeta: RequestGroupMeta, patch: Partial<RequestGroupMeta>) => services.requestGroupMeta.update(requestGroupMeta, patch);
+export const requestGroupMetaUpdateOrCreateForParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<RequestGroupMeta> = {}) => services.requestGroupMeta.updateOrCreateForParentId(parentId, patch);

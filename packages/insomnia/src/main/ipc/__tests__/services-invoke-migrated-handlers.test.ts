@@ -40,6 +40,8 @@ vi.mock('insomnia-data', () => ({
     protoDirectory: { all: vi.fn(), create: vi.fn(), findByParentId: vi.fn(), remove: vi.fn() },
     protoFile: { all: vi.fn(), create: vi.fn(), findByParentId: vi.fn(), remove: vi.fn(), update: vi.fn() },
     request: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), getByParentId: vi.fn(), update: vi.fn() },
+    requestGroup: { create: vi.fn(), duplicate: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    requestGroupMeta: { create: vi.fn(), getByParentId: vi.fn(), update: vi.fn(), updateOrCreateForParentId: vi.fn() },
   },
 }));
 
@@ -170,6 +172,16 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'requestGetById', serviceName: 'request', methodName: 'getById', args: ['req1'] },
   { handlerName: 'requestGetByParentId', serviceName: 'request', methodName: 'getByParentId', args: ['w1'] },
   { handlerName: 'requestUpdate', serviceName: 'request', methodName: 'update', args: [{ _id: 'req1' }, { name: 'renamed' }] },
+  { handlerName: 'requestGroupCreate', serviceName: 'requestGroup', methodName: 'create', args: [{ parentId: 'w1' }] },
+  { handlerName: 'requestGroupDuplicate', serviceName: 'requestGroup', methodName: 'duplicate', args: [{ _id: 'rg1' }, { name: 'copy' }] },
+  { handlerName: 'requestGroupFindByParentId', serviceName: 'requestGroup', methodName: 'findByParentId', args: ['w1'] },
+  { handlerName: 'requestGroupGetById', serviceName: 'requestGroup', methodName: 'getById', args: ['rg1'] },
+  { handlerName: 'requestGroupRemove', serviceName: 'requestGroup', methodName: 'remove', args: [{ _id: 'rg1' }] },
+  { handlerName: 'requestGroupUpdate', serviceName: 'requestGroup', methodName: 'update', args: [{ _id: 'rg1' }, { name: 'renamed' }] },
+  { handlerName: 'requestGroupMetaCreate', serviceName: 'requestGroupMeta', methodName: 'create', args: [{ parentId: 'rg1' }] },
+  { handlerName: 'requestGroupMetaGetByParentId', serviceName: 'requestGroupMeta', methodName: 'getByParentId', args: ['rg1'] },
+  { handlerName: 'requestGroupMetaUpdate', serviceName: 'requestGroupMeta', methodName: 'update', args: [{ _id: 'meta1' }, { collapsed: true }] },
+  { handlerName: 'requestGroupMetaUpdateOrCreateForParentId', serviceName: 'requestGroupMeta', methodName: 'updateOrCreateForParentId', args: ['rg1', { collapsed: true }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

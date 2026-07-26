@@ -154,6 +154,16 @@ import {
   requestFindByParentId,
   requestGetById,
   requestGetByParentId,
+  requestGroupCreate,
+  requestGroupDuplicate,
+  requestGroupFindByParentId,
+  requestGroupGetById,
+  requestGroupMetaCreate,
+  requestGroupMetaGetByParentId,
+  requestGroupMetaUpdate,
+  requestGroupMetaUpdateOrCreateForParentId,
+  requestGroupRemove,
+  requestGroupUpdate,
   requestUpdate,
   settingsGet,
   settingsGetOrCreate,
@@ -632,6 +642,16 @@ export function registerMainHandlers() {
   ipcMainHandle('services.request.getById', requestGetById);
   ipcMainHandle('services.request.getByParentId', requestGetByParentId);
   ipcMainHandle('services.request.update', requestUpdate);
+  ipcMainHandle('services.requestGroup.create', requestGroupCreate);
+  ipcMainHandle('services.requestGroup.duplicate', requestGroupDuplicate);
+  ipcMainHandle('services.requestGroup.findByParentId', requestGroupFindByParentId);
+  ipcMainHandle('services.requestGroup.getById', requestGroupGetById);
+  ipcMainHandle('services.requestGroup.remove', requestGroupRemove);
+  ipcMainHandle('services.requestGroup.update', requestGroupUpdate);
+  ipcMainHandle('services.requestGroupMeta.create', requestGroupMetaCreate);
+  ipcMainHandle('services.requestGroupMeta.getByParentId', requestGroupMetaGetByParentId);
+  ipcMainHandle('services.requestGroupMeta.update', requestGroupMetaUpdate);
+  ipcMainHandle('services.requestGroupMeta.updateOrCreateForParentId', requestGroupMetaUpdateOrCreateForParentId);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
