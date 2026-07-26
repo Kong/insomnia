@@ -113,6 +113,17 @@ import {
   mcpRequestGetByParentId,
   mcpResponseGetById,
   mcpResponseGetLatestForRequestId,
+  mockRouteCreate,
+  mockRouteFindByParentId,
+  mockRouteGetById,
+  mockRouteRemove,
+  mockRouteUpdate,
+  mockServerFindByProjectId,
+  mockServerGetById,
+  mockServerGetByParentId,
+  mockServerGetOrCreateForParentId,
+  mockServerUpdate,
+  organizationList,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -548,6 +559,17 @@ export function registerMainHandlers() {
   ipcMainHandle('services.mcpRequest.getByParentId', mcpRequestGetByParentId);
   ipcMainHandle('services.mcpResponse.getById', mcpResponseGetById);
   ipcMainHandle('services.mcpResponse.getLatestForRequestId', mcpResponseGetLatestForRequestId);
+  ipcMainHandle('services.mockRoute.create', mockRouteCreate);
+  ipcMainHandle('services.mockRoute.findByParentId', mockRouteFindByParentId);
+  ipcMainHandle('services.mockRoute.getById', mockRouteGetById);
+  ipcMainHandle('services.mockRoute.remove', mockRouteRemove);
+  ipcMainHandle('services.mockRoute.update', mockRouteUpdate);
+  ipcMainHandle('services.mockServer.findByProjectId', mockServerFindByProjectId);
+  ipcMainHandle('services.mockServer.getById', mockServerGetById);
+  ipcMainHandle('services.mockServer.getByParentId', mockServerGetByParentId);
+  ipcMainHandle('services.mockServer.getOrCreateForParentId', mockServerGetOrCreateForParentId);
+  ipcMainHandle('services.mockServer.update', mockServerUpdate);
+  ipcMainHandle('services.organization.list', organizationList);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

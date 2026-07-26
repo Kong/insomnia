@@ -13,6 +13,8 @@ import type {
   GitRepository,
   GrpcRequest,
   GrpcRequestMeta,
+  MockRoute,
+  MockServer,
   Query,
   Settings,
   UserSession,
@@ -118,3 +120,17 @@ export const mcpRequestGetByParentId = (_: IpcMainInvokeEvent, parentId: string)
 
 export const mcpResponseGetById = (_: IpcMainInvokeEvent, id: string) => services.mcpResponse.getById(id);
 export const mcpResponseGetLatestForRequestId = (_: IpcMainInvokeEvent, requestId: string, environmentId: string | null) => services.mcpResponse.getLatestForRequestId(requestId, environmentId);
+
+export const mockRouteCreate = (_: IpcMainInvokeEvent, patch: Partial<MockRoute> = {}) => services.mockRoute.create(patch);
+export const mockRouteFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.mockRoute.findByParentId(parentId);
+export const mockRouteGetById = (_: IpcMainInvokeEvent, id: string) => services.mockRoute.getById(id);
+export const mockRouteRemove = (_: IpcMainInvokeEvent, mockRoute: MockRoute) => services.mockRoute.remove(mockRoute);
+export const mockRouteUpdate = (_: IpcMainInvokeEvent, mockRoute: MockRoute, patch: Partial<MockRoute> = {}) => services.mockRoute.update(mockRoute, patch);
+
+export const mockServerFindByProjectId = (_: IpcMainInvokeEvent, projectId: string) => services.mockServer.findByProjectId(projectId);
+export const mockServerGetById = (_: IpcMainInvokeEvent, id: string) => services.mockServer.getById(id);
+export const mockServerGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.mockServer.getByParentId(parentId);
+export const mockServerGetOrCreateForParentId = (_: IpcMainInvokeEvent, workspaceId: string, patch: Partial<MockServer> = {}) => services.mockServer.getOrCreateForParentId(workspaceId, patch);
+export const mockServerUpdate = (_: IpcMainInvokeEvent, mockServer: MockServer, patch: Partial<MockServer> = {}) => services.mockServer.update(mockServer, patch);
+
+export const organizationList = (_: IpcMainInvokeEvent) => services.organization.list();

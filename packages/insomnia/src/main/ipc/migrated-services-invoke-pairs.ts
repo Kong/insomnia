@@ -80,6 +80,17 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'mcpRequest.getByParentId',
   'mcpResponse.getById',
   'mcpResponse.getLatestForRequestId',
+  'mockRoute.create',
+  'mockRoute.findByParentId',
+  'mockRoute.getById',
+  'mockRoute.remove',
+  'mockRoute.update',
+  'mockServer.findByProjectId',
+  'mockServer.getById',
+  'mockServer.getByParentId',
+  'mockServer.getOrCreateForParentId',
+  'mockServer.update',
+  'organization.list',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

@@ -28,6 +28,9 @@ vi.mock('insomnia-data', () => ({
     mcpPayload: { getByParentIdAndUrl: vi.fn(), updateOrCreateByParentIdAndUrl: vi.fn() },
     mcpRequest: { create: vi.fn(), getById: vi.fn(), getByParentId: vi.fn() },
     mcpResponse: { getById: vi.fn(), getLatestForRequestId: vi.fn() },
+    mockRoute: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    mockServer: { findByProjectId: vi.fn(), getById: vi.fn(), getByParentId: vi.fn(), getOrCreateForParentId: vi.fn(), update: vi.fn() },
+    organization: { list: vi.fn() },
   },
 }));
 
@@ -116,6 +119,17 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'mcpRequestGetByParentId', serviceName: 'mcpRequest', methodName: 'getByParentId', args: ['w1'] },
   { handlerName: 'mcpResponseGetById', serviceName: 'mcpResponse', methodName: 'getById', args: ['res1'] },
   { handlerName: 'mcpResponseGetLatestForRequestId', serviceName: 'mcpResponse', methodName: 'getLatestForRequestId', args: ['req1', null] },
+  { handlerName: 'mockRouteCreate', serviceName: 'mockRoute', methodName: 'create', args: [{ parentId: 'server1' }] },
+  { handlerName: 'mockRouteFindByParentId', serviceName: 'mockRoute', methodName: 'findByParentId', args: ['server1'] },
+  { handlerName: 'mockRouteGetById', serviceName: 'mockRoute', methodName: 'getById', args: ['route1'] },
+  { handlerName: 'mockRouteRemove', serviceName: 'mockRoute', methodName: 'remove', args: [{ _id: 'route1' }] },
+  { handlerName: 'mockRouteUpdate', serviceName: 'mockRoute', methodName: 'update', args: [{ _id: 'route1' }, { name: 'renamed' }] },
+  { handlerName: 'mockServerFindByProjectId', serviceName: 'mockServer', methodName: 'findByProjectId', args: ['proj1'] },
+  { handlerName: 'mockServerGetById', serviceName: 'mockServer', methodName: 'getById', args: ['server1'] },
+  { handlerName: 'mockServerGetByParentId', serviceName: 'mockServer', methodName: 'getByParentId', args: ['w1'] },
+  { handlerName: 'mockServerGetOrCreateForParentId', serviceName: 'mockServer', methodName: 'getOrCreateForParentId', args: ['w1', {}] },
+  { handlerName: 'mockServerUpdate', serviceName: 'mockServer', methodName: 'update', args: [{ _id: 'server1' }, { name: 'renamed' }] },
+  { handlerName: 'organizationList', serviceName: 'organization', methodName: 'list', args: [] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {
