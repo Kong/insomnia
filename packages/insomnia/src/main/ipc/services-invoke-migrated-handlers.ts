@@ -23,6 +23,8 @@ import type {
   Request,
   RequestGroup,
   RequestGroupMeta,
+  RequestMeta,
+  Response,
   Settings,
   UserSession,
 } from 'insomnia-data';
@@ -190,3 +192,16 @@ export const requestGroupMetaCreate = (_: IpcMainInvokeEvent, patch: Partial<Req
 export const requestGroupMetaGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.requestGroupMeta.getByParentId(parentId);
 export const requestGroupMetaUpdate = (_: IpcMainInvokeEvent, requestGroupMeta: RequestGroupMeta, patch: Partial<RequestGroupMeta>) => services.requestGroupMeta.update(requestGroupMeta, patch);
 export const requestGroupMetaUpdateOrCreateForParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<RequestGroupMeta> = {}) => services.requestGroupMeta.updateOrCreateForParentId(parentId, patch);
+
+export const requestMetaGetByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.requestMeta.getByParentId(parentId);
+export const requestMetaGetOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.requestMeta.getOrCreateByParentId(parentId);
+export const requestMetaUpdate = (_: IpcMainInvokeEvent, requestMeta: RequestMeta, patch: Partial<RequestMeta>) => services.requestMeta.update(requestMeta, patch);
+export const requestMetaUpdateOrCreateByParentId = (_: IpcMainInvokeEvent, parentId: string, patch: Partial<RequestMeta>) => services.requestMeta.updateOrCreateByParentId(parentId, patch);
+
+export const requestVersionFindByParentId = (_: IpcMainInvokeEvent, parentId: string) => services.requestVersion.findByParentId(parentId);
+export const requestVersionRestore = (_: IpcMainInvokeEvent, requestVersionId: string) => services.requestVersion.restore(requestVersionId);
+
+export const responseCreate = (_: IpcMainInvokeEvent, patch: Partial<Response> = {}, maxResponses?: number) => services.response.create(patch, maxResponses);
+export const responseGetByBodyPath = (_: IpcMainInvokeEvent, bodyPath: string) => services.response.getByBodyPath(bodyPath);
+export const responseGetById = (_: IpcMainInvokeEvent, id: string) => services.response.getById(id);
+export const responseGetLatestForRequestId = (_: IpcMainInvokeEvent, requestId: string, environmentId: string | null) => services.response.getLatestForRequestId(requestId, environmentId);

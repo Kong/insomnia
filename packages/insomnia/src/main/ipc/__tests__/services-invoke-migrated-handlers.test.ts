@@ -42,6 +42,9 @@ vi.mock('insomnia-data', () => ({
     request: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), getByParentId: vi.fn(), update: vi.fn() },
     requestGroup: { create: vi.fn(), duplicate: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
     requestGroupMeta: { create: vi.fn(), getByParentId: vi.fn(), update: vi.fn(), updateOrCreateForParentId: vi.fn() },
+    requestMeta: { getByParentId: vi.fn(), getOrCreateByParentId: vi.fn(), update: vi.fn(), updateOrCreateByParentId: vi.fn() },
+    requestVersion: { findByParentId: vi.fn(), restore: vi.fn() },
+    response: { create: vi.fn(), getByBodyPath: vi.fn(), getById: vi.fn(), getLatestForRequestId: vi.fn() },
   },
 }));
 
@@ -182,6 +185,16 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'requestGroupMetaGetByParentId', serviceName: 'requestGroupMeta', methodName: 'getByParentId', args: ['rg1'] },
   { handlerName: 'requestGroupMetaUpdate', serviceName: 'requestGroupMeta', methodName: 'update', args: [{ _id: 'meta1' }, { collapsed: true }] },
   { handlerName: 'requestGroupMetaUpdateOrCreateForParentId', serviceName: 'requestGroupMeta', methodName: 'updateOrCreateForParentId', args: ['rg1', { collapsed: true }] },
+  { handlerName: 'requestMetaGetByParentId', serviceName: 'requestMeta', methodName: 'getByParentId', args: ['req1'] },
+  { handlerName: 'requestMetaGetOrCreateByParentId', serviceName: 'requestMeta', methodName: 'getOrCreateByParentId', args: ['req1'] },
+  { handlerName: 'requestMetaUpdate', serviceName: 'requestMeta', methodName: 'update', args: [{ _id: 'meta1' }, { lastActive: 1 }] },
+  { handlerName: 'requestMetaUpdateOrCreateByParentId', serviceName: 'requestMeta', methodName: 'updateOrCreateByParentId', args: ['req1', { lastActive: 1 }] },
+  { handlerName: 'requestVersionFindByParentId', serviceName: 'requestVersion', methodName: 'findByParentId', args: ['req1'] },
+  { handlerName: 'requestVersionRestore', serviceName: 'requestVersion', methodName: 'restore', args: ['rv1'] },
+  { handlerName: 'responseCreate', serviceName: 'response', methodName: 'create', args: [{ parentId: 'req1' }, 20] },
+  { handlerName: 'responseGetByBodyPath', serviceName: 'response', methodName: 'getByBodyPath', args: ['/path/to/body'] },
+  { handlerName: 'responseGetById', serviceName: 'response', methodName: 'getById', args: ['res1'] },
+  { handlerName: 'responseGetLatestForRequestId', serviceName: 'response', methodName: 'getLatestForRequestId', args: ['req1', null] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

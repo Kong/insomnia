@@ -164,7 +164,17 @@ import {
   requestGroupMetaUpdateOrCreateForParentId,
   requestGroupRemove,
   requestGroupUpdate,
+  requestMetaGetByParentId,
+  requestMetaGetOrCreateByParentId,
+  requestMetaUpdate,
+  requestMetaUpdateOrCreateByParentId,
   requestUpdate,
+  requestVersionFindByParentId,
+  requestVersionRestore,
+  responseCreate,
+  responseGetByBodyPath,
+  responseGetById,
+  responseGetLatestForRequestId,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -652,6 +662,16 @@ export function registerMainHandlers() {
   ipcMainHandle('services.requestGroupMeta.getByParentId', requestGroupMetaGetByParentId);
   ipcMainHandle('services.requestGroupMeta.update', requestGroupMetaUpdate);
   ipcMainHandle('services.requestGroupMeta.updateOrCreateForParentId', requestGroupMetaUpdateOrCreateForParentId);
+  ipcMainHandle('services.requestMeta.getByParentId', requestMetaGetByParentId);
+  ipcMainHandle('services.requestMeta.getOrCreateByParentId', requestMetaGetOrCreateByParentId);
+  ipcMainHandle('services.requestMeta.update', requestMetaUpdate);
+  ipcMainHandle('services.requestMeta.updateOrCreateByParentId', requestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.requestVersion.findByParentId', requestVersionFindByParentId);
+  ipcMainHandle('services.requestVersion.restore', requestVersionRestore);
+  ipcMainHandle('services.response.create', responseCreate);
+  ipcMainHandle('services.response.getByBodyPath', responseGetByBodyPath);
+  ipcMainHandle('services.response.getById', responseGetById);
+  ipcMainHandle('services.response.getLatestForRequestId', responseGetLatestForRequestId);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
