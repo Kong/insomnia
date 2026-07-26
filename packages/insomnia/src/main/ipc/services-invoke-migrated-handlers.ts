@@ -1,4 +1,4 @@
-import type { CaCertificate, ClientCertificate } from 'insomnia-data';
+import type { CaCertificate, ClientCertificate, CloudProviderCredential, CloudProviderName, Settings } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
 // Named per-pair handlers for services.invoke pairs migrated off the generic reflection-based
@@ -17,3 +17,15 @@ export const clientCertificateFindByParentId = (_: unknown, parentId: string) =>
 export const clientCertificateGetById = (_: unknown, id: string) => services.clientCertificate.getById(id);
 export const clientCertificateRemove = (_: unknown, cert: ClientCertificate) => services.clientCertificate.remove(cert);
 export const clientCertificateUpdate = (_: unknown, cert: ClientCertificate, patch: Partial<ClientCertificate> = {}) => services.clientCertificate.update(cert, patch);
+
+export const cloudCredentialAll = (_: unknown) => services.cloudCredential.all();
+export const cloudCredentialCreate = (_: unknown, patch: Partial<CloudProviderCredential> = {}) => services.cloudCredential.create(patch);
+export const cloudCredentialGetById = (_: unknown, id: string) => services.cloudCredential.getById(id);
+export const cloudCredentialGetByName = (_: unknown, name: string, provider: CloudProviderName) => services.cloudCredential.getByName(name, provider);
+export const cloudCredentialRemove = (_: unknown, credential: CloudProviderCredential) => services.cloudCredential.remove(credential);
+export const cloudCredentialUpdate = (_: unknown, credential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) => services.cloudCredential.update(credential, patch);
+
+export const settingsGet = (_: unknown) => services.settings.get();
+export const settingsGetOrCreate = (_: unknown) => services.settings.getOrCreate();
+export const settingsPatch = (_: unknown, patch: Partial<Settings>) => services.settings.patch(patch);
+export const settingsUpdate = (_: unknown, settings: Settings, patch: Partial<Settings>) => services.settings.update(settings, patch);

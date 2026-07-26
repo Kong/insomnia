@@ -55,6 +55,16 @@ import {
   clientCertificateGetById,
   clientCertificateRemove,
   clientCertificateUpdate,
+  cloudCredentialAll,
+  cloudCredentialCreate,
+  cloudCredentialGetById,
+  cloudCredentialGetByName,
+  cloudCredentialRemove,
+  cloudCredentialUpdate,
+  settingsGet,
+  settingsGetOrCreate,
+  settingsPatch,
+  settingsUpdate,
 } from '~/main/ipc/services-invoke-migrated-handlers';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -418,6 +428,16 @@ export function registerMainHandlers() {
   ipcMainHandle('services.clientCertificate.getById', clientCertificateGetById);
   ipcMainHandle('services.clientCertificate.remove', clientCertificateRemove);
   ipcMainHandle('services.clientCertificate.update', clientCertificateUpdate);
+  ipcMainHandle('services.cloudCredential.all', cloudCredentialAll);
+  ipcMainHandle('services.cloudCredential.create', cloudCredentialCreate);
+  ipcMainHandle('services.cloudCredential.getById', cloudCredentialGetById);
+  ipcMainHandle('services.cloudCredential.getByName', cloudCredentialGetByName);
+  ipcMainHandle('services.cloudCredential.remove', cloudCredentialRemove);
+  ipcMainHandle('services.cloudCredential.update', cloudCredentialUpdate);
+  ipcMainHandle('services.settings.get', settingsGet);
+  ipcMainHandle('services.settings.getOrCreate', settingsGetOrCreate);
+  ipcMainHandle('services.settings.patch', settingsPatch);
+  ipcMainHandle('services.settings.update', settingsUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });

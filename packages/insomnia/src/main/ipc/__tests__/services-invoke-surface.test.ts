@@ -32,7 +32,9 @@ describe('describeServicesInvokeSurface (fixture tree)', () => {
     write('routes/thing.tsx', "await services.request.getById(id);\n");
     fs.mkdirSync(path.join(rendererRoot, 'main', 'ipc'), { recursive: true });
 
-    const entries = describeServicesInvokeSurface({ rendererRoot });
+    // mainIpcDir is scoped to an empty fixture directory, not the real repo's main/ipc — otherwise
+    // this assertion would depend on whether the real repo happens to have migrated request.getById.
+    const entries = describeServicesInvokeSurface({ rendererRoot, mainIpcDir: path.join(rendererRoot, 'main', 'ipc') });
     expect(entries).toEqual([
       { pair: 'request.getById', serviceName: 'request', methodName: 'getById', callSiteFiles: ['routes/thing.tsx'], hasNamedHandler: false },
     ]);
@@ -71,7 +73,9 @@ describe('describeServicesInvokeSurface (fixture tree)', () => {
     write('templating/sandbox/vendored/pkg/index.ts', "await services.settings.patch(patch);\n");
     write('routes/real-call-site.tsx', "await services.settings.get();\n");
 
-    const entries = describeServicesInvokeSurface({ rendererRoot });
+    // mainIpcDir is scoped to an empty fixture directory, not the real repo's main/ipc — otherwise
+    // this assertion would depend on whether the real repo happens to have migrated settings.get.
+    const entries = describeServicesInvokeSurface({ rendererRoot, mainIpcDir: path.join(rendererRoot, 'main', 'ipc') });
     expect(entries).toEqual([
       { pair: 'settings.get', serviceName: 'settings', methodName: 'get', callSiteFiles: ['routes/real-call-site.tsx'], hasNamedHandler: false },
     ]);

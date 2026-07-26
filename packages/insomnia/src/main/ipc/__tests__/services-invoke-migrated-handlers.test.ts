@@ -6,6 +6,8 @@ vi.mock('insomnia-data', () => ({
   services: {
     caCertificate: { create: vi.fn(), getById: vi.fn(), getByParentId: vi.fn(), removeWhere: vi.fn(), update: vi.fn() },
     clientCertificate: { create: vi.fn(), findByParentId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    cloudCredential: { all: vi.fn(), create: vi.fn(), getById: vi.fn(), getByName: vi.fn(), remove: vi.fn(), update: vi.fn() },
+    settings: { get: vi.fn(), getOrCreate: vi.fn(), patch: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -29,6 +31,16 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'clientCertificateGetById', serviceName: 'clientCertificate', methodName: 'getById', args: ['cert1'] },
   { handlerName: 'clientCertificateRemove', serviceName: 'clientCertificate', methodName: 'remove', args: [{ _id: 'cert1' }] },
   { handlerName: 'clientCertificateUpdate', serviceName: 'clientCertificate', methodName: 'update', args: [{ _id: 'cert1' }, { host: 'localhost' }] },
+  { handlerName: 'cloudCredentialAll', serviceName: 'cloudCredential', methodName: 'all', args: [] },
+  { handlerName: 'cloudCredentialCreate', serviceName: 'cloudCredential', methodName: 'create', args: [{ name: 'konnect' }] },
+  { handlerName: 'cloudCredentialGetById', serviceName: 'cloudCredential', methodName: 'getById', args: ['cred1'] },
+  { handlerName: 'cloudCredentialGetByName', serviceName: 'cloudCredential', methodName: 'getByName', args: ['konnect', 'konnect'] },
+  { handlerName: 'cloudCredentialRemove', serviceName: 'cloudCredential', methodName: 'remove', args: [{ _id: 'cred1' }] },
+  { handlerName: 'cloudCredentialUpdate', serviceName: 'cloudCredential', methodName: 'update', args: [{ _id: 'cred1' }, { credentials: undefined }] },
+  { handlerName: 'settingsGet', serviceName: 'settings', methodName: 'get', args: [] },
+  { handlerName: 'settingsGetOrCreate', serviceName: 'settings', methodName: 'getOrCreate', args: [] },
+  { handlerName: 'settingsPatch', serviceName: 'settings', methodName: 'patch', args: [{ httpProxy: '' }] },
+  { handlerName: 'settingsUpdate', serviceName: 'settings', methodName: 'update', args: [{ _id: 'set1' }, { httpProxy: '' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

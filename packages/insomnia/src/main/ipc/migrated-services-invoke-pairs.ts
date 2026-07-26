@@ -15,6 +15,16 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'clientCertificate.getById',
   'clientCertificate.remove',
   'clientCertificate.update',
+  'cloudCredential.all',
+  'cloudCredential.create',
+  'cloudCredential.getById',
+  'cloudCredential.getByName',
+  'cloudCredential.remove',
+  'cloudCredential.update',
+  'settings.get',
+  'settings.getOrCreate',
+  'settings.patch',
+  'settings.update',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */
