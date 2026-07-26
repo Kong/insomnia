@@ -19,6 +19,12 @@ vi.mock('insomnia-data', () => ({
     gitRepository: { all: vi.fn(), getAllByCredentialId: vi.fn(), getById: vi.fn(), remove: vi.fn(), update: vi.fn() },
     grpcRequest: { create: vi.fn(), findByProtoFileId: vi.fn() },
     grpcRequestMeta: { getByParentId: vi.fn(), updateOrCreateByParentId: vi.fn() },
+    helpers: {
+      abortCommandSearch: vi.fn(), commandSearch: vi.fn(), duplicateRequest: vi.fn(), findRequestByParentId: vi.fn(),
+      getRequestById: vi.fn(), getResponseBodyBuffer: vi.fn(), getResponseTimeline: vi.fn(), queryAllWorkspaceUrls: vi.fn(),
+      readCurlResponse: vi.fn(), removeRequest: vi.fn(), removeResponse: vi.fn(), removeResponsesForRequest: vi.fn(),
+      updateRequest: vi.fn(),
+    },
   },
 }));
 
@@ -87,6 +93,19 @@ const CASES: { handlerName: keyof typeof handlers; serviceName: string; methodNa
   { handlerName: 'grpcRequestFindByProtoFileId', serviceName: 'grpcRequest', methodName: 'findByProtoFileId', args: ['pf1'] },
   { handlerName: 'grpcRequestMetaGetByParentId', serviceName: 'grpcRequestMeta', methodName: 'getByParentId', args: ['req1'] },
   { handlerName: 'grpcRequestMetaUpdateOrCreateByParentId', serviceName: 'grpcRequestMeta', methodName: 'updateOrCreateByParentId', args: ['req1', { expandedTypes: [] }] },
+  { handlerName: 'helpersAbortCommandSearch', serviceName: 'helpers', methodName: 'abortCommandSearch', args: ['req1'] },
+  { handlerName: 'helpersCommandSearch', serviceName: 'helpers', methodName: 'commandSearch', args: [{ allOrganizations: [], organizationId: 'o1', projectId: 'p1', requestId: 'req1' }] },
+  { handlerName: 'helpersDuplicateRequest', serviceName: 'helpers', methodName: 'duplicateRequest', args: [{ _id: 'req1' }, { name: 'copy' }] },
+  { handlerName: 'helpersFindRequestByParentId', serviceName: 'helpers', methodName: 'findRequestByParentId', args: ['w1'] },
+  { handlerName: 'helpersGetRequestById', serviceName: 'helpers', methodName: 'getRequestById', args: ['req1'] },
+  { handlerName: 'helpersGetResponseBodyBuffer', serviceName: 'helpers', methodName: 'getResponseBodyBuffer', args: [{ bodyPath: '/x' }, 'fail'] },
+  { handlerName: 'helpersGetResponseTimeline', serviceName: 'helpers', methodName: 'getResponseTimeline', args: [{ timelinePath: '/x' }, true] },
+  { handlerName: 'helpersQueryAllWorkspaceUrls', serviceName: 'helpers', methodName: 'queryAllWorkspaceUrls', args: ['w1', 'Request', 'req1'] },
+  { handlerName: 'helpersReadCurlResponse', serviceName: 'helpers', methodName: 'readCurlResponse', args: [{ bodyPath: '/x' }] },
+  { handlerName: 'helpersRemoveRequest', serviceName: 'helpers', methodName: 'removeRequest', args: [{ _id: 'req1' }] },
+  { handlerName: 'helpersRemoveResponse', serviceName: 'helpers', methodName: 'removeResponse', args: [{ _id: 'res1' }] },
+  { handlerName: 'helpersRemoveResponsesForRequest', serviceName: 'helpers', methodName: 'removeResponsesForRequest', args: ['req1', 'env1'] },
+  { handlerName: 'helpersUpdateRequest', serviceName: 'helpers', methodName: 'updateRequest', args: [{ _id: 'req1' }, { name: 'renamed' }] },
 ];
 
 describe.each(CASES)('$handlerName', ({ handlerName, serviceName, methodName, args }) => {

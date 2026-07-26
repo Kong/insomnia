@@ -60,6 +60,19 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'grpcRequest.findByProtoFileId',
   'grpcRequestMeta.getByParentId',
   'grpcRequestMeta.updateOrCreateByParentId',
+  'helpers.abortCommandSearch',
+  'helpers.commandSearch',
+  'helpers.duplicateRequest',
+  'helpers.findRequestByParentId',
+  'helpers.getRequestById',
+  'helpers.getResponseBodyBuffer',
+  'helpers.getResponseTimeline',
+  'helpers.queryAllWorkspaceUrls',
+  'helpers.readCurlResponse',
+  'helpers.removeRequest',
+  'helpers.removeResponse',
+  'helpers.removeResponsesForRequest',
+  'helpers.updateRequest',
 ]);
 
 /** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */

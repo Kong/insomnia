@@ -89,3 +89,17 @@ export const grpcRequestFindByProtoFileId = (_: unknown, protoFileId: string) =>
 
 export const grpcRequestMetaGetByParentId = (_: unknown, parentId: string) => services.grpcRequestMeta.getByParentId(parentId);
 export const grpcRequestMetaUpdateOrCreateByParentId = (_: unknown, parentId: string, patch: Partial<GrpcRequestMeta>) => services.grpcRequestMeta.updateOrCreateByParentId(parentId, patch);
+
+export const helpersAbortCommandSearch = (_: unknown, requestId: string) => services.helpers.abortCommandSearch(requestId);
+export const helpersCommandSearch = (_: unknown, params: Parameters<typeof services.helpers.commandSearch>[0]) => services.helpers.commandSearch(params);
+export const helpersDuplicateRequest = (_: unknown, request: any, patch: any = {}) => services.helpers.duplicateRequest(request, patch);
+export const helpersFindRequestByParentId = (_: unknown, parentId: string) => services.helpers.findRequestByParentId(parentId);
+export const helpersGetRequestById = (_: unknown, requestId: string) => services.helpers.getRequestById(requestId);
+export const helpersGetResponseBodyBuffer = (_: unknown, response?: Parameters<typeof services.helpers.getResponseBodyBuffer>[0], readFailureValue?: string) => services.helpers.getResponseBodyBuffer(response, readFailureValue);
+export const helpersGetResponseTimeline = (_: unknown, response: Parameters<typeof services.helpers.getResponseTimeline>[0], showBody?: boolean) => services.helpers.getResponseTimeline(response, showBody);
+export const helpersQueryAllWorkspaceUrls = (_: unknown, workspaceId: string, reqType: Parameters<typeof services.helpers.queryAllWorkspaceUrls>[1], reqId?: string) => services.helpers.queryAllWorkspaceUrls(workspaceId, reqType, reqId);
+export const helpersReadCurlResponse = (_: unknown, options: Parameters<typeof services.helpers.readCurlResponse>[0]) => services.helpers.readCurlResponse(options);
+export const helpersRemoveRequest = (_: unknown, request: any) => services.helpers.removeRequest(request);
+export const helpersRemoveResponse = (_: unknown, response: Parameters<typeof services.helpers.removeResponse>[0]) => services.helpers.removeResponse(response);
+export const helpersRemoveResponsesForRequest = (_: unknown, requestId: string, environmentId?: string | null) => services.helpers.removeResponsesForRequest(requestId, environmentId);
+export const helpersUpdateRequest = (_: unknown, request: any, patch: any = {}) => services.helpers.updateRequest(request, patch);

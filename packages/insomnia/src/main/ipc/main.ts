@@ -93,6 +93,19 @@ import {
   grpcRequestFindByProtoFileId,
   grpcRequestMetaGetByParentId,
   grpcRequestMetaUpdateOrCreateByParentId,
+  helpersAbortCommandSearch,
+  helpersCommandSearch,
+  helpersDuplicateRequest,
+  helpersFindRequestByParentId,
+  helpersGetRequestById,
+  helpersGetResponseBodyBuffer,
+  helpersGetResponseTimeline,
+  helpersQueryAllWorkspaceUrls,
+  helpersReadCurlResponse,
+  helpersRemoveRequest,
+  helpersRemoveResponse,
+  helpersRemoveResponsesForRequest,
+  helpersUpdateRequest,
   settingsGet,
   settingsGetOrCreate,
   settingsPatch,
@@ -508,6 +521,19 @@ export function registerMainHandlers() {
   ipcMainHandle('services.grpcRequest.findByProtoFileId', grpcRequestFindByProtoFileId);
   ipcMainHandle('services.grpcRequestMeta.getByParentId', grpcRequestMetaGetByParentId);
   ipcMainHandle('services.grpcRequestMeta.updateOrCreateByParentId', grpcRequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.helpers.abortCommandSearch', helpersAbortCommandSearch);
+  ipcMainHandle('services.helpers.commandSearch', helpersCommandSearch);
+  ipcMainHandle('services.helpers.duplicateRequest', helpersDuplicateRequest);
+  ipcMainHandle('services.helpers.findRequestByParentId', helpersFindRequestByParentId);
+  ipcMainHandle('services.helpers.getRequestById', helpersGetRequestById);
+  ipcMainHandle('services.helpers.getResponseBodyBuffer', helpersGetResponseBodyBuffer);
+  ipcMainHandle('services.helpers.getResponseTimeline', helpersGetResponseTimeline);
+  ipcMainHandle('services.helpers.queryAllWorkspaceUrls', helpersQueryAllWorkspaceUrls);
+  ipcMainHandle('services.helpers.readCurlResponse', helpersReadCurlResponse);
+  ipcMainHandle('services.helpers.removeRequest', helpersRemoveRequest);
+  ipcMainHandle('services.helpers.removeResponse', helpersRemoveResponse);
+  ipcMainHandle('services.helpers.removeResponsesForRequest', helpersRemoveResponsesForRequest);
+  ipcMainHandle('services.helpers.updateRequest', helpersUpdateRequest);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
