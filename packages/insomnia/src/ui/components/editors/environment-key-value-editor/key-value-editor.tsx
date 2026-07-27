@@ -73,13 +73,28 @@ export const EnvironmentKVEditor = ({
   // Deduped by id - react-aria-components' ListBox keys rows by id, and two rows sharing
   // an id corrupts its internal collection (can hang the tab). Duplicate ids shouldn't occur,
   // but have been observed with corrupted/legacy persisted data, so guard against it here.
-  const persistedPairs: EnvironmentKvPairData[] = useMemo(() => {
+  const dedupe = (pairs: EnvironmentKvPairData[]) => {
     const byId = new Map<string, EnvironmentKvPairData>();
-    data.forEach(pair => byId.set(pair.id, pair));
+    pairs.forEach(pair => byId.set(pair.id, pair));
     return [...byId.values()];
-    // Ensure same array data will not generate different kvPairs to avoid flash issue
+  };
+  // Held as local state (updated optimistically the instant we call onChange below) rather
+  // than derived fresh from the `data` prop on every render. Deriving straight from `data`
+  // meant two edits fired back-to-back (e.g. typing a row's value, then immediately adding
+  // another row) could race: the second edit would build its outgoing array from a `data`
+  // snapshot that hadn't yet round-tripped the parent's persistence of the first, silently
+  // dropping it. Local state is always at least as current as the last edit we made
+  // ourselves; the effect below still re-syncs from `data` for changes that didn't originate
+  // here (e.g. switching to a different environment).
+  const [persistedPairs, setPersistedPairs] = useState<EnvironmentKvPairData[]>(() => dedupe(data));
+  useEffect(() => {
+    setPersistedPairs(dedupe(data));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(data)]);
+  const commitPairs = (next: EnvironmentKvPairData[]) => {
+    setPersistedPairs(next);
+    onChange(next);
+  };
   const blankNameEditorRef = useRef<OneLineEditorHandle | null>(null);
   // The id for the trailing blank row is derived from the persisted pairs (rather than
   // held in state) so it only changes when the data actually changes. This keeps it in
@@ -180,7 +195,7 @@ export const EnvironmentKVEditor = ({
         return;
       }
       const targetIndex = persistedPairs.findIndex(pair => pair.id === e.target.key.toString());
-      onChange(repositionInArray(moveItems, targetIndex === -1 ? persistedPairs.length : targetIndex));
+      commitPairs(repositionInArray(moveItems, targetIndex === -1 ? persistedPairs.length : targetIndex));
     },
     renderDragPreview(items) {
       const pair = kvPairs.find(pair => pair.id === items[0]['text/plain']) || createNewPair();
@@ -226,30 +241,33 @@ export const EnvironmentKVEditor = ({
       if (isNameOrValueChange && !newPair.name && !newPair.value) {
         return;
       }
-      onChange([...persistedPairs, newPair]);
+      commitPairs([...persistedPairs, newPair]);
       return;
     }
-    // Mutate the persisted working copy in place so sequential calls (e.g. the secret
-    // type switch, which changes value then type) accumulate onto the same item.
+    // Build a new array with the changed item replaced by a new object (rather than mutating
+    // persistedPairs in place) - persistedPairs is React state now, and setState bails out of
+    // re-rendering when given back the same array reference it was passed.
     const changedItemIdx = persistedPairs.findIndex(p => p.id === id);
-    if (changedItemIdx !== -1) {
-      const changedItem = persistedPairs[changedItemIdx];
-      // A blur-flush (from clicking into a disabled/read-only row's name or value editor and
-      // then clicking away, e.g. into another row) re-fires onChange with the same, unedited
-      // value. Treat that as a no-op rather than force-enabling a row the user never touched.
-      const isNameOrValueChange = changedPropertyName === 'name' || changedPropertyName === 'value';
-      if (isNameOrValueChange && changedItem[changedPropertyName] === newValue) {
-        return;
-      }
-      // enable item since user modifies the item unless manual disable it
-      changedItem['enabled'] = true;
-      changedItem[changedPropertyName] = newValue;
-      // update value to empty object json string when switch to json type and current value is empty string
-      if (newValue === EnvironmentKvPairDataType.JSON && changedItem.value.trim() === '') {
-        changedItem.value = JSON.stringify({});
-      }
+    if (changedItemIdx === -1) {
+      return;
     }
-    onChange(persistedPairs);
+    const changedItem = persistedPairs[changedItemIdx];
+    // A blur-flush (from clicking into a disabled/read-only row's name or value editor and
+    // then clicking away, e.g. into another row) re-fires onChange with the same, unedited
+    // value. Treat that as a no-op rather than force-enabling a row the user never touched.
+    const isNameOrValueChange = changedPropertyName === 'name' || changedPropertyName === 'value';
+    if (isNameOrValueChange && changedItem[changedPropertyName] === newValue) {
+      return;
+    }
+    // enable item since user modifies the item unless manual disable it
+    const updatedItem = { ...changedItem, enabled: true, [changedPropertyName]: newValue };
+    // update value to empty object json string when switch to json type and current value is empty string
+    if (newValue === EnvironmentKvPairDataType.JSON && updatedItem.value.trim() === '') {
+      updatedItem.value = JSON.stringify({});
+    }
+    const next = [...persistedPairs];
+    next[changedItemIdx] = updatedItem;
+    commitPairs(next);
   };
 
   const handleItemTypeChange = async (id: string, newType: EnvironmentKvPairDataType) => {
@@ -299,11 +317,11 @@ export const EnvironmentKVEditor = ({
     const insertIdx = id ? persistedPairs.findIndex(d => d.id === id) : persistedPairs.length - 1;
     const next = [...persistedPairs];
     next.splice(insertIdx === -1 ? next.length : insertIdx + 1, 0, newPair);
-    onChange(next);
+    commitPairs(next);
   };
 
   const handleDeleteItem = (id: string) => {
-    onChange(persistedPairs.filter(d => d.id !== id));
+    commitPairs(persistedPairs.filter(d => d.id !== id));
   };
 
   const checkValidJSONString = (input: string) => {
@@ -544,7 +562,7 @@ export const EnvironmentKVEditor = ({
         <PromptButton
           disabled={disabled || persistedPairs.length === 0}
           onClick={() => {
-            onChange([]);
+            commitPairs([]);
           }}
           ariaLabel="Delete All"
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
