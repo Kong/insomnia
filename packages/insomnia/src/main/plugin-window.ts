@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 
-import { type PromptRequestOptions, requestPromptFromRenderer } from './prompt-bridge';
+import { requestPromptFromRenderer } from './prompt-bridge';
 import { getMainWindow } from './window-utils';
 
 let pluginWindow: BrowserWindow | null = null;
@@ -69,6 +69,58 @@ export function getBridgeMetricsSnapshot() {
   };
 }
 
+// --- Sender-checked IPC registration wrappers -------------------------------------------
+//
+// Every `ipcMain.handle`/`ipcMain.on` call in this file must go through one of the three
+// wrappers below instead of the raw `ipcMain` API, so each channel enforces which window is
+// allowed to be its caller. `plugin-window-ipc-authorization.test.ts` fails the build if a bare
+// `ipcMain` call is added to this file outside these three function bodies.
+
+/**
+ * Registers a channel that dispatches a plugin operation into the hidden plugin window
+ * (`getThemes`, `applyRequestHooks`, `executeAction`, etc.), forwarding caller-supplied data to
+ * `invokeInPluginWindow`. Restricted to the real main app window; any other sender gets a
+ * rejected promise instead of a result.
+ */
+function handleFromMainWindow<Args = unknown, R = unknown>(
+  channel: string,
+  handler: (args: Args) => R | Promise<R>,
+): void {
+  ipcMain.handle(channel, (event: IpcMainInvokeEvent, args: Args) => {
+    if (event.sender !== getMainWindow()?.webContents) {
+      throw new Error(`[plugin-bridge] rejected ${channel}: sender is not the main app window`);
+    }
+    return handler(args);
+  });
+}
+
+/**
+ * Registers a fire-and-forget callback that the hidden plugin window sends back to the host
+ * (a UI callback, an invoke result). Restricted to the plugin window itself; any other sender
+ * is silently ignored, matching how these "reverse direction" messages already behaved.
+ */
+function onFromPluginWindow<Args = unknown>(channel: string, handler: (args: Args) => void): void {
+  ipcMain.on(channel, (event: IpcMainEvent, args: Args) => {
+    if (event.sender !== pluginWindow?.webContents) {
+      return;
+    }
+    handler(args);
+  });
+}
+
+/** Like {@link onFromPluginWindow}, but for the one plugin-window callback that replies (`plugins.uiPrompt`). */
+function handleFromPluginWindow<Args = unknown, R = unknown>(
+  channel: string,
+  handler: (args: Args) => R | Promise<R>,
+): void {
+  ipcMain.handle(channel, (event: IpcMainInvokeEvent, args: Args) => {
+    if (event.sender !== pluginWindow?.webContents) {
+      return null;
+    }
+    return handler(args);
+  });
+}
+
 // Registered once so that persistent `ipcMain.on` handlers don't accumulate across window recreations.
 let ipcListenersRegistered = false;
 
@@ -78,10 +130,7 @@ function ensureIpcListeners() {
   }
   ipcListenersRegistered = true;
 
-  ipcMain.on('plugins.windowReady', event => {
-    if (event.sender !== pluginWindow?.webContents) {
-      return;
-    }
+  onFromPluginWindow<void>('plugins.windowReady', () => {
     windowReady = true;
     const startedAt = bridgeMetrics.lastStartupAt;
     const startupMs = startedAt ? Date.now() - startedAt : 0;
@@ -89,33 +138,21 @@ function ensureIpcListeners() {
     console.log(`[plugin-bridge] window_ready startup_ms=${startupMs}`);
   });
 
-  ipcMain.on('plugins.uiAlert', (event, options: Record<string, unknown>) => {
-    if (event.sender !== pluginWindow?.webContents) {
-      return;
-    }
+  onFromPluginWindow<Record<string, unknown>>('plugins.uiAlert', options => {
     getMainWindow()?.webContents.send('plugins.uiAlert', options);
   });
 
-  ipcMain.on('plugins.uiDialog', (event, options: Record<string, unknown>) => {
-    if (event.sender !== pluginWindow?.webContents) {
-      return;
-    }
+  onFromPluginWindow<Record<string, unknown>>('plugins.uiDialog', options => {
     getMainWindow()?.webContents.send('plugins.uiDialog', options);
   });
 
-  ipcMain.handle('plugins.uiPrompt', async (event, options: Record<string, unknown>) => {
-    if (event.sender !== pluginWindow?.webContents) {
-      return null;
-    }
-    return requestPromptFromRenderer(options as unknown as PromptRequestOptions);
-  });
+  handleFromPluginWindow<{ title: string; label?: string; defaultValue?: string }>('plugins.uiPrompt', options =>
+    requestPromptFromRenderer(options),
+  );
 
-  ipcMain.on(
+  onFromPluginWindow<{ id: string; result?: unknown; error?: string }>(
     'plugins.invokeResult',
-    (event, { id, result, error }: { id: string; result?: unknown; error?: string }) => {
-      if (event.sender !== pluginWindow?.webContents) {
-        return;
-      }
+    ({ id, result, error }) => {
       const pending = pendingRequests.get(id);
       if (!pending) {
         return;
@@ -257,40 +294,38 @@ export function reloadPluginsInWindow() {
 }
 
 export function registerPluginIpcHandlers() {
-  ipcMain.handle('plugins.getThemes', () => invokeInPluginWindow('getThemes'));
-  ipcMain.handle('plugins.getPlugins', () => invokeInPluginWindow('getPlugins'));
-  ipcMain.handle('plugins.getActivePlugins', () => invokeInPluginWindow('getActivePlugins'));
-  ipcMain.handle('plugins.reloadPlugins', async () => {
+  handleFromMainWindow('plugins.getThemes', () => invokeInPluginWindow('getThemes'));
+  handleFromMainWindow('plugins.getPlugins', () => invokeInPluginWindow('getPlugins'));
+  handleFromMainWindow('plugins.getActivePlugins', () => invokeInPluginWindow('getActivePlugins'));
+  handleFromMainWindow('plugins.reloadPlugins', async () => {
     cachedHasRequestHooks = null;
     cachedHasResponseHooks = null;
     await invokeInPluginWindow('reloadPlugins');
   });
-  ipcMain.handle('plugins.getRequestActions', () => invokeInPluginWindow('getRequestActions'));
-  ipcMain.handle('plugins.getRequestGroupActions', () => invokeInPluginWindow('getRequestGroupActions'));
-  ipcMain.handle('plugins.getWorkspaceActions', () => invokeInPluginWindow('getWorkspaceActions'));
-  ipcMain.handle('plugins.getDocumentActions', () => invokeInPluginWindow('getDocumentActions'));
-  ipcMain.handle('plugins.executeAction', (_event, args) => invokeInPluginWindow('executeAction', args));
-  ipcMain.handle('plugins.getTemplateTags', () => invokeInPluginWindow('getTemplateTags'));
-  ipcMain.handle('plugins.runTemplateTagAction', (_event, args) => invokeInPluginWindow('runTemplateTagAction', args));
-  ipcMain.handle('plugins.getBundlePlugins', () => invokeInPluginWindow('getBundlePlugins'));
-  ipcMain.handle('plugins.executePluginMainAction', (_event, args) =>
-    invokeInPluginWindow('executePluginMainAction', args),
-  );
-  ipcMain.handle('plugins.hasRequestHooks', async () => {
+  handleFromMainWindow('plugins.getRequestActions', () => invokeInPluginWindow('getRequestActions'));
+  handleFromMainWindow('plugins.getRequestGroupActions', () => invokeInPluginWindow('getRequestGroupActions'));
+  handleFromMainWindow('plugins.getWorkspaceActions', () => invokeInPluginWindow('getWorkspaceActions'));
+  handleFromMainWindow('plugins.getDocumentActions', () => invokeInPluginWindow('getDocumentActions'));
+  handleFromMainWindow('plugins.executeAction', args => invokeInPluginWindow('executeAction', args));
+  handleFromMainWindow('plugins.getTemplateTags', () => invokeInPluginWindow('getTemplateTags'));
+  handleFromMainWindow('plugins.runTemplateTagAction', args => invokeInPluginWindow('runTemplateTagAction', args));
+  handleFromMainWindow('plugins.getBundlePlugins', () => invokeInPluginWindow('getBundlePlugins'));
+  handleFromMainWindow('plugins.executePluginMainAction', args => invokeInPluginWindow('executePluginMainAction', args));
+  handleFromMainWindow('plugins.hasRequestHooks', async () => {
     if (cachedHasRequestHooks === null) {
       cachedHasRequestHooks = (await invokeInPluginWindow('hasRequestHooks')) as boolean;
     }
     return cachedHasRequestHooks;
   });
-  ipcMain.handle('plugins.hasResponseHooks', async () => {
+  handleFromMainWindow('plugins.hasResponseHooks', async () => {
     if (cachedHasResponseHooks === null) {
       cachedHasResponseHooks = (await invokeInPluginWindow('hasResponseHooks')) as boolean;
     }
     return cachedHasResponseHooks;
   });
-  ipcMain.handle('plugins.applyRequestHooks', (_event, args) => invokeInPluginWindow('applyRequestHooks', args));
-  ipcMain.handle('plugins.applyResponseHooks', (_event, args) => invokeInPluginWindow('applyResponseHooks', args));
-  ipcMain.handle('plugins.getBridgeMetrics', () => getBridgeMetricsSnapshot());
+  handleFromMainWindow('plugins.applyRequestHooks', args => invokeInPluginWindow('applyRequestHooks', args));
+  handleFromMainWindow('plugins.applyResponseHooks', args => invokeInPluginWindow('applyResponseHooks', args));
+  handleFromMainWindow('plugins.getBridgeMetrics', () => getBridgeMetricsSnapshot());
 }
 
 export function getAppUserDataPath() {

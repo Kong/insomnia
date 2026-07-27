@@ -207,6 +207,80 @@ export const findLeakedGatedReferences = (entries: SurfaceEntry[]): string[] =>
     .filter(e => !!e.aliasOf && e.aliasOf.startsWith('globalThis.') && (e.root === 'context' || e.root.startsWith('require(')))
     .map(e => `${e.path} aliases ${e.aliasOf}`);
 
+/**
+ * The complete, reviewed set of sandbox-internal globals (`in-sandbox-bootstrap.ts`) exposed bare on
+ * `globalThis` so `RUNNER`/`DESCRIBE_RUNNER` — each a separate `ctx.evalCode` call, so they can only
+ * share state via `globalThis`, never lexical closure — can reach them. Locked against reassignment,
+ * but reachable (and callable) by plugin top-level code, same as any other global. `__buildContext`
+ * in particular returns a context wired to the real host bridge; discovery-time safety comes from
+ * `runTagInSandbox` substituting a rejecting bridge when `discover: true`, not from hiding this
+ * global. Adding a new one here forces a human to re-check that story still holds.
+ *
+ * `__invokeHook` (H1) is in this set: like `__invoke`, it wires a context to the real bridge, but
+ * during discovery the rejecting bridge is installed AND no hook is present to run (hookKind/hookIndex
+ * are unset), so a discovery-time call reaches nothing — re-checked and safe.
+ */
+export const SANDBOX_INTERNAL_GLOBALS = [
+  '__buildContext',
+  '__describeExports',
+  '__invoke',
+  '__invokeHook',
+  '__loadPluginEntry',
+  '__require',
+];
+
+/** Filters sandbox surface entries down to the bare `globalThis.__*` internals (excluding the `.prototype` sibling lines already in the snapshot). */
+export const findSandboxInternalGlobals = (entries: SurfaceEntry[]): string[] =>
+  entries
+    .filter(e => e.root === 'globalThis' && /^globalThis\.__[^.]+$/.test(e.path))
+    .map(e => e.path.slice('globalThis.'.length));
+
+/**
+ * Tier B-deep reachability probe (discovery-time bridge escape coverage): recursively walks every
+ * `globalThis`-reachable property (same walk/cycle-detection shape as `buildSurfaceProbeSource`) and
+ * additionally *invokes* every function found with a couple of generic argument shapes, then walks
+ * whatever it returns too — the real exploit shape is a bare `globalThis` function (`__buildContext`)
+ * whose return value exposes further bridge-backed functions several levels down. Meant to run as
+ * plugin top-level code during a `discover: true` run (no tag ever inserted). The authoritative check
+ * is the host-side recording bridge seeing zero calls; nothing here reports its own pass/fail — a
+ * bridge call from inside the sandbox is indistinguishable from any other promise-returning builtin.
+ */
+export const buildReachabilityProbeSource = (maxDepth = 2): string => `
+(function () {
+  var seen = [];
+  var genericArgs = [
+    [],
+    [{ pluginName: 'probe', context: {}, meta: {}, renderPurpose: 'preview', appInfo: {} }],
+  ];
+  function walk(obj, depth) {
+    if (depth > ${maxDepth}) { return; }
+    if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) { return; }
+    if (seen.indexOf(obj) !== -1) { return; }
+    seen.push(obj);
+    var names;
+    try { names = Object.getOwnPropertyNames(obj).sort(); } catch (e) { return; }
+    for (var i = 0; i < names.length; i++) {
+      var name = names[i];
+      if (name === 'length' || name === 'name' || name === 'prototype') { continue; }
+      var val;
+      try { val = obj[name]; } catch (e) { continue; }
+      if (typeof val === 'function') {
+        for (var a = 0; a < genericArgs.length; a++) {
+          try {
+            var r = val.apply(null, genericArgs[a]);
+            if (r && typeof r.then === 'function') { r.then(function () {}, function () {}); }
+            walk(r, 0);
+          } catch (e) { /* probing only - a thrown arity/shape mismatch is not a finding */ }
+        }
+      }
+      walk(val, depth + 1);
+    }
+  }
+  walk(globalThis, 0);
+})();
+module.exports.templateTags = [];
+`;
+
 const ESCAPE_PROBE_TAG_NAME = 'escapeProbe';
 
 // Checks whether `this`, Function('return this')(), ambient globals, or the process shim ever

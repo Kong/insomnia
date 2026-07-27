@@ -18,6 +18,8 @@ import { fuzzyMatchAll } from 'insomnia-data/common';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import type { FlatItem } from '~/ui/components/sidebar/project-navigation-sidebar/types';
+import { dedupeCollectionItems } from '~/ui/utils/dedupe-collection-items';
 
 export interface SlimRequestDoc extends BaseModel {
   type: 'Request' | 'GrpcRequest' | 'WebSocketRequest' | 'SocketIORequest' | 'RequestGroup';
@@ -53,6 +55,22 @@ export interface AllRequestsAndMetaInWorkspace {
 export type WorkspaceWithSyncStatus = Workspace & {
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
+};
+
+export const getSidebarGridListItemId = (item: FlatItem): string => {
+  const { kind, doc } = item;
+  const itemId = doc._id;
+  switch (kind) {
+    case 'pinnedRequest': {
+      return `pinned-request-${itemId}`;
+    }
+    case 'unsyncedWorkspace': {
+      return `project-${item.project._id}-unsynced-workspace-${itemId}`;
+    }
+    default: {
+      return itemId;
+    }
+  }
 };
 
 export async function getWorkspacesByProjectIds(projectIds: string[]) {
@@ -211,14 +229,7 @@ export function flattenCollectionChildren(
   const { isRequestGroup } = models.requestGroup;
   const collection: Child[] = [];
 
-  const seenIds = new Set<string>();
-  const uniqueRequests = allRequests.filter(doc => {
-    if (seenIds.has(doc._id)) {
-      return false;
-    }
-    seenIds.add(doc._id);
-    return true;
-  });
+  const uniqueRequests = dedupeCollectionItems(allRequests, doc => doc._id);
 
   // map of parentId to its direct children requests and request groups
   const requestsByParentId = new Map<string, AllRequestDoc[]>();

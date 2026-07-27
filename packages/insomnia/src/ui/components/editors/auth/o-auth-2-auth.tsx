@@ -166,6 +166,17 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       offTitle="Click to use default browser"
     />
   );
+  const launchBrowserAutomatically = (
+    <AuthToggleRow
+      label="Launch browser automatically"
+      property="launchBrowserManually"
+      key="launchBrowserManually"
+      help="Automatically launch the browser for OAuth authorization."
+      invert
+      onTitle="Click to launch browser manually"
+      offTitle="Click to launch browser automatically"
+    />
+  );
   const state = <AuthInputRow label="State" property="state" key="state" />;
   const scope = <AuthInputRow label="Scope" property="scope" key="scope" />;
   const username = <AuthInputRow label="Username" property="username" key="username" />;
@@ -232,6 +243,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
     resource,
     origin,
     credentialsInBody,
+    launchBrowserAutomatically,
   };
 };
 
@@ -333,6 +345,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     resource,
     origin,
     credentialsInBody,
+    launchBrowserAutomatically,
   } = getFields(authentication);
 
   const { grantType } = authentication;
@@ -366,7 +379,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
-    basic = [clientId, clientSecret, readonlyRedirectUri];
+    basic = [clientId, clientSecret, readonlyRedirectUri, launchBrowserAutomatically];
     advanced = [state, scope];
   }
 
