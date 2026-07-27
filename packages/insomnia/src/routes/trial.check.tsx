@@ -6,6 +6,11 @@ import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/settings.update';
 
+// only revalidate when call load(), not on every render
+export function shouldRevalidate() {
+  return false;
+}
+
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { id: sessionId } = await services.userSession.get();
 
