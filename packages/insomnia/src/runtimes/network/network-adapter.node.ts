@@ -127,16 +127,32 @@ export async function applyResponseHooks(
   const newResponse = clone(response);
   const newRequest = clone(renderedRequest);
   const pluginIndex = await import('../../plugins/index');
+  const { services } = await import('insomnia-data');
+  // The sandbox host (templating-worker-database) statically imports `electron`, so it's reachable
+  // only from an Electron process. This node runtime also backs the pure-Node inso CLI (no electron),
+  // where the sandbox is unavailable and hooks run in-process — gate on process.type accordingly.
+  const canSandbox = !!process.type;
+  const sandboxEnabled = canSandbox && (await services.settings.get()).templateTagSandboxEnabled;
+  const hookIndexByPlugin: Record<string, number> = {};
   for (const { plugin, hook } of await pluginIndex.getResponseHooks()) {
-    const context = {
-      ...(pluginApp.init() as Record<string, any>),
-      ...pluginData.init(renderedContext.getProjectId()),
-      ...(pluginStore.init(plugin) as Record<string, any>),
-      ...(pluginResponse.init(newResponse) as Record<string, any>),
-      ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
-      ...(pluginNetwork.init() as Record<string, any>),
-    };
+    const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);
     try {
+      if (sandboxEnabled && plugin.directory !== '') {
+        const { runResponseHookInSandbox } = await import('../../main/templating-worker-database');
+        // The hook rewrites the body via the response.setBody bridge (on-disk) and returns the
+        // mutated response fields (e.g. bytesContent); merge them so downstream sees the change.
+        const mutated = await runResponseHookInSandbox(plugin, hookIndex, newResponse, newRequest, renderedContext);
+        Object.assign(newResponse, mutated);
+        continue;
+      }
+      const context = {
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(renderedContext.getProjectId()),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginResponse.init(newResponse) as Record<string, any>),
+        ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
+      };
       await hook(context);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
