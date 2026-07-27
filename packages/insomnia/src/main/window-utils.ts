@@ -492,7 +492,7 @@ export function createWindow(): ElectronBrowserWindow {
           const msgBox = await dialog.showMessageBox({
             type: 'warning',
             title: 'App Data Folder',
-            message: 'This folder contains your live database, not a cache',
+            message: 'This folder contains your live database, not a cache.',
             detail: 'It holds your actual collections, projects, and environments. Deleting or modifying its contents will permanently delete your local data and cannot be undone.',
             buttons,
             defaultId: buttons.indexOf('Cancel'),
