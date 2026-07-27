@@ -143,7 +143,9 @@ test.describe('Environment Editor', () => {
     // (inserting the blank row) - if that click blurred the value cell too, the blur-flush
     // and the insert would be two separate writes fired by one gesture with no way to wait
     // between them, and the older one landing after the newer one silently drops the value.
-    await page.keyboard.press('Tab');
+    // Click away (rather than pressing Tab) to blur - Tab's target inside a CodeMirror
+    // instance isn't guaranteed to actually move focus out of the editor.
+    await page.locator('body').click();
     await waitForSync();
 
     // add second row: exampleObject (JSON type)
