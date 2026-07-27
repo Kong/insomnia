@@ -200,4 +200,30 @@ describe('test CookieJar', () => {
     cookieList.upsert(upsertedC1);
     expect(cookieList.one('c1')).toEqual(upsertedC1.valueOf());
   });
+
+  it('toObject returns {} when there are no cookies', () => {
+    expect(new CookieList([]).toObject()).toEqual({});
+    expect(new CookieObject(null).toObject()).toEqual({});
+  });
+
+  it('toObject returns a key-value map when there are cookies', () => {
+    const cookieList = new CookieList([new Cookie({ key: 'c1', value: 'v1' }), new Cookie({ key: 'c2', value: 'v2' })]);
+    expect(cookieList.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
+
+    const cookieObject = new CookieObject({
+      _id: '',
+      type: 'CookieJar',
+      parentId: '',
+      modified: 0,
+      created: 0,
+      isPrivate: false,
+      name: 'my jar',
+      cookies: [
+        { id: '1', key: 'c1', value: 'v1', domain: 'inso.com' },
+        { id: '2', key: 'c2', value: 'v2', domain: 'inso.com' },
+      ],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+    expect(cookieObject.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
+  });
 });

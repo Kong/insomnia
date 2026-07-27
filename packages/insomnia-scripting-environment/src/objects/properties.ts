@@ -394,7 +394,12 @@ export class PropertyList<T extends Property> {
 
   // TODO: unsupported yet
 
-  toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
+  toObject(
+    _excludeDisabled?: boolean,
+    _caseSensitive?: boolean,
+    _multiValue?: boolean,
+    _sanitizeKeys?: boolean,
+  ): Record<string, any> | Record<string, any>[] {
     // it just dump all properties of each element without arguments
     // then user is able to handle them by themself
     return this.list.map(elem => elem.toJSON());
