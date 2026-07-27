@@ -42,7 +42,6 @@ export type HandleChannels =
   | 'createPlugin'
   | 'curlRequest'
   | 'database.caCertificate.create'
-  | 'services.invoke'
   | 'services.caCertificate.create'
   | 'services.caCertificate.getById'
   | 'services.caCertificate.getByParentId'

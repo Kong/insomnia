@@ -555,9 +555,7 @@ if (process.contextIsolated) {
     '_dataServicesInvoke',
     (serviceName: string, methodName: string, ...args: unknown[]) => {
       const channel = resolveServicesInvokeChannel(serviceName, methodName);
-      return channel === 'services.invoke'
-        ? invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args)
-        : invokeWithNormalizedError(channel, ...args);
+      return invokeWithNormalizedError(channel, ...args);
     },
   );
   contextBridge.exposeInMainWorld('env', env);

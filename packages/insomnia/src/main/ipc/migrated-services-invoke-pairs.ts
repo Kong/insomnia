@@ -1,6 +1,8 @@
-// Single source of truth for which (serviceName, methodName) pairs have their own
-// `services.<serviceName>.<methodName>` IPC handler instead of routing through the generic
-// `services.invoke` gateway (see services-invoke-surface.ts, SERVICES-INVOKE-MIGRATION-PLAN.md).
+// Single source of truth for every (serviceName, methodName) pair that has its own
+// `services.<serviceName>.<methodName>` IPC handler (see services-invoke-surface.ts,
+// SERVICES-INVOKE-MIGRATION-PLAN.md). The generic reflection-based `services.invoke` gateway this
+// pairing used to fall back to has been removed — every real call site is expected to be a member of
+// this set, and resolving a pair that isn't throws rather than silently reopening that gateway.
 // Consulted by both the preload bridge and the non-isolated renderer proxy fallback so the two
 // transports can never pick a different channel for the same pair. No Node-only imports here — this
 // module is bundled into the renderer as well as the main process.
@@ -198,8 +200,13 @@ export const MIGRATED_SERVICES_INVOKE_PAIRS: ReadonlySet<string> = new Set<strin
   'oAuth2Token.update',
 ]);
 
-/** The IPC channel a `services.<serviceName>.<methodName>` call should use: the named channel once migrated, else the legacy generic gateway. */
-export const resolveServicesInvokeChannel = (serviceName: string, methodName: string): string =>
-  MIGRATED_SERVICES_INVOKE_PAIRS.has(`${serviceName}.${methodName}`)
-    ? `services.${serviceName}.${methodName}`
-    : 'services.invoke';
+/** The named IPC channel a `services.<serviceName>.<methodName>` call should use. Throws if the pair has no named handler — there is no generic gateway left to fall back to. */
+export const resolveServicesInvokeChannel = (serviceName: string, methodName: string): string => {
+  if (!MIGRATED_SERVICES_INVOKE_PAIRS.has(`${serviceName}.${methodName}`)) {
+    throw new Error(
+      `("${serviceName}", "${methodName}") has no named services IPC handler. ` +
+      'Add one instead of restoring generic dispatch.',
+    );
+  }
+  return `services.${serviceName}.${methodName}`;
+};

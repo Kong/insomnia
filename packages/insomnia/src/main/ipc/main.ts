@@ -783,12 +783,6 @@ export function registerMainHandlers() {
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
   });
-  ipcMainHandle('services.invoke', async (_, serviceName: string, methodName: string) => {
-    throw new Error(
-      `services.invoke is being retired: ("${serviceName}", "${methodName}") has no named handler. ` +
-      'Add one instead of restoring generic dispatch.',
-    );
-  });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
   });
