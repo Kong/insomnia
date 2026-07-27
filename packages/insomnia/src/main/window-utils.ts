@@ -486,9 +486,23 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
-        click: () => {
+        click: async () => {
           const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
-          shell.showItemInFolder(directory);
+          const buttons = ['Show Folder', 'Cancel'];
+          const msgBox = await dialog.showMessageBox({
+            type: 'warning',
+            title: 'App Data Folder',
+            message: 'This folder contains your live database, not a cache',
+            detail: 'It holds your actual collections, projects, and environments. Deleting or modifying its contents will permanently delete your local data and cannot be undone.',
+            buttons,
+            defaultId: buttons.indexOf('Cancel'),
+            cancelId: buttons.indexOf('Cancel'),
+            noLink: true,
+          });
+
+          if (msgBox.response === buttons.indexOf('Show Folder')) {
+            shell.showItemInFolder(directory);
+          }
         },
       },
       {
