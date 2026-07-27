@@ -41,7 +41,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@getinsomnia/node-libcurl": "3.2.2",
+    "@getinsomnia/node-libcurl": "3.3.0",
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@types/deep-equal": "^1.0.4",
     "mocha": "^11.7.5",
