@@ -83,6 +83,7 @@ export interface AuthTypeOAuth2 {
   usePkce?: boolean;
   pkceMethod?: string;
   responseType?: OAuth2ResponseType;
+  launchBrowserManually?: boolean;
   origin?: string;
 }
 export interface AuthTypeHawk {

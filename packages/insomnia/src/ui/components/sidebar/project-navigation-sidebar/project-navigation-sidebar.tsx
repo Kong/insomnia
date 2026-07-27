@@ -57,7 +57,6 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { dedupeCollectionItems } from '~/ui/utils/dedupe-collection-items';
 import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
 
 import { Icon } from '../../icon';
@@ -66,6 +65,7 @@ import {
   filterCollection,
   flattenCollectionChildren,
   getAllRequestsAndMetaByWorkspace,
+  getSidebarGridListItemId,
   getWorkspacesByProjectIds,
   type WorkspaceWithSyncStatus,
 } from './project-navigation-sidebar-utils';
@@ -75,9 +75,6 @@ import type { FlatItem } from './types';
 import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
-
-const getSidebarGridListItemId = (item: FlatItem): string =>
-  `${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`;
 
 interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
@@ -1002,10 +999,7 @@ const ProjectNavigationSidebarInner = (
   const [isShortcutCreateOpen, setIsShortcutCreateOpen] = useState(false);
   // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
-  const visibleFlatItems = useMemo(
-    () => dedupeCollectionItems(flatItems.filter(i => !i.hidden), getSidebarGridListItemId),
-    [flatItems],
-  );
+  const visibleFlatItems = useMemo(() => flatItems.filter(i => !i.hidden), [flatItems]);
   const virtualizer = useVirtualizer({
     getScrollElement: () => parentRef.current,
     count: visibleFlatItems.length,

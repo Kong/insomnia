@@ -760,3 +760,56 @@ test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox 
   // The second header mutation also round-tripped through the sandbox and reached the wire.
   await expect.soft(responsePane).toContainText('hook-marker-9k2x');
 });
+
+test('Response hook sandbox (H1): a user plugin response hook runs in the sandbox and rewrites the body', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // The response hook overwrites the response body with a canary that reports where it ran (the
+  // sandbox sets INSOMNIA_TEMPLATE_SANDBOX). setBody goes through the host bridge (base64) to the
+  // response's body file, so the rewritten body shows in the response pane.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-resp-hook-probe',
+    {},
+    `
+      module.exports.responseHooks = [
+        function (context) {
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+          context.response.setBody('resphook-rewrote-body:' + ranIn + ':status-' + context.response.getStatusCode());
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-hook-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Hook Request');
+  const responsePane = page.getByTestId('response-pane');
+
+  // Flag OFF (default): the response hook runs in-process (control) and rewrites the body.
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
+  await expect.soft(responsePane).toContainText('resphook-rewrote-body:ranin-mainprocess');
+
+  // Flag ON: the same hook now runs in the QuickJS sandbox; setBody bridges the new body to disk.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        return (await responsePane.textContent()) || '';
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('resphook-rewrote-body:ranin-sandboxed');
+});
