@@ -150,6 +150,49 @@ describe('request hooks in the sandbox (H1)', () => {
     expect((result.response as any)?.bytesContent).toBe('rewritten:201:text/plain:ORIGINAL'.length);
   });
 
+  it('awaits a fire-and-forget setBody in a sync hook before the sandbox is torn down', async () => {
+    // Regression: a synchronous response hook that calls setBody without awaiting it. Before the
+    // fix, __invokeHook returned before the async bridge call resolved, so the QuickJS runtime was
+    // freed while the promise was still alive, crashing with JS_FreeRuntime's
+    // list_empty(&rt->gc_obj_list) assertion (QuickJSUseAfterFree). The async bridge here resolves
+    // on a later microtask to reproduce that timing.
+    let setBodyCalled = false;
+    const bridge: HostBridge = path => {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          if (path === 'response.setBody') {
+            setBodyCalled = true;
+          }
+          resolve(null);
+        }, 0);
+      });
+    };
+    const envelope: ContextEnvelope = {
+      args: [],
+      context: {},
+      meta: {},
+      renderPurpose: 'send',
+      appInfo: { version: '0.0.0', platform: 'linux', arch: 'x64' },
+      pluginName: 'test-plugin',
+      renderDepth: 0,
+      grantedModules: [],
+      grantedCapabilities: [],
+      moduleFiles: {
+        'index.js': `module.exports.responseHooks = [function (context) {
+          context.response.setBody('fire-and-forget');
+        }];`,
+      },
+      entryModuleKey: 'index.js',
+      hookKind: 'response',
+      hookIndex: 0,
+      hookRequest: { url: 'https://x', method: 'GET', headers: [] },
+      hookResponse: { parentId: 'req_1', statusCode: 200, bodyPath: '/tmp/body' },
+    };
+    const json = await runTagInSandbox({ tagName: '', envelope, bridge });
+    JSON.parse(json) as HookResult;
+    expect(setBodyCalled).toBe(true);
+  });
+
   it('allows a granted capability: context.network is present when the manifest grants network', async () => {
     // With 'network' granted the branch exists; feature-detecting it as an object proves C2 attaches
     // the branch (the actual call would bridge to the host, which the unit test bridge rejects).

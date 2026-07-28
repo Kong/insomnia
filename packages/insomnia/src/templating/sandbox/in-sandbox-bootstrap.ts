@@ -120,14 +120,21 @@ export const IN_SANDBOX_BOOTSTRAP = [
 
   // --- the single async bridge helper ---
   // Capture then drop the global so plugin code can't call the raw bridge, bypassing context.*.
+  // Every call is tracked in __pendingBridges so __invokeHook can await fire-and-forget bridge
+  // calls (e.g. response.setBody) before the QuickJS runtime is torn down - otherwise the pending
+  // promise's callbacks reference freed GC objects and crash with JS_FreeRuntime's
+  // list_empty(&rt->gc_obj_list) assertion (QuickJSUseAfterFree).
   '  var __hostBridgeFn = globalThis.__hostBridge;',
   '  delete globalThis.__hostBridge;',
+  '  var __pendingBridges = [];',
   '  function __bridge(path, body) {',
-  '    return __hostBridgeFn(path, JSON.stringify(body || {})).then(function (raw) {',
+  '    var p = __hostBridgeFn(path, JSON.stringify(body || {})).then(function (raw) {',
   '      var res = JSON.parse(raw);',
   '      if (!res.ok) { throw new Error(res.error && res.error.message ? res.error.message : "host bridge error: " + path); }',
   '      return res.value;',
   '    });',
+  '    __pendingBridges.push(p);',
+  '    return p;',
   '  }',
 
   // --- a Response-like wrapper for network.sendRequestWithoutSideEffects ---
@@ -496,7 +503,11 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    for (var i = 0; i < tags.length; i++) { if (tags[i].name === __tag) { tag = tags[i]; break; } }',
   '    if (!tag) { throw new Error("Template tag \'" + __tag + "\' not found in plugin module"); }',
   '    var args = [ctx].concat(env.args || []);',
-  '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
+  '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) {',
+  '      return Promise.all(__pendingBridges).then(function () {',
+  '        return r == null ? "" : String(r);',
+  '      });',
+  '    });',
   '  };',
 
   // --- run a request/response hook (H1) and marshal the mutated request/response back out ---
@@ -519,7 +530,11 @@ export const IN_SANDBOX_BOOTSTRAP = [
   // ones the hook mutated.
   '    ctx.request = __buildRequestApi(env.hookRequest, isResponse);',
   '    if (isResponse) { ctx.response = __buildResponseApi(env.hookResponse); }',
-  '    return Promise.resolve(hook(ctx)).then(function () { return JSON.stringify({ request: env.hookRequest, response: env.hookResponse }); });',
+  '    return Promise.resolve(hook(ctx)).then(function () {',
+  '      return Promise.all(__pendingBridges).then(function () {',
+  '        return JSON.stringify({ request: env.hookRequest, response: env.hookResponse });',
+  '      });',
+  '    });',
   '  };',
 
   // --- describe the plugin's exports without running any of them (L1 load-time discovery) ---
