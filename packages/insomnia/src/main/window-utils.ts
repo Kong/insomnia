@@ -247,7 +247,9 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   // Load the html of the app.
-  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
+  const appUrl = process.env.NODE_ENV === 'development'
+    ? `http://localhost:${fs.readFileSync(path.resolve(__dirname, '..', '.vite-port'), 'utf8').trim()}`
+    : 'https://insomnia-app.local';
 
   console.log(`[main] Loading ${appUrl}`);
 
