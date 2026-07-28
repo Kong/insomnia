@@ -1,5 +1,5 @@
 import { models } from 'insomnia-data';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { useParams } from 'react-router';
 
 import {
@@ -8,7 +8,85 @@ import {
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 
-import { useLoaderDeferData } from './use-loader-defer-data';
+// ---------------------------------------------------------------------------
+// Shared, per-organization resolution store.
+//
+// The permissions loader returns deferred promises (`featuresPromise`,
+// `billingPromise`) shared across every consumer via the react-router fetcher
+// key. Previously each consumer unwrapped that promise into its own local
+// `useState` (via `useLoaderDeferData`), so the copies could desync: one
+// component's copy would resolve to the real value while another stayed on the
+// fallback. This store resolves each promise ONCE per organization and shares
+// the resolved value with all consumers through `useSyncExternalStore`, so they
+// always agree.
+// ---------------------------------------------------------------------------
+const createSharedDeferredStore = () => {
+  const values = new Map<string, unknown>();
+  const latest = new Map<string, Promise<unknown>>();
+  const listeners = new Map<string, Set<() => void>>();
+  const ingested = new WeakSet<Promise<unknown>>();
+
+  const notify = (key: string) => {
+    listeners.get(key)?.forEach(cb => cb());
+  };
+
+  return {
+    subscribe(key: string, cb: () => void) {
+      const set = listeners.get(key) ?? new Set<() => void>();
+      listeners.set(key, set);
+      set.add(cb);
+      return () => {
+        set.delete(cb);
+      };
+    },
+    getSnapshot(key: string) {
+      return values.get(key);
+    },
+    ingest(key: string, promise?: Promise<unknown>) {
+      if (!promise) {
+        return;
+      }
+      // Track the most recent promise for this key so an out-of-order older
+      // resolution can't overwrite a newer value.
+      latest.set(key, promise);
+      if (ingested.has(promise)) {
+        return;
+      }
+      ingested.add(promise);
+      promise.then(
+        value => {
+          if (latest.get(key) === promise) {
+            values.set(key, value);
+            notify(key);
+          }
+        },
+        () => {
+          // Ignore rejection; consumers fall back to their default value.
+        },
+      );
+    },
+  };
+};
+
+const permissionsStore = createSharedDeferredStore();
+
+/**
+ * Resolve a deferred promise through the shared store and return the resolved
+ * value (or `undefined` until it resolves). All consumers passing the same
+ * `key` read the same value and stay in sync.
+ */
+function useSharedDeferredData<T>(key: string, promise?: Promise<T>): T | undefined {
+  // Kick off resolution once per promise. Done in an effect to keep render pure;
+  // the store dedupes by promise identity so concurrent consumers are cheap.
+  useEffect(() => {
+    permissionsStore.ingest(key, promise);
+  }, [key, promise]);
+
+  return useSyncExternalStore(
+    useCallback(cb => permissionsStore.subscribe(key, cb), [key]),
+    () => permissionsStore.getSnapshot(key) as T | undefined,
+  );
+}
 
 export function useOrganizationPermissions() {
   const { organizationId } = useParams() as {
@@ -20,20 +98,23 @@ export function useOrganizationPermissions() {
   const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
 
   // Load organization permissions and features if they are not already loaded.
+  // Depend only on the stable `load` callback and the primitive state/data
+  // flags (not the whole fetcher object, which is re-created every render) so
+  // the loader is triggered once instead of on every render.
+  const { load, state, data } = permissionsFetcher;
   useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (organizationId && !models.organization.isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
-      permissionsFetcher.load({
+    if (organizationId && !models.organization.isScratchpadOrganizationId(organizationId) && state === 'idle' && !data) {
+      load({
         organizationId,
       });
     }
-  }, [organizationId, permissionsFetcher]);
+  }, [organizationId, load, state, data]);
 
   const { featuresPromise, billingPromise } = permissionsFetcher.data || {};
-  // Features and billing return a promise using react-router's defer() so we need to wait for the data to be available.
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
-
-  const [billing = fallbackBilling] = useLoaderDeferData(billingPromise, organizationId);
+  // Features and billing return a promise using react-router's defer(); resolve
+  // them through the shared store so every consumer sees the same value.
+  const features = useSharedDeferredData(`${organizationId}:features`, featuresPromise) ?? fallbackFeatures;
+  const billing = useSharedDeferredData(`${organizationId}:billing`, billingPromise) ?? fallbackBilling;
 
   return { features, billing };
 }
@@ -99,13 +180,15 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 
 export function useIsGitSyncEnabled(organizationId: string) {
   const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
-  const permissionsFetcherLoad = permissionsFetcher.load;
+  const { load, state, data } = permissionsFetcher;
   useEffect(() => {
-    permissionsFetcherLoad({
-      organizationId,
-    });
-  }, [organizationId, permissionsFetcherLoad]);
+    if (state === 'idle' && !data) {
+      load({
+        organizationId,
+      });
+    }
+  }, [organizationId, load, state, data]);
   const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
+  const features = useSharedDeferredData(`${organizationId}:features`, featuresPromise) ?? fallbackFeatures;
   return features.gitSync.enabled;
 }
