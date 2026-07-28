@@ -2,7 +2,7 @@ import type { CookieJar, Request, RequestAuthentication, RequestGroup, RequestHe
 import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from './try-interpolate';
 
 const { applyPathParametersToUrl } = models.request;
@@ -52,12 +52,7 @@ export async function renderRealtimeConnectPayload({
     return undefined;
   }
 
-  // getOrInheritHeaders drops disabled headers, so disabled User-Agent headers are only visible on the raw request/folder headers
-  const userAgentHeaders = [...requestGroups, request]
-    .flatMap(doc => doc.headers || [])
-    .filter(h => h.name?.toLowerCase() === 'user-agent');
-  const suppressUserAgent =
-    Boolean(request.disableUserAgentHeader) || (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled));
+  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
 
   const url = applyPathParametersToUrl(rendered.url, rendered.pathParameters);
 

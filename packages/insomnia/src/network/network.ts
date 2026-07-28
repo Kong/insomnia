@@ -111,6 +111,24 @@ export function getOrInheritHeaders({
     .sort(ascendingFirstIndexStringSort)
     .map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
+
+// determines if any user-agent header is disabled
+export function shouldSuppressUserAgent({
+  request,
+  requestGroups = [],
+}: {
+  request: Pick<Request | WebSocketRequest | SocketIORequest, 'headers' | 'disableUserAgentHeader'>;
+  requestGroups?: Pick<RequestGroup, 'headers'>[];
+}): boolean {
+  const userAgentHeaders = [...requestGroups, request]
+    .flatMap(doc => doc.headers || [])
+    .filter(h => h.name?.toLowerCase() === 'user-agent');
+  return (
+    Boolean(request.disableUserAgentHeader) ||
+    (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled))
+  );
+}
+
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
 export const fetchRequestGroupData = async (requestGroupId: string) => {
   const requestGroup = await services.requestGroup.getById(requestGroupId);
@@ -544,9 +562,9 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
         },
         iterationData: userUploadEnvironment
           ? {
-              name: userUploadEnvironment.name,
-              data: userUploadEnvironment.data || {},
-            }
+            name: userUploadEnvironment.name,
+            data: userUploadEnvironment.data || {},
+          }
           : undefined,
         execution: {
           ...execution, // keep some existing properties in the after-response script from the pre-request script

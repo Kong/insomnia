@@ -1169,3 +1169,17 @@ describe('getOrInheritHeaders', () => {
     expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
   });
 });
+
+describe('getRenderedRequestAndContext suppressUserAgent', () => {
+  it('suppresses default user-agent when a custom user-agent header is disabled', async () => {
+    const workspace = await services.workspace.create();
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_disabled_ua',
+      parentId: workspace._id,
+      url: 'http://localhost',
+      headers: [{ name: 'User-Agent', value: 'custom-xx', disabled: true }],
+    });
+
+    expect((await getRenderedRequest({ request })).suppressUserAgent).toBe(true);
+  });
+});
