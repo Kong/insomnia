@@ -60,8 +60,11 @@ const createSharedDeferredStore = () => {
             notify(key);
           }
         },
-        () => {
-          // Ignore rejection; consumers fall back to their default value.
+        err => {
+          // Consumers fall back to their default value, but keep the failure
+          // observable. This runs once per promise (deduped above), so it does
+          // not produce the previous per-consumer warning spam.
+          console.warn('Failed to load deferred permissions data', err);
         },
       );
     },
@@ -82,9 +85,11 @@ function useSharedDeferredData<T>(key: string, promise?: Promise<T>): T | undefi
     permissionsStore.ingest(key, promise);
   }, [key, promise]);
 
+  const getSnapshot = () => permissionsStore.getSnapshot(key) as T | undefined;
   return useSyncExternalStore(
     useCallback(cb => permissionsStore.subscribe(key, cb), [key]),
-    () => permissionsStore.getSnapshot(key) as T | undefined,
+    getSnapshot,
+    getSnapshot,
   );
 }
 
