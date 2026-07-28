@@ -91,6 +91,7 @@ import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
+import { registerTemplatingDbAuthIpcHandler } from './templating-db-auth';
 
 let lintProcess: Electron.UtilityProcess | null = null;
 
@@ -341,6 +342,9 @@ export interface RendererToMainBridgeAPI {
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
+  templatingDb: {
+    getAuthToken: () => Promise<string>;
+  };
   notifyPromptResult: (id: string, value: string | null) => void;
   vault: {
     encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
@@ -948,4 +952,5 @@ export function registerMainHandlers() {
   });
 
   registerPluginIpcHandlers();
+  registerTemplatingDbAuthIpcHandler();
 }

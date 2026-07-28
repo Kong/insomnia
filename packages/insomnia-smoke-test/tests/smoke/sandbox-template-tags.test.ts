@@ -121,7 +121,12 @@ const writePlugin = (dataPath: string, name: string, insomnia: unknown, indexJs:
 };
 
 // Seed the once-only guard for the persistent "Plugin system updated" toast (it intercepts pointer
-// events over the page) and dismiss any toast already in flight, before driving the UI.
+// events over the page) and dismiss any toast already in flight, before driving the UI. The toast
+// can re-render mid-dismiss (its DOM node gets swapped out during its exit transition), which made
+// a plain `.click()` here flake: Playwright's actionability wait would see the button go from
+// stable -> detached and retry forever, eventually blowing the whole test's timeout. `force: true`
+// skips that stability wait (fires the click at whatever is there right now), and the loop is
+// bounded by wall-clock time instead of trusting the button count to reach zero.
 const clearPluginToast = async (page: Page) => {
   await page.getByLabel('Import').waitFor();
   await page.evaluate(() => localStorage.setItem('plugin-system-changes-toast-shown', 'true'));
@@ -130,8 +135,9 @@ const clearPluginToast = async (page: Page) => {
     .first()
     .waitFor({ timeout: 3000 })
     .catch(() => {});
-  while ((await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click();
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline && (await dismissButtons.count()) > 0) {
+    await dismissButtons.first().click({ force: true, timeout: 500 }).catch(() => {});
   }
 };
 
@@ -159,21 +165,7 @@ test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sa
   insomnia,
 }) => {
   installProbePlugin(dataPath);
-
-  // The persistent "Plugin system updated" notification fires from a Root mount effect whenever
-  // user plugins exist on disk, and its toast region intercepts pointer events over the page.
-  // Seed its once-only guard so route remounts can't re-raise it, then clear any toast already
-  // in flight before driving the UI.
-  await page.getByLabel('Import').waitFor();
-  await page.evaluate(() => localStorage.setItem('plugin-system-changes-toast-shown', 'true'));
-  const dismissButtons = page.getByRole('button', { name: 'Dismiss' });
-  await dismissButtons
-    .first()
-    .waitFor({ timeout: 3000 })
-    .catch(() => {});
-  while ((await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click();
-  }
+  await clearPluginToast(page);
 
   // Import a collection whose request body contains the probe tags (the tags render as pills
   // lexically, so importing before the plugin is registered is fine).
@@ -486,4 +478,338 @@ test('Template tag sandbox: surface profile enforces the ceiling and warns manif
   // Ceiling: `credentials` is declared but above the template-tag profile ceiling, so it is not
   // granted — the cloudCredential branch is absent (a manifest can't self-escalate past the surface).
   await assertTagPreview('{% ceilingprobe', 'cloudCredential=undefined');
+});
+
+test('Template tag sandbox: vetted npm libraries (uuid, ajv) run when declared (M3)', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // Declares uuid; a second tag requires ajv WITHOUT declaring it (registry presence ≠ grant).
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-m3-uuid',
+    { permissions: { modules: ['uuid'] } },
+    `module.exports.templateTags = [
+      { name: 'uuidprobe', displayName: 'uuidprobe', args: [], async run() {
+        var uuid = require('uuid');
+        return 'uuid=' + (uuid.validate(uuid.v4()) ? 'ok' : 'bad');
+      } },
+      { name: 'ajvungranted', displayName: 'ajvungranted', args: [], async run() { return typeof require('ajv'); } }
+    ];`,
+  );
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-m3-ajv',
+    { permissions: { modules: ['ajv'] } },
+    `module.exports.templateTags = [{ name: 'ajvprobe', displayName: 'ajvprobe', args: [], async run() {
+      var Ajv = require('ajv');
+      var validate = new Ajv().compile({ type: 'object', properties: { n: { type: 'number' } }, required: ['n'] });
+      return (validate({ n: 1 }) ? 'valid' : 'invalid') + ',' + (validate({ n: 'x' }) ? 'valid' : 'invalid');
+    } }];`,
+  );
+
+  await clearPluginToast(page);
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  const fixture = await loadFixture('sandbox-vendored-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await enableSandbox(page);
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Vendored Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  const assertTagPreview = async (tagPrefix: string, expected: string) => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    await expect.soft(modal.getByLabel('Live Preview')).toContainText(expected);
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+  };
+
+  // Declared `uuid` → the bundled lib runs (v4 generated and validated by the same bundle).
+  await assertTagPreview('{% uuidprobe', 'uuid=ok');
+  // Declared `ajv` → schema compiled and both payloads validated by the bundled lib.
+  await assertTagPreview('{% ajvprobe', 'valid,invalid');
+  // ajv is IN the registry but this plugin didn't declare it — registry presence ≠ grant.
+  await assertTagPreview('{% ajvungranted', "Module 'ajv' not permitted by manifest");
+});
+
+// Write an extra file into an already-installed plugin's directory (for multi-file plugins).
+const writePluginFile = (dataPath: string, pluginName: string, relPath: string, contents: string) => {
+  const abs = path.join(dataPath, 'plugins', pluginName, relPath);
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, contents);
+};
+
+test('Template tag sandbox: multi-file plugins resolve relative requires and ignore their node_modules (M4)', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // A multi-file plugin: entry requires a sibling, a nested file, and a vetted registry lib (uuid).
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-multifile',
+    { permissions: { modules: ['uuid'] } },
+    // Relative requires are top-level (they resolve at both discovery and sandbox execution); the
+    // bare uuid require lives inside run() so plugin discovery (a real nodeRequire in main) doesn't
+    // need it on disk — it's a vetted registry module resolved only inside the sandbox.
+    `var util = require('./util');
+     var helper = require('./nested/helper');
+     module.exports.templateTags = [{ name: 'multifileprobe', displayName: 'multifileprobe', args: [], async run() {
+       var uuid = require('uuid');
+       return util.a() + '|' + helper.b() + '|' + (uuid.validate(uuid.v4()) ? 'id-ok' : 'id-bad');
+     } }];`,
+  );
+  writePluginFile(
+    dataPath,
+    'insomnia-plugin-multifile',
+    'util.js',
+    "module.exports.a = function () { return 'util-a'; };",
+  );
+  writePluginFile(
+    dataPath,
+    'insomnia-plugin-multifile',
+    'nested/helper.js',
+    "var deep = require('../util'); module.exports.b = function () { return 'helper-' + deep.a(); };",
+  );
+
+  // A plugin that ships its OWN node_modules/uuid returning 'evil' — must never be consulted; the
+  // bare require('uuid') resolves to the vetted registry bundle.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-poison',
+    { permissions: { modules: ['uuid'] } },
+    // Top-level require('uuid') deliberately resolves to this plugin's OWN fake node_modules/uuid at
+    // discovery time (so the plugin loads), but the sandbox — which never reads node_modules — binds
+    // the real vetted uuid from the registry. The two disagreeing is exactly the poison guarantee.
+    `var uuid = require('uuid');
+     module.exports.templateTags = [{ name: 'poisonprobe', displayName: 'poisonprobe', args: [], async run() {
+       var id = uuid.v4();
+       return id === 'evil' ? 'POISONED' : (uuid.validate(id) ? 'poison-real' : 'poison-bad');
+     } }];`,
+  );
+  writePluginFile(
+    dataPath,
+    'insomnia-plugin-poison',
+    'node_modules/uuid/index.js',
+    "module.exports = { v4: function () { return 'evil'; }, validate: function () { return true; } };",
+  );
+
+  await clearPluginToast(page);
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  const fixture = await loadFixture('sandbox-multifile-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await enableSandbox(page);
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Multi-file Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  const assertTagPreview = async (tagPrefix: string, expected: string) => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    await expect.soft(modal.getByLabel('Live Preview')).toContainText(expected);
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+  };
+
+  // Relative requires (sibling + nested + ../) all resolve, and the bare uuid require hits the registry.
+  await assertTagPreview('{% multifileprobe', 'util-a|helper-util-a|id-ok');
+  // The plugin's own node_modules/uuid ('evil') is never consulted — the real vetted uuid runs.
+  await assertTagPreview('{% poisonprobe', 'poison-real');
+});
+
+test('Plugin sandbox (L1): installing a user plugin no longer runs its top-level code on the host', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  const SENTINEL_PLUGIN = 'insomnia-plugin-l1-sentinel';
+  const sentinelPath = path.join(dataPath, 'plugins', SENTINEL_PLUGIN, 'sentinel.txt');
+
+  // The plugin's TOP-LEVEL code tries to write a file via a Node built-in. With the sandbox off, the
+  // loader nodeRequire()s the module on the host, so require('fs') works and the sentinel appears.
+  // With the sandbox on, exports are discovered by evaluating the source INSIDE the sandbox, where
+  // require('fs') is default-denied — so the write never happens, yet the tag still enumerates + runs.
+  // The try/catch keeps discovery from failing on the denied require, so the plugin still loads.
+  writePlugin(
+    dataPath,
+    SENTINEL_PLUGIN,
+    {},
+    `
+      try { require('fs').writeFileSync(__dirname + '/sentinel.txt', 'top-level-ran-on-host'); } catch (e) {}
+      module.exports.templateTags = [{
+        name: 'l1probe', displayName: 'L1 Probe', description: 'discovery marker', args: [],
+        async run() { return 'l1-tag-ran'; },
+      }];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-l1-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  // Flag OFF (default): the loader runs the plugin's top-level code on the host (control).
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+  expect.soft(fs.existsSync(sentinelPath), 'sandbox off: top-level code runs on the host').toBe(true);
+
+  // Flag ON: re-discover via the sandbox. Poll delete→reload→check so the just-toggled setting has
+  // time to propagate to the main process before we conclude the write did not recur.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        fs.rmSync(sentinelPath, { force: true });
+        await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+        return fs.existsSync(sentinelPath);
+      },
+      { timeout: 20_000 },
+    )
+    .toBe(false);
+
+  // Discovery still worked without host execution: the tag enumerates and runs in the sandbox.
+  await insomnia.navigationSidebar.clickRequestOrFolder('L1 Probe');
+  await page.getByText('Body', { exact: true }).click();
+  const readTagPreview = async (tagPrefix: string): Promise<string> => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    const preview = modal.getByLabel('Live Preview');
+    await expect.soft(preview).not.toHaveValue('rendering...');
+    const value = (await preview.inputValue()).trim();
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+    return value;
+  };
+  await expect.poll(() => readTagPreview('{% l1probe'), { timeout: 20_000 }).toContain('l1-tag-ran');
+});
+
+test('Request hook sandbox (H1): a user plugin request hook runs in the sandbox and mutates the request', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // The hook injects two headers, and the request targets the echo server, which reflects request
+  // headers into the response body. We assert on the header *values* (not names) because the echo
+  // lowercases header names but preserves values. X-Ran-In's value is the canary — the sandbox sets
+  // INSOMNIA_TEMPLATE_SANDBOX, the legacy in-process path does not — and the values are chosen so
+  // neither is a substring of the other (or of the marker), keeping the assertions unambiguous.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-hook-probe',
+    {},
+    `
+      module.exports.requestHooks = [
+        function (context) {
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+          context.request.setHeader('X-Ran-In', ranIn);
+          context.request.setHeader('X-Hook-Marker', 'hook-marker-9k2x');
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-hook-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Hook Request');
+  const responsePane = page.getByTestId('response-pane');
+
+  // Flag OFF (default): the hook runs in-process (control).
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
+  await expect.soft(responsePane).toContainText('ranin-mainprocess');
+
+  // Flag ON: the same hook now runs in the QuickJS sandbox, still mutating the request. Poll the send
+  // so the just-toggled setting has propagated before we assert the sandbox canary.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        return (await responsePane.textContent()) || '';
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('ranin-sandboxed');
+  // The second header mutation also round-tripped through the sandbox and reached the wire.
+  await expect.soft(responsePane).toContainText('hook-marker-9k2x');
+});
+
+test('Response hook sandbox (H1): a user plugin response hook runs in the sandbox and rewrites the body', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // The response hook overwrites the response body with a canary that reports where it ran (the
+  // sandbox sets INSOMNIA_TEMPLATE_SANDBOX). setBody goes through the host bridge (base64) to the
+  // response's body file, so the rewritten body shows in the response pane.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-resp-hook-probe',
+    {},
+    `
+      module.exports.responseHooks = [
+        function (context) {
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+          context.response.setBody('resphook-rewrote-body:' + ranIn + ':status-' + context.response.getStatusCode());
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-hook-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Hook Request');
+  const responsePane = page.getByTestId('response-pane');
+
+  // Flag OFF (default): the response hook runs in-process (control) and rewrites the body.
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
+  await expect.soft(responsePane).toContainText('resphook-rewrote-body:ranin-mainprocess');
+
+  // Flag ON: the same hook now runs in the QuickJS sandbox; setBody bridges the new body to disk.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        return (await responsePane.textContent()) || '';
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('resphook-rewrote-body:ranin-sandboxed');
 });

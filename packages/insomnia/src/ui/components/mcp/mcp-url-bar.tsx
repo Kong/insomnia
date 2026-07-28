@@ -261,6 +261,7 @@ export const McpUrlActionBar = ({
           <OneLineEditor
             id="mcp-url-bar"
             key={uniqueKey}
+            historyKey={`mcp-url-bar::${requestId}`}
             ref={oneLineEditorRef}
             onKeyDown={createKeybindingsHandler({
               Enter: () => handleSubmitRef.current(),

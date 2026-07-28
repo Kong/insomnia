@@ -156,7 +156,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
       <CodeEditor
         id="websocket-message-editor"
         showPrettifyButton
-        uniquenessKey={request._id}
+        historyKey={request._id}
         mode={previewMode}
         ref={editorRef}
         onChange={upsertPayloadWithValue}
@@ -401,6 +401,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                               readOnly={disabled}
                               key={activeRequest._id}
                               id={'key-value-editor__name' + pathParameter.name}
+                              historyKey={`path-param::${activeRequest._id}::${pathParameter.name}`}
                               placeholder="Parameter value"
                               defaultValue={pathParameter.value || ''}
                               onChange={name => {
@@ -482,6 +483,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
             key={uniqueKey}
+            historyKey={`websocket-description::${requestId}`}
             placeholder="Write a description"
             defaultValue={activeRequest.description}
             onChange={(description: string) => patchRequest(requestId, { description })}

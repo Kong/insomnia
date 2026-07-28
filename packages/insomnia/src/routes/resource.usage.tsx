@@ -23,6 +23,11 @@ function getLicenseUsage(sessionId: string, enterpriseId?: string | null) {
   return enterpriseId ? getEnterpriseLicenseUsage({ sessionId, enterpriseId }) : getAccountUsedSeats({ sessionId });
 }
 
+// only revalidate when call load(), not on every render
+export function shouldRevalidate() {
+  return false;
+}
+
 export async function clientLoader() {
   const { id: sessionId, accountId } = await services.userSession.get();
 

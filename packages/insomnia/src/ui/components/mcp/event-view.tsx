@@ -215,12 +215,13 @@ export const MessageEventView = ({ event }: Props) => {
             hideLineNumbers
             mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
             defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
-            uniquenessKey={event._id}
+            historyKey={event._id}
             ref={editorRef}
             filter={filter}
             updateFilter={handleSetFilter}
             filterHistory={filterHistory}
             readOnly
+            truncateLongLines
             autoPrettify
           />
         </div>

@@ -1,9 +1,39 @@
-import { services } from 'insomnia-data';
+import { services, type Workspace } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { database as db } from '~/common/database';
 
-import { checkAllProjectSyncStatus } from './project';
+import { checkAllProjectSyncStatus, getUnsyncedRemoteWorkspaces, type InsomniaFile } from './project';
+
+const mkRemoteFile = (id: string): InsomniaFile => ({
+  id,
+  name: `${id}-name`,
+  scope: 'unsynced',
+  label: 'Unsynced',
+  created: 0,
+  lastModifiedTimestamp: 0,
+});
+
+const mkWorkspace = (id: string): Workspace => ({ _id: id, scope: 'collection' }) as unknown as Workspace;
+
+describe('getUnsyncedRemoteWorkspaces', () => {
+  it('excludes a remote file once its workspace exists locally', () => {
+    const remoteFiles = [mkRemoteFile('wrk_downloaded'), mkRemoteFile('wrk_pending')];
+    const workspaces = [mkWorkspace('wrk_downloaded')];
+
+    const result = getUnsyncedRemoteWorkspaces(remoteFiles, workspaces);
+
+    expect(result.map(f => f.id)).toEqual(['wrk_pending']);
+  });
+
+  it('de-duplicates remote files sharing an id', () => {
+    const remoteFiles = [mkRemoteFile('wrk_dup'), mkRemoteFile('wrk_dup')];
+
+    const result = getUnsyncedRemoteWorkspaces(remoteFiles, []);
+
+    expect(result.map(f => f.id)).toEqual(['wrk_dup']);
+  });
+});
 
 describe('checkAllProjectSyncStatus', () => {
   beforeEach(async () => {

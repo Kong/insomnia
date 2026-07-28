@@ -1,6 +1,6 @@
 import type CodeMirror from 'codemirror';
 
-// Persisted CodeMirror state, cached by a stable `uniquenessKey` so it survives
+// Persisted CodeMirror state, cached by a stable `historyKey` so it survives
 // editor remounts (when a parent changes its React `key`). Used by both
 // CodeEditor and OneLineEditor. `history` is the undo/redo stack; the remaining
 // fields are only populated by the richer multi-line CodeEditor.
@@ -12,29 +12,32 @@ export interface CachedEditorState {
   marks?: Partial<CodeMirror.MarkerRange>[];
 }
 
-// Bounded LRU. Keys can be ephemeral (e.g. one per key-value pair id, minted per
-// row and never reused), so without a cap this would grow unboundedly for the
-// lifetime of the renderer, each entry retaining a CodeMirror history stack.
-// The cap only needs to cover editors that might remount roughly concurrently;
-// a few dozen is plenty, 100 is comfortably safe.
-const MAX_CACHED_EDITOR_STATES = 100;
+// The cache is primarily bounded by lifecycle purging (see purgeCachedEditorStates):
+// entries are dropped when their owning tab closes or their key-value row is
+// deleted, so it tracks live editors rather than growing forever. The LRU cap
+// below is only a safety backstop for entries no lifecycle event reaches. It must
+// be high enough that a single param/header-heavy request — which alone can mint a
+// few hundred keys (three per key-value row) — never evicts its own editors, and
+// that switching between several open tabs never evicts a still-open tab's undo
+// history. Each entry is a small CodeMirror history snapshot.
+const MAX_CACHED_EDITOR_STATES = 2000;
 // Map preserves insertion order, so the first key is the least-recently-used.
 const editorStates = new Map<string, CachedEditorState>();
 
-export const getCachedEditorState = (uniquenessKey: string): CachedEditorState | undefined => {
-  const state = editorStates.get(uniquenessKey);
+export const getCachedEditorState = (historyKey: string): CachedEditorState | undefined => {
+  const state = editorStates.get(historyKey);
   if (state) {
     // mark as most-recently-used
-    editorStates.delete(uniquenessKey);
-    editorStates.set(uniquenessKey, state);
+    editorStates.delete(historyKey);
+    editorStates.set(historyKey, state);
   }
   return state;
 };
 
-export const setCachedEditorState = (uniquenessKey: string, state: CachedEditorState): void => {
+export const setCachedEditorState = (historyKey: string, state: CachedEditorState): void => {
   // re-insert at the end so it counts as most-recently-used
-  editorStates.delete(uniquenessKey);
-  editorStates.set(uniquenessKey, state);
+  editorStates.delete(historyKey);
+  editorStates.set(historyKey, state);
   while (editorStates.size > MAX_CACHED_EDITOR_STATES) {
     const lruKey = editorStates.keys().next().value;
     if (lruKey === undefined) {
@@ -42,4 +45,20 @@ export const setCachedEditorState = (uniquenessKey: string, state: CachedEditorS
     }
     editorStates.delete(lruKey);
   }
+};
+
+// Lifecycle purge: drop every cached entry whose historyKey matches `shouldPurge`.
+// Used to reclaim history when the owning scope goes away — e.g. a closed tab
+// (purge keys that embed the closed request id) or a deleted key-value row (purge
+// that pair's keys) — so stale entries never accumulate or crowd out live editors.
+// Returns the number of entries removed.
+export const purgeCachedEditorStates = (shouldPurge: (historyKey: string) => boolean): number => {
+  let purged = 0;
+  for (const key of editorStates.keys()) {
+    if (shouldPurge(key)) {
+      editorStates.delete(key);
+      purged++;
+    }
+  }
+  return purged;
 };

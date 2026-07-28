@@ -288,7 +288,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
     const disableLogs = console.log;
-    console.log = () => {};
+    console.log = () => { };
     const scanResult = await importUtil.scanResources([
       {
         contentStr: content,
@@ -732,7 +732,9 @@ describe('MCP run deep-link import', () => {
 
   it('imports an MCP url into an MCP workspace and exposes its client', async () => {
     const project = await services.project.create();
-    const scanResult = await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const scanResult = await importUtil.scanResources([
+      { contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' },
+    ]);
 
     expect(scanResult[0].errors).toEqual([]);
     expect(scanResult[0].mcpRequests).toHaveLength(1);
@@ -746,5 +748,109 @@ describe('MCP run deep-link import', () => {
     expect(requests).toHaveLength(1);
     expect(models.mcpRequest.isMcpRequest(requests[0])).toBe(true);
     expect((requests[0] as McpRequest).url).toBe(mcpUrl);
+  });
+
+  it('findExistingImportedWorkspace returns the MCP client with the same URL', async () => {
+    const project = await services.project.create();
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const [workspace] = await importUtil.importResourcesToProject({ projectId: project._id });
+    const existingRequest = await services.mcpRequest.getByParentId(workspace._id);
+    expect(existingRequest?.url).toBe(mcpUrl);
+
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    const match = await importUtil.findExistingImportedWorkspace(project._id);
+    expect(match).toEqual({
+      workspace: expect.objectContaining({ _id: workspace._id, scope: 'mcp' }),
+      model: expect.objectContaining({ _id: existingRequest?._id, url: mcpUrl }),
+    });
+  });
+
+  it('findExistingImportedWorkspace returns undefined for a different MCP URL', async () => {
+    const project = await services.project.create();
+    await importUtil.scanResources([{ contentStr: mcpUrlToInsomniaV5Yaml(mcpUrl), oriFileName: 'mcp' }]);
+    await importUtil.importResourcesToProject({ projectId: project._id });
+
+    await importUtil.scanResources([
+      { contentStr: mcpUrlToInsomniaV5Yaml('https://mcp.example.com/other'), oriFileName: 'mcp' },
+    ]);
+    const match = await importUtil.findExistingImportedWorkspace(project._id);
+    expect(match).toBeUndefined();
+  });
+});
+
+describe('requiresNewWorkspace()', () => {
+  const base = { errors: [] as string[] };
+
+  it('returns false for collection-only imports', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        workspaces: [{ scope: 'collection' } as any],
+      }),
+    ).toBe(false);
+  });
+
+  it('returns false for request-only imports without workspaces', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        requests: [{ _id: 'req_1' } as any],
+      }),
+    ).toBe(false);
+  });
+
+  it.each(['mock-server', 'environment', 'design', 'mcp'] as const)(
+    'returns true when a %s workspace is present',
+    scope => {
+      expect(
+        importUtil.requiresNewWorkspace({
+          ...base,
+          workspaces: [{ scope } as any],
+        }),
+      ).toBe(true);
+    },
+  );
+
+  it('returns true when any non-collection workspace is mixed with collections', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        workspaces: [{ scope: 'collection' } as any, { scope: 'environment' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true for OpenAPI / Swagger scan results', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        type: { id: 'openapi3' } as any,
+      }),
+    ).toBe(true);
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        apiSpecs: [{ _id: 'spc_1' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true when mcpRequests are present', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        mcpRequests: [{ _id: 'mcp_1' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true for Postman environment scan results', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        type: { id: 'postman-environment' } as any,
+        environments: [{ _id: '__ENV_1__' } as any],
+      }),
+    ).toBe(true);
   });
 });

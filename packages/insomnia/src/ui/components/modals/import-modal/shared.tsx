@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
 import { type ProjectScopeKeys, scopeToLabelMap } from '~/common/get-workspace-label';
-import type { ScanResult } from '~/common/import';
+import { isApiSpecScanResult, type ScanResult } from '~/common/import';
 
 export const validImportExtensions = [
   'sh',
@@ -181,12 +181,6 @@ export const SupportedFormats = () => {
     </div>
   );
 };
-
-export function isApiSpecScanResult(scanResult: ScanResult) {
-  return (
-    (scanResult.apiSpecs?.length ?? 0) > 0 || scanResult.type?.id === 'openapi3' || scanResult.type?.id === 'swagger2'
-  );
-}
 
 function getWorkspaceCountsByScope(workspaces: { scope?: string }[], scanResult: ScanResult) {
   const defaultScope = isApiSpecScanResult(scanResult) ? 'design' : 'collection';

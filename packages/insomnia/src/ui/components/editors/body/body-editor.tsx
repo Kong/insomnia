@@ -148,7 +148,7 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
       return (
         <GraphQLEditor
           key={uniqueKey}
-          uniquenessKey={uniqueKey}
+          historyKey={uniqueKey}
           request={request}
           workspaceId={workspaceId}
           environmentId={environmentId}
@@ -159,7 +159,7 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
-          uniquenessKey={uniqueKey}
+          historyKey={uniqueKey}
           contentType={contentType || 'text/plain'}
           content={request.body.text || ''}
           onChange={handleRawChange}
