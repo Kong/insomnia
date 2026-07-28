@@ -18,6 +18,7 @@ import {
 import { checkNestedKeys, ensureKeyIsValid } from '~/common/utils/environment-utils';
 import { base64decode } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
+import { purgeCachedEditorStates } from '~/ui/components/.client/codemirror/editor-state-cache';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { generateId } from '../../../../common/misc';
@@ -303,6 +304,9 @@ export const EnvironmentKVEditor = ({
   };
 
   const handleDeleteItem = (id: string) => {
+    // Drop the deleted row's cached undo history (keyed on the pair id) so its
+    // ephemeral entries don't linger in the shared cache.
+    purgeCachedEditorStates(key => key.includes(id));
     onChange(persistedPairs.filter(d => d.id !== id));
   };
 
