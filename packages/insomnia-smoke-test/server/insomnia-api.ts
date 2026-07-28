@@ -492,6 +492,11 @@ export default function setup(app: Application) {
     });
   });
 
+  // GET /v3/users/me/onboarding
+  app.get('/v3/users/me/onboarding', (_req, res) => {
+    res.status(200).send({ is_new_signup: false, first_request_treatment: null });
+  });
+
   app.get('/v1/organizations/:orgId/features', (_req, res) => {
     res.status(200).send(organizationFeatures);
   });
