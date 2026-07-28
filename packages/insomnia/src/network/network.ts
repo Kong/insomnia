@@ -112,7 +112,7 @@ export function getOrInheritHeaders({
     .map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 
-// determines if any user-agent header is disabled
+// Determine whether the default User-Agent should be suppressed (explicitly disabled, or when all custom User-Agent headers are disabled).
 export function shouldSuppressUserAgent({
   request,
   requestGroups = [],
