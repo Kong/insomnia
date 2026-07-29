@@ -87,12 +87,24 @@ export const EnvironmentKVEditor = ({
   // ourselves; the effect below still re-syncs from `data` for changes that didn't originate
   // here (e.g. switching to a different environment).
   const [persistedPairs, setPersistedPairs] = useState<EnvironmentKvPairData[]>(() => dedupe(data));
+  // Every array we've ever handed to onChange, so the resync effect below can recognize its
+  // own writes echoing back through the `data` prop. Without this, two edits fired close
+  // together (each awaited individually, e.g. a smoke test asserting the row count after
+  // each one) could still race on a slow round trip: the first edit's persistence resolves
+  // and updates `data` *after* the second edit already advanced local state, and the effect
+  // would silently revert persistedPairs to that now-stale echo, dropping the second edit.
+  const sentSnapshotsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    const incoming = JSON.stringify(data);
+    if (sentSnapshotsRef.current.has(incoming)) {
+      return;
+    }
     setPersistedPairs(dedupe(data));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(data)]);
   const commitPairs = (next: EnvironmentKvPairData[]) => {
     setPersistedPairs(next);
+    sentSnapshotsRef.current.add(JSON.stringify(next));
     onChange(next);
   };
   const blankNameEditorRef = useRef<OneLineEditorHandle | null>(null);
