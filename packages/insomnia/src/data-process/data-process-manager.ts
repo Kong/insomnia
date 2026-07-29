@@ -10,7 +10,7 @@ import { deserializeValue } from './serialization';
 
 let child: UtilityProcess | null = null;
 
-const MAX_RESTARTS = 5;
+const MAX_RESTARTS = 10;
 const RESTART_WINDOW_MS = 60_000;
 let restartCount = 0;
 let lastRestartTime = 0;
