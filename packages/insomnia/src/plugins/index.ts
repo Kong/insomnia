@@ -19,7 +19,8 @@ import type {
   WorkspaceAction,
 } from '~/common/plugins/types';
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
-import type { RenderPurpose } from '~/common/templating/types';
+import type { PluginTemplateTag, RenderPurpose } from '~/common/templating/types';
+import type { ActionDescriptor, PluginExportManifest } from '~/templating/sandbox/marshal';
 
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import * as pluginApp from '../plugins/context/app';
@@ -51,7 +52,66 @@ export async function init() {
   await reloadPlugins();
 }
 
-async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: string[], allConfigs: PluginConfigMap) {
+// Build a user plugin's `module` from the sandbox-discovered export manifest (L1). Only descriptors
+// cross from the sandbox — no live functions. Execution is routed separately: a template tag's
+// `run()` goes through the sandbox bridge (`plugin.executeUserPluginTag`), so the stub `run` here is
+// never called while the sandbox is on. Hook/action invocation isn't sandbox-routed yet, so those
+// function members throw a clear error until that lands (PR 10/11); the plugin's tags/hooks/actions
+// still *enumerate* in the UI from these descriptors.
+// Run sandbox export discovery for a user plugin. getPlugins/traversePluginPath runs in BOTH the
+// main process (via getTemplateTags in templating-worker-database) and the plugin window, so the
+// discovery has to reach the sandbox from either. In main we call the sandbox directly — the
+// `insomnia-templating-worker-database://` protocol is a renderer<->main channel and main's own
+// `fetch` can't resolve it. In a renderer (the plugin window) we go over that protocol.
+async function discoverUserPluginExports(
+  directory: string,
+  name: string,
+  permissions: Plugin['permissions'],
+): Promise<PluginExportManifest> {
+  const body = { directory, name, permissions };
+  if (__IS_RENDERER__) {
+    return (await fetchFromTemplateWorkerDatabase('plugin.discoverUserPluginExports', body)) as PluginExportManifest;
+  }
+  const { discoverUserPluginExportsForLoader } = await import('~/main/templating-worker-database');
+  return discoverUserPluginExportsForLoader(body);
+}
+
+function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginExportManifest): Plugin['module'] {
+  const notRouted = (surface: string) => () => {
+    throw new Error(
+      `Plugin "${pluginName}": sandboxed ${surface} are not supported yet. Disable "Run template tags in sandbox" to use them.`,
+    );
+  };
+  const toAction = (surface: string) => (a: ActionDescriptor) => ({
+    label: a.label ?? '',
+    icon: a.icon,
+    action: notRouted(surface),
+  });
+  // The count comes from untrusted sandbox output; clamp to a finite, non-negative, bounded integer
+  // before allocating so a hostile manifest can't drive a huge Array.from allocation (the sandbox
+  // clamps too — this is defense in depth).
+  const hookStubs = (count: number, surface: string) =>
+    Array.from({ length: Number.isFinite(count) && count > 0 ? Math.min(Math.floor(count), 1000) : 0 }, () =>
+      notRouted(surface),
+    );
+  return {
+    templateTags: manifest.templateTags.map(t => ({ ...t, run: notRouted('template-tag run()') }) as PluginTemplateTag),
+    requestHooks: hookStubs(manifest.requestHooks, 'request hooks'),
+    responseHooks: hookStubs(manifest.responseHooks, 'response hooks'),
+    requestActions: manifest.requestActions.map(toAction('request actions')),
+    requestGroupActions: manifest.requestGroupActions.map(toAction('request group actions')),
+    workspaceActions: manifest.workspaceActions.map(toAction('workspace actions')),
+    documentActions: manifest.documentActions.map(toAction('document actions')),
+    themes: manifest.themes,
+  } as Plugin['module'];
+}
+
+async function traversePluginPath(
+  pluginMap: Record<string, Plugin>,
+  allPaths: string[],
+  allConfigs: PluginConfigMap,
+  sandboxEnabled: boolean,
+) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
       continue;
@@ -71,7 +131,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
 
         // Is it a scoped directory?
         if (filename.startsWith('@')) {
-          await traversePluginPath(pluginMap, [modulePath], allConfigs);
+          await traversePluginPath(pluginMap, [modulePath], allConfigs, sandboxEnabled);
         }
 
         // Is it a Node module?
@@ -100,6 +160,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           }
         }
 
+        // package.json is plain data — requiring it runs no plugin code (unlike the module below).
         const pluginJson = nodeRequire(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
@@ -107,13 +168,21 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           continue;
         }
 
-        // Delete require cache entry and re-require
-        const module = nodeRequire(modulePath);
-
         const parsedPermissions = parsePluginPermissions(pluginJson.insomnia);
         if (parsedPermissions.warnings.length > 0) {
           // Constant format string; interpolated values passed as args so a plugin name can't forge log output.
           console.warn('[plugin] %s has invalid insomnia.permissions: %o', pluginJson.name, parsedPermissions.warnings);
+        }
+
+        // L1: with the sandbox on, discover a user plugin's exports by evaluating its source *inside*
+        // the sandbox (main process) instead of nodeRequire-ing it here — so installing/enabling it
+        // never runs its top-level code with host (Node) privileges. Off → legacy in-process require.
+        let module: Plugin['module'];
+        if (sandboxEnabled) {
+          const manifest = await discoverUserPluginExports(modulePath, pluginJson.name, parsedPermissions.permissions);
+          module = buildUserPluginModuleFromManifest(pluginJson.name, manifest);
+        } else {
+          module = nodeRequire(modulePath);
         }
 
         pluginMap[pluginJson.name] = {
@@ -166,7 +235,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
-    await traversePluginPath(pluginMap, allPaths, allConfigs);
+    await traversePluginPath(pluginMap, allPaths, allConfigs, settings.templateTagSandboxEnabled);
     const bundlePluginMap = getBundlePluginMap();
     const fullPluginMap = { ...pluginMap, ...bundlePluginMap };
     plugins = Object.keys(fullPluginMap).map(name => fullPluginMap[name]);

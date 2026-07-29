@@ -87,7 +87,11 @@ export async function buildRenderContext({
   }
 
   if (subEnvironment) {
-    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(
+      subEnvironment.data,
+      subEnvironment.dataPropertyOrder ?? null,
+      JSON_ORDER_SEPARATOR,
+    );
     envObjects.push(ordered);
   }
 
@@ -428,19 +432,26 @@ export async function getRenderContext({
   const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
 
   if (rootGlobalEnvironment) {
-    getKeySource(rootGlobalEnvironment.data || {}, inKey, 'rootGlobal');
+    getKeySource(rootGlobalEnvironment.data || {}, inKey, rootGlobalEnvironment.name || 'Base Environment (Project)');
   }
 
   if (subGlobalEnvironment) {
-    getKeySource(subGlobalEnvironment.data || {}, inKey, 'subGlobal');
+    getKeySource(
+      subGlobalEnvironment.data || {},
+      inKey,
+      `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`,
+    );
   }
 
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, 'root');
+  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment (Collection)');
 
-  // Get Keys from sub environment
-  if (subEnvironment) {
-    getKeySource(subEnvironment.data || {}, inKey, subEnvironment.name || '');
+  if (subEnvironment && subEnvironment._id !== rootEnvironment?._id) {
+    getKeySource(
+      subEnvironment.data || {},
+      inKey,
+      `${subEnvironment.name || 'Environment'} (Collection Sub-Environment)`,
+    );
   }
 
   // Get Keys from ancestors (e.g. Folders)

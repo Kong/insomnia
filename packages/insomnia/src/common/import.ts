@@ -137,6 +137,21 @@ export interface ScanResult {
   errors: string[];
 }
 
+export function isApiSpecScanResult(scanResult: ScanResult) {
+  return (
+    (scanResult.apiSpecs?.length ?? 0) > 0 || scanResult.type?.id === 'openapi3' || scanResult.type?.id === 'swagger2'
+  );
+}
+
+export function requiresNewWorkspace(scanResult: ScanResult) {
+  return (
+    isApiSpecScanResult(scanResult) ||
+    scanResult.type?.id === postmanEnvImporterId ||
+    (scanResult.mcpRequests?.length ?? 0) > 0 ||
+    !!scanResult.workspaces?.some(w => w.scope !== 'collection')
+  );
+}
+
 interface ResourceCacheType {
   content: string;
   resources: BaseModel[];

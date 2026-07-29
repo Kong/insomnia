@@ -20,6 +20,7 @@ import type {
 import { models, services } from 'insomnia-data';
 import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
+import { LARGE_RESPONSE_MB } from '~/common/constants';
 import { database } from '~/common/database';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -169,8 +170,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (activeResponse && 'bodyPath' in activeResponse) {
     // read the body if its smaller than the limit add it to the activeResponse
     const length = Math.max(activeResponse.bytesContent, activeResponse.bytesRead);
-    const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
-    // Oversized repsonses are handled in the response-viewer.tsx for now
+    const isOversizedResponse = length > LARGE_RESPONSE_MB * 1024 * 1024;
+    // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
       const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? undefined : buffer;
