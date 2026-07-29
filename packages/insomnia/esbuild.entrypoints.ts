@@ -1,4 +1,5 @@
 import { type ChildProcess, spawn } from 'node:child_process';
+import fs from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 
@@ -24,6 +25,10 @@ export default async function build(options: Options) {
   const mode = options.mode || 'production';
   const __DEV__ = mode !== 'production';
   const autoRestart = options.autoRestart || false;
+
+  if (__DEV__) {
+    try { fs.unlinkSync(path.join(__dirname, '.vite-port')); } catch {}
+  }
 
   const outdir = __DEV__ ? path.join(__dirname, 'src') : path.join(__dirname, 'build');
 

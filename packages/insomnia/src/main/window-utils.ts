@@ -247,9 +247,18 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   // Load the html of the app.
-  const appUrl = process.env.NODE_ENV === 'development'
-    ? `http://localhost:${fs.readFileSync(path.resolve(__dirname, '..', '.vite-port'), 'utf8').trim()}`
-    : 'https://insomnia-app.local';
+  let appUrl: string;
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const port = fs.readFileSync(path.resolve(__dirname, '..', '.vite-port'), 'utf8').trim();
+      appUrl = `http://localhost:${port}`;
+    } catch {
+      console.warn('[main] .vite-port not found, falling back to default port 3334');
+      appUrl = 'http://localhost:3334';
+    }
+  } else {
+    appUrl = 'https://insomnia-app.local';
+  }
 
   console.log(`[main] Loading ${appUrl}`);
 
