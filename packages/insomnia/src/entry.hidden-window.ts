@@ -21,7 +21,9 @@ Sentry.init({
 });
 
 // Initialize data bridge for hidden renderer process
-const initPromise = initDataBridge(window.invokeDataPort);
+const initPromise = initDataBridge(window.invokeDataPort, {
+  database: { init: async () => {}, onChange: () => {} },
+});
 initRuntime(rendererRuntime);
 
 window.bridge.onmessage(

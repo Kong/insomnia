@@ -27,6 +27,7 @@ export async function initDataBridge(
   await initDatabase(
     new Proxy((options?.database ?? {}) as IDatabase, {
       get(target, prop) {
+        if (typeof prop === 'symbol') return;
         if (prop in target) return target[prop as keyof IDatabase];
         return (...args: unknown[]) => invoke('database', prop as string, ...args);
       },
@@ -35,9 +36,11 @@ export async function initDataBridge(
 
   initServices(
     new Proxy({} as Services, {
-      get(_target, serviceName: string) {
+      get(_target, serviceName: string | symbol) {
+        if (typeof serviceName === 'symbol') return;
         return new Proxy({}, {
-          get(_target, methodName: string) {
+          get(_target, methodName: string | symbol) {
+            if (typeof methodName === 'symbol') return;
             return (...args: unknown[]) => invoke('services', `${serviceName}.${methodName}`, ...args);
           },
         });

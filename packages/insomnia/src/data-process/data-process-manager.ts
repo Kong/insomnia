@@ -10,6 +10,11 @@ import { deserializeValue } from './serialization';
 
 let child: UtilityProcess | null = null;
 
+const MAX_RESTARTS = 5;
+const RESTART_WINDOW_MS = 60_000;
+let restartCount = 0;
+let lastRestartTime = 0;
+
 const mainProcessChangeListeners: ChangeListener[] = [];
 let deepLinkHandler: ((uri: string) => void) | null = null;
 
@@ -28,7 +33,7 @@ function getDataProcessPath(): string {
 // Messages from a UtilityProcess arrive as the raw value passed to
 // process.parentPort.postMessage() on the child side - NOT wrapped in
 // an { data: ... } envelope.  Use this helper to cast safely.
-function msgOf(event: Electron.MessageEvent): Record<string, unknown> {
+function castMessageEvent(event: Electron.MessageEvent): Record<string, unknown> {
   return event as unknown as Record<string, unknown>;
 }
 
@@ -53,7 +58,7 @@ export async function spawnDataProcess(dbPath: string): Promise<void> {
     }, 30_000);
 
     const onMessage = (event: Electron.MessageEvent) => {
-      const msg = msgOf(event);
+      const msg = castMessageEvent(event);
       if (msg.type === 'ready') {
         clearTimeout(timeout);
         child!.off('message', onMessage);
@@ -89,7 +94,7 @@ export async function spawnDataProcess(dbPath: string): Promise<void> {
   console.log('[data-process] main-process RPC port attached');
 
   child.on('message', (event: Electron.MessageEvent) => {
-    const msg = msgOf(event);
+    const msg = castMessageEvent(event);
     if (msg.type === 'db.changes') {
       const changes = deserializeValue(msg.changes) as ChangeBufferEvent[];
       BrowserWindow.getAllWindows().forEach(w => {
@@ -119,16 +124,33 @@ export function issuePort(window: BrowserWindow): void {
 }
 
 function handleExit(dbPath: string): void {
-  console.warn('[data-process] restarting...');
+  const now = Date.now();
+  if (now - lastRestartTime > RESTART_WINDOW_MS) {
+    restartCount = 0;
+  }
+  lastRestartTime = now;
+  restartCount++;
+
+  if (restartCount > MAX_RESTARTS) {
+    console.error(`[data-process] exceeded ${MAX_RESTARTS} restarts within ${RESTART_WINDOW_MS / 1000}s - giving up`);
+    mainRpc.invalidate('data-process crashed and could not be restarted');
+    return;
+  }
+
+  const delay = Math.min(1000 * 2 ** (restartCount - 1), 10_000);
+  console.warn(`[data-process] restarting in ${delay}ms (attempt ${restartCount}/${MAX_RESTARTS})...`);
   mainRpc.invalidate('data-process restarting');
   BrowserWindow.getAllWindows().forEach(w => w.webContents.send('data-process.restarting'));
   child = null;
-  spawnDataProcess(dbPath)
-    .then(() => {
-      console.log('[data-process] restarted, re-issuing ports');
-      BrowserWindow.getAllWindows().forEach(w => issuePort(w));
-    })
-    .catch(e => {
-      console.error('[data-process] failed to restart:', e);
-    });
+  setTimeout(() => {
+    spawnDataProcess(dbPath)
+      .then(() => {
+        console.log('[data-process] restarted, re-issuing ports');
+        restartCount = 0;
+        BrowserWindow.getAllWindows().forEach(w => issuePort(w));
+      })
+      .catch(e => {
+        console.error('[data-process] failed to restart:', e);
+      });
+  }, delay);
 }
