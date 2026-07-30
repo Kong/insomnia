@@ -31,6 +31,7 @@ import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
 import { registerCookieHandlers } from './main/ipc/cookies';
+import { registerDevPortalHandlers } from './main/ipc/dev-portal';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
@@ -110,6 +111,7 @@ app.on('ready', async () => {
   registerSecretStorageHandlers();
   registerElectronStorageHandlers();
   registerSyncHandlers();
+  registerDevPortalHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
@@ -123,7 +125,9 @@ app.on('ready', async () => {
   disableSpellcheckerDownload();
 
   // Default-deny web-API permissions; only allow-listed ones are granted (see permission-policy.ts).
-  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => callback(isPermissionAllowed(permission)));
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) =>
+    callback(isPermissionAllowed(permission)),
+  );
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(permission));
 
   if (isDevelopment()) {

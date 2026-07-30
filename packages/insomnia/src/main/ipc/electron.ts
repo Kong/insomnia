@@ -42,6 +42,7 @@ export type HandleChannels =
   | 'createPlugin'
   | 'curlRequest'
   | 'database.caCertificate.create'
+  | 'devPortal.oauthLogin'
   | 'services.invoke'
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'generateCommitsFromDiff'

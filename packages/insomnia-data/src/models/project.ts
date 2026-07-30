@@ -21,6 +21,68 @@ export const EMPTY_GIT_PROJECT_ID = 'empty';
 export const PROTECTED_GIT_REPO_PREFIX = 'gr_';
 const REAL_GIT_REPO_PREFIX = 'git_';
 
+export type KonnectDeploymentType = 'selfManaged' | 'serverless' | 'dedicatedCloud' | 'group' | 'k8sIngressController';
+
+interface CommonProject {
+  name: string;
+  mcpStdioAccess?: boolean;
+  konnectControlPlaneId?: string | null;
+  konnectClusterType?: string | null;
+  konnectDeploymentType?: KonnectDeploymentType | null;
+  konnectRegion?: string | null;
+}
+
+export interface DevPortalOAuthClient {
+  clientId: string;
+  clientName: string;
+  clientSecretEncrypted: string;
+  clientSecretExpiresAt: number;
+  registrationEndpoint: string;
+  authorizationEndpoint: string;
+  tokenEndpoint: string;
+  registeredAt: number;
+}
+
+export interface DevPortalOAuthToken {
+  // safeStorage-encrypted
+  accessTokenEncrypted: string;
+  refreshTokenEncrypted?: string;
+  idTokenEncrypted?: string;
+  tokenType: string;
+  expiresAt: number;
+  obtainedAt: number;
+  error?: string;
+  errorDescription?: string;
+}
+
+export interface DevPortalProject extends BaseModel, CommonProject {
+  devPortalName: string;
+  devPortalUrl: string;
+  // dev portal remote id is the dev portal entity in backend to distinguish the project from other dev portal projects
+  devPortalRemoteId: string;
+  remoteId: null;
+  gitRepositoryId: null;
+  devPortalOAuthClient?: DevPortalOAuthClient | null;
+  devPortalOAuthToken?: DevPortalOAuthToken | null;
+}
+
+export interface RemoteProject extends BaseModel, CommonProject {
+  remoteId: string;
+  gitRepositoryId: null;
+}
+
+export interface LocalProject extends BaseModel, CommonProject {
+  remoteId: null;
+  gitRepositoryId: null;
+}
+
+export interface GitProject extends BaseModel, CommonProject {
+  gitRepositoryId: string;
+  remoteId: null;
+}
+
+export type Project = LocalProject | RemoteProject | GitProject | DevPortalProject;
+
 /**
  * Decode a raw gitRepositoryId string to the real GitRepository._id.
  * Handles both the protected ('gr_xxx') and legacy ('git_xxx') formats.
@@ -85,40 +147,26 @@ export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is 
 export const isGitProject = (project: Project): project is GitProject =>
   'gitRepositoryId' in project && (project.gitRepositoryId !== null || isEmptyGitProject(project));
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
-
-export type KonnectDeploymentType = 'selfManaged' | 'serverless' | 'dedicatedCloud' | 'group' | 'k8sIngressController';
-
-interface CommonProject {
-  name: string;
-  mcpStdioAccess?: boolean;
-  konnectControlPlaneId?: string | null;
-  konnectClusterType?: string | null;
-  konnectDeploymentType?: KonnectDeploymentType | null;
-  konnectRegion?: string | null;
-}
-
-export interface RemoteProject extends BaseModel, CommonProject {
-  remoteId: string;
-  gitRepositoryId: null;
-}
-
-export interface LocalProject extends BaseModel, CommonProject {
-  remoteId: null;
-  gitRepositoryId: null;
-}
-
-export interface GitProject extends BaseModel, CommonProject {
-  gitRepositoryId: string;
-  remoteId: null;
-}
-
-export type Project = LocalProject | RemoteProject | GitProject;
+export const isDevPortalProject = (project: Project): project is DevPortalProject =>
+  'devPortalRemoteId' in project && project.devPortalRemoteId !== null;
+export const isControlPlaneProject = (project: Project) =>
+  'konnectControlPlaneId' in project && project.konnectControlPlaneId !== null;
 
 export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => model.type === type;
 
 export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
-export const optionalKeys = ['konnectControlPlaneId', 'konnectClusterType', 'konnectDeploymentType', 'konnectRegion'];
+export const optionalKeys: (keyof LocalProject | keyof RemoteProject | keyof GitProject | keyof DevPortalProject)[] = [
+  'konnectControlPlaneId',
+  'konnectClusterType',
+  'konnectDeploymentType',
+  'konnectRegion',
+  'devPortalName',
+  'devPortalUrl',
+  'devPortalRemoteId',
+  'devPortalOAuthClient',
+  'devPortalOAuthToken',
+];
 
 export function init(): Partial<Project> {
   return {

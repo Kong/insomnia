@@ -75,13 +75,13 @@ export const PKCE_CHALLENGE_PLAIN = 'plain';
 
 export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';
 
-const showOAuthAuthorizationModal = (authCodeUrlStr: string) => {
+export const showOAuthAuthorizationModal = (authCodeUrlStr: string) => {
   BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send('show-oauth-authorization-modal', authCodeUrlStr);
   });
 };
 
-const hideOAuthAuthorizationModal = () => {
+export const hideOAuthAuthorizationModal = () => {
   BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send('hide-oauth-authorization-modal');
   });

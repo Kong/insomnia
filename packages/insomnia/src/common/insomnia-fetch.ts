@@ -34,6 +34,10 @@ export async function insomniaFetch<T = void>({
   retries?: number;
   onDeepLink?: (uri: string) => void;
 }): Promise<T> {
+  const isRawBody =
+    data instanceof URLSearchParams || data instanceof FormData || data instanceof Blob || data instanceof ArrayBuffer;
+  const hasContentTypeHeader = Object.keys(headers || {}).some(key => key.toLowerCase() === 'content-type');
+
   const config: RequestInit = {
     method,
     headers: {
@@ -42,14 +46,15 @@ export async function insomniaFetch<T = void>({
       'insomnia-request-id': generateId('desk'),
       'X-Origin': origin || getApiBaseURL(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
-      ...(data ? { 'Content-Type': 'application/json' } : {}),
+      ...(data && !isRawBody && !hasContentTypeHeader ? { 'Content-Type': 'application/json' } : {}),
       ...(organizationId ? { 'X-Insomnia-Org-Id': organizationId } : {}),
       ...(PLAYWRIGHT_TEST ? { 'X-Mockbin-Test': 'true' } : {}),
     },
-    ...(data ? { body: JSON.stringify(data) } : {}),
+    ...(data ? { body: isRawBody ? data : JSON.stringify(data) } : {}),
     signal: AbortSignal.timeout(timeout),
   };
-  if (sessionId === undefined) {
+  if ((!origin || origin === getApiBaseURL()) && sessionId === undefined) {
+    // This is a safeguard to prevent accidental requests to the Insomnia API without a session ID.
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
 
@@ -72,6 +77,9 @@ export async function insomniaFetch<T = void>({
           if (typeof json?.message === 'string') {
             errMsg = json.message;
           }
+          if (typeof json?.error_description === 'string') {
+            errMsg = json.error_description;
+          }
         } catch {}
       }
       throw new ResponseFailError(errName, errMsg, response);
@@ -86,8 +94,7 @@ export async function insomniaFetch<T = void>({
       throw new Error(`insomniaFetch timed out: ${method} ${path}`, { cause: err });
     }
     // the real error (ECONNREFUSED, cert problems) hides in err.cause, sometimes nested in an AggregateError
-    const cause = (err as { cause?: string | { code?: string; message?: string; errors?: { code?: string }[] } })
-      .cause;
+    const cause = (err as { cause?: string | { code?: string; message?: string; errors?: { code?: string }[] } }).cause;
     const detail = typeof cause === 'string' ? cause : cause?.code || cause?.errors?.[0]?.code || cause?.message;
     if (detail) {
       // fresh Error (don't mutate err.message) so a re-observed/retried error doesn't append the detail twice

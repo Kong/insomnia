@@ -21,6 +21,7 @@ import { servicesProxy } from '~/ui/renderer-services-proxy';
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
 import type { CookiesBridgeAPI } from './main/ipc/cookies';
+import type { devPortalBridgeAPI } from './main/ipc/dev-portal';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
@@ -148,6 +149,10 @@ const secretStorage: secretStorageBridgeAPI = {
 const electronStorage: electronStorageBridgeAPI = {
   getItem: key => invokeWithNormalizedError('electronStorage.getItem', key),
   setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
+};
+
+const devPortal: devPortalBridgeAPI = {
+  oauthLogin: options => invokeWithNormalizedError('devPortal.oauthLogin', options),
 };
 
 const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
@@ -334,6 +339,7 @@ const main: Window['main'] = {
   curl,
   secretStorage,
   electronStorage,
+  devPortal,
   sync,
   trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),

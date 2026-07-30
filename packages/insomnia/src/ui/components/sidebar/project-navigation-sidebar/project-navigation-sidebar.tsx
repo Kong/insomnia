@@ -561,6 +561,7 @@ const ProjectNavigationSidebarInner = (
       for (const project of projectsWithPresence) {
         const projectId = project._id;
         const isProjectCollapsed = !(expandedProjectAndWorkspaceIds ?? []).includes(projectId);
+        const isDevPortalProject = models.project.isDevPortalProject(project);
         items.push({
           kind: 'project',
           organizationId,
@@ -592,7 +593,7 @@ const ProjectNavigationSidebarInner = (
           : [];
         const allWorkspaces = [...sortedWorkspaces, ...unsyncedWorkspaces];
         // If there is no workspace under the project, show an empty workspace if no active filter
-        if (allWorkspaces.length === 0 && !activeFilter) {
+        if (allWorkspaces.length === 0 && !activeFilter && !isDevPortalProject) {
           items.push({
             kind: 'emptyProject',
             organizationId,
@@ -1003,7 +1004,11 @@ const ProjectNavigationSidebarInner = (
   // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
   const visibleFlatItems = useMemo(
-    () => dedupeCollectionItems(flatItems.filter(i => !i.hidden), getSidebarGridListItemId),
+    () =>
+      dedupeCollectionItems(
+        flatItems.filter(i => !i.hidden),
+        getSidebarGridListItemId,
+      ),
     [flatItems],
   );
   const virtualizer = useVirtualizer({

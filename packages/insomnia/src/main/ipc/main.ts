@@ -86,6 +86,7 @@ import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { registerPluginIpcHandlers } from '../plugin-window';
 import type { CookiesBridgeAPI } from './cookies';
+import type { devPortalBridgeAPI } from './dev-portal';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -271,6 +272,7 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
+  devPortal: devPortalBridgeAPI;
   sync: SyncBridgeAPI;
   trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;

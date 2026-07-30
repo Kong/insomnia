@@ -19,10 +19,48 @@ interface ProjectNodeProps {
   onSortOrderChange: (newSortOrder: WorkspaceSortOrder) => void;
 }
 
+export const ProjectNodeIcon = ({ project }: { project: ProjectFlatItem['doc'] }) => {
+  const isDevPortalProject = models.project.isDevPortalProject(project);
+  const isControlPlaneProject = models.project.isControlPlaneProject(project);
+  const [faviconFailed, setFaviconFailed] = useState(false);
+
+  if (isDevPortalProject && project.devPortalUrl) {
+    if (faviconFailed) {
+      return <Icon icon="laptop" />;
+    }
+
+    return (
+      <img
+        src={`${project.devPortalUrl}/api/v3/assets/favicon`}
+        alt=""
+        className="h-5 w-5"
+        onError={() => setFaviconFailed(true)}
+      />
+    );
+  }
+
+  if (isControlPlaneProject) {
+    return <KonnectProjectIcon konnectDeploymentType={project.konnectDeploymentType} />;
+  }
+
+  return (
+    <Icon
+      icon={
+        models.project.isRemoteProject(project)
+          ? 'globe-americas'
+          : models.project.isGitProject(project)
+            ? ['fab', 'git-alt']
+            : 'laptop'
+      }
+    />
+  );
+};
+
 export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrderChange }: ProjectNodeProps) => {
   const { doc, collapsed, organizationId } = item;
   const { name: projectName, presence, _id: projectId } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const isDevPortalProject = models.project.isDevPortalProject(doc);
 
   return (
     <div
@@ -44,23 +82,11 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
         <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} />
       </Button>
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
-        {doc.konnectControlPlaneId ? (
-          <KonnectProjectIcon konnectDeploymentType={doc.konnectDeploymentType} />
-        ) : (
-          <Icon
-            icon={
-              models.project.isRemoteProject(doc)
-                ? 'globe-americas'
-                : models.project.isGitProject(doc)
-                  ? ['fab', 'git-alt']
-                  : 'laptop'
-            }
-          />
-        )}
+        <ProjectNodeIcon project={doc} />
         <span className="min-w-0 flex-1 truncate text-base text-[rgb(var(--color-font-rgb),0.8)]">{projectName}</span>
       </div>
       {presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={presence} />}
-      {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
+      {projectId !== models.project.SCRATCHPAD_PROJECT_ID && !isDevPortalProject && (
         <ProjectDropdown
           organizationId={organizationId}
           project={doc}
