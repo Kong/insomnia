@@ -330,20 +330,26 @@ test('Template tag sandbox: manifest grants a non-baseline module and is shown i
   await assertTagPreview('{% eventsgranted', 'events-ok');
   await assertTagPreview('{% eventsbaseline', "Module 'events' not permitted by manifest");
 
-  // Preferences → Plugins surfaces each plugin's declared permissions, and flags the malformed one.
+  // Preferences → Plugins surfaces each plugin's declared permissions (inside its row's expandable
+  // details), and flags the malformed one.
   await page.getByTestId('settings-button').click();
   await page.locator('div[role="tab"]:has-text("Plugins")').click();
 
+  await page.getByTestId('plugin-details-toggle-insomnia-plugin-events-granted').click();
+  await page.getByTestId('plugin-details-toggle-insomnia-plugin-events-baseline').click();
+  await page.getByTestId('plugin-details-toggle-insomnia-plugin-events-malformed').click();
+
+  // The declared `events` module shows up alongside the always-granted baseline modules.
   await expect
     .soft(page.getByTestId('plugin-permissions-insomnia-plugin-events-granted'))
-    .toContainText('modules: events');
+    .toContainText('events');
   await expect
     .soft(page.getByTestId('plugin-permissions-insomnia-plugin-events-baseline'))
-    .toContainText('baseline access');
+    .toContainText('Baseline only');
   // Malformed manifest degrades to baseline AND surfaces a validation warning — never crashes the loader.
   await expect
     .soft(page.getByTestId('plugin-permissions-insomnia-plugin-events-malformed'))
-    .toContainText('baseline access');
+    .toContainText('Baseline only');
   await expect.soft(page.getByTestId('plugin-permission-warning-insomnia-plugin-events-malformed')).toBeVisible();
 });
 

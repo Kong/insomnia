@@ -106,6 +106,9 @@ function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginE
   } as Plugin['module'];
 }
 
+// A plugin name of "__proto__"/"constructor"/"prototype" must never be used as a pluginMap key, since that would write onto Object.prototype instead of a normal property.
+const DANGEROUS_PLUGIN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 async function traversePluginPath(
   pluginMap: Record<string, Plugin>,
   allPaths: string[],
@@ -120,8 +123,12 @@ async function traversePluginPath(
     folders.length && console.log('[plugin] Loading', folders.map(f => f.replace('insomnia-plugin-', '')).join(', '));
 
     for (const filename of fs.readdirSync(p)) {
+      // Captured as they're parsed so a load failure below can still identify which plugin failed.
+      let modulePath = '';
+      let pluginJson: { name?: string; description?: string; version?: string; insomnia?: any } | undefined;
+      let parsedPermissions: ReturnType<typeof parsePluginPermissions> | undefined;
       try {
-        const modulePath = path.resolve(p, filename);
+        modulePath = path.resolve(p, filename);
         const packageJSONPath = path.resolve(modulePath, 'package.json');
 
         // Only read directories
@@ -161,14 +168,15 @@ async function traversePluginPath(
         }
 
         // package.json is plain data — requiring it runs no plugin code (unlike the module below).
-        const pluginJson = nodeRequire(packageJSONPath);
+        pluginJson = nodeRequire(packageJSONPath);
 
-        // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
-        if (!('insomnia' in pluginJson)) {
+        // Skip anything that isn't a real Insomnia plugin: no package.json['insomnia'], no name, or a name that collides with an object prototype key.
+        if (!pluginJson || !('insomnia' in pluginJson) || !pluginJson.name || DANGEROUS_PLUGIN_KEYS.has(pluginJson.name)) {
           continue;
         }
+        const pluginName = pluginJson.name;
 
-        const parsedPermissions = parsePluginPermissions(pluginJson.insomnia);
+        parsedPermissions = parsePluginPermissions(pluginJson.insomnia);
         if (parsedPermissions.warnings.length > 0) {
           // Constant format string; interpolated values passed as args so a plugin name can't forge log output.
           console.warn('[plugin] %s has invalid insomnia.permissions: %o', pluginJson.name, parsedPermissions.warnings);
@@ -179,25 +187,92 @@ async function traversePluginPath(
         // never runs its top-level code with host (Node) privileges. Off → legacy in-process require.
         let module: Plugin['module'];
         if (sandboxEnabled) {
-          const manifest = await discoverUserPluginExports(modulePath, pluginJson.name, parsedPermissions.permissions);
-          module = buildUserPluginModuleFromManifest(pluginJson.name, manifest);
+          const manifest = await discoverUserPluginExports(modulePath, pluginName, parsedPermissions.permissions);
+          module = buildUserPluginModuleFromManifest(pluginName, manifest);
         } else {
           module = nodeRequire(modulePath);
         }
 
-        pluginMap[pluginJson.name] = {
-          name: pluginJson.name,
-          description: pluginJson.description || pluginJson.insomnia.description || '',
-          version: pluginJson.version || 'unknown',
-          directory: modulePath || '',
-          config: pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false },
-          permissions: parsedPermissions.permissions,
-          permissionWarnings: parsedPermissions.warnings,
-          permissionsDeclared: parsedPermissions.declared,
-          module: module,
-        };
+        // A real name collision with an already-loaded folder: keep that winner and show this one as a separate, disabled row keyed by its own modulePath instead of discarding it.
+        const existing = pluginMap[pluginName];
+        if (existing && existing.directory !== modulePath && !existing.loadError) {
+          pluginMap[modulePath] = {
+            name: pluginName,
+            displayName: pluginJson.insomnia.name || '',
+            description: pluginJson.description || pluginJson.insomnia.description || '',
+            version: pluginJson.version || 'unknown',
+            directory: modulePath || '',
+            config: { disabled: true },
+            permissions: parsedPermissions.permissions,
+            permissionWarnings: parsedPermissions.warnings,
+            permissionsDeclared: parsedPermissions.declared,
+            module: {},
+            loadError: `Another plugin folder (${existing.directory}) already uses the name "${pluginName}".`,
+          };
+        } else {
+          pluginMap[pluginName] = {
+            name: pluginName,
+            displayName: pluginJson.insomnia.name || '',
+            description: pluginJson.description || pluginJson.insomnia.description || '',
+            version: pluginJson.version || 'unknown',
+            directory: modulePath || '',
+            config: pluginName in allConfigs ? allConfigs[pluginName] : { disabled: false },
+            permissions: parsedPermissions.permissions,
+            permissionWarnings: parsedPermissions.warnings,
+            permissionsDeclared: parsedPermissions.declared,
+            module: module,
+          };
+        }
       } catch (err) {
         console.error(`[plugin] Error while loading plugin from ${p}/${filename}:`, err);
+        const message = err instanceof Error ? err.message : String(err);
+        // Don't overwrite a plugin that already loaded under the same name; key a taken name by its own folder path instead of dropping it.
+        const name = pluginJson?.name;
+        if (name && !(name in pluginMap)) {
+          pluginMap[name] = {
+            name,
+            displayName: pluginJson?.insomnia?.name || '',
+            description: pluginJson?.description || pluginJson?.insomnia?.description || '',
+            version: pluginJson?.version || 'unknown',
+            directory: modulePath,
+            // Always disabled — there's nothing usable to enable.
+            config: { disabled: true },
+            permissions: parsedPermissions?.permissions ?? { modules: [], capabilities: [] },
+            permissionWarnings: parsedPermissions?.warnings ?? [],
+            permissionsDeclared: parsedPermissions?.declared ?? false,
+            module: {},
+            loadError: message,
+          };
+        } else if (name && modulePath && !(modulePath in pluginMap)) {
+          pluginMap[modulePath] = {
+            name,
+            displayName: pluginJson?.insomnia?.name || '',
+            description: pluginJson?.description || pluginJson?.insomnia?.description || '',
+            version: pluginJson?.version || 'unknown',
+            directory: modulePath,
+            config: { disabled: true },
+            permissions: parsedPermissions?.permissions ?? { modules: [], capabilities: [] },
+            permissionWarnings: parsedPermissions?.warnings ?? [],
+            permissionsDeclared: parsedPermissions?.declared ?? false,
+            module: {},
+            loadError: message,
+          };
+        } else if (!name && modulePath && !DANGEROUS_PLUGIN_KEYS.has(filename) && !(filename in pluginMap)) {
+          // Falls back to the folder name when package.json itself couldn't be read.
+          pluginMap[filename] = {
+            name: filename,
+            displayName: '',
+            description: '',
+            version: 'unknown',
+            directory: modulePath,
+            config: { disabled: true },
+            permissions: { modules: [], capabilities: [] },
+            permissionWarnings: [],
+            permissionsDeclared: false,
+            module: {},
+            loadError: message,
+          };
+        }
       }
     }
   }
@@ -263,6 +338,7 @@ function getBundlePluginMap() {
       const module = getNodeRequire()(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
+        displayName: '',
         description: `Insomnia bundled plugin for ${pluginName}`,
         version: 'unknown',
         directory: '',

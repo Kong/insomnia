@@ -73,6 +73,8 @@ export interface PluginTheme {
 
 export interface SerializablePlugin {
   name: string;
+  /** The plugin's own display name from `insomnia.name` in its manifest, if it declared one — distinct from `name` (the npm package name). */
+  displayName?: string;
   description: string;
   version: string;
   directory: string;
@@ -83,6 +85,8 @@ export interface SerializablePlugin {
   permissionWarnings: string[];
   /** True when the plugin declared a valid `permissions` object (even if empty); false = baseline access (no/malformed manifest). */
   permissionsDeclared: boolean;
+  /** Set when the plugin's own code threw while loading; shown disabled in Preferences → Plugins with this message. */
+  loadError?: string;
 }
 
 export interface SerializableTheme {
