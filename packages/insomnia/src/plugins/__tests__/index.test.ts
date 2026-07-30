@@ -1,4 +1,8 @@
 // @ts-nocheck
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../themes', () => ({ default: [] }));
@@ -31,6 +35,7 @@ import {
   executePluginMainAction,
   getDocumentActions,
   getPluginCommonContext,
+  getPlugins,
   getRequestActions,
   getRequestGroupActions,
   getRequestHooks,
@@ -345,5 +350,42 @@ describe('executePluginMainAction', () => {
     await expect(executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' })).rejects.toThrow(
       'IPC failure',
     );
+  });
+});
+
+describe('getPlugins: discovery', () => {
+  const SYMLINK_PLUGIN_NAME = 'insomnia-plugin-symlink-test';
+  const NORMAL_PLUGIN_NAME = 'insomnia-plugin-discovery-test-normal';
+
+  const writePlugin = (dir: string, name: string) => {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ name, version: '1.0.0', main: 'index.js', insomnia: {} }),
+    );
+    fs.writeFileSync(path.join(dir, 'index.js'), 'module.exports.templateTags = [];');
+  };
+
+  it('only loads plugins from within the configured plugin directory, even through a symlink', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-discovery-test-'));
+    const pluginBase = path.join(root, 'plugins');
+    const outsideDir = path.join(root, 'outside');
+    fs.mkdirSync(pluginBase, { recursive: true });
+    writePlugin(outsideDir, SYMLINK_PLUGIN_NAME);
+    fs.symlinkSync(outsideDir, path.join(pluginBase, SYMLINK_PLUGIN_NAME), 'dir');
+    writePlugin(path.join(pluginBase, NORMAL_PLUGIN_NAME), NORMAL_PLUGIN_NAME);
+
+    vi.mocked(services.settings.get).mockResolvedValue({
+      pluginConfig: {},
+      pluginPath: pluginBase,
+      templateTagSandboxEnabled: false,
+    });
+
+    const plugins = await getPlugins(true);
+
+    expect(plugins.find(p => p.name === SYMLINK_PLUGIN_NAME)).toBeUndefined();
+    expect(plugins.find(p => p.name === NORMAL_PLUGIN_NAME)?.loadError).toBeUndefined();
+
+    fs.rmSync(root, { recursive: true, force: true });
   });
 });
