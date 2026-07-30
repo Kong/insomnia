@@ -914,6 +914,16 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
         templateTag,
       }));
   },
+  // `getPlugins`/`getTemplateTags` cache their discovered plugin list in this module's own scope —
+  // and this file's plugin registry is a separate instance from the one the Settings > Plugins
+  // page reloads (that one lives in the plugin window's own realm; see `plugin-window.ts`). Without
+  // this, a plugin that's missing when this registry first populates (e.g. a discovery race) never
+  // becomes visible to template rendering, no matter how many times "Reload" is clicked —
+  // reloading has to reach *this* registry too, not just the plugin window's.
+  'plugin.reloadPlugins': async () => {
+    await getPlugins(true);
+    return null;
+  },
   // L1: discover a user plugin's exports by evaluating its source in the sandbox (no host execution),
   // returning a serializable manifest. The plugin loader (plugins/index.ts) calls this instead of
   // nodeRequire-ing the module when the sandbox is enabled.

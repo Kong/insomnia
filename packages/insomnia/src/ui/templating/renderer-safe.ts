@@ -3,8 +3,13 @@
 
 export { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME, LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 
-// No-op in renderer: the web worker manages its own engine lifecycle.
-export function reload(): void {}
+// The actual rendering happens in a persistent, dedicated web worker (see
+// `~/ui/worker/templating-handler`) that caches its own Liquid engine (plugin tags included) for
+// the life of the renderer process. Tell it to drop that cache so its next render reflects
+// whatever plugins are currently installed/enabled.
+export function reload(): void {
+  import('~/ui/worker/templating-handler').then(({ reloadTemplatingWorker }) => reloadTemplatingWorker());
+}
 
 // Return text as-is for renderer linting; the worker handles actual rendering.
 export async function render(text: string, _config: Record<string, unknown> = {}): Promise<string | null> {
