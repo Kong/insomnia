@@ -41,6 +41,7 @@ import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
 import { useGitProjectCommitsActionFetcher } from '~/routes/git.commits';
 import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
+import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
@@ -116,6 +117,73 @@ function getModificationClassName(type: GitFileType) {
 
   return '';
 }
+
+// Shown when a commit succeeded locally but the push that followed it failed
+// (e.g. a protected branch rejected it). The work is safe in a local commit —
+// this offers a retry instead of implying the changes were lost.
+// Some errors (e.g. GitHub's protected-branch rejection) are pre-formatted
+// by the backend as "Error Pushing Repository, <raw remote message>" for use
+// in the plain-text error banner elsewhere. Here the banner title already
+// says "push failed", so that prefix is just noise — strip it if present.
+function stripRedundantPushErrorPrefix(error: string) {
+  return error.replace(/^Error Pushing Repository,\s*/, '');
+}
+
+// Recognize GitHub's protected-branch push rejection (GH006) so we can show a
+// concrete next step instead of just the raw remote log. Other providers/errors
+// fall back to the generic message — this only covers the one pattern we know.
+function getGitHubProtectedBranchTip(error: string): string | null {
+  if (/protected branch/i.test(error) || /\bGH006\b/.test(error)) {
+    return 'This branch is protected, your commit is safe locally. Push to a new branch and open a pull request, or ask an admin to allow it.';
+  }
+  return null;
+}
+
+const PushFailedAfterCommitBanner = (props: { error: string; isRetrying: boolean; onRetry: () => void }) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const detail = stripRedundantPushErrorPrefix(props.error);
+  const tip = getGitHubProtectedBranchTip(detail);
+
+  return (
+    <Banner
+      type="warning"
+      title="Push failed"
+      message={
+        <div className="flex flex-col gap-2">
+          <p>
+            {tip ?? "Your commit is safe locally — it just hasn't been pushed yet."}{' '}
+            <Button
+              type="button"
+              onPress={() => setShowDetails(!showDetails)}
+              className="inline cursor-pointer border-0 bg-transparent p-0 underline"
+            >
+              {showDetails ? 'Show less' : 'Show more'}
+            </Button>
+          </p>
+          {showDetails && (
+            <p className="rounded-xs bg-(--hl-xs) p-2 font-mono text-xs whitespace-pre-wrap text-(--color-font-danger)">
+              {detail}
+            </p>
+          )}
+        </div>
+      }
+      footer={
+        <Button
+          type="button"
+          isDisabled={props.isRetrying}
+          onPress={props.onRetry}
+          className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+        >
+          <Icon
+            icon={props.isRetrying ? 'spinner' : 'cloud-arrow-up'}
+            className={props.isRetrying ? 'animate-spin' : ''}
+          />
+          Retry push
+        </Button>
+      }
+    />
+  );
+};
 
 interface GeneratedCommitsFormProps {
   commits: { id: string; message: string; files: string[] }[];
@@ -296,9 +364,13 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   isNonOriginBranch,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
+  const pushRetryFetcher = useGitProjectPushActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [operationError, setOperationError] = useState<string | null>(null);
+  // Set when the commits succeeded but the push that followed them failed —
+  // the commits are safe locally, so we offer a retry rather than a plain error.
+  const [pushFailedError, setPushFailedError] = useState<string | null>(null);
   const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
@@ -334,14 +406,44 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
       ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
       ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
     if (hasErrors && 'errors' in commitsFetcher.data) {
-      setOperationError((commitsFetcher.data.errors as string[]).join('\n'));
+      const pushFailedAfterCommit =
+        'pushFailedAfterCommit' in commitsFetcher.data && commitsFetcher.data.pushFailedAfterCommit;
+      if (pushFailedAfterCommit) {
+        setOperationError(null);
+        setPushFailedError((commitsFetcher.data.errors as string[]).join('\n'));
+      } else {
+        setOperationError((commitsFetcher.data.errors as string[]).join('\n'));
+      }
       return;
     }
     if (isSuccess && !hasErrors) {
       setOperationError(null);
+      setPushFailedError(null);
       onCommitSuccess({ push: action === 'commit-push' });
     }
   }, [commitsFetcher.data, onCommitSuccess, isCommitting]);
+
+  const isRetryingPush = pushRetryFetcher.state !== 'idle';
+  const prevPushRetryStateRef = useRef(pushRetryFetcher.state);
+  useEffect(() => {
+    const prevState = prevPushRetryStateRef.current;
+    prevPushRetryStateRef.current = pushRetryFetcher.state;
+    if (!(prevState !== 'idle' && pushRetryFetcher.state === 'idle' && pushRetryFetcher.data)) {
+      return;
+    }
+    const errors = pushRetryFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      setPushFailedError(errors.join('\n'));
+      showToast({ icon: 'exclamation-triangle', title: 'Push failed again', status: 'error' });
+      return;
+    }
+    setPushFailedError(null);
+    onCommitSuccess({ push: true });
+  }, [pushRetryFetcher.state, pushRetryFetcher.data, onCommitSuccess]);
+
+  const retryPush = () => {
+    pushRetryFetcher.submit({ projectId });
+  };
 
   const moveFileToDoNotCommit = (fileItem: FileItem) => {
     try {
@@ -542,7 +644,9 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           </Button>
         </div>
       )}
-      {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+      {pushFailedError ? (
+        <PushFailedAfterCommitBanner error={pushFailedError} isRetrying={isRetryingPush} onRetry={retryPush} />
+      ) : operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
         <GitOauthAuthBanner
           selectedCredential={selectedCredential}
           gitRepository={gitRepository}
@@ -610,6 +714,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   isNonOriginBranch,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
+  const pushRetryFetcher = useGitProjectPushActionFetcher();
 
   const stagedCount = changes.staged.length;
   const unstagedCount = changes.unstaged.length;
@@ -620,6 +725,9 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   const [pendingCommit, setPendingCommit] = useState<{ message: string; push: boolean } | null>(null);
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  // Set when a commit succeeded but the push that followed it failed — the
+  // commit is safe locally, so we offer a retry rather than a plain error.
+  const [pushFailedError, setPushFailedError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const repoPath = gitRepository?._id ? resolveGitRepoBaseDir(gitRepository) : '';
@@ -666,6 +774,12 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     if (errors && errors.length > 0) {
       if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         onPullRequired();
+      } else if (commitFetcher.data.pushFailedAfterCommit) {
+        // The commit itself succeeded — only clear the message/error state
+        // for that, and surface the push failure as a retryable banner.
+        setMessage('');
+        setOperationError(null);
+        setPushFailedError(errors.join('\n'));
       } else {
         setOperationError(errors.join('\n'));
       }
@@ -673,8 +787,36 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     }
     setMessage('');
     setOperationError(null);
+    setPushFailedError(null);
     onCommitSuccess({ push: action === 'commit-push' });
   }, [commitFetcher.data, onCommitSuccess, onPullRequired, isCommitting]);
+
+  const isRetryingPush = pushRetryFetcher.state !== 'idle';
+  const prevPushRetryStateRef = useRef(pushRetryFetcher.state);
+  useEffect(() => {
+    const prevState = prevPushRetryStateRef.current;
+    prevPushRetryStateRef.current = pushRetryFetcher.state;
+    if (!(prevState !== 'idle' && pushRetryFetcher.state === 'idle' && pushRetryFetcher.data)) {
+      return;
+    }
+    const errors = pushRetryFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+        setPushFailedError(null);
+        onPullRequired();
+        return;
+      }
+      setPushFailedError(errors.join('\n'));
+      showToast({ icon: 'exclamation-triangle', title: 'Push failed again', status: 'error' });
+      return;
+    }
+    setPushFailedError(null);
+    onCommitSuccess({ push: true });
+  }, [pushRetryFetcher.state, pushRetryFetcher.data, onCommitSuccess, onPullRequired]);
+
+  const retryPush = () => {
+    pushRetryFetcher.submit({ projectId });
+  };
 
   return (
     <>
@@ -803,7 +945,9 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             )}
           </div>
         )}
-        {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+        {pushFailedError ? (
+          <PushFailedAfterCommitBanner error={pushFailedError} isRetrying={isRetryingPush} onRetry={retryPush} />
+        ) : operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
             gitRepository={gitRepository}
@@ -1726,7 +1870,8 @@ const ConfirmCommitAllModal = ({ onConfirm, onClose }: Omit<ConfirmModalProps, '
                 </Button>
               </div>
               <div className="">
-                There are no staged changes to commit. Would you like to stage all your changes and commit them directly?
+                There are no staged changes to commit. Would you like to stage all your changes and commit them
+                directly?
               </div>
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button

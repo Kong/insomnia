@@ -2130,6 +2130,12 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
 
 export interface CommitToGitRepoResult {
   errors?: string[];
+  /**
+   * True when the local commit succeeded but the subsequent push failed (e.g. a
+   * protected branch rejected it). The user's work is safe in a local commit —
+   * callers should offer a way to retry the push rather than implying data loss.
+   */
+  pushFailedAfterCommit?: boolean;
 }
 
 export const commitToGitRepoAction = async ({
@@ -2298,14 +2304,21 @@ export const commitAndPushToGitRepoAction = async ({
   try {
     canPush = await GitVCS.canPush(repo.credentialsId);
   } catch (err) {
+    // The commit above already succeeded — a failure here is just the
+    // pushability check, so persist that the commit is still unpushed.
+    await services.gitRepository.update(repo, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
 
-    return { errors: [errorMessage] };
+    return { errors: [errorMessage], pushFailedAfterCommit: true };
   }
   // If nothing to push, display that to the user
   if (!canPush) {
@@ -2337,9 +2350,18 @@ export const commitAndPushToGitRepoAction = async ({
       cachedGitLastCommitTime: Date.now(),
     });
   } catch (err: unknown) {
+    // The commit above already succeeded and is safe on disk — only the push
+    // failed. Reflect that in the persisted repo state so indicators elsewhere
+    // in the app (e.g. the unpushed-changes badge) stay accurate, and flag it
+    // for the UI so it can offer a retry instead of implying data loss.
+    await services.gitRepository.update(repo, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
         errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2348,12 +2370,14 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+        pushFailedAfterCommit: true,
       };
     }
 
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
@@ -2366,6 +2390,7 @@ export const commitAndPushToGitRepoAction = async ({
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
+      pushFailedAfterCommit: true,
     };
   }
 
@@ -2656,6 +2681,12 @@ export interface PushToGitRemoteResult {
   errors?: string[];
   success?: boolean;
   gitRepository?: GitRepository;
+  /**
+   * True when the push failed but local commits exist and are safe on disk
+   * (i.e. this wasn't "nothing to push" or an upfront auth/connectivity check
+   * failure). Callers should offer a way to retry the push.
+   */
+  pushFailedAfterCommit?: boolean;
 }
 
 export const pushToGitRemoteAction = async ({
@@ -2728,11 +2759,18 @@ export const pushToGitRemoteAction = async ({
     });
     await database.flushChanges(bufferId);
   } catch (err: unknown) {
+    // The local commit(s) that made canPush true above are untouched by a
+    // failed push — persist that so indicators elsewhere in the app stay
+    // accurate, and flag it for the UI so it can offer a retry.
+    await services.gitRepository.update(gitRepository, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
         errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
-
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2741,6 +2779,7 @@ export const pushToGitRemoteAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2751,6 +2790,7 @@ export const pushToGitRemoteAction = async ({
       return {
         errors: [GitVCSOperationErrors.AuthenticationRequiredError],
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2758,6 +2798,7 @@ export const pushToGitRemoteAction = async ({
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
@@ -2771,6 +2812,7 @@ export const pushToGitRemoteAction = async ({
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
       gitRepository,
+      pushFailedAfterCommit: true,
     };
   }
 
