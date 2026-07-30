@@ -30,3 +30,12 @@ collection:
     headers:
       - name: X-Reload-Probe
         value: "{% reloadprobe %}"
+environments:
+  name: Base Environment
+  meta:
+    id: env_5b0a100000000000000000000000004
+    created: 1751900000003
+    modified: 1751900000003
+    isPrivate: false
+  data:
+    placeholder: baseline

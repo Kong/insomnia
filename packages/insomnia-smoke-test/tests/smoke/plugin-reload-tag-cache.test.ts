@@ -50,7 +50,11 @@ const clearPluginToast = async (page: Page) => {
   }
 };
 
-test('Kong/insomnia#10295: reloading plugins picks up a plugin tag once a render has already run without it', async ({
+// The Settings list is served by a separate plugin registry (in a hidden plugin window) that
+// repopulates correctly on Reload. The rendering pipeline (Send / live preview) has its own, third
+// copy of plugin discovery that Reload must also rescan, so a plugin missing on the session's
+// first render doesn't stay permanently unusable for rendering.
+test('Kong/insomnia#10295: reloading plugins must also refresh the tag the render pipeline uses, not just the Settings list', async ({
   page,
   app,
   dataPath,
@@ -83,6 +87,9 @@ test('Kong/insomnia#10295: reloading plugins picks up a plugin tag once a render
   await insomnia.statusbar.openPreferences();
   await insomnia.preferencesPage.switchToPreferenceTab('Plugins');
   await page.getByRole('button', { name: 'Reload', exact: true }).click();
+
+  // Sanity check: the Settings list already shows the plugin; the bug this test targets is that
+  // its tag still fails to render despite the list showing it.
   await expect.soft(page.getByTestId(PLUGIN_NAME)).toBeVisible();
   await insomnia.preferencesPage.closePreferences();
 

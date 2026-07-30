@@ -26,6 +26,10 @@ self.onmessage = async event => {
   // registry this worker fetches tags from (in main) also caches independently of the Settings
   // page's own copy, so it has to be told to rescan too — see `plugin.reloadPlugins`.
   if (data.type === 'reload') {
+    // This worker's own auth token is normally set below, from a render job's payload — but reload
+    // can be the very first message this worker ever receives (e.g. Reload clicked before any
+    // request has been sent this session), so it carries its own token rather than relying on that.
+    setTemplatingDbAuthToken(data.authToken ?? null);
     await fetchFromTemplateWorkerDatabase('plugin.reloadPlugins', {});
     templating.reload();
     return;
