@@ -224,6 +224,7 @@ export const SANDBOX_INTERNAL_GLOBALS = [
   '__buildContext',
   '__describeExports',
   '__invoke',
+  '__invokeAction',
   '__invokeHook',
   '__loadPluginEntry',
   '__require',

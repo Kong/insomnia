@@ -137,6 +137,21 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
         throw new Error(`[plugin-window] Action not found: ${pluginName}/${label}`);
       }
 
+      // A1: with the sandbox on, a user plugin's action (a throw-stub here after discovery) runs in the
+      // main-process sandbox over the templating-worker-database protocol; bundle plugins and the
+      // flag-off path run in-process.
+      const settings = await fetchFromTemplateWorkerDatabase('settings.get', {});
+      const sandboxEnabled = !!settings?.templateTagSandboxEnabled;
+      if (sandboxEnabled && entry.plugin.directory !== '') {
+        await fetchFromTemplateWorkerDatabase('plugin.runUserAction', {
+          plugin: { directory: entry.plugin.directory, name: entry.plugin.name, permissions: entry.plugin.permissions },
+          actionKind: type,
+          actionLabel: label,
+          actionDomainData: domainData,
+        });
+        return null;
+      }
+
       const context = {
         ...pluginApp.init(),
         ...pluginData.init(projectId),
