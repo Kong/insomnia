@@ -813,3 +813,98 @@ test('Response hook sandbox (H1): a user plugin response hook runs in the sandbo
     )
     .toContain('resphook-rewrote-body:ranin-sandboxed');
 });
+
+test('Plugin action sandbox (A1): a user plugin request action runs in the sandbox and its side effect persists', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // Actions are fire-and-effect — nothing marshals back — so the canary rides the side effect: the
+  // request action writes which path executed it (INSOMNIA_TEMPLATE_SANDBOX exists only in the
+  // sandbox) plus whether it received the domain models, into plugin storage; a sibling template tag
+  // reads that back out. The `storage` capability is declared so context.store is granted on both
+  // paths. Canary values are chosen so neither is a substring of the other.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-action-probe',
+    { permissions: { capabilities: ['storage'] } },
+    `
+      module.exports.requestActions = [
+        {
+          label: 'Probe Action',
+          async action(context, data) {
+            var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+            await context.store.setItem('action_ran_in', ranIn);
+            await context.store.setItem('action_req_id', (data && data.request && data.request._id) || 'no-request');
+          },
+        },
+      ];
+      module.exports.templateTags = [
+        {
+          name: 'actionreadback', displayName: 'actionreadback', args: [],
+          async run(context) {
+            var ranIn = await context.store.getItem('action_ran_in');
+            var reqId = await context.store.getItem('action_req_id');
+            return (ranIn || 'unset') + '|' + (reqId === 'req-canary-7t3w' ? 'got-req' : 'no-req');
+          },
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-action-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Action Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  // Fire the request action directly through the plugin bridge (the same call the request-actions
+  // dropdown makes), passing domain models so we can prove they reach the action.
+  const runAction = () =>
+    page.evaluate(() =>
+      (window as any).main.plugins.executeAction({
+        type: 'request',
+        pluginName: 'insomnia-plugin-action-probe',
+        label: 'Probe Action',
+        projectId: 'proj_action_probe',
+        domainData: { request: { _id: 'req-canary-7t3w' } },
+      }),
+    );
+
+  const readTagPreview = async (tagPrefix: string): Promise<string> => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    const preview = modal.getByLabel('Live Preview');
+    await expect.soft(preview).not.toHaveValue('rendering...');
+    const value = (await preview.inputValue()).trim();
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+    return value;
+  };
+
+  // Flag OFF (default): the action runs in-process (control). Its write is observable via the tag,
+  // and the domain models reached it.
+  await runAction();
+  await expect.poll(() => readTagPreview('{% actionreadback'), { timeout: 20_000 }).toContain('ranin-mainprocess|got-req');
+
+  // Flag ON: the same action now runs in the QuickJS sandbox (its in-process fn is a throw-stub after
+  // discovery, so a successful write proves routing). Poll run+readback so the just-toggled setting
+  // has propagated to the main process.
+  await enableSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await runAction();
+        return readTagPreview('{% actionreadback');
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('ranin-sandboxed|got-req');
+});

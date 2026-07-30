@@ -28,6 +28,7 @@ export async function registerInsomniaProtocols() {
         standard: true,
         supportFetchAPI: true,
         stream: true,
+        corsEnabled: true,
       },
     },
     {
@@ -40,7 +41,7 @@ export async function registerInsomniaProtocols() {
     },
     {
       scheme: templatingWorkerDatabaseInterface,
-      privileges: { secure: true, standard: true, supportFetchAPI: true },
+      privileges: { secure: true, standard: true, supportFetchAPI: true, corsEnabled: true },
     },
   ]);
 
