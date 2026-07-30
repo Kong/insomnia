@@ -57,6 +57,18 @@ export interface ContextEnvelope {
   hookRequest?: Record<string, unknown>;
   /** The response patch a response hook may read (getters only; `setBody` bridges to the host). */
   hookResponse?: Record<string, unknown>;
+  /**
+   * Plugin action invocation (A1). When set, the sandbox runs the plugin's action matching
+   * `actionLabel` in the `actionKind` list (requestActions/requestGroupActions/…) instead of a tag
+   * or hook. The action reads the copied-in `actionDomainData` (plain models) and performs side
+   * effects only through the capability-gated `context.*` bridge; it returns void, so nothing is
+   * marshaled back.
+   */
+  actionKind?: 'request' | 'requestGroup' | 'workspace' | 'document';
+  /** The action's `label` (unique per plugin per kind) — how the sandbox finds it in the list. */
+  actionLabel?: string;
+  /** The serializable domain models passed as the action's second argument. */
+  actionDomainData?: unknown;
 }
 
 /** What a hook invocation marshals back out of the sandbox: the mutated request/response data. */
