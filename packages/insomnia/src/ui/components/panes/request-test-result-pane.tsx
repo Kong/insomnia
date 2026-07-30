@@ -16,20 +16,12 @@ export interface RequestTestResultRowsProps {
   targetTests: string;
 }
 
-export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
-  requestTestResults,
-  resultFilter,
-  targetTests,
-}: RequestTestResultRowsProps) => {
-  if (requestTestResults.length === 0) {
-    return (
-      <div className="my-2 w-full pl-3 text-sm text-neutral-400">
-        No test was detected, add test cases in scripts to see results.
-      </div>
-    );
-  }
-
-  const testResultRows = requestTestResults
+export function filterTestResults(
+  requestTestResults: RequestTestResult[],
+  targetTests: string,
+  resultFilter: string,
+): { result: RequestTestResult; index: number }[] {
+  return requestTestResults
     .map((result, index) => ({ result, index }))
     .filter(({ result }) => {
       switch (targetTests) {
@@ -56,7 +48,23 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
       }
 
       return Boolean(fuzzyMatch(resultFilter, result.testCase, { splitSpace: false, loose: true })?.indexes);
-    })
+    });
+}
+
+export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
+  requestTestResults,
+  resultFilter,
+  targetTests,
+}: RequestTestResultRowsProps) => {
+  if (requestTestResults.length === 0) {
+    return (
+      <div className="my-2 w-full pl-3 text-sm text-neutral-400">
+        No test was detected, add test cases in scripts to see results.
+      </div>
+    );
+  }
+
+  const testResultRows = filterTestResults(requestTestResults, targetTests, resultFilter)
     .map(({ result, index }) => {
       const statusText = {
         passed: 'PASS',

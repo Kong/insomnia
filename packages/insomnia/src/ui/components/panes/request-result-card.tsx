@@ -11,7 +11,7 @@ import {
   type RunnerLiveItem,
 } from '../../../common/runner-feedback';
 import { RenderedText } from '../rendered-text';
-import { RequestTestResultRows } from './request-test-result-pane';
+import { filterTestResults, RequestTestResultRows } from './request-test-result-pane';
 
 interface Props {
   item: RunnerResultPerRequest | RunnerLiveItem;
@@ -48,6 +48,11 @@ export const RequestResultCard: FC<Props> = ({
   const showInlineStats = isExpanded && !isSkipped && stats;
 
   const requestId = 'requestId' in item ? item.requestId : undefined;
+
+  const isFilterEngaged = targetTests !== 'all' || resultFilter.trim() !== '';
+  if (isFilterEngaged && filterTestResults(results, targetTests, resultFilter).length === 0) {
+    return null;
+  }
 
   return (
     <div data-testid={testId} className="m-3 rounded-sm border border-solid border-(--hl-md) p-3">

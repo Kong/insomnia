@@ -6,6 +6,7 @@ import { useRootLoaderData } from '~/root';
 import { Hotkey } from '~/ui/components/hotkey';
 
 import { RequestResultCard } from './request-result-card';
+import { filterTestResults } from './request-test-result-pane';
 
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
@@ -52,10 +53,20 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
   const selectFailedTests = () => setTargetTests('failed');
   const selectSkippedTests = () => setTargetTests('skipped');
 
+  const isFilterEngaged = targetTests !== 'all' || resultFilter.trim() !== '';
+
   const resultsByIteration = result.iterationResults.map((iterationResults: RunnerResultPerRequest[], i: number) => {
     const key = `runner-test-result-iteration-${i + 1}`;
 
     if (Array.isArray(iterationResults)) {
+      const hasVisibleRequest = !isFilterEngaged || iterationResults.some(
+        requestTestResult => filterTestResults(requestTestResult.results ?? [], targetTests, resultFilter).length > 0,
+      );
+
+      if (!hasVisibleRequest) {
+        return null;
+      }
+
       const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, reqIndex: number) => {
         const key = `request-test-result-${reqIndex}`;
         return (
