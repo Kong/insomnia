@@ -11,6 +11,7 @@ import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import { isSandboxEnabled, shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type {
   AppPromptOptions,
@@ -19,7 +20,11 @@ import type {
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
 import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
-import { HOOK_REQUEST_FIELDS, type PluginExportManifest, stripDangerousKeysReviver } from '~/templating/sandbox/marshal';
+import {
+  HOOK_REQUEST_FIELDS,
+  type PluginExportManifest,
+  stripDangerousKeysReviver,
+} from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
@@ -886,7 +891,9 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
         const settings = await services.settings.get();
-        if (settings.templateTagSandboxEnabled) {
+        // T1: pluginSandboxEnabled supersedes templateTagSandboxEnabled. Bundle plugins are trusted,
+        // so when the sandbox is on they run in it with the broad (all-modules/all-caps) profile.
+        if (isSandboxEnabled(settings)) {
           const { ALL_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
           const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
           // Bundle plugins are first-party and trusted: grant every module + capability.
@@ -1002,7 +1009,9 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
     if (targetTag) {
       const settings = await services.settings.get();
-      if (settings.templateTagSandboxEnabled) {
+      // T1: a user plugin's tag runs in the sandbox unless the plugin is elevated (then its `run` is a
+      // live in-process fn from nodeRequire discovery). Bundle tags are handled by the sibling handler.
+      if (shouldSandboxPlugin(settings, targetTag.plugin)) {
         const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
           '../templating/sandbox/surface-profiles'
         );

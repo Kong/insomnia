@@ -5,6 +5,7 @@ import type {
   ExecutePluginMainActionArgs,
   RunTemplateTagActionArgs,
 } from '~/common/plugins/bridge-types';
+import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import type { Plugin } from '~/common/plugins/types';
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 import { deserializeRenderContext } from '~/common/templating/render-context-serialization';
@@ -137,12 +138,11 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
         throw new Error(`[plugin-window] Action not found: ${pluginName}/${label}`);
       }
 
-      // A1: with the sandbox on, a user plugin's action (a throw-stub here after discovery) runs in the
-      // main-process sandbox over the templating-worker-database protocol; bundle plugins and the
-      // flag-off path run in-process.
+      // A1/T1: a sandboxed user plugin's action (a throw-stub here after discovery) runs in the
+      // main-process sandbox over the templating-worker-database protocol; bundle plugins, an
+      // elevated plugin, and the flag-off path run in-process (see resolvePluginExecutionMode).
       const settings = await fetchFromTemplateWorkerDatabase('settings.get', {});
-      const sandboxEnabled = !!settings?.templateTagSandboxEnabled;
-      if (sandboxEnabled && entry.plugin.directory !== '') {
+      if (shouldSandboxPlugin(settings, entry.plugin)) {
         await fetchFromTemplateWorkerDatabase('plugin.runUserAction', {
           plugin: { directory: entry.plugin.directory, name: entry.plugin.name, permissions: entry.plugin.permissions },
           actionKind: type,
@@ -210,17 +210,17 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
       const { renderedRequest, projectId, environment } = args as ApplyRequestHooksArgs;
       const newRenderedRequest = { ...renderedRequest };
       const renderedContext = deserializeRenderContext(environment);
-      // H1: with the sandbox on, a user plugin's hook (a throw-stub here after discovery) runs in the
-      // main-process sandbox over the templating-worker-database protocol; bundle plugins and the
-      // flag-off path run in-process. Per-plugin counter recovers the hook's index within its array.
+      // H1/T1: a sandboxed user plugin's hook (a throw-stub here after discovery) runs in the
+      // main-process sandbox over the templating-worker-database protocol; bundle plugins, an
+      // elevated plugin, and the flag-off path run in-process. Per-plugin counter recovers the
+      // hook's index within its array.
       const settings = await fetchFromTemplateWorkerDatabase('settings.get', {});
-      const sandboxEnabled = !!settings?.templateTagSandboxEnabled;
       const hookIndexByPlugin: Record<string, number> = {};
 
       for (const { plugin, hook } of await getRequestHooks()) {
         const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);
         try {
-          if (sandboxEnabled && plugin.directory !== '') {
+          if (shouldSandboxPlugin(settings, plugin)) {
             const mutated = await fetchFromTemplateWorkerDatabase('plugin.runUserRequestHook', {
               plugin: { directory: plugin.directory, name: plugin.name, permissions: plugin.permissions },
               hookIndex,
@@ -253,16 +253,16 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
       const newResponse = { ...response };
       const newRequest = { ...renderedRequest };
       const renderedContext = deserializeRenderContext(environment);
-      // H1: with the sandbox on, a user plugin's response hook runs in the main-process sandbox over
-      // the templating-worker-database protocol; bundle plugins and the flag-off path run in-process.
+      // H1/T1: a sandboxed user plugin's response hook runs in the main-process sandbox over the
+      // templating-worker-database protocol; bundle plugins, an elevated plugin, and the flag-off
+      // path run in-process.
       const settings = await fetchFromTemplateWorkerDatabase('settings.get', {});
-      const sandboxEnabled = !!settings?.templateTagSandboxEnabled;
       const hookIndexByPlugin: Record<string, number> = {};
 
       for (const { plugin, hook } of await getResponseHooks()) {
         const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);
         try {
-          if (sandboxEnabled && plugin.directory !== '') {
+          if (shouldSandboxPlugin(settings, plugin)) {
             const mutated = await fetchFromTemplateWorkerDatabase('plugin.runUserResponseHook', {
               plugin: { directory: plugin.directory, name: plugin.name, permissions: plugin.permissions },
               hookIndex,

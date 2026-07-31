@@ -95,9 +95,12 @@ export type SettingsOfType<MatchType> = NonNullable<
 
 export interface PluginConfig {
   disabled: boolean;
+  // T1: per-plugin escape hatch. When true, a user plugin runs in-process with full host access
+  // instead of the sandbox, even while the sandbox is enabled. Off/absent = sandboxed (default-deny).
+  elevated?: boolean;
 }
 
-export type PluginConfigMap = Record<string, { disabled: boolean }>;
+export type PluginConfigMap = Record<string, PluginConfig>;
 
 export interface Settings {
   autoDetectColorScheme: boolean;
@@ -168,6 +171,11 @@ export interface Settings {
   scriptStrictModeEnabled: boolean;
   // Experimental: execute plugin template tags inside the QuickJS-WASM sandbox instead of directly in the main process.
   templateTagSandboxEnabled: boolean;
+  // T1: sandbox ALL untrusted (user) plugin surfaces — template tags, request/response hooks, actions,
+  // and load-time module code. Supersedes templateTagSandboxEnabled: either flag on activates the
+  // sandbox (migration bridge). User plugins are default-deny; per-plugin `pluginConfig.elevated` opts
+  // an individual plugin back into full-host in-process execution. Bundle plugins are always trusted.
+  pluginSandboxEnabled: boolean;
   // Names of security rules that have been individually disabled.
   disabledSecurityRules: string[];
   // AST blocked-property names that have been individually disabled.

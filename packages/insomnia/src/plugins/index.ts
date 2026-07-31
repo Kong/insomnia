@@ -7,6 +7,7 @@ import { database as db, models, services } from 'insomnia-data';
 import type { PluginConfigMap } from 'insomnia-data/common';
 
 import { parsePluginPermissions } from '~/common/plugins/permissions';
+import { type SandboxSettings, shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import type {
   DocumentAction,
   Plugin,
@@ -110,7 +111,7 @@ async function traversePluginPath(
   pluginMap: Record<string, Plugin>,
   allPaths: string[],
   allConfigs: PluginConfigMap,
-  sandboxEnabled: boolean,
+  settings: SandboxSettings,
 ) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
@@ -131,7 +132,7 @@ async function traversePluginPath(
 
         // Is it a scoped directory?
         if (filename.startsWith('@')) {
-          await traversePluginPath(pluginMap, [modulePath], allConfigs, sandboxEnabled);
+          await traversePluginPath(pluginMap, [modulePath], allConfigs, settings);
         }
 
         // Is it a Node module?
@@ -174,11 +175,15 @@ async function traversePluginPath(
           console.warn('[plugin] %s has invalid insomnia.permissions: %o', pluginJson.name, parsedPermissions.warnings);
         }
 
-        // L1: with the sandbox on, discover a user plugin's exports by evaluating its source *inside*
-        // the sandbox (main process) instead of nodeRequire-ing it here — so installing/enabling it
-        // never runs its top-level code with host (Node) privileges. Off → legacy in-process require.
+        const config = pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false };
+
+        // L1/T1: a sandboxed user plugin's exports are discovered by evaluating its source *inside* the
+        // sandbox (main process) instead of nodeRequire-ing it here — so installing/enabling it never
+        // runs its top-level code with host (Node) privileges. An elevated plugin (or sandbox-off) is
+        // nodeRequire-d so its hooks/actions/tags are live in-process functions. Decision is per-plugin
+        // because `elevated` is per-plugin.
         let module: Plugin['module'];
-        if (sandboxEnabled) {
+        if (shouldSandboxPlugin(settings, { directory: modulePath, config })) {
           const manifest = await discoverUserPluginExports(modulePath, pluginJson.name, parsedPermissions.permissions);
           module = buildUserPluginModuleFromManifest(pluginJson.name, manifest);
         } else {
@@ -190,7 +195,7 @@ async function traversePluginPath(
           description: pluginJson.description || pluginJson.insomnia.description || '',
           version: pluginJson.version || 'unknown',
           directory: modulePath || '',
-          config: pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false },
+          config,
           permissions: parsedPermissions.permissions,
           permissionWarnings: parsedPermissions.warnings,
           permissionsDeclared: parsedPermissions.declared,
@@ -235,7 +240,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
-    await traversePluginPath(pluginMap, allPaths, allConfigs, settings.templateTagSandboxEnabled);
+    await traversePluginPath(pluginMap, allPaths, allConfigs, settings);
     const bundlePluginMap = getBundlePluginMap();
     const fullPluginMap = { ...pluginMap, ...bundlePluginMap };
     plugins = Object.keys(fullPluginMap).map(name => fullPluginMap[name]);
