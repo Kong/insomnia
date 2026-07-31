@@ -33,11 +33,24 @@ import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templ
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
+const templatingDbCorsHeaders = (request: Request): Record<string, string> => ({
+  'Access-Control-Allow-Origin': request.headers.get('Origin') ?? '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': `${TEMPLATING_DB_AUTH_HEADER}, content-type`,
+  'Vary': 'Origin',
+});
+
 export const resolveDbByKey = async (request: Request) => {
+  const cors = templatingDbCorsHeaders(request);
+  // A CORS preflight never carries the auth header, so answer it before the token check.
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors });
+  }
   // Reject before parsing the body, so an unauthenticated call never reaches a handler.
   if (!isValidTemplatingDbAuthToken(request.headers.get(TEMPLATING_DB_AUTH_HEADER))) {
     return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid templating database auth token' }), {
       status: 401,
+      headers: cors,
     });
   }
   const url = new URL(request.url);
@@ -45,7 +58,7 @@ export const resolveDbByKey = async (request: Request) => {
   try {
     // We expect this to throw if a db call returns undefined
     body = JSON.parse(await request.text(), stripDangerousKeysReviver);
-  } catch {}
+  } catch { }
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
@@ -60,10 +73,10 @@ export const resolveDbByKey = async (request: Request) => {
       throw new TypeError(`No host bridge handler registered for "${urlHostLowerCase}"`);
     }
     const result = await handler(body);
-    return new Response(JSON.stringify(result));
+    return new Response(JSON.stringify(result), { headers: cors });
   } catch (err) {
     console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: cors });
   }
 };
 
@@ -579,6 +592,47 @@ export const runResponseHookInSandbox = async (
   return result.response ?? hookResponse;
 };
 
+// A1: run a user plugin's action (matching actionLabel in the actionKind list) inside the sandbox,
+// capability-gated. Actions are fire-and-effect — the plugin reads the copied-in domain models and
+// performs side effects only through the bridge — so nothing is marshaled back. Reuses the same
+// bridge/grants/crypto as tag and hook execution.
+export const runActionInSandbox = async (
+  plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } },
+  actionKind: 'request' | 'requestGroup' | 'workspace' | 'document',
+  actionLabel: string,
+  actionDomainData: unknown,
+  renderContext?: Record<string, any>,
+): Promise<void> => {
+  const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
+  const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
+    '../templating/sandbox/surface-profiles'
+  );
+  const grantedCapabilities = resolveTemplateTagCapabilities(plugin.permissions?.capabilities);
+  const bridge = await buildSandboxBridge(grantedCapabilities);
+  const { moduleFiles, entryModuleKey } = readPluginModuleMap({ directory: plugin.directory, name: plugin.name });
+  await runTagInSandbox({
+    tagName: '',
+    bridge,
+    hostCrypto: SANDBOX_HOST_CRYPTO,
+    envelope: {
+      args: [],
+      context: renderContext || {},
+      meta: {},
+      renderPurpose: 'send',
+      appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
+      pluginName: plugin.name,
+      renderDepth: 0,
+      grantedModules: resolveTemplateTagModules(plugin.permissions?.modules),
+      grantedCapabilities,
+      moduleFiles,
+      entryModuleKey,
+      actionKind,
+      actionLabel,
+      actionDomainData,
+    },
+  });
+};
+
 // These are exposed to the templating worker and can be used by plugins from context.util.
 // Exported so tests can enumerate every registered path.
 export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
@@ -651,6 +705,12 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     const target = path.resolve(body.bodyPath);
     const relative = path.relative(responsesDir, target);
     if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error('response.setBody path escapes the responses directory');
+    }
+    // Re-check after resolving symlinks, mirroring getPluginEntrySource/readPluginModuleMap: a
+    // symlinked directory entry under responsesDir could otherwise resolve outside it despite the
+    // string-based check above passing.
+    if (!isContainedIn(fs.realpathSync(responsesDir), fs.realpathSync(path.dirname(target)))) {
       throw new Error('response.setBody path escapes the responses directory');
     }
     fs.writeFileSync(target, Buffer.from(body.bodyBase64, 'base64'));
@@ -909,6 +969,25 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
       body.renderedRequest,
       body.renderContext,
     );
+  },
+  // A1: run a user plugin's action in the sandbox (plugin-window path reaches this over the
+  // templating-worker-database protocol; the node runtime calls runActionInSandbox directly).
+  'plugin.runUserAction': async (body: {
+    plugin: { directory: string; name: string; permissions?: { modules?: string[]; capabilities?: string[] } };
+    actionKind: 'request' | 'requestGroup' | 'workspace' | 'document';
+    actionLabel: string;
+    actionDomainData: unknown;
+    renderContext?: Record<string, any>;
+  }) => {
+    const trusted = await resolveTrustedPlugin(body.plugin.name);
+    await runActionInSandbox(
+      { ...body.plugin, directory: trusted.directory, permissions: trusted.permissions },
+      body.actionKind,
+      body.actionLabel,
+      body.actionDomainData,
+      body.renderContext,
+    );
+    return null;
   },
   // execute a user-installed plugin tag with the given parameters, in the main process where
   // Node built-ins (e.g. crypto) the plugin requires are available.
