@@ -91,6 +91,8 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
     return <div key={key}>Invalid test result format</div>;
   });
 
+  const hasVisibleResults = resultsByIteration.some(Boolean);
+
   return (
     <>
       <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
@@ -122,7 +124,13 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
             </button>
           </Toolbar>
           <div className="h-[calc(100%-var(--line-height-sm))] w-auto overflow-x-auto overflow-y-auto">
-            {resultsByIteration}
+            {hasVisibleResults ? (
+              resultsByIteration
+            ) : (
+              <div className="mt-5 text-center">
+                <div>No {targetTests} requests/tests to display</div>
+              </div>
+            )}
           </div>
         </div>
         <Toolbar className="box-border flex h-(--line-height-sm) shrink-0 flex-row items-center overflow-x-auto text-(--font-size-sm)">
