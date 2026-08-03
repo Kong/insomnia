@@ -272,6 +272,7 @@ jobs:
             "artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap"
 
       - name: Get Cloudsmith OIDC token
+        if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
         id: cloudsmith_token
         uses: cloudsmith-io/cloudsmith-cli-action@18665afcce9f859312b61989671af9af7402e4fb # v2.0.2
         with:
