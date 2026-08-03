@@ -151,6 +151,7 @@ export interface Settings {
   preferredHttpVersion: HttpVersion;
   proxyEnabled: boolean;
   showPasswords: boolean;
+  sidebarFocusForCollections: boolean;
   theme: string;
   timeout: number;
   updateAutomatically: boolean;
