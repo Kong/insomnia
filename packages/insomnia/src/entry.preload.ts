@@ -153,6 +153,8 @@ const electronStorage: electronStorageBridgeAPI = {
 
 const devPortal: devPortalBridgeAPI = {
   oauthLogin: options => invokeWithNormalizedError('devPortal.oauthLogin', options),
+  sync: options => invokeWithNormalizedError('devPortal.sync', options),
+  cancelSync: options => ipcRenderer.send('devPortal.cancelSync', options),
 };
 
 const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {

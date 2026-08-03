@@ -15,12 +15,23 @@ import {
   hideOAuthAuthorizationModal,
   showOAuthAuthorizationModal,
 } from '~/main/network/o-auth-2/get-token';
+import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
+
+import {
+  type DevPortalFetchErrorDetails,
+  handleDevPortalFetchError,
+  throwDevPortalFetchError,
+} from './dev-portal-fetch';
+
+type INTROSPECTION_ENDPOINT_AUTH_METHOD = 'client_secret_post' | 'client_secret_basic';
 
 interface OIDCConfiguration {
   issuer: string;
   authorization_endpoint: string;
   token_endpoint: string;
   registration_endpoint: string;
+  introspection_endpoint: string;
+  introspection_endpoint_auth_methods_supported: INTROSPECTION_ENDPOINT_AUTH_METHOD[];
   scopes_supported: string[];
 }
 
@@ -51,6 +62,16 @@ interface ExchangeTokenResponse {
   error_uri?: string;
 }
 
+export type DevPortalOAuthLoginResult =
+  | {
+      success: true;
+      accessToken: string;
+    }
+  | {
+      success: false;
+      errorDetails: DevPortalFetchErrorDetails;
+    };
+
 const SCOPE_PORTAL_READ = 'portal:read';
 
 const fetchOIDCConfiguration = async (): Promise<OIDCConfiguration> => {
@@ -66,13 +87,14 @@ const fetchOIDCConfiguration = async (): Promise<OIDCConfiguration> => {
     invariant(config.authorization_endpoint, 'OIDC configuration is missing authorization_endpoint');
     invariant(config.token_endpoint, 'OIDC configuration is missing token_endpoint');
     invariant(config.registration_endpoint, 'OIDC configuration is missing registration_endpoint');
+    invariant(config.introspection_endpoint, 'OIDC configuration is missing introspection_endpoint');
     invariant(
       config.scopes_supported.includes(SCOPE_PORTAL_READ),
       `OIDC configuration does not support required scope: ${SCOPE_PORTAL_READ}`,
     );
     return config;
   } catch (error) {
-    throw new Error(`Failed to fetch OIDC configuration from ${origin}${oidcConfigPath}: ${error}`);
+    return await throwDevPortalFetchError(error, `fetch OIDC configuration from ${origin}${oidcConfigPath}`);
   }
 };
 
@@ -105,7 +127,59 @@ const registerOAuthClient = async (
       client_secret_expires_at: response.client_secret_expires_at,
     };
   } catch (error) {
-    throw new Error(`Failed to dynamic register OAuth client at ${registrationEndpoint}: ${error}`);
+    return await throwDevPortalFetchError(error, `dynamic register OAuth client at ${registrationEndpoint}`);
+  }
+};
+
+const introspectClientAndToken = async ({
+  introspectionEndpoint,
+  introspectionEndpointAuthMethod,
+  clientId,
+  clientSecret,
+  accessToken,
+}: {
+  introspectionEndpoint: string;
+  clientId: string;
+  introspectionEndpointAuthMethod: INTROSPECTION_ENDPOINT_AUTH_METHOD[];
+  clientSecret: string;
+  accessToken?: string;
+}): Promise<{ validClient: boolean; activeToken?: boolean }> => {
+  const headers: Record<string, string> = {};
+  let data: Record<string, string> | URLSearchParams;
+  if (introspectionEndpointAuthMethod.includes('client_secret_basic')) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    const { name: authName, value: authValue } = getBasicAuthHeader(clientId, clientSecret);
+    headers[authName] = authValue;
+    data = new URLSearchParams({
+      token: accessToken || '',
+    });
+  } else if (introspectionEndpointAuthMethod.includes('client_secret_post')) {
+    headers['Content-Type'] = 'application/json';
+    data = {
+      client_id: clientId,
+      client_secret: clientSecret,
+      token: accessToken || '',
+    };
+  } else {
+    throw new Error(`Unsupported introspection endpoint auth method: ${introspectionEndpointAuthMethod.join(', ')}`);
+  }
+  try {
+    const response = await insomniaFetch<{ active: boolean }>({
+      method: 'POST',
+      origin: introspectionEndpoint,
+      path: '',
+      headers,
+      data,
+    });
+    return {
+      validClient: true,
+      activeToken: response.active,
+    };
+  } catch {
+    return {
+      validClient: false,
+      activeToken: false,
+    };
   }
 };
 
@@ -115,7 +189,18 @@ const getOrRegisterOAuthClient = async (
 ): Promise<{ client: DevPortalOAuthClient; clientSecret: string }> => {
   if (project.devPortalOAuthClient) {
     const clientSecret = decryptString(project.devPortalOAuthClient.clientSecretEncrypted);
-    return { client: project.devPortalOAuthClient, clientSecret };
+    const { validClient } = await introspectClientAndToken({
+      introspectionEndpoint: oidc.introspection_endpoint,
+      introspectionEndpointAuthMethod: oidc.introspection_endpoint_auth_methods_supported,
+      clientId: project.devPortalOAuthClient.clientId,
+      clientSecret,
+    });
+    if (validClient) {
+      return { client: project.devPortalOAuthClient, clientSecret };
+    }
+    console.log('[Dev Portal] OAuth client is no longer valid, removing it from the project and registering a new one');
+    // Client is no longer valid, remove it from the project and register a new one
+    await services.project.update(project, { devPortalOAuthClient: null });
   }
   invariant(oidc.registration_endpoint, 'OIDC configuration is missing registration_endpoint');
 
@@ -172,17 +257,22 @@ const exchangeCodeForToken = async ({
     });
     return response;
   } catch (error) {
-    throw new Error(`Failed to exchange authorization code for token at ${tokenEndpoint}: ${error}`);
+    return await throwDevPortalFetchError(error, `exchange authorization code for token at ${tokenEndpoint}`);
   }
 };
 
-export const oauthLoginToDevPortal = async ({ projectId }: { projectId: string }) => {
+export const oauthLoginToDevPortal = async ({
+  projectId,
+}: {
+  projectId: string;
+}): Promise<DevPortalOAuthLoginResult> => {
   try {
     const project = await services.project.getById(projectId);
     invariant(project, `Project not found: ${projectId}`);
     invariant(models.project.isDevPortalProject(project), `Project ${projectId} is not a dev portal project`);
 
     const oidcConfig = await fetchOIDCConfiguration();
+
     const { client, clientSecret } = await getOrRegisterOAuthClient(project, oidcConfig);
 
     const codeVerifier = encodePKCE(crypto.randomBytes(32));
@@ -246,9 +336,16 @@ export const oauthLoginToDevPortal = async ({ projectId }: { projectId: string }
     const latestProject = await services.project.getById(projectId);
     invariant(latestProject, `Project not found: ${projectId}`);
     await services.project.update(latestProject, { devPortalOAuthToken: token });
-    return tokenResponse.access_token;
-  } catch (err) {
-    console.error('[dev-portal-oauth] Failed to log in to dev portal', err);
-    throw err;
+    const accessToken = tokenResponse.access_token;
+    return {
+      success: true,
+      accessToken,
+    };
+  } catch (error) {
+    const errorDetails = handleDevPortalFetchError(error);
+    return {
+      success: false,
+      errorDetails,
+    };
   }
 };

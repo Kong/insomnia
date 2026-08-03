@@ -267,6 +267,9 @@ const importRequest = (
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
+  const operationId =
+    (endpointSchema as OpenAPIV3.OperationObject).operationId ||
+    `${endpointSchema.method?.toUpperCase()}:${endpointSchema.path}`;
   const body = prepareBody(endpointSchema as OpenAPIV3.OperationObject);
   const paramHeaders = prepareHeaders(endpointSchema, body);
   const {
@@ -286,6 +289,7 @@ const importRequest = (
     headers: [...paramHeaders, ...securityHeaders],
     authentication: authentication,
     parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
+    operationId,
   };
 };
 

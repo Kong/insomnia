@@ -77,9 +77,6 @@ export async function insomniaFetch<T = void>({
           if (typeof json?.message === 'string') {
             errMsg = json.message;
           }
-          if (typeof json?.error_description === 'string') {
-            errMsg = json.error_description;
-          }
         } catch {}
       }
       throw new ResponseFailError(errName, errMsg, response);

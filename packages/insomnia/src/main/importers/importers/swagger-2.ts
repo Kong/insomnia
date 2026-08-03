@@ -116,6 +116,8 @@ const importRequest = (
   parentId: string,
 ): ImportRequest => {
   const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
+  const operationId =
+    endpointSchema.operationId || `${endpointSchema.method?.toUpperCase()}:${endpointSchema.path}`;
 
   const body = prepareBody(document, endpointSchema, globalMimeTypes);
 
@@ -144,6 +146,7 @@ const importRequest = (
     description: endpointSchema.description || '',
     headers,
     parameters: prepareQueryParams(endpointSchema),
+    operationId,
   };
 
   return setupAuthentication(document.securityDefinitions, endpointSchema, request);
