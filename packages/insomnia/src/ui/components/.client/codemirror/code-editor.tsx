@@ -45,6 +45,8 @@ import { getCachedEditorState, setCachedEditorState } from './editor-state-cache
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
+const LONG_LINE_THRESHOLD = 10_000; // Collapse lines longer than 10,000 characters
+const LONG_LINE_VISIBLE_CHARS = 20; // Show first/last 20 chars if meets LONG_LINE_THRESHOLD
 
 export const shouldIndentWithTabs = ({ mode, indentWithTabs }: { mode?: string; indentWithTabs?: boolean }) => {
   // YAML is not valid when indented with Tabs
@@ -74,6 +76,70 @@ const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Posit
     return '\u2194';
   }
 };
+
+function setEditorValueWithTruncation(
+  editor: CodeMirror.EditorFromTextArea | null,
+  fullText: string,
+  threshold = LONG_LINE_THRESHOLD,
+) {
+  if (!editor) {
+    return;
+  }
+  if (fullText.length <= threshold) {
+    // If the full text length is under the threshold, set it directly without processing
+    editor.setValue(fullText);
+    return;
+  }
+  // split the original text by line with different line breaks across Different OS
+  const lines = fullText.split(/\r\n?|\n/);
+  const longLinesMap: Record<number, string> = {};
+  const markerMap = new Map<number, CodeMirror.TextMarker>();
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].length > threshold) {
+      // save the original long line in a map for later restoration
+      longLinesMap[i] = lines[i];
+      // truncate the line, preserving both the start and end
+      lines[i] = lines[i].slice(0, LONG_LINE_VISIBLE_CHARS) + lines[i].slice(-LONG_LINE_VISIBLE_CHARS);
+    }
+  }
+  const makeToggleWidget = (lineNum: number, originalText: string): HTMLSpanElement => {
+    const el = document.createElement('span');
+    el.className = 'line-collapse-widget';
+    el.style.cssText =
+      'display:inline-block; padding:0 6px ;margin:0 2px; background:var(--hl-md); color:var(--color-font); border-radius:3px; font-size:0.85em; cursor:pointer; vertical-align:baseline;';
+    el.textContent = '\u2026 Show full value \u2026';
+    el.title = 'Expanding long values can affect performance';
+    el.setAttribute('aria-label', 'Show full value');
+    el.onclick = () => {
+      // clear the marker and restore the original long line when the widget is clicked
+      markerMap.get(lineNum)?.clear();
+      editor.replaceRange(
+        originalText,
+        { line: lineNum, ch: 0 },
+        { line: lineNum, ch: editor.getLine(lineNum).length },
+      );
+    };
+
+    return el;
+  };
+
+  // Perform the editor update in a single operation to minimize reflows
+  editor.operation(() => {
+    const longLineMapKeys = Object.keys(longLinesMap);
+    const hasLongLines = longLineMapKeys.length > 0;
+    editor.setValue(hasLongLines ? lines.join('\n') : fullText);
+    longLineMapKeys.forEach(lineStr => {
+      const lineNum = Number.parseInt(lineStr, 10);
+      const originalText = longLinesMap[lineNum];
+      const editorMarker = editor.setBookmark(
+        { line: lineNum, ch: LONG_LINE_VISIBLE_CHARS },
+        { widget: makeToggleWidget(lineNum, originalText), insertLeft: true },
+      );
+      markerMap.set(lineNum, editorMarker);
+    });
+  });
+}
+
 export interface CodeEditorProps {
   autoPrettify?: boolean;
   className?: string;
@@ -107,6 +173,7 @@ export interface CodeEditorProps {
   pinToBottom?: boolean;
   placeholder?: string;
   readOnly?: boolean;
+  truncateLongLines?: boolean;
   style?: object;
   // NOTE: for caching scroll and marks
   historyKey?: string;
@@ -184,6 +251,7 @@ export const CodeEditor = memo(
         pinToBottom,
         placeholder,
         readOnly,
+        truncateLongLines,
         style,
         historyKey,
         updateFilter,
@@ -221,6 +289,7 @@ export const CodeEditor = memo(
       );
       const { handleRender, handleGetRenderContext } = useNunjucks();
       const isNunjucksEnabled = enableNunjucks && handleRender;
+      const shouldTruncateLongLines = !!readOnly && !!truncateLongLines;
 
       const maybePrettifyAndSetValue = useCallback(
         (code?: string, forcePrettify?: boolean, filter?: string) => {
@@ -290,9 +359,11 @@ export const CodeEditor = memo(
           if (currentCode === code) {
             return;
           }
-          codeMirror.current?.setValue(code || '');
+          shouldTruncateLongLines
+            ? setEditorValueWithTruncation(codeMirror.current, code)
+            : codeMirror.current?.setValue(code || '');
         },
-        [autoPrettify, mode, indentChars, updateFilter],
+        [autoPrettify, shouldTruncateLongLines, updateFilter, indentChars, mode],
       );
 
       useDocBodyKeyboardShortcuts({
@@ -681,7 +752,10 @@ export const CodeEditor = memo(
       useImperativeHandle(
         ref,
         () => ({
-          setValue: value => codeMirror.current?.setValue(value),
+          setValue: value =>
+            shouldTruncateLongLines
+              ? setEditorValueWithTruncation(codeMirror.current, value)
+              : codeMirror.current?.setValue(value || ''),
           getValue: () => codeMirror.current?.getValue() || '',
           selectAll: () =>
             codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
@@ -708,7 +782,7 @@ export const CodeEditor = memo(
           indexFromPos: (pos?: CodeMirror.Position) => (pos ? codeMirror.current?.indexFromPos(pos) || 0 : 0),
           getDoc: () => codeMirror.current?.getDoc(),
         }),
-        [],
+        [shouldTruncateLongLines],
       );
 
       useEffect(() => {

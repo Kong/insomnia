@@ -3,6 +3,7 @@ export function dedupeCollectionItems<T>(items: T[], getId: (item: T) => string)
   const uniqueItems = items.filter(item => {
     const id = getId(item);
     if (seenIds.has(id)) {
+      console.warn(`[Duplicate Item] Duplicate item found with id: ${id}`);
       return false;
     }
     seenIds.add(id);

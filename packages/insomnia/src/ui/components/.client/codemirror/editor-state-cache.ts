@@ -12,12 +12,15 @@ export interface CachedEditorState {
   marks?: Partial<CodeMirror.MarkerRange>[];
 }
 
-// Bounded LRU. Keys can be ephemeral (e.g. one per key-value pair id, minted per
-// row and never reused), so without a cap this would grow unboundedly for the
-// lifetime of the renderer, each entry retaining a CodeMirror history stack.
-// The cap only needs to cover editors that might remount roughly concurrently;
-// a few dozen is plenty, 100 is comfortably safe.
-const MAX_CACHED_EDITOR_STATES = 100;
+// The cache is primarily bounded by lifecycle purging (see purgeCachedEditorStates):
+// entries are dropped when their owning tab closes or their key-value row is
+// deleted, so it tracks live editors rather than growing forever. The LRU cap
+// below is only a safety backstop for entries no lifecycle event reaches. It must
+// be high enough that a single param/header-heavy request — which alone can mint a
+// few hundred keys (three per key-value row) — never evicts its own editors, and
+// that switching between several open tabs never evicts a still-open tab's undo
+// history. Each entry is a small CodeMirror history snapshot.
+const MAX_CACHED_EDITOR_STATES = 2000;
 // Map preserves insertion order, so the first key is the least-recently-used.
 const editorStates = new Map<string, CachedEditorState>();
 
@@ -42,4 +45,20 @@ export const setCachedEditorState = (historyKey: string, state: CachedEditorStat
     }
     editorStates.delete(lruKey);
   }
+};
+
+// Lifecycle purge: drop every cached entry whose historyKey matches `shouldPurge`.
+// Used to reclaim history when the owning scope goes away — e.g. a closed tab
+// (purge keys that embed the closed request id) or a deleted key-value row (purge
+// that pair's keys) — so stale entries never accumulate or crowd out live editors.
+// Returns the number of entries removed.
+export const purgeCachedEditorStates = (shouldPurge: (historyKey: string) => boolean): number => {
+  let purged = 0;
+  for (const key of editorStates.keys()) {
+    if (shouldPurge(key)) {
+      editorStates.delete(key);
+      purged++;
+    }
+  }
+  return purged;
 };

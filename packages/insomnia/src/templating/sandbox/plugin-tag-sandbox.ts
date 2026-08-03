@@ -1,7 +1,7 @@
 import type { QuickJSContext, QuickJSHandle } from 'quickjs-emscripten';
 
 import type { HostBridge } from './host-bridge';
-import { DESCRIBE_RUNNER, HOOK_RUNNER, IN_SANDBOX_BOOTSTRAP, RUNNER } from './in-sandbox-bootstrap';
+import { ACTION_RUNNER, DESCRIBE_RUNNER, HOOK_RUNNER, IN_SANDBOX_BOOTSTRAP, RUNNER } from './in-sandbox-bootstrap';
 import { type ContextEnvelope, encodeBridgeFailure, encodeBridgeSuccess } from './marshal';
 import { buildModuleRegistrySource } from './module-registry';
 import { SANDBOX_GLOBALS_SOURCE } from './sandbox-globals';
@@ -97,7 +97,13 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     evalOrThrow(ctx, buildModuleRegistrySource(fullEnvelope.grantedModules), '<sandbox-modules>');
     // Plugin source travels as envelope DATA (moduleFiles) and is compiled by the in-sandbox loader
     // when __invoke()/__describeExports()/__invokeHook() loads the entry — no host-side eval.
-    const runner = envelope.hookKind ? HOOK_RUNNER : discover ? DESCRIBE_RUNNER : RUNNER;
+    const runner = envelope.actionKind
+      ? ACTION_RUNNER
+      : envelope.hookKind
+        ? HOOK_RUNNER
+        : discover
+          ? DESCRIBE_RUNNER
+          : RUNNER;
     evalOrThrow(ctx, runner, '<runner>');
 
     return await drivePromiseToString(ctx, timeoutMs);
