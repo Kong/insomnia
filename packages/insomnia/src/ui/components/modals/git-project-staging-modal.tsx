@@ -17,6 +17,7 @@ import {
   GridList,
   GridListItem,
   Heading,
+  Input,
   isTextDropItem,
   Label,
   Modal,
@@ -36,6 +37,7 @@ import { Button as BasicButton } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
+import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
 import { useGitProjectCommitsActionFetcher } from '~/routes/git.commits';
@@ -139,10 +141,41 @@ function getGitHubProtectedBranchTip(error: string): string | null {
   return null;
 }
 
-const PushFailedAfterCommitBanner = (props: { error: string; isRetrying: boolean; onRetry: () => void }) => {
+const PushFailedAfterCommitBanner = (props: {
+  error: string;
+  isRetrying: boolean;
+  onRetry: () => void;
+  projectId: string;
+}) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [isCreateBranchModalOpen, setIsCreateBranchModalOpen] = useState(false);
   const detail = stripRedundantPushErrorPrefix(props.error);
   const tip = getGitHubProtectedBranchTip(detail);
+
+  const createBranchFetcher = useGitProjectNewBranchActionFetcher();
+  const isCreatingBranch = createBranchFetcher.state !== 'idle';
+  const createBranchError =
+    createBranchFetcher.data?.errors && createBranchFetcher.data.errors.length > 0
+      ? createBranchFetcher.data.errors.join('\n')
+      : null;
+
+  const { onRetry } = props;
+  const prevCreateBranchStateRef = useRef(createBranchFetcher.state);
+  useEffect(() => {
+    const prevState = prevCreateBranchStateRef.current;
+    prevCreateBranchStateRef.current = createBranchFetcher.state;
+    if (!(prevState !== 'idle' && createBranchFetcher.state === 'idle' && createBranchFetcher.data)) {
+      return;
+    }
+    if (createBranchFetcher.data.errors && createBranchFetcher.data.errors.length > 0) {
+      // Most likely a name collision — let the user try a different name.
+      return;
+    }
+    // The branch was created from (and includes) the commit that failed to
+    // push, and is now checked out — push it right away.
+    setIsCreateBranchModalOpen(false);
+    onRetry();
+  }, [createBranchFetcher.state, createBranchFetcher.data, onRetry]);
 
   return (
     <Banner
@@ -168,18 +201,38 @@ const PushFailedAfterCommitBanner = (props: { error: string; isRetrying: boolean
         </div>
       }
       footer={
-        <Button
-          type="button"
-          isDisabled={props.isRetrying}
-          onPress={props.onRetry}
-          className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-        >
-          <Icon
-            icon={props.isRetrying ? 'spinner' : 'cloud-arrow-up'}
-            className={props.isRetrying ? 'animate-spin' : ''}
-          />
-          Retry push
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            isDisabled={props.isRetrying}
+            onPress={props.onRetry}
+            className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+          >
+            <Icon
+              icon={props.isRetrying ? 'spinner' : 'cloud-arrow-up'}
+              className={props.isRetrying ? 'animate-spin' : ''}
+            />
+            Retry push
+          </Button>
+          {tip && (
+            <Button
+              type="button"
+              onPress={() => setIsCreateBranchModalOpen(true)}
+              className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+            >
+              <Icon icon="code-branch" />
+              Create branch &amp; push
+            </Button>
+          )}
+          {isCreateBranchModalOpen && (
+            <CreateBranchAndPushModal
+              isCreating={isCreatingBranch}
+              error={createBranchError}
+              onClose={() => setIsCreateBranchModalOpen(false)}
+              onSubmit={branch => createBranchFetcher.submit({ projectId: props.projectId, branch })}
+            />
+          )}
+        </div>
       }
     />
   );
@@ -645,7 +698,12 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         </div>
       )}
       {pushFailedError ? (
-        <PushFailedAfterCommitBanner error={pushFailedError} isRetrying={isRetryingPush} onRetry={retryPush} />
+        <PushFailedAfterCommitBanner
+          error={pushFailedError}
+          isRetrying={isRetryingPush}
+          onRetry={retryPush}
+          projectId={projectId}
+        />
       ) : operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
         <GitOauthAuthBanner
           selectedCredential={selectedCredential}
@@ -946,7 +1004,12 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </div>
         )}
         {pushFailedError ? (
-          <PushFailedAfterCommitBanner error={pushFailedError} isRetrying={isRetryingPush} onRetry={retryPush} />
+          <PushFailedAfterCommitBanner
+          error={pushFailedError}
+          isRetrying={isRetryingPush}
+          onRetry={retryPush}
+          projectId={projectId}
+        />
         ) : operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
@@ -1829,6 +1892,102 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 </Button>
               </div>
             </div>
+          )}
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
+  );
+};
+
+// Focused, single-purpose modal for the "push failed" banner's branch-creation
+// shortcut. Deliberately not the full Branches modal — that has checkout/delete/
+// merge actions for every branch, which would distract from this one specific
+// recovery step.
+const CreateBranchAndPushModal = ({
+  isCreating,
+  error,
+  onSubmit,
+  onClose,
+}: {
+  isCreating: boolean;
+  error: string | null;
+  onSubmit: (branchName: string) => void;
+  onClose: () => void;
+}) => {
+  const [branchName, setBranchName] = useState('');
+
+  return (
+    <ModalOverlay
+      isOpen
+      onOpenChange={isOpen => {
+        !isOpen && onClose();
+      }}
+      isDismissable
+      className="fixed top-[50%] left-0 z-10 flex h-(--visual-viewport-height) w-full translate-y-[-50%] items-center justify-center bg-black/30"
+    >
+      <Modal
+        onOpenChange={isOpen => {
+          !isOpen && onClose();
+        }}
+        className="flex w-full max-w-md flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
+      >
+        <Dialog className="outline-hidden">
+          {({ close }) => (
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                const name = branchName.trim();
+                if (!name) {
+                  return;
+                }
+                onSubmit(name);
+              }}
+              className="flex flex-col gap-4"
+            >
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <Heading slot="title" className="flex items-center gap-2 text-2xl">
+                  Create branch &amp; push
+                </Heading>
+                <Button
+                  type="button"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  onPress={close}
+                >
+                  <Icon icon="x" />
+                </Button>
+              </div>
+              <TextField autoFocus className="flex flex-col gap-2">
+                <Label className="font-bold">Branch name</Label>
+                <Input
+                  value={branchName}
+                  onChange={e => setBranchName(e.target.value)}
+                  placeholder="e.g. fix/protected-branch"
+                  className="h-8 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                />
+              </TextField>
+              {error && (
+                <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
+                  <Icon icon="exclamation-triangle" /> {error}
+                </p>
+              )}
+              <div className="flex h-10 shrink-0 items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
+                  onPress={close}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  isDisabled={isCreating || !branchName.trim()}
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80 disabled:opacity-50"
+                >
+                  <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
+                  Create branch &amp; push
+                </Button>
+              </div>
+            </form>
           )}
         </Dialog>
       </Modal>

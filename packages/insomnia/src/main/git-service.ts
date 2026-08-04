@@ -2418,6 +2418,23 @@ export const createNewGitBranchAction = async ({
   invariant(typeof branch === 'string', 'Branch name is required');
 
   try {
+    // `GitVCS.checkout()` silently falls back to checking out an existing branch
+    // of the same name instead of branching from HEAD (see its implementation) —
+    // which would strand any local commits on the branch the user is leaving,
+    // with no indication anything happened differently than a real "create".
+    // Since this action's whole contract is "create a NEW branch", refuse up
+    // front rather than let that ambiguity through.
+    const [localBranches, syncedBranches, remoteBranches] = await Promise.all([
+      GitVCS.listBranches(),
+      GitVCS.listRemoteBranches(),
+      GitVCS.fetchRemoteBranches(),
+    ]);
+    if ([...localBranches, ...syncedBranches, ...remoteBranches].includes(branch)) {
+      return {
+        errors: [`A branch named "${branch}" already exists. Choose a different name, or use "Switch branch" instead.`],
+      };
+    }
+
     let providerName = 'custom';
     if (gitRepository?.credentialsId) {
       const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
@@ -2479,6 +2496,17 @@ export const checkoutGitBranchAction = async ({
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    // Capture the branch being left, and whether it has commits that haven't
+    // been pushed, before switching away from it — those commits aren't lost,
+    // but they won't be reachable again until the user switches back.
+    const previousBranch = await GitVCS.getCurrentBranch();
+    let hadUnpushedChangesOnPreviousBranch = false;
+    try {
+      hadUnpushedChangesOnPreviousBranch = await GitVCS.canPush(gitRepository.credentialsId);
+    } catch (err) {
+      console.error('Error checking for unpushed changes before branch switch', err);
+    }
+
     const bufferId = await database.bufferChanges();
     await GitVCS.checkout(branch);
 
@@ -2510,19 +2538,25 @@ export const checkoutGitBranchAction = async ({
 
     await database.flushChanges(bufferId);
 
+    const warnings: string[] = [];
+
+    if (hadUnpushedChangesOnPreviousBranch && previousBranch !== branch) {
+      warnings.push(
+        `"${previousBranch}" has commits that haven't been pushed. They're safe — switch back to "${previousBranch}" to push them.`,
+      );
+    }
+
     const branchRemoteInfo = await GitVCS.getBranchRemoteInfo(branch);
     if (!branchRemoteInfo.isOrigin) {
-      return {
-        success: true,
-        warnings: [
-          `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
-            `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
-        ],
-      };
+      warnings.push(
+        `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
+          `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
+      );
     }
 
     return {
       success: true,
+      ...(warnings.length > 0 ? { warnings } : {}),
     };
   } catch (err) {
     if (err instanceof Errors.HttpError) {
