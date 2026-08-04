@@ -142,7 +142,7 @@ describe('Environment serialization', () => {
   });
 });
 
-describe('set accepts null but rejects undefined/NaN', () => {
+describe('set accepts null/undefined but rejects NaN', () => {
   it('Environment.set accepts null', () => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const env = new Environment('test', {});
@@ -153,11 +153,21 @@ describe('set accepts null but rejects undefined/NaN', () => {
     warnSpy.mockRestore();
   });
 
-  it.each([undefined, Number.NaN])('Environment.set warns and skips on %s', value => {
+  it('Environment.set accepts undefined', () => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const env = new Environment('test', {});
-    env.set('key', value);
-    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has an undefined or NaN value');
+    env.set('key', undefined);
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(env.has('key')).toBe(true);
+    expect(env.get('key')).toBeUndefined();
+    warnSpy.mockRestore();
+  });
+
+  it('Environment.set warns and skips on NaN', () => {
+    const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
+    const env = new Environment('test', {});
+    env.set('key', Number.NaN);
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a NaN value');
     expect(env.has('key')).toBe(false);
     warnSpy.mockRestore();
   });
@@ -179,7 +189,7 @@ describe('set accepts null but rejects undefined/NaN', () => {
     warnSpy.mockRestore();
   });
 
-  it.each([undefined, Number.NaN])('Variables.set warns and skips on %s', value => {
+  it('Variables.set accepts undefined', () => {
     const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
     const variables = new Variables({
       baseGlobalVars: new Environment('baseGlobals', {}),
@@ -190,8 +200,25 @@ describe('set accepts null but rejects undefined/NaN', () => {
       folderLevelVars: [],
       localVars: new Environment('local', {}),
     });
-    variables.set('key', value);
-    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has an undefined or NaN value');
+    variables.set('key', undefined);
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(variables.get('key')).toBeUndefined();
+    warnSpy.mockRestore();
+  });
+
+  it('Variables.set warns and skips on NaN', () => {
+    const warnSpy = vi.spyOn(getExistingConsole(), 'warn');
+    const variables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', {}),
+      globalVars: new Environment('globals', {}),
+      environmentVars: new Environment('environments', {}),
+      collectionVars: new Environment('baseEnvironment', {}),
+      iterationDataVars: new Environment('iterationData', {}),
+      folderLevelVars: [],
+      localVars: new Environment('local', {}),
+    });
+    variables.set('key', Number.NaN);
+    expect(warnSpy).toHaveBeenCalledWith('Variable "key" has a NaN value');
     expect(variables.get('key')).toBeUndefined();
     warnSpy.mockRestore();
   });

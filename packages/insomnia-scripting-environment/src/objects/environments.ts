@@ -81,15 +81,15 @@ export class Environment {
 
   /**
    * Sets a variable in the key-value store with the specified name and value.
-   * If the provided value is `undefined` or `NaN`, a warning is logged and the variable is not set.
+   * If the provided value is `NaN`, a warning is logged and the variable is not set.
    *
    * @param variableName - The name of the variable to set.
    * @param variableValue - The value to assign to the variable. Can be a boolean, number, string, undefined, or null.
-   *                        If `undefined` or `NaN`, the variable will not be set, and a warning will be logged.
+   *                        If `NaN`, the variable will not be set, and a warning will be logged.
    */
   set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
-    if (variableValue === undefined || Number.isNaN(variableValue)) {
-      getExistingConsole().warn(`Variable "${variableName}" has an undefined or NaN value`);
+    if (Number.isNaN(variableValue)) {
+      getExistingConsole().warn(`Variable "${variableName}" has a NaN value`);
       return;
     }
     this.kvs.set(variableName, variableValue);
@@ -300,15 +300,15 @@ export class Variables {
 
   /**
    * Sets a local variable with the specified name and value.
-   * If the provided value is `undefined` or `NaN`, a warning is logged and the variable is not set.
+   * If the provided value is `NaN`, a warning is logged and the variable is not set.
    *
    * @param variableName - The name of the variable to set.
    * @param variableValue - The value to assign to the variable. Can be a boolean, number, string, undefined, or null.
-   *                        If `undefined` or `NaN`, the variable will not be set and a warning will be logged.
+   *                        If `NaN`, the variable will not be set and a warning will be logged.
    */
   set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
-    if (variableValue === undefined || Number.isNaN(variableValue)) {
-      getExistingConsole().warn(`Variable "${variableName}" has an undefined or NaN value`);
+    if (Number.isNaN(variableValue)) {
+      getExistingConsole().warn(`Variable "${variableName}" has a NaN value`);
       return;
     }
 
