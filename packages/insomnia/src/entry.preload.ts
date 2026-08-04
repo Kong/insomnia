@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils as webUtilities } from 'electron';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
 import type {
   ApplyRequestHooksArgs,
@@ -300,7 +300,7 @@ const main: Window['main'] = {
   deleteCompiledRuleset: options => invokeWithNormalizedError('deleteCompiledRuleset', options),
   refreshCompiledRuleset: options => invokeWithNormalizedError('refreshCompiledRuleset', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
-  getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
+  getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }> =>
     invokeWithNormalizedError('getAuthHeader', renderedRequest, url),
   getOAuth2Token: (
     requestId: string,

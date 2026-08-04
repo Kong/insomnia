@@ -1,5 +1,5 @@
 import * as Hawk from 'hawk';
-import type { AuthTypeOAuth2, RequestAuthentication, RequestHeader } from 'insomnia-data';
+import type { AuthTypeOAuth2, RequestAuthentication, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
 import type { RenderedRequest } from '~/common/templating/types';
 
@@ -8,6 +8,11 @@ import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import getOAuth1Token from './o-auth-1/get-token';
 import { getOAuth2Token } from './o-auth-2/get-token';
+
+export interface AuthHeaderResult {
+  header?: RequestHeader;
+  timeline?: ResponseTimelineEntry[];
+}
 
 const buildBearerHeader = (accessToken: string, prefix?: string): RequestHeader | undefined => {
   if (!accessToken) {
@@ -20,49 +25,53 @@ const buildBearerHeader = (accessToken: string, prefix?: string): RequestHeader 
   };
 };
 
-export async function getAuthHeader(renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> {
+export async function getAuthHeader(renderedRequest: RenderedRequest, url: string): Promise<AuthHeaderResult> {
   const { method, body } = renderedRequest;
   const authentication = renderedRequest.authentication as RequestAuthentication;
 
   const requestId = renderedRequest._id;
 
   if (authentication.disabled) {
-    return;
+    return {};
   }
 
   if (authentication.type === 'apikey' && authentication.addTo === HEADER) {
     const { key, value } = authentication;
 
     if (!key || !value) {
-      return;
+      return {};
     }
 
     return {
-      name: key,
-      value,
+      header: {
+        name: key,
+        value,
+      },
     };
   }
 
   if (authentication.type === 'apikey' && authentication.addTo === COOKIE) {
     const { key, value } = authentication;
     if (!key || !value) {
-      return undefined;
+      return {};
     }
     return {
-      name: 'Cookie',
-      value: `${key}=${value}`,
+      header: {
+        name: 'Cookie',
+        value: `${key}=${value}`,
+      },
     };
   }
 
   if (authentication.type === 'basic') {
     const { username, password, useISO88591 } = authentication;
     const encoding = useISO88591 ? 'latin1' : 'utf8';
-    return getBasicAuthHeader(username, password, encoding);
+    return { header: getBasicAuthHeader(username, password, encoding) };
   }
 
   if (authentication.type === 'bearer' && authentication.token) {
     const { token, prefix } = authentication;
-    return getBearerAuthHeader(token, prefix);
+    return { header: getBearerAuthHeader(token, prefix) };
   }
 
   if (authentication.type === 'oauth2') {
@@ -72,16 +81,16 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       // pretending we are fetching a token for the original request. This makes sure
       // the same tokens are used for schema fetching. See issue #835 on GitHub.
       const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
-      const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
+      const { token: oAuth2Token, timeline } = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
 
       if (oAuth2Token) {
-        return buildBearerHeader(oAuth2Token.accessToken, authentication.tokenPrefix);
+        return { header: buildBearerHeader(oAuth2Token.accessToken, authentication.tokenPrefix), timeline };
       }
 
-      return;
+      return { timeline };
     } catch (err) {
       console.log('[oauth2] Failed to get token', err);
-      return;
+      return { timeline: err.timeline };
     }
   }
 
@@ -90,12 +99,14 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
     if (oAuth1Token) {
       return {
-        name: 'Authorization',
-        value: oAuth1Token.Authorization,
+        header: {
+          name: 'Authorization',
+          value: oAuth1Token.Authorization,
+        },
       };
     }
 
-    return;
+    return {};
   }
 
   if (authentication.type === 'hawk') {
@@ -110,17 +121,21 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
     if (!authentication.validatePayload) {
       return {
-        name: 'Authorization',
-        value: Hawk.client.header(url, method, headerOptions).header,
+        header: {
+          name: 'Authorization',
+          value: Hawk.client.header(url, method, headerOptions).header,
+        },
       };
     }
     return {
-      name: 'Authorization',
-      value: Hawk.client.header(url, method, {
-        ...headerOptions,
-        payload: renderedRequest.body.text,
-        contentType: renderedRequest.body.mimeType || undefined,
-      }).header,
+      header: {
+        name: 'Authorization',
+        value: Hawk.client.header(url, method, {
+          ...headerOptions,
+          payload: renderedRequest.body.text,
+          contentType: renderedRequest.body.mimeType || undefined,
+        }).header,
+      },
     };
   }
 
@@ -147,10 +162,12 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       tokenMaxAgeMs: 9 * 60 * 1000,
     });
     return {
-      name: 'Authorization',
-      value: generator(),
+      header: {
+        name: 'Authorization',
+        value: generator(),
+      },
     };
   }
 
-  return;
+  return {};
 }

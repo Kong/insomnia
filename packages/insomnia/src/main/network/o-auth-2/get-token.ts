@@ -11,6 +11,7 @@ import type {
   RequestHeader,
   RequestParameter,
   Response,
+  ResponseTimelineEntry,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
@@ -145,22 +146,45 @@ export const encryptOAuthUrl = (authCodeUrlStr: string) => {
   };
 };
 
+export interface OAuth2TokenResult {
+  token?: OAuth2Token;
+  timeline: ResponseTimelineEntry[];
+}
+
+const logEntry = (value: string): ResponseTimelineEntry => ({
+  name: 'Text',
+  value: `[oauth2] ${value}`,
+  timestamp: Date.now(),
+});
+
 export const getOAuth2Token = async (
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
-): Promise<OAuth2Token | undefined> => {
+): Promise<OAuth2TokenResult> => {
+  const timeline: ResponseTimelineEntry[] = [];
   try {
     if (authentication.grantType === 'mcp_auth_flow') {
-      return undefined;
+      return { token: undefined, timeline };
     }
-    const { oAuth2Token, closestAuthId } = await getExistingAccessTokenAndRefreshIfExpired(
+    timeline.push(
+      logEntry(`Starting OAuth2 flow (grantType=${authentication.grantType}, forceRefresh=${forceRefresh})`),
+    );
+    const { oAuth2Token, closestAuthId, refreshTimeline } = await getExistingAccessTokenAndRefreshIfExpired(
       requestId,
       authentication,
       forceRefresh,
     );
-    if (oAuth2Token) {
-      return oAuth2Token;
+    if (refreshTimeline) {
+      timeline.push(...refreshTimeline);
+    }
+    if (oAuth2Token?.accessToken) {
+      timeline.push(
+        logEntry(
+          `Using existing access token (expires: ${oAuth2Token.expiresAt ? new Date(oAuth2Token.expiresAt).toISOString() : 'never'}, token: ${oAuth2Token.accessToken.slice(0, 8)}...)`,
+        ),
+      );
+      return { token: oAuth2Token, timeline };
     }
     const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(
       authentication.grantType,
@@ -187,31 +211,45 @@ export const getOAuth2Token = async (
             ]
           : []),
       ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
-      const redirectedTo = await authorizeUserInWindow({
-        url: implicitUrl.toString(),
-        urlSuccessRegex: /(access_token=|id_token=)/,
-        urlFailureRegex: /(error=)/,
-        sessionId: getOAuthSession(),
-      });
+      timeline.push(logEntry(`Opening authorization window: ${implicitUrl.origin}${implicitUrl.pathname}`));
+      let redirectedTo: string;
+      try {
+        redirectedTo = await authorizeUserInWindow({
+          url: implicitUrl.toString(),
+          urlSuccessRegex: /(access_token=|id_token=)/,
+          urlFailureRegex: /(error=)/,
+          sessionId: getOAuthSession(),
+        });
+      } catch (err) {
+        timeline.push(logEntry(`Authorization window error: ${err.message}`));
+        throw err;
+      }
       console.log('[oauth2] Detected redirect ' + redirectedTo);
+      timeline.push(logEntry(`Authorization redirect detected`));
 
       const responseUrl = new URL(redirectedTo);
       if (responseUrl.searchParams.has('error')) {
         const params = Object.fromEntries(responseUrl.searchParams);
+        timeline.push(
+          logEntry(`Authorization error: ${params.error} - ${params.error_description || 'no description'}`),
+        );
         const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
-        return services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
+        const token = await services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
+        return { token, timeline };
       }
       const hash = responseUrl.hash.slice(1);
       invariant(hash, 'No hash found in response URL from OAuth2 provider');
       const data = Object.fromEntries(new URLSearchParams(hash));
+      timeline.push(logEntry('Received implicit token successfully'));
       const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
-      return services.oAuth2Token.update(
+      const token = await services.oAuth2Token.update(
         old,
         transformNewAccessTokenToOauthModel({
           ...data,
           access_token: data.access_token || data.id_token,
         }),
       );
+      return { token, timeline };
     }
     invariant(authentication.accessTokenUrl, 'Missing access token URL');
     let params: RequestHeader[] = [];
@@ -246,35 +284,52 @@ export const getOAuth2Token = async (
 
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
+        timeline.push(logEntry(`Opening default browser for authorization: ${authCodeUrl.toString()}`));
         const authCodeUrlStr = authCodeUrl.toString();
         const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
 
         showOAuthAuthorizationModal(relayUrl);
-        const result = await authorizeUserInDefaultBrowser({
-          url: relayUrl,
-        });
-        hideOAuthAuthorizationModal();
-
-        redirectedTo = decryptOAuthResult(result);
+        try {
+          const result = await authorizeUserInDefaultBrowser({
+            url: relayUrl,
+          });
+          redirectedTo = decryptOAuthResult(result);
+        } catch (err) {
+          timeline.push(logEntry(`Default browser authorization error: ${err.message}`));
+          throw err;
+        } finally {
+          hideOAuthAuthorizationModal();
+        }
       } else {
-        redirectedTo = await authorizeUserInWindow({
-          url: authCodeUrl.toString(),
-          urlSuccessRegex: authentication.redirectUrl
-            ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i')
-            : /([?&]code=)/i,
-          urlFailureRegex: authentication.redirectUrl
-            ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
-            : /([?&]error=)/i,
-          sessionId: getOAuthSession(),
-        });
+        timeline.push(logEntry(`Opening authorization window: ${authCodeUrl.toString()}`));
+        try {
+          redirectedTo = await authorizeUserInWindow({
+            url: authCodeUrl.toString(),
+            urlSuccessRegex: authentication.redirectUrl
+              ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i')
+              : /([?&]code=)/i,
+            urlFailureRegex: authentication.redirectUrl
+              ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
+              : /([?&]error=)/i,
+            sessionId: getOAuthSession(),
+          });
+        } catch (err) {
+          timeline.push(logEntry(`Authorization window error: ${err.message}`));
+          throw err;
+        }
       }
 
       console.log('[oauth2] Detected redirect ' + redirectedTo);
+      timeline.push(
+        logEntry(`Authorization redirect detected: ${redirectedTo}`),
+        logEntry('Exchanging code for token'),
+      );
       const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
       if (redirectParams.error) {
         const code = redirectParams.error;
         const msg = redirectParams.error_description;
         const uri = redirectParams.error_uri;
+        timeline.push(logEntry(`Authorization error: ${code} - ${msg || 'no description'}`));
         throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
       }
       console.log('[oauth2] Detected code ' + redirectParams.code);
@@ -313,18 +368,31 @@ export const getOAuth2Token = async (
       headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
     }
 
+    timeline.push(logEntry(`Sending token request to ${authentication.accessTokenUrl}`));
     const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
+    const responseTimeline = await services.helpers.getResponseTimeline(response, true);
+    timeline.push(
+      logEntry('--- token request/response details ---'),
+      ...responseTimeline,
+      logEntry('--- end token request/response details ---'),
+    );
     const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
 
-    return services.oAuth2Token.update(
-      old,
-      transformNewAccessTokenToOauthModel(await oauthResponseToAccessToken(authentication.accessTokenUrl, response)),
-    );
+    const tokenData = await oauthResponseToAccessToken(authentication.accessTokenUrl, response);
+    const tokenModel = transformNewAccessTokenToOauthModel(tokenData);
+    const token = await services.oAuth2Token.update(old, tokenModel);
+    if (tokenData.xError) {
+      timeline.push(logEntry(`Token request failed: ${tokenData.xError}`));
+      return { token: undefined, timeline };
+    }
+    timeline.push(logEntry('Token received successfully'));
+    return { token, timeline };
   } catch (err) {
     if (authentication.useDefaultBrowser) {
       hideOAuthAuthorizationModal();
     }
-    throw err;
+    timeline.push(logEntry(`OAuth2 flow error: ${err.message}`));
+    throw Object.assign(err, { timeline });
   }
 };
 
@@ -332,94 +400,139 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
-): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string }> {
+): Promise<{ oAuth2Token: OAuth2Token | undefined; closestAuthId: string; refreshTimeline?: ResponseTimelineEntry[] }> {
   let closestAuthId = requestId;
+  const refreshTimeline: ResponseTimelineEntry[] = [];
 
-  if (!models.mcpRequest.isMcpRequestId(requestId)) {
-    const activeRequest = await services.request.getById(requestId);
-    const requestGroups = (
-      await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
-    ).filter(isRequestGroup) as RequestGroup[];
-    // requestGroups is of order leaf to root
-    const closestFolderAuth = requestGroups.find(
-      ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
-    );
-    const isRequestAuthEnabled =
-      getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
-    closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
-  }
+  try {
+    if (!models.mcpRequest.isMcpRequestId(requestId)) {
+      const activeRequest = await services.request.getById(requestId);
+      const requestGroups = (
+        await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
+      ).filter(isRequestGroup) as RequestGroup[];
+      // requestGroups is of order leaf to root
+      const closestFolderAuth = requestGroups.find(
+        ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
+      );
+      const isRequestAuthEnabled =
+        getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
+      closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
 
-  const token = await services.oAuth2Token.getByParentId(closestAuthId);
-  if (!token) {
-    return { oAuth2Token: undefined, closestAuthId };
-  }
-  const expiresAt = token.expiresAt || Infinity;
-  const isExpired = Date.now() > expiresAt;
-  if (!isExpired && !forceRefresh) {
-    return { oAuth2Token: token, closestAuthId };
-  }
-
-  if (!token.refreshToken) {
-    return { oAuth2Token: undefined, closestAuthId };
-  }
-
-  let params = [
-    { name: 'grant_type', value: 'refresh_token' },
-    { name: 'refresh_token', value: token.refreshToken },
-    ...insertAuthKeyIf('scope', authentication.scope),
-  ];
-  const headers = [];
-  if (authentication.credentialsInBody) {
-    params = [
-      ...params,
-      ...insertAuthKeyIf('client_id', authentication.clientId),
-      ...insertAuthKeyIf('client_secret', authentication.clientSecret),
-    ];
-  } else {
-    headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
-  }
-  const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
-
-  const statusCode = response.statusCode || 0;
-  const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
-
-  if (statusCode === 401) {
-    const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
-    services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-    return { oAuth2Token: undefined, closestAuthId };
-  }
-  const isSuccessful = statusCode >= 200 && statusCode < 300;
-  const hasBodyAndIsError = bodyBuffer && statusCode === 400;
-  if (!isSuccessful) {
-    if (hasBodyAndIsError) {
-      const body = tryToParse(bodyBuffer.toString());
-      if (body?.error === 'invalid_grant') {
-        console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
-        const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
-        const token = await services.oAuth2Token.update(
-          old,
-          transformNewAccessTokenToOauthModel({ access_token: null }),
-        );
-        return { oAuth2Token: token, closestAuthId };
+      if (isRequestAuthEnabled) {
+        refreshTimeline.push(logEntry('Using OAuth2 auth from request'));
+      } else if (closestFolderAuth) {
+        refreshTimeline.push(logEntry(`Using OAuth2 auth inherited from folder "${closestFolderAuth.name}"`));
       }
     }
 
-    throw new Error(`[oauth2] Failed to refresh token url=${authentication.accessTokenUrl} status=${statusCode}`);
+    const token = await services.oAuth2Token.getByParentId(closestAuthId);
+    if (!token) {
+      refreshTimeline.push(logEntry('No existing token found, will fetch new token'));
+      return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+    }
+    if (!token.accessToken) {
+      refreshTimeline.push(logEntry('Existing token has empty access token, will fetch new token'));
+      return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+    }
+    const expiresAt = token.expiresAt || Infinity;
+    const isExpired = Date.now() > expiresAt;
+    if (!isExpired && !forceRefresh) {
+      refreshTimeline.push(
+        logEntry(
+          `Existing token is valid (expires: ${token.expiresAt ? new Date(token.expiresAt).toISOString() : 'never'})`,
+        ),
+      );
+      return { oAuth2Token: token, closestAuthId, refreshTimeline };
+    }
+
+    if (isExpired) {
+      refreshTimeline.push(logEntry(`Token expired at ${new Date(expiresAt).toISOString()}`));
+    }
+    if (forceRefresh) {
+      refreshTimeline.push(logEntry('Force refresh requested'));
+    }
+
+    if (!token.refreshToken) {
+      refreshTimeline.push(logEntry('No refresh token available, will fetch new token'));
+      return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+    }
+
+    refreshTimeline.push(logEntry(`Refreshing token via ${authentication.accessTokenUrl}`));
+
+    let params = [
+      { name: 'grant_type', value: 'refresh_token' },
+      { name: 'refresh_token', value: token.refreshToken },
+      ...insertAuthKeyIf('scope', authentication.scope),
+    ];
+    const headers = [];
+    if (authentication.credentialsInBody) {
+      params = [
+        ...params,
+        ...insertAuthKeyIf('client_id', authentication.clientId),
+        ...insertAuthKeyIf('client_secret', authentication.clientSecret),
+      ];
+    } else {
+      headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
+    }
+    const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
+    const responseTimeline = await services.helpers.getResponseTimeline(response, true);
+    refreshTimeline.push(
+      logEntry('--- refresh token request/response details ---'),
+      ...responseTimeline,
+      logEntry('--- end refresh token request/response details ---'),
+    );
+
+    const statusCode = response.statusCode || 0;
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
+
+    if (statusCode === 401) {
+      refreshTimeline.push(logEntry('Refresh token rejected (401 Unauthorized)'));
+      const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+      services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+      return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+    }
+    const isSuccessful = statusCode >= 200 && statusCode < 300;
+    const hasBodyAndIsError = bodyBuffer && statusCode === 400;
+    if (!isSuccessful) {
+      if (hasBodyAndIsError) {
+        const body = tryToParse(bodyBuffer.toString());
+        if (body?.error === 'invalid_grant') {
+          console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
+          refreshTimeline.push(
+            logEntry(`Refresh token rejected: invalid_grant - ${body.error_description || 'no description'}`),
+          );
+          const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+          await services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+          return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+        }
+      }
+
+      refreshTimeline.push(logEntry(`Failed to refresh token: status=${statusCode}`));
+      return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+    }
+    if (!bodyBuffer) {
+      refreshTimeline.push(logEntry(`No body returned from ${authentication.accessTokenUrl}`));
+      return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+    }
+    const data = tryToParse(bodyBuffer.toString());
+    if (!data) {
+      refreshTimeline.push(logEntry('Failed to parse refresh token response body'));
+      return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
+    }
+    refreshTimeline.push(logEntry('Token refreshed successfully'));
+    const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+    const oAuth2Token = await services.oAuth2Token.update(
+      old,
+      transformNewAccessTokenToOauthModel({
+        ...data,
+        refresh_token: data.refresh_token || token.refreshToken,
+      }),
+    );
+    return { oAuth2Token, closestAuthId, refreshTimeline };
+  } catch (err) {
+    refreshTimeline.push(logEntry(`Error during token refresh: ${err.message}`));
+    return { oAuth2Token: undefined, closestAuthId, refreshTimeline };
   }
-  invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
-  const data = tryToParse(bodyBuffer.toString());
-  if (!data) {
-    return { oAuth2Token: undefined, closestAuthId };
-  }
-  const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
-  const oAuth2Token = await services.oAuth2Token.update(
-    old,
-    transformNewAccessTokenToOauthModel({
-      ...data,
-      refresh_token: data.refresh_token || token.refreshToken,
-    }),
-  );
-  return { oAuth2Token, closestAuthId };
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
@@ -438,6 +551,19 @@ export const oauthResponseToAccessToken = async (accessTokenUrl: string, respons
   }
   const body = bodyBuffer.toString('utf8');
   const data = tryToParse(body);
+  if (!data) {
+    return {
+      xResponseId: response._id,
+      xError: `Failed to parse response body from ${accessTokenUrl}`,
+    };
+  }
+  if (!data.access_token && !data.id_token) {
+    return {
+      ...data,
+      xResponseId: response._id,
+      xError: `No access_token or id_token in response from ${accessTokenUrl}`,
+    };
+  }
   return {
     ...data,
     xResponseId: response._id,

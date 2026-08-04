@@ -27,7 +27,7 @@ import type {
 import * as templatingUtils from '~/common/templating/utils';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../network/network';
 import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
@@ -581,6 +581,7 @@ export async function getRenderedRequestAndContext({
   const description = request.description;
   request.description = '';
 
+  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
   request.headers = getOrInheritHeaders({ request, requestGroups });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Render all request properties
@@ -599,12 +600,6 @@ export async function getRenderedRequestAndContext({
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, 'keep');
-  const userAgentHeaders = request.headers.filter(h => h.name.toLowerCase() === 'user-agent');
-  const hasUserAgentHeader = userAgentHeaders.length > 0;
-  const allUserAgentHeadersDisabled = hasUserAgentHeader && userAgentHeaders.every(h => h.disabled === true);
-  // Suppress the default User-Agent when the request opts out via disableUserAgentHeader,
-  // or when the user added their own User-Agent header(s) and disabled all of them.
-  const suppressUserAgent = request.disableUserAgentHeader || allUserAgentHeadersDisabled;
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
   // Remove disabled headers

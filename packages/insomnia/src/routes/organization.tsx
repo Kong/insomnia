@@ -11,6 +11,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { useEditorHistoryTabCleanup } from '~/ui/components/.client/codemirror/editor-history-cleanup';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
 import { HeaderInviteButton } from '~/ui/components/header-invite-button';
@@ -255,6 +256,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   useCloseConnection({
     organizationId,
   });
+
+  // Reclaim cached editor undo/redo history when tabs close, so switching between
+  // open tabs never evicts a still-open tab's history from the shared cache.
+  useEditorHistoryTabCleanup();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
 

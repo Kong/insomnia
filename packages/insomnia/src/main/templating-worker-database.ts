@@ -38,11 +38,24 @@ import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templ
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
+const templatingDbCorsHeaders = (request: Request): Record<string, string> => ({
+  'Access-Control-Allow-Origin': request.headers.get('Origin') ?? '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': `${TEMPLATING_DB_AUTH_HEADER}, content-type`,
+  'Vary': 'Origin',
+});
+
 export const resolveDbByKey = async (request: Request) => {
+  const cors = templatingDbCorsHeaders(request);
+  // A CORS preflight never carries the auth header, so answer it before the token check.
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors });
+  }
   // Reject before parsing the body, so an unauthenticated call never reaches a handler.
   if (!isValidTemplatingDbAuthToken(request.headers.get(TEMPLATING_DB_AUTH_HEADER))) {
     return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid templating database auth token' }), {
       status: 401,
+      headers: cors,
     });
   }
   const url = new URL(request.url);
@@ -50,7 +63,7 @@ export const resolveDbByKey = async (request: Request) => {
   try {
     // We expect this to throw if a db call returns undefined
     body = JSON.parse(await request.text(), stripDangerousKeysReviver);
-  } catch {}
+  } catch { }
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
@@ -65,10 +78,10 @@ export const resolveDbByKey = async (request: Request) => {
       throw new TypeError(`No host bridge handler registered for "${urlHostLowerCase}"`);
     }
     const result = await handler(body);
-    return new Response(JSON.stringify(result));
+    return new Response(JSON.stringify(result), { headers: cors });
   } catch (err) {
     console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: cors });
   }
 };
 

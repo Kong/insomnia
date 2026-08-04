@@ -24,17 +24,19 @@ describe('OAuth 1.0', () => {
     };
     const header = await getAuthHeader(request, 'https://insomnia.rest/');
     expect(header).toEqual({
-      name: 'Authorization',
-      value: [
-        'OAuth ' + 'oauth_callback="https%3A%2F%2Finsomnia.rest%2Fcallback%2F"',
-        'oauth_consumer_key="consumerKey"',
-        'oauth_nonce="nonce"',
-        'oauth_signature="muJumAG6rOEUuJmhx5zOcBquqk8%3D"',
-        'oauth_signature_method="HMAC-SHA1"',
-        'oauth_timestamp="1234567890"',
-        'oauth_token="tokenKey"',
-        'oauth_version="1.0"',
-      ].join(', '),
+      header: {
+        name: 'Authorization',
+        value: [
+          'OAuth ' + 'oauth_callback="https%3A%2F%2Finsomnia.rest%2Fcallback%2F"',
+          'oauth_consumer_key="consumerKey"',
+          'oauth_nonce="nonce"',
+          'oauth_signature="muJumAG6rOEUuJmhx5zOcBquqk8%3D"',
+          'oauth_signature_method="HMAC-SHA1"',
+          'oauth_timestamp="1234567890"',
+          'oauth_token="tokenKey"',
+          'oauth_version="1.0"',
+        ].join(', '),
+      },
     });
   });
 
@@ -73,17 +75,19 @@ describe('OAuth 1.0', () => {
     };
     const header = await getAuthHeader(request, 'https://insomnia.rest/');
     expect(header).toEqual({
-      name: 'Authorization',
-      value: [
-        'OAuth ' + 'oauth_callback="https%3A%2F%2Finsomnia.rest%2Fcallback%2F"',
-        'oauth_consumer_key="consumerKey"',
-        'oauth_nonce="nonce"',
-        'oauth_signature="cuJlDLQcyQkIdfs8sIE9Y1769hrPy%2Fkwq8D%2BSQxl5azvk1TimWSgUECf3vJoF7DkgnvcYhFYTnduldj%2FJ9ttaOh8xmfE7krGm8Yh%2FDqYfvLPKnw%2F%2BAaKjd43Y6ulZqptTaf4q5D0%2FM9MhqI8pNRcblk30fI%2FR6JYRyjHVm3YNZo%3D"',
-        'oauth_signature_method="RSA-SHA1"',
-        'oauth_timestamp="1234567890"',
-        'oauth_token="tokenKey"',
-        'oauth_version="1.0"',
-      ].join(', '),
+      header: {
+        name: 'Authorization',
+        value: [
+          'OAuth ' + 'oauth_callback="https%3A%2F%2Finsomnia.rest%2Fcallback%2F"',
+          'oauth_consumer_key="consumerKey"',
+          'oauth_nonce="nonce"',
+          'oauth_signature="cuJlDLQcyQkIdfs8sIE9Y1769hrPy%2Fkwq8D%2BSQxl5azvk1TimWSgUECf3vJoF7DkgnvcYhFYTnduldj%2FJ9ttaOh8xmfE7krGm8Yh%2FDqYfvLPKnw%2F%2BAaKjd43Y6ulZqptTaf4q5D0%2FM9MhqI8pNRcblk30fI%2FR6JYRyjHVm3YNZo%3D"',
+          'oauth_signature_method="RSA-SHA1"',
+          'oauth_timestamp="1234567890"',
+          'oauth_token="tokenKey"',
+          'oauth_version="1.0"',
+        ].join(', '),
+      },
     });
   });
 
@@ -100,8 +104,8 @@ describe('OAuth 1.0', () => {
       authentication,
     };
     const header = await getAuthHeader(request, 'https://insomnia.rest/');
-    expect(header.name).toBe('Authorization');
-    expect(header.value).toMatch(
+    expect(header.header.name).toBe('Authorization');
+    expect(header.header.value).toMatch(
       new RegExp(
         [
           'OAuth ' + 'oauth_consumer_key="consumerKey"',
@@ -161,8 +165,10 @@ describe('API Key', () => {
       };
       const header = await getAuthHeader(request, 'https://insomnia.rest/');
       expect(header).toEqual({
-        name: 'x-api-key',
-        value: 'test',
+        header: {
+          name: 'x-api-key',
+          value: 'test',
+        },
       });
     });
 
@@ -180,8 +186,10 @@ describe('API Key', () => {
       };
       const header = await getAuthHeader(request, 'https://insomnia.rest/');
       expect(header).toEqual({
-        name: 'Cookie',
-        value: 'x-api-key=test',
+        header: {
+          name: 'Cookie',
+          value: 'x-api-key=test',
+        },
       });
     });
   });

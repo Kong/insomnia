@@ -18,7 +18,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, TestResults } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry, TestResults } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
@@ -435,7 +435,7 @@ export interface RendererToMainBridgeAPI {
     destinationPath: string;
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
-  getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
+  getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }>;
   getOAuth2Token: (
     requestId: string,
     authentication: AuthTypeOAuth2,
@@ -846,8 +846,9 @@ export function registerMainHandlers() {
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
   });
-  ipcMainHandle('getOAuth2Token', (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
-    return getOAuth2TokenInMain(requestId, authentication, forceRefresh);
+  ipcMainHandle('getOAuth2Token', async (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
+    const { token } = await getOAuth2TokenInMain(requestId, authentication, forceRefresh);
+    return token;
   });
   ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
     try {

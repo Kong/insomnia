@@ -1041,7 +1041,7 @@ export const go = (args?: string[]) => {
       program.parseAsync(scriptArgs).catch(logErrorAndExit);
     });
 
-  program.command('generate-docs').action(() => {
+  program.command('generate-docs', { hidden: true }).action(() => {
     generateDocumentation(program);
     return process.exit(1);
   });

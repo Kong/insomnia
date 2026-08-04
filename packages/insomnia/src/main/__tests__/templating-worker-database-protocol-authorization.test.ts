@@ -114,6 +114,37 @@ describe('resolveDbByKey requires a valid protocol auth token', () => {
   });
 });
 
+describe('resolveDbByKey answers CORS preflight and tags responses with CORS headers', () => {
+  beforeEach(() => {
+    _testOnlyResetTemplatingDbAuthToken();
+  });
+
+  it('answers an OPTIONS preflight with 204 and CORS headers, without requiring a token', async () => {
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://settings.get', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://insomnia-app.local' },
+    });
+    const res = await resolveDbByKey(req);
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://insomnia-app.local');
+    expect(res.headers.get('Access-Control-Allow-Headers')).toContain(TEMPLATING_DB_AUTH_HEADER);
+    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('OPTIONS');
+  });
+
+  it('tags an authorized response with an Access-Control-Allow-Origin echoing the request Origin', async () => {
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://settings.get', {
+      method: 'POST',
+      headers: { [TEMPLATING_DB_AUTH_HEADER]: token, Origin: 'https://insomnia-app.local' },
+      body: '{}',
+    });
+    const res = await resolveDbByKey(req);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://insomnia-app.local');
+  });
+});
+
 describe('protocol-dispatch handlers resolve `directory` from the trusted registry, not the request body', () => {
   let legitDir: string;
   let foreignDir: string;
