@@ -113,10 +113,25 @@ export class NavigationSidebar {
   async expectWorkspaceActive(workspaceName: string): Promise<void> {
     await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
     // In focus mode there's no grid row to check aria-selected on for this workspace — being
-    // shown as the focused header already proves it's the active one.
-    if (!(await this.isWorkspaceFocused(workspaceName))) {
-      await expect.soft(this.workspaceGridListItem(workspaceName)).toHaveAttribute('aria-selected', 'true');
-    }
+    // shown as the focused header already proves it's the active one. Poll for either outcome
+    // rather than deciding up front: right after navigating in, there's a brief window where
+    // neither is true yet (focus mode hasn't finished swapping the row for the header), and a
+    // one-shot check can catch that transient state and commit to the wrong branch.
+    await expect
+      .poll(
+        async () => {
+          if (await this.isWorkspaceFocused(workspaceName)) {
+            return true;
+          }
+          const gridItem = this.workspaceGridListItem(workspaceName);
+          if ((await gridItem.count()) === 0) {
+            return false;
+          }
+          return (await gridItem.getAttribute('aria-selected')) === 'true';
+        },
+        { timeout: 25_000 },
+      )
+      .toBe(true);
   }
 
   async selectWorkspace(workspaceName: string): Promise<void> {
