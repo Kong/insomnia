@@ -107,11 +107,53 @@ function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginE
   } as Plugin['module'];
 }
 
+// Finds package.json `name`s claimed by more than one folder under `allPaths`, read-only and before
+// any folder is trusted, so the result doesn't depend on filesystem read order.
+async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>> {
+  const nameCounts: Record<string, number> = {};
+
+  const walk = (paths: string[]) => {
+    for (const p of paths) {
+      if (!fs.existsSync(p)) {
+        continue;
+      }
+      for (const filename of fs.readdirSync(p)) {
+        const modulePath = path.resolve(p, filename);
+        if (!fs.statSync(modulePath).isDirectory()) {
+          continue;
+        }
+        if (filename.startsWith('@')) {
+          walk([modulePath]);
+        }
+        if (!fs.readdirSync(modulePath).includes('package.json')) {
+          continue;
+        }
+        if (!path.resolve(modulePath).startsWith(p)) {
+          continue;
+        }
+        try {
+          // package.json is plain data — reading it runs no plugin code.
+          const pluginJson = getNodeRequire()(path.resolve(modulePath, 'package.json'));
+          if ('insomnia' in pluginJson && typeof pluginJson.name === 'string') {
+            nameCounts[pluginJson.name] = (nameCounts[pluginJson.name] ?? 0) + 1;
+          }
+        } catch {
+          // Any read/parse error here will be hit (and reported) again by the real pass below.
+        }
+      }
+    }
+  };
+  walk(allPaths);
+
+  return new Set(Object.keys(nameCounts).filter(name => nameCounts[name] > 1));
+}
+
 async function traversePluginPath(
   pluginMap: Record<string, Plugin>,
   allPaths: string[],
   allConfigs: PluginConfigMap,
   settings: SandboxSettings,
+  duplicatePluginNames: Set<string>,
 ) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
@@ -132,7 +174,7 @@ async function traversePluginPath(
 
         // Is it a scoped directory?
         if (filename.startsWith('@')) {
-          await traversePluginPath(pluginMap, [modulePath], allConfigs, settings);
+          await traversePluginPath(pluginMap, [modulePath], allConfigs, settings, duplicatePluginNames);
         }
 
         // Is it a Node module?
@@ -166,6 +208,13 @@ async function traversePluginPath(
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
         if (!('insomnia' in pluginJson)) {
+          continue;
+        }
+
+        // pluginConfig is keyed by declared name, not by folder — never load a name claimed by more
+        // than one folder, so a colliding folder can't inherit another folder's `elevated` grant.
+        if (duplicatePluginNames.has(pluginJson.name)) {
+          console.warn('[plugin] Ignoring %s at %s: multiple plugin folders declare this name.', pluginJson.name, modulePath);
           continue;
         }
 
@@ -240,7 +289,8 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
-    await traversePluginPath(pluginMap, allPaths, allConfigs, settings);
+    const duplicatePluginNames = await findDuplicatePluginNames(allPaths);
+    await traversePluginPath(pluginMap, allPaths, allConfigs, settings, duplicatePluginNames);
     const bundlePluginMap = getBundlePluginMap();
     const fullPluginMap = { ...pluginMap, ...bundlePluginMap };
     plugins = Object.keys(fullPluginMap).map(name => fullPluginMap[name]);

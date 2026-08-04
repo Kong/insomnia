@@ -21,6 +21,16 @@ import * as pluginResponse from '../../plugins/context/response';
 import * as pluginStore from '../../plugins/context/store';
 import { runScript as executeScript } from '../../script-executor';
 
+// Uses defineProperty, not assignment, so a plugin-thrown error can't define its own `plugin` setter
+// to intercept the write and grab a live, mutable reference to its own cached registry entry.
+const attachPluginToError = (error: Error, plugin: unknown): void => {
+  try {
+    Object.defineProperty(error, 'plugin', { value: plugin, enumerable: true, configurable: true });
+  } catch {
+    // Best-effort annotation only; nothing downstream depends on this property.
+  }
+};
+
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
   const dataDir = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
@@ -115,7 +125,7 @@ export async function applyRequestHooks(
       await hook(context);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      (error as any).plugin = plugin;
+      attachPluginToError(error, plugin);
       throw error;
     }
   }
@@ -160,7 +170,7 @@ export async function applyResponseHooks(
       await hook(context);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      (error as any).plugin = plugin;
+      attachPluginToError(error, plugin);
       throw error;
     }
   }
