@@ -107,6 +107,15 @@ function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginE
   } as Plugin['module'];
 }
 
+// A bare `.startsWith(base)` string check passes for a sibling directory whose name happens to
+// prefix-match (e.g. `/plugins-evil` starts with `/plugins`); this compares the resolved relative
+// path instead, so containment can't be spoofed by a similarly-named sibling.
+const isContainedIn = (base: string, target: string): boolean => {
+  const rel = path.relative(base, target);
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+};
+export const _testOnlyIsContainedIn = isContainedIn;
+
 // Finds package.json `name`s claimed by more than one folder under `allPaths`, read-only and before
 // any folder is trusted, so the result doesn't depend on filesystem read order.
 async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>> {
@@ -128,7 +137,7 @@ async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>
         if (!fs.readdirSync(modulePath).includes('package.json')) {
           continue;
         }
-        if (!path.resolve(modulePath).startsWith(p)) {
+        if (!isContainedIn(p, path.resolve(modulePath))) {
           continue;
         }
         try {
@@ -188,7 +197,7 @@ async function traversePluginPath(
         const pluginBasePath = p;
 
         // Check if the resolved module path is inside the base plugin path (to prevent directory traversal)
-        if (!safeModulePath.startsWith(pluginBasePath)) {
+        if (!isContainedIn(pluginBasePath, safeModulePath)) {
           console.warn(`[plugin] Ignored potentially unsafe plugin path: ${modulePath}`);
           continue;
         }
