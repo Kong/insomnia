@@ -42,6 +42,11 @@ jobs:
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
       - name: Check Release Build Confirmed
         env:
           IS_RELEASE_BUILD_TRIGGERED: ${{ github.event.inputs.release_build }}
