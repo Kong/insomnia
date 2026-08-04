@@ -16,6 +16,7 @@ import { initRuntime } from 'insomnia/src/runtimes';
 import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
 import { configureFetch } from 'insomnia-api';
 import type {
+  BaseModel,
   Environment,
   Request,
   RequestGroup,
@@ -41,7 +42,6 @@ import { isFile, loadDb } from './db';
 import { insomniaExportAdapter } from './db/adapters/insomnia-adapter';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
 import { loadEnvironment, promptEnvironment } from './db/models/environment';
-import type { BaseModel } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
@@ -641,11 +641,15 @@ export const go = (args?: string[]) => {
               // attach this global env to the workspace
               db.WorkspaceMeta = [
                 {
+                  ...models.workspaceMeta.init(),
                   activeGlobalEnvironmentId: globalEnv._id,
                   _id: `wrkm_${uuidv4().replace(/-/g, '')}`,
                   type: 'WorkspaceMeta',
                   parentId: workspaceId,
                   name: '',
+                  modified: Date.now(),
+                  created: Date.now(),
+                  isPrivate: false,
                 },
               ];
             }
@@ -665,11 +669,15 @@ export const go = (args?: string[]) => {
             // attach this global env to the workspace
             db.WorkspaceMeta = [
               {
+                ...models.workspaceMeta.init(),
                 activeGlobalEnvironmentId: firstGlobalEnv._id,
                 _id: `wrkm_${uuidv4().replace(/-/g, '')}`,
                 type: 'WorkspaceMeta',
                 parentId: workspaceId,
                 name: '',
+                modified: Date.now(),
+                created: Date.now(),
+                isPrivate: false,
               },
             ];
           }
