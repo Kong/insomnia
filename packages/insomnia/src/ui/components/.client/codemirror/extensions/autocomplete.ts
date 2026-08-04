@@ -91,6 +91,17 @@ CodeMirror.defineOption(
       const variables = options.getVariables ? await options.getVariables() : null;
       const snippets = options.getSnippets ? await options.getSnippets() : null;
       const tags = options.getTags ? await options.getTags() : null;
+
+      // The awaits above can take a while (e.g. a slow render-context round trip). If the
+      // user has since moved focus elsewhere, showing the hint now would create a popup
+      // with no editor to blur it closed - closeOnUnfocus only starts listening for blur
+      // once the widget exists, so a blur that already happened is missed entirely and the
+      // popup is orphaned, sitting open (and blocking clicks) until some unrelated focus
+      // change happens to close it.
+      if (!cm.hasFocus()) {
+        return;
+      }
+
       // Actually show the hint
       cm.showHint({
         // Insomnia-specific options
