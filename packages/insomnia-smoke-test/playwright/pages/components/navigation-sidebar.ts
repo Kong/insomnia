@@ -94,6 +94,31 @@ export class NavigationSidebar {
     return this.navigationTree.getByRole('row', { name: workspaceName });
   }
 
+  // When collection focus mode narrows the sidebar to one collection, that collection's tree
+  // row is replaced by the back-arrow header (same `workspace-node-*` testid, no ARIA "row").
+  async isWorkspaceFocused(workspaceName: string): Promise<boolean> {
+    return (await this.workspaceRow(workspaceName).getByLabel('Back to all projects').count()) > 0;
+  }
+
+  // Exits collection focus mode if currently focused; no-op otherwise. Needed before
+  // interacting with a different collection or project, since focus mode hides everything
+  // outside the focused collection.
+  async backToAllProjects(): Promise<void> {
+    const backButton = this.root.getByLabel('Back to all projects');
+    if (await backButton.isVisible().catch(() => false)) {
+      await backButton.click();
+    }
+  }
+
+  async expectWorkspaceActive(workspaceName: string): Promise<void> {
+    await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
+    // In focus mode there's no grid row to check aria-selected on for this workspace — being
+    // shown as the focused header already proves it's the active one.
+    if (!(await this.isWorkspaceFocused(workspaceName))) {
+      await expect.soft(this.workspaceGridListItem(workspaceName)).toHaveAttribute('aria-selected', 'true');
+    }
+  }
+
   async selectWorkspace(workspaceName: string): Promise<void> {
     await this.workspaceRow(workspaceName).click();
   }
