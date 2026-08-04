@@ -261,6 +261,7 @@ export const ResponseViewer = ({
         placeholder="..."
         readOnly
         historyKey={responseId}
+        truncateLongLines
         updateFilter={filter => {
           updateFilter?.(filter);
 
@@ -388,6 +389,7 @@ export const ResponseViewer = ({
       placeholder="..."
       readOnly
       historyKey={responseId}
+      truncateLongLines
       updateFilter={filter => {
         updateFilter?.(filter);
 

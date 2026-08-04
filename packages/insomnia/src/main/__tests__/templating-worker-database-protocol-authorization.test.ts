@@ -114,6 +114,37 @@ describe('resolveDbByKey requires a valid protocol auth token', () => {
   });
 });
 
+describe('resolveDbByKey answers CORS preflight and tags responses with CORS headers', () => {
+  beforeEach(() => {
+    _testOnlyResetTemplatingDbAuthToken();
+  });
+
+  it('answers an OPTIONS preflight with 204 and CORS headers, without requiring a token', async () => {
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://settings.get', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://insomnia-app.local' },
+    });
+    const res = await resolveDbByKey(req);
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://insomnia-app.local');
+    expect(res.headers.get('Access-Control-Allow-Headers')).toContain(TEMPLATING_DB_AUTH_HEADER);
+    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('OPTIONS');
+  });
+
+  it('tags an authorized response with an Access-Control-Allow-Origin echoing the request Origin', async () => {
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    const req = new Request('insomnia-templating-worker-database://settings.get', {
+      method: 'POST',
+      headers: { [TEMPLATING_DB_AUTH_HEADER]: token, Origin: 'https://insomnia-app.local' },
+      body: '{}',
+    });
+    const res = await resolveDbByKey(req);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://insomnia-app.local');
+  });
+});
+
 describe('protocol-dispatch handlers resolve `directory` from the trusted registry, not the request body', () => {
   let legitDir: string;
   let foreignDir: string;
@@ -483,6 +514,19 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     expect(fs.readFileSync(otherBodyPath, 'utf8')).toBe('other-original-body');
   });
 
+  it('rejects a bodyPath reached through a symlinked directory that resolves outside the responses directory', async () => {
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-outside-'));
+    const linkedDir = path.join(responsesDir, 'linked');
+    fs.symlinkSync(outsideDir, linkedDir, 'dir');
+    const throughSymlink = path.join(linkedDir, 'escaped-body.txt');
+    try {
+      await runResponseHook(throughSymlink, 'req_1');
+      expect(fs.existsSync(path.join(outsideDir, 'escaped-body.txt'))).toBe(false);
+    } finally {
+      fs.rmSync(outsideDir, { recursive: true, force: true });
+    }
+  });
+
   // Same check, reached by sending the path-normalization variant directly to response.setBody.
   it('rejects a path-normalization variant sent directly to response.setBody', async () => {
     const { services } = await import('insomnia-data');
@@ -507,6 +551,34 @@ describe('plugin.runUserResponseHook: setBody cannot redirect its write onto a d
     const json = await res.json();
     expect(json.error).toMatch(/belongs to a different response/);
     expect(fs.readFileSync(otherBodyPath, 'utf8')).toBe('other-original-body');
+  });
+
+  // Same check, reached by sending a bodyPath through a symlinked directory directly to response.setBody.
+  it('rejects a bodyPath through a symlinked directory sent directly to response.setBody', async () => {
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-outside-'));
+    const linkedDir = path.join(responsesDir, 'linked');
+    fs.symlinkSync(outsideDir, linkedDir, 'dir');
+    const throughSymlink = path.join(linkedDir, 'escaped-body.txt');
+    const token = getOrCreateTemplatingDbAuthToken();
+    const { resolveDbByKey } = await import('../templating-worker-database');
+    try {
+      const req = new Request('insomnia-templating-worker-database://response.setbody', {
+        method: 'POST',
+        headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
+        body: JSON.stringify({
+          bodyPath: throughSymlink,
+          bodyBase64: Buffer.from('replacement-body', 'utf8').toString('base64'),
+          parentId: 'req_1',
+        }),
+      });
+      const res = await resolveDbByKey(req);
+      expect(res.status).toBe(500);
+      const json = await res.json();
+      expect(json.error).toMatch(/escapes the responses directory/);
+      expect(fs.existsSync(path.join(outsideDir, 'escaped-body.txt'))).toBe(false);
+    } finally {
+      fs.rmSync(outsideDir, { recursive: true, force: true });
+    }
   });
 });
 

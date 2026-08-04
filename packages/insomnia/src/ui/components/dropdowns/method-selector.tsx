@@ -115,7 +115,7 @@ export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onCha
     >
       <DropdownSection>
         {HTTP_METHODS.map(m => (
-          <DropdownItem key={m}>
+          <DropdownItem key={m} textValue={m}>
             <ItemContent
               className={getMethodTextClasses(m)}
               label={m}
@@ -127,7 +127,7 @@ export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onCha
       </DropdownSection>
 
       <DropdownSection>
-        <DropdownItem>
+        <DropdownItem textValue="Custom Method">
           <ItemContent
             className={getMethodTextClasses('')}
             label="Custom Method"

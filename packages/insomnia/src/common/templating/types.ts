@@ -97,6 +97,7 @@ export type PluginToMainAPIPaths =
   | 'plugin.discoverUserPluginExports'
   | 'plugin.runUserRequestHook'
   | 'plugin.runUserResponseHook'
+  | 'plugin.runUserAction'
   | 'response.setBody'
   | 'app.alert'
   | 'app.dialog'

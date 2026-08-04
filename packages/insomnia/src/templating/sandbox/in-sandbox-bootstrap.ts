@@ -522,6 +522,23 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return Promise.resolve(hook(ctx)).then(function () { return JSON.stringify({ request: env.hookRequest, response: env.hookResponse }); });',
   '  };',
 
+  // --- run a plugin action (A1) ---
+  // Actions are fire-and-effect: action(context, domainData) returns void and performs side effects
+  // only through the capability-gated context.* bridge (built by __buildContext). The domain models
+  // are copied in as plain data; nothing is marshaled back. The action is found by its label within
+  // the kind-specific list (request/requestGroup/workspace/document Actions).
+  '  globalThis.__invokeAction = function () {',
+  '    var env = __env;',
+  '    var ctx = globalThis.__buildContext(env);',
+  '    var mod = globalThis.__loadPluginEntry() || {};',
+  '    var lists = { request: mod.requestActions, requestGroup: mod.requestGroupActions, workspace: mod.workspaceActions, document: mod.documentActions };',
+  '    var actions = lists[env.actionKind] || [];',
+  '    var entry = null;',
+  '    for (var i = 0; i < actions.length; i++) { if (actions[i] && actions[i].label === env.actionLabel) { entry = actions[i]; break; } }',
+  '    if (!entry || typeof entry.action !== "function") { throw new Error("Plugin " + env.actionKind + " action not found: " + env.actionLabel); }',
+  '    return Promise.resolve(entry.action(ctx, env.actionDomainData)).then(function () { return "{}"; });',
+  '  };',
+
   // --- describe the plugin's exports without running any of them (L1 load-time discovery) ---
   // Evaluates the plugin entry (its top-level code runs here, in the sandbox — never on the host)
   // and returns a JSON-serializable manifest of what it exports: template-tag metadata, hook counts,
@@ -558,7 +575,7 @@ export const IN_SANDBOX_BOOTSTRAP = [
   // context/invocation entry points. __registerModule is intentionally left mutable — the module
   // registry source deletes it once the registry is populated.
   '  var __lock = function (n) { Object.defineProperty(globalThis, n, { value: globalThis[n], writable: false, configurable: false }); };',
-  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry"); __lock("__describeExports"); __lock("__invokeHook");',
+  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry"); __lock("__describeExports"); __lock("__invokeHook"); __lock("__invokeAction");',
   '})();',
 ].join('\n');
 
@@ -576,3 +593,9 @@ export const DESCRIBE_RUNNER = 'globalThis.__task = Promise.resolve(globalThis._
  * `globalThis.__task`. Used instead of {@link RUNNER} to run a request/response hook.
  */
 export const HOOK_RUNNER = 'globalThis.__task = globalThis.__invokeHook();';
+
+/**
+ * Action runner (A1): parks a resolved promise on `globalThis.__task` after running the plugin
+ * action. Actions are fire-and-effect, so the resolved value is an empty JSON object.
+ */
+export const ACTION_RUNNER = 'globalThis.__task = globalThis.__invokeAction();';
