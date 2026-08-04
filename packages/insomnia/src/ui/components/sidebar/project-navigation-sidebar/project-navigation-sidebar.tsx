@@ -779,23 +779,33 @@ const ProjectNavigationSidebarInner = (
     [expandProjectOrWorkspaces, enableCollectionFocus],
   );
 
+  // Clears focus along with any focus-only UI state (inline rename, options
+  // menu). Without this, leaving focus mode mid-rename or with the options
+  // menu open would leak that state into the next focus session (e.g. a
+  // different collection reopening pre-filled with the old rename text).
+  const clearFocusState = useCallback(() => {
+    setFocusTransition('out');
+    setFocusedWorkspaceId(null);
+    setIsRenamingFocusedWorkspace(false);
+    setRenamingWorkspaceValue('');
+    setIsFocusedWorkspaceMenuOpen(false);
+  }, []);
+
   // Back arrow: return to the full tree without touching the route, and reset
   // the filter so it doesn't carry over silently scoped to the old collection.
   const exitFocus = useCallback(() => {
-    setFocusTransition('out');
-    setFocusedWorkspaceId(null);
+    clearFocusState();
     if (filterInputValue) {
       setFilterInputValue('');
     }
-  }, [filterInputValue]);
+  }, [clearFocusState, filterInputValue]);
 
   // Turning the preference off while a collection is focused returns to the full tree.
   useEffect(() => {
     if (!enableCollectionFocus) {
-      setFocusTransition('out');
-      setFocusedWorkspaceId(null);
+      clearFocusState();
     }
-  }, [enableCollectionFocus]);
+  }, [enableCollectionFocus, clearFocusState]);
 
   // Drive focus from the active route so navigating to a collection from
   // anywhere (tabs, project dashboard, deep links) focuses it too, not just a
@@ -809,8 +819,7 @@ const ProjectNavigationSidebarInner = (
     if (!activeWorkspaceId) {
       // Navigated to the project dashboard (no active workspace) → full tree.
       prevActiveWorkspaceIdRef.current = activeWorkspaceId;
-      setFocusTransition('out');
-      setFocusedWorkspaceId(null);
+      clearFocusState();
       return;
     }
     // Wait until the workspace is present in the tree so we can read its scope.
@@ -827,10 +836,9 @@ const ProjectNavigationSidebarInner = (
       focusWorkspace(activeWorkspaceId, workspaceItem.project._id);
     } else {
       // Design docs, mock servers, environments etc. show the full tree.
-      setFocusTransition('out');
-      setFocusedWorkspaceId(null);
+      clearFocusState();
     }
-  }, [activeWorkspaceId, flatItems, focusWorkspace]);
+  }, [activeWorkspaceId, flatItems, focusWorkspace, clearFocusState]);
 
   useImperativeHandle(
     ref,
@@ -1075,7 +1083,13 @@ const ProjectNavigationSidebarInner = (
         <>
           {focusedWorkspaceId ? (
             <div className={focusTransition === 'in' ? 'animate-[sidebar-focus-in_200ms_ease-out]' : ''}>
-              <div className="group flex items-center gap-1 px-(--padding-sm) pt-(--padding-sm)">
+              <div
+                className="group flex items-center gap-1 px-(--padding-sm) pt-(--padding-sm)"
+                // Mirrors WorkspaceNode's row attributes so this header stands in for the
+                // (now-hidden) workspace row — e.g. for anything keyed off `workspace-node-*`.
+                data-testid={focusedWorkspaceItem ? `workspace-node-${focusedWorkspaceItem.doc.name}` : undefined}
+                data-project={focusedWorkspaceItem?.project.name}
+              >
                 <TooltipTrigger delay={300}>
                   <BasicButton
                     aria-label="Back to all projects"
