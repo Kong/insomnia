@@ -313,6 +313,14 @@ export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
     }
     return null;
   }
+
+  override toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
+    const obj: Record<string, any> = Object.create(null);
+    this.list.forEach(proxyConfig => {
+      obj[proxyConfig.match] = proxyConfig.toJSON();
+    });
+    return obj;
+  }
 }
 
 /** @ignore */

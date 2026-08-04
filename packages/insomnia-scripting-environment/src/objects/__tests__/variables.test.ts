@@ -28,4 +28,17 @@ describe('test Variables object', () => {
     varList.upsert(upserted);
     expect(varList.one('h1')).toEqual(upserted);
   });
+
+  it('toObject returns {} when there are no variables', () => {
+    expect(new VariableList(undefined, []).toObject()).toEqual({});
+  });
+
+  it('toObject returns a key-value map when there are variables', () => {
+    const varList = new VariableList(undefined, [
+      new Variable({ key: 'h1', value: 'v1' }),
+      new Variable({ key: 'h2', value: 'v2' }),
+    ]);
+
+    expect(varList.toObject()).toEqual({ h1: 'v1', h2: 'v2' });
+  });
 });

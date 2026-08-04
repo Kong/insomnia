@@ -26,4 +26,17 @@ describe('test Header object', () => {
     headerList.upsert(upserted);
     expect(headerList.one('h1')).toEqual(upserted.value);
   });
+
+  it('toObject returns {} when there are no headers', () => {
+    expect(new HeaderList(undefined, []).toObject()).toEqual({});
+  });
+
+  it('toObject returns a key-value map when there are headers', () => {
+    const headerList = new HeaderList(undefined, [
+      new Header({ key: 'h1', value: 'v1' }),
+      new Header({ key: 'h2', value: 'v2' }),
+    ]);
+
+    expect(headerList.toObject()).toEqual({ h1: 'v1', h2: 'v2' });
+  });
 });

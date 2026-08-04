@@ -135,4 +135,12 @@ export class VariableList<T extends Variable> extends PropertyList<T> {
   static isVariableList(obj: any) {
     return '_kind' in obj && obj._kind === 'VariableList';
   }
+
+  override toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
+    const obj: Record<string, any> = Object.create(null);
+    this.list.forEach(variable => {
+      obj[variable.key] = variable.get();
+    });
+    return obj;
+  }
 }

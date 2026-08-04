@@ -219,11 +219,23 @@ describe('test CookieJar', () => {
       isPrivate: false,
       name: 'my jar',
       cookies: [
-        { id: '1', key: 'c1', value: 'v1', domain: 'inso.com' },
-        { id: '2', key: 'c2', value: 'v2', domain: 'inso.com' },
+        { id: '1', key: 'c1', value: 'v1', domain: 'inso.com', expires: null, path: '/', secure: false, httpOnly: false },
+        { id: '2', key: 'c2', value: 'v2', domain: 'inso.com', expires: null, path: '/', secure: false, httpOnly: false },
       ],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    });
     expect(cookieObject.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
+  });
+
+  it('toObject does not pollute the prototype for dangerous cookie keys', () => {
+    const cookieList = new CookieList([
+      new Cookie({ key: '__proto__', value: 'polluted' }),
+      new Cookie({ key: 'constructor', value: 'polluted' }),
+    ]);
+
+    const obj = cookieList.toObject();
+    expect(Object.getPrototypeOf(obj)).toBeNull();
+    expect(({} as any).polluted).toBeUndefined();
+    expect(obj.__proto__).toEqual('polluted');
+    expect(obj.constructor).toEqual('polluted');
   });
 });
