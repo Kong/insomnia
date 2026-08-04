@@ -43,7 +43,6 @@ export interface DevPortalSyncResult {
   success: boolean;
   apis: SyncCounts;
   versions: SyncCounts;
-  requests: SyncCounts;
   skippedVersions: SkippedApiVersion[];
   durationMs: number;
   error?: string;
@@ -157,11 +156,7 @@ const syncVersionEnvironments = async (
 };
 
 // Add/Update folders and requests based on the converted spec, and delete any stale requests or folders.
-const syncVersionSpecContents = async (
-  versionFolderId: string,
-  resources: ImportRequest[],
-  requestCounts: SyncCounts,
-): Promise<boolean> => {
+const syncVersionSpecContents = async (versionFolderId: string, resources: ImportRequest[]): Promise<boolean> => {
   let changed = false;
 
   const existingTagFolders = await db.find<RequestGroup>(models.requestGroup.type, { parentId: versionFolderId });
@@ -201,18 +196,15 @@ const syncVersionSpecContents = async (
   for (const requestToImport of requestsToImport) {
     const operationId = requestToImport.operationId!;
     incomingRequestOperationIds.add(operationId);
-    requestCounts.total++;
     const parentId = (requestToImport.parentId && folderIdMap.get(requestToImport.parentId)) || versionFolderId;
     const existingRequest = existingRequestByOperationKey.get(operationId);
     if (existingRequest) {
       if (requestFieldsChanged(existingRequest, requestToImport)) {
         await services.request.update(existingRequest, buildRequestPatch(requestToImport, operationId, false));
-        requestCounts.updated++;
         changed = true;
       }
     } else {
       await services.request.create({ parentId, ...buildRequestPatch(requestToImport, operationId, true) });
-      requestCounts.created++;
       changed = true;
     }
   }
@@ -223,7 +215,6 @@ const syncVersionSpecContents = async (
   );
   for (const request of staledRequests) {
     await services.request.remove(request);
-    requestCounts.deleted++;
     changed = true;
   }
 
@@ -314,7 +305,7 @@ const syncApiVersions = async (
       folderChanged = true;
     }
 
-    ctx.onProgress?.(`Sync spec version ${apiSpecVersion} for ${api.name}...`);
+    ctx.onProgress?.(`Checking for updates from API ${api.name} spec version ${apiSpecVersion}...`);
     let specData: Awaited<ReturnType<typeof getAPISpecByVersion>>;
     try {
       specData = await getAPISpecByVersion(ctx.devPortalUrl, ctx.accessToken, apiId, apiSpecVersionId);
@@ -346,7 +337,7 @@ const syncApiVersions = async (
         environmentType: EnvironmentType.KVPAIR,
       });
     }
-    const contentChanged = await syncVersionSpecContents(folder._id, result, counts.requests);
+    const contentChanged = await syncVersionSpecContents(folder._id, result);
     const envChanged = baseEnvironment
       ? await syncVersionEnvironments(baseEnvironment._id, apiSpecVersion, result)
       : false;
@@ -384,7 +375,7 @@ export async function syncDevPortal({
 
   const bufferId = await db.bufferChangesIndefinitely();
   try {
-    onProgress?.(`Fetching APIs from dev portal ${devPortalUrl}...`);
+    onProgress?.(`Checking for updates from ${devPortalUrl}...`);
     let devPortalApis: Awaited<ReturnType<typeof listDevPortalAPIs>> = [];
     try {
       devPortalApis = await listDevPortalAPIs({ devPortalUrl, accessToken });
@@ -404,7 +395,7 @@ export async function syncDevPortal({
       signal?.throwIfAborted();
       incomingApiIds.add(apiId);
       counts.apis.total++;
-      onProgress?.(`Syncing API ${apiName}...`);
+      onProgress?.(`Checking for updates from API ${apiName}...`);
 
       const existingWorkspace = existingWorkspaceByApiId.get(apiId);
 
@@ -464,7 +455,6 @@ export async function syncDevPortal({
       success: true,
       apis: counts.apis,
       versions: counts.versions,
-      requests: counts.requests,
       skippedVersions,
       durationMs: Date.now() - startTime,
     };
@@ -474,7 +464,6 @@ export async function syncDevPortal({
       success: false,
       apis: counts.apis,
       versions: counts.versions,
-      requests: counts.requests,
       skippedVersions,
       durationMs: Date.now() - startTime,
       errorDetails: {

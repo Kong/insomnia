@@ -16,6 +16,7 @@ export interface BaseWorkspace {
   certificates?: any; // deprecated
   scope: 'design' | 'collection' | 'mock-server' | 'environment' | 'mcp';
   konnectServiceId?: string | null;
+  devPortalApiId?: string | null;
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];
@@ -32,7 +33,7 @@ export type Workspace = BaseModel & BaseWorkspace;
 
 export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => model.type === type;
 
-export const optionalKeys = ['konnectServiceId'];
+export const optionalKeys: (keyof Workspace)[] = ['konnectServiceId', 'devPortalApiId'];
 export const isWorkspaceId = (id?: string | null) => id?.startsWith(prefix + '_');
 
 export const isDesign = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.design;
@@ -45,6 +46,9 @@ export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
   workspace.scope === WorkspaceScopeKeys.environment;
 
 export const isMcp = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.mcp;
+
+export const isDevPortalWorkspace = (workspace: Pick<Workspace, 'devPortalApiId'>) =>
+  'devPortalApiId' in workspace && workspace.devPortalApiId != null;
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,

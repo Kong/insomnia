@@ -18,6 +18,7 @@ export const optionalKeys: (keyof BaseRequestGroup)[] = [
   'environmentType',
   'konnectRouteId',
   'environmentPropertyOrder',
+  'devPortalVersionId',
 ];
 interface BaseRequestGroup {
   name: string;
@@ -32,6 +33,7 @@ interface BaseRequestGroup {
   authentication?: RequestAuthentication | {};
   headers?: RequestHeader[];
   konnectRouteId?: string | null;
+  devPortalVersionId?: string | null;
 }
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
@@ -61,5 +63,6 @@ export function rewriteReferences(group: RequestGroup, idMapping: Map<string, st
       idMapping,
     ),
     konnectRouteId: null,
+    devPortalVersionId: null,
   };
 }

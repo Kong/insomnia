@@ -71,6 +71,7 @@ export interface ImportRequest extends Comment {
   afterResponseScript?: string;
   metaSortKey?: number;
   scope?: string;
+  operationId?: string;
 }
 
 interface ConvertErrorResult {

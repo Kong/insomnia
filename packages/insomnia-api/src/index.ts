@@ -9,5 +9,6 @@ export * from './organizations';
 export * from './spaces';
 export * from './mock';
 export * from './vcs';
+export * from './dev-portal';
 
 export { configureFetch, type FetchConfig, ResponseFailError, isApiError } from './fetch';

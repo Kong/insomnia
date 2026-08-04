@@ -1,7 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
-import { models } from 'insomnia-data';
+import { models, type Project } from 'insomnia-data';
 import { useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 
 import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 
@@ -11,12 +11,15 @@ import { KonnectProjectIcon } from './konnect-project-icon/konnect-project-icon'
 import { ACTIVE_BORDER_CLASS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './project-navigation-sidebar-utils';
 import { type ProjectFlatItem } from './types';
 
+const HOVER_ACTION_BTN_CLASS =
+  'flex aspect-square h-6 border border-(--hl-md) items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:opacity-100 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)';
 interface ProjectNodeProps {
   item: ProjectFlatItem;
   storageRules: StorageRules;
   onToggle: (projectId: string) => void;
   sortOrder: WorkspaceSortOrder;
   onSortOrderChange: (newSortOrder: WorkspaceSortOrder) => void;
+  onSyncDevPortal: (project: Project) => void;
 }
 
 export const ProjectNodeIcon = ({ project }: { project: ProjectFlatItem['doc'] }) => {
@@ -56,11 +59,26 @@ export const ProjectNodeIcon = ({ project }: { project: ProjectFlatItem['doc'] }
   );
 };
 
-export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrderChange }: ProjectNodeProps) => {
+export const ProjectNode = ({
+  item,
+  storageRules,
+  onToggle,
+  sortOrder,
+  onSortOrderChange,
+  onSyncDevPortal,
+}: ProjectNodeProps) => {
   const { doc, collapsed, organizationId } = item;
   const { name: projectName, presence, _id: projectId } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const isDevPortalProject = models.project.isDevPortalProject(doc);
+
+  const handleOpenDevPortal = () => {
+    if (!models.project.isDevPortalProject(doc)) {
+      return;
+    }
+
+    window.main.openInBrowser(doc.devPortalUrl);
+  };
 
   return (
     <div
@@ -68,7 +86,7 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
         e.preventDefault();
         setIsContextMenuOpen(true);
       }}
-      className={ROW_CLASS}
+      className={`${ROW_CLASS} group`}
       style={{ paddingLeft: '1em' }}
       data-testid={`project-node-${projectName}`}
     >
@@ -86,7 +104,37 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
         <span className="min-w-0 flex-1 truncate text-base text-[rgb(var(--color-font-rgb),0.8)]">{projectName}</span>
       </div>
       {presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={presence} />}
-      {projectId !== models.project.SCRATCHPAD_PROJECT_ID && !isDevPortalProject && (
+      {isDevPortalProject && (
+        <>
+          <TooltipTrigger>
+            <Button
+              aria-label="Sync APIs"
+              className={`${HOVER_ACTION_BTN_CLASS} p-2`}
+              onPress={() => onSyncDevPortal(doc)}
+            >
+              ↙ Fetch
+            </Button>
+            <Tooltip
+              offset={8}
+              className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-base text-(--color-font) shadow-lg select-none focus:outline-hidden"
+            >
+              Sync APIs
+            </Tooltip>
+          </TooltipTrigger>
+          <TooltipTrigger>
+            <Button aria-label="Open Dev Portal" className={HOVER_ACTION_BTN_CLASS} onPress={handleOpenDevPortal}>
+              <Icon icon="arrow-up-right-from-square" />
+            </Button>
+            <Tooltip
+              offset={8}
+              className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-base text-(--color-font) shadow-lg select-none focus:outline-hidden"
+            >
+              Open Dev Portal
+            </Tooltip>
+          </TooltipTrigger>
+        </>
+      )}
+      {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
         <ProjectDropdown
           organizationId={organizationId}
           project={doc}

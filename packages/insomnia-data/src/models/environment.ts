@@ -12,7 +12,12 @@ export const vaultEnvironmentMaskValue = '••••••';
 export const canDuplicate = true;
 export const canSync = true;
 // for those keys do not need to add in model init method
-export const optionalKeys: (keyof BaseEnvironment)[] = ['kvPairData', 'environmentType', 'dataPropertyOrder'];
+export const optionalKeys: (keyof BaseEnvironment)[] = [
+  'kvPairData',
+  'environmentType',
+  'dataPropertyOrder',
+  'devPortalEnvKey',
+];
 
 export interface BaseEnvironment {
   name: string;
@@ -24,6 +29,9 @@ export interface BaseEnvironment {
   // For sync control
   isPrivate: boolean;
   environmentType?: EnvironmentType;
+  // Dev Portal sync: `${specVersionId}:${server placeholder id}` — identifies which spec
+  // version + server this sub-environment was generated from, for upsert/orphan matching.
+  devPortalEnvKey?: string | null;
 }
 
 export enum EnvironmentType {

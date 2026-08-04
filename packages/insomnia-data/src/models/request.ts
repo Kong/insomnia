@@ -310,6 +310,7 @@ export interface BaseRequest {
   disableUserAgentHeader?: boolean;
   konnectRouteKey?: string | null;
   konnectManagedHeaderNames?: string[] | null;
+  devPortalOperationId?: string | null;
 }
 
 export type Request = BaseModel & BaseRequest;
@@ -347,6 +348,7 @@ export const optionalKeys: (keyof BaseRequest)[] = [
   'konnectRouteKey',
   'konnectManagedHeaderNames',
   'disableUserAgentHeader',
+  'devPortalOperationId',
 ];
 
 export function init(): BaseRequest {
@@ -392,5 +394,6 @@ export function rewriteReferences(request: Request, idMapping: Map<string, strin
       idMapping,
     ),
     konnectRouteKey: null,
+    devPortalOperationId: null,
   };
 }

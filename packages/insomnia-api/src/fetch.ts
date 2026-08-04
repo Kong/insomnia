@@ -1,7 +1,7 @@
 export interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
   path: string;
-  sessionId: string | null;
+  sessionId?: string | null;
   organizationId?: string | null;
   data?: unknown;
   origin?: string;

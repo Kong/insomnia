@@ -80,7 +80,16 @@ export type {
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
 } from './runner-test-result';
-export type { Project, LocalProject, RemoteProject, GitProject, KonnectDeploymentType } from './project';
+export type {
+  Project,
+  LocalProject,
+  RemoteProject,
+  GitProject,
+  DevPortalProject,
+  DevPortalOAuthClient,
+  DevPortalOAuthToken,
+  KonnectDeploymentType,
+} from './project';
 export type { ProjectLintRuleset } from './project-lint-ruleset';
 export type { Settings, ThemeSettings } from './settings';
 export type { Stats } from './stats';
