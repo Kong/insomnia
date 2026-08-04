@@ -107,4 +107,32 @@ describe('S1: bridge-handler scoping inventory', () => {
       expect(e.guards, `${e.path} writes files but has no ownership guard`).toContain('body-path-ownership');
     }
   });
+
+  it('blast radius text names the concrete data each baseline (zero-manifest) handler discloses', () => {
+    // oAuth2Token.getByRequestId returns live bearer tokens (o-auth-2-token.ts's accessToken/
+    // refreshToken/identityToken fields) through the 'models.read' baseline capability, granted to
+    // every plugin with no manifest — its classification and wording should reflect a credential
+    // disclosure, not generic model metadata.
+    const oauth = HANDLER_INVENTORY.find(e => e.path === 'oAuth2Token.getByRequestId');
+    expect(oauth?.sideEffect).toBe('credential');
+    expect(oauth?.blastRadius.toLowerCase()).toMatch(/access.*token|refresh.*token/);
+
+    // nodeOS discloses real host-identifying state: hostname and os.userInfo() (username/homedir/shell).
+    const nodeOS = HANDLER_INVENTORY.find(e => e.path === 'nodeOS');
+    expect(nodeOS?.blastRadius.toLowerCase()).toMatch(/hostname/);
+    expect(nodeOS?.blastRadius.toLowerCase()).toMatch(/userinfo|username/);
+
+    // These three call a getOrCreate service function, so their wording should name the persisted
+    // write alongside the read.
+    for (const path of ['cookieJar.getOrCreateForParentId', 'cookieJar.getCookiesForUrl', 'settings.get']) {
+      const e = HANDLER_INVENTORY.find(x => x.path === path);
+      expect(e?.blastRadius.toLowerCase(), `${path} blastRadius should mention its get-or-create side effect`).toMatch(/creat/);
+    }
+
+    // response.getBodyBuffer's read-side ownership check is existence-only (no identity/parentId
+    // comparison), unlike response.setBody's write-side check — its wording should name both
+    // possibilities rather than implying the two guards are equivalent.
+    const getBodyBuffer = HANDLER_INVENTORY.find(e => e.path === 'response.getBodyBuffer');
+    expect(getBodyBuffer?.blastRadius.toLowerCase()).toMatch(/any known response|arbitrary file/);
+  });
 });
