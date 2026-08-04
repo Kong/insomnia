@@ -19,6 +19,11 @@ import type {
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
 import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
+import {
+  readResponseBodyBufferOwned,
+  recordBelongsToCallerWorkspace,
+  reloadCloudCredentialForTrustedUpdate,
+} from '~/templating/db-trust';
 import { HOOK_REQUEST_FIELDS, type PluginExportManifest, stripDangerousKeysReviver } from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
@@ -106,17 +111,6 @@ const assertResponseBodyPathOwnership = async (response: Record<string, any>): P
   const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
   if (existing && existing.parentId !== response.parentId) {
     throw new Error('response.bodyPath belongs to a different response than the one being processed');
-  }
-};
-
-// Read-side counterpart of assertResponseBodyPathOwnership: rejects a bodyPath that isn't the stored bodyPath of an already-persisted response.
-const assertResponseBodyPathReadOwnership = async (bodyPath: string | undefined): Promise<void> => {
-  if (!bodyPath) {
-    return;
-  }
-  const existing = await services.response.getByBodyPath(path.resolve(bodyPath));
-  if (!existing) {
-    throw new Error('response.bodyPath does not belong to any known response');
   }
 };
 
@@ -466,6 +460,19 @@ export const discoverUserPluginExportsForLoader = async (body: {
   });
 };
 
+// Reads the caller's real workspace id off a render context that arrives in one of two shapes:
+// the real, in-process context (a live getMeta() function) or its JSON-transited copy from the
+// plugin-window path (getMeta is dropped by JSON, but the serializedFunctions bag survives).
+const callerWorkspaceIdFromRenderContext = (renderContext: Record<string, any> | undefined): string | undefined => {
+  if (!renderContext) {
+    return undefined;
+  }
+  if (typeof renderContext.getMeta === 'function') {
+    return renderContext.getMeta()?.workspaceId;
+  }
+  return renderContext.serializedFunctions?.workspaceId;
+};
+
 const pickHookRequestFields = (req: Record<string, any>): Record<string, any> => {
   const out: Record<string, any> = {};
   for (const key of HOOK_REQUEST_FIELDS) {
@@ -500,7 +507,7 @@ export const runRequestHookInSandbox = async (
     envelope: {
       args: [],
       context: (renderContext as Record<string, any>) || {},
-      meta: {},
+      meta: { workspaceId: callerWorkspaceIdFromRenderContext(renderContext) },
       renderPurpose: 'send',
       appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
       pluginName: plugin.name,
@@ -572,7 +579,7 @@ export const runResponseHookInSandbox = async (
     envelope: {
       args: [],
       context: (renderContext as Record<string, any>) || {},
-      meta: {},
+      meta: { workspaceId: callerWorkspaceIdFromRenderContext(renderContext) },
       renderPurpose: 'send',
       appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
       pluginName: plugin.name,
@@ -602,6 +609,9 @@ export const runActionInSandbox = async (
   actionLabel: string,
   actionDomainData: unknown,
   renderContext?: Record<string, any>,
+  // The caller's own, host-verified workspace id (e.g. the UI dropdown's `activeWorkspace._id`) —
+  // never anything the plugin's own action code could set.
+  callerWorkspaceId?: string,
 ): Promise<void> => {
   const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
   const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
@@ -617,7 +627,7 @@ export const runActionInSandbox = async (
     envelope: {
       args: [],
       context: renderContext || {},
-      meta: {},
+      meta: { workspaceId: callerWorkspaceId },
       renderPurpose: 'send',
       appInfo: { version: app.getVersion(), platform: process.platform, arch: process.arch },
       pluginName: plugin.name,
@@ -656,35 +666,76 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
   'encode': async (body: { input: string; encoding: BinaryToTextEncoding }) => {
     return crypto.createHash('md5').update(body.input).digest(body.encoding);
   },
-  'request.getById': async (body: { id: string }) => {
-    return await services.request.getById(body.id);
+  'request.getById': async (body: { id: string; callerWorkspaceId?: string }) => {
+    const request = await services.request.getById(String(body.id));
+    if (!(await recordBelongsToCallerWorkspace(request, body.callerWorkspaceId))) {
+      return null;
+    }
+    return request;
   },
-  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: AllTypes[] }) => {
+  'request.getAncestors': async (body: {
+    request: DBRequest | RequestGroup | Workspace;
+    types: AllTypes[];
+    callerWorkspaceId?: string;
+  }) => {
+    if (!(await recordBelongsToCallerWorkspace(body.request, body.callerWorkspaceId))) {
+      return [];
+    }
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
-  'workspace.getById': async (body: { id: string }) => {
-    return await services.workspace.getById(body.id);
+  'workspace.getById': async (body: { id: string; callerWorkspaceId?: string }) => {
+    const workspace = await services.workspace.getById(String(body.id));
+    if (!(await recordBelongsToCallerWorkspace(workspace, body.callerWorkspaceId))) {
+      return null;
+    }
+    return workspace;
   },
-  'oAuth2Token.getByRequestId': async (body: { parentId: string }) => {
-    return await services.oAuth2Token.getByParentId(body.parentId);
+  'oAuth2Token.getByRequestId': async (body: { parentId: string; callerWorkspaceId?: string }) => {
+    const requestId = String(body.parentId);
+    const request = await services.request.getById(requestId);
+    if (!(await recordBelongsToCallerWorkspace(request, body.callerWorkspaceId))) {
+      return null;
+    }
+    return await services.oAuth2Token.getByParentId(requestId);
   },
-  'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
-    return await services.cookieJar.getOrCreateForParentId(body.parentId);
+  'cookieJar.getOrCreateForParentId': async (body: { parentId: string; callerWorkspaceId?: string }) => {
+    const requestId = String(body.parentId);
+    const request = await services.request.getById(requestId);
+    // getOrCreateForParentId always succeeds, so an unknown requestId is left alone; only a request
+    // that exists in another workspace is refused, since getOrCreate would otherwise return that
+    // request's real cookie jar.
+    if (request && !(await recordBelongsToCallerWorkspace(request, body.callerWorkspaceId))) {
+      throw new Error('Could not resolve cookie jar for the given request');
+    }
+    return await services.cookieJar.getOrCreateForParentId(requestId);
   },
-  'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
-    const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
+  'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string; callerWorkspaceId?: string }) => {
+    const requestId = String(body.parentId);
+    const request = await services.request.getById(requestId);
+    if (request && !(await recordBelongsToCallerWorkspace(request, body.callerWorkspaceId))) {
+      throw new Error('Could not resolve cookie jar for the given request');
+    }
+    const cookies = await services.cookieJar.getOrCreateForParentId(requestId);
     const jar = jarFromCookies(cookies.cookies);
     return jar.getCookiesSync(body.url).map(c => c.toJSON());
   },
-  'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
+  'response.getLatestForRequestId': async (body: {
+    requestId: string;
+    environmentId: string;
+    callerWorkspaceId?: string;
+  }) => {
+    const requestId = String(body.requestId);
+    const request = await services.request.getById(requestId);
+    if (!(await recordBelongsToCallerWorkspace(request, body.callerWorkspaceId))) {
+      return null;
+    }
+    return await services.response.getLatestForRequestId(requestId, String(body.environmentId));
   },
   'response.getBodyBuffer': async (body: {
-    response?: { bodyPath?: string; bodyCompression?: any };
+    response?: { _id?: string; bodyPath?: string; bodyCompression?: any };
     readFailureValue?: string;
   }) => {
-    await assertResponseBodyPathReadOwnership(body.response?.bodyPath);
-    return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
+    return await readResponseBodyBufferOwned(body.response, body.readFailureValue);
   },
   // H1: a sandboxed response hook's context.response.setBody(). The body arrives base64-encoded (so
   // the bytes survive the JSON bridge). Contain the write to the responses directory as defense in
@@ -717,18 +768,18 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     return null;
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, String(body.key));
     return doc !== null;
   },
   'pluginData.setItem': async (body: { pluginName: string; key: string; value: string }) => {
-    return services.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
+    return services.pluginData.upsertByKey(body.pluginName, String(body.key), String(body.value));
   },
   'pluginData.getItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, String(body.key));
     return doc ? doc.value : null;
   },
   'pluginData.removeItem': async (body: { pluginName: string; key: string }) => {
-    return services.pluginData.removeByKey(body.pluginName, body.key);
+    return services.pluginData.removeByKey(body.pluginName, String(body.key));
   },
   'pluginData.clear': async (body: { pluginName: string }) => {
     return services.pluginData.removeAll(body.pluginName);
@@ -741,13 +792,14 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     }));
   },
   'cloudCredential.getById': async (body: { id: string }) => {
-    return await services.cloudCredential.getById(body.id);
+    return await services.cloudCredential.getById(String(body.id));
   },
   'cloudCredential.update': async (body: {
     originCredential: CloudProviderCredential;
     patch: Partial<CloudProviderCredential>;
   }) => {
-    return await services.cloudCredential.update(body.originCredential, body.patch);
+    const { existing, patch } = await reloadCloudCredentialForTrustedUpdate(body.originCredential, body.patch);
+    return await services.cloudCredential.update(existing, patch);
   },
   'settings.get': async () => {
     return await services.settings.get();
@@ -978,6 +1030,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     actionLabel: string;
     actionDomainData: unknown;
     renderContext?: Record<string, any>;
+    workspaceId?: string;
   }) => {
     const trusted = await resolveTrustedPlugin(body.plugin.name);
     await runActionInSandbox(
@@ -986,6 +1039,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
       body.actionLabel,
       body.actionDomainData,
       body.renderContext,
+      body.workspaceId,
     );
     return null;
   },

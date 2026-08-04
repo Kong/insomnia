@@ -137,11 +137,13 @@ export function createLiquidTagWorker(
           openInBrowser: (url: string) => fetchFromTemplateWorkerDatabase('openInBrowser', { url }),
           models: {
             request: {
-              getById: async (id: string) => fetchFromTemplateWorkerDatabase('request.getById', { id }),
+              getById: async (id: string) =>
+                fetchFromTemplateWorkerDatabase('request.getById', { id, callerWorkspaceId: renderMeta?.workspaceId }),
               getAncestors: async (request: any) => {
                 const ancestors = (await fetchFromTemplateWorkerDatabase('request.getAncestors', {
                   request,
                   types: ['RequestGroup', 'Workspace'],
+                  callerWorkspaceId: renderMeta?.workspaceId,
                 })) as (Request | RequestGroup | Workspace)[];
                 return ancestors.filter(doc => doc._id !== request._id);
               },
@@ -152,23 +154,25 @@ export function createLiquidTagWorker(
                 fetchFromTemplateWorkerDatabase('cloudCredential.update', { originCredential, patch }),
             },
             workspace: {
-              getById: async (id: string) => fetchFromTemplateWorkerDatabase('workspace.getById', { id }),
+              getById: async (id: string) =>
+                fetchFromTemplateWorkerDatabase('workspace.getById', { id, callerWorkspaceId: renderMeta?.workspaceId }),
             },
             oAuth2Token: {
               getByRequestId: async (parentId: string) =>
-                fetchFromTemplateWorkerDatabase('oAuth2Token.getByRequestId', { parentId }),
+                fetchFromTemplateWorkerDatabase('oAuth2Token.getByRequestId', { parentId, callerWorkspaceId: renderMeta?.workspaceId }),
             },
             cookieJar: {
               getOrCreateForParentId: async (parentId: string) =>
-                fetchFromTemplateWorkerDatabase('cookieJar.getOrCreateForParentId', { parentId }),
+                fetchFromTemplateWorkerDatabase('cookieJar.getOrCreateForParentId', { parentId, callerWorkspaceId: renderMeta?.workspaceId }),
               getCookiesForUrl: async (parentId: string, url: string) =>
-                fetchFromTemplateWorkerDatabase('cookieJar.getCookiesForUrl', { parentId, url }),
+                fetchFromTemplateWorkerDatabase('cookieJar.getCookiesForUrl', { parentId, url, callerWorkspaceId: renderMeta?.workspaceId }),
             },
             response: {
               getLatestForRequestId: async (requestId: string, environmentId: string | null) =>
                 fetchFromTemplateWorkerDatabase('response.getLatestForRequestId', {
                   requestId,
                   environmentId,
+                  callerWorkspaceId: renderMeta?.workspaceId,
                 }),
               getBodyBuffer: async (
                 response?: { bodyPath?: string; bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__' | undefined },

@@ -138,6 +138,7 @@ export const RequestGroupActionsDropdown = ({
         label,
         projectId: activeProject._id,
         domainData: { requestGroup, requests },
+        workspaceId,
       });
     } catch (err) {
       showError({

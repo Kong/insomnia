@@ -378,32 +378,39 @@ export const createConfiguredCurlInstance = async ({
   // Use the system's native CA store for SSL certificate verification
   curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
   certificates.forEach(validCert => {
-    const { passphrase, cert, key, pfx } = validCert;
-    if (cert) {
-      const { isAllowed, securedPath } = isPathAllowed(cert, settings.dataFolders);
-      invariant(isAllowed, cannotAccessPathError(securedPath));
+    // A disallowed path on one certificate must not prevent other certificates in this request
+    // from being applied, so each one is isolated rather than letting invariant() abort the loop.
+    try {
+      const { passphrase, cert, key, pfx } = validCert;
+      if (cert) {
+        const { isAllowed, securedPath } = isPathAllowed(cert, settings.dataFolders);
+        invariant(isAllowed, cannotAccessPathError(securedPath));
 
-      curl.setOpt(Curl.option.SSLCERT, cert);
-      curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-      debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
-    }
-    if (pfx) {
-      const { isAllowed, securedPath } = isPathAllowed(pfx, settings.dataFolders);
-      invariant(isAllowed, cannotAccessPathError(securedPath));
+        curl.setOpt(Curl.option.SSLCERT, cert);
+        curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
+        debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
+      }
+      if (pfx) {
+        const { isAllowed, securedPath } = isPathAllowed(pfx, settings.dataFolders);
+        invariant(isAllowed, cannotAccessPathError(securedPath));
 
-      curl.setOpt(Curl.option.SSLCERT, pfx);
-      curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
-      debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
-    }
-    if (key) {
-      const { isAllowed, securedPath } = isPathAllowed(key, settings.dataFolders);
-      invariant(isAllowed, cannotAccessPathError(securedPath));
+        curl.setOpt(Curl.option.SSLCERT, pfx);
+        curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
+        debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
+      }
+      if (key) {
+        const { isAllowed, securedPath } = isPathAllowed(key, settings.dataFolders);
+        invariant(isAllowed, cannotAccessPathError(securedPath));
 
-      curl.setOpt(Curl.option.SSLKEY, key);
-      debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
-    }
-    if (passphrase) {
-      curl.setOpt(Curl.option.KEYPASSWD, passphrase);
+        curl.setOpt(Curl.option.SSLKEY, key);
+        debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
+      }
+      if (passphrase) {
+        curl.setOpt(Curl.option.KEYPASSWD, passphrase);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      debugTimeline.push({ value: `Skipping client certificate: ${message}`, name: 'Text', timestamp: Date.now() });
     }
   });
   const httpVersion = getHttpVersion(settings.preferredHttpVersion);

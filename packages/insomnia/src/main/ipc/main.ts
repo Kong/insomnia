@@ -18,7 +18,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry, Services, TestResults } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry, TestResults } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
@@ -44,6 +44,199 @@ import {
   exportWorkspacesHAR,
 } from '~/main/har';
 import { convert } from '~/main/importers/convert';
+import {
+  apiSpecGetByParentId,
+  apiSpecGetOrCreateForParentId,
+  apiSpecUpdate,
+  apiSpecUpdateOrCreateForParentId,
+  caCertificateCreate,
+  caCertificateGetById,
+  caCertificateGetByParentId,
+  caCertificateRemoveWhere,
+  caCertificateUpdate,
+  clientCertificateCreate,
+  clientCertificateFindByParentId,
+  clientCertificateGetById,
+  clientCertificateRemove,
+  clientCertificateUpdate,
+  cloudCredentialAll,
+  cloudCredentialCreate,
+  cloudCredentialGetById,
+  cloudCredentialGetByName,
+  cloudCredentialRemove,
+  cloudCredentialUpdate,
+  cookieJarGetById,
+  cookieJarGetOrCreateForParentId,
+  cookieJarUpdate,
+  environmentCreate,
+  environmentDuplicate,
+  environmentGetById,
+  environmentGetByParentId,
+  environmentGetOrCreateForParentId,
+  environmentList,
+  environmentListByParentId,
+  environmentRemove,
+  environmentRemoveAllSecrets,
+  environmentUpdate,
+  gitCredentialsAll,
+  gitCredentialsCreate,
+  gitCredentialsGetById,
+  gitCredentialsRemove,
+  gitCredentialsRemoveAll,
+  gitCredentialsUpdate,
+  gitRepositoryAll,
+  gitRepositoryGetAllByCredentialId,
+  gitRepositoryGetById,
+  gitRepositoryRemove,
+  gitRepositoryUpdate,
+  grpcRequestCreate,
+  grpcRequestFindByProtoFileId,
+  grpcRequestMetaGetByParentId,
+  grpcRequestMetaUpdateOrCreateByParentId,
+  helpersAbortCommandSearch,
+  helpersCommandSearch,
+  helpersDuplicateRequest,
+  helpersFindRequestByParentId,
+  helpersGetRequestById,
+  helpersGetResponseBodyBuffer,
+  helpersGetResponseTimeline,
+  helpersQueryAllWorkspaceUrls,
+  helpersReadCurlResponse,
+  helpersRemoveRequest,
+  helpersRemoveResponse,
+  helpersRemoveResponsesForRequest,
+  helpersUpdateRequest,
+  mcpPayloadGetByParentIdAndUrl,
+  mcpPayloadUpdateOrCreateByParentIdAndUrl,
+  mcpRequestCreate,
+  mcpRequestGetById,
+  mcpRequestGetByParentId,
+  mcpResponseGetById,
+  mcpResponseGetLatestForRequestId,
+  mockRouteCreate,
+  mockRouteFindByParentId,
+  mockRouteGetById,
+  mockRouteRemove,
+  mockRouteUpdate,
+  mockServerFindByProjectId,
+  mockServerGetById,
+  mockServerGetByParentId,
+  mockServerGetOrCreateForParentId,
+  mockServerUpdate,
+  oAuth2TokenCreate,
+  oAuth2TokenGetByParentId,
+  oAuth2TokenRemove,
+  oAuth2TokenUpdate,
+  organizationList,
+  pluginDataAll,
+  pluginDataGetByKey,
+  pluginDataRemoveAll,
+  pluginDataRemoveByKey,
+  pluginDataUpsertByKey,
+  projectCount,
+  projectCreate,
+  projectGet,
+  projectGetById,
+  projectLintRulesetGetByParentId,
+  projectLintRulesetRemove,
+  projectLintRulesetUpsert,
+  projectList,
+  projectListByGitRepositoryIds,
+  projectListByOrganizationIds,
+  projectRemove,
+  projectUpdate,
+  protoDirectoryAll,
+  protoDirectoryCreate,
+  protoDirectoryFindByParentId,
+  protoDirectoryRemove,
+  protoFileAll,
+  protoFileCreate,
+  protoFileFindByParentId,
+  protoFileRemove,
+  protoFileUpdate,
+  requestCreate,
+  requestFindByParentId,
+  requestGetById,
+  requestGetByParentId,
+  requestGroupCreate,
+  requestGroupDuplicate,
+  requestGroupFindByParentId,
+  requestGroupGetById,
+  requestGroupMetaCreate,
+  requestGroupMetaGetByParentId,
+  requestGroupMetaUpdate,
+  requestGroupMetaUpdateOrCreateForParentId,
+  requestGroupRemove,
+  requestGroupUpdate,
+  requestMetaGetByParentId,
+  requestMetaGetOrCreateByParentId,
+  requestMetaUpdate,
+  requestMetaUpdateOrCreateByParentId,
+  requestUpdate,
+  requestVersionFindByParentId,
+  requestVersionGetRequest,
+  requestVersionRestore,
+  responseCreate,
+  responseFindByParentId,
+  responseGetByBodyPath,
+  responseGetById,
+  responseGetLatestForRequestId,
+  runnerTestResultCreate,
+  runnerTestResultFindByParentId,
+  runnerTestResultGetById,
+  runnerTestResultRemove,
+  settingsGet,
+  settingsGetOrCreate,
+  settingsPatch,
+  settingsUpdate,
+  socketIOPayloadGetOrCreateByParentId,
+  socketIOPayloadUpdateOrCreateByParentId,
+  socketIORequestCreate,
+  socketIORequestMetaUpdateOrCreateByParentId,
+  socketIOResponseFindByParentId,
+  socketIOResponseGetById,
+  socketIOResponseGetLatestForRequestId,
+  statsGet,
+  statsIncrementCreatedRequests,
+  statsIncrementCreatedRequestsForDescendents,
+  statsIncrementDeletedRequests,
+  statsIncrementDeletedRequestsForDescendents,
+  statsIncrementExecutedRequests,
+  statsUpdate,
+  unitTestCreate,
+  unitTestRemove,
+  unitTestResultCreate,
+  unitTestSuiteCreate,
+  unitTestSuiteFindByParentId,
+  unitTestSuiteGetById,
+  unitTestSuiteRemove,
+  unitTestSuiteUpdate,
+  unitTestUpdate,
+  userSessionGet,
+  userSessionRemove,
+  userSessionUpdate,
+  webSocketPayloadCreate,
+  webSocketPayloadGetByParentId,
+  webSocketPayloadUpdate,
+  webSocketRequestCreate,
+  webSocketRequestMetaUpdateOrCreateByParentId,
+  webSocketResponseFindByParentId,
+  webSocketResponseGetById,
+  webSocketResponseGetLatestForRequestId,
+  workspaceCount,
+  workspaceCreate,
+  workspaceGetById,
+  workspaceList,
+  workspaceListByParentId,
+  workspaceMetaCreate,
+  workspaceMetaGetByParentId,
+  workspaceMetaGetOrCreateByParentId,
+  workspaceMetaList,
+  workspaceMetaUpdate,
+  workspaceMetaUpdateByParentId,
+  workspaceRemove,
+  workspaceUpdate,
+} from '~/main/ipc/services-invoke-migrated-handlers';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
@@ -396,20 +589,199 @@ export function registerMainHandlers() {
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return services.caCertificate.create(options);
   });
+  ipcMainHandle('services.caCertificate.create', caCertificateCreate);
+  ipcMainHandle('services.caCertificate.getById', caCertificateGetById);
+  ipcMainHandle('services.caCertificate.getByParentId', caCertificateGetByParentId);
+  ipcMainHandle('services.caCertificate.removeWhere', caCertificateRemoveWhere);
+  ipcMainHandle('services.caCertificate.update', caCertificateUpdate);
+  ipcMainHandle('services.clientCertificate.create', clientCertificateCreate);
+  ipcMainHandle('services.clientCertificate.findByParentId', clientCertificateFindByParentId);
+  ipcMainHandle('services.clientCertificate.getById', clientCertificateGetById);
+  ipcMainHandle('services.clientCertificate.remove', clientCertificateRemove);
+  ipcMainHandle('services.clientCertificate.update', clientCertificateUpdate);
+  ipcMainHandle('services.cloudCredential.all', cloudCredentialAll);
+  ipcMainHandle('services.cloudCredential.create', cloudCredentialCreate);
+  ipcMainHandle('services.cloudCredential.getById', cloudCredentialGetById);
+  ipcMainHandle('services.cloudCredential.getByName', cloudCredentialGetByName);
+  ipcMainHandle('services.cloudCredential.remove', cloudCredentialRemove);
+  ipcMainHandle('services.cloudCredential.update', cloudCredentialUpdate);
+  ipcMainHandle('services.settings.get', settingsGet);
+  ipcMainHandle('services.settings.getOrCreate', settingsGetOrCreate);
+  ipcMainHandle('services.settings.patch', settingsPatch);
+  ipcMainHandle('services.settings.update', settingsUpdate);
+  ipcMainHandle('services.gitCredentials.all', gitCredentialsAll);
+  ipcMainHandle('services.gitCredentials.create', gitCredentialsCreate);
+  ipcMainHandle('services.gitCredentials.getById', gitCredentialsGetById);
+  ipcMainHandle('services.gitCredentials.remove', gitCredentialsRemove);
+  ipcMainHandle('services.gitCredentials.removeAll', gitCredentialsRemoveAll);
+  ipcMainHandle('services.gitCredentials.update', gitCredentialsUpdate);
+  ipcMainHandle('services.userSession.get', userSessionGet);
+  ipcMainHandle('services.userSession.remove', userSessionRemove);
+  ipcMainHandle('services.userSession.update', userSessionUpdate);
+  ipcMainHandle('services.environment.create', environmentCreate);
+  ipcMainHandle('services.environment.update', environmentUpdate);
+  ipcMainHandle('services.environment.list', environmentList);
+  ipcMainHandle('services.environment.listByParentId', environmentListByParentId);
+  ipcMainHandle('services.environment.getOrCreateForParentId', environmentGetOrCreateForParentId);
+  ipcMainHandle('services.environment.getById', environmentGetById);
+  ipcMainHandle('services.environment.getByParentId', environmentGetByParentId);
+  ipcMainHandle('services.environment.duplicate', environmentDuplicate);
+  ipcMainHandle('services.environment.remove', environmentRemove);
+  ipcMainHandle('services.environment.removeAllSecrets', environmentRemoveAllSecrets);
+  ipcMainHandle('services.apiSpec.getByParentId', apiSpecGetByParentId);
+  ipcMainHandle('services.apiSpec.getOrCreateForParentId', apiSpecGetOrCreateForParentId);
+  ipcMainHandle('services.apiSpec.update', apiSpecUpdate);
+  ipcMainHandle('services.apiSpec.updateOrCreateForParentId', apiSpecUpdateOrCreateForParentId);
+  ipcMainHandle('services.cookieJar.getById', cookieJarGetById);
+  ipcMainHandle('services.cookieJar.getOrCreateForParentId', cookieJarGetOrCreateForParentId);
+  ipcMainHandle('services.cookieJar.update', cookieJarUpdate);
+  ipcMainHandle('services.gitRepository.all', gitRepositoryAll);
+  ipcMainHandle('services.gitRepository.getAllByCredentialId', gitRepositoryGetAllByCredentialId);
+  ipcMainHandle('services.gitRepository.getById', gitRepositoryGetById);
+  ipcMainHandle('services.gitRepository.remove', gitRepositoryRemove);
+  ipcMainHandle('services.gitRepository.update', gitRepositoryUpdate);
+  ipcMainHandle('services.grpcRequest.create', grpcRequestCreate);
+  ipcMainHandle('services.grpcRequest.findByProtoFileId', grpcRequestFindByProtoFileId);
+  ipcMainHandle('services.grpcRequestMeta.getByParentId', grpcRequestMetaGetByParentId);
+  ipcMainHandle('services.grpcRequestMeta.updateOrCreateByParentId', grpcRequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.helpers.abortCommandSearch', helpersAbortCommandSearch);
+  ipcMainHandle('services.helpers.commandSearch', helpersCommandSearch);
+  ipcMainHandle('services.helpers.duplicateRequest', helpersDuplicateRequest);
+  ipcMainHandle('services.helpers.findRequestByParentId', helpersFindRequestByParentId);
+  ipcMainHandle('services.helpers.getRequestById', helpersGetRequestById);
+  ipcMainHandle('services.helpers.getResponseBodyBuffer', helpersGetResponseBodyBuffer);
+  ipcMainHandle('services.helpers.getResponseTimeline', helpersGetResponseTimeline);
+  ipcMainHandle('services.helpers.queryAllWorkspaceUrls', helpersQueryAllWorkspaceUrls);
+  ipcMainHandle('services.helpers.readCurlResponse', helpersReadCurlResponse);
+  ipcMainHandle('services.helpers.removeRequest', helpersRemoveRequest);
+  ipcMainHandle('services.helpers.removeResponse', helpersRemoveResponse);
+  ipcMainHandle('services.helpers.removeResponsesForRequest', helpersRemoveResponsesForRequest);
+  ipcMainHandle('services.helpers.updateRequest', helpersUpdateRequest);
+  ipcMainHandle('services.mcpPayload.getByParentIdAndUrl', mcpPayloadGetByParentIdAndUrl);
+  ipcMainHandle('services.mcpPayload.updateOrCreateByParentIdAndUrl', mcpPayloadUpdateOrCreateByParentIdAndUrl);
+  ipcMainHandle('services.mcpRequest.create', mcpRequestCreate);
+  ipcMainHandle('services.mcpRequest.getById', mcpRequestGetById);
+  ipcMainHandle('services.mcpRequest.getByParentId', mcpRequestGetByParentId);
+  ipcMainHandle('services.mcpResponse.getById', mcpResponseGetById);
+  ipcMainHandle('services.mcpResponse.getLatestForRequestId', mcpResponseGetLatestForRequestId);
+  ipcMainHandle('services.mockRoute.create', mockRouteCreate);
+  ipcMainHandle('services.mockRoute.findByParentId', mockRouteFindByParentId);
+  ipcMainHandle('services.mockRoute.getById', mockRouteGetById);
+  ipcMainHandle('services.mockRoute.remove', mockRouteRemove);
+  ipcMainHandle('services.mockRoute.update', mockRouteUpdate);
+  ipcMainHandle('services.mockServer.findByProjectId', mockServerFindByProjectId);
+  ipcMainHandle('services.mockServer.getById', mockServerGetById);
+  ipcMainHandle('services.mockServer.getByParentId', mockServerGetByParentId);
+  ipcMainHandle('services.mockServer.getOrCreateForParentId', mockServerGetOrCreateForParentId);
+  ipcMainHandle('services.mockServer.update', mockServerUpdate);
+  ipcMainHandle('services.organization.list', organizationList);
+  ipcMainHandle('services.pluginData.all', pluginDataAll);
+  ipcMainHandle('services.pluginData.getByKey', pluginDataGetByKey);
+  ipcMainHandle('services.pluginData.removeAll', pluginDataRemoveAll);
+  ipcMainHandle('services.pluginData.removeByKey', pluginDataRemoveByKey);
+  ipcMainHandle('services.pluginData.upsertByKey', pluginDataUpsertByKey);
+  ipcMainHandle('services.project.count', projectCount);
+  ipcMainHandle('services.project.create', projectCreate);
+  ipcMainHandle('services.project.get', projectGet);
+  ipcMainHandle('services.project.getById', projectGetById);
+  ipcMainHandle('services.project.list', projectList);
+  ipcMainHandle('services.project.listByGitRepositoryIds', projectListByGitRepositoryIds);
+  ipcMainHandle('services.project.listByOrganizationIds', projectListByOrganizationIds);
+  ipcMainHandle('services.project.remove', projectRemove);
+  ipcMainHandle('services.project.update', projectUpdate);
+  ipcMainHandle('services.projectLintRuleset.getByParentId', projectLintRulesetGetByParentId);
+  ipcMainHandle('services.projectLintRuleset.remove', projectLintRulesetRemove);
+  ipcMainHandle('services.projectLintRuleset.upsert', projectLintRulesetUpsert);
+  ipcMainHandle('services.protoDirectory.all', protoDirectoryAll);
+  ipcMainHandle('services.protoDirectory.create', protoDirectoryCreate);
+  ipcMainHandle('services.protoDirectory.findByParentId', protoDirectoryFindByParentId);
+  ipcMainHandle('services.protoDirectory.remove', protoDirectoryRemove);
+  ipcMainHandle('services.protoFile.all', protoFileAll);
+  ipcMainHandle('services.protoFile.create', protoFileCreate);
+  ipcMainHandle('services.protoFile.findByParentId', protoFileFindByParentId);
+  ipcMainHandle('services.protoFile.remove', protoFileRemove);
+  ipcMainHandle('services.protoFile.update', protoFileUpdate);
+  ipcMainHandle('services.request.create', requestCreate);
+  ipcMainHandle('services.request.findByParentId', requestFindByParentId);
+  ipcMainHandle('services.request.getById', requestGetById);
+  ipcMainHandle('services.request.getByParentId', requestGetByParentId);
+  ipcMainHandle('services.request.update', requestUpdate);
+  ipcMainHandle('services.requestGroup.create', requestGroupCreate);
+  ipcMainHandle('services.requestGroup.duplicate', requestGroupDuplicate);
+  ipcMainHandle('services.requestGroup.findByParentId', requestGroupFindByParentId);
+  ipcMainHandle('services.requestGroup.getById', requestGroupGetById);
+  ipcMainHandle('services.requestGroup.remove', requestGroupRemove);
+  ipcMainHandle('services.requestGroup.update', requestGroupUpdate);
+  ipcMainHandle('services.requestGroupMeta.create', requestGroupMetaCreate);
+  ipcMainHandle('services.requestGroupMeta.getByParentId', requestGroupMetaGetByParentId);
+  ipcMainHandle('services.requestGroupMeta.update', requestGroupMetaUpdate);
+  ipcMainHandle('services.requestGroupMeta.updateOrCreateForParentId', requestGroupMetaUpdateOrCreateForParentId);
+  ipcMainHandle('services.requestMeta.getByParentId', requestMetaGetByParentId);
+  ipcMainHandle('services.requestMeta.getOrCreateByParentId', requestMetaGetOrCreateByParentId);
+  ipcMainHandle('services.requestMeta.update', requestMetaUpdate);
+  ipcMainHandle('services.requestMeta.updateOrCreateByParentId', requestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.requestVersion.findByParentId', requestVersionFindByParentId);
+  ipcMainHandle('services.requestVersion.restore', requestVersionRestore);
+  ipcMainHandle('services.requestVersion.getRequest', requestVersionGetRequest);
+  ipcMainHandle('services.response.create', responseCreate);
+  ipcMainHandle('services.response.getByBodyPath', responseGetByBodyPath);
+  ipcMainHandle('services.response.getById', responseGetById);
+  ipcMainHandle('services.response.getLatestForRequestId', responseGetLatestForRequestId);
+  ipcMainHandle('services.response.findByParentId', responseFindByParentId);
+  ipcMainHandle('services.runnerTestResult.create', runnerTestResultCreate);
+  ipcMainHandle('services.runnerTestResult.findByParentId', runnerTestResultFindByParentId);
+  ipcMainHandle('services.runnerTestResult.getById', runnerTestResultGetById);
+  ipcMainHandle('services.runnerTestResult.remove', runnerTestResultRemove);
+  ipcMainHandle('services.socketIOPayload.getOrCreateByParentId', socketIOPayloadGetOrCreateByParentId);
+  ipcMainHandle('services.socketIOPayload.updateOrCreateByParentId', socketIOPayloadUpdateOrCreateByParentId);
+  ipcMainHandle('services.socketIORequest.create', socketIORequestCreate);
+  ipcMainHandle('services.socketIORequestMeta.updateOrCreateByParentId', socketIORequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.socketIOResponse.getById', socketIOResponseGetById);
+  ipcMainHandle('services.socketIOResponse.findByParentId', socketIOResponseFindByParentId);
+  ipcMainHandle('services.socketIOResponse.getLatestForRequestId', socketIOResponseGetLatestForRequestId);
+  ipcMainHandle('services.stats.get', statsGet);
+  ipcMainHandle('services.stats.incrementCreatedRequests', statsIncrementCreatedRequests);
+  ipcMainHandle('services.stats.incrementCreatedRequestsForDescendents', statsIncrementCreatedRequestsForDescendents);
+  ipcMainHandle('services.stats.incrementDeletedRequests', statsIncrementDeletedRequests);
+  ipcMainHandle('services.stats.incrementDeletedRequestsForDescendents', statsIncrementDeletedRequestsForDescendents);
+  ipcMainHandle('services.stats.incrementExecutedRequests', statsIncrementExecutedRequests);
+  ipcMainHandle('services.stats.update', statsUpdate);
+  ipcMainHandle('services.unitTest.create', unitTestCreate);
+  ipcMainHandle('services.unitTest.remove', unitTestRemove);
+  ipcMainHandle('services.unitTest.update', unitTestUpdate);
+  ipcMainHandle('services.unitTestResult.create', unitTestResultCreate);
+  ipcMainHandle('services.unitTestSuite.create', unitTestSuiteCreate);
+  ipcMainHandle('services.unitTestSuite.findByParentId', unitTestSuiteFindByParentId);
+  ipcMainHandle('services.unitTestSuite.getById', unitTestSuiteGetById);
+  ipcMainHandle('services.unitTestSuite.remove', unitTestSuiteRemove);
+  ipcMainHandle('services.unitTestSuite.update', unitTestSuiteUpdate);
+  ipcMainHandle('services.webSocketPayload.create', webSocketPayloadCreate);
+  ipcMainHandle('services.webSocketPayload.getByParentId', webSocketPayloadGetByParentId);
+  ipcMainHandle('services.webSocketPayload.update', webSocketPayloadUpdate);
+  ipcMainHandle('services.webSocketRequest.create', webSocketRequestCreate);
+  ipcMainHandle('services.webSocketRequestMeta.updateOrCreateByParentId', webSocketRequestMetaUpdateOrCreateByParentId);
+  ipcMainHandle('services.webSocketResponse.getById', webSocketResponseGetById);
+  ipcMainHandle('services.webSocketResponse.findByParentId', webSocketResponseFindByParentId);
+  ipcMainHandle('services.webSocketResponse.getLatestForRequestId', webSocketResponseGetLatestForRequestId);
+  ipcMainHandle('services.workspace.count', workspaceCount);
+  ipcMainHandle('services.workspace.create', workspaceCreate);
+  ipcMainHandle('services.workspace.getById', workspaceGetById);
+  ipcMainHandle('services.workspace.list', workspaceList);
+  ipcMainHandle('services.workspace.listByParentId', workspaceListByParentId);
+  ipcMainHandle('services.workspace.remove', workspaceRemove);
+  ipcMainHandle('services.workspace.update', workspaceUpdate);
+  ipcMainHandle('services.workspaceMeta.create', workspaceMetaCreate);
+  ipcMainHandle('services.workspaceMeta.getByParentId', workspaceMetaGetByParentId);
+  ipcMainHandle('services.workspaceMeta.getOrCreateByParentId', workspaceMetaGetOrCreateByParentId);
+  ipcMainHandle('services.workspaceMeta.list', workspaceMetaList);
+  ipcMainHandle('services.workspaceMeta.update', workspaceMetaUpdate);
+  ipcMainHandle('services.workspaceMeta.updateByParentId', workspaceMetaUpdateByParentId);
+  ipcMainHandle('services.oAuth2Token.create', oAuth2TokenCreate);
+  ipcMainHandle('services.oAuth2Token.getByParentId', oAuth2TokenGetByParentId);
+  ipcMainHandle('services.oAuth2Token.remove', oAuth2TokenRemove);
+  ipcMainHandle('services.oAuth2Token.update', oAuth2TokenUpdate);
   ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
     return createPlugin(options.pluginName, options.mainJs);
-  });
-  ipcMainHandle('services.invoke', async (_, serviceName: string, methodName: string, ...args: unknown[]) => {
-    const service = services[serviceName as keyof Services];
-    if (!service) {
-      throw new TypeError(`Unknown service: ${serviceName}`);
-    }
-    const fn = service[methodName as keyof typeof service];
-    if (typeof fn !== 'function') {
-      throw new TypeError(`Unknown service method: ${serviceName}.${methodName}`);
-    }
-    const result = await (fn as (...args: unknown[]) => unknown).call(service, ...args);
-    return Buffer.isBuffer(result) ? new Uint8Array(result) : result;
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);

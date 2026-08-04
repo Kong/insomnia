@@ -23,13 +23,14 @@ function makeResponseContext(body: string, contentType = 'application/json; char
       getProjectId: () => {},
       value: '',
     },
-    meta: {},
+    meta: { workspaceId: 'wrk_1' },
     renderPurpose: 'general',
     util: {
       decode: vi.fn(async (buf: Buffer) => buf.toString('utf8')),
       models: {
         request: {
           getById: vi.fn(async () => ({ _id: 'req_1' })),
+          getAncestors: vi.fn(async () => [{ _id: 'wrk_1', type: 'Workspace' }]),
         },
         response: {
           getLatestForRequestId: vi.fn(async () => ({
@@ -49,9 +50,80 @@ function makeResponseContext(body: string, contentType = 'application/json; char
   } as unknown as PluginTemplateTagContext;
 }
 
+// Context builder for the workspace-scope tests below: unlike makeResponseContext (which has no
+// meta/getAncestors and so implicitly documents the pre-fix, unscoped behavior), this drives the
+// real scope check the `response` tag now performs.
+function makeScopedResponseContext(options: {
+  workspaceId?: string;
+  requestWorkspaceId: string;
+  body?: string;
+}): PluginTemplateTagContext {
+  const bodyBuffer = Buffer.from(options.body ?? '{"ok":true}', 'utf8');
+  return {
+    context: {
+      getMeta: () => ({}),
+      getKeysContext: () => ({ keyContext: {} }),
+      getPurpose: () => {},
+      getExtraInfo: () => {},
+      getEnvironmentId: () => {},
+      getGlobalEnvironmentId: () => {},
+      getProjectId: () => {},
+      value: '',
+    },
+    meta: { workspaceId: options.workspaceId },
+    renderPurpose: 'general',
+    util: {
+      decode: vi.fn(async (buf: Buffer) => buf.toString('utf8')),
+      models: {
+        request: {
+          getById: vi.fn(async () => ({ _id: 'req_victim', parentId: 'fld_1' })),
+          getAncestors: vi.fn(async () => [{ _id: options.requestWorkspaceId, type: 'Workspace' }]),
+        },
+        response: {
+          getLatestForRequestId: vi.fn(async () => ({
+            _id: 'res_victim',
+            statusCode: 200,
+            contentType: 'application/json; charset=utf-8',
+            headers: [],
+            url: 'http://example.com',
+            error: '',
+            environmentId: undefined,
+            globalEnvironmentId: undefined,
+          })),
+          getBodyBuffer: vi.fn(async () => bodyBuffer),
+        },
+      },
+    },
+  } as unknown as PluginTemplateTagContext;
+}
+
 describe('response tag', () => {
   const responseTag = localTemplateTags.find(p => p.templateTag.name === 'response')?.templateTag;
   invariant(responseTag, 'missing response tag in localTemplateTags');
+
+  describe('cross-workspace scope check (Finding 2)', () => {
+    it('rejects a request id that resolves to a different workspace than the current render', async () => {
+      const ctx = makeScopedResponseContext({ workspaceId: 'wrk_caller', requestWorkspaceId: 'wrk_other' });
+      await expect(responseTag.run(ctx, 'body', 'req_victim', '$.ok', 'never', 60)).rejects.toThrow(
+        'Could not find request req_victim',
+      );
+      // Must not distinguish "wrong workspace" from "doesn't exist" — same message either way.
+      expect(ctx.util.models.response.getLatestForRequestId).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the current render context has no workspaceId to check against', async () => {
+      const ctx = makeScopedResponseContext({ workspaceId: undefined, requestWorkspaceId: 'wrk_other' });
+      await expect(responseTag.run(ctx, 'body', 'req_victim', '$.ok', 'never', 60)).rejects.toThrow(
+        'Could not find request req_victim',
+      );
+    });
+
+    it('succeeds when the resolved request belongs to the current render workspace', async () => {
+      const ctx = makeScopedResponseContext({ workspaceId: 'wrk_caller', requestWorkspaceId: 'wrk_caller' });
+      const result = await responseTag.run(ctx, 'body', 'req_victim', '$.ok', 'never', 60);
+      expect(result).toBe('true');
+    });
+  });
 
   describe('JSONPath body attribute - large integer precision', () => {
     it('returns a large integer (19 digits) with exact precision', async () => {

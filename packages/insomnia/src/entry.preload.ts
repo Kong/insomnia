@@ -13,6 +13,7 @@ import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types
 import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
+import { resolveServicesInvokeChannel } from '~/main/ipc/migrated-services-invoke-pairs';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
@@ -552,8 +553,10 @@ if (process.contextIsolated) {
   // function and rebuild the services Proxy in the isolated renderer world.
   contextBridge.exposeInMainWorld(
     '_dataServicesInvoke',
-    (serviceName: string, methodName: string, ...args: unknown[]) =>
-      invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args),
+    (serviceName: string, methodName: string, ...args: unknown[]) => {
+      const channel = resolveServicesInvokeChannel(serviceName, methodName);
+      return invokeWithNormalizedError(channel, ...args);
+    },
   );
   contextBridge.exposeInMainWorld('env', env);
 } else {

@@ -451,26 +451,45 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       };
     }, [editorVersion, type]);
 
+    // Keep the latest onChange/updateTooltipValue in refs so the listener effects below
+    // don't need to depend on their identity. Parents commonly pass a fresh inline closure
+    // on every render, and updateTooltipValue itself is recreated whenever handleRender's
+    // upstream loader data gets a new reference (e.g. on every route revalidation) - if the
+    // 'changes' listener effect re-ran on either alone, it would cancel any pending debounced
+    // call scheduled by keystrokes that haven't fired yet, silently dropping them.
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+    const updateTooltipValueRef = useRef(updateTooltipValue);
+    updateTooltipValueRef.current = updateTooltipValue;
+
+    const debouncedChangeRef = useRef<{ cancel: () => void } | null>(null);
     useEffect(() => {
       const fn = misc.debounce((doc: CodeMirror.Editor) => {
-        if (onChange) {
-          onChange(doc.getValue() || '');
-        }
-        updateTooltipValue(doc.getValue() || '');
+        onChangeRef.current?.(doc.getValue() || '');
+        updateTooltipValueRef.current(doc.getValue() || '');
       }, DEBOUNCE_MILLIS);
+      debouncedChangeRef.current = fn;
       codeMirror.current?.on('changes', fn);
-      return () => codeMirror.current?.off('changes', fn);
-    }, [editorVersion, onChange, type, updateTooltipValue]);
+      return () => {
+        fn.cancel();
+        debouncedChangeRef.current = null;
+        codeMirror.current?.off('changes', fn);
+      };
+    }, [editorVersion, type]);
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
-        if (onChange) {
-          onChange(doc.getValue() || '');
-        }
+        // Drop the pending debounced call from the 'changes' listener above - it would
+        // otherwise still fire ~DEBOUNCE_MILLIS after this, calling onChange again with a
+        // closure over whatever was current when the last keystroke happened. If other
+        // actions (e.g. adding a new row elsewhere in the same form) landed in that window,
+        // that stale call can silently clobber state newer than what it captured.
+        debouncedChangeRef.current?.cancel();
+        onChangeRef.current?.(doc.getValue() || '');
       };
       codeMirror.current?.on('blur', flushOnBlur);
       return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [editorVersion, onChange]);
+    }, [editorVersion]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(

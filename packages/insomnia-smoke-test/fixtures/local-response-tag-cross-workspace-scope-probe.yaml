@@ -1,0 +1,44 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Probe Collection
+meta:
+  id: wrk_2222222222222222222222222222222a
+  created: 1751900000000
+  modified: 1751900000000
+collection:
+  - url: localhost:4010/echo
+    name: Sandbox Probe
+    meta:
+      id: req_2222222222222222222222222222222b
+      created: 1751900000001
+      modified: 1751900000001
+      isPrivate: false
+      sortKey: -1751900000001
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "PLACEHOLDER_TAG_TEXT"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_2222222222222222222222222222222c
+    created: 1751900000000
+    modified: 1751900000000
+environments:
+  name: Base Environment
+  meta:
+    id: env_2222222222222222222222222222222d
+    created: 1751900000000
+    modified: 1751900000000
+    isPrivate: false

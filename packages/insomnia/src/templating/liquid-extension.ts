@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import os from 'node:os';
 
 import iconv from 'iconv-lite';
-import type { Request, RequestGroup, Workspace } from 'insomnia-data';
+import type { CloudProviderCredential, Request, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { Context, Emitter, Liquid, TagToken, TopLevelToken } from 'liquidjs';
 import { Tag } from 'liquidjs';
@@ -18,6 +18,7 @@ import { database as db } from '../common/database';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
+import { readResponseBodyBufferOwned, reloadCloudCredentialForTrustedUpdate } from './db-trust';
 
 export function createLiquidTag(
   ext: PluginTemplateTag,
@@ -66,7 +67,7 @@ export function createLiquidTag(
           openInBrowser: (url: string) => window.main.openInBrowser(url),
           models: {
             request: {
-              getById: services.request.getById,
+              getById: (id: string) => services.request.getById(String(id)),
               getAncestors: async (request: any) => {
                 const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
                   models.requestGroup.type,
@@ -76,26 +77,39 @@ export function createLiquidTag(
               },
             },
             cloudCredential: {
-              getById: services.cloudCredential.getById,
-              update: services.cloudCredential.update,
+              getById: (id: string) => services.cloudCredential.getById(String(id)),
+              update: async (originCredential: { _id?: string }, patch: Partial<CloudProviderCredential>) => {
+                const { existing, patch: stripped } = await reloadCloudCredentialForTrustedUpdate(
+                  originCredential,
+                  patch,
+                );
+                return await services.cloudCredential.update(existing, stripped);
+              },
             },
             workspace: {
-              getById: services.workspace.getById,
+              getById: (id: string) => services.workspace.getById(String(id)),
             },
             oAuth2Token: {
-              getByRequestId: services.oAuth2Token.getByParentId,
+              getByRequestId: (parentId: string) => services.oAuth2Token.getByParentId(String(parentId)),
             },
             cookieJar: {
-              getOrCreateForParentId: (parentId: string) => services.cookieJar.getOrCreateForParentId(parentId),
+              getOrCreateForParentId: (parentId: string) => services.cookieJar.getOrCreateForParentId(String(parentId)),
               getCookiesForUrl: async (parentId: string, url: string) => {
-                const cookies = await services.cookieJar.getOrCreateForParentId(parentId);
+                const cookies = await services.cookieJar.getOrCreateForParentId(String(parentId));
                 const jar = jarFromCookies(cookies.cookies);
                 return jar.getCookiesSync(url).map(c => c.toJSON());
               },
             },
             response: {
-              getLatestForRequestId: services.response.getLatestForRequestId,
-              getBodyBuffer: services.helpers.getResponseBodyBuffer,
+              getLatestForRequestId: (requestId: string, environmentId: string | null) =>
+                services.response.getLatestForRequestId(
+                  String(requestId),
+                  environmentId === null ? null : String(environmentId),
+                ),
+              getBodyBuffer: (
+                response?: { bodyPath?: string; bodyCompression?: any },
+                readFailureValue?: string,
+              ) => readResponseBodyBufferOwned(response, readFailureValue),
             },
             settings: {
               get: services.settings.get,

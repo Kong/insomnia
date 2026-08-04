@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { expect } from '@playwright/test';
 
-import { getFixturePath, loadFixture } from '../../playwright/paths';
+import { cwd, getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('pre-request features tests', () => {
@@ -411,9 +411,9 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText('fake.pfx')).toBeVisible();
 
-    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders').fill(cwd);
     await page.getByTestId('dataFolders-btn').click();
-    await expect.soft(page.getByText('invalid')).toBeVisible();
+    await expect.soft(page.getByText(cwd)).toBeVisible();
 
     await page.locator('.app').press('Escape');
 
@@ -444,9 +444,9 @@ test.describe('pre-request features tests', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('test certificate manipulation');
 
     await page.getByTestId('settings-button').click();
-    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders').fill(cwd);
     await page.getByTestId('dataFolders-btn').click();
-    await expect.soft(page.getByText('invalid')).toBeVisible();
+    await expect.soft(page.getByText(cwd)).toBeVisible();
     await page.locator('.app').press('Escape');
 
     // send
