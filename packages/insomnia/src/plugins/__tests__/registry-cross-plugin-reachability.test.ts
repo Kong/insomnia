@@ -100,17 +100,31 @@ describe('require.cache enumeration for a live getPlugins() reference', () => {
 });
 
 describe('guessed absolute-path require via electron.app.getAppPath()', () => {
-  it('has no getAppPath on the test double, and the real packaged bundle refuses to load outside Electron', () => {
+  it('has no getAppPath on the test double', () => {
     expect(typeof (electron.app as any).getAppPath).not.toBe('function');
+  });
 
-    const bundlePath = path.resolve(__dirname, '../../../build/entry.main.min.js');
-    if (!fs.existsSync(bundlePath)) {
-      // No local production build present in this checkout — nothing further to assert here；
-      // the require.cache/bundling evidence above already establishes internal modules aren't
-      // separately reachable regardless of path-guessing.
-      return;
-    }
+  const bundlePath = path.resolve(__dirname, '../../../build/entry.main.min.js');
+  // Reported as skipped (not a silent pass) when no local production build is present, so a run
+  // that never actually exercises the real packaged bundle is visible in the test output rather
+  // than looking identical to one that did.
+  it.skipIf(!fs.existsSync(bundlePath))('the real packaged bundle refuses to load outside Electron', () => {
     expect(() => require(bundlePath)).toThrow(/Electron/i);
+  });
+
+  // Self-contained static evidence for the bundling claim the require.cache test above leans on:
+  // that test's empty `registryCandidates` result also occurs under Vitest's own module loader
+  // regardless of production bundling (Vitest never routes `plugins/index.ts` through real Node
+  // `require.cache` either way), so it can't by itself distinguish "bundled" from "just not
+  // required the way Vitest loads it". This checks the actual esbuild config instead: the
+  // main-process build's `external` list — the only packages that stay real, separately-`require()`-able
+  // modules at runtime — never names this project's own `plugins/index` module, confirming it is
+  // always inlined into the single bundle file rather than reachable as its own `require.cache` entry.
+  it('esbuild never lists plugins/index as an external (separately-required) module in the main build', () => {
+    const esbuildConfigPath = path.resolve(__dirname, '../../../esbuild.entrypoints.ts');
+    const config = fs.readFileSync(esbuildConfigPath, 'utf8');
+
+    expect(config).not.toMatch(/external:\s*\[[^\]]*plugins\/index/);
   });
 });
 
