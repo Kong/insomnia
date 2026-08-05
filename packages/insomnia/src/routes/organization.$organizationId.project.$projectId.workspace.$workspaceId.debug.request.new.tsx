@@ -17,6 +17,7 @@ import { trackCioEvent } from '~/ui/hooks/use-cio';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
+import { trackUserActivity } from '~/ui/utils/track-user-activity';
 
 // Request types that are edited in the RequestPane / RequestUrlBar and should focus the URL on create.
 const URL_BAR_REQUEST_TYPES: CreateRequestType[] = ['HTTP', 'GraphQL', 'Event Stream', 'From Curl'];
@@ -163,6 +164,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   // Send to Customer.io directly so the event is tied to the identified user's
   // email-bearing profile (only fires when logged in). See INS-2678.
   trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
+
+  trackUserActivity('request_created');
 
   return redirect(
     href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {

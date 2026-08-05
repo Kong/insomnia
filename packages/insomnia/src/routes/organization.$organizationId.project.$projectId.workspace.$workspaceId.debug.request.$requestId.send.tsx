@@ -32,6 +32,7 @@ import {
 } from '~/network/network';
 import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
+import { trackUserActivity } from '~/ui/utils/track-user-activity';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 
@@ -410,6 +411,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               source: 'request-pane',
             },
           });
+
+          trackUserActivity('request_executed');
 
           const attributionStorageKey = importAttributionKey(requestId);
           const jsonImportAttribution = window.localStorage.getItem(attributionStorageKey);

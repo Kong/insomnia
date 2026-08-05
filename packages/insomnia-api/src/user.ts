@@ -43,6 +43,26 @@ export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: s
   });
 };
 
+// POST /v3/users/me/actions
+export type UserActionType = 'request_created' | 'request_executed' | 'document_created';
+
+export const trackUserAction = async ({
+  sessionId,
+  eventId,
+  actionType,
+}: {
+  sessionId: string;
+  eventId: string;
+  actionType: UserActionType;
+}): Promise<void> => {
+  return fetch<void>({
+    method: 'POST',
+    path: '/v3/users/me/actions',
+    sessionId,
+    data: { event_id: eventId, action_type: actionType },
+  });
+};
+
 // GET /v1/billing/current-plan
 export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
 type PaymentSchedules = 'month' | 'year';
