@@ -7,6 +7,7 @@ import { database as db, models, services } from 'insomnia-data';
 import type { PluginConfigMap } from 'insomnia-data/common';
 
 import { parsePluginPermissions } from '~/common/plugins/permissions';
+import { type SandboxSettings, shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import type {
   DocumentAction,
   Plugin,
@@ -106,11 +107,62 @@ function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginE
   } as Plugin['module'];
 }
 
+// A bare `.startsWith(base)` string check passes for a sibling directory whose name happens to
+// prefix-match (e.g. `/plugins-evil` starts with `/plugins`); this compares the resolved relative
+// path instead, so containment can't be spoofed by a similarly-named sibling.
+const isContainedIn = (base: string, target: string): boolean => {
+  const rel = path.relative(base, target);
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+};
+export const _testOnlyIsContainedIn = isContainedIn;
+
+// Finds package.json `name`s claimed by more than one folder under `allPaths`, read-only and before
+// any folder is trusted, so the result doesn't depend on filesystem read order.
+async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>> {
+  const nameCounts: Record<string, number> = {};
+
+  const walk = (paths: string[]) => {
+    for (const p of paths) {
+      if (!fs.existsSync(p)) {
+        continue;
+      }
+      for (const filename of fs.readdirSync(p)) {
+        const modulePath = path.resolve(p, filename);
+        if (!fs.statSync(modulePath).isDirectory()) {
+          continue;
+        }
+        if (filename.startsWith('@')) {
+          walk([modulePath]);
+        }
+        if (!fs.readdirSync(modulePath).includes('package.json')) {
+          continue;
+        }
+        if (!isContainedIn(p, path.resolve(modulePath))) {
+          continue;
+        }
+        try {
+          // package.json is plain data — reading it runs no plugin code.
+          const pluginJson = getNodeRequire()(path.resolve(modulePath, 'package.json'));
+          if ('insomnia' in pluginJson && typeof pluginJson.name === 'string') {
+            nameCounts[pluginJson.name] = (nameCounts[pluginJson.name] ?? 0) + 1;
+          }
+        } catch {
+          // Any read/parse error here will be hit (and reported) again by the real pass below.
+        }
+      }
+    }
+  };
+  walk(allPaths);
+
+  return new Set(Object.keys(nameCounts).filter(name => nameCounts[name] > 1));
+}
+
 async function traversePluginPath(
   pluginMap: Record<string, Plugin>,
   allPaths: string[],
   allConfigs: PluginConfigMap,
-  sandboxEnabled: boolean,
+  settings: SandboxSettings,
+  duplicatePluginNames: Set<string>,
 ) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
@@ -131,7 +183,7 @@ async function traversePluginPath(
 
         // Is it a scoped directory?
         if (filename.startsWith('@')) {
-          await traversePluginPath(pluginMap, [modulePath], allConfigs, sandboxEnabled);
+          await traversePluginPath(pluginMap, [modulePath], allConfigs, settings, duplicatePluginNames);
         }
 
         // Is it a Node module?
@@ -145,7 +197,7 @@ async function traversePluginPath(
         const pluginBasePath = p;
 
         // Check if the resolved module path is inside the base plugin path (to prevent directory traversal)
-        if (!safeModulePath.startsWith(pluginBasePath)) {
+        if (!isContainedIn(pluginBasePath, safeModulePath)) {
           console.warn(`[plugin] Ignored potentially unsafe plugin path: ${modulePath}`);
           continue;
         }
@@ -168,17 +220,28 @@ async function traversePluginPath(
           continue;
         }
 
+        // pluginConfig is keyed by declared name, not by folder — never load a name claimed by more
+        // than one folder, so a colliding folder can't inherit another folder's `elevated` grant.
+        if (duplicatePluginNames.has(pluginJson.name)) {
+          console.warn('[plugin] Ignoring %s at %s: multiple plugin folders declare this name.', pluginJson.name, modulePath);
+          continue;
+        }
+
         const parsedPermissions = parsePluginPermissions(pluginJson.insomnia);
         if (parsedPermissions.warnings.length > 0) {
           // Constant format string; interpolated values passed as args so a plugin name can't forge log output.
           console.warn('[plugin] %s has invalid insomnia.permissions: %o', pluginJson.name, parsedPermissions.warnings);
         }
 
-        // L1: with the sandbox on, discover a user plugin's exports by evaluating its source *inside*
-        // the sandbox (main process) instead of nodeRequire-ing it here — so installing/enabling it
-        // never runs its top-level code with host (Node) privileges. Off → legacy in-process require.
+        const config = pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false };
+
+        // L1/T1: a sandboxed user plugin's exports are discovered by evaluating its source *inside* the
+        // sandbox (main process) instead of nodeRequire-ing it here — so installing/enabling it never
+        // runs its top-level code with host (Node) privileges. An elevated plugin (or sandbox-off) is
+        // nodeRequire-d so its hooks/actions/tags are live in-process functions. Decision is per-plugin
+        // because `elevated` is per-plugin.
         let module: Plugin['module'];
-        if (sandboxEnabled) {
+        if (shouldSandboxPlugin(settings, { directory: modulePath, config })) {
           const manifest = await discoverUserPluginExports(modulePath, pluginJson.name, parsedPermissions.permissions);
           module = buildUserPluginModuleFromManifest(pluginJson.name, manifest);
         } else {
@@ -190,7 +253,7 @@ async function traversePluginPath(
           description: pluginJson.description || pluginJson.insomnia.description || '',
           version: pluginJson.version || 'unknown',
           directory: modulePath || '',
-          config: pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false },
+          config,
           permissions: parsedPermissions.permissions,
           permissionWarnings: parsedPermissions.warnings,
           permissionsDeclared: parsedPermissions.declared,
@@ -235,7 +298,8 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
-    await traversePluginPath(pluginMap, allPaths, allConfigs, settings.templateTagSandboxEnabled);
+    const duplicatePluginNames = await findDuplicatePluginNames(allPaths);
+    await traversePluginPath(pluginMap, allPaths, allConfigs, settings, duplicatePluginNames);
     const bundlePluginMap = getBundlePluginMap();
     const fullPluginMap = { ...pluginMap, ...bundlePluginMap };
     plugins = Object.keys(fullPluginMap).map(name => fullPluginMap[name]);
