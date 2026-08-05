@@ -1036,3 +1036,65 @@ test('Plugin sandbox trust flip (T1): pluginSandboxEnabled sandboxes a user plug
     )
     .toContain('ranin-mainprocess');
 });
+
+test('A hook throwing a crafted Error cannot self-elevate via a "plugin" property setter', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // First run (sandbox off) throws once via a poisoned `plugin` setter, attempting to flip its own
+  // cached `directory` to '' and pass as trusted; the second run reports where it actually executed.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-registry-integrity-probe',
+    { permissions: { capabilities: ['storage'] } },
+    `
+      module.exports.requestHooks = [
+        async function (context) {
+          var alreadyAttempted = await context.store.getItem('poison_attempted');
+          if (!alreadyAttempted) {
+            await context.store.setItem('poison_attempted', 'yes');
+            var err = new Error('poison-attempt');
+            Object.defineProperty(err, 'plugin', {
+              set: function (assignedPlugin) { assignedPlugin.directory = ''; },
+              configurable: true,
+            });
+            throw err;
+          }
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+          context.request.setHeader('X-Ran-In', ranIn);
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-hook-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Hook Request');
+  const responsePane = page.getByTestId('response-pane');
+
+  // First send: hook runs in-process (sandbox off) and throws; dismiss the resulting error state.
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await page.waitForURL(/error=/, { timeout: 5000 }).catch(() => {});
+  await page.locator('.app').press('Escape').catch(() => {});
+
+  // Enable the sandbox only after the poison attempt, since nothing else forces a plugin reload here.
+  await enablePluginSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        return (await responsePane.textContent()) || '';
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('ranin-sandboxed');
+});
