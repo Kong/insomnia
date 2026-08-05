@@ -96,7 +96,9 @@ export async function applyRequestHooks(
   // reached from an Electron process. This node runtime also backs the pure-Node inso CLI, which has
   // no `electron` — there the sandbox is unavailable, so hooks run in-process as they always have.
   const canSandbox = !!process.type;
-  const settings = await services.settings.get();
+  // Only fetch settings when a sandbox host is reachable — the pure-Node inso CLI (process.type
+  // falsy) can never sandbox, so skip the read entirely; shouldSandboxPlugin treats undefined as off.
+  const settings = canSandbox ? await services.settings.get() : undefined;
   // getRequestHooks flattens each plugin's requestHooks in order, so a per-plugin running counter
   // recovers the hook's index within its own array (what the sandbox loads by).
   const hookIndexByPlugin: Record<string, number> = {};
@@ -145,7 +147,9 @@ export async function applyResponseHooks(
   // only from an Electron process. This node runtime also backs the pure-Node inso CLI (no electron),
   // where the sandbox is unavailable and hooks run in-process — gate on process.type accordingly.
   const canSandbox = !!process.type;
-  const settings = await services.settings.get();
+  // Only fetch settings when a sandbox host is reachable — the pure-Node inso CLI (process.type
+  // falsy) can never sandbox, so skip the read entirely; shouldSandboxPlugin treats undefined as off.
+  const settings = canSandbox ? await services.settings.get() : undefined;
   const hookIndexByPlugin: Record<string, number> = {};
   for (const { plugin, hook } of await pluginIndex.getResponseHooks()) {
     const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);

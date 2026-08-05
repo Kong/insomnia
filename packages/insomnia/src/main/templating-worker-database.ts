@@ -11,7 +11,7 @@ import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import { isSandboxEnabled, shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
+import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type {
   AppPromptOptions,
@@ -891,9 +891,11 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
         const settings = await services.settings.get();
-        // T1: pluginSandboxEnabled supersedes templateTagSandboxEnabled. Bundle plugins are trusted,
-        // so when the sandbox is on they run in it with the broad (all-modules/all-caps) profile.
-        if (isSandboxEnabled(settings)) {
+        // Bundle plugins are first-party/trusted, so the new pluginSandboxEnabled flag (which isolates
+        // *untrusted* plugins) deliberately leaves them in-process. Their tags run in the sandbox only
+        // under the legacy templateTagSandboxEnabled experiment, with the broad all-modules/all-caps
+        // profile — a hardening opt-in, not part of the T1 trust flip.
+        if (settings.templateTagSandboxEnabled) {
           const { ALL_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
           const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
           // Bundle plugins are first-party and trusted: grant every module + capability.
