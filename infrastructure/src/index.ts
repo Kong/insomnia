@@ -3,4 +3,5 @@
 // libs/Electron/Node. Only reachable from each app's own bootstrap/wiring code.
 // Populated incrementally, one aggregate at a time.
 export { nedbEnvironmentRepository } from './persistence/nedb/nedb-environment-repository';
+export { nedbRequestRepository } from './persistence/nedb/nedb-request-repository';
 export { nedbWorkspaceRepository } from './persistence/nedb/nedb-workspace-repository';
