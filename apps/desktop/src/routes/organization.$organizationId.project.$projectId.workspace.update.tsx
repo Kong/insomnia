@@ -1,6 +1,7 @@
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
+import { renameWorkspace } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -60,7 +61,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
-  await services.workspace.update(workspace, patch);
+  await renameWorkspace(workspace._id, patch.name);
 
   const project = await services.project.getById(workspace.parentId);
   invariant(project, 'Project not found');
