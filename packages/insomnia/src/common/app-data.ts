@@ -216,7 +216,9 @@ function updateCollectionChildrenWithUpdatedDoc(
 ): CollectionWorkspaceChildren | null {
   if (COLLECTION_REQUEST_DOC_TYPES.includes(doc.type)) {
     const requestsAndGroups = replaceById(collectionChildren.children.requestsAndGroups, doc);
-    return requestsAndGroups ? { ...collectionChildren, children: { requestsAndGroups } } : null;
+    return requestsAndGroups
+      ? { ...collectionChildren, children: { ...collectionChildren.children, requestsAndGroups } }
+      : null;
   }
   if (COLLECTION_REQUEST_META_DOC_TYPES.includes(doc.type)) {
     const allRequestMetas = replaceById(collectionChildren.childrenMetas.allRequestMetas, doc);
