@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # This Dockerfile is intended for CI use only
-# It assumes inso-linux-VERSION.tar.xz exists in /packages/insomnia-inso/artifacts
+# It assumes inso-linux-VERSION.tar.xz exists in /apps/cli/artifacts
 # You can run `npm run inso-package && npm run inso-package:artifacts` on a linux host OR
 # `curl -LO "https://github.com/Kong/insomnia/releases/download/lib%40<version>/inso-linux-<version>.tar.xz"`
 
