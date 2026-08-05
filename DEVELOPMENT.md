@@ -21,15 +21,16 @@ There are a few more technologies and tools worth mentioning:
 
 Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true) to manage multiple npm packages within a single repository. There are currently the following package locations:
 
+- `/apps` contains the runnable applications: `apps/desktop` (the Electron app) and `apps/cli` (the Inso CLI).
 - `/packages` contains related packages that are consumed by `insomnia` or externally.
 - `/packages/insomnia-data` contains shared data models, model services, database adapters, and common data utilities used by the app and CLI.
 
 Insomnia Inso CLI is built using a series of steps
 
 1. `insomnia-inso` uses monorepo references to import `insomnia` and `insomnia-testing` to expose `getSendRequestCallbackMemDb` and `generate`, `runTests`, `runTestsCli` respectively
-1. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild to commonjs
-1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
-1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
+1. `apps/cli/dist/index.js` is transpiled with esbuild to commonjs
+1. `apps/cli/bin/inso` is shell script which points at `apps/cli/dist/index.js` and is used for local development
+1. `apps/cli/binaries/inso` is an executable made with `pkg`
 
 `getSendRequestCallbackMemDb` exposes some behavior from the insomnia renderer.
 
@@ -53,7 +54,7 @@ Unexplored ideas in this area.
 
 ## The `insomnia` Main Package
 
-`/packages/insomnia` is the entry point for the app. All other packages are imported from this one.
+`/apps/desktop` is the entry point for the app. All other packages are imported from this one.
 
 There are a few notable directories inside it:
 
@@ -127,5 +128,5 @@ bump the following node and electron versions
 
 - `.npmrc`
 - `.nvmrc`
-- `packages/insomnia/package.json` electron and node-libcurl
+- `apps/desktop/package.json` electron and node-libcurl
 - `shell.nix`

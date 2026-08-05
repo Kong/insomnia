@@ -153,7 +153,7 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 - `npm i`
 - Start the compiler in watch mode: `npm run inso-start`
-- Run: `./packages/insomnia-inso/bin/inso -v`
+- Run: `./apps/cli/bin/inso -v`
 
 ## Plugins
 

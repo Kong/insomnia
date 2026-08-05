@@ -62,7 +62,7 @@ jobs:
         id: inso-variables
         shell: bash
         run: |
-          INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
+          INSO_VERSION="$(jq .version apps/cli/package.json -rj)-run.${{ github.run_number }}"
           PKG_NAME="inso-ubuntu-24.04-$INSO_VERSION"
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
@@ -87,4 +87,4 @@ jobs:
         with:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
-          path: packages/insomnia-inso/artifacts
+          path: apps/cli/artifacts

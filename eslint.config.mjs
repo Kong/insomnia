@@ -33,7 +33,7 @@ const generalRestrictedImportPatterns = [
 // Node built-ins. Tests run under jsdom/node and are exempt. No production
 // files need an exemption: node-only modules live outside common/ (main/,
 // network/) and genuinely isomorphic code uses userland or __IS_RENDERER__ forks.
-const rendererNodeRestrictionIgnores = ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'];
+const rendererNodeRestrictionIgnores = ['apps/desktop/src/common/__tests__/**/*.{ts,tsx}'];
 // Browser globals that must not appear in Node-context code (main process,
 // UtilityProcess, node adapters) or in context-agnostic worker/isomorphic code.
 const domRestrictedGlobals = [
@@ -107,7 +107,7 @@ export default defineConfig([
   },
   // React hooks section
   {
-    files: ['packages/insomnia/src/**/*.{ts,tsx}'],
+    files: ['apps/desktop/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooksPlugin },
     rules: {
       ...reactHooksPlugin.configs.recommended.rules,
@@ -120,7 +120,7 @@ export default defineConfig([
   },
   // React section
   {
-    files: ['packages/insomnia/src/**/*.{ts,tsx}'],
+    files: ['apps/desktop/src/**/*.{ts,tsx}'],
     ...reactPlugin.configs.flat.recommended,
     ...reactPlugin.configs.flat['jsx-runtime'],
     languageOptions: {
@@ -190,10 +190,10 @@ export default defineConfig([
   // Browser/renderer context: DOM is available, Node built-ins are a bug.
   {
     files: [
-      'packages/insomnia/src/ui/**/*.{ts,tsx}',
-      'packages/insomnia/src/basic-components/**/*.{ts,tsx}',
-      'packages/insomnia/src/routes/**/*.{ts,tsx}',
-      'packages/insomnia/src/**/*.renderer.{ts,tsx}',
+      'apps/desktop/src/ui/**/*.{ts,tsx}',
+      'apps/desktop/src/basic-components/**/*.{ts,tsx}',
+      'apps/desktop/src/routes/**/*.{ts,tsx}',
+      'apps/desktop/src/**/*.renderer.{ts,tsx}',
     ],
     rules: {
       'no-restricted-imports': [
@@ -209,7 +209,7 @@ export default defineConfig([
   // (suffix-based opt-in; the templating worker is named `.worker.ts`. Any other
   // workers still using folder/`-worker.ts` naming need renaming to opt in.)
   {
-    files: ['packages/insomnia/src/**/*.worker.ts'],
+    files: ['apps/desktop/src/**/*.worker.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -225,8 +225,8 @@ export default defineConfig([
   // main process, and the inso CLI, so it must not reach for DOM globals.
   // whose only remaining exemption is the `__tests__` glob.)
   {
-    files: ['packages/insomnia/src/common/**/*.{ts,tsx}'],
-    ignores: ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'],
+    files: ['apps/desktop/src/common/**/*.{ts,tsx}'],
+    ignores: ['apps/desktop/src/common/__tests__/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -299,12 +299,12 @@ export default defineConfig([
       '**/verify-pkg.js',
       '**/__mocks__/*',
       '**/.react-router/*',
-      'packages/insomnia/src/*.js',
+      'apps/desktop/src/*.js',
     ],
   },
   // Node context: main process, UtilityProcess, and node adapters — no DOM globals.
   {
-    files: ['packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}', 'packages/insomnia/src/**/*.node.ts'],
+    files: ['apps/desktop/src/main/**/*.{ts,tsx,js,mjs}', 'apps/desktop/src/**/*.node.ts'],
     rules: {
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },

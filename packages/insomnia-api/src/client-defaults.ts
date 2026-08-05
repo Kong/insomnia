@@ -10,10 +10,10 @@ interface ClientEnv {
 
 // Renderer reads env from the preload (`window.env`); main process, UtilityProcess and the inso
 // CLI have no `window` and fall back to `process.env`.
-const env: ClientEnv =
-  typeof window !== 'undefined' && (window as unknown as { env?: ClientEnv }).env
-    ? (window as unknown as { env: ClientEnv }).env
-    : (process.env as unknown as ClientEnv);
+// Accessed via `globalThis` (rather than the bare `window` identifier) so this file type-checks
+// under any tsconfig, including ones without the DOM lib.
+const rendererWindow = (globalThis as { window?: { env?: ClientEnv } }).window;
+const env: ClientEnv = rendererWindow?.env ?? (process.env as unknown as ClientEnv);
 
 export const PLAYWRIGHT_TEST = env.PLAYWRIGHT_TEST;
 

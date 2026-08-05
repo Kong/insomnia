@@ -15,12 +15,12 @@
     "npm": ">=11"
   },
   "workspaces": [
+    "apps/desktop",
+    "apps/cli",
     "packages/insomnia-testing",
-    "packages/insomnia",
     "packages/insomnia-data",
     "packages/insomnia-analytics",
     "packages/insomnia-api",
-    "packages/insomnia-inso",
     "packages/insomnia-smoke-test",
     "packages/insomnia-scripting-environment"
   ],
@@ -32,7 +32,7 @@
     "test": "npm run test --workspaces --if-present",
     "check-boundaries": "npm run check-boundaries:insomnia-data && npm run check-boundaries:insomnia",
     "check-boundaries:insomnia-data": "depcruise packages/insomnia-data/src packages/insomnia-data/node-src packages/insomnia-data/common-src --config .dependency-cruiser.cjs",
-    "check-boundaries:insomnia": "cd packages/insomnia && depcruise src --config ../../.dependency-cruiser.cjs --ts-config tsconfig.json",
+    "check-boundaries:insomnia": "cd apps/desktop && depcruise src --config ../../.dependency-cruiser.cjs --ts-config tsconfig.json",
     "clean": "git clean -dfX",
     "install-libcurl-electron": "node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary --runtime=electron --target=43.2.0",
     "install-libcurl-node": "node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary --runtime=node --target=24.18.0",
@@ -47,7 +47,7 @@
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
     "test:crit:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Critical",
     "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron",
-    "check-cycle-references": "madge --circular --extensions ts,tsx packages"
+    "check-cycle-references": "madge --circular --extensions ts,tsx packages apps"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",

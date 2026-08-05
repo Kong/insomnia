@@ -18,50 +18,50 @@ before attempting any improvement. Findings below are split into **confirmed by 
 
 ### A. Multi-line CodeMirror — `CodeEditor`
 
-[`code-editor.tsx`](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx)
+[`code-editor.tsx`](../apps/desktop/src/ui/components/.client/codemirror/code-editor.tsx)
 
 | Aspect               | Behaviour                                                                                                                                                                                       | Ref                                                                                                                                                                            |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Undo engine          | CodeMirror built-in history                                                                                                                                                                     | —                                                                                                                                                                              |
-| Init                 | `initEditor` runs once via `useMount`; `defaultValue` applied on mount only → **uncontrolled**                                                                                                  | [:560](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L560)                                                                                         |
-| Seed guard           | `clearHistory()` after first `setValue` so the seed isn't undoable                                                                                                                              | [:488](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L488)                                                                                         |
-| External writes      | `maybePrettifyAndSetValue` no-ops when value is unchanged                                                                                                                                       | [:296](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L296)                                                                                         |
-| **Remount survival** | History is persisted to module-global `editorStates[uniquenessKey]` (`getHistory()`) and restored (`setHistory()`) on re-init — **but only if `uniquenessKey` is unchanged across the remount** | [:324](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L324), [:503](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L503) |
-| Persist to model     | debounced `onChange`, `DEBOUNCE_MILLIS = 100`                                                                                                                                                   | [:598](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L598)                                                                                         |
+| Init                 | `initEditor` runs once via `useMount`; `defaultValue` applied on mount only → **uncontrolled**                                                                                                  | [:560](../apps/desktop/src/ui/components/.client/codemirror/code-editor.tsx#L560)                                                                                         |
+| Seed guard           | `clearHistory()` after first `setValue` so the seed isn't undoable                                                                                                                              | [:488](../apps/desktop/src/ui/components/.client/codemirror/code-editor.tsx#L488)                                                                                         |
+| External writes      | `maybePrettifyAndSetValue` no-ops when value is unchanged                                                                                                                                       | [:296](../apps/desktop/src/ui/components/.client/codemirror/code-editor.tsx#L296)                                                                                         |
+| **Remount survival** | History is persisted to module-global `editorStates[uniquenessKey]` (`getHistory()`) and restored (`setHistory()`) on re-init — **but only if `uniquenessKey` is unchanged across the remount** | [:324](../apps/desktop/src/ui/components/.client/codemirror/code-editor.tsx#L324), [:503](../apps/desktop/src/ui/components/.client/codemirror/code-editor.tsx#L503) |
+| Persist to model     | debounced `onChange`, `DEBOUNCE_MILLIS = 100`                                                                                                                                                   | [:598](../apps/desktop/src/ui/components/.client/codemirror/code-editor.tsx#L598)                                                                                         |
 
 Consumers (~21): raw body, GraphQL query/variables, environment JSON editor, request
 headers/params editors, request-script, markdown, mock response, code-prompt modal, etc.
 
 ### B. Single-line CodeMirror — `OneLineEditor`
 
-[`one-line-editor.tsx`](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx)
+[`one-line-editor.tsx`](../apps/desktop/src/ui/components/.client/codemirror/one-line-editor.tsx)
 
 | Aspect               | Behaviour                                                                         | Ref                                                                                                                                                                                    |
 | -------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Undo engine          | CodeMirror built-in history                                                       | —                                                                                                                                                                                      |
-| Init                 | `initEditor` once via `useMount`, `defaultValue` on mount only → **uncontrolled** | [:255](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L255)                                                                                             |
-| Seed guard           | `clearHistory()` after first set                                                  | [:221](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L221)                                                                                             |
+| Init                 | `initEditor` once via `useMount`, `defaultValue` on mount only → **uncontrolled** | [:255](../apps/desktop/src/ui/components/.client/codemirror/one-line-editor.tsx#L255)                                                                                             |
+| Seed guard           | `clearHistory()` after first set                                                  | [:221](../apps/desktop/src/ui/components/.client/codemirror/one-line-editor.tsx#L221)                                                                                             |
 | **Remount survival** | **None.** No `editorStates` equivalent — history is destroyed on every remount    | —                                                                                                                                                                                      |
-| `setValue` handle    | Preserves cursor but `cm.setValue()` **clears CM undo history**                   | [:366](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L366)                                                                                             |
-| Persist to model     | debounced `onChange` (100ms) **+ flush on blur**                                  | [:295](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L295), [:304](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L304) |
+| `setValue` handle    | Preserves cursor but `cm.setValue()` **clears CM undo history**                   | [:366](../apps/desktop/src/ui/components/.client/codemirror/one-line-editor.tsx#L366)                                                                                             |
+| Persist to model     | debounced `onChange` (100ms) **+ flush on blur**                                  | [:295](../apps/desktop/src/ui/components/.client/codemirror/one-line-editor.tsx#L295), [:304](../apps/desktop/src/ui/components/.client/codemirror/one-line-editor.tsx#L304) |
 
 Consumers (~14): URL bar, all key-value rows (name/value/description for headers, query,
 form-data, env), auth-input rows, cookies modal, WebSocket/gRPC/Socket.IO URL + panes, MCP url bar.
 
 The "uncontrolled + manual `setValue`" design is deliberate — see the comment at
-[`request-pane.tsx:71-75`](../packages/insomnia/src/ui/components/panes/request-pane.tsx#L71):
+[`request-pane.tsx:71-75`](../apps/desktop/src/ui/components/panes/request-pane.tsx#L71):
 controlling the editor would make typed input lag behind the model round-trip.
 
 ### C. Plain inputs — React Aria `Input`/`TextField`, raw `<input>`/`<textarea>`
 
-Approx counts in `packages/insomnia/src/ui`: ~79 `<Input>`, ~42 `<TextField>`, ~19 `<input>`,
+Approx counts in `apps/desktop/src/ui`: ~79 `<Input>`, ~42 `<TextField>`, ~19 `<input>`,
 ~10 `<textarea>`. These are mostly **controlled** (`value` + `onChange`). Undo relies on the
 browser/OS native undo stack. A controlled input that re-renders on every keystroke can reset
 that native stack — but this is **not universal** (see runtime results).
 
 ## Native Electron Edit menu
 
-[`window-utils.ts:305-342`](../packages/insomnia/src/main/window-utils.ts#L305) defines an Edit menu:
+[`window-utils.ts:305-342`](../apps/desktop/src/main/window-utils.ts#L305) defines an Edit menu:
 
 - **Undo** → `role: 'undo'`, accelerator `CmdOrCtrl+Z`
 - **Redo** → `role: 'redo'`, accelerator `Shift+CmdOrCtrl+Z`
@@ -75,7 +75,7 @@ below).
 ## Remount triggers
 
 The request pane builds a composite key and applies it to the URL bar editor and body editor
-([`request-pane.tsx:82`](../packages/insomnia/src/ui/components/panes/request-pane.tsx#L82)):
+([`request-pane.tsx:82`](../apps/desktop/src/ui/components/panes/request-pane.tsx#L82)):
 
 ```ts
 const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
@@ -141,8 +141,8 @@ landed. Confirmed: a stable editor keeps focus and undoes correctly; the remount
    handler. The Edit menu's `Undo`/`Redo` no longer use `role: 'undo'`/`'redo'` (which only drove
    the native stack and left CodeMirror's Cmd+Z inert behind the menu accelerator); they now send
    `edit:undo`/`edit:redo` to the focused window. A single renderer handler
-   ([`editor-undo.ts`](../packages/insomnia/src/ui/components/.client/codemirror/editor-undo.ts),
-   wired in [`renderer-listeners.ts`](../packages/insomnia/src/ui/renderer-listeners.ts)) routes by
+   ([`editor-undo.ts`](../apps/desktop/src/ui/components/.client/codemirror/editor-undo.ts),
+   wired in [`renderer-listeners.ts`](../apps/desktop/src/ui/renderer-listeners.ts)) routes by
    focus: a CodeMirror surface drives `cm.undo()/redo()`; anything else replays the browser's native
    edit command (`execCommand`), preserving the old behaviour for plain inputs.
 5. **Plain controlled inputs (Category C).** Largest surface, lowest per-item value; defer

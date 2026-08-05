@@ -159,9 +159,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+          New-Item -Path "apps/desktop/dist/win-unpacked/tosign" -ItemType Directory -Force
+          Get-ChildItem -Path "apps/desktop/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "apps/desktop/dist/win-unpacked/tosign"
+          Get-ChildItem -Path "apps/desktop/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "apps/desktop/dist/win-unpacked/tosign"
 
       # signs unpacked electron-builder contents, in this case only the .exe
       # this installs smctl as well
@@ -171,7 +171,7 @@ jobs:
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
-          input: packages/insomnia/dist/win-unpacked/tosign
+          input: apps/desktop/dist/win-unpacked/tosign
           keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
         env:
           SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
@@ -182,9 +182,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
-          Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
+          Get-ChildItem -Path "apps/desktop/dist/win-unpacked/tosign" -Filter *.dll | Move-Item -Destination "apps/desktop/dist/win-unpacked"
+          Get-ChildItem -Path "apps/desktop/dist/win-unpacked/tosign" -Filter *.exe | Move-Item -Destination "apps/desktop/dist/win-unpacked"
+          Remove-Item -Path "apps/desktop/dist/win-unpacked/tosign" -Recurse -Force
 
       # re-packages the now code-signed electron-builder contents into the installer
       - name: Package dist app (Windows only)
@@ -207,7 +207,7 @@ jobs:
           $nupkgVersion = $version -replace "-([a-zA-Z]+)\.", '-$1'
           $nupkg = "insomnia-${nupkgVersion}-full.nupkg"
           Write-Host "scan insomnia-${nupkgVersion}-full.nupkg"
-          7z x "packages/insomnia/dist/squirrel-windows/${nupkg}" -o"${version}-extract"
+          7z x "apps/desktop/dist/squirrel-windows/${nupkg}" -o"${version}-extract"
 
           $exeFiles = Get-ChildItem -Path "${version}-extract/lib/net45" -Filter *.exe
 
@@ -248,7 +248,7 @@ jobs:
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
-          input: packages/insomnia-inso/binaries/inso.exe
+          input: apps/cli/binaries/inso.exe
           keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
         env:
           SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
@@ -345,26 +345,26 @@ jobs:
           if-no-files-found: ignore
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
-            packages/insomnia/dist/*.exe
-            packages/insomnia/dist/*.yml
-            packages/insomnia/dist/squirrel-windows/*
-            packages/insomnia/dist/*.zip
-            packages/insomnia/dist/*.dmg
-            packages/insomnia/dist/*.snap
-            packages/insomnia/dist/*.rpm
-            packages/insomnia/dist/*.deb
-            packages/insomnia/dist/*.AppImage
-            packages/insomnia/dist/*.tar.gz
-            packages/insomnia-inso/artifacts/*
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.yml
+            apps/desktop/dist/squirrel-windows/*
+            apps/desktop/dist/*.zip
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.snap
+            apps/desktop/dist/*.rpm
+            apps/desktop/dist/*.deb
+            apps/desktop/dist/*.AppImage
+            apps/desktop/dist/*.tar.gz
+            apps/cli/artifacts/*
 
       - name: Upload source assets for Sentry
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ runner.os }}-${{ runner.arch }}-sentry
           path: |
-            packages/insomnia/build/**/*.js
-            packages/insomnia/build/**/*.map
-            !packages/insomnia/build/yarn-standalone.js
+            apps/desktop/build/**/*.js
+            apps/desktop/build/**/*.map
+            !apps/desktop/build/yarn-standalone.js
 
   update-pull-request:
     if: startsWith(github.ref_name, 'release/')
@@ -382,7 +382,7 @@ jobs:
         id: release_version
         shell: bash
         run: |
-          echo "version=$(jq .version packages/insomnia/package.json -rj)" >> $GITHUB_OUTPUT
+          echo "version=$(jq .version apps/desktop/package.json -rj)" >> $GITHUB_OUTPUT
           echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
       - name: update-pull-request

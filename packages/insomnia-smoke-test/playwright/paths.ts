@@ -48,7 +48,7 @@ if (typeof platformPath === 'string') {
   throw new Error(`Cannot find binary path for ${process.platform} ${process.arch}`);
 }
 
-export const cwd = path.resolve(__dirname, '..', '..', 'insomnia');
+export const cwd = path.resolve(__dirname, '..', '..', '..', 'apps', 'desktop');
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 const insomniaBinary = path.join(cwd, 'dist', binaryPath);
 const electronBinary = path.join(

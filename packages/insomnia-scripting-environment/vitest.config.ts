@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     hideSkippedTests: true,
     alias: {
-      '~/': new URL('../insomnia/src/', import.meta.url).pathname,
+      '~/': new URL('../../apps/desktop/src/', import.meta.url).pathname,
     },
   },
 });
