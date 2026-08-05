@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "name": "infrastructure",
+  "license": "Apache-2.0",
+  "version": "13.1.0",
+  "author": "Kong <office@konghq.com>",
+  "description": "Adapters implementing domain- and application-defined ports (persistence, network, sync, secret storage). Depends on domain plus external libs/Electron/Node. Only reachable from each app's own bootstrap/wiring code, never from route/command logic directly.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "infrastructure"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "type-check": "tsc --noEmit --project tsconfig.json"
+  }
+}

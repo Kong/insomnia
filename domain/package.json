@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "name": "domain",
+  "license": "Apache-2.0",
+  "version": "13.1.0",
+  "author": "Kong <office@konghq.com>",
+  "description": "Pure business logic - entities, value objects, and the Repository/port interfaces implemented by infrastructure. No I/O, no framework or runtime dependencies.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "domain"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "type-check": "tsc --noEmit --project tsconfig.json"
+  }
+}

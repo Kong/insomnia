@@ -1,0 +1,10 @@
+{
+  "extends": "../.config/tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "ESNext",
+    "noEmit": true,
+    "lib": ["ES2023"]
+  },
+  "include": ["src"]
+}

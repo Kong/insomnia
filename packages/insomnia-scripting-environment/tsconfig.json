@@ -1,25 +1,14 @@
 {
+  "extends": "../../.config/tsconfig.base.json",
   "compilerOptions": {
     /* Base Options: */
-    "esModuleInterop": true,
-    "skipLibCheck": true,
     "target": "es2022",
     "allowJs": true,
-    "resolveJsonModule": true,
     "module": "ES2022",
-    "moduleResolution": "bundler",
-    "isolatedModules": true,
     "noEmit": true,
     "paths": {
       "~/*": ["../../apps/desktop/src/*"]
     },
-    /* Strictness */
-    "strict": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "useUnknownInCatchVariables": false,
     "verbatimModuleSyntax": true,
     "jsx": "react",
     /* If your code runs in the DOM: */

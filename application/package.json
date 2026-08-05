@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "name": "application",
+  "license": "Apache-2.0",
+  "version": "13.1.0",
+  "author": "Kong <office@konghq.com>",
+  "description": "Use cases that orchestrate domain entities and repositories, plus cross-cutting application-level ports (NetworkClient, TemplatingEngine, Clock, IdGenerator, ...). Depends on domain only.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "application"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx --cache",
+    "type-check": "tsc --noEmit --project tsconfig.json"
+  }
+}
