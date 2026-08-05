@@ -91,7 +91,7 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
-          PKG_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+          PKG_VERSION=$(jq .version apps/cli/package.json -rj)
           if [ "$PKG_VERSION" != "$VERSION" ]; then
             echo "Input version $VERSION does not match package.json version $PKG_VERSION"
             exit 1
@@ -109,7 +109,7 @@ jobs:
       - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
         id: metadata
         run: |
-          INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+          INSO_VERSION=$(jq .version apps/cli/package.json -rj)
           echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV
           echo "CLI_ARTIFACT_BASE64_FILE=${{env.CLI_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV
           echo "ELECTRON_ARTIFACT_BASE64_FILE=${{env.ELECTRON_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV

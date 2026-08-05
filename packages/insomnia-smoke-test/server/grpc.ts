@@ -7,7 +7,7 @@ import type { HandleCall } from '@grpc/grpc-js/build/src/server-call';
 import * as protoLoader from '@grpc/proto-loader';
 import { addReflection } from '@ravanallc/grpc-server-reflection';
 
-const PROTO_PATH = path.resolve('../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide.proto');
+const PROTO_PATH = path.resolve('../../apps/desktop/src/network/grpc/__fixtures__/library/route_guide.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
@@ -197,7 +197,7 @@ export const startGRPCServer = (port: number) => {
         return reject(error);
       }
 
-      const dbPath = '../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide_db.json';
+      const dbPath = '../../apps/desktop/src/network/grpc/__fixtures__/library/route_guide_db.json';
       fs.readFile(path.resolve(dbPath), function (err, data) {
         if (err) {
           throw err;
@@ -239,7 +239,7 @@ export const startGRPCServer = (port: number) => {
         return reject(error);
       }
 
-      const dbPath = '../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide_db.json';
+      const dbPath = '../../apps/desktop/src/network/grpc/__fixtures__/library/route_guide_db.json';
       fs.readFile(path.resolve(dbPath), (err, data) => {
         if (err) {
           throw err;

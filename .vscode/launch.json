@@ -12,7 +12,7 @@
         "group": "Insomnia",
         "order": 1
       },
-      "cwd": "${workspaceFolder}/packages/insomnia",
+      "cwd": "${workspaceFolder}/apps/desktop",
       "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
       "runtimeArgs": ["--remote-debugging-port=9222", "."],
       "outputCapture": "std",
@@ -37,7 +37,7 @@
         "order": 2
       },
       "port": 9222,
-      "webRoot": "${workspaceFolder}/packages/insomnia/src",
+      "webRoot": "${workspaceFolder}/apps/desktop/src",
       "timeout": 60000
     },
     {
@@ -46,8 +46,8 @@
       "protocol": "inspector",
       "smartStep": true,
       "name": "Inso",
-      "cwd": "${workspaceFolder}/packages/insomnia-inso",
-      "program": "${workspaceFolder}/packages/insomnia-inso/bin/debug_inso",
+      "cwd": "${workspaceFolder}/apps/cli",
+      "program": "${workspaceFolder}/apps/cli/bin/debug_inso",
       "sourceMaps": true,
       "autoAttachChildProcesses": true,
       "trace": true,

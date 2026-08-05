@@ -79,7 +79,7 @@ jobs:
       - name: Get version
         shell: bash
         run: |
-          VERSION=$(node -p "require('./packages/insomnia/package.json').version")
+          VERSION=$(node -p "require('./apps/desktop/package.json').version")
           MAJOR_MINOR=$(echo $VERSION | cut -d. -f1,2)
 
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV

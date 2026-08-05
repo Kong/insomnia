@@ -86,7 +86,7 @@ jobs:
       - name: Check sandbox-vendored bundles are up to date
         run: |
           npm run sandbox:vendored:generate -w insomnia
-          if ! git diff --exit-code packages/insomnia/src/templating/sandbox/vendored/*.generated.ts; then
+          if ! git diff --exit-code apps/desktop/src/templating/sandbox/vendored/*.generated.ts; then
             echo "::error::Sandbox-vendored bundles are out of date or hand-edited. Run 'npm run sandbox:vendored:ci -w insomnia && npm run sandbox:vendored:generate -w insomnia' and commit the result."
             exit 1
           fi
@@ -98,7 +98,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           git fetch origin "$BASE_SHA" --depth=1
-          if git diff --name-only "$BASE_SHA"...HEAD | grep -qE '^packages/insomnia/src/templating/sandbox/(vendored/(pkg/|.*\.generated\.ts$)|module-registry\.ts$)'; then
+          if git diff --name-only "$BASE_SHA"...HEAD | grep -qE '^apps/desktop/src/templating/sandbox/(vendored/(pkg/|.*\.generated\.ts$)|module-registry\.ts$)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -139,18 +139,21 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const fs = require('fs');
             const path = require('path');
 
             const workspaceRoot = process.env.GITHUB_WORKSPACE;
-            const prPackagesDir = path.join(workspaceRoot, 'packages');
-            const basePackagesDir = path.join(workspaceRoot, 'insomnia-base', 'packages');
+            const prPackagesDirs = ['packages', 'apps'].map(dir => path.join(workspaceRoot, dir));
+            const basePackagesDirs = ['packages', 'apps'].map(dir => path.join(workspaceRoot, 'insomnia-base', dir));
 
-            async function analyzeCircularReferences(rootDir) {
+            async function analyzeCircularReferences(rootDirs) {
               const madge = require('madge');
-              const res = await madge(rootDir, {
-                fileExtensions: ['ts', 'tsx'],
-              });
-              return res.circular();
+              const results = await Promise.all(
+                rootDirs.filter(dir => fs.existsSync(dir)).map(dir =>
+                  madge(dir, { fileExtensions: ['ts', 'tsx'] }).then(res => res.circular())
+                ),
+              );
+              return results.flat();
             }
 
             // Function to generate markdown report
@@ -252,16 +255,16 @@ jobs:
             try {
               const baseBranch = context.payload.pull_request.base.ref;
               console.log(`Base branch (PR target): ${baseBranch}`);
-              console.log(`PR packages dir: ${prPackagesDir}`);
-              console.log(`Base packages dir: ${basePackagesDir}`);
+              console.log(`PR packages dirs: ${prPackagesDirs.join(', ')}`);
+              console.log(`Base packages dirs: ${basePackagesDirs.join(', ')}`);
 
               console.log('Analyzing circular references in PR (merge) tree...');
-              const prCircularRefs = await analyzeCircularReferences(prPackagesDir);
+              const prCircularRefs = await analyzeCircularReferences(prPackagesDirs);
               const prCount = prCircularRefs.length;
               console.log(`PR: Found ${prCount} circular references`);
 
               console.log(`Analyzing circular references in ${baseBranch} tree...`);
-              const baseCircularRefs = await analyzeCircularReferences(basePackagesDir);
+              const baseCircularRefs = await analyzeCircularReferences(basePackagesDirs);
               const baseCount = baseCircularRefs.length;
               console.log(`Base: Found ${baseCount} circular references`);
 

@@ -11,7 +11,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
-      "~/*": ["../insomnia/src/*"]
+      "~/*": ["../../apps/desktop/src/*"]
     },
     /* Strictness */
     "strict": true,
@@ -25,6 +25,6 @@
     /* If your code runs in the DOM: */
     "lib": ["es2023", "dom", "dom.iterable"]
   },
-  "include": ["../insomnia/types"],
+  "include": ["../../apps/desktop/types"],
   "exclude": ["**/__tests__", "node_modules"]
 }

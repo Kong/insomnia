@@ -35,7 +35,7 @@ Run from repo root before considering work complete:
 ```bash
 npm run lint          # ESLint all workspaces
 npm run type-check    # TypeScript check all workspaces
-npm test              # Tests all workspaces (or: npm test -w packages/insomnia)
+npm test              # Tests all workspaces (or: npm test -w insomnia)
 ```
 
 ## Worktree Setup
@@ -54,8 +54,8 @@ npm -v
 
 ## Repository Structure
 
-`packages/`
-  `insomnia/`                ← Main Electron app
+`apps/`
+  `desktop/`                 ← Main Electron app (formerly `packages/insomnia`)
     `src/`
       `common/`              ← Shared utils, settings types
       `routes/`              ← React Router files (clientLoader/clientAction)
@@ -65,9 +65,10 @@ npm -v
       `sync/`                ← Git/VCS sync
       `network/`             ← Request execution engine
       `templating/`          ← Nunjucks rendering (Web Worker)
+  `cli/`                     ← CLI tool (formerly `packages/insomnia-inso`)
+`packages/`
   `insomnia-data/`           ← Data models, services, NeDB implementation, shared data utilities
   `insomnia-api/`            ← Cloud API client
-  `insomnia-inso/`           ← CLI tool
   `insomnia-testing/`        ← Test framework
 
 ## Data Model Hierarchy

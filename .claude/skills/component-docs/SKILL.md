@@ -1,7 +1,7 @@
 ---
 name: component-docs
 description: "Author or update a component doc in the Docusaurus site (packages/insomnia-component-docs) for a component in the shared library. Use when adding a new component to src/basic-components, changing a component's props/variants, or when asked to document/update docs for a component."
-argument-hint: 'The component name and its source path, e.g. "Select (packages/insomnia/src/basic-components/select.tsx)"'
+argument-hint: 'The component name and its source path, e.g. "Select (apps/desktop/src/basic-components/select.tsx)"'
 ---
 
 # Component Docs (Docusaurus + MDX)
@@ -12,7 +12,7 @@ editable examples.
 
 ## When to Use
 
-- A new component was added to `packages/insomnia/src/basic-components/` (or migrated in).
+- A new component was added to `apps/desktop/src/basic-components/` (or migrated in).
 - A component's props/variants/styling changed and its doc needs updating.
 - Asked to "document" / "write docs for" / "update docs for" a component.
 
@@ -42,6 +42,6 @@ editable examples.
 ## Conventions
 
 - Match the existing docs' tone and section order (see `docs/Components/button.mdx` as the reference).
-- Document colors via CSS variables (`--color-*` / `--hl-*`); sizes/spacing are native Tailwind utilities — mirror the component's actual source, not an idealized version. (Library styling conventions live in `packages/insomnia/src/basic-components/AGENTS.md`.)
+- Document colors via CSS variables (`--color-*` / `--hl-*`); sizes/spacing are native Tailwind utilities — mirror the component's actual source, not an idealized version. (Library styling conventions live in `apps/desktop/src/basic-components/AGENTS.md`.)
 - Keep live examples free of business/data dependencies so they render in isolation.
 - If the component is multi-part (e.g. `Modal.Header/Body/Footer`), document the sub-components together in one file.

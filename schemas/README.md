@@ -9,7 +9,7 @@ Use it to validate and autocomplete Insomnia files in your editor or CI, and to 
 AI agents a precise contract for the files they generate.
 
 > The schema is **generated** from Insomnia's source of truth (the Zod schema in
-> [`packages/insomnia/src/common/import-v5-parser.ts`](../packages/insomnia/src/common/import-v5-parser.ts)).
+> [`apps/desktop/src/common/import-v5-parser.ts`](../apps/desktop/src/common/import-v5-parser.ts)).
 > Do not edit the schema files by hand — see [Regenerating](#regenerating).
 
 ## Versioning
@@ -19,7 +19,7 @@ Each schema version is published as its own immutable file,
 adds a new file next to the existing ones, so every version stays addressable and no
 published URL ever changes meaning. The current version is defined by
 `INSOMNIA_SCHEMA_VERSION` in
-[`schema-version.ts`](../packages/insomnia/src/common/insomnia-schema-migrations/schema-version.ts).
+[`schema-version.ts`](../apps/desktop/src/common/insomnia-schema-migrations/schema-version.ts).
 
 Reference the specific version you target — when the schema bumps, update the version in
 the URL to move forward.

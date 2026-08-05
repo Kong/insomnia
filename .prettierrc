@@ -6,7 +6,7 @@
   "quoteProps": "consistent",
   "overrides": [
     {
-      "files": "packages/insomnia/**/*",
+      "files": "apps/desktop/**/*",
       "options": {
         "plugins": ["prettier-plugin-tailwindcss"]
       }

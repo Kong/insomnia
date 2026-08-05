@@ -9,7 +9,7 @@
       "type": "shell",
       "promptOnClose": false,
       "options": {
-        "cwd": "${workspaceFolder}/packages/insomnia",
+        "cwd": "${workspaceFolder}/apps/desktop",
         "env": {
           "NODE_ENV": "development"
         }
@@ -22,7 +22,7 @@
       "type": "shell",
       "promptOnClose": false,
       "options": {
-        "cwd": "${workspaceFolder}/packages/insomnia",
+        "cwd": "${workspaceFolder}/apps/desktop",
         "env": {
           "NODE_ENV": "development"
         }

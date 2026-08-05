@@ -1,19 +1,19 @@
 
 # if you're curious about what this does and why it's here,
-# see packages/insomnia/src/cpp/README.md
+# see apps/desktop/src/cpp/README.md
 
 set -e
 
 BUILD_CONTEXT=$1
-VERSION=$(jq .version ./packages/insomnia/package.json -rj)
+VERSION=$(jq .version ./apps/desktop/package.json -rj)
 echo "Starting Insomnia secure wrapper build for version $VERSION..."
 MAJOR=$(echo $VERSION | cut -d '.' -f 1)
 MINOR=$(echo $VERSION | cut -d '.' -f 2)
 PATCH=$(echo $VERSION | cut -d '.' -f 3 | cut -d '-' -f 1)
 TAG=$(echo $VERSION | cut -d '-' -f 2)
-SRC_DIR=packages/insomnia/src
+SRC_DIR=apps/desktop/src
 CPP_DIR=$SRC_DIR/cpp
-DEST_DIR=packages/insomnia/dist/win-unpacked
+DEST_DIR=apps/desktop/dist/win-unpacked
 DEST_EXE=$DEST_DIR/Insomnia.exe
 
 # use this if you just want to rebuild the wrapper so you can copy into the installation folder

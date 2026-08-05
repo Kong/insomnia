@@ -1,0 +1,33 @@
+{
+  "name": "insomnia",
+  "appId": "com.insomnia.app",
+  "userDataFolder": "Insomnia",
+  "productName": "Insomnia",
+  "synopsis": "The Collaborative API Client and Design Tool",
+  "icon": "https://github.com/kong/insomnia/blob/develop/apps/desktop/src/icons/icon.ico?raw=true",
+  "githubOrg": "Kong",
+  "githubRepo": "insomnia",
+  "segmentWriteKeys": {
+    "development": "rTOCSvGV23cHGJyb3HI9EUQDNA6ar7ay",
+    "production": "4l7QUfACrIcqvC913hiIwAA2BDYP2OJ1"
+  },
+  "cio": {
+    "development": {
+      "writeKey": "d819a0f74f1ba47aac56",
+      "siteId": "6a3e5585a91dc95f33d5"
+    },
+    "production": {
+      "writeKey": "70d3f482cef87818efce",
+      "siteId": "4d5c703f3edbc5155bac"
+    }
+  },
+  "bundlePlugins": [
+    {
+      "name": "@kong/insomnia-plugin-external-vault"
+    },
+    {
+      "name": "@kong/insomnia-plugin-ai"
+    }
+  ],
+  "sentryDsn": "https://aaec2e800e644070a8daba5b7ad02c16@o1147619.ingest.sentry.io/6311804"
+}
