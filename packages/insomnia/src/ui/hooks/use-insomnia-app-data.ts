@@ -48,11 +48,15 @@ export function useMultipleCollectionWorkspaceChildrenData(
       return;
     }
     let cancelled = false;
-    prefetchUncachedWorkspaceChildren(queryClient, collectionWorkspaceIdsKey.split(','), 'collection').then(() => {
-      if (!cancelled) {
-        setPrefetchedKey(collectionWorkspaceIdsKey);
-      }
-    });
+    prefetchUncachedWorkspaceChildren(queryClient, collectionWorkspaceIdsKey.split(','), 'collection')
+      .catch(() => {
+        console.warn('Failed to prefetch uncached workspace children for collection workspaces');
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPrefetchedKey(collectionWorkspaceIdsKey);
+        }
+      });
     return () => {
       cancelled = true;
     };
