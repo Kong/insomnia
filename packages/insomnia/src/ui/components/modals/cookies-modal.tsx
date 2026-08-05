@@ -26,10 +26,8 @@ import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-edito
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { RenderedText } from '../rendered-text';
 
 // Use tough-cookie MAX_DATE value
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
@@ -49,8 +47,6 @@ interface Props {
 }
 
 export const CookiesModal = ({ setIsOpen }: Props) => {
-  const { handleRender } = useNunjucks();
-
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -76,31 +72,25 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     setFilteredCookies(chunkArray(patch.cookies));
   };
 
+  // Filters against the cookies' literal stored fields/string — never a rendered copy. Rendering
+  // executes any template tag a cookie's domain/value contains (including plugin tags), and a
+  // cookie's value can be set by a remote server via Set-Cookie with no user authorship, so no
+  // template rendering happens here merely because the user is searching.
   const handleFilterChange = async (value: string) => {
     setFilter(value);
     setPage(0);
 
-    const renderedCookies: Cookie[] = [];
-
-    for (const cookie of activeCookieJar?.cookies || []) {
-      try {
-        renderedCookies.push(await handleRender(cookie));
-      } catch {
-        renderedCookies.push(cookie);
-      }
-    }
+    const cookies = activeCookieJar?.cookies || [];
 
     if (!value) {
-      setFilteredCookies(chunkArray(renderedCookies));
+      setFilteredCookies(chunkArray(cookies));
       return;
     }
 
     const query = value.toLowerCase();
-    const cookieStrings = await Promise.all(
-      renderedCookies.map(cookie => window.main.cookies.toString(cookie).catch(() => '')),
-    );
+    const cookieStrings = await Promise.all(cookies.map(cookie => window.main.cookies.toString(cookie).catch(() => '')));
 
-    setFilteredCookies(chunkArray(renderedCookies.filter((_, i) => cookieStrings[i].toLowerCase().includes(query))));
+    setFilteredCookies(chunkArray(cookies.filter((_, i) => cookieStrings[i].toLowerCase().includes(query))));
   };
 
   const handleCookieDelete = (cookieId: string) => {
@@ -300,13 +290,14 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               textValue={cookie.domain}
               className="flex min-h-[40px] justify-between gap-2 rounded-xs px-2 py-1 leading-[36px] outline-hidden odd:bg-(--hl-xs)"
             >
+              {/* Shown literally, never rendered: a cookie's domain/value can be set by a remote
+                  server via Set-Cookie with no user authorship, so this list must not execute any
+                  template tag the text happens to contain merely by being displayed. */}
               <span className="flex min-w-[20%] items-center leading-relaxed break-all" data-testid="cookie-domain">
-                <RenderedText>{cookie.domain || ''}</RenderedText>
+                {cookie.domain || ''}
               </span>
               <div className="flex w-[70%] items-center leading-relaxed">
-                <div className="line-clamp-3 w-full break-all">
-                  <RenderedText>{cookieString || ''}</RenderedText>
-                </div>
+                <div className="line-clamp-3 w-full break-all">{cookieString || ''}</div>
               </div>
               <div className="flex min-w-[10%] items-center justify-end gap-1">
                 <Button
