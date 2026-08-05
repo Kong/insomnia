@@ -50,10 +50,13 @@ test.describe('runner features tests', () => {
     expect.soft(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
   };
 
-  const selectRunnerRequest = async (page: Page, name: string) => {
-    const row = page.locator(`.runner-request-list-${name}`);
-    await row.waitFor({ state: 'visible' });
-    await row.locator('label[slot="selection"]').click();
+  const selectRunnerRequests = async (page: Page, ...names: string[]) => {
+    await page.getByText('Unselect All').click();
+    for (const name of names) {
+      const row = page.locator(`.runner-request-list-${name}`);
+      await row.waitFor({ state: 'visible' });
+      await row.locator('label[slot="selection"]').click();
+    }
   };
 
   test('run collection runner', async ({ page, insomnia }) => {
@@ -62,9 +65,7 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    // select requests to test
-    await page.locator('.runner-request-list-req1').click();
-    await page.locator('.runner-request-list-req2').click();
+    await selectRunnerRequests(page, 'req1', 'req2');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -107,8 +108,7 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    await selectRunnerRequest(page, 'delaySkip');
-    await selectRunnerRequest(page, 'fastAfterSkip');
+    await selectRunnerRequests(page, 'delaySkip', 'fastAfterSkip');
 
     await page.getByRole('button', { name: 'Run', exact: true }).click();
 
@@ -130,8 +130,7 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    await selectRunnerRequest(page, 'delaySkip');
-    await selectRunnerRequest(page, 'fastAfterSkip');
+    await selectRunnerRequests(page, 'delaySkip', 'fastAfterSkip');
 
     await page.getByRole('button', { name: 'Run', exact: true }).click();
 
@@ -160,12 +159,7 @@ test.describe('runner features tests', () => {
     // check iteration number match json data length
     await expect.soft(page.locator('input[name="Iterations"]')).toHaveValue('2');
 
-    // select requests to test
-    await page.locator('.runner-request-list-req1').click();
-    await page.locator('.runner-request-list-req2').click();
-    await page.locator('.runner-request-list-req3').click();
-    await page.locator('.runner-request-list-req4').click();
-    await page.locator('.runner-request-list-req5').click();
+    await selectRunnerRequests(page, 'req1', 'req2', 'req3', 'req4', 'req5');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
@@ -195,7 +189,7 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-req4').click();
+    await selectRunnerRequests(page, 'req4');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -213,7 +207,7 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-await-test').click();
+    await selectRunnerRequests(page, 'await-test');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -231,7 +225,7 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-req5').click();
+    await selectRunnerRequests(page, 'req5');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -249,9 +243,7 @@ test.describe('runner features tests', () => {
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
-    await page.locator('.runner-request-list-req0').click();
-    await page.locator('.runner-request-list-req01').click();
-    await page.locator('.runner-request-list-req02').click();
+    await selectRunnerRequests(page, 'req0', 'req01', 'req02');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -275,8 +267,7 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    await page.locator('.runner-request-list-set-var1').click();
-    await page.locator('.runner-request-list-read-var1').click();
+    await selectRunnerRequests(page, 'set-var1', 'read-var1');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -295,7 +286,7 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    await page.locator('.runner-request-list-async-test').click();
+    await selectRunnerRequests(page, 'async-test');
 
     // send
     await page.getByRole('button', { name: 'Run', exact: true }).click();
@@ -385,8 +376,7 @@ test.describe('runner features tests', () => {
     await iterationsInput.clear();
     await expect.soft(iterationsInput).toHaveValue('');
 
-    // select a request and run
-    await page.locator('.runner-request-list-req1').click();
+    await selectRunnerRequests(page, 'req1');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
 
     // should have run 2 iterations (last valid value)
@@ -401,17 +391,11 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    // Select the request via its selection checkbox. The list is a drag-and-drop
-    // GridList, so a plain row click can be read as the start of a drag on slower
-    // CI and swallow the selection toggle — clicking the checkbox is reliable.
-    const printLogsRow = page.locator('.runner-request-list-printLogs');
-    await printLogsRow.waitFor({ state: 'visible' });
-    await printLogsRow.locator('label[slot="selection"]').click();
+    await selectRunnerRequests(page, 'printLogs');
 
     await page.getByRole('tab', { name: 'advanced' }).click();
     await page.locator('input[name="enable-log"]').click();
 
-    // Run becomes enabled only once a request is selected; selecting printLogs above enables it
     const runButton = page.getByRole('button', { name: 'Run', exact: true });
     await expect.soft(runButton).toBeEnabled();
     await runButton.click();

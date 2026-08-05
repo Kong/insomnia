@@ -2,7 +2,7 @@
   "private": true,
   "name": "insomnia-data",
   "license": "Apache-2.0",
-  "version": "12.5.1-alpha.0",
+  "version": "13.1.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia data functionalities",
   "repository": {
@@ -36,11 +36,12 @@
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
     "deep-equal": "2.2.3",
+    "fuzzysort": "^1.9.0",
     "graphql": "^16.10.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@getinsomnia/node-libcurl": "3.2.2",
+    "@getinsomnia/node-libcurl": "3.3.0",
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@types/deep-equal": "^1.0.4",
     "mocha": "^11.7.5",

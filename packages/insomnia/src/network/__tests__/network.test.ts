@@ -1169,3 +1169,35 @@ describe('getOrInheritHeaders', () => {
     expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
   });
 });
+
+describe('getRenderedRequest suppressUserAgent', () => {
+  it('suppresses default user-agent when a custom user-agent header is disabled', async () => {
+    const workspace = await services.workspace.create();
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_disabled_ua',
+      parentId: workspace._id,
+      url: 'http://localhost',
+      headers: [{ name: 'User-Agent', value: 'custom-xx', disabled: true }],
+    });
+
+    expect((await getRenderedRequest({ request })).suppressUserAgent).toBe(true);
+  });
+
+  it('suppresses default user-agent when all inherited user-agent headers are disabled', async () => {
+    const workspace = await services.workspace.create();
+    const folder = await services.requestGroup.create({
+      _id: 'fld_disabled_ua',
+      name: 'Disabled UA Folder',
+      parentId: workspace._id,
+      metaSortKey: 0,
+      headers: [{ name: 'User-Agent', value: 'custom-xx', disabled: true }],
+    });
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_inherited_disabled_ua',
+      parentId: folder._id,
+      url: 'http://localhost',
+    });
+
+    expect((await getRenderedRequest({ request })).suppressUserAgent).toBe(true);
+  });
+});

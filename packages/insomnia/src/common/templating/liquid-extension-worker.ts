@@ -8,6 +8,7 @@ import packageJson from '../../../package.json';
 import { resolveArg } from './resolve-arg';
 import { tokenizeArgs } from './tokenize-args';
 import type {
+  AppPromptOptions,
   BaseRenderContext,
   NodeCurlRequestOptions,
   PluginTemplateTag,
@@ -36,9 +37,18 @@ export function decodeEncodingWorker<T>(value: T) {
   return value;
 }
 
+// Set by each JS realm that calls fetchFromTemplateWorkerDatabase, since none of them share
+// module state with each other.
+let templatingDbAuthToken: string | null = null;
+
+export const setTemplatingDbAuthToken = (token: string | null) => {
+  templatingDbAuthToken = token;
+};
+
 export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths, body: any) => {
   const resp = await fetch('insomnia-templating-worker-database://' + path, {
     method: 'post',
+    headers: templatingDbAuthToken ? { 'x-insomnia-templating-auth': templatingDbAuthToken } : undefined,
     body: JSON.stringify(body),
   });
   let result;
@@ -81,10 +91,8 @@ export function createLiquidTagWorker(
           alert: async (title: string, message?: string) =>
             fetchFromTemplateWorkerDatabase('app.alert', { title, message }),
           dialog: async (title: string) => fetchFromTemplateWorkerDatabase('app.dialog', { title }),
-          prompt: async (
-            title: string,
-            options?: { label?: string; defaultValue?: string; submitName?: string; inputType?: string },
-          ) => fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
+          prompt: async (title: string, options?: AppPromptOptions) =>
+            fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
           getPath: async (name: string) => fetchFromTemplateWorkerDatabase('app.getPath', { name }),
           getInfo: () => ({ version: packageJson.version, platform }),
           showSaveDialog: async (options?: { defaultPath?: string }) =>

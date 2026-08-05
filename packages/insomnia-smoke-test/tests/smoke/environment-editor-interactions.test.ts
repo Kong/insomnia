@@ -108,35 +108,64 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Table Edit' }).click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
 
+    // The environment update fetcher disables Close while a change is persisting (see the
+    // Close click at the end of this flow). Wait on it between edits too - each row commit
+    // is an async round-trip, and firing the next edit before it lands can race with it and
+    // silently clobber the row (e.g. editing a still-blank row's value before its name commit
+    // has round-tripped discards the name).
+    const closeButton = page.getByRole('button', { name: 'Close', exact: true });
+    const waitForSync = () => expect.soft(closeButton).toBeEnabled();
+
     // disable the first row and verify the opacity change
     await page.getByRole('button', { name: 'Disable Row' }).first().click();
+    await waitForSync();
     let firstRow = kvTable.getByRole('option').first();
     await expect.soft(firstRow).toHaveCSS('opacity', '0.4');
 
     // delete all rows and wait for the list to clear
     await page.getByRole('dialog').getByRole('button', { name: 'Delete All' }).dblclick();
     await kvTable.getByRole('option').nth(2).waitFor({ state: 'hidden' });
+    await waitForSync();
 
     // add first row: exampleString = kvstring
     firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleString');
 
-    // clicking the value cell blurs the key cell, triggering its debounce flush
+    // clicking the value cell blurs the key cell, triggering its debounce flush; wait for
+    // that commit to round-trip before typing the value (see note above)
     await firstRow.getByTestId('OneLineEditor').nth(1).click();
+    await waitForSync();
     await page.keyboard.type('kvstring');
 
+    // explicitly blur the value cell (rather than letting the Add Row click do it) so its
+    // commit is its own action we can wait on. Add Row also mutates the row list itself
+    // (inserting the blank row) - if that click blurred the value cell too, the blur-flush
+    // and the insert would be two separate writes fired by one gesture with no way to wait
+    // between them, and the older one landing after the newer one silently drops the value.
+    await page.keyboard.press('Tab');
+    await waitForSync();
+
     // add second row: exampleObject (JSON type)
-    // clicking Add Row blurs the value cell; wait for the new row before interacting
     await page.getByRole('button', { name: 'Add Row' }).click();
+    await waitForSync();
+    // A trailing blank row is always present, so merely waiting for "something" at index 1
+    // to be visible can succeed before Add Row's own pair has actually rendered - typing into
+    // it then lands on the still-blank row instead, which commits as a brand new row built
+    // from a stale snapshot that doesn't yet include the row Add Row just created, silently
+    // dropping it. Wait for the row count itself to include the new pair (row1, new pair,
+    // trailing blank = 3) before interacting with it.
+    await expect.soft(kvTable.getByRole('option')).toHaveCount(3);
     const secondRow = kvTable.getByRole('option').nth(1);
-    await secondRow.waitFor({ state: 'visible' });
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleObject');
 
-    // clicking Type Selection blurs the key cell, triggering its debounce flush
+    // clicking Type Selection blurs the key cell, triggering its debounce flush; wait for
+    // that commit before changing the type, for the same reason as above
     await secondRow.getByRole('button', { name: 'Type Selection' }).click();
+    await waitForSync();
     await page.getByRole('menuitemradio', { name: 'JSON' }).click();
+    await waitForSync();
     await secondRow.getByRole('button', { name: 'Edit JSON' }).click();
     
     // wait for the JSON modal before typing
@@ -151,8 +180,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('dialog', { name: 'Modal' }).waitFor({ state: 'hidden' });
 
     // wait for the environment update fetcher to finish (Close is disabled while it's in-flight)
-    const closeButton = page.getByRole('button', { name: 'Close', exact: true });
-    await expect.soft(closeButton).toBeEnabled();
+    await waitForSync();
     await closeButton.click();
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 

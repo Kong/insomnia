@@ -19,10 +19,18 @@ interface Props {
   targetTests?: string;
   onSkip?: () => void;
   testId?: string;
+  defaultExpanded?: boolean;
 }
 
-export const RequestResultCard: FC<Props> = ({ item, resultFilter = '', targetTests = 'all', onSkip, testId }) => {
-  const [isExpanded, setIsExpanded] = useState(!!targetTests);
+export const RequestResultCard: FC<Props> = ({
+  item,
+  resultFilter = '',
+  targetTests = 'all',
+  onSkip,
+  testId,
+  defaultExpanded = false,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const status: RunnerItemStatus =
     'status' in item ? item.status : item.skipped ? 'skipped' : item.responseCode > 0 ? 'completed' : 'failed';
   const isSkipped = status === 'skipped';

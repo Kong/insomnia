@@ -10,3 +10,4 @@ export * from './strings';
 export * from './hotkeys';
 export * from './settings';
 export * from './keyboard-keys';
+export * from './search';

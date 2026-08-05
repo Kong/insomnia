@@ -1,6 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import cn from 'classnames';
 import type { McpRequest, McpServerPrimitiveTypes } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -25,7 +26,6 @@ import {
   METHOD_LIST_RESOURCES,
   METHOD_LIST_TOOLS,
 } from '~/common/mcp-utils';
-import { fuzzyMatchAll } from '~/common/misc';
 import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
 import { useRootLoaderData } from '~/root';
 import {

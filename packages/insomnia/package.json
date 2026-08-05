@@ -1,6 +1,6 @@
 {
   "name": "insomnia",
-  "version": "12.5.1-alpha.0",
+  "version": "13.1.0",
   "productName": "Insomnia",
   "private": true,
   "description": "The Collaborative API Design Tool",
@@ -40,7 +40,11 @@
     "sandbox:vendored:generate": "esr ./scripts/generate-sandbox-vendored.ts",
     "sandbox:vendored:guardrail": "esr ./scripts/check-sandbox-vendor-guardrail.ts",
     "sandbox:vendored:upgrade": "esr ./scripts/upgrade-sandbox-vendored.ts",
-    "sandbox:vendored:test-regression": "vitest run --config vitest.sandbox-vendored-regression.config.ts"
+    "sandbox:vendored:test-regression": "vitest run --config vitest.sandbox-vendored-regression.config.ts",
+    "sandbox:surface": "vitest run src/templating/sandbox/print-sandbox-surface.test.ts",
+    "sandbox:surface:test": "vitest run src/templating/sandbox/sandbox-surface.test.ts",
+    "sandbox:bridge-trust": "vitest run src/main/__tests__/print-templating-worker-database-surface.test.ts",
+    "sandbox:bridge-trust:test": "vitest run src/main/__tests__/templating-worker-database-surface.test.ts"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
@@ -55,7 +59,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^3.0.2",
-    "@getinsomnia/node-libcurl": "3.2.2",
+    "@getinsomnia/node-libcurl": "3.3.0",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.7.13",
@@ -102,7 +106,6 @@
     "events": "^3.3.0",
     "fastq": "^1.19.1",
     "fflate": "^0.8.2",
-    "fuzzysort": "^1.9.0",
     "graphql": "^16.10.0",
     "graphql-ws": "^5.16.2",
     "grpc-reflection-js": "Kong/grpc-reflection-js#master",
@@ -199,7 +202,7 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "5.1.2",
     "cross-env": "^10.1.0",
-    "electron": "41.0.3",
+    "electron": "43.2.0",
     "electron-builder": "26.8.1",
     "electron-builder-squirrel-windows": "26.8.1",
     "electron-devtools-installer": "^3.2.1",

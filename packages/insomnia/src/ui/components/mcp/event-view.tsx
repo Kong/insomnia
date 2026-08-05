@@ -221,6 +221,7 @@ export const MessageEventView = ({ event }: Props) => {
             updateFilter={handleSetFilter}
             filterHistory={filterHistory}
             readOnly
+            truncateLongLines
             autoPrettify
           />
         </div>

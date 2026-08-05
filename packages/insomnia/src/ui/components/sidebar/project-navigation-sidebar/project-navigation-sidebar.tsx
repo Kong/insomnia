@@ -2,6 +2,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import type { RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 import {
   type Dispatch,
   type ForwardedRef,
@@ -31,7 +32,6 @@ import * as reactUse from 'react-use';
 
 import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
-import { fuzzyMatchAll } from '~/common/misc';
 import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
@@ -65,6 +65,7 @@ import {
   filterCollection,
   flattenCollectionChildren,
   getAllRequestsAndMetaByWorkspace,
+  getSidebarGridListItemId,
   getWorkspacesByProjectIds,
   type WorkspaceWithSyncStatus,
 } from './project-navigation-sidebar-utils';
@@ -354,10 +355,11 @@ const ProjectNavigationSidebarInner = (
       for (const file of files) {
         const projectId = remoteIdToProjectIdMap.get(file.teamProjectId);
         if (projectId) {
-          if (!filesByProjectId.has(projectId)) {
-            filesByProjectId.set(projectId, []);
+          const projectFiles = filesByProjectId.get(projectId) ?? [];
+          if (projectFiles.some(f => f.id === file.rootDocumentId)) {
+            continue;
           }
-          filesByProjectId.get(projectId)?.push({
+          projectFiles.push({
             id: file.rootDocumentId,
             name: file.name,
             scope: 'unsynced',
@@ -366,6 +368,7 @@ const ProjectNavigationSidebarInner = (
             created: 0,
             lastModifiedTimestamp: 0,
           });
+          filesByProjectId.set(projectId, projectFiles);
         }
       }
 
@@ -1002,7 +1005,7 @@ const ProjectNavigationSidebarInner = (
     count: visibleFlatItems.length,
     estimateSize: useCallback(() => 32, []),
     overscan: 30,
-    getItemKey: index => visibleFlatItems[index].doc._id,
+    getItemKey: index => getSidebarGridListItemId(visibleFlatItems[index]),
   });
   const sidebarDragAndDropHooks = useSidebarDragAndDrop({
     flatItems,
@@ -1245,9 +1248,8 @@ const ProjectNavigationSidebarInner = (
 
                 return (
                   <GridListItem
-                    // Prefix pinned-request to the key and id to ensure pinned items have a different key and id from non-pinned items with the same doc._id
-                    key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
-                    id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
+                    key={getSidebarGridListItemId(item)}
+                    id={getSidebarGridListItemId(item)}
                     textValue={item.doc.name || item.kind}
                     onAuxClick={e => {
                       if (e.button === 1 && item.kind === 'collectionChild') {

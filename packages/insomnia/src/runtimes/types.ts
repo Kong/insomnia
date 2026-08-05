@@ -1,6 +1,6 @@
-import type { AESMessage, Cookie, RequestHeader } from 'insomnia-data';
+import type { AESMessage, Cookie, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
-import type { RenderedRequest, RenderInputType } from '~/common/templating/types';
+import type { AppPromptOptions, RenderedRequest, RenderInputType } from '~/common/templating/types';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { ConvertResult } from '../main/importers/convert';
@@ -16,7 +16,7 @@ export interface NetworkRuntime {
   getTimelinePath: (responseId: string) => Promise<string>;
   appendToTimelineOnError: (timelinePath: string, data: string) => Promise<void>;
   appendTimelineLines: (timelinePath: string, logs: string[]) => Promise<void>;
-  getAuthHeader: (request: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
+  getAuthHeader: (request: RenderedRequest, url: string) => Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }>;
   executeCurlRequest: (options: CurlRequestOptions) => Promise<CurlRequestOutput | CurlRequestErrorOutput>;
   extractCookies: (options: {
     setCookieStrings: string[];
@@ -62,10 +62,15 @@ export interface ImportRuntime {
   convert: (importEntry: ImportEntry, options?: { importerId?: string }) => Promise<ConvertResult>;
 }
 
+export interface AppRuntime {
+  prompt: (title: string, options?: AppPromptOptions) => Promise<string>;
+}
+
 export interface RuntimeCapabilities {
   network: NetworkRuntime;
   crypto: CryptoRuntime;
   templating: TemplatingRuntime;
   secretStorage: SecretStorageRuntime;
   importer: ImportRuntime;
+  app?: AppRuntime;
 }

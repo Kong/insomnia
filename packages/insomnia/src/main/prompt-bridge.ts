@@ -2,15 +2,17 @@ import { randomUUID } from 'node:crypto';
 
 import { ipcMain } from 'electron';
 
+import type { AppPromptOptions } from '~/common/templating/types';
+
 import { getMainWindow } from './window-utils';
+
+export interface PromptRequestOptions extends AppPromptOptions {
+  title: string;
+}
 
 const promptPendingRequests = new Map<string, (value: string | null) => void>();
 
-export function requestPromptFromRenderer(options: {
-  title: string;
-  label?: string;
-  defaultValue?: string;
-}): Promise<string | null> {
+export function requestPromptFromRenderer(options: PromptRequestOptions): Promise<string | null> {
   const mainWindow = getMainWindow();
   if (!mainWindow) {
     return Promise.resolve(null);

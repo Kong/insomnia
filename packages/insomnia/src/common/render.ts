@@ -27,7 +27,7 @@ import type {
 import * as templatingUtils from '~/common/templating/utils';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../network/network';
 import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
@@ -87,7 +87,11 @@ export async function buildRenderContext({
   }
 
   if (subEnvironment) {
-    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(
+      subEnvironment.data,
+      subEnvironment.dataPropertyOrder ?? null,
+      JSON_ORDER_SEPARATOR,
+    );
     envObjects.push(ordered);
   }
 
@@ -428,19 +432,26 @@ export async function getRenderContext({
   const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
 
   if (rootGlobalEnvironment) {
-    getKeySource(rootGlobalEnvironment.data || {}, inKey, 'rootGlobal');
+    getKeySource(rootGlobalEnvironment.data || {}, inKey, rootGlobalEnvironment.name || 'Base Environment (Project)');
   }
 
   if (subGlobalEnvironment) {
-    getKeySource(subGlobalEnvironment.data || {}, inKey, 'subGlobal');
+    getKeySource(
+      subGlobalEnvironment.data || {},
+      inKey,
+      `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`,
+    );
   }
 
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, 'root');
+  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment (Collection)');
 
-  // Get Keys from sub environment
-  if (subEnvironment) {
-    getKeySource(subEnvironment.data || {}, inKey, subEnvironment.name || '');
+  if (subEnvironment && subEnvironment._id !== rootEnvironment?._id) {
+    getKeySource(
+      subEnvironment.data || {},
+      inKey,
+      `${subEnvironment.name || 'Environment'} (Collection Sub-Environment)`,
+    );
   }
 
   // Get Keys from ancestors (e.g. Folders)
@@ -570,6 +581,7 @@ export async function getRenderedRequestAndContext({
   const description = request.description;
   request.description = '';
 
+  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
   request.headers = getOrInheritHeaders({ request, requestGroups });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Render all request properties
@@ -588,12 +600,6 @@ export async function getRenderedRequestAndContext({
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, 'keep');
-  const userAgentHeaders = request.headers.filter(h => h.name.toLowerCase() === 'user-agent');
-  const hasUserAgentHeader = userAgentHeaders.length > 0;
-  const allUserAgentHeadersDisabled = hasUserAgentHeader && userAgentHeaders.every(h => h.disabled === true);
-  // Suppress the default User-Agent when the request opts out via disableUserAgentHeader,
-  // or when the user added their own User-Agent header(s) and disabled all of them.
-  const suppressUserAgent = request.disableUserAgentHeader || allUserAgentHeadersDisabled;
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
   // Remove disabled headers

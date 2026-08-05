@@ -13,11 +13,13 @@ import type {
 } from 'insomnia-data';
 import type { BaseModel } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 
 import { database } from '~/common/database';
-import { fuzzyMatchAll } from '~/common/misc';
 import { sortMethodMap } from '~/common/sorting';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import type { FlatItem } from '~/ui/components/sidebar/project-navigation-sidebar/types';
+import { dedupeCollectionItems } from '~/ui/utils/dedupe-collection-items';
 
 export interface SlimRequestDoc extends BaseModel {
   type: 'Request' | 'GrpcRequest' | 'WebSocketRequest' | 'SocketIORequest' | 'RequestGroup';
@@ -53,6 +55,22 @@ export interface AllRequestsAndMetaInWorkspace {
 export type WorkspaceWithSyncStatus = Workspace & {
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
+};
+
+export const getSidebarGridListItemId = (item: FlatItem): string => {
+  const { kind, doc } = item;
+  const itemId = doc._id;
+  switch (kind) {
+    case 'pinnedRequest': {
+      return `pinned-request-${itemId}`;
+    }
+    case 'unsyncedWorkspace': {
+      return `project-${item.project._id}-unsynced-workspace-${itemId}`;
+    }
+    default: {
+      return itemId;
+    }
+  }
 };
 
 export async function getWorkspacesByProjectIds(projectIds: string[]) {
@@ -211,9 +229,11 @@ export function flattenCollectionChildren(
   const { isRequestGroup } = models.requestGroup;
   const collection: Child[] = [];
 
+  const uniqueRequests = dedupeCollectionItems(allRequests, doc => doc._id);
+
   // map of parentId to its direct children requests and request groups
   const requestsByParentId = new Map<string, AllRequestDoc[]>();
-  for (const req of allRequests) {
+  for (const req of uniqueRequests) {
     const allRequestsByParentId = requestsByParentId.get(req.parentId);
     if (allRequestsByParentId) {
       allRequestsByParentId.push(req);
