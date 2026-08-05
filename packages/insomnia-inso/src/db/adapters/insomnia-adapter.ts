@@ -5,8 +5,7 @@ import { importInsomniaV5Data } from 'insomnia/src/common/insomnia-v5';
 import YAML from 'yaml';
 
 import { InsoError } from '../../errors';
-import type { BaseModel } from '../models/types';
-import type { DbAdapter } from '../types';
+import type { Database, DbAdapter } from '../types';
 import { emptyDb } from '../types';
 
 /**
@@ -39,7 +38,7 @@ type RawTypeKey =
   | 'unit_test_suite'
   | 'unit_test';
 
-const rawTypeToParsedTypeMap: Record<RawTypeKey, BaseModel['type']> = {
+const rawTypeToParsedTypeMap: Record<RawTypeKey, keyof Database> = {
   api_spec: 'ApiSpec',
   environment: 'Environment',
   request: 'Request',
@@ -55,7 +54,7 @@ type RawTypeModel = {
   _type: RawTypeKey;
 } & ExtraProperties;
 
-type ParsedTypeModel = Pick<BaseModel, 'type'> & ExtraProperties;
+type ParsedTypeModel = { type: keyof Database } & ExtraProperties;
 
 const parseRawType = (type: RawTypeModel['_type']): ParsedTypeModel['type'] => rawTypeToParsedTypeMap[type];
 

@@ -1,10 +1,10 @@
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
+import type { UnitTestSuite } from 'insomnia-data';
 
 import { logger } from '../../logger';
 import type { Database } from '../types';
 import { loadApiSpec } from './api-spec';
-import type { UnitTestSuite } from './types';
 import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import { loadWorkspace } from './workspace';
 
