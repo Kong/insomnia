@@ -51,6 +51,21 @@ export function filterTestResults(
     });
 }
 
+export function isFilterEngaged(targetTests: string, resultFilter: string): boolean {
+  return targetTests !== 'all' || resultFilter.trim() !== '';
+}
+
+export function hasMatchingTestResults(
+  requestTestResults: RequestTestResult[],
+  targetTests: string,
+  resultFilter: string,
+): boolean {
+  return (
+    !isFilterEngaged(targetTests, resultFilter) ||
+    filterTestResults(requestTestResults, targetTests, resultFilter).length > 0
+  );
+}
+
 export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
   requestTestResults,
   resultFilter,
