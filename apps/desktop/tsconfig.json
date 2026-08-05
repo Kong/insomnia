@@ -1,9 +1,13 @@
 {
-  "extends": "../../.config/tsconfig.base.json",
   "compilerOptions": {
     /* Basic */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "target": "es2020",
     "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
     "noEmit": true,
     /* Transpiling Options */
     "module": "ESNext",
@@ -17,6 +21,13 @@
     /* Runs in the DOM */
     "lib": ["ES2023", "DOM.Iterable", "DOM"],
     "jsx": "preserve",
+    /* Strictness */
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false,
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true
   },

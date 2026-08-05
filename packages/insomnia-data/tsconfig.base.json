@@ -1,11 +1,21 @@
 {
-  "extends": "../../.config/tsconfig.base.json",
   "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "target": "es2022",
     "allowJs": false,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
     "noEmit": true,
     "module": "ESNext",
     "sourceMap": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false,
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true
   }

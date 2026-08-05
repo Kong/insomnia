@@ -1,9 +1,13 @@
 {
-  "extends": "../../.config/tsconfig.base.json",
   "compilerOptions": {
     /* Basic */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "target": "es2022",
     "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
     "noEmit": true,
     "paths": {
       "~/*": ["../desktop/src/*"]
@@ -11,7 +15,14 @@
     /* Transpiling Options */
     "module": "ESNext",
     "sourceMap": true,
-    "lib": ["ES2023", "DOM.Iterable"]
+    "lib": ["ES2023", "DOM.Iterable"],
+    /* Strictness */
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false
   },
   "include": ["esbuild.ts", "package.json", "src", "../desktop/types"],
   "exclude": [
