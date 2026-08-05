@@ -17,8 +17,8 @@
 
 /** What a handler can touch. Drives which guards are mandatory. */
 export type SideEffectClass =
-  | 'pure' // compute only, no host state
-  | 'model-read' // reads a DB model (request/workspace/cookieJar/response/settings)
+  | 'pure' // no host mutation: pure compute, or a read-only host-info snapshot (e.g. nodeOS discloses OS/arch)
+  | 'model-read' // reads (or lazily get-or-creates, e.g. cookieJar.getOrCreateForParentId) a DB model
   | 'fs-read' // reads a file off disk
   | 'fs-write' // writes a file to disk
   | 'network' // makes an outbound network request
@@ -62,7 +62,7 @@ export interface HandlerInventoryEntry {
 export const NON_DB_BRIDGE_PATHS = ['util.render'];
 
 export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
-  // --- util (pure compute) ---
+  // --- util (pure compute; nodeOS is a read-only host-info snapshot) ---
   {
     path: 'nodeOS',
     // Reads host state (hostname, current OS user) rather than computing something from its
@@ -117,7 +117,7 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
     sideEffect: 'model-read',
     capability: 'models.read',
     guards: ['capability'],
-    blastRadius: 'reads a workspace\'s cookie jar, creating an empty one if none exists yet',
+    blastRadius: "reads a workspace's cookie jar, creating an empty one if none exists yet",
   },
   {
     path: 'cookieJar.getCookiesForUrl',
@@ -154,7 +154,7 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
     // parentId. It stops path traversal outside the responses directory, not a caller reading a
     // different, already-known response's body once it has that response's bodyPath.
     guards: ['capability', 'body-path-ownership'],
-    blastRadius: 'reads any known response\'s body by its bodyPath, or an arbitrary file if that check is not enforced',
+    blastRadius: "reads any known response's body by its bodyPath, or an arbitrary file if that check is not enforced",
   },
   {
     path: 'response.setBody',
@@ -243,7 +243,7 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
     sideEffect: 'credential',
     capability: 'models.read',
     guards: ['capability'],
-    blastRadius: 'discloses live OAuth2 access/refresh/identity tokens for a request\'s configured provider',
+    blastRadius: "discloses live OAuth2 access/refresh/identity tokens for a request's configured provider",
   },
 
   // --- credentials ---
