@@ -1,4 +1,4 @@
-// S1: the checked-in scoping inventory for every protocol-dispatch handler in `pluginToMainAPI`.
+// The checked-in scoping inventory for every protocol-dispatch handler in `pluginToMainAPI`.
 //
 // Two classes of handler share that map, and only the first is capability-gated:
 //   1. Plugin-facing bridge calls — reachable from inside the sandbox via `__bridge`, gated by
@@ -31,7 +31,11 @@ export type SideEffectClass =
 export type Guard =
   | 'capability' // gated by BRIDGE_PATH_CAPABILITIES at the in-sandbox bridge (filterByCapabilities)
   | 'path-allowlist' // caller path constrained to a secured-folder allowlist (secureReadFile)
-  | 'body-path-ownership' // caller bodyPath must belong to the claimed response (assert*BodyPath*Ownership)
+  // caller bodyPath must belong to *a* known response (assertResponseBodyPathReadOwnership, read side:
+  // existence-only, no identity comparison) or to *the specific claimed* response
+  // (assertResponseBodyPathOwnership, write side: also compares parentId) — see the two rows below,
+  // read and write are not equally strict despite sharing this guard name.
+  | 'body-path-ownership'
   | 'trusted-plugin' // plugin identity re-resolved from the registry, never caller-supplied (resolveTrustedPlugin)
   | 'bundle-allowlist' // only first-party bundle plugins (getAppBundlePlugins / appBundlePluginNames)
   | 'registry-lookup' // target resolved from the trusted getTemplateTags/getX registry, not caller input
@@ -49,7 +53,7 @@ export interface HandlerInventoryEntry {
   capability: string | null;
   /** Everything that protects this handler. A directly-dispatchable I/O handler needs more than 'capability'. */
   guards: Guard[];
-  /** One line: what an attacker gains if the guard(s) fail. */
+  /** One line: what becomes reachable if the guard(s) fail. */
   blastRadius: string;
 }
 
@@ -61,10 +65,13 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
   // --- util (pure compute) ---
   {
     path: 'nodeOS',
+    // Reads host state (hostname, current OS user) rather than computing something from its
+    // arguments; kept in 'util' alongside decode/encode since baseline callers already reach the
+    // same data via the built-in `os` template tag (host-bridge.ts's TEMPLATE_TAG_BASELINE_CAPABILITIES).
     sideEffect: 'pure',
     capability: 'util',
     guards: ['capability'],
-    blastRadius: 'discloses host OS/arch strings',
+    blastRadius: 'discloses hostname, OS user (os.userInfo(): username/homedir/shell), arch/platform/cpu info',
   },
   {
     path: 'decode',
@@ -105,17 +112,20 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
   },
   {
     path: 'cookieJar.getOrCreateForParentId',
+    // getOrCreateForParentId (cookie-jar.ts) creates a new jar document when none exists — a
+    // get-or-create, not a pure read.
     sideEffect: 'model-read',
     capability: 'models.read',
     guards: ['capability'],
-    blastRadius: 'reads/creates a cookie jar for a workspace',
+    blastRadius: 'reads a workspace\'s cookie jar, creating an empty one if none exists yet',
   },
   {
     path: 'cookieJar.getCookiesForUrl',
+    // Same getOrCreateForParentId call underneath — also a get-or-create, not a pure read.
     sideEffect: 'model-read',
     capability: 'models.read',
     guards: ['capability'],
-    blastRadius: 'reads cookies matching a url',
+    blastRadius: 'reads cookies matching a url, creating an empty cookie jar if none exists yet',
   },
   {
     path: 'response.getLatestForRequestId',
@@ -126,10 +136,11 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
   },
   {
     path: 'settings.get',
+    // services.settings.get() is a getOrCreate() — creates the Settings singleton on first access.
     sideEffect: 'model-read',
     capability: 'models.read',
     guards: ['capability'],
-    blastRadius: 'reads app settings',
+    blastRadius: 'reads app settings, creating the settings document if none exists yet',
   },
 
   // --- response body I/O (file-backed, caller-supplied bodyPath → ownership-checked) ---
@@ -137,8 +148,13 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
     path: 'response.getBodyBuffer',
     sideEffect: 'fs-read',
     capability: 'models.read',
+    // Read-side guard (assertResponseBodyPathReadOwnership) only confirms the bodyPath belongs to
+    // *some* persisted response, not that it belongs to the response the caller claims to be
+    // operating on — weaker than the write-side guard on response.setBody below, which also checks
+    // parentId. It stops path traversal outside the responses directory, not a caller reading a
+    // different, already-known response's body once it has that response's bodyPath.
     guards: ['capability', 'body-path-ownership'],
-    blastRadius: 'reads an arbitrary file if bodyPath ownership is not enforced',
+    blastRadius: 'reads any known response\'s body by its bodyPath, or an arbitrary file if that check is not enforced',
   },
   {
     path: 'response.setBody',
@@ -217,13 +233,17 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
     blastRadius: 'SSRF / arbitrary outbound request',
   },
 
-  // --- model reads (continued: OAuth tokens scoped to request) ---
+  // --- credentials (OAuth tokens, gated by the models.read baseline capability) ---
   {
     path: 'oAuth2Token.getByRequestId',
-    sideEffect: 'model-read',
+    // The returned OAuth2Token document (o-auth-2-token.ts) carries live accessToken/refreshToken/
+    // identityToken values — bearer credentials for the request's configured OAuth2 provider.
+    // Classified 'credential', like cloudCredential.*, since both disclose equivalent-sensitivity
+    // bearer material regardless of which capability group gates the handler.
+    sideEffect: 'credential',
     capability: 'models.read',
     guards: ['capability'],
-    blastRadius: 'reads OAuth2 tokens associated with a request',
+    blastRadius: 'discloses live OAuth2 access/refresh/identity tokens for a request\'s configured provider',
   },
 
   // --- credentials ---
