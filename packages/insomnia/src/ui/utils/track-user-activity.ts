@@ -1,5 +1,4 @@
-import type { UserActionType } from 'insomnia-api';
-import { trackUserAction } from 'insomnia-api';
+import { trackUserAction, type UserActionType } from 'insomnia-api';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getCurrentSessionId } from '~/common/account/session';
