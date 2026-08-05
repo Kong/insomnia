@@ -2,5 +2,8 @@
 // interfaces implemented by infrastructure. No I/O, no framework or runtime dependencies.
 // Populated incrementally, one aggregate at a time.
 export type { Entity } from './shared/entity';
+export { EnvironmentKvPairDataType, EnvironmentType } from './environment/environment.entity';
+export type { Environment, EnvironmentKvPairData } from './environment/environment.entity';
+export type { EnvironmentRepository } from './environment/environment-repository.port';
 export type { Workspace, WorkspaceScope } from './workspace/workspace.entity';
 export type { WorkspaceRepository } from './workspace/workspace-repository.port';
