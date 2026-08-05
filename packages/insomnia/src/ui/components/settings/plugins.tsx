@@ -13,6 +13,7 @@ import {
 } from 'react-aria-components';
 
 import type { SerializablePlugin } from '~/common/plugins/bridge-types';
+import { resolvePluginExecutionMode } from '~/common/plugins/sandbox-mode';
 import { validatePluginName } from '~/common/utils/plugin-name';
 import { useRootLoaderData } from '~/root';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
@@ -498,6 +499,28 @@ export const Plugins: FC = () => {
                       ? 'Declared empty permissions (baseline access)'
                       : 'No permissions declared (baseline access)';
 
+                // T1: this plugin's resolved execution mode + the per-plugin "elevated" escape hatch.
+                // Only user plugins reach this list (bundle plugins are filtered out above). Read
+                // `elevated` from live settings (not the load-time plugin.config snapshot) so the toggle
+                // and badge update immediately, before the plugin list reloads.
+                const isElevated = settings.pluginConfig?.[plugin.name]?.elevated === true;
+                const executionMode = resolvePluginExecutionMode(settings, {
+                  directory: plugin.directory,
+                  config: { elevated: isElevated },
+                });
+                const modeLabel =
+                  executionMode === 'sandboxed'
+                    ? 'Sandboxed'
+                    : executionMode === 'elevated'
+                      ? 'Elevated'
+                      : 'In-process';
+                const modeTitle =
+                  executionMode === 'sandboxed'
+                    ? 'Runs in the QuickJS sandbox (default-deny host access).'
+                    : executionMode === 'elevated'
+                      ? 'Runs in the main process with full host access (you granted this).'
+                      : 'Sandbox is off — runs in the main process with full host access.';
+
                 return (
                   <GridListItem
                     textValue={plugin.name}
@@ -540,6 +563,13 @@ export const Plugins: FC = () => {
                         >
                           {permissionLabel}
                         </span>
+                        <span
+                          data-testid={`plugin-mode-${plugin.name}`}
+                          className="rounded-sm bg-(--hl-xs) px-1.5 text-xs whitespace-nowrap text-(--hl)"
+                          title={modeTitle}
+                        >
+                          {modeLabel}
+                        </span>
                         {plugin.permissionWarnings && plugin.permissionWarnings.length > 0 && (
                           <span
                             data-testid={`plugin-permission-warning-${plugin.name}`}
@@ -554,6 +584,37 @@ export const Plugins: FC = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
+                      <Checkbox
+                        data-testid={`plugin-elevated-${plugin.name}`}
+                        isSelected={isElevated}
+                        isDisabled={isRefreshingPlugins}
+                        className="group flex items-center gap-1.5 p-0 text-xs disabled:animate-pulse"
+                        onChange={isSelected => {
+                          patchSettings({
+                            pluginConfig: {
+                              ...settings.pluginConfig,
+                              [plugin.name]: {
+                                ...plugin.config,
+                                ...settings.pluginConfig?.[plugin.name],
+                                elevated: isSelected,
+                              },
+                            },
+                          });
+                        }}
+                      >
+                        <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                          <Icon
+                            icon="check"
+                            className="h-3 w-3 opacity-0 group-data-selected:text-(--color-warning) group-data-selected:opacity-100"
+                          />
+                        </div>
+                        <span
+                          className="whitespace-nowrap text-(--hl)"
+                          title="Run this plugin in the main process with full host access instead of the sandbox."
+                        >
+                          Full host access
+                        </span>
+                      </Checkbox>
                       <div className="flex w-[8ch] items-center justify-center gap-2">
                         {plugin.version}
                         <a className="space-left" href={link} title={link}>
