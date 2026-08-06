@@ -188,6 +188,16 @@ export const TagEditor: FC<Props> = props => {
     update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
+  // Generate a unique tag id for the vault and link it to the credential in pluginData.
+  // Update the tag arg to store the unique id instead of the raw (per-user) credential id.
+  function convertLegacyCredentialTag(legacyCredentialId: string, argIndex: number) {
+    const tagUniqueId = generateId('externalVaultTag');
+    updateArg(tagUniqueId, argIndex);
+    return services.pluginData
+      .upsertByKey(vaultPluginName, tagUniqueId, legacyCredentialId)
+      .then(refreshVaultPluginData);
+  }
+
   function handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     let argIndex = -1;
     if (event.currentTarget.parentNode instanceof HTMLElement) {
@@ -367,6 +377,16 @@ export const TagEditor: FC<Props> = props => {
                   activeTagData={activeTagData}
                   activeTagDefinition={activeTagDefinition}
                   docs={state.allDocs}
+                  vaultPluginData={state.vaultPluginData}
+                  onConvertLegacyTag={(legacyCredentialId: string) => {
+                    const credentialArgIndex = activeTagDefinition.args.findIndex(
+                      a => a.type === 'model' && a.model === cloudCredentialModelType,
+                    );
+                    if (credentialArgIndex === -1) {
+                      return;
+                    }
+                    return convertLegacyCredentialTag(legacyCredentialId, credentialArgIndex);
+                  }}
                 />
               );
               isVariableAllowed = false;
@@ -440,22 +460,20 @@ export const TagEditor: FC<Props> = props => {
                 onChange={event => {
                   if (modelName === cloudCredentialModelType) {
                     const selectedCredentialId = event.currentTarget.value;
-                    let tagUniqueId = strValue;
+                    let argIndex = -1;
+                    if (event.currentTarget.parentNode instanceof HTMLElement) {
+                      const index = event.currentTarget.parentNode?.dataset.argIndex;
+                      argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
+                    }
                     if (models.cloudCredential.isCloudCredentialId(strValue) || !strValue) {
                       // legacy version to save cloud credential id in tag or default empty value, generate a unique id as key to save in pluginData
-                      tagUniqueId = generateId('externalVaultTag');
-                      let argIndex = -1;
-                      if (event.currentTarget.parentNode instanceof HTMLElement) {
-                        const index = event.currentTarget.parentNode?.dataset.argIndex;
-                        argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
-                      }
-                      // update the tag arg value to the unique id so that we can use it as key to get the selected cloud credential id from pluginData
-                      updateArg(tagUniqueId, argIndex);
+                      return convertLegacyCredentialTag(selectedCredentialId, argIndex);
                     }
                     // Update the link between the unique id and the selected cloud credential id in pluginData
                     return services.pluginData
-                      .upsertByKey(vaultPluginName, tagUniqueId, selectedCredentialId)
-                      .then(refreshVaultPluginData);
+                      .upsertByKey(vaultPluginName, strValue, selectedCredentialId)
+                      .then(refreshVaultPluginData)
+                      .then(() => updateArg(strValue, argIndex));
                   }
                   return handleChange(event);
                 }}
