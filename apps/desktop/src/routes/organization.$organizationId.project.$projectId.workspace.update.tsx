@@ -1,7 +1,7 @@
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { renameWorkspace } from '~/common/application-bootstrap';
+import { InsomniaContext } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -17,7 +17,7 @@ interface WorkspacePatch {
   mockServerUrl?: string;
 }
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function clientAction({ request, context }: Route.ClientActionArgs) {
   const patch = (await request.json()) as WorkspacePatch;
   const workspaceId = patch.workspaceId;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
@@ -61,7 +61,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
-  await renameWorkspace(workspace._id, patch.name);
+  await context.get(InsomniaContext).workspace.renameById(workspace._id, patch.name);
 
   const project = await services.project.getById(workspace.parentId);
   invariant(project, 'Project not found');

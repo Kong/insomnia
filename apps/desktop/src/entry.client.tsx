@@ -5,6 +5,7 @@ import { configureFetch } from 'insomnia-api';
 import { initDatabase, initServices, services } from 'insomnia-data';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
+import { RouterContextProvider } from 'react-router';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
@@ -18,6 +19,7 @@ import { createServicesProxy } from '~/ui/services-proxy';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { getInitialEntry } from '~/ui/utils/router';
 
+import { insomnia, InsomniaContext } from './common/application-bootstrap';
 import { configureV3ClientDefaults } from './common/configure-v3-client';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
@@ -156,7 +158,7 @@ startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <HydratedRouter />
+      <HydratedRouter getContext={() => new RouterContextProvider(new Map([[InsomniaContext, insomnia]]))} />
     </StrictMode>,
   );
 });
