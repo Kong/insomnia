@@ -10,6 +10,9 @@ export type { AnyRequest } from './request/any-request.entity';
 export type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from './request/grpc-request.entity';
 export { MCP_TRANSPORT_TYPES } from './request/mcp-request.entity';
 export type { McpRequest, McpTransportType } from './request/mcp-request.entity';
+export { getPathParametersFromUrl } from './request/path-parameters';
+export { getRequestBodyForMimeTypeChange } from './request/request-body-for-mime-type';
+export type { RequestBodyForMimeTypeChange } from './request/request-body-for-mime-type';
 export type { RequestRepository } from './request/request-repository.port';
 export type {
   AuthTypeAPIKey,

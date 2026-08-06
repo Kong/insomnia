@@ -7,6 +7,7 @@ export { deleteEnvironment } from './environment/delete-environment.use-case';
 export { updateEnvironment, type UpdateEnvironmentPatch } from './environment/update-environment.use-case';
 export { Insomnia, type InsomniaDependencies } from './insomnia';
 export { deleteRequest } from './request/delete-request.use-case';
+export { updateRequest, type UpdateRequestPatch } from './request/update-request.use-case';
 export { createWorkspace } from './workspace/create-workspace.use-case';
 export { deleteWorkspace } from './workspace/delete-workspace.use-case';
 export { moveWorkspace } from './workspace/move-workspace.use-case';
