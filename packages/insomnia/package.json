@@ -44,7 +44,9 @@
     "sandbox:surface": "vitest run src/templating/sandbox/print-sandbox-surface.test.ts",
     "sandbox:surface:test": "vitest run src/templating/sandbox/sandbox-surface.test.ts",
     "sandbox:bridge-trust": "vitest run src/main/__tests__/print-templating-worker-database-surface.test.ts",
-    "sandbox:bridge-trust:test": "vitest run src/main/__tests__/templating-worker-database-surface.test.ts"
+    "sandbox:bridge-trust:test": "vitest run src/main/__tests__/templating-worker-database-surface.test.ts",
+    "sandbox:bridge-inventory": "vitest run src/main/__tests__/print-templating-worker-database-inventory.test.ts",
+    "sandbox:bridge-inventory:test": "vitest run src/main/__tests__/templating-worker-database-inventory.test.ts"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
@@ -220,7 +222,7 @@
   },
   "optionalDependencies": {
     "@kong/insomnia-plugin-ai": "^1.0.11",
-    "@kong/insomnia-plugin-external-vault": "0.1.4-dev.20251224090833"
+    "@kong/insomnia-plugin-external-vault": "0.1.5-dev.20260806050036"
   },
   "dev": {
     "dev-server-port": 3334
