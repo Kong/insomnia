@@ -162,6 +162,28 @@ async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>
   return new Set(Object.keys(nameCounts).filter(name => nameCounts[name] > 1));
 }
 
+// A name claimed by more than one folder is surfaced as a disabled row instead of being loaded.
+function buildCollisionRow(
+  pluginName: string,
+  pluginJson: { name?: string; description?: string; version?: string; insomnia?: any },
+  modulePath: string,
+  parsedPermissions: ReturnType<typeof parsePluginPermissions>,
+): Plugin {
+  return {
+    name: pluginName,
+    displayName: pluginJson.insomnia.name || '',
+    description: pluginJson.description || pluginJson.insomnia.description || '',
+    version: pluginJson.version || 'unknown',
+    directory: modulePath,
+    config: { disabled: true },
+    permissions: parsedPermissions.permissions,
+    permissionWarnings: parsedPermissions.warnings,
+    permissionsDeclared: parsedPermissions.declared,
+    module: {},
+    loadError: `Multiple plugin folders declare the name "${pluginName}"; none are loaded, to avoid an ambiguous or spoofed trust grant.`,
+  };
+}
+
 async function traversePluginPath(
   pluginMap: Record<string, Plugin>,
   allPaths: string[],
@@ -254,19 +276,15 @@ async function traversePluginPath(
         // detection is an order-independent pre-pass; here we surface EACH colliding folder as a
         // visible disabled row keyed by its own path (P0-B / #10295) rather than silently skipping it.
         if (duplicatePluginNames.has(pluginName)) {
-          pluginMap[modulePath] = {
-            name: pluginName,
-            displayName: pluginJson.insomnia.name || '',
-            description: pluginJson.description || pluginJson.insomnia.description || '',
-            version: pluginJson.version || 'unknown',
-            directory: modulePath,
-            config: { disabled: true },
-            permissions: parsedPermissions.permissions,
-            permissionWarnings: parsedPermissions.warnings,
-            permissionsDeclared: parsedPermissions.declared,
-            module: {},
-            loadError: `Multiple plugin folders declare the name "${pluginName}"; none are loaded, to avoid an ambiguous or spoofed trust grant.`,
-          };
+          pluginMap[modulePath] = buildCollisionRow(pluginName, pluginJson, modulePath, parsedPermissions);
+          continue;
+        }
+
+        // The collision set above is a snapshot taken before this walk's own await points below;
+        // re-checking here catches a same-named folder that was created after that snapshot but
+        // before this iteration was reached.
+        if ((await findDuplicatePluginNames(allPaths)).has(pluginName)) {
+          pluginMap[modulePath] = buildCollisionRow(pluginName, pluginJson, modulePath, parsedPermissions);
           continue;
         }
 
