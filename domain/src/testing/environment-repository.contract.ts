@@ -65,5 +65,15 @@ export function runEnvironmentRepositoryContractTests(getContext: () => Environm
 
       expect(await repository.findById(environment._id)).toBeNull();
     });
+
+    it('create() persists a new environment and returns it', async () => {
+      const { repository } = getContext();
+
+      const created = await repository.create({ parentId: 'wrk_contract_test', name: 'New Environment' });
+
+      expect(created.name).toBe('New Environment');
+      expect(created.parentId).toBe('wrk_contract_test');
+      expect(await repository.findById(created._id)).toEqual(created);
+    });
   });
 }

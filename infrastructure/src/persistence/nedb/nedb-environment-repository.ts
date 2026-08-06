@@ -33,6 +33,11 @@ export const nedbEnvironmentRepository: EnvironmentRepository = {
     return docs.map(toDomainEnvironment);
   },
 
+  async create(input) {
+    const doc = await services.environment.create(input as unknown as Partial<DataEnvironment>);
+    return toDomainEnvironment(doc);
+  },
+
   async save(environment) {
     await database.update(environment as unknown as DataEnvironment);
   },

@@ -4,7 +4,7 @@
 export type { Entity } from './shared/entity';
 export { EnvironmentKvPairDataType, EnvironmentType } from './environment/environment.entity';
 export type { Environment, EnvironmentKvPairData } from './environment/environment.entity';
-export type { EnvironmentRepository } from './environment/environment-repository.port';
+export type { CreateEnvironmentInput, EnvironmentRepository } from './environment/environment-repository.port';
 export { getRequestTypeFromId, isGrpcRequest, isMcpRequest, isRequest, isSocketIORequest, isWebSocketRequest, REQUEST_ID_PREFIXES } from './request/any-request.entity';
 export type { AnyRequest } from './request/any-request.entity';
 export type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from './request/grpc-request.entity';

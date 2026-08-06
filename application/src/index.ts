@@ -2,6 +2,9 @@
 // cross-cutting application-level ports (NetworkClient, TemplatingEngine, Clock,
 // IdGenerator, ...). Depends on domain only.
 // Populated incrementally, one aggregate at a time.
+export { createEnvironment } from './environment/create-environment.use-case';
+export { deleteEnvironment } from './environment/delete-environment.use-case';
+export { updateEnvironment, type UpdateEnvironmentPatch } from './environment/update-environment.use-case';
 export { Insomnia, type InsomniaDependencies } from './insomnia';
 export { createWorkspace } from './workspace/create-workspace.use-case';
 export { deleteWorkspace } from './workspace/delete-workspace.use-case';
