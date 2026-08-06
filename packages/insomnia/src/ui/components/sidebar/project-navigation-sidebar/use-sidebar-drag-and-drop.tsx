@@ -60,6 +60,15 @@ function canDrop(
   const dragInCloud = models.project.isRemoteProject(dragItem.project);
   if (dragItem.kind === 'workspace') {
     const dragWorkspaceScope = dragItem.doc.scope;
+    // Konnect workspaces are keyed to their project's control plane, so moving one across projects
+    // would orphan it and make the next sync delete or duplicate it.
+    const dropProject = realDropItem.kind === 'project' ? realDropItem.doc : realDropItem.project;
+    const dropToAnotherKonnectProject =
+      dragItem.project._id !== dropProject._id &&
+      (dragItem.project.konnectControlPlaneId != null || dropProject.konnectControlPlaneId != null);
+    if (dropToAnotherKonnectProject) {
+      return false;
+    }
     if (realDropItem) {
       if (realDropItem.kind === 'project') {
         const dropToAnotherProject = dragItem.project._id !== realDropItem.doc._id;

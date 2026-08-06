@@ -2,6 +2,7 @@ import { type Billing, type FeatureList, getOrganizationFeatures, type Organizat
 import { models, services } from 'insomnia-data';
 import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router';
 
+import { mergeKonnectSyncEnabledForOrganization } from '~/ui/organization-utils';
 import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';
@@ -28,7 +29,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId } = params;
   const { id: sessionId, accountId } = await services.userSession.get();
 
-  if (models.organization.isScratchpadOrganizationId(organizationId)) {
+  // Local-only organizations have no server-side representation; must return before the lookup
+  // below, which would otherwise bounce the user out to /organization.
+  if (models.organization.isLocalOrganizationId(organizationId)) {
     return {
       featuresPromise: Promise.resolve(fallbackFeatures),
       billingPromise: Promise.resolve(fallbackBilling),
@@ -46,7 +49,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const featuresResponse = getOrganizationFeatures({ organizationId, sessionId });
 
     return {
-      featuresPromise: featuresResponse.then(res => res?.features || fallbackFeatures),
+      featuresPromise: featuresResponse.then(res => {
+        const features = res?.features || fallbackFeatures;
+        mergeKonnectSyncEnabledForOrganization(accountId, features.konnectSync?.enabled === true);
+        return features;
+      }),
       billingPromise: featuresResponse.then(res => res?.billing || fallbackBilling),
     };
   } catch {

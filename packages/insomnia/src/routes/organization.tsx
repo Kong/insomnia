@@ -3,9 +3,20 @@ import type { Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import {
+  href,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+  useRevalidator,
+  useRouteLoaderData,
+} from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organization';
+import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
@@ -22,6 +33,7 @@ import { Icon } from '~/ui/components/icon';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
+import { KonnectOrgMigrationModal } from '~/ui/components/modals/konnect-org-migration-modal';
 import { SettingsModal, showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { PresentUsers } from '~/ui/components/present-users';
 import { OrganizationSelect } from '~/ui/components/project/organization-select';
@@ -30,6 +42,7 @@ import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
+import { getKonnectSyncEnabled, syncKonnectSyncEnabled } from '~/ui/organization-utils';
 import type { AsyncTask } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization';
@@ -40,22 +53,54 @@ export interface OrganizationLoaderData {
   currentPlan?: CurrentPlan;
 }
 
+/**
+ * The Konnect organization is local-only, so it is surfaced when the account-wide feature flag is
+ * on, or when this account already has Konnect data from a previous version (in which case sync is
+ * disabled but the data stays reachable). Migration runs before hydration in `entry.client.tsx`,
+ * so any Konnect data this account owns is already parented to the Konnect organization by now.
+ */
+async function getKonnectOrganization(sessionId: string, accountId: string) {
+  const konnectOrganizationId = models.organization.getKonnectOrganizationId(accountId);
+  // Refresh before reading rather than assuming another loader already did it. TTL-guarded, so this
+  // is a no-op on all but the first load of a session.
+  await syncKonnectSyncEnabled(sessionId, accountId);
+  const konnectSyncEnabled = getKonnectSyncEnabled(accountId);
+
+  if (!konnectSyncEnabled) {
+    const existingKonnectProjectCount = await services.project.count({
+      konnectControlPlaneId: { $exists: true, $ne: null },
+      parentId: konnectOrganizationId,
+    });
+    if (existingKonnectProjectCount === 0) {
+      return { konnectSyncEnabled, konnectOrganization: null };
+    }
+  }
+
+  return {
+    konnectSyncEnabled,
+    konnectOrganization: models.organization.buildKonnectOrganization(accountId),
+  };
+}
+
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { id, accountId } = await services.userSession.get();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as User;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
+    const { konnectSyncEnabled, konnectOrganization } = await getKonnectOrganization(id, accountId);
     return {
-      organizations,
+      organizations: konnectOrganization ? [konnectOrganization, ...organizations] : organizations,
       user,
       currentPlan,
+      konnectSyncEnabled,
     };
   }
   return {
     organizations: [],
     user: undefined,
     currentPlan: undefined,
+    konnectSyncEnabled: false,
   };
 }
 
@@ -176,17 +221,23 @@ const LoginUserActions = ({
   user: User;
   currentPlan?: CurrentPlan;
 }) => {
+  // Collaboration is meaningless in an organization that only exists on this machine.
+  const isLocalOrganization = models.organization.isLocalOrganizationId(organizationId);
   return (
     <>
-      <PresentUsers />
-      <HeaderInviteButton
-        organizationId={organizationId}
-        className={
-          !isMinimal
-            ? 'border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)'
-            : 'text-(--color-font)'
-        }
-      />
+      {!isLocalOrganization && (
+        <>
+          <PresentUsers />
+          <HeaderInviteButton
+            organizationId={organizationId}
+            className={
+              !isMinimal
+                ? 'border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)'
+                : 'text-(--color-font)'
+            }
+          />
+        </>
+      )}
       <HeaderPlanIndicator isMinimal={isMinimal} />
       <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
     </>
@@ -195,7 +246,9 @@ const LoginUserActions = ({
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { organizations, user, currentPlan } = loaderData;
-  const { settings } = useRootLoaderData()!;
+  const { settings, userSession } = useRootLoaderData()!;
+  const { revalidate } = useRevalidator();
+  const [konnectMigrationGroups, setKonnectMigrationGroups] = useState<KonnectMigrationGroup[]>([]);
 
   const workspaceData = useWorkspaceLoaderData();
 
@@ -248,10 +301,22 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     return () => window.main.setCurrentOrganizationId(undefined);
   }, [organizationId]);
 
+  useEffect(() => {
+    const accountId = userSession.accountId;
+    if (!accountId) {
+      return;
+    }
+    // The unambiguous case already migrated during startup; only a genuine conflict reaches the UI.
+    detectKonnectOrgMigration({ accountId }).then(plan => {
+      setKonnectMigrationGroups(plan.status === 'conflict' ? plan.groups : []);
+    });
+  }, [userSession.accountId]);
+
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
   const isScratchPad = organizationId === models.organization.SCRATCHPAD_ORGANIZATION_ID;
+  const isLocalOrganization = models.organization.isLocalOrganizationId(organizationId);
 
   useCloseConnection({
     organizationId,
@@ -390,7 +455,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
                       </Tooltip>
                     </TooltipTrigger>
-                    {!isScratchpadWorkspace && hasUntrackedData && (
+                    {!isScratchpadWorkspace && !isLocalOrganization && hasUntrackedData && (
                       <TooltipTrigger delay={500}>
                         <Button
                           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -436,6 +501,16 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
               </div>
             </div>
           </div>
+          {konnectMigrationGroups.length > 0 && userSession.accountId && (
+            <KonnectOrgMigrationModal
+              accountId={userSession.accountId}
+              groups={konnectMigrationGroups}
+              onDone={() => {
+                setKonnectMigrationGroups([]);
+                revalidate();
+              }}
+            />
+          )}
         </SidebarContext.Provider>
       </InsomniaTabProvider>
     </InsomniaEventStreamProvider>

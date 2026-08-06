@@ -15,15 +15,16 @@ export class NavigationSidebar {
   }
 
   // ===========================================================================
-  // Tab controls
+  // Organization switching
   // ===========================================================================
 
-  async clickProjectsTab(): Promise<void> {
-    await this.root.getByTestId('sidebar-tab-projects').click();
+  async selectOrganization(name: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Organizations' }).click();
+    await this.page.getByRole('option', { name }).click();
   }
 
-  async clickKonnectTab(): Promise<void> {
-    await this.root.getByTestId('sidebar-tab-konnect').click();
+  async openControlPlanesOrganization(): Promise<void> {
+    await this.selectOrganization('Control Planes');
   }
 
   // ===========================================================================

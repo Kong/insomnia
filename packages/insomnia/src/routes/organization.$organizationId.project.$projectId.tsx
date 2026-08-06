@@ -1,6 +1,6 @@
 import { getLearningFeature } from 'insomnia-api';
 import { models, services } from 'insomnia-data';
-import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
@@ -17,13 +17,11 @@ import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutori
 import {
   ProjectNavigationSidebar,
   type ProjectNavigationSidebarHandle,
-  type ProjectNavigationSidebarTabId,
 } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
 import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
@@ -71,27 +69,16 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const project = await services.project.getById(projectId);
 
   if (!project) {
-    // When a project is not found (e.g., after deletion), check if user was on Konnect tab
-    // and try to redirect to another Konnect project to avoid switching tabs
-    const storedTab = localStorage.getItem(`${organizationId}:sidebar-tab`);
-    if (storedTab) {
-      try {
-        const parsedTab = JSON.parse(storedTab);
-        if (parsedTab === 'konnect') {
-          const allProjects = await services.project.listByOrganizationIds(organizationId);
-          const konnectProjects = models.project.sortProjects(allProjects.filter(p => p.konnectControlPlaneId != null));
-          if (konnectProjects.length > 0) {
-            return redirect(
-              href('/organization/:organizationId/project/:projectId', {
-                organizationId,
-                projectId: konnectProjects[0]._id,
-              }),
-            );
-          }
-        }
-      } catch {
-        // ignore parse errors
-      }
+    // The project was deleted; stay inside the current organization rather than bouncing the user out.
+    const allProjects = await services.project.listByOrganizationIds(organizationId);
+    const [fallbackProject] = models.project.sortProjects(allProjects);
+    if (fallbackProject) {
+      return redirect(
+        href('/organization/:organizationId/project/:projectId', {
+          organizationId,
+          projectId: fallbackProject._id,
+        }),
+      );
     }
     return redirect(href('/organization/:organizationId', { organizationId }));
   }
@@ -143,8 +130,7 @@ export function useProjectLoaderData() {
 }
 
 export interface ProjectRouteContextValue {
-  activeSidebarTab: ProjectNavigationSidebarTabId;
-  setActiveSidebarTab: Dispatch<SetStateAction<ProjectNavigationSidebarTabId | undefined>>;
+  isKonnectOrganization: boolean;
 }
 
 export function useProjectRouteContext() {
@@ -181,12 +167,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     }
   }, [isSidebarCollapsed]);
 
-  const { features } = useOrganizationPermissions();
-  const [storedSidebarTab, setActiveSidebarTab] = reactUse.useLocalStorage<ProjectNavigationSidebarTabId>(
-    `${organizationId}:sidebar-tab`,
-    'projects',
-  );
-  const activeSidebarTab = !features.konnectSync.enabled ? 'projects' : (storedSidebarTab ?? 'projects');
+  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
 
   const isScratchPad = models.project.isScratchpadProject(activeProject);
   const gitRepositoryId =
@@ -226,11 +207,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         >
           <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
             <ProjectNavigationSidebar
-              activeTab={activeSidebarTab}
               storageRules={storageRules}
-              konnectSyncEnabled={features.konnectSync.enabled}
               onCreateProject={() => setIsNewProjectModalOpen(true)}
-              setActiveTab={setActiveSidebarTab}
               ref={navigationSidebarRef}
             />
             {isScratchPad && <ScratchPadTutorialPanel />}
@@ -264,8 +242,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
           <GitFileIssuesProvider value={gitFileIssues}>
             <Outlet
               context={{
-                activeSidebarTab,
-                setActiveSidebarTab,
+                isKonnectOrganization,
               }}
             />
           </GitFileIssuesProvider>

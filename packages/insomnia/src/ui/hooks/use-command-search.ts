@@ -1,5 +1,5 @@
 import type { CommandSearchResult } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseCommandSearchParams {
@@ -44,9 +44,18 @@ export function useCommandSearch({
         services.helpers.abortCommandSearch(prevRequestId).catch(() => {});
       }
 
-      const allOrganizations: { id: string; name: string }[] = JSON.parse(
+      const cachedOrganizations: { id: string; name: string }[] = JSON.parse(
         localStorage.getItem(`${accountId}:spaces`) || '[]',
       );
+      // The Konnect organization is local-only so it is never in the cached list, and search scopes
+      // projects by organization id — without it Konnect projects are unreachable.
+      const allOrganizations = [
+        ...cachedOrganizations,
+        {
+          id: models.organization.getKonnectOrganizationId(accountId),
+          name: models.organization.KONNECT_ORGANIZATION_NAME,
+        },
+      ];
 
       try {
         const result = await services.helpers.commandSearch({

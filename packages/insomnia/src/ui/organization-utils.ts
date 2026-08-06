@@ -2,6 +2,7 @@ import {
   createTeamProject,
   fetchTeamProjects,
   getCurrentPlan,
+  getOrganizationFeatures,
   getUserProfile,
   isApiError,
   type Organization,
@@ -52,6 +53,78 @@ export async function syncOrganizations(sessionId: string, accountId: string) {
   } catch (error) {
     console.log('[organization] Failed to load Organizations', error);
   }
+}
+
+interface KonnectSyncEnabledCache {
+  enabled: boolean;
+  checkedAt: number;
+}
+
+const KONNECT_SYNC_ENABLED_TTL_MS = 6 * 60 * 60 * 1000;
+
+const konnectSyncEnabledCacheKey = (accountId: string) => `${accountId}:konnectSyncEnabled`;
+
+function readKonnectSyncEnabledCache(accountId: string): KonnectSyncEnabledCache | null {
+  try {
+    const raw = localStorage.getItem(konnectSyncEnabledCacheKey(accountId));
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as KonnectSyncEnabledCache;
+    return typeof parsed?.enabled === 'boolean' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getKonnectSyncEnabled(accountId: string): boolean {
+  return readKonnectSyncEnabledCache(accountId)?.enabled ?? false;
+}
+
+/**
+ * Konnect sync is a per-organization feature flag, but the Konnect organization is account-wide,
+ * so the flag is the OR across every organization the user belongs to.
+ */
+export async function syncKonnectSyncEnabled(
+  sessionId: string,
+  accountId: string,
+  { force = false }: { force?: boolean } = {},
+) {
+  if (!sessionId || !accountId) {
+    return;
+  }
+
+  const cached = readKonnectSyncEnabledCache(accountId);
+  if (!force && cached && Date.now() - cached.checkedAt < KONNECT_SYNC_ENABLED_TTL_MS) {
+    return;
+  }
+
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
+  if (organizations.length === 0) {
+    return;
+  }
+
+  const results = await Promise.allSettled(
+    organizations.map(organization => getOrganizationFeatures({ organizationId: organization.id, sessionId })),
+  );
+  const enabled = results.some(
+    result => result.status === 'fulfilled' && result.value?.features?.konnectSync?.enabled === true,
+  );
+
+  // A failed lookup is indistinguishable from "disabled", so never downgrade a known-true value.
+  if (!enabled && cached?.enabled && results.some(result => result.status === 'rejected')) {
+    return;
+  }
+
+  localStorage.setItem(konnectSyncEnabledCacheKey(accountId), JSON.stringify({ enabled, checkedAt: Date.now() }));
+}
+
+/** Keeps the aggregated flag fresh for the organization the user is currently looking at. */
+export function mergeKonnectSyncEnabledForOrganization(accountId: string, enabled: boolean) {
+  if (!accountId || !enabled) {
+    return;
+  }
+  localStorage.setItem(konnectSyncEnabledCacheKey(accountId), JSON.stringify({ enabled, checkedAt: Date.now() }));
 }
 
 export async function updateLocalProjectToRemote({
@@ -239,10 +312,14 @@ async function syncTeamProjects({
 }
 
 export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
+  // Local-only organizations have no team projects to fetch, so bail out before the request.
+  if (models.organization.isLocalOrganizationId(organizationId)) {
+    return;
+  }
   const user = await services.userSession.get();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
-  if (Array.isArray(teamProjects) && user.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
+  if (Array.isArray(teamProjects) && user.id) {
     await syncTeamProjects({
       organizationId,
       teamProjects,

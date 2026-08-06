@@ -1,4 +1,5 @@
 import { getRealTimeCollaborators, type Organization, type UserPresence } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
@@ -111,7 +112,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   useEffect(() => {
     async function updatePresence() {
       const sessionId = userSession.id;
-      if (sessionId && remoteId) {
+      if (sessionId && remoteId && !models.organization.isLocalOrganizationId(organizationId)) {
         try {
           const response = await getRealTimeCollaborators({
             sessionId,
@@ -140,7 +141,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
   useEffect(() => {
     const sessionId = userSession.id;
-    if (sessionId) {
+    // Local-only organizations have no server-side stream to subscribe to.
+    if (sessionId && !models.organization.isLocalOrganizationId(organizationId)) {
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams`);
 
@@ -184,7 +186,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
               syncOrganizationsSubmit();
-            } else if (event.type === 'StorageRuleChanged' && (event.team.startsWith('org_') || event.team.startsWith('team_'))) {
+            } else if (
+              event.type === 'StorageRuleChanged' &&
+              (event.team.startsWith('org_') || event.team.startsWith('team_'))
+            ) {
               syncStorageRulesSubmit({
                 organizationId: event.team,
               });
@@ -205,11 +210,14 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               }
             } else if (event.type === 'VaultKeyChanged') {
               const accountId = userSession.accountId;
-              const organizations = JSON.parse(
-                localStorage.getItem(`${accountId}:spaces`) || '[]',
-              ) as Organization[];
+              const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
               clearVaultKeySubmit({
-                organizations: organizations?.map(org => org.id) || [],
+                // The Konnect organization is local-only so it is never in the cached list, but its
+                // workspaces hold secrets like any other.
+                organizations: [
+                  ...(organizations?.map(org => org.id) || []),
+                  models.organization.getKonnectOrganizationId(accountId),
+                ],
                 sessionId: event.sessionId,
               });
             } else if (
