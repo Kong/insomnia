@@ -122,7 +122,9 @@ export const _testOnlyIsContainedIn = isContainedIn;
 // Finds package.json `name`s claimed by more than one folder under `allPaths`, read-only and before
 // any folder is trusted, so the result doesn't depend on filesystem read order.
 async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>> {
-  const nameCounts: Record<string, number> = {};
+  // Null-prototype so a plugin literally named `toString`/`valueOf`/`hasOwnProperty`/etc. can't collide
+  // with an inherited Object.prototype member (which would skew the count or dodge detection).
+  const nameCounts: Record<string, number> = Object.create(null);
 
   const walk = (paths: string[]) => {
     for (const p of paths) {
@@ -380,8 +382,11 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     const extendedPaths = basePaths.map(p => path.resolve(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
 
-    // Store plugins in a map so that plugins with the same name only get added once
-    const pluginMap: Record<string, Plugin> = {};
+    // Store plugins in a map so that plugins with the same name only get added once. Null-prototype so
+    // a plugin named `toString`/`valueOf`/`hasOwnProperty`/etc. can't match an inherited Object.prototype
+    // member — otherwise the `name in pluginMap` check in the load-error handler would treat such a
+    // failed plugin as "already present" and silently drop it instead of surfacing a disabled row.
+    const pluginMap: Record<string, Plugin> = Object.create(null);
     const duplicatePluginNames = await findDuplicatePluginNames(allPaths);
     await traversePluginPath(pluginMap, allPaths, allConfigs, settings, duplicatePluginNames);
     const bundlePluginMap = getBundlePluginMap();
