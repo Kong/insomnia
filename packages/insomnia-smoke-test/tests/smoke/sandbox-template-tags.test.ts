@@ -137,7 +137,11 @@ const clearPluginToast = async (page: Page) => {
     .catch(() => {});
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline && (await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click({ force: true, timeout: 500 }).catch(() => {});
+    // eslint-disable-next-line playwright/no-force-option -- necessary to avoid flakiness with re-rendering toast
+    await dismissButtons
+      .first()
+      .click({ force: true, timeout: 500 })
+      .catch(() => {});
   }
 };
 
@@ -898,7 +902,9 @@ test('Plugin action sandbox (A1): a user plugin request action runs in the sandb
   // Flag OFF (default): the action runs in-process (control). Its write is observable via the tag,
   // and the domain models reached it.
   await runAction();
-  await expect.poll(() => readTagPreview('{% actionreadback'), { timeout: 20_000 }).toContain('ranin-mainprocess|got-req');
+  await expect
+    .poll(() => readTagPreview('{% actionreadback'), { timeout: 20_000 })
+    .toContain('ranin-mainprocess|got-req');
 
   // Flag ON: the same action now runs in the QuickJS sandbox (its in-process fn is a throw-stub after
   // discovery, so a successful write proves routing). Poll run+readback so the just-toggled setting
@@ -913,4 +919,188 @@ test('Plugin action sandbox (A1): a user plugin request action runs in the sandb
       { timeout: 25_000 },
     )
     .toContain('ranin-sandboxed|got-req');
+});
+
+// T1: enable the *new* pluginSandboxEnabled flag (distinct from templateTagSandboxEnabled) via
+// Preferences → Scripting. Same soft-assertion + Escape-to-close shape as enableSandbox.
+const enablePluginSandbox = async (page: Page) => {
+  await page.getByTestId('settings-button').click();
+  const toggle = page.getByTestId('toggle-plugin-sandbox');
+  await page.getByRole('tab', { name: 'Scripting' }).click();
+  await toggle.getByRole('switch').waitFor();
+  await toggle.click();
+  await expect.soft(toggle.getByRole('switch')).toBeChecked();
+  await page.locator('.app').press('Escape');
+  await expect.soft(page.getByTestId('toggle-plugin-sandbox')).toBeHidden();
+};
+
+// T1: toggle a user plugin's "Full host access" (elevated) in Preferences → Plugins, assert the mode
+// indicator reflects the new mode, then close. Toggling pluginConfig triggers a plugin reload (the
+// Plugins pane re-discovers on settings.pluginConfig change), so the plugin is re-loaded elevated.
+const setPluginElevated = async (page: Page, pluginName: string, expectedMode: string) => {
+  await page.getByTestId('settings-button').click();
+  await page.getByRole('tab', { name: 'Plugins' }).click();
+  const elevatedToggle = page.getByTestId(`plugin-elevated-${pluginName}`);
+  await elevatedToggle.waitFor();
+  await elevatedToggle.click();
+  await expect.soft(page.getByTestId(`plugin-mode-${pluginName}`)).toHaveText(expectedMode);
+  await page.locator('.app').press('Escape');
+  await expect.soft(elevatedToggle).toBeHidden();
+};
+
+test('Plugin sandbox trust flip (T1): pluginSandboxEnabled sandboxes a user plugin; elevating it runs it in-process', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // One plugin, two surfaces sharing its store: a request action records where it ran (the sandbox
+  // marker INSOMNIA_TEMPLATE_SANDBOX exists only in the sandbox), and a template tag reads it back.
+  // `storage` is declared so context.store is granted on both the sandboxed and elevated paths.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-t1-probe',
+    { permissions: { capabilities: ['storage'] } },
+    `
+      module.exports.requestActions = [
+        {
+          label: 'T1 Probe',
+          async action(context) {
+            var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+            await context.store.setItem('t1_ran_in', ranIn);
+          },
+        },
+      ];
+      module.exports.templateTags = [
+        {
+          name: 'actionreadback', displayName: 'actionreadback', args: [],
+          async run(context) {
+            return (await context.store.getItem('t1_ran_in')) || 'unset';
+          },
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-action-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Action Probe');
+  await page.getByText('Body', { exact: true }).click();
+
+  const runAction = () =>
+    page.evaluate(() =>
+      (window as any).main.plugins.executeAction({
+        type: 'request',
+        pluginName: 'insomnia-plugin-t1-probe',
+        label: 'T1 Probe',
+        projectId: 'proj_t1_probe',
+        domainData: {},
+      }),
+    );
+
+  const readTagPreview = async (tagPrefix: string): Promise<string> => {
+    await page.locator(`[data-template^="${tagPrefix}"]`).click();
+    const modal = page.getByRole('dialog');
+    const preview = modal.getByLabel('Live Preview');
+    await expect.soft(preview).not.toHaveValue('rendering...');
+    const value = (await preview.inputValue()).trim();
+    await modal.getByRole('button', { name: 'Done' }).click();
+    await expect.soft(modal).toBeHidden();
+    return value;
+  };
+
+  // Turn on the NEW pluginSandboxEnabled flag (the legacy template-tag flag stays off). The user
+  // plugin's action must now run in the QuickJS sandbox — proving the new flag drives every surface.
+  await enablePluginSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await runAction();
+        return readTagPreview('{% actionreadback');
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('ranin-sandboxed');
+
+  // Grant this plugin full host access. The mode indicator flips to "Elevated" and the same action
+  // now runs in-process (marker absent) — the deliberate, per-plugin escape hatch.
+  await setPluginElevated(page, 'insomnia-plugin-t1-probe', 'Elevated');
+  await expect
+    .poll(
+      async () => {
+        await runAction();
+        return readTagPreview('{% actionreadback');
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('ranin-mainprocess');
+});
+
+test('A hook throwing a crafted Error cannot self-elevate via a "plugin" property setter', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
+  // First run (sandbox off) throws once via a poisoned `plugin` setter, attempting to flip its own
+  // cached `directory` to '' and pass as trusted; the second run reports where it actually executed.
+  writePlugin(
+    dataPath,
+    'insomnia-plugin-registry-integrity-probe',
+    { permissions: { capabilities: ['storage'] } },
+    `
+      module.exports.requestHooks = [
+        async function (context) {
+          var alreadyAttempted = await context.store.getItem('poison_attempted');
+          if (!alreadyAttempted) {
+            await context.store.setItem('poison_attempted', 'yes');
+            var err = new Error('poison-attempt');
+            Object.defineProperty(err, 'plugin', {
+              set: function (assignedPlugin) { assignedPlugin.directory = ''; },
+              configurable: true,
+            });
+            throw err;
+          }
+          var ranIn = typeof INSOMNIA_TEMPLATE_SANDBOX !== 'undefined' ? 'ranin-sandboxed' : 'ranin-mainprocess';
+          context.request.setHeader('X-Ran-In', ranIn);
+        },
+      ];
+    `,
+  );
+
+  const fixture = await loadFixture('sandbox-hook-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), fixture);
+  await clearPluginToast(page);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('Hook Request');
+  const responsePane = page.getByTestId('response-pane');
+
+  // First send: hook runs in-process (sandbox off) and throws; dismiss the resulting error state.
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await page.waitForURL(/error=/, { timeout: 5000 }).catch(() => {});
+  await page.locator('.app').press('Escape').catch(() => {});
+
+  // Enable the sandbox only after the poison attempt, since nothing else forces a plugin reload here.
+  await enablePluginSandbox(page);
+  await expect
+    .poll(
+      async () => {
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        return (await responsePane.textContent()) || '';
+      },
+      { timeout: 25_000 },
+    )
+    .toContain('ranin-sandboxed');
 });

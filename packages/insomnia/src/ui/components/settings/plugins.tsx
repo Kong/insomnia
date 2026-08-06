@@ -13,6 +13,7 @@ import {
 } from 'react-aria-components';
 
 import type { SerializablePlugin } from '~/common/plugins/bridge-types';
+import { resolvePluginExecutionMode } from '~/common/plugins/sandbox-mode';
 import { validatePluginName } from '~/common/utils/plugin-name';
 import { useRootLoaderData } from '~/root';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
@@ -521,6 +522,28 @@ export const Plugins: FC = () => {
                 // Controls with their own click behavior (checkbox, copy, folder) opt out of the row's click-to-expand.
                 const stopPropagation = (e: React.SyntheticEvent) => e.stopPropagation();
 
+                // T1: this plugin's resolved execution mode + the per-plugin "elevated" escape hatch.
+                // Only user plugins reach this list (bundle plugins are filtered out above). Read
+                // `elevated` from live settings (not the load-time plugin.config snapshot) so the toggle
+                // and badge update immediately, before the plugin list reloads.
+                const isElevated = settings.pluginConfig?.[plugin.name]?.elevated === true;
+                const executionMode = resolvePluginExecutionMode(settings, {
+                  directory: plugin.directory,
+                  config: { elevated: isElevated },
+                });
+                const modeLabel =
+                  executionMode === 'sandboxed'
+                    ? 'Sandboxed'
+                    : executionMode === 'elevated'
+                      ? 'Elevated'
+                      : 'In-process';
+                const modeTitle =
+                  executionMode === 'sandboxed'
+                    ? 'Runs in the QuickJS sandbox (default-deny host access).'
+                    : executionMode === 'elevated'
+                      ? 'Runs in the main process with full host access (you granted this).'
+                      : 'Sandbox is off — runs in the main process with full host access.';
+
                 return (
                   <GridListItem
                     textValue={plugin.name}
@@ -530,7 +553,9 @@ export const Plugins: FC = () => {
                     data-testid={plugin.name}
                   >
                     {/* Highlight lives on this inner wrapper so the item's own py-1 gap stays transparent. */}
-                    <div className={`flex flex-col rounded-xs transition-colors ${isDetailsExpanded ? 'bg-(--hl-xs)' : ''}`}>
+                    <div
+                      className={`flex flex-col rounded-xs transition-colors ${isDetailsExpanded ? 'bg-(--hl-xs)' : ''}`}
+                    >
                       <div
                         role="button"
                         tabIndex={0}
@@ -581,6 +606,15 @@ export const Plugins: FC = () => {
                                 Failed to load plugin
                               </span>
                             )}
+                            {!plugin.loadError && (
+                              <span
+                                data-testid={`plugin-mode-${plugin.name}`}
+                                className="rounded-sm bg-(--hl-xs) px-1.5 text-xs whitespace-nowrap text-(--hl)"
+                                title={modeTitle}
+                              >
+                                {modeLabel}
+                              </span>
+                            )}
                             <Icon
                               icon={isDetailsExpanded ? 'chevron-up' : 'chevron-down'}
                               className="h-3 w-3 shrink-0 text-(--hl)"
@@ -588,11 +622,42 @@ export const Plugins: FC = () => {
                             />
                           </div>
                         </div>
-  
+
                         <div className="flex items-center gap-6" onClick={stopPropagation}>
-                          <div className="flex w-[8ch] cursor-auto items-center justify-center">
-                            {plugin.version}
-                          </div>
+                          {!plugin.loadError && (
+                            <Checkbox
+                              data-testid={`plugin-elevated-${plugin.name}`}
+                              isSelected={isElevated}
+                              isDisabled={isRefreshingPlugins}
+                              className="group flex cursor-auto items-center gap-1.5 p-0 text-xs disabled:animate-pulse"
+                              onChange={isSelected => {
+                                patchSettings({
+                                  pluginConfig: {
+                                    ...settings.pluginConfig,
+                                    [plugin.name]: {
+                                      ...plugin.config,
+                                      ...settings.pluginConfig?.[plugin.name],
+                                      elevated: isSelected,
+                                    },
+                                  },
+                                });
+                              }}
+                            >
+                              <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                                <Icon
+                                  icon="check"
+                                  className="h-3 w-3 opacity-0 group-data-selected:text-(--color-warning) group-data-selected:opacity-100"
+                                />
+                              </div>
+                              <span
+                                className="whitespace-nowrap text-(--hl)"
+                                title="Run this plugin in the main process with full host access instead of the sandbox."
+                              >
+                                Full host access
+                              </span>
+                            </Checkbox>
+                          )}
+                          <div className="flex w-[8ch] cursor-auto items-center justify-center">{plugin.version}</div>
                           <div className="flex w-[8ch] cursor-auto items-center gap-1">
                             <CopyButton
                               size="small"
@@ -610,7 +675,7 @@ export const Plugins: FC = () => {
                           </div>
                         </div>
                       </div>
-  
+
                       {/* Grid-rows trick animates open/close smoothly since height: auto can't be transitioned. */}
                       <div
                         className="grid transition-[grid-template-rows] duration-200 ease-in-out"
@@ -625,11 +690,14 @@ export const Plugins: FC = () => {
                               </div>
                             )}
                             {plugin.displayName && plugin.displayName !== plugin.name && (
-                              <div data-testid={`plugin-display-name-${plugin.name}`} className="font-semibold text-(--hl-xl)">
+                              <div
+                                data-testid={`plugin-display-name-${plugin.name}`}
+                                className="font-semibold text-(--hl-xl)"
+                              >
                                 {plugin.displayName}
                               </div>
                             )}
-                            <div data-testid={`plugin-description-${plugin.name}`} className="italic text-(--hl)">
+                            <div data-testid={`plugin-description-${plugin.name}`} className="text-(--hl) italic">
                               {plugin.description || 'A non-descriptive Insomnia plugin.'}
                             </div>
                             <div data-testid={`plugin-permissions-${plugin.name}`}>

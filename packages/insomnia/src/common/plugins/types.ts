@@ -75,7 +75,7 @@ export interface Plugin {
   description: string;
   version: string;
   directory: string;
-  config: { disabled: boolean };
+  config: { disabled: boolean; elevated?: boolean };
   /** Parsed, validated `insomnia.permissions` manifest (sandbox plan C3). */
   permissions: PluginPermissions;
   /** Validation warnings from parsing `permissions`; shown on the plugin card. Empty when clean. */

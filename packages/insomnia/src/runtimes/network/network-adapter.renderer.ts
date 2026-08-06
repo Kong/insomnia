@@ -1,4 +1,4 @@
-import type { Cookie, RequestHeader } from 'insomnia-data';
+import type { Cookie, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
 import { serializeRenderContext } from '~/common/templating/render-context-serialization';
 import type { RenderedRequest } from '~/common/templating/types';
@@ -18,7 +18,7 @@ export const appendToTimelineOnError = (timelinePath: string, data: string): Pro
 export const appendTimelineLines = (timelinePath: string, logs: string[]): Promise<void> =>
   window.main.timeline.appendToFile({ timelinePath, data: logs.join('\n') });
 
-export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHeader | undefined> =>
+export const getAuthHeader = (r: RenderedRequest, u: string): Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }> =>
   window.main.getAuthHeader(r, u);
 
 export const executeCurlRequest = (options: CurlRequestOptions) => cancellableCurlRequest(options);

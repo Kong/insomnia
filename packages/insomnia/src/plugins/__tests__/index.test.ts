@@ -31,6 +31,7 @@ import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-exte
 
 import type { Plugin } from '../index';
 import {
+  _testOnlyIsContainedIn,
   _testOnlySetPlugins,
   executePluginMainAction,
   getDocumentActions,
@@ -387,5 +388,20 @@ describe('getPlugins: discovery', () => {
     expect(plugins.find(p => p.name === NORMAL_PLUGIN_NAME)?.loadError).toBeUndefined();
 
     fs.rmSync(root, { recursive: true, force: true });
+  });
+});
+
+describe('_testOnlyIsContainedIn', () => {
+  it('accepts the base path itself and a real child path', () => {
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins')).toBe(true);
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins/my-plugin')).toBe(true);
+  });
+
+  it('rejects a sibling directory whose name merely prefix-matches the base', () => {
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins-evil/my-plugin')).toBe(false);
+  });
+
+  it('rejects a path that escapes the base via ..', () => {
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins/../other')).toBe(false);
   });
 });
