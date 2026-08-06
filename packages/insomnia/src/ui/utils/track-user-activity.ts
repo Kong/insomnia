@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId, getCurrentSessionId } from '~/common/account/session';
 
-// Matches the isEnterpriseOwner/isEnterpriseMember convention in ~/ui/hooks/use-user-service.ts
 const isCurrentAccountOnEnterprisePlan = async (): Promise<boolean> => {
   const accountId = await getAccountId();
   if (!accountId) {
@@ -15,8 +14,7 @@ const isCurrentAccountOnEnterprisePlan = async (): Promise<boolean> => {
 };
 
 /**
- * POST /v3/users/me/actions. Fire-and-forget: never throws, no-ops when logged out or when
- * the current user isn't on an enterprise plan.
+ * POST /v3/users/me/actions. Fire-and-forget: never throws, no-ops when logged out or when the current user isn't on an enterprise plan.
  * Call sites should not await this so it never blocks the calling flow.
  */
 export const trackUserActivity = async (actionType: UserActionType): Promise<void> => {
