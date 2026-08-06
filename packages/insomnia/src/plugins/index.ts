@@ -210,7 +210,8 @@ async function traversePluginPath(
         }
 
         // path.resolve is lexical only, so re-check the realpath too: plugins should only load from within the configured plugin directory, even through a symlink.
-        if (!fs.realpathSync(safeModulePath).startsWith(fs.realpathSync(pluginBasePath))) {
+        // Reuse isContainedIn (not startsWith) so a sibling like `/plugins-evil` can't prefix-match `/plugins`.
+        if (!isContainedIn(fs.realpathSync(pluginBasePath), fs.realpathSync(safeModulePath))) {
           console.warn(`[plugin] Ignored plugin path outside the configured plugin directory: ${modulePath}`);
           continue;
         }

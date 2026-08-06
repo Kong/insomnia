@@ -107,7 +107,7 @@ export const Plugins: FC = () => {
   // GridList caches each row's render by item identity, so give each plugin a fresh object on
   // expansion changes to force a re-render.
   const pluginRows: PluginRow[] = useMemo(
-    () => plugins.map(plugin => ({ ...plugin, isDetailsExpanded: expandedPluginDetails.has(plugin.name) })),
+    () => plugins.map(plugin => ({ ...plugin, isDetailsExpanded: expandedPluginDetails.has(plugin.directory) })),
     [plugins, expandedPluginDetails],
   );
 
@@ -508,7 +508,7 @@ export const Plugins: FC = () => {
                 const applyToggleDetails = () => {
                   setExpandedPluginDetails(prev => {
                     const next = new Set(prev);
-                    next.has(plugin.name) ? next.delete(plugin.name) : next.add(plugin.name);
+                    next.has(plugin.directory) ? next.delete(plugin.directory) : next.add(plugin.directory);
                     return next;
                   });
                 };

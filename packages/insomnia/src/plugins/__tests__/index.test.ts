@@ -389,6 +389,29 @@ describe('getPlugins: discovery', () => {
 
     fs.rmSync(root, { recursive: true, force: true });
   });
+
+  it('rejects a symlink into a sibling directory whose name merely prefix-matches the configured plugin path', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-discovery-test-'));
+    // Deliberately a *sibling* whose name starts with the plugin base's name, so a naive
+    // `realpath(target).startsWith(realpath(base))` check would wrongly treat it as contained.
+    const pluginBase = path.join(root, 'plugins');
+    const outsideDir = path.join(root, 'plugins-evil');
+    fs.mkdirSync(pluginBase, { recursive: true });
+    writePlugin(outsideDir, SYMLINK_PLUGIN_NAME);
+    fs.symlinkSync(outsideDir, path.join(pluginBase, SYMLINK_PLUGIN_NAME), 'dir');
+
+    vi.mocked(services.settings.get).mockResolvedValue({
+      pluginConfig: {},
+      pluginPath: pluginBase,
+      templateTagSandboxEnabled: false,
+    });
+
+    const plugins = await getPlugins(true);
+
+    expect(plugins.find(p => p.name === SYMLINK_PLUGIN_NAME)).toBeUndefined();
+
+    fs.rmSync(root, { recursive: true, force: true });
+  });
 });
 
 describe('_testOnlyIsContainedIn', () => {
