@@ -24,7 +24,8 @@ export const trackUserActivity = async (actionType: UserActionType): Promise<voi
       return;
     }
 
-    if (!(await isCurrentAccountOnEnterprisePlan())) {
+    const isEnterpriseMember = await isCurrentAccountOnEnterprisePlan();
+    if (!isEnterpriseMember) {
       return;
     }
 
