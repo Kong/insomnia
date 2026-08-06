@@ -3,6 +3,7 @@ import type { MockRoute, MockServer, WorkspaceScope } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
+import { InsomniaContext } from '~/common/application-bootstrap';
 import { getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
 import type { MockRouteData } from '~/common/plugins/types';
@@ -37,7 +38,7 @@ interface NewWorkspaceData {
   source?: string;
 }
 
-export async function clientAction({ request, params }: Route.ClientActionArgs) {
+export async function clientAction({ request, params, context }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   try {
     const redirectAfterCreate = new URL(request.url).searchParams.get('redirectAfterCreate') !== 'false';
@@ -95,7 +96,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
-    const workspace = await services.workspace.create({
+    const workspace = await context.get(InsomniaContext).workspace.create({
       name: workspaceName,
       scope,
       parentId: projectId,

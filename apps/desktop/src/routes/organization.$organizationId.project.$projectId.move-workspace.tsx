@@ -1,12 +1,13 @@
 import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
+import { InsomniaContext } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.move-workspace';
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function clientAction({ request, context }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');
@@ -15,12 +16,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(project, 'Project not found');
 
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const workspace = await services.workspace.getById(workspaceId);
-  invariant(workspace, 'Workspace not found');
 
-  await services.workspace.update(workspace, {
-    parentId: projectId,
-  });
+  await context.get(InsomniaContext).workspace.moveById(workspaceId, projectId);
 
   return null;
 }

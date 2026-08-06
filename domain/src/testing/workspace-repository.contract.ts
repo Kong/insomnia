@@ -65,5 +65,16 @@ export function runWorkspaceRepositoryContractTests(getContext: () => WorkspaceR
 
       expect(await repository.findById(workspace._id)).toBeNull();
     });
+
+    it('create() persists a new workspace and returns it', async () => {
+      const { repository } = getContext();
+
+      const created = await repository.create({ name: 'New Workspace', scope: 'collection', parentId: 'proj_contract_test' });
+
+      expect(created.name).toBe('New Workspace');
+      expect(created.scope).toBe('collection');
+      expect(created.parentId).toBe('proj_contract_test');
+      expect(await repository.findById(created._id)).toEqual(created);
+    });
   });
 }

@@ -38,4 +38,4 @@ export type { Request } from './request/request.entity';
 export type { SocketIOEventListener, SocketIORequest } from './request/socket-io-request.entity';
 export type { WebSocketRequest } from './request/websocket-request.entity';
 export type { Workspace, WorkspaceScope } from './workspace/workspace.entity';
-export type { WorkspaceRepository } from './workspace/workspace-repository.port';
+export type { CreateWorkspaceInput, WorkspaceRepository } from './workspace/workspace-repository.port';

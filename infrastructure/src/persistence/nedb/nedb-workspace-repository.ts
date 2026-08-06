@@ -29,6 +29,11 @@ export const nedbWorkspaceRepository: WorkspaceRepository = {
     return docs.map(toDomainWorkspace);
   },
 
+  async create(input) {
+    const doc = await services.workspace.create(input);
+    return toDomainWorkspace(doc);
+  },
+
   async save(workspace) {
     await services.workspace.upsert(workspace as unknown as DataWorkspace);
   },

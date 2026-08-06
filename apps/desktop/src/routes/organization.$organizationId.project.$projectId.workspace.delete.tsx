@@ -1,7 +1,8 @@
 import type { Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { href, redirect } from 'react-router';
+import { href, redirect, type RouterContextProvider } from 'react-router';
 
+import { InsomniaContext } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
@@ -35,12 +36,17 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
   return null;
 }
 
-async function deleteWorkspaceFromLocal(workspace: Workspace) {
+async function deleteWorkspaceFromLocal(workspace: Workspace, context: Readonly<RouterContextProvider>) {
   await services.stats.incrementDeletedRequestsForDescendents(workspace);
-  await services.workspace.remove(workspace);
+  await context.get(InsomniaContext).workspace.deleteById(workspace._id);
 }
 
-async function deleteWorkspace(workspace: Workspace | null, project: Project | null, localOnly: boolean) {
+async function deleteWorkspace(
+  workspace: Workspace | null,
+  project: Project | null,
+  localOnly: boolean,
+  context: Readonly<RouterContextProvider>,
+) {
   invariant(workspace, 'Workspace not found');
   invariant(project, 'Project not found');
 
@@ -49,7 +55,7 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
     return ret;
   }
 
-  await deleteWorkspaceFromLocal(workspace);
+  await deleteWorkspaceFromLocal(workspace, context);
 
   if (workspace.scope === 'mock-server') {
     window.main.trackAnalyticsEvent({
@@ -60,7 +66,7 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
   return null;
 }
 
-export async function clientAction({ request, params }: Route.ClientActionArgs) {
+export async function clientAction({ request, params, context }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
 
   const project = await services.project.getById(projectId);
@@ -74,7 +80,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const msgObj = await deleteWorkspace(workspace, project, localOnly);
+  const msgObj = await deleteWorkspace(workspace, project, localOnly, context);
 
   if (msgObj?.error) {
     return msgObj;

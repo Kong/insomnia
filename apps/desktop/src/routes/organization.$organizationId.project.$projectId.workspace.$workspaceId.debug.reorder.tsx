@@ -1,6 +1,7 @@
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
+import { InsomniaContext } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -16,7 +17,7 @@ const getCollectionItem = async (id: string) => {
   return item;
 };
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function clientAction({ request, context }: Route.ClientActionArgs) {
   const { id, targetId, dropPosition, metaSortKey } = await request.json();
   invariant(typeof id === 'string', 'ID is required');
   invariant(typeof targetId === 'string', 'Target ID is required');
@@ -25,13 +26,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     return null;
   }
   if (models.workspace.isWorkspaceId(id)) {
-    const item = await services.workspace.getById(id);
     const targetItem = await services.project.getById(targetId);
-    invariant(item, 'Drag item not found');
     invariant(targetItem, 'Target item not found');
-    await services.workspace.update(item, {
-      parentId: targetItem._id,
-    });
+    await context.get(InsomniaContext).workspace.moveById(id, targetItem._id);
     return null;
   }
 
