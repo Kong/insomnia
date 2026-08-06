@@ -5,9 +5,12 @@ import { expect, type Page } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
-// Two plugin folders declaring the same package.json "name" must both show up in Settings — one
-// active, the other disabled with a "Failed to load" collision marker — instead of one of them
-// being silently dropped.
+// Two plugin folders declaring the same package.json "name" must both show up in Settings, each as a
+// disabled row with a "Failed to load" collision marker, instead of one being silently dropped. The
+// collision is resolved order-independently (#10326): because pluginConfig — including the `elevated`
+// full-host-access grant — is keyed by name, letting filesystem read order pick a "winner" could hand
+// a colliding (possibly hostile) folder another folder's trust. So neither is loaded active; both are
+// surfaced disabled and the user resolves the ambiguity by removing one.
 
 const WINNER_DIR_NAME = 'insomnia-plugin-vanish-collision-b';
 const LOSER_DIR_NAME = 'insomnia-plugin-vanish-collision-a';
@@ -52,7 +55,7 @@ const clearPluginToast = async (page: Page) => {
   }
 };
 
-test('Kong/insomnia#10295: two plugin folders sharing one package.json name both show up, one active and one disabled with a collision marker', async ({
+test('Kong/insomnia#10295: two plugin folders sharing one package.json name both show up as disabled rows with a collision marker (neither loaded active)', async ({
   page,
   insomnia,
   dataPath,
@@ -70,17 +73,19 @@ test('Kong/insomnia#10295: two plugin folders sharing one package.json name both
   await expect.soft(collidedRows.first()).toBeVisible({ timeout: 10_000 });
   await expect.soft(collidedRows).toHaveCount(2);
 
-  // Exactly one row has a checkbox (the winner); the other has no checkbox at all (which folder
-  // wins is traversal-order dependent, so check both without asserting which).
-  const firstHasCheckbox = await collidedRows.nth(0).getByRole('checkbox').count();
-  const secondHasCheckbox = await collidedRows.nth(1).getByRole('checkbox').count();
-  expect.soft(firstHasCheckbox > 0).not.toBe(secondHasCheckbox > 0);
+  // Order-independent (#10326): neither folder is loaded active — so a colliding folder can't inherit
+  // another's name-keyed trust by winning on load order. Both rows are disabled (no enable checkbox)
+  // and both carry the "Failed to load" collision marker.
+  await expect.soft(collidedRows.nth(0).getByRole('checkbox')).toHaveCount(0);
+  await expect.soft(collidedRows.nth(1).getByRole('checkbox')).toHaveCount(0);
+  await expect.soft(collidedRows.nth(0)).toContainText('Failed to load plugin');
+  await expect.soft(collidedRows.nth(1)).toContainText('Failed to load plugin');
 
-  const disabledRow = firstHasCheckbox > 0 ? collidedRows.nth(1) : collidedRows.nth(0);
-  await expect.soft(disabledRow).toContainText('Failed to load plugin');
-  await disabledRow.getByTestId(`plugin-details-toggle-${SHARED_PACKAGE_NAME}`).click();
-  const disabledRowDetail = disabledRow.getByTestId(`plugin-details-${SHARED_PACKAGE_NAME}`);
-  await expect.soft(disabledRowDetail).toContainText(SHARED_PACKAGE_NAME);
+  // The collision reason is visible in the (first) row's details.
+  await collidedRows.nth(0).getByTestId(`plugin-details-toggle-${SHARED_PACKAGE_NAME}`).click();
+  await expect
+    .soft(collidedRows.nth(0).getByTestId(`plugin-details-${SHARED_PACKAGE_NAME}`))
+    .toContainText('Multiple plugin folders declare');
 
   // Reload repeatedly — deterministic, so this never changes.
   await page.getByRole('button', { name: 'Reload', exact: true }).click();
