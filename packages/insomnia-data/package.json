@@ -38,7 +38,7 @@
     "deep-equal": "2.2.3",
     "fuzzysort": "^1.9.0",
     "graphql": "^16.10.0",
-    "uuid": "^9.0.1"
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@getinsomnia/node-libcurl": "3.3.0",
