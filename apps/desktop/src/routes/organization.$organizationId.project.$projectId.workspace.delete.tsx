@@ -1,6 +1,7 @@
+import type { Insomnia } from 'application';
 import type { Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { href, redirect, type RouterContextProvider } from 'react-router';
+import { href, redirect } from 'react-router';
 
 import { InsomniaContext } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
@@ -36,16 +37,11 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
   return null;
 }
 
-async function deleteWorkspaceFromLocal(workspace: Workspace, context: Readonly<RouterContextProvider>) {
-  await services.stats.incrementDeletedRequestsForDescendents(workspace);
-  await context.get(InsomniaContext).workspace.deleteById(workspace._id);
-}
-
 async function deleteWorkspace(
   workspace: Workspace | null,
   project: Project | null,
   localOnly: boolean,
-  context: Readonly<RouterContextProvider>,
+  insomnia: Insomnia,
 ) {
   invariant(workspace, 'Workspace not found');
   invariant(project, 'Project not found');
@@ -55,7 +51,8 @@ async function deleteWorkspace(
     return ret;
   }
 
-  await deleteWorkspaceFromLocal(workspace, context);
+  await services.stats.incrementDeletedRequestsForDescendents(workspace);
+  await insomnia.workspace.deleteById(workspace._id);
 
   if (workspace.scope === 'mock-server') {
     window.main.trackAnalyticsEvent({
@@ -80,7 +77,7 @@ export async function clientAction({ request, params, context }: Route.ClientAct
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const msgObj = await deleteWorkspace(workspace, project, localOnly, context);
+  const msgObj = await deleteWorkspace(workspace, project, localOnly, context.get(InsomniaContext));
 
   if (msgObj?.error) {
     return msgObj;
