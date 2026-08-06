@@ -1,6 +1,7 @@
-import type { EnvironmentRepository, WorkspaceRepository } from 'insomnia-domain';
+import type { EnvironmentRepository, RequestRepository, WorkspaceRepository } from 'insomnia-domain';
 
 import { EnvironmentModule } from './environment/environment.module';
+import { RequestModule } from './request/request.module';
 import { WorkspaceModule } from './workspace/workspace.module';
 
 /**
@@ -12,6 +13,7 @@ import { WorkspaceModule } from './workspace/workspace.module';
 export interface InsomniaDependencies {
   workspaceRepository: WorkspaceRepository;
   environmentRepository: EnvironmentRepository;
+  requestRepository: RequestRepository;
 }
 
 /**
@@ -23,9 +25,11 @@ export interface InsomniaDependencies {
 export class Insomnia {
   workspace: WorkspaceModule;
   environment: EnvironmentModule;
+  request: RequestModule;
 
   constructor(dependencies: InsomniaDependencies) {
     this.workspace = new WorkspaceModule(dependencies.workspaceRepository);
     this.environment = new EnvironmentModule(dependencies.environmentRepository);
+    this.request = new RequestModule(dependencies.requestRepository);
   }
 }
