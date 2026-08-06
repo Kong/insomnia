@@ -1,21 +1,20 @@
 import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
+import { InsomniaContext } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 
-export async function clientAction({ params, request }: Route.ClientActionArgs) {
+export async function clientAction({ params, request, context }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
   const formData = await request.formData();
   const id = formData.get('id') as string;
-  const req = await services.helpers.getRequestById(id);
-  invariant(req, 'Request not found');
+  await context.get(InsomniaContext).request.deleteById(id);
   services.stats.incrementDeletedRequests();
-  await services.helpers.removeRequest(req);
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Workspace meta not found');
 

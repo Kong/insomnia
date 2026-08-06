@@ -8,12 +8,13 @@
 // react-router is a desktop-specific framework dependency, and `application` must stay usable by
 // any app (apps/cli, future MCP/web apps) - only the Insomnia class itself belongs there.
 import { Insomnia } from 'application';
-import { nedbEnvironmentRepository, nedbWorkspaceRepository } from 'infrastructure';
+import { nedbEnvironmentRepository, nedbRequestRepository, nedbWorkspaceRepository } from 'infrastructure';
 import { createContext } from 'react-router';
 
 export const insomnia = new Insomnia({
   workspaceRepository: nedbWorkspaceRepository,
   environmentRepository: nedbEnvironmentRepository,
+  requestRepository: nedbRequestRepository,
 });
 
 export const InsomniaContext = createContext<Insomnia>();
