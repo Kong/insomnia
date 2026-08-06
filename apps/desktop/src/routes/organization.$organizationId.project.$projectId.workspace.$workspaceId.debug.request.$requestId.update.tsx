@@ -1,48 +1,32 @@
-import type { WebSocketRequest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
+import { InsomniaContext } from '~/common/application-bootstrap';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 
-const { getPathParametersFromUrl, isRequest } = models.request;
+const { isRequest } = models.request;
 
-export async function clientAction({ params, request }: Route.ClientActionArgs) {
+export async function clientAction({ params, request, context }: Route.ClientActionArgs) {
   const { requestId } = params;
 
   const req = await services.helpers.getRequestById(requestId);
   invariant(req, 'Request not found');
   const patch = await request.json();
 
-  const isRequestURLChanged =
-    (isRequest(req) || models.webSocketRequest.isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
-
-  if (isRequestURLChanged) {
-    const { url } = patch as Request | WebSocketRequest;
-
-    // Check the URL for path parameters and store them in the request
-    const urlPathParameters = getPathParametersFromUrl(url);
-
-    const pathParameters = urlPathParameters.map(name => ({
-      name,
-      value: req.pathParameters?.find(p => p.name === name)?.value || '',
-    }));
-
-    patch.pathParameters = pathParameters;
-  }
-
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
   const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
+
+  await context.get(InsomniaContext).request.updateById(requestId, patch);
+
+  // mimeType changes replace the whole body/headers shape - skip the rename check below in that
+  // case, matching the prior behavior of returning immediately after that kind of update.
   if (isMimeTypeChanged) {
-    await services.helpers.updateRequest(req, { ...patch, ...updateMimeType(req, patch.body?.mimeType) });
     return null;
   }
-
-  await services.helpers.updateRequest(req, patch);
 
   if (req.name !== patch.name) {
     window.main.trackAnalyticsEvent({

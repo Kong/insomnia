@@ -26,7 +26,8 @@
   },
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx --cache",
-    "type-check": "tsc --noEmit --project tsconfig.json"
+    "type-check": "tsc --noEmit --project tsconfig.json",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.17.5"
