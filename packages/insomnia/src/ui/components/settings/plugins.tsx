@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Checkbox,
@@ -19,15 +19,20 @@ import { useRootLoaderData } from '~/root';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 import { reload } from '~/ui/templating/renderer-safe';
 
-import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
+import { ACCEPTED_NODE_CA_FILE_EXTS, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
-import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 import { CreatePluginModal } from './create-plugin-modal';
+
+// Baseline grant for every template-tag plugin regardless of its manifest; kept as a local literal
+// in sync with module-registry.ts's TEMPLATE_TAG_BASELINE_MODULES and host-bridge.ts's
+// TEMPLATE_TAG_BASELINE_CAPABILITIES to avoid pulling the sandbox module graph into this bundle.
+const TEMPLATE_TAG_BASELINE_MODULES = ['path', 'crypto'];
+const TEMPLATE_TAG_BASELINE_CAPABILITIES = ['render', 'models.read', 'util', 'crypto'];
 
 const getNpmRegistryUrlValidationError = (url: string): string | null => {
   if (!url) {
@@ -47,6 +52,10 @@ const getNpmRegistryUrlValidationError = (url: string): string | null => {
   }
 };
 
+interface PluginRow extends SerializablePlugin {
+  isDetailsExpanded: boolean;
+}
+
 interface State {
   plugins: SerializablePlugin[];
   npmPluginValue: string;
@@ -62,6 +71,7 @@ interface State {
 export const Plugins: FC = () => {
   const { settings } = useRootLoaderData()!;
   const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
+  const [expandedPluginDetails, setExpandedPluginDetails] = useState<Set<string>>(new Set());
 
   const [
     {
@@ -93,6 +103,13 @@ export const Plugins: FC = () => {
 
   // If some plugins are enabled, we show the indeterminate state
   const isIndeterminate = plugins.some(plugin => plugin.config.disabled === false);
+
+  // GridList caches each row's render by item identity, so give each plugin a fresh object on
+  // expansion changes to force a re-render.
+  const pluginRows: PluginRow[] = useMemo(
+    () => plugins.map(plugin => ({ ...plugin, isDetailsExpanded: expandedPluginDetails.has(plugin.directory) })),
+    [plugins, expandedPluginDetails],
+  );
 
   useEffect(() => {
     setState(state => ({ ...state, pluginNodeExtraCerts: settings.pluginNodeExtraCerts }));
@@ -461,8 +478,8 @@ export const Plugins: FC = () => {
             <GridList
               aria-label="Installed Plugins"
               selectionMode="multiple"
-              items={plugins}
-              className="flex flex-col"
+              items={pluginRows}
+              className="flex flex-col divide-y divide-(--hl-sm)"
               renderEmptyState={() => (
                 <div className="flex h-36 flex-col items-center">
                   <h3 className="mt-2 font-semibold text-(--hl-xl)">No plugins</h3>
@@ -478,26 +495,32 @@ export const Plugins: FC = () => {
               )}
             >
               {plugin => {
-                const link = plugin.name.startsWith('insomnia-plugin-')
-                  ? PLUGIN_HUB_BASE
-                  : NPM_PACKAGE_BASE + '/' + plugin.name;
-
-                // Summarize the plugin's declared sandbox permissions (C3). No declaration means it
-                // runs on the baseline grant; a declared block lists its requested modules/capabilities.
+                // Effective grant is always baseline ∪ declared, so list the full set rather than a vague "default access" message.
                 const { modules, capabilities } = plugin.permissions ?? { modules: [], capabilities: [] };
-                const permissionParts: string[] = [];
-                if (modules.length > 0) {
-                  permissionParts.push(`modules: ${modules.join(', ')}`);
-                }
-                if (capabilities.length > 0) {
-                  permissionParts.push(`capabilities: ${capabilities.join(', ')}`);
-                }
-                const permissionLabel =
-                  permissionParts.length > 0
-                    ? permissionParts.join(' · ')
-                    : plugin.permissionsDeclared
-                      ? 'Declared empty permissions (baseline access)'
-                      : 'No permissions declared (baseline access)';
+                const effectiveModules = [...new Set([...TEMPLATE_TAG_BASELINE_MODULES, ...modules])];
+                const effectiveCapabilities = [...new Set([...TEMPLATE_TAG_BASELINE_CAPABILITIES, ...capabilities])];
+                const hasExtraPermissions = modules.length > 0 || capabilities.length > 0;
+                const baselineOnlyNote = plugin.permissionsDeclared
+                  ? 'Baseline only — declared an empty permissions block'
+                  : 'Baseline only — no permissions manifest declared';
+
+                const isDetailsExpanded = plugin.isDetailsExpanded;
+                const applyToggleDetails = () => {
+                  setExpandedPluginDetails(prev => {
+                    const next = new Set(prev);
+                    next.has(plugin.directory) ? next.delete(plugin.directory) : next.add(plugin.directory);
+                    return next;
+                  });
+                };
+                // react-aria's usePress can re-fire a synthetic, untrusted click after a real one on a slow render; ignore untrusted clicks to avoid a double toggle.
+                const handleToggleClick = (e: React.MouseEvent) => {
+                  if (!e.nativeEvent.isTrusted) {
+                    return;
+                  }
+                  applyToggleDetails();
+                };
+                // Controls with their own click behavior (checkbox, copy, folder) opt out of the row's click-to-expand.
+                const stopPropagation = (e: React.SyntheticEvent) => e.stopPropagation();
 
                 // T1: this plugin's resolved execution mode + the per-plugin "elevated" escape hatch.
                 // Only user plugins reach this list (bundle plugins are filtered out above). Read
@@ -524,117 +547,177 @@ export const Plugins: FC = () => {
                 return (
                   <GridListItem
                     textValue={plugin.name}
-                    id={plugin.name}
-                    className="flex h-(--line-height-sm) items-center gap-2 rounded-xs pl-2 odd:bg-(--hl-xxs)"
+                    // `directory` is unique per folder even when two plugins collide on `name`.
+                    id={plugin.directory}
+                    className={`flex flex-col py-1 ${plugin.loadError ? 'opacity-50' : ''}`}
                     data-testid={plugin.name}
                   >
-                    <div className="flex flex-1 items-center gap-3">
-                      <Checkbox
-                        isSelected={!plugin.config.disabled}
-                        isDisabled={isRefreshingPlugins}
-                        className="group flex h-full items-center p-0 disabled:animate-pulse"
-                        onChange={isSelected => {
-                          patchSettings({
-                            pluginConfig: {
-                              ...settings.pluginConfig,
-                              [plugin.name]: { ...plugin.config, disabled: !isSelected },
-                            },
-                          });
+                    {/* Highlight lives on this inner wrapper so the item's own py-1 gap stays transparent. */}
+                    <div
+                      className={`flex flex-col rounded-xs transition-colors ${isDetailsExpanded ? 'bg-(--hl-xs)' : ''}`}
+                    >
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isDetailsExpanded}
+                        className={`flex h-(--line-height-sm) cursor-pointer items-center gap-2 rounded-xs px-2 transition-colors ${isDetailsExpanded ? '' : 'hover:bg-(--hl-xs)'}`}
+                        data-testid={`plugin-details-toggle-${plugin.name}`}
+                        onClick={handleToggleClick}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            applyToggleDetails();
+                          }
                         }}
                       >
-                        <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-                          <Icon
-                            icon="check"
-                            className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
-                          />
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          {plugin.loadError ? (
+                            <Icon icon="triangle-exclamation" className="h-3 w-3 shrink-0 text-(--color-danger)" />
+                          ) : (
+                            <div onClick={stopPropagation} className="cursor-auto">
+                              <Checkbox
+                                isSelected={!plugin.config.disabled}
+                                isDisabled={isRefreshingPlugins}
+                                className="group flex h-full items-center p-0 disabled:animate-pulse"
+                                onChange={isSelected => {
+                                  patchSettings({
+                                    pluginConfig: {
+                                      ...settings.pluginConfig,
+                                      [plugin.name]: { ...plugin.config, disabled: !isSelected },
+                                    },
+                                  });
+                                }}
+                              >
+                                <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                                  <Icon
+                                    icon="check"
+                                    className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+                                  />
+                                </div>
+                              </Checkbox>
+                            </div>
+                          )}
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="max-w-[24ch] truncate" title={plugin.name}>
+                              {plugin.name}
+                            </span>
+                            {plugin.loadError && (
+                              <span className="truncate text-xs font-bold text-(--color-danger)">
+                                Failed to load plugin
+                              </span>
+                            )}
+                            {!plugin.loadError && (
+                              <span
+                                data-testid={`plugin-mode-${plugin.name}`}
+                                className="rounded-sm bg-(--hl-xs) px-1.5 text-xs whitespace-nowrap text-(--hl)"
+                                title={modeTitle}
+                              >
+                                {modeLabel}
+                              </span>
+                            )}
+                            <Icon
+                              icon={isDetailsExpanded ? 'chevron-up' : 'chevron-down'}
+                              className="h-3 w-3 shrink-0 text-(--hl)"
+                              data-testid={`plugin-details-chevron-${plugin.name}`}
+                            />
+                          </div>
                         </div>
-                      </Checkbox>
-                      <div className="flex items-center gap-2">
-                        <span className="whitespace-nowrap">{plugin.name}</span>
-                        {plugin.description && (
-                          <HelpTooltip info className="space-left">
-                            {plugin.description}
-                          </HelpTooltip>
-                        )}
-                        <span
-                          data-testid={`plugin-permissions-${plugin.name}`}
-                          className="truncate text-xs text-(--hl)"
-                          title={permissionLabel}
-                        >
-                          {permissionLabel}
-                        </span>
-                        <span
-                          data-testid={`plugin-mode-${plugin.name}`}
-                          className="rounded-sm bg-(--hl-xs) px-1.5 text-xs whitespace-nowrap text-(--hl)"
-                          title={modeTitle}
-                        >
-                          {modeLabel}
-                        </span>
-                        {plugin.permissionWarnings && plugin.permissionWarnings.length > 0 && (
-                          <span
-                            data-testid={`plugin-permission-warning-${plugin.name}`}
-                            className="text-(--color-warning)"
-                          >
-                            <HelpTooltip info={false} className="space-left text-(--color-warning)">
-                              {plugin.permissionWarnings.join(' ')}
-                            </HelpTooltip>
-                          </span>
-                        )}
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-6">
-                      <Checkbox
-                        data-testid={`plugin-elevated-${plugin.name}`}
-                        isSelected={isElevated}
-                        isDisabled={isRefreshingPlugins}
-                        className="group flex items-center gap-1.5 p-0 text-xs disabled:animate-pulse"
-                        onChange={isSelected => {
-                          patchSettings({
-                            pluginConfig: {
-                              ...settings.pluginConfig,
-                              [plugin.name]: {
-                                ...plugin.config,
-                                ...settings.pluginConfig?.[plugin.name],
-                                elevated: isSelected,
-                              },
-                            },
-                          });
-                        }}
-                      >
-                        <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-                          <Icon
-                            icon="check"
-                            className="h-3 w-3 opacity-0 group-data-selected:text-(--color-warning) group-data-selected:opacity-100"
-                          />
+                        <div className="flex items-center gap-6" onClick={stopPropagation}>
+                          {!plugin.loadError && (
+                            <Checkbox
+                              data-testid={`plugin-elevated-${plugin.name}`}
+                              isSelected={isElevated}
+                              isDisabled={isRefreshingPlugins}
+                              className="group flex cursor-auto items-center gap-1.5 p-0 text-xs disabled:animate-pulse"
+                              onChange={isSelected => {
+                                patchSettings({
+                                  pluginConfig: {
+                                    ...settings.pluginConfig,
+                                    [plugin.name]: {
+                                      ...plugin.config,
+                                      ...settings.pluginConfig?.[plugin.name],
+                                      elevated: isSelected,
+                                    },
+                                  },
+                                });
+                              }}
+                            >
+                              <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                                <Icon
+                                  icon="check"
+                                  className="h-3 w-3 opacity-0 group-data-selected:text-(--color-warning) group-data-selected:opacity-100"
+                                />
+                              </div>
+                              <span
+                                className="whitespace-nowrap text-(--hl)"
+                                title="Run this plugin in the main process with full host access instead of the sandbox."
+                              >
+                                Full host access
+                              </span>
+                            </Checkbox>
+                          )}
+                          <div className="flex w-[8ch] cursor-auto items-center justify-center">{plugin.version}</div>
+                          <div className="flex w-[8ch] cursor-auto items-center gap-1">
+                            <CopyButton
+                              size="small"
+                              variant="text"
+                              title={plugin.directory}
+                              content={plugin.directory}
+                              confirmMessage=""
+                              className="px-[calc(var(--padding-md) * 0.8)] w-[40px] border border-solid border-transparent"
+                            >
+                              <Icon icon="copy" className="h-4 w-4 text-white" />
+                            </CopyButton>
+                            <Button onPress={() => window.shell.showItemInFolder(plugin.directory)}>
+                              <Icon icon="folder-open" className="h-4 w-4 text-white" />
+                            </Button>
+                          </div>
                         </div>
-                        <span
-                          className="whitespace-nowrap text-(--hl)"
-                          title="Run this plugin in the main process with full host access instead of the sandbox."
-                        >
-                          Full host access
-                        </span>
-                      </Checkbox>
-                      <div className="flex w-[8ch] items-center justify-center gap-2">
-                        {plugin.version}
-                        <a className="space-left" href={link} title={link}>
-                          <i className="fa fa-external-link-square" />
-                        </a>
                       </div>
-                      <div className="flex w-[8ch] items-center gap-1">
-                        <CopyButton
-                          size="small"
-                          variant="text"
-                          title={plugin.directory}
-                          content={plugin.directory}
-                          confirmMessage=""
-                          className="px-[calc(var(--padding-md) * 0.8)] w-[40px] border border-solid border-transparent"
-                        >
-                          <Icon icon="copy" className="h-4 w-4 text-white" />
-                        </CopyButton>
-                        <Button onPress={() => window.shell.showItemInFolder(plugin.directory)}>
-                          <Icon icon="folder-open" className="h-4 w-4 text-white" />
-                        </Button>
+
+                      {/* Grid-rows trick animates open/close smoothly since height: auto can't be transitioned. */}
+                      <div
+                        className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+                        style={{ gridTemplateRows: isDetailsExpanded ? '1fr' : '0fr' }}
+                      >
+                        {/* This overflow-hidden wrapper, not its child, is what collapses to zero height. */}
+                        <div className="overflow-hidden" data-testid={`plugin-details-${plugin.name}`}>
+                          <div className="flex flex-col gap-2 pb-2 pl-9 text-xs text-(--hl)">
+                            {plugin.loadError && (
+                              <div className="selectable force-pre-wrap text-(--color-danger)">
+                                <code>{plugin.loadError}</code>
+                              </div>
+                            )}
+                            {plugin.displayName && plugin.displayName !== plugin.name && (
+                              <div
+                                data-testid={`plugin-display-name-${plugin.name}`}
+                                className="font-semibold text-(--hl-xl)"
+                              >
+                                {plugin.displayName}
+                              </div>
+                            )}
+                            <div data-testid={`plugin-description-${plugin.name}`} className="text-(--hl) italic">
+                              {plugin.description || 'A non-descriptive Insomnia plugin.'}
+                            </div>
+                            <div data-testid={`plugin-permissions-${plugin.name}`}>
+                              <span className="font-bold text-(--hl-xl)">Permissions</span>
+                              {!hasExtraPermissions && <span> ({baselineOnlyNote})</span>}
+                              <div className="flex flex-col gap-0.5 border-l border-(--hl-sm) pl-2">
+                                <div>Modules: {effectiveModules.join(', ')}</div>
+                                <div>Capabilities: {effectiveCapabilities.join(', ')}</div>
+                              </div>
+                            </div>
+                            {plugin.permissionWarnings && plugin.permissionWarnings.length > 0 && (
+                              <div
+                                data-testid={`plugin-permission-warning-${plugin.name}`}
+                                className="text-(--color-warning)"
+                              >
+                                {plugin.permissionWarnings.join(' ')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </GridListItem>

@@ -93,6 +93,7 @@ export type PluginToMainAPIPaths =
   | 'plugin.executeBundlePluginTag'
   | 'plugin.executeBundlePluginMainAction'
   | 'plugin.getUserPluginTemplateTags'
+  | 'plugin.reloadPlugins'
   | 'plugin.executeUserPluginTag'
   | 'plugin.discoverUserPluginExports'
   | 'plugin.runUserRequestHook'
