@@ -13,7 +13,7 @@ import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 
 import { Icon } from '../../icon';
-import { GUIDE_LINE_CSS, ROW_CLASS } from './project-navigation-sidebar-utils';
+import { GUIDE_LINE_CSS, ROW_CLASS } from './styles';
 import type { EmptyNodeFlatItem } from './types';
 
 interface EmptyNodeProps {
