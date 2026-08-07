@@ -28,6 +28,7 @@ import type {
   WorkspaceScope,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { slugify } from 'insomnia-data/common';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
@@ -393,26 +394,31 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
  * - When the repository has a user-chosen `directory`, that path is used as-is
  *   (the user owns it; Insomnia must not delete it on project removal).
  * - Otherwise the repository lives in the app-managed location
- *   `{INSOMNIA_DATA_PATH || userData}/version-control/git/{id}`.
+ *   `{INSOMNIA_DATA_PATH || userData}/version-control/git/{folder}`, where
+ *   `folder` is computed by `models.gitRepository.getGitRepoFolderName` (the
+ *   bare id, or `git_<slug>_<hex>` once a `folderSlug` has been set).
  *
  * This is the single source of truth for repo paths. Callers that already have
- * the GitRepository document should pass `directory` to avoid a DB lookup;
- * otherwise the directory is resolved from the database by id.
+ * the GitRepository document should pass `directory`/`folderSlug` to avoid a DB
+ * lookup; otherwise both are resolved from the database by id.
  */
-async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null): Promise<string> {
+async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null, folderSlug?: string | null): Promise<string> {
   let dir = directory;
+  let slug = folderSlug;
   if (dir === undefined) {
     const repo = await services.gitRepository.getById(gitRepositoryId);
     dir = repo?.directory ?? null;
+    slug = repo?.folderSlug ?? null;
   }
 
   if (dir) {
     return dir;
   }
 
+  const folderName = models.gitRepository.getGitRepoFolderName({ _id: gitRepositoryId, folderSlug: slug ?? null });
   return path.join(
     process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}`,
+    `version-control/git/${folderName}`,
   );
 }
 
@@ -423,17 +429,93 @@ async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null
  * `directory` belongs to the user and must never be deleted when the project is
  * removed. Failures are logged, not thrown — losing a project record should not be blocked by a stale folder.
  */
-async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 'directory'>) {
+async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 'directory' | 'folderSlug'>) {
   if (repo.directory) {
     // User-owned folder — leave it on disk.
     return;
   }
 
-  const baseDir = await getRepoBaseDir(repo._id, null);
+  const baseDir = await getRepoBaseDir(repo._id, null, repo.folderSlug);
   try {
     await fs.promises.rm(baseDir, { recursive: true, force: true });
   } catch (e) {
     console.warn('[git] Failed to remove managed repo folder', baseDir, e);
+  }
+}
+
+// Defensive in-process guard against calling this twice for the same repo
+// concurrently (only matters if `backfillAllManagedGitFolderSlugs` is ever
+// invoked more than once in a process) — the second call reuses the first
+// call's in-flight result instead of racing it on the same rename.
+const foldersBeingBackfilled = new Map<string, Promise<GitRepository>>();
+
+/**
+ * One-time, best-effort backfill: gives an app-managed repo folder a
+ * human-readable name derived from its owning project's name.
+ *
+ * MUST only be called from `backfillAllManagedGitFolderSlugs` at main-process
+ * startup, before the app window/renderer exists. Renaming a folder that any
+ * other code might concurrently read (a file watcher, a route loader's git
+ * call) is unsafe: a reader holding the old path can recreate it via the FS
+ * client's auto-mkdir-on-write behavior microseconds after the rename,
+ * silently forking the repo's files across both directories. Before startup
+ * completes, nothing else can be touching these folders yet, so no such
+ * reader exists.
+ *
+ * No-ops (returns `repo` unchanged) when there's nothing on disk yet to rename,
+ * the target name is already taken, the project has no usable name, or any I/O
+ * error occurs — callers keep working against the legacy (unslugged) folder
+ * name via `getRepoBaseDir`'s fallback. Never throws.
+ */
+async function backfillManagedFolderSlug(repo: GitRepository, projectId: string): Promise<GitRepository> {
+  const inFlight = foldersBeingBackfilled.get(repo._id);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const promise = (async () => {
+    try {
+      const project = await services.project.getById(projectId);
+      const slug = project ? slugify(project.name) : '';
+      if (!slug) {
+        return repo;
+      }
+
+      const gitRoot = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'version-control', 'git');
+      const oldDir = path.join(gitRoot, models.gitRepository.getGitRepoFolderName(repo));
+      const newDir = path.join(gitRoot, models.gitRepository.getGitRepoFolderName({ _id: repo._id, folderSlug: slug }));
+
+      const oldDirExists = await fs.promises
+        .stat(oldDir)
+        .then(stat => stat.isDirectory())
+        .catch(() => false);
+      if (!oldDirExists) {
+        // Nothing on disk yet — just record the slug so it's used from now on.
+        return await services.gitRepository.update(repo, { folderSlug: slug });
+      }
+
+      const newDirExists = await fs.promises
+        .access(newDir)
+        .then(() => true)
+        .catch(() => false);
+      if (newDirExists) {
+        console.warn('[git] Skipping managed repo folder rename — target already exists:', newDir);
+        return repo;
+      }
+
+      await fs.promises.rename(oldDir, newDir);
+      return await services.gitRepository.update(repo, { folderSlug: slug });
+    } catch (e) {
+      console.warn('[git] Failed to give managed repo folder a readable name', e);
+      return repo;
+    }
+  })();
+
+  foldersBeingBackfilled.set(repo._id, promise);
+  try {
+    return await promise;
+  } finally {
+    foldersBeingBackfilled.delete(repo._id);
   }
 }
 
@@ -445,6 +527,7 @@ async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 
  * @param workspaceId - Optional workspace ID (if provided, uses workspace-specific client)
  * @param gitRepositoryId - The Git repository ID
  * @param directory - Optional user-chosen repo directory (resolved from DB when omitted)
+ * @param folderSlug - Optional pre-fetched `GitRepository.folderSlug` (resolved from DB when omitted)
  * @returns File system client configured for the appropriate context
  */
 
@@ -453,14 +536,16 @@ async function getGitFSClient({
   workspaceId,
   gitRepositoryId,
   directory,
+  folderSlug,
 }: {
   projectId: string;
   workspaceId?: string;
   gitRepositoryId: string;
   directory?: string | null;
+  folderSlug?: string | null;
 }) {
   // Base directory where Git data is stored
-  const baseDir = await getRepoBaseDir(gitRepositoryId, directory);
+  const baseDir = await getRepoBaseDir(gitRepositoryId, directory, folderSlug);
 
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
@@ -594,7 +679,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
-    const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
+    const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
 
     // For a user-owned folder, detect that it has been moved/renamed/deleted (or
     // its drive unmounted) BEFORE creating the FS client — `fsClient` auto-creates
@@ -626,6 +711,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       projectId,
       workspaceId,
       directory: gitRepository.directory,
+      folderSlug: gitRepository.folderSlug,
     });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
@@ -1332,9 +1418,10 @@ export const cloneGitRepoAction = async ({
         projectId: project._id,
         gitRepositoryId: gitRepository._id,
         directory: gitRepository.directory,
+        folderSlug: gitRepository.folderSlug,
       });
 
-      const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
+      const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
 
       if (gitRepository.needsFullClone) {
         await GitVCS.initFromClone({
@@ -1788,7 +1875,7 @@ export const relocateGitRepoAction = async ({
   const repo = await services.gitRepository.getById(gitRepositoryId);
   invariant(repo, 'Git Repository not found');
 
-  const currentBaseDir = await getRepoBaseDir(repo._id, repo.directory);
+  const currentBaseDir = await getRepoBaseDir(repo._id, repo.directory, repo.folderSlug);
   if (path.resolve(currentBaseDir) === targetDir) {
     return { errors: ['The repository is already in that folder.'] };
   }
@@ -1937,7 +2024,7 @@ export const updateGitRepoAction = async ({
       credentialsId: credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
-      repoPath: await getRepoBaseDir(gitRepository._id, gitRepository.directory),
+      repoPath: await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug),
     });
 
     await GitVCS.setAuthor();
@@ -3317,6 +3404,52 @@ async function getCurrentBranchByRepositoryId({
   return GitVCSClass.getRepoCurrentBranch({
     fs,
   });
+}
+
+/**
+ * Best-effort startup pass: gives every app-managed git folder that predates
+ * `folderSlug` a human-readable name.
+ *
+ * MUST be awaited before the app window/renderer is created (see
+ * `entry.main.ts`) and MUST NOT be called again afterwards. Renaming these
+ * folders is only safe while nothing else — a file watcher, a route loader's
+ * git call — can be concurrently reading or writing them; once the renderer
+ * exists, it can trigger exactly that, and a rename racing a reader can
+ * silently fork a repo's files across the old and new folder (a reader that
+ * already resolved the old path can recreate it via the FS client's
+ * auto-mkdir-on-write behavior microseconds after the rename moves it away).
+ *
+ * Skips user-owned `directory` repos and already-slugged repos. Failures are
+ * logged, never thrown — this is a purely cosmetic upgrade, not worth failing
+ * startup over.
+ */
+export async function backfillAllManagedGitFolderSlugs(): Promise<void> {
+  try {
+    const allProjects = await services.project.list();
+    const gitProjects = allProjects.filter((p): p is GitProject => models.project.isConnectedGitProject(p));
+    if (gitProjects.length === 0) {
+      return;
+    }
+
+    const repoIds = gitProjects.map(p => models.project.getEffectiveRepoId(p)).filter(Boolean) as string[];
+    const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+      _id: { $in: repoIds },
+    });
+    const repoById = new Map(gitRepositories.map(r => [r._id, r]));
+
+    await Promise.all(
+      gitProjects.map(async project => {
+        const repoId = models.project.getEffectiveRepoId(project);
+        const repo = repoId ? repoById.get(repoId) : undefined;
+        if (!repo || repo.directory || repo.folderSlug || GitVCS.isInitializedForRepo(repo._id)) {
+          return;
+        }
+        await backfillManagedFolderSlug(repo, project._id);
+      }),
+    );
+  } catch (e) {
+    console.warn('[git] Failed to backfill managed repo folder names on startup', e);
+  }
 }
 
 export interface MigrationSummary {

@@ -13,3 +13,25 @@ export function generateId(prefix?: string) {
   }
   return id;
 }
+
+/**
+ * Turns arbitrary text into a filesystem-safe slug: lowercased, accents
+ * stripped, runs of non-alphanumeric characters collapsed to a single `-`,
+ * leading/trailing `-` trimmed, and truncated to `maxLength`.
+ *
+ * Returns `''` when nothing usable remains (e.g. all-emoji or all-punctuation
+ * input) — callers should treat that as "no slug available".
+ */
+export function slugify(input: string, maxLength = 40) {
+  const slug = input
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '') // strip accents (combining diacritical marks)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  if (slug.length <= maxLength) {
+    return slug;
+  }
+  return slug.slice(0, maxLength).replace(/-+$/g, '');
+}
