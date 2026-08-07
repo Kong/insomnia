@@ -378,12 +378,21 @@ export const CodeEditor = memo(
       const persistState = useCallback(() => {
         if (historyKey && codeMirror.current) {
           const scrollInfo = codeMirror.current.getScrollInfo();
-          // ignore invalid scroll positions
-          if (scrollInfo.height <= 0 || scrollInfo.width <= 0) {
-            return;
-          }
+          // A hidden or unmounting editor reports a zero-size viewport, so only
+          // persist a valid scroll position — but ALWAYS persist history (and
+          // cursor/selections/marks), which are layout-independent. Bailing here
+          // would drop the undo stack whenever the editor is toggled away while
+          // hidden (markdown write<->preview, pre/after-response script tabs).
+          const scroll = scrollInfo.height > 0 && scrollInfo.width > 0 ? scrollInfo : undefined;
           setCachedEditorState(historyKey, {
-            scroll: scrollInfo,
+            scroll,
+            // Only cache the value for editable editors, whose content can diverge
+            // from `defaultValue` (unsaved edits). Read-only editors are always
+            // authoritative from `defaultValue`. `valueSeed` records the model
+            // baseline so restore can tell an unchanged model (reuse the cached
+            // value + history) from an externally-updated one (use fresh defaultValue).
+            value: readOnly ? undefined : codeMirror.current.getValue(),
+            valueSeed: readOnly ? undefined : defaultValue ?? '',
             selections: codeMirror.current.listSelections(),
             cursor: codeMirror.current.getCursor(),
             history: codeMirror.current.getHistory(),
@@ -401,7 +410,7 @@ export const CodeEditor = memo(
               }),
           });
         }
-      }, [historyKey, codeMirror]);
+      }, [historyKey, codeMirror, readOnly, defaultValue]);
 
       const initEditor = useCallback(() => {
         if (!textAreaRef.current) {
@@ -567,11 +576,27 @@ export const CodeEditor = memo(
         // Restore the state
         const cachedState = historyKey ? getCachedEditorState(historyKey) : undefined;
         if (cachedState) {
-          const { scroll, selections, cursor, history, marks } = cachedState;
+          const { scroll, selections, cursor, history, marks, value, valueSeed } = cachedState;
+          // Reuse the cached content + undo stack only when the current model is
+          // consistent with what was cached, i.e. `defaultValue` equals either:
+          //   - the cached value  -> the model caught up to / saved that content
+          //     (e.g. markdown's debounced onChange landed), or
+          //   - the cached seed   -> the model is unchanged and the cached value is
+          //     just unsaved edits on top of it.
+          // If it matches neither, the model changed externally between two mounts
+          // sharing a historyKey (a script/sync updated the environment/response),
+          // so the fresh defaultValue wins and the stale value + history are dropped.
+          // Restore the value first so it stays consistent with the restored undo
+          // stack; the setHistory below replaces the throwaway history setValue creates.
+          const currentDefault = defaultValue ?? '';
+          const canReuse = value !== undefined && (currentDefault === value || currentDefault === valueSeed);
+          if (canReuse && value !== codeMirror.current.getValue()) {
+            codeMirror.current.setValue(value);
+          }
           if (scroll) {
             codeMirror.current.scrollTo(scroll.left, scroll.top);
           }
-          if (history) {
+          if (canReuse && history) {
             codeMirror.current.setHistory(history);
           }
           // NOTE: These won't be visible unless the editor is focused
