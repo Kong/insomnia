@@ -55,6 +55,7 @@ import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { useOrganizationData } from '~/ui/hooks/use-insomnia-app-data';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
@@ -80,12 +81,14 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { localFiles, remoteFilesPromise } = loaderData;
-  const { activeProject, activeProjectGitRepository, projects } = useProjectLoaderData()!;
+  const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
   const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
+  const { projects } = useOrganizationData(organizationId);
+
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
 
   useEffect(() => {
