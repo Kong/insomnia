@@ -149,6 +149,33 @@ export class ProjectPage extends BasePage {
     await this.setProjectName(name);
     await this.selectStorageType(storageType);
     await this.page.getByRole('button', { name: 'Create', exact: true }).click();
+    await this.closeProjectModalIfStuck();
+  }
+
+  /**
+   * Known app-side race: the "Create project" dialog can fail to close itself
+   * even though the project was created and the app already navigated to it.
+   */
+  private async closeProjectModalIfStuck(timeout = 5000): Promise<void> {
+    const dialog = this.page.getByRole('dialog', { name: 'Create or update dialog' });
+    const closedOnItsOwn = await dialog
+      .waitFor({ state: 'hidden', timeout })
+      .then(() => true)
+      .catch(() => false);
+
+    if (closedOnItsOwn) {
+      return;
+    }
+
+    await this.page.locator('[data-test-id="project-modal-close-button"]').click();
+
+    // The name/type fields were filled in, so closing can trigger a "discard unsaved changes" confirmation.
+    const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
+    if (await discardConfirmDialog.isVisible().catch(() => false)) {
+      await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click();
+    }
+
+    await dialog.waitFor({ state: 'hidden' });
   }
 
   /**

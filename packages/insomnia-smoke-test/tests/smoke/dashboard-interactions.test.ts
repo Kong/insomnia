@@ -10,20 +10,19 @@ test.describe('Dashboard', () => {
     await expect.soft(page.locator('.app')).not.toContainText('Setup Git Sync');
 
     // Create new project
-    await page.getByRole('button', { name: 'Create new Project' }).click();
-    await page.getByText('Local Vault').click();
-    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    const projectName = 'My Project';
+    await insomnia.projectPage.createProject(projectName, 'local');
 
     // Check empty project
     await expect.soft(page.locator('.app')).toContainText('Welcome to your project!');
     await expect.soft(page.locator('.app')).toContainText('Start fresh or bring in existing work');
 
     await insomnia.navigationSidebar.selectProjectDropdownOption({
-      projectName: 'My Project',
+      projectName,
       actionName: 'Settings',
     });
-    await page.getByPlaceholder('My Project').click();
-    await page.getByPlaceholder('My Project').fill('My Project123');
+    await page.getByPlaceholder(projectName).click();
+    await page.getByPlaceholder(projectName).fill('My Project123');
     await page.getByRole('button', { name: 'Update' }).click();
 
     // Check that the project name is updated on modal
