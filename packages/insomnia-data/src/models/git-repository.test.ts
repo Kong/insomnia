@@ -28,4 +28,13 @@ describe('getGitRepoFolderName', () => {
 
     expect(folderName).toBe('git_cams-project_57d071a646b34393929036c34dd0915e');
   });
+
+  it('falls back to the bare id when folderSlug contains anything outside [a-z0-9-] (e.g. a corrupted or path-traversal value)', () => {
+    const folderName = models.gitRepository.getGitRepoFolderName({
+      _id: 'git_57d071a646b34393929036c34dd0915e',
+      folderSlug: '../../etc',
+    });
+
+    expect(folderName).toBe('git_57d071a646b34393929036c34dd0915e');
+  });
 });

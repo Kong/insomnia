@@ -387,6 +387,29 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
   }
 }
 
+function getManagedGitRoot(): string {
+  return path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'version-control', 'git');
+}
+
+/**
+ * Joins `folderName` onto `gitRoot` and refuses to return a path that would
+ * escape it, returning `null` instead. `folderName` comes from
+ * `models.gitRepository.getGitRepoFolderName`, which already restricts
+ * `folderSlug` to `[a-z0-9-]` — this is a second, independent guard at the
+ * point the path is actually used on disk, in case that invariant is ever
+ * broken upstream. (`path.join`/`path.normalize` alone would silently collapse
+ * a `..` segment instead of rejecting it.)
+ */
+function resolveWithinGitRoot(gitRoot: string, folderName: string): string | null {
+  const resolvedGitRoot = path.resolve(gitRoot);
+  const resolvedPath = path.resolve(gitRoot, folderName);
+  const relative = path.relative(resolvedGitRoot, resolvedPath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    return null;
+  }
+  return resolvedPath;
+}
+
 /**
  * Resolves the absolute base directory where a Git repository's working tree and
  * .git directory live on disk.
@@ -415,11 +438,16 @@ async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null
     return dir;
   }
 
+  const gitRoot = getManagedGitRoot();
   const folderName = models.gitRepository.getGitRepoFolderName({ _id: gitRepositoryId, folderSlug: slug ?? null });
-  return path.join(
-    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${folderName}`,
-  );
+  const resolved = resolveWithinGitRoot(gitRoot, folderName);
+  if (!resolved) {
+    // Should be unreachable — getGitRepoFolderName already validates folderSlug — but
+    // fall back to the safe bare-id path rather than ever returning one outside gitRoot.
+    console.warn('[git] Computed managed repo folder path escaped the git root, falling back to bare id:', folderName);
+    return path.join(gitRoot, gitRepositoryId);
+  }
+  return resolved;
 }
 
 /**
@@ -481,9 +509,15 @@ async function backfillManagedFolderSlug(repo: GitRepository, projectId: string)
         return repo;
       }
 
-      const gitRoot = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'version-control', 'git');
-      const oldDir = path.join(gitRoot, models.gitRepository.getGitRepoFolderName(repo));
-      const newDir = path.join(gitRoot, models.gitRepository.getGitRepoFolderName({ _id: repo._id, folderSlug: slug }));
+      const gitRoot = getManagedGitRoot();
+      const oldDir = resolveWithinGitRoot(gitRoot, models.gitRepository.getGitRepoFolderName(repo));
+      const newDir = resolveWithinGitRoot(gitRoot, models.gitRepository.getGitRepoFolderName({ _id: repo._id, folderSlug: slug }));
+      if (!oldDir || !newDir) {
+        // Should be unreachable — getGitRepoFolderName already validates folderSlug — but
+        // never rename into/out of a path outside gitRoot.
+        console.warn('[git] Computed managed repo folder path escaped the git root, skipping backfill for', repo._id);
+        return repo;
+      }
 
       const oldDirExists = await fs.promises
         .stat(oldDir)

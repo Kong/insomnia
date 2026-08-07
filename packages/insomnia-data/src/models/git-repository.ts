@@ -85,11 +85,12 @@ export interface BaseGitRepository {
   /**
    * A filesystem-safe slug derived from the owning project's name at the time
    * the app-managed folder was created (or, for repos that predate this field,
-   * backfilled the first time the repo is loaded). It is baked into the
-   * managed folder name for readability (see {@link getGitRepoFolderName}) and
-   * is intentionally NOT kept in sync with later project renames — renaming
-   * the folder on every project rename would risk moving a directory out from
-   * under an open editor, terminal, or native git process.
+   * backfilled by a one-time best-effort startup pass before the window is
+   * created). It is baked into the managed folder name for readability (see
+   * {@link getGitRepoFolderName}) and is intentionally NOT kept in sync with
+   * later project renames — renaming the folder on every project rename would
+   * risk moving a directory out from under an open editor, terminal, or
+   * native git process.
    *
    * `null` means either the repo uses a user-chosen `directory` (irrelevant),
    * or the folder still uses its legacy bare-id name.
@@ -99,13 +100,20 @@ export interface BaseGitRepository {
 
 export const isGitRepository = (model: Pick<BaseModel, 'type'>): model is GitRepository => model.type === type;
 
+// `folderSlug` is only ever written via `slugify()`, which already restricts
+// its output to this charset — this is a second, independent check at the
+// point the value gets baked into a filesystem path, so a corrupted or
+// otherwise unsanitized `folderSlug` can never introduce a path separator or
+// a `..` traversal segment into the computed folder name.
+const SAFE_FOLDER_SLUG_PATTERN = /^[a-z0-9-]+$/;
+
 /**
  * Computes the on-disk folder name for a Git repository's app-managed
  * location: `git_<slug>_<hex>` when a `folderSlug` snapshot is available,
  * otherwise the bare `_id` (e.g. pre-existing repos not yet backfilled).
  */
 export function getGitRepoFolderName(repo: Pick<GitRepository, '_id' | 'folderSlug'>): string {
-  if (!repo.folderSlug) {
+  if (!repo.folderSlug || !SAFE_FOLDER_SLUG_PATTERN.test(repo.folderSlug)) {
     return repo._id;
   }
   const hex = repo._id.startsWith(`${prefix}_`) ? repo._id.slice(prefix.length + 1) : repo._id;

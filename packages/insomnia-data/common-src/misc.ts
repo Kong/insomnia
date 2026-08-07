@@ -25,7 +25,7 @@ export function generateId(prefix?: string) {
 export function slugify(input: string, maxLength = 40) {
   const slug = input
     .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '') // strip accents (combining diacritical marks)
+    .replace(/[\u0300-\u036F]/g, '') // strip accents (combining diacritical marks)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
