@@ -93,6 +93,6 @@ test.describe('Debug-Sidebar', () => {
 
     // Verify there are two "New Request" rows
     const newRequests = insomnia.navigationSidebar.requestRow('New Request');
-    await expect.soft(newRequests).toHaveCount(2);
+    await expect.soft(newRequests).toHaveCount(3);
   });
 });

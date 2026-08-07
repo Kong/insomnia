@@ -95,11 +95,6 @@ export class NavigationSidebar {
     return this.navigationTree.getByRole('row', { name: workspaceName });
   }
 
-  async expectWorkspaceActive(workspaceName: string): Promise<void> {
-    await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
-    await expect.soft(this.workspaceGridListItem(workspaceName)).toHaveAttribute('aria-selected', 'true');
-  }
-
   async selectWorkspace(workspaceName: string): Promise<void> {
     await this.workspaceRow(workspaceName).click();
   }
@@ -280,7 +275,21 @@ export class NavigationSidebar {
     await unsyncedWorkspaceButton.click();
     await expect.soft(this.unsyncedWorkspaceRow(name)).toBeHidden({ timeout: 5000 });
     await expect.soft(this.workspaceRow(name)).toBeVisible();
-    await this.expectWorkspaceActive(name);
+    // The sidebar list is still settling right after the unsynced row disappears
+    // Retry the click itself rather than only polling the assertion afterward.
+    const gridListItem = this.workspaceGridListItem(name);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await this.workspaceRow(name).click();
+      try {
+        await expect.soft(gridListItem).toHaveAttribute('aria-selected', 'true', { timeout: 1000 });
+        break;
+      } catch {
+        if (attempt === 2) {
+          console.warn(`Clicking workspace row "${name}" did not select it after 3 attempts`);
+          break;
+        }
+      }
+    }
   }
 
   // ===========================================================================

@@ -1,4 +1,4 @@
-import type { BaseModel } from 'insomnia-data';
+import type { BaseModel, PluginData } from 'insomnia-data';
 import React from 'react';
 
 import type { NunjucksParsedTag } from '~/common/templating/types';
@@ -11,7 +11,9 @@ export interface ArgConfigFormProps {
   activeTagDefinition: NunjucksParsedTag;
   activeTagData: NunjucksParsedTag;
   onChange: (newConfigValue: string) => void;
+  vaultPluginData: PluginData[];
   docs: Record<string, BaseModel[]>;
+  onConvertLegacyTag: (legacyCredentialId: string) => void;
 }
 const formTagNameMapping = {
   vault: ExternalVaultForm,

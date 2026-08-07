@@ -478,7 +478,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
           if (id === key) {
             if (needsEnterprisePlan && !isEnterprisePlan) {
-              // show modal if current user is not an enteprise user and the command is an enterprise feature
+              // show modal if current user is not an enterprise user and the command is an enterprise feature
               showModal(UpgradeModal, {
                 newPlan: 'enterprise',
                 featureName: displayName,

@@ -1,0 +1,13 @@
+diff --git a/node_modules/json-order/dist/parse.js b/node_modules/json-order/dist/parse.js
+index 7d4aad8..8eda055 100644
+--- a/node_modules/json-order/dist/parse.js
++++ b/node_modules/json-order/dist/parse.js
+@@ -12,7 +12,7 @@ var traverseObject = function (obj, map, parentKey, separator) {
+     }
+     childKeys.forEach(function (childKey) {
+         var value = obj[childKey];
+-        if (typeof value === 'object') {
++        if (value !== null && typeof value === 'object') {
+             traverseObject(value, map, "" + parentKey + separator + childKey, separator);
+         }
+     });
