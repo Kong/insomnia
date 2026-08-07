@@ -145,7 +145,7 @@ const ProjectNavigationSidebarInner = (
     null,
   );
 
-  const { organizationProjects, organizationWorkspaces, workspaceMetas, activeProjects, collectionByWorkspaceId } =
+  const { organizationProjects, organizationWorkspaces, workspaceMetas, collectionByWorkspaceId } =
     useProjectNavigationSidebarData(organizationId, {
       projectNavigationSidebarFilter,
       expandedProjectAndWorkspaceIds,
@@ -179,8 +179,8 @@ const ProjectNavigationSidebarInner = (
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
   const cloudSyncProjects = useMemo(
-    () => activeProjects.filter(p => models.project.isRemoteProject(p)),
-    [activeProjects],
+    () => organizationProjects.filter(p => models.project.isRemoteProject(p)),
+    [organizationProjects],
   ); // Generate a stable string key to trigger getOrFetchUnsyncedFiles when the list of cloud sync projects changes.
   const cloudSyncProjectIdsKey = useMemo(
     () =>
@@ -373,7 +373,7 @@ const ProjectNavigationSidebarInner = (
 
       const collectionChildrenAndMetaByWorkspaceId = collectionByWorkspaceId;
 
-      for (const project of activeProjects) {
+      for (const project of organizationProjects) {
         const projectId = project._id;
         const isProjectCollapsed = !(expandedProjectAndWorkspaceIds ?? []).includes(projectId);
         items.push({
@@ -627,12 +627,12 @@ const ProjectNavigationSidebarInner = (
     return buildWorkspaceAndCollectionData();
   }, [
     activeFilter,
-    activeProjects,
     collectionByWorkspaceId,
     collectionSortOrders,
     expandedProjectAndWorkspaceIds,
     localWorkspaceOrders,
     organizationId,
+    organizationProjects,
     organizationWorkspaces,
     projectWorkspaceSortOrder,
     requestGroupCollapseOverrides,

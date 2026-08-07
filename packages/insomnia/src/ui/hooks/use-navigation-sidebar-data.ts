@@ -13,8 +13,7 @@ export function useProjectNavigationSidebarData(
 ) {
   const { projectNavigationSidebarFilter, expandedProjectAndWorkspaceIds } = options;
   const { projects, workspaces, workspaceMetas } = useOrganizationData(organizationId);
-  const activeProjects = projects;
-  const projectIds = useMemo(() => activeProjects.map(p => p._id), [activeProjects]);
+  const projectIds = useMemo(() => projects.map(p => p._id), [projects]);
   // Get the list of collection workspace ids that should be cached based on the current filter and expanded projects/workspaces.
 
   const collectionWorkspaceIds = useMemo(() => {
@@ -40,7 +39,6 @@ export function useProjectNavigationSidebarData(
     organizationProjects: projects,
     organizationWorkspaces: workspaces,
     workspaceMetas,
-    activeProjects,
     projectIds,
     collectionWorkspaceIds,
     collectionByWorkspaceId,
