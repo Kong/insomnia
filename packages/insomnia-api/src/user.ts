@@ -44,8 +44,6 @@ export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: s
 };
 
 // POST /v3/users/me/actions
-export type UserActionType = CurrentUserActionCreateActionTypeEnum;
-
 export const trackUserAction = async ({
   sessionId,
   eventId,
@@ -53,7 +51,7 @@ export const trackUserAction = async ({
 }: {
   sessionId: string;
   eventId: string;
-  actionType: UserActionType;
+  actionType: CurrentUserActionCreateActionTypeEnum;
 }): Promise<void> => {
   const data: CurrentUserActionCreate = { event_id: eventId, action_type: actionType };
   return fetch<void>({

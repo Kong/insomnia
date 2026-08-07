@@ -1,4 +1,4 @@
-import { type CurrentPlan, trackUserAction, type UserActionType } from 'insomnia-api';
+import { type CurrentPlan, type CurrentUserActionCreateActionTypeEnum, trackUserAction } from 'insomnia-api';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId, getCurrentSessionId } from '~/common/account/session';
@@ -17,7 +17,7 @@ const isCurrentAccountOnEnterprisePlan = async (): Promise<boolean> => {
  * POST /v3/users/me/actions. Fire-and-forget: never throws, no-ops when logged out or when the current user isn't on an enterprise plan.
  * Call sites should not await this so it never blocks the calling flow.
  */
-export const trackUserActivity = async (actionType: UserActionType): Promise<void> => {
+export const trackUserActivity = async (actionType: CurrentUserActionCreateActionTypeEnum): Promise<void> => {
   try {
     const sessionId = await getCurrentSessionId();
     if (!sessionId) {
