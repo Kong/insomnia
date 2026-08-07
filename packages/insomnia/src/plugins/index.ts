@@ -371,12 +371,36 @@ async function traversePluginPath(
   }
 }
 
+// `quickjs-runtime.ts`'s `require('quickjs-emscripten')` only happens once per process, the first
+// time anything actually imports that module — and its resolved export is memoized forever
+// (`modulePromise`) rather than re-required on later calls. Nothing else in this process requires
+// `quickjs-emscripten` before an `elevated`/`unsandboxed` plugin's top-level module code has had a
+// chance to run its own real, synchronous `nodeRequire()` below — including patching
+// `Module.prototype.require`/`Module._load` to intercept and substitute whichever module the *host's*
+// first-ever real require of `quickjs-emscripten` resolves to (that first real require is what
+// backs the sandbox engine for every other, `sandboxed` plugin in the session, since the resolved
+// module is cached and reused, never re-required). Triggering that host require here, before the
+// loop below ever nodeRequires a plugin folder, ensures the module reference every later
+// `getQuickJSModule()` call reuses was captured before any plugin's own code could run at all — a
+// patch installed after this point can no longer change what's already been captured.
+async function ensureSandboxEngineLoadedBeforePlugins(): Promise<void> {
+  if (__IS_RENDERER__ || !process.type) {
+    // The plugin window's own sandboxed discovery goes over IPC to main rather than requiring
+    // quickjs-emscripten directly in this process; main's own call already runs this guard. The
+    // inso CLI's node runtime has no Electron/quickjs sandbox host at all.
+    return;
+  }
+  const { getQuickJSModule } = await import('../templating/sandbox/quickjs-runtime');
+  void getQuickJSModule();
+}
+
 export async function getPlugins(force = false): Promise<Plugin[]> {
   if (force) {
     plugins = null;
   }
 
   if (!plugins) {
+    await ensureSandboxEngineLoadedBeforePlugins();
     const settings = await services.settings.get();
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
