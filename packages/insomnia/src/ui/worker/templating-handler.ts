@@ -21,6 +21,17 @@ function getTemplatingDbAuthToken(): Promise<string> {
   return authTokenPromise;
 }
 
+// Invalidate this persistent worker's cached Liquid engine so its next render re-fetches plugin
+// tags from main, instead of reusing whatever was baked in the first time it ever rendered. Also
+// forces the plugin registry that fetch reaches (main/templating-worker-database.ts) to rescan —
+// see `plugin.reloadPlugins`. That fetch needs an auth token; if Reload is clicked before this
+// worker has ever handled a render job, it has none yet, so fetch one here rather than reusing the
+// render path's lazily-populated one.
+export async function reloadTemplatingWorker(): Promise<void> {
+  const authToken = await getTemplatingDbAuthToken();
+  worker.postMessage(JSON.stringify({ type: 'reload', authToken }));
+}
+
 export async function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
   const newContext = serializeRenderContext(context);
   const authToken = await getTemplatingDbAuthToken();
