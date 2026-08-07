@@ -152,6 +152,8 @@ export interface Settings {
   proxyEnabled: boolean;
   showPasswords: boolean;
   sidebarFocusForCollections: boolean;
+  /** True once the user has dismissed the one-time "Welcome to focus mode" onboarding popup. */
+  hasSeenSidebarFocusOnboarding: boolean;
   theme: string;
   timeout: number;
   updateAutomatically: boolean;

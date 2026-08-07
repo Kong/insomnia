@@ -68,6 +68,7 @@ export function init(): BaseSettings {
     proxyEnabled: false,
     showPasswords: false,
     sidebarFocusForCollections: true,
+    hasSeenSidebarFocusOnboarding: false,
     theme: getAppDefaultTheme(),
     // milliseconds
     timeout: 30_000,

@@ -44,12 +44,14 @@ import { SideBarTabList } from '~/ui/components/sidebar/project-navigation-sideb
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
+import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/sidebar-focus-onboarding';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useProjectNavigationSidebarData } from '~/ui/hooks/use-navigation-sidebar-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
@@ -1054,6 +1056,16 @@ const ProjectNavigationSidebarInner = (
     setOnboardingEnvWorkspaceId(null);
   }, []);
 
+  // One-time nudge explaining collection focus mode, anchored to the "back to
+  // all projects" arrow (only rendered while a collection is actually focused).
+  const patchSettings = useSettingsPatcher();
+  const [focusedWorkspaceHeaderNode, setFocusedWorkspaceHeaderNode] = useState<HTMLDivElement | null>(null);
+  const showSidebarFocusOnboarding =
+    enableCollectionFocus && !settings.hasSeenSidebarFocusOnboarding && Boolean(focusedWorkspaceId);
+  const dismissSidebarFocusOnboarding = useCallback(() => {
+    patchSettings({ hasSeenSidebarFocusOnboarding: true });
+  }, [patchSettings]);
+
   const skippedRoutesByReason = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const { routeName, reason, serviceName } of lastSyncResult?.skippedRoutes ?? []) {
@@ -1084,6 +1096,7 @@ const ProjectNavigationSidebarInner = (
           {focusedWorkspaceId ? (
             <div className={focusTransition === 'in' ? 'animate-[sidebar-focus-in_200ms_ease-out]' : ''}>
               <div
+                ref={setFocusedWorkspaceHeaderNode}
                 className="group flex items-center gap-1 px-(--padding-sm) pt-(--padding-sm)"
                 // Mirrors WorkspaceNode's row attributes so this header stands in for the
                 // (now-hidden) workspace row — e.g. for anything keyed off `workspace-node-*`.
@@ -1603,6 +1616,9 @@ const ProjectNavigationSidebarInner = (
 
       {onboardingEnvWorkspaceId && envOnboardingNode && (
         <KonnectEnvOnboarding triggerElement={envOnboardingNode} onDismiss={dismissEnvOnboarding} />
+      )}
+      {showSidebarFocusOnboarding && focusedWorkspaceHeaderNode && (
+        <SidebarFocusOnboarding triggerElement={focusedWorkspaceHeaderNode} onDismiss={dismissSidebarFocusOnboarding} />
       )}
     </div>
   );
