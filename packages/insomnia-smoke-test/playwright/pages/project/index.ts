@@ -251,6 +251,9 @@ export class ProjectPage extends BasePage {
     if (await projectModalCloseButton.isVisible()) {
       await projectModalCloseButton.click();
     }
+    // The modal's backdrop still intercepts clicks for a moment after closing
+    // (exit animation / unmount), which flakily blocks the click below.
+    await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
     await this.page.getByRole('button', { name: 'Personal workspace Organizations' }).click();
     await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
