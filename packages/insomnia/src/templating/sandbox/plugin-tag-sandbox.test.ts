@@ -485,6 +485,40 @@ describe('manifest-declared module grants (C3)', () => {
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
+
+  const bufferTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var buf = require('buffer'); return (buf.Buffer === Buffer) + ':' + buf.Buffer.from('ok').toString('utf8'); } }];";
+
+  it('a plugin granted "buffer" can use it, and its Buffer is the same object as the ambient global', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: bufferTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['buffer'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('true:ok');
+  });
+
+  it('a plugin declaring the node:buffer alias can use it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: bufferTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:buffer'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('true:ok');
+  });
+
+  it('a plugin without the grant is denied "buffer" with the manifest message (the ambient Buffer global remains usable regardless)', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: bufferTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'buffer' not permitted by manifest");
+  });
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
@@ -524,6 +558,79 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
         "var a = Buffer.from('ab'); var b = Buffer.from('cd'); var c = Buffer.concat([a, b]); return c.toString('utf8') + ':' + Buffer.isBuffer(c) + ':' + Buffer.isBuffer('x');",
       );
       expect(actual).toBe('abcd:true:false');
+    });
+
+    it('slice()/subarray() share memory with the original buffer, matching real Node (not Uint8Array.prototype.slice\'s copy semantics)', async () => {
+      const actual = await runGlobal(`
+        var b = Buffer.from('hello world');
+        var s = b.slice(0, 5);
+        s[0] = 88;
+        var sub = b.subarray(6, 11);
+        sub[0] = 89;
+        return b.toString('utf8') + ':' + Buffer.isBuffer(s) + ':' + Buffer.isBuffer(sub);
+      `);
+      const real = Buffer.from('hello world');
+      const s = real.slice(0, 5);
+      s[0] = 88;
+      const sub = real.subarray(6, 11);
+      sub[0] = 89;
+      expect(actual).toBe(`${real.toString('utf8')}:true:true`);
+    });
+
+    it('indexOf()/lastIndexOf()/includes() match real Node for string, byte, and offset forms', async () => {
+      const real = Buffer.from('hello world hello');
+      const actual = await runGlobal(`
+        var b = Buffer.from('hello world hello');
+        return JSON.stringify({
+          byString: b.indexOf('world'),
+          byByte: b.indexOf(119),
+          withOffset: b.indexOf('hello', 1),
+          notFound: b.indexOf('zzz'),
+          last: b.lastIndexOf('hello'),
+          lastWithOffset: b.lastIndexOf('hello', 10),
+          includesTrue: b.includes('world'),
+          includesFalse: b.includes('zzz'),
+        });
+      `);
+      expect(JSON.parse(actual)).toEqual({
+        byString: real.indexOf('world'),
+        byByte: real.indexOf(119),
+        withOffset: real.indexOf('hello', 1),
+        notFound: real.indexOf('zzz'),
+        last: real.lastIndexOf('hello'),
+        lastWithOffset: real.lastIndexOf('hello', 10),
+        includesTrue: real.includes('world'),
+        includesFalse: real.includes('zzz'),
+      });
+    });
+
+    it('compare()/equals() (instance and static) match real Node\'s ordering', async () => {
+      const actual = await runGlobal(`
+        return JSON.stringify({
+          aVsB: Buffer.from('a').compare(Buffer.from('b')),
+          bVsA: Buffer.from('b').compare(Buffer.from('a')),
+          aVsA: Buffer.from('a').compare(Buffer.from('a')),
+          staticCompare: Buffer.compare(Buffer.from('a'), Buffer.from('b')),
+          equalsTrue: Buffer.from('a').equals(Buffer.from('a')),
+          equalsFalse: Buffer.from('a').equals(Buffer.from('b')),
+        });
+      `);
+      expect(JSON.parse(actual)).toEqual({
+        aVsB: Buffer.from('a').compare(Buffer.from('b')),
+        bVsA: Buffer.from('b').compare(Buffer.from('a')),
+        aVsA: Buffer.from('a').compare(Buffer.from('a')),
+        staticCompare: Buffer.compare(Buffer.from('a'), Buffer.from('b')),
+        equalsTrue: Buffer.from('a').equals(Buffer.from('a')),
+        equalsFalse: Buffer.from('a').equals(Buffer.from('b')),
+      });
+    });
+
+    it('fill() with a numeric byte matches real Node; a string pattern throws rather than silently misbehaving (documented gap)', async () => {
+      const actual = await runGlobal("var b = Buffer.alloc(5); b.fill(65); return b.toString('utf8');");
+      const real = Buffer.alloc(5);
+      real.fill(65);
+      expect(actual).toBe(real.toString('utf8'));
+      await expect(runGlobal("Buffer.alloc(5).fill('ab');")).rejects.toThrow('only a numeric byte value is supported');
     });
   });
 
