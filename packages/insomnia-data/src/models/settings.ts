@@ -67,6 +67,8 @@ export function init(): BaseSettings {
     preferredHttpVersion: HttpVersions.default,
     proxyEnabled: false,
     showPasswords: false,
+    sidebarFocusForCollections: true,
+    hasSeenSidebarFocusOnboarding: false,
     theme: getAppDefaultTheme(),
     // milliseconds
     timeout: 30_000,
