@@ -132,14 +132,14 @@ const ASSERT_FACTORY = [
   '    "[object Float64Array]": true, "[object BigInt64Array]": true, "[object BigUint64Array]": true',
   '  };',
   '',
-  // Object.prototype.toString\'s tag alone is not a reliable brand check: a Proxy whose "get" trap
+  // Object.prototype.toString's tag alone is not a reliable brand check: a Proxy whose "get" trap
   // reports a spoofed Symbol.toStringTag (e.g. "Object") for a real Map/Set/WeakMap/WeakSet/
   // ArrayBuffer makes the tag lookup above see the spoofed value, even though the operand still
   // behaves like the real thing for every other operation. instanceof walks the prototype chain
   // instead (via [[GetPrototypeOf]], which a Proxy forwards to its target unless a getPrototypeOf
   // trap is also defined) and is unaffected by a toStringTag-only spoof, so it is checked too rather
   // than trusting the tag in isolation. This does not defend against a Proxy that fakes its
-  // prototype chain as well (documented as a residual gap in PERMISSIONS.md).',
+  // prototype chain as well (documented as a residual gap in PERMISSIONS.md).
   '  function isUnsupportedDeepEqualOperand(v) {',
   '    if (v === null || typeof v !== "object") { return false; }',
   '    if (UNSUPPORTED_DEEP_EQUAL_TAGS[Object.prototype.toString.call(v)]) { return true; }',
