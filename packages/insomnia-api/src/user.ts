@@ -44,7 +44,7 @@ export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: s
 };
 
 // POST /v3/users/me/actions
-export const trackUserAction = async ({
+export const recordUserAction = async ({
   sessionId,
   eventId,
   actionType,
