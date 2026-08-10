@@ -102,14 +102,21 @@ const EVENTS_FACTORY = [
 ].join('\n');
 
 // A pure-JS `assert` reimplementation. Deep-equality tracks visited [a, b] pairs to stay safe on
-// circular structures; Map/Set/TypedArray/ArrayBuffer operands and Symbol-keyed own properties throw
-// an explicit "not supported" error rather than risk a silently-wrong comparison (Object.keys alone
-// can't see into a Map/Set's internal entries). `throws()`'s matcher supports a RegExp (tests
-// `.message`), an Error-derived constructor (`instanceof` check), a plain validator function (called
-// with the thrown value), or a plain object (own-enumerable-property subset match) — legacy Node's
-// string-as-matcher form is not implemented. Thrown `AssertionError`s carry the same
-// name/message/actual/expected/operator shape as real Node's and satisfy `instanceof Error` and
-// `instanceof AssertionError`; exact message wording is not guaranteed to match Node's own formatting.
+// circular structures; Map/Set/WeakMap/WeakSet/TypedArray/ArrayBuffer operands and Symbol-keyed own
+// properties throw an explicit "not supported" error rather than risk a silently-wrong comparison
+// (Object.keys alone can't see into a Map/Set's internal entries). That detection checks both the
+// Object.prototype.toString tag and `instanceof`, because the tag alone is spoofable by a Proxy
+// whose `get` trap reports a different Symbol.toStringTag for a real Map/Set/WeakMap/WeakSet/
+// ArrayBuffer — instanceof is unaffected by a toStringTag-only spoof since it walks the prototype
+// chain instead. A Proxy that also fakes its prototype chain via a `getPrototypeOf` trap is a
+// documented residual gap (PERMISSIONS.md) — real Node's own deepStrictEqual has the identical
+// limitation against that same craft, so this is not a sandbox-specific regression. `throws()`'s
+// matcher supports a RegExp (tests `.message`), an Error-derived constructor (`instanceof` check), a
+// plain validator function (called with the thrown value), or a plain object (own-enumerable-property
+// subset match) — legacy Node's string-as-matcher form is not implemented. Thrown `AssertionError`s
+// carry the same name/message/actual/expected/operator shape as real Node's and satisfy
+// `instanceof Error` and `instanceof AssertionError`; exact message wording is not guaranteed to
+// match Node's own formatting.
 const ASSERT_FACTORY = [
   'function () {',
   '  function isDate(v) { return Object.prototype.toString.call(v) === "[object Date]"; }',
@@ -125,11 +132,29 @@ const ASSERT_FACTORY = [
   '    "[object Float64Array]": true, "[object BigInt64Array]": true, "[object BigUint64Array]": true',
   '  };',
   '',
+  // Object.prototype.toString\'s tag alone is not a reliable brand check: a Proxy whose "get" trap
+  // reports a spoofed Symbol.toStringTag (e.g. "Object") for a real Map/Set/WeakMap/WeakSet/
+  // ArrayBuffer makes the tag lookup above see the spoofed value, even though the operand still
+  // behaves like the real thing for every other operation. instanceof walks the prototype chain
+  // instead (via [[GetPrototypeOf]], which a Proxy forwards to its target unless a getPrototypeOf
+  // trap is also defined) and is unaffected by a toStringTag-only spoof, so it is checked too rather
+  // than trusting the tag in isolation. This does not defend against a Proxy that fakes its
+  // prototype chain as well (documented as a residual gap in PERMISSIONS.md).',
+  '  function isUnsupportedDeepEqualOperand(v) {',
+  '    if (v === null || typeof v !== "object") { return false; }',
+  '    if (UNSUPPORTED_DEEP_EQUAL_TAGS[Object.prototype.toString.call(v)]) { return true; }',
+  '    if (typeof Map === "function" && v instanceof Map) { return true; }',
+  '    if (typeof Set === "function" && v instanceof Set) { return true; }',
+  '    if (typeof WeakMap === "function" && v instanceof WeakMap) { return true; }',
+  '    if (typeof WeakSet === "function" && v instanceof WeakSet) { return true; }',
+  '    if (typeof ArrayBuffer === "function" && v instanceof ArrayBuffer) { return true; }',
+  '    return false;',
+  '  }',
+  '',
   '  function deepEqual(a, b, strict, seen) {',
   '    if (strict ? a === b : (a == b || sameValueZero(a, b))) { return true; }',
   '    if (a === null || b === null || typeof a !== "object" || typeof b !== "object") { return false; }',
-  '    var ta = Object.prototype.toString.call(a), tb = Object.prototype.toString.call(b);',
-  '    if (UNSUPPORTED_DEEP_EQUAL_TAGS[ta] || UNSUPPORTED_DEEP_EQUAL_TAGS[tb]) {',
+  '    if (isUnsupportedDeepEqualOperand(a) || isUnsupportedDeepEqualOperand(b)) {',
   '      throw new Error("assert deepEqual/deepStrictEqual: Map/Set/TypedArray/ArrayBuffer comparison is not supported in this sandbox");',
   '    }',
   '    if (Object.getOwnPropertySymbols(a).length || Object.getOwnPropertySymbols(b).length) {',
