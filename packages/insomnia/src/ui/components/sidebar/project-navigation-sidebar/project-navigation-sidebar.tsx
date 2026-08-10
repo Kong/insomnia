@@ -16,10 +16,9 @@ import {
   useState,
 } from 'react';
 import { Button, GridList, GridListItem, type Selection, Tabs, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { href, useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { Button as BasicButton } from '~/basic-components/button';
 import { filterCollection, flattenCollectionChildren } from '~/common/collection';
 import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
@@ -39,8 +38,12 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
-import { SidebarSearchField } from '~/ui/components/sidebar/project-navigation-sidebar/components/sidebar-search-field';
-import { SideBarTabList } from '~/ui/components/sidebar/project-navigation-sidebar/components/sidebar-tab-list';
+import {
+  NewProjectButton,
+  SidebarSearchField,
+  SideBarTabList,
+} from '~/ui/components/sidebar/project-navigation-sidebar/components';
+// import {  } from '~/ui/components/sidebar/project-navigation-sidebar/components/sidebar-tab-list';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
@@ -100,18 +103,6 @@ function getRelativeTimeString(timestamp: number, now: number = Date.now()): str
   const days = Math.floor(hours / 24);
   return `${days}d ${hours % 24}h ago`;
 }
-
-const NewProjectButton = ({ onPress, isDisabled }: { onPress: () => void; isDisabled?: boolean }) => (
-  <BasicButton
-    aria-label="Create new Project"
-    onPress={onPress}
-    isDisabled={isDisabled}
-    className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-  >
-    <Icon icon="plus" className="h-2.5 w-2.5" />
-    <span>New Project</span>
-  </BasicButton>
-);
 
 const ProjectNavigationSidebarInner = (
   { storageRules, konnectSyncEnabled, onCreateProject, activeTab, setActiveTab }: ProjectNavigationSidebarProps,
@@ -232,6 +223,13 @@ const ProjectNavigationSidebarInner = (
         .join(','),
     [cloudSyncProjects],
   );
+
+  const workspaceManualSortMethod = (a: Workspace, b: Workspace, localOrder: string[]) => {
+    const orderIndexByWorkspaceId = new Map(localOrder.map((workspaceId, index) => [workspaceId, index]));
+    const ai = orderIndexByWorkspaceId.get(a._id) ?? Infinity;
+    const bi = orderIndexByWorkspaceId.get(b._id) ?? Infinity;
+    return ai - bi;
+  };
 
   const getAllRemoteFilesByProjectId = useCallback(async () => {
     if (!cloudSyncProjectIdsKey) return new Map();
@@ -430,16 +428,9 @@ const ProjectNavigationSidebarInner = (
         let sortedWorkspaces: Workspace[] = [];
         if (workspaceOrder === 'type-manual') {
           const localOrder = localWorkspaceOrders?.[projectId];
-          if (localOrder) {
-            const orderIndexByWorkspaceId = new Map(localOrder.map((workspaceId, index) => [workspaceId, index]));
-            sortedWorkspaces = [...workspaces].sort((a, b) => {
-              const ai = orderIndexByWorkspaceId.get(a._id) ?? Infinity;
-              const bi = orderIndexByWorkspaceId.get(b._id) ?? Infinity;
-              return ai - bi;
-            });
-          } else {
-            sortedWorkspaces = [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b));
-          }
+          sortedWorkspaces = localOrder
+            ? [...workspaces].sort((a, b) => workspaceManualSortMethod(a, b, localOrder))
+            : [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b));
         } else {
           sortedWorkspaces = [...workspaces].sort((a, b) => sortMethodMap[workspaceOrder](a, b));
         }
@@ -703,11 +694,13 @@ const ProjectNavigationSidebarInner = (
       const workspaces = organizationWorkspaces.filter(w => w.parentId === targetProjectId);
       const currentWorkspaceSortOrder = projectWorkspaceSortOrder[targetProjectId] || 'type-manual';
       // Get the base order of workspace before re-order
+      const localOrder = localWorkspaceOrders?.[targetProjectId];
       const baseOrder =
         // if current order is manual, use the current order in local state or default sort by created time; otherwise use current order to sort
         currentWorkspaceSortOrder === 'type-manual'
-          ? localWorkspaceOrders?.[targetProjectId] ||
-            [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b)).map(w => w._id)
+          ? localOrder
+            ? [...workspaces].sort((a, b) => workspaceManualSortMethod(a, b, localOrder)).map(w => w._id)
+            : [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b)).map(w => w._id)
           : [...workspaces].sort((a, b) => sortMethodMap[currentWorkspaceSortOrder](a, b)).map(w => w._id);
       const reordered = (baseOrder as string[]).filter((id: string) => id !== draggedId);
 
@@ -1475,6 +1468,19 @@ const ProjectNavigationSidebarInner = (
               isOpen={isShortcutCreateOpen}
               onOpenChange={setIsShortcutCreateOpen}
               triggerRef={shortcutCreateTriggerRef}
+              onWorkspaceCreated={newWorkspaceId => {
+                const projectId =
+                  shortcutTargetItem.kind === 'workspace' ? shortcutTargetItem.project._id : shortcutTargetItem.doc._id;
+                const targetWorkspaceId = shortcutTargetItem.kind === 'workspace' ? shortcutTargetItem.doc._id : null;
+                handleLocalWorkspaceReorder(projectId, projectId, newWorkspaceId, targetWorkspaceId, 'after');
+                return navigate(
+                  href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
+                    organizationId,
+                    projectId,
+                    workspaceId: newWorkspaceId,
+                  }),
+                );
+              }}
             />
           )}
 
