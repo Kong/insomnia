@@ -136,10 +136,19 @@ export class VariableList<T extends Variable> extends PropertyList<T> {
     return '_kind' in obj && obj._kind === 'VariableList';
   }
 
-  override toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
+  override toObject(excludeDisabled?: boolean, _caseSensitive?: boolean, multiValue?: boolean, _sanitizeKeys?: boolean) {
     const obj: Record<string, any> = Object.create(null);
     this.list.forEach(variable => {
-      obj[variable.key] = variable.get();
+      if (excludeDisabled && variable.disabled) {
+        return;
+      }
+      const value = variable.get();
+      if (multiValue && variable.key in obj) {
+        const existing = obj[variable.key];
+        obj[variable.key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+      } else {
+        obj[variable.key] = value;
+      }
     });
     return obj;
   }

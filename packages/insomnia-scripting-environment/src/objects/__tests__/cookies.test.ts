@@ -226,6 +226,27 @@ describe('test CookieJar', () => {
     expect(cookieObject.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
   });
 
+  it('toObject includes disabled cookies by default but excludes them when excludeDisabled is true', () => {
+    const c1 = new Cookie({ key: 'c1', value: 'v1' });
+    const c2 = new Cookie({ key: 'c2', value: 'v2' });
+    c2.disabled = true;
+    const cookieList = new CookieList([c1, c2]);
+
+    expect(cookieList.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
+    expect(cookieList.toObject(true)).toEqual({ c1: 'v1' });
+  });
+
+  it('toObject collapses duplicate keys to the last value by default, but collects them into an array when multiValue is true', () => {
+    const cookieList = new CookieList([
+      new Cookie({ key: 'c1', value: 'v1' }),
+      new Cookie({ key: 'c1', value: 'v1b' }),
+      new Cookie({ key: 'c2', value: 'v2' }),
+    ]);
+
+    expect(cookieList.toObject()).toEqual({ c1: 'v1b', c2: 'v2' });
+    expect(cookieList.toObject(false, false, true)).toEqual({ c1: ['v1', 'v1b'], c2: 'v2' });
+  });
+
   it('toObject does not pollute the prototype for dangerous cookie keys', () => {
     const cookieList = new CookieList([
       new Cookie({ key: '__proto__', value: 'polluted' }),

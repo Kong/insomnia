@@ -249,10 +249,19 @@ export class HeaderList<T extends Header> extends PropertyList<T> {
       .reduce((totalSize, headerSize) => totalSize + headerSize, 0);
   }
 
-  override toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-    const obj: Record<string, string> = Object.create(null);
+  override toObject(excludeDisabled?: boolean, _caseSensitive?: boolean, multiValue?: boolean, _sanitizeKeys?: boolean) {
+    const obj: Record<string, string | string[]> = Object.create(null);
     this.list.forEach(header => {
-      obj[header.key] = header.valueOf();
+      if (excludeDisabled && header.disabled) {
+        return;
+      }
+      const value = header.valueOf();
+      if (multiValue && header.key in obj) {
+        const existing = obj[header.key];
+        obj[header.key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+      } else {
+        obj[header.key] = value;
+      }
     });
     return obj;
   }

@@ -188,10 +188,19 @@ export class CookieList extends PropertyList<Cookie> {
     return '_kind' in obj && obj._kind === 'CookieList';
   }
 
-  override toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-    const obj: Record<string, string> = Object.create(null);
+  override toObject(excludeDisabled?: boolean, _caseSensitive?: boolean, multiValue?: boolean, _sanitizeKeys?: boolean) {
+    const obj: Record<string, string | string[]> = Object.create(null);
     this.list.forEach(cookie => {
-      obj[cookie.key] = cookie.valueOf();
+      if (excludeDisabled && cookie.disabled) {
+        return;
+      }
+      const value = cookie.valueOf();
+      if (multiValue && cookie.key in obj) {
+        const existing = obj[cookie.key];
+        obj[cookie.key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+      } else {
+        obj[cookie.key] = value;
+      }
     });
     return obj;
   }
