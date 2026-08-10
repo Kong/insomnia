@@ -116,6 +116,58 @@ describe('querystring regression suite', () => {
       const result = await runQuerystringTag('return qs.unescape("bad%");');
       expect(result).toBe('bad%');
     });
+
+    it('parse() leaves a whole key/value undecoded if it contains malformed percent-encoding, even alongside well-formed escapes in the same token (documented gap, same root cause as unescape())', async () => {
+      const input = 'a=100%zzhello%20';
+      const result = await runQuerystringTag(`return JSON.stringify(qs.parse(${JSON.stringify(input)}));`);
+      // The shim's fallback is all-or-nothing per key/value: because "%zz" is malformed, the
+      // trailing well-formed "%20" is left undecoded too, unlike real Node (pinned below).
+      expect(JSON.parse(result)).toEqual({ a: '100%zzhello%20' });
+      expect(nodeQuerystring.parse(input)).toEqual({ a: '100%zzhello ' });
+    });
+
+    it('adversarial: a crafted "__proto__" query key cannot be used to write through to a real prototype, and repeated "__proto__" keys collect into an array like any other key', async () => {
+      const result = await runQuerystringTag(`
+        var r = qs.parse("__proto__=whatever");
+        var beforeHasPolluted = ({}).polluted;
+        try { r.__proto__.polluted = 'x'; } catch (e) { /* r.__proto__ is a string primitive, not a live prototype reference */ }
+        var afterHasPolluted = ({}).polluted;
+        var repeated = qs.parse("__proto__=1&__proto__=2");
+        return JSON.stringify({
+          typeofProto: typeof r.__proto__,
+          beforeHasPolluted: beforeHasPolluted,
+          afterHasPolluted: afterHasPolluted,
+          repeatedIsArray: Array.isArray(repeated.__proto__),
+          repeatedValue: repeated.__proto__,
+          chainOk: Object.getPrototypeOf({}) === Object.prototype,
+        });
+      `);
+      expect(JSON.parse(result)).toEqual({
+        typeofProto: 'string',
+        beforeHasPolluted: undefined,
+        afterHasPolluted: undefined,
+        repeatedIsArray: true,
+        repeatedValue: ['1', '2'],
+        chainOk: true,
+      });
+    });
+
+    it('adversarial: a crafted "constructor" query key cannot reach the real Function constructor or its prototype', async () => {
+      const result = await runQuerystringTag(`
+        var r = qs.parse("constructor=zzz&constructor.prototype.polluted=1");
+        var probe = {};
+        return JSON.stringify({ probeHasPolluted: probe.polluted, ctorType: typeof r.constructor });
+      `);
+      expect(JSON.parse(result)).toEqual({ probeHasPolluted: undefined, ctorType: 'string' });
+    });
+
+    it('adversarial: a pollution attempt in one render cannot leak into a later, independent render', async () => {
+      await runQuerystringTag('qs.parse("__proto__=1"); return "done";');
+      const second = await runQuerystringTag(
+        'return JSON.stringify({ chainOk: Object.getPrototypeOf({}) === Object.prototype, hasLeak: "polluted" in {} });',
+      );
+      expect(JSON.parse(second)).toEqual({ chainOk: true, hasLeak: false });
+    });
   });
 
   describe('parity with real node:querystring', () => {

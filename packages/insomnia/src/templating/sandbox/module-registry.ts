@@ -106,7 +106,11 @@ const EVENTS_FACTORY = [
 // Object.prototype accessor — no prototype-pollution path through parsed query keys. `unescape()`
 // falls back to the input value unchanged if it contains any malformed percent-encoding; real Node
 // partially decodes valid escapes and passes through only the invalid segment, which this shim does
-// not replicate (documented in PERMISSIONS.md).
+// not replicate (documented in PERMISSIONS.md). `parse()`'s own per-key/value decode (`decodeQSValue`)
+// has the identical all-or-nothing fallback, scoped to the individual key or value token rather than
+// the whole query string: a malformed escape anywhere in one key/value leaves that whole token
+// undecoded, including any well-formed escapes elsewhere in the same token, where real Node would
+// still decode them (also documented in PERMISSIONS.md).
 const QUERYSTRING_FACTORY = [
   'function () {',
   '  function isFiniteNumber(v) { return typeof v === "number" && v === v && v !== Infinity && v !== -Infinity; }',
