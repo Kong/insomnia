@@ -26,15 +26,17 @@ function insomniaIntegrationHosts() {
     getKonnectApiUrl(),
     getGitHubRestApiUrl(),
   ];
-  return urls
-    .map(url => {
-      try {
-        return new URL(setDefaultProtocol(url)).host;
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
+  return urls.flatMap(url => {
+    try {
+      const host = new URL(setDefaultProtocol(url)).host;
+      // Leading-dot form also bypasses subdomains — needed for e.g. Insomnia Cloud's
+      // per-mock-server `mock-<id>.mock.insomnia.run` hosts (see getMockServiceBinURL).
+      // Same convention already documented on the `noProxy` setting in the UI.
+      return [host, `.${host}`];
+    } catch {
+      return [];
+    }
+  });
 }
 
 // Update the proxy settings before making the request.
