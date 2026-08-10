@@ -127,7 +127,7 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '      var needle = __toNeedleBytes(value, encoding);',
   '      var offset = typeof byteOffset === "number" ? byteOffset : 0;',
   '      if (offset < 0) { offset = Math.max(this.length + offset, 0); }',
-  '      if (needle.length === 0) { return offset <= this.length ? offset : -1; }',
+  '      if (needle.length === 0) { return offset <= this.length ? offset : this.length; }',
   '      search:',
   '      for (var i = offset; i <= this.length - needle.length; i++) {',
   '        for (var j = 0; j < needle.length; j++) { if (this[i + j] !== needle[j]) { continue search; } }',

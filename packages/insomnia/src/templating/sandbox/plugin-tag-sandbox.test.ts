@@ -604,6 +604,25 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       });
     });
 
+    it('indexOf()/includes() with an empty needle clamp an out-of-range offset to length, matching real Node (not -1)', async () => {
+      const real = Buffer.from('abc');
+      const actual = await runGlobal(`
+        var b = Buffer.from('abc');
+        return JSON.stringify({
+          pastEnd: b.indexOf('', 100),
+          atEnd: b.indexOf('', 3),
+          negative: b.indexOf('', -100),
+          includesPastEnd: b.includes('', 100),
+        });
+      `);
+      expect(JSON.parse(actual)).toEqual({
+        pastEnd: real.indexOf('', 100),
+        atEnd: real.indexOf('', 3),
+        negative: real.indexOf('', -100),
+        includesPastEnd: real.includes('', 100),
+      });
+    });
+
     it('compare()/equals() (instance and static) match real Node\'s ordering', async () => {
       const actual = await runGlobal(`
         return JSON.stringify({
