@@ -135,6 +135,35 @@ describe('assert regression suite', () => {
       ).rejects.toThrow(/not supported/);
     });
 
+    it('deepEqual/deepStrictEqual still throw for a Map/Set disguised behind a Proxy that only spoofs Symbol.toStringTag', async () => {
+      // Object.prototype.toString's tag alone is not a reliable brand check: a Proxy can report a
+      // spoofed Symbol.toStringTag for a real Map/Set/WeakMap/WeakSet/ArrayBuffer while leaving every
+      // other operation (including its prototype chain) untouched, which would otherwise make two
+      // Maps/Sets with entirely different entries compare as "equal" with no throw at all — silently
+      // wrong, the exact outcome this module's explicit throw exists to prevent. A bare-`instanceof`
+      // check (unaffected by a toStringTag-only spoof) closes this specific bypass; a Proxy that also
+      // fakes its prototype chain via a `getPrototypeOf` trap is a documented residual gap.
+      const wrapProxy = 'function (v) { return new Proxy(v, { get: function (t, p, r) { return p === Symbol.toStringTag ? "Object" : Reflect.get(t, p, r); } }); }';
+      await expect(
+        runAssertTag(`
+          var wrap = ${wrapProxy};
+          assert.deepStrictEqual(wrap(new Map([["k", "left"]])), wrap(new Map([["k", "right"]])));
+        `),
+      ).rejects.toThrow(/not supported/);
+      await expect(
+        runAssertTag(`
+          var wrap = ${wrapProxy};
+          assert.deepStrictEqual(wrap(new Set(["left"])), wrap(new Set(["right"])));
+        `),
+      ).rejects.toThrow(/not supported/);
+      await expect(
+        runAssertTag(`
+          var wrap = ${wrapProxy};
+          assert.deepStrictEqual({ nested: wrap(new Map([["k", "left"]])) }, { nested: wrap(new Map([["k", "right"]])) });
+        `),
+      ).rejects.toThrow(/not supported/);
+    });
+
     it('ifError throws the value itself when not null/undefined', async () => {
       await expect(runAssertTag('assert.ifError(null); assert.ifError(undefined); return "pass";')).resolves.toBe('pass');
       await expect(runAssertTag('assert.ifError("boom");')).rejects.toThrow('boom');
