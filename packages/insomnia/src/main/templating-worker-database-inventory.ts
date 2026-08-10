@@ -391,6 +391,16 @@ export const HANDLER_INVENTORY: HandlerInventoryEntry[] = [
     guards: ['trusted-plugin'],
     blastRadius: 'runs an action from a caller-supplied directory/permissions if identity is not re-resolved',
   },
+  {
+    path: 'plugin.reloadPlugins',
+    // Takes no caller input — forces a full re-scan of the trusted plugin registry (getPlugins(true))
+    // so the render worker's reload path picks up plugin changes. The rescan (traversePluginPath) is
+    // itself the trust boundary; there is no caller-controlled target to abuse here (#10295).
+    sideEffect: 'sandbox-orchestration',
+    capability: null,
+    guards: ['registry-lookup'],
+    blastRadius: 'triggers a plugin-registry rescan; no caller input, so no injectable target',
+  },
 ];
 
 /** Handlers reachable from inside the sandbox (capability-gated). */

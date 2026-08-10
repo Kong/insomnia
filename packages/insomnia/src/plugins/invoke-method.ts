@@ -55,6 +55,7 @@ export type PluginInvokeMethod =
 function serializePlugin(p: Plugin) {
   return {
     name: p.name,
+    displayName: p.displayName,
     description: p.description,
     version: p.version,
     directory: p.directory,
@@ -62,6 +63,7 @@ function serializePlugin(p: Plugin) {
     permissions: p.permissions,
     permissionWarnings: p.permissionWarnings,
     permissionsDeclared: p.permissionsDeclared,
+    loadError: p.loadError,
   };
 }
 

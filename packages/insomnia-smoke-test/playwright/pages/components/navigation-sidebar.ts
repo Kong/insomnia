@@ -281,12 +281,12 @@ export class NavigationSidebar {
     for (let attempt = 0; attempt < 3; attempt++) {
       await this.workspaceRow(name).click();
       try {
-        await expect.soft(gridListItem).toHaveAttribute('aria-selected', 'true', { timeout: 1000 });
+        await expect(gridListItem).toHaveAttribute('aria-selected', 'true', { timeout: 1000 });
         break;
       } catch {
         if (attempt === 2) {
           console.warn(`Clicking workspace row "${name}" did not select it after 3 attempts`);
-          break;
+          throw new Error(`Clicking workspace row "${name}" did not select it after 3 attempts`);
         }
       }
     }
