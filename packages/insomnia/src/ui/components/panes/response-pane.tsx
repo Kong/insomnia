@@ -21,6 +21,7 @@ import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { MockResponseExtractor } from '../editors/mock-response-extractor';
 import { ErrorBoundary } from '../error-boundary';
+import { showError } from '../modals';
 import { ResponseTimer } from '../response-timer';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -73,13 +74,21 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
   const handleDownloadResponseBody = useCallback(
-    (prettify: boolean) =>
-      downloadResponseBody(
-        activeRequest,
-        activeResponse,
-        prettify,
-        activeResponse ? () => services.helpers.getResponseBodyBuffer(activeResponse) : undefined,
-      ),
+    async (prettify: boolean) => {
+      try {
+        await downloadResponseBody(
+          activeRequest,
+          activeResponse,
+          prettify,
+          activeResponse ? () => services.helpers.getResponseBodyBuffer(activeResponse) : undefined,
+        );
+      } catch (err) {
+        showError({
+          title: 'Failed to save response body',
+          error: err instanceof Error ? err : new Error(String(err)),
+        });
+      }
+    },
     [activeRequest, activeResponse],
   );
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);

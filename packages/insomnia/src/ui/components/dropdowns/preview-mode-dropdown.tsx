@@ -12,6 +12,7 @@ import {
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { showError } from '../modals';
 
 interface Props {
   download: (pretty: boolean) => any;
@@ -37,26 +38,33 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const data = await window.main.exportHarCurrentRequest({
-      requestId: activeRequest._id,
-      responseId: activeResponse._id,
-    });
-    const har = JSON.stringify(data, null, '\t');
+    try {
+      const data = await window.main.exportHarCurrentRequest({
+        requestId: activeRequest._id,
+        responseId: activeResponse._id,
+      });
+      const har = JSON.stringify(data, null, '\t');
 
-    const { filePath } = await window.dialog.showSaveDialog({
-      title: 'Export As HAR',
-      buttonLabel: 'Save',
-      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.har`,
-    });
+      const { filePath } = await window.dialog.showSaveDialog({
+        title: 'Export As HAR',
+        buttonLabel: 'Save',
+        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.har`,
+      });
 
-    if (!filePath) {
-      return;
+      if (!filePath) {
+        return;
+      }
+
+      await window.main.writeFile({
+        path: filePath,
+        content: har,
+      });
+    } catch (err) {
+      showError({
+        title: 'Failed to export as HAR',
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
     }
-
-    await window.main.writeFile({
-      path: filePath,
-      content: har,
-    });
   }, [activeRequest, activeResponse]);
 
   const exportDebugFile = useCallback(async () => {
@@ -65,26 +73,31 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const timeline = await services.helpers.getResponseTimeline(activeResponse);
-    const headers = timeline
-      .filter(v => v.name === 'HeaderIn')
-      .map(v => v.value)
-      .join('');
+    try {
+      const timeline = await services.helpers.getResponseTimeline(activeResponse);
+      const headers = timeline
+        .filter(v => v.name === 'HeaderIn')
+        .map(v => v.value)
+        .join('');
 
-    const { canceled, filePath } = await window.dialog.showSaveDialog({
-      title: 'Save Full Response',
-      buttonLabel: 'Save',
-      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
-    });
+      const { canceled, filePath } = await window.dialog.showSaveDialog({
+        title: 'Save Full Response',
+        buttonLabel: 'Save',
+        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
+      });
 
-    if (canceled) {
-      return;
-    }
+      if (canceled || !filePath || !activeResponse.bodyBuffer) {
+        return;
+      }
 
-    if (filePath && activeResponse.bodyBuffer) {
       await window.main.writeFile({
         path: filePath,
         content: headers + '\n' + bodyBufferToUtf8(activeResponse.bodyBuffer) || '',
+      });
+    } catch (err) {
+      showError({
+        title: 'Failed to export HTTP debug',
+        error: err instanceof Error ? err : new Error(String(err)),
       });
     }
   }, [activeRequest, activeResponse]);
