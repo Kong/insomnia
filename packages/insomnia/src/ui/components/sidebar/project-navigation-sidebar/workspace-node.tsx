@@ -6,19 +6,12 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-workspace-dropdown';
 
 import { Icon } from '../../icon';
-import {
-  ACTIVE_BORDER_CLASS,
-  GUIDE_LINE_CSS,
-  ICON_CLASS,
-  ROW_CLASS,
-  TOGGLE_BTN_CLASS,
-} from './project-navigation-sidebar-utils';
+import { ACTIVE_BORDER_CLASS, GUIDE_LINE_CSS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 import { type WorkspaceFlatItem } from './types';
 
 interface WorkspaceNodeProps {
   item: WorkspaceFlatItem;
   onToggle: (workspaceId: string) => void;
-
   sortOrder: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
   highlighted?: boolean;

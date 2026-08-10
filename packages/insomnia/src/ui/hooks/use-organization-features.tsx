@@ -1,41 +1,66 @@
-import { models } from 'insomnia-data';
+import { useQuery } from '@tanstack/react-query';
+import { type Billing, type FeatureList, getOrganizationFeatures } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
-import {
-  fallbackBilling,
-  fallbackFeatures,
-  useOrganizationPermissionsLoaderFetcher,
-} from '~/routes/organization.$organizationId.permissions';
+import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 
-import { useLoaderDeferData } from './use-loader-defer-data';
+export const fallbackFeatures = Object.freeze<FeatureList>({
+  bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
+  gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+  orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+  aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
+  aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
+  aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
+  konnectSync: { enabled: false, reason: 'Insomnia API unreachable' },
+});
 
-export function useOrganizationPermissions() {
-  const { organizationId } = useParams() as {
-    organizationId: string;
+// If network unreachable assume user has paid for the current period
+export const fallbackBilling = Object.freeze<Billing>({
+  isActive: true,
+  expirationWarningMessage: '',
+  expirationErrorMessage: '',
+  accessDenied: false,
+});
+
+/**
+ * Fetches the organization's features and billing from the Insomnia API using
+ * TanStack Query. Keying on the organization ID means all consumers share a
+ * single resolved copy from the server-data cache, so the value can no longer
+ * desync between components (the root cause of the missing Konnect tab).
+ *
+ * @param organizationIdParam optional explicit organization ID; defaults to the
+ * `organizationId` route param.
+ */
+export function useOrganizationPermissions(organizationIdParam?: string) {
+  const params = useParams() as { organizationId?: string };
+  const organizationId = organizationIdParam ?? params.organizationId ?? '';
+
+  // Bind explicitly to the server-data client: inside the organization subtree
+  // the nearest QueryClientProvider is the local database cache, which is not
+  // where this network query belongs.
+  const serverDataQueryClient = useServerDataQueryClient();
+
+  const isEnabled = !!organizationId && !models.organization.isScratchpadOrganizationId(organizationId);
+
+  const { data } = useQuery(
+    {
+      queryKey: ['organization-features', organizationId],
+      queryFn: async () => {
+        const { id: sessionId } = await services.userSession.get();
+        return getOrganizationFeatures({ organizationId, sessionId });
+      },
+      enabled: isEnabled,
+    },
+    serverDataQueryClient,
+  );
+
+  // Fall back to safe defaults while loading, when disabled (scratchpad), or on error.
+  return {
+    features: data?.features ?? fallbackFeatures,
+    billing: data?.billing ?? fallbackBilling,
   };
-
-  // Fetch organization permissions and features using the organization ID as the key.
-  // This will ensure that the data is cached and shared across components in the same page.
-  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
-
-  // Load organization permissions and features if they are not already loaded.
-  useEffect(() => {
-    const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (organizationId && !models.organization.isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
-      permissionsFetcher.load({
-        organizationId,
-      });
-    }
-  }, [organizationId, permissionsFetcher]);
-
-  const { featuresPromise, billingPromise } = permissionsFetcher.data || {};
-  // Features and billing return a promise using react-router's defer() so we need to wait for the data to be available.
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
-
-  const [billing = fallbackBilling] = useLoaderDeferData(billingPromise, organizationId);
-
-  return { features, billing };
 }
 
 /**
@@ -98,14 +123,6 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 }
 
 export function useIsGitSyncEnabled(organizationId: string) {
-  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
-  const permissionsFetcherLoad = permissionsFetcher.load;
-  useEffect(() => {
-    permissionsFetcherLoad({
-      organizationId,
-    });
-  }, [organizationId, permissionsFetcherLoad]);
-  const { featuresPromise } = permissionsFetcher.data || {};
-  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
+  const { features } = useOrganizationPermissions(organizationId);
   return features.gitSync.enabled;
 }

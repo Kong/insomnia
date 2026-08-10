@@ -7,6 +7,8 @@ export function list(query?: Query<WorkspaceMeta>, sort?: Record<string, any>, l
   return db.find<WorkspaceMeta>(type, query, sort, limit);
 }
 
+export const getById = (_id: string) => db.findOne<WorkspaceMeta>(type, { _id });
+
 export function create(patch: Partial<WorkspaceMeta> = {}) {
   if (!patch.parentId) {
     throw new Error(`New WorkspaceMeta missing parentId ${JSON.stringify(patch)}`);

@@ -8,7 +8,6 @@ import * as reactUse from 'react-use';
 
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { checkAllProjectSyncStatus, getProjectsWithGitRepositories } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { logout } from '~/ui/account/session';
@@ -116,13 +115,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     url: '',
   };
 
-  const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
-
-  const projects = models.project.sortProjects(organizationProjects);
-
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
-
-  const projectsSyncStatusPromise = checkAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
     project && models.project.isGitProject(project)
@@ -130,10 +123,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       : undefined;
 
   return {
-    projects,
     activeProject: project,
     activeProjectGitRepository,
-    projectsSyncStatusPromise,
     learningFeaturePromise,
   };
 }
