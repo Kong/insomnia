@@ -19,6 +19,7 @@ import { Button, GridList, GridListItem, type Selection, Tabs, Tooltip, TooltipT
 import { href, useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { Button as BasicButton } from '~/basic-components/button';
 import { filterCollection, flattenCollectionChildren } from '~/common/collection';
 import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
@@ -32,7 +33,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { SidebarShortcutActionsDropdown } from '~/ui/components/dropdowns/sidebar-shortcut-actions-dropdown';
 import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-workspace-dropdown';
-import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
+import { useKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
@@ -43,7 +44,6 @@ import {
   SidebarSearchField,
   SideBarTabList,
 } from '~/ui/components/sidebar/project-navigation-sidebar/components';
-// import {  } from '~/ui/components/sidebar/project-navigation-sidebar/components/sidebar-tab-list';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
@@ -981,7 +981,7 @@ const ProjectNavigationSidebarInner = (
     }
   }, [selectedItemId]);
 
-  useDocBodyKeyboardShortcuts({
+  useKeyboardShortcuts(() => parentRef.current!, {
     sidebar_showCreateDropdown: event => {
       if (!isProjectTabActive) {
         return;
@@ -1188,32 +1188,32 @@ const ProjectNavigationSidebarInner = (
               ) : (
                 <div className="flex items-center gap-1">
                   {syncing ? (
-                  <Button
-                    aria-label="Cancel sync"
-                    onPress={cancelSync}
-                    className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
-                  >
-                    Cancel
-                    <Icon icon="stop-circle" />
-                  </Button>
-                ) : (
-                  <TooltipTrigger delay={300}>
                     <Button
-                      aria-label="Sync Konnect"
-                      onPress={handleSync}
+                      aria-label="Cancel sync"
+                      onPress={cancelSync}
                       className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
                     >
-                      <Icon icon="refresh" />
-                      Sync
+                      Cancel
+                      <Icon icon="stop-circle" />
                     </Button>
-                    <Tooltip
-                      placement="bottom"
-                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
-                    >
-                      <LastSyncedLabel lastSyncedAt={lastSyncedAt ?? null} />
-                    </Tooltip>
-                  </TooltipTrigger>
-                )}
+                  ) : (
+                    <TooltipTrigger delay={300}>
+                      <Button
+                        aria-label="Sync Konnect"
+                        onPress={handleSync}
+                        className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                      >
+                        <Icon icon="refresh" />
+                        Sync
+                      </Button>
+                      <Tooltip
+                        placement="bottom"
+                        className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
+                      >
+                        <LastSyncedLabel lastSyncedAt={lastSyncedAt ?? null} />
+                      </Tooltip>
+                    </TooltipTrigger>
+                  )}
                   <Button
                     aria-label="Konnect settings"
                     onPress={() => setShowKonnectConfigModal(true)}
@@ -1280,65 +1280,78 @@ const ProjectNavigationSidebarInner = (
                     : ''
               }
             >
-            <GridList
-              aria-label="Project Navigation Tree"
-              items={virtualizer.getVirtualItems()}
-              style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
-              className="outline-hidden"
-              selectedKeys={selectedKeys}
-              onSelectionChange={setSelectedKeys}
-              selectionMode="single"
-              disabledKeys={pinnedHeaderKeys}
-              disabledBehavior="all"
-              dragAndDropHooks={sidebarDragAndDropHooks}
-            >
-              {virtualItem => {
-                const item = visibleFlatItems[virtualItem.index];
-                if (!item) return null;
+              <GridList
+                aria-label="Project Navigation Tree"
+                items={virtualizer.getVirtualItems()}
+                style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+                className="outline-hidden"
+                selectedKeys={selectedKeys}
+                onSelectionChange={setSelectedKeys}
+                selectionMode="single"
+                disabledKeys={pinnedHeaderKeys}
+                disabledBehavior="all"
+                dragAndDropHooks={sidebarDragAndDropHooks}
+              >
+                {virtualItem => {
+                  const item = visibleFlatItems[virtualItem.index];
+                  if (!item) return null;
 
-                // Keep the focus ring on the targeted item while the create dropdown is open,
-                // since keyboard focus has moved into the dropdown menu.
-                const isShortcutTarget =
-                  isShortcutCreateOpen && shortcutTargetItemId === item.doc._id && item.kind !== 'pinnedRequest';
+                  // Keep the focus ring on the targeted item while the create dropdown is open,
+                  // since keyboard focus has moved into the dropdown menu.
+                  const isShortcutTarget =
+                    isShortcutCreateOpen && shortcutTargetItemId === item.doc._id && item.kind !== 'pinnedRequest';
 
-                return (
-                  <GridListItem
-                    key={getSidebarGridListItemId(item)}
-                    id={getSidebarGridListItemId(item)}
-                    textValue={item.doc.name || item.kind}
-                    onAuxClick={e => {
-                      if (e.button === 1 && item.kind === 'collectionChild') {
-                        e.preventDefault();
-                        tabNavigate(
-                          {
-                            organization: organizationId,
-                            project: item.project,
-                            workspace: item.workspace,
-                            item: item.doc,
-                          },
-                          { withTab: true, shouldNavigate: true, searchParams },
-                        );
-                      }
-                    }}
-                    onPress={async e => {
-                      const docId = item.doc._id;
-                      if (item.kind === 'project') {
-                        if (routeInfo?.resourceId === docId) {
-                          toggleProjectOrWorkspace(docId);
-                        } else {
-                          !isScratchPad &&
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.projectSwitched,
-                              properties: { project_id: docId },
-                            });
-                          !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
+                  return (
+                    <GridListItem
+                      key={getSidebarGridListItemId(item)}
+                      id={getSidebarGridListItemId(item)}
+                      textValue={item.doc.name || item.kind}
+                      onAuxClick={e => {
+                        if (e.button === 1 && item.kind === 'collectionChild') {
+                          e.preventDefault();
+                          tabNavigate(
+                            {
+                              organization: organizationId,
+                              project: item.project,
+                              workspace: item.workspace,
+                              item: item.doc,
+                            },
+                            { withTab: true, shouldNavigate: true, searchParams },
+                          );
                         }
-                      } else if (item.kind === 'workspace') {
-                        if (item.doc.scope === 'collection' && enableCollectionFocus) {
-                          // Narrow the sidebar into this collection's tree, and open it
-                          // in the main pane if it isn't already active.
-                          focusWorkspace(docId, item.project._id);
-                          if (routeInfo?.resourceId !== docId || routeInfo?.routeId === 'runner') {
+                      }}
+                      onPress={async e => {
+                        const docId = item.doc._id;
+                        if (item.kind === 'project') {
+                          if (routeInfo?.resourceId === docId) {
+                            toggleProjectOrWorkspace(docId);
+                          } else {
+                            !isScratchPad &&
+                              window.main.trackAnalyticsEvent({
+                                event: AnalyticsEvent.projectSwitched,
+                                properties: { project_id: docId },
+                              });
+                            !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
+                          }
+                        } else if (item.kind === 'workspace') {
+                          if (item.doc.scope === 'collection' && enableCollectionFocus) {
+                            // Narrow the sidebar into this collection's tree, and open it
+                            // in the main pane if it isn't already active.
+                            focusWorkspace(docId, item.project._id);
+                            if (routeInfo?.resourceId !== docId || routeInfo?.routeId === 'runner') {
+                              tabNavigate(
+                                {
+                                  organization: organizationId,
+                                  project: item.project,
+                                  workspace: item.doc,
+                                  item: item.doc,
+                                },
+                                { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                              );
+                            }
+                          } else if (routeInfo?.resourceId === docId && routeInfo?.routeId !== 'runner') {
+                            toggleProjectOrWorkspace(docId);
+                          } else {
                             tabNavigate(
                               {
                                 organization: organizationId,
@@ -1349,116 +1362,105 @@ const ProjectNavigationSidebarInner = (
                               { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
                             );
                           }
-                        } else if (routeInfo?.resourceId === docId && routeInfo?.routeId !== 'runner') {
-                          toggleProjectOrWorkspace(docId);
-                        } else {
-                          tabNavigate(
-                            {
-                              organization: organizationId,
-                              project: item.project,
-                              workspace: item.doc,
-                              item: item.doc,
-                            },
-                            { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                          );
-                        }
-                        // Dismiss onboarding when user navigates to the highlighted environment
-                        if (docId === onboardingEnvWorkspaceId) {
-                          dismissEnvOnboarding();
-                        }
-                      } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
-                        // Clicking anything inside a collection (folder, request, etc.) focuses it.
-                        // Guard so re-clicking within an already-focused collection doesn't replay the transition.
-                        if (enableCollectionFocus && focusedWorkspaceId !== item.workspace._id) {
-                          focusWorkspace(item.workspace._id, item.project._id);
-                        }
-                        if (
-                          routeInfo?.resourceId === docId &&
-                          models.requestGroup.isRequestGroupId(docId) &&
-                          routeInfo?.routeId !== 'runner'
-                        ) {
-                          toggleRequestGroups([docId], item.workspace);
-                        } else {
-                          tabNavigate(
-                            {
-                              organization: organizationId,
-                              project: item.project,
-                              workspace: item.workspace,
-                              item: item.doc,
-                            },
-                            { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                          );
-                        }
-                      }
-                    }}
-                    className={`group rounded-xs outline-hidden select-none data-focus-visible:z-10 data-focus-visible:ring-2 data-focus-visible:ring-(--color-surprise) data-focus-visible:ring-inset ${isShortcutTarget ? 'z-10 ring-2 ring-(--color-surprise) ring-inset' : ''}`}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${virtualItem.size}px`,
-                      transform: `translateY(${virtualItem.start}px)`,
-                    }}
-                  >
-                    {item.kind === 'project' && (
-                      <ProjectNode
-                        item={item}
-                        onToggle={toggleProjectOrWorkspace}
-                        storageRules={storageRules}
-                        sortOrder={projectWorkspaceSortOrder[item.doc._id] || 'type-manual'}
-                        onSortOrderChange={newSortOrder =>
-                          setProjectWorkspaceSortOrder(prev => {
-                            const newProjectWorkspaceSortOrder = { ...prev, [item.doc._id]: newSortOrder };
-                            return newProjectWorkspaceSortOrder;
-                          })
-                        }
-                        onDeleteProject={projectId =>
-                          deleteProjectFetcher.submit({
-                            organizationId,
-                            projectId,
-                          })
-                        }
-                      />
-                    )}
-
-                    {item.kind === 'workspace' && (
-                      <WorkspaceNode
-                        item={item}
-                        onToggle={toggleProjectOrWorkspace}
-                        sortOrder={collectionSortOrders[item.doc._id] || 'type-manual'}
-                        onSortOrderChange={newSortOder => {
-                          if (item.doc.scope === 'collection') {
-                            setCollectionSortOrders(prev => {
-                              const newCollectionSortOrders = { ...prev, [item.doc._id]: newSortOder };
-                              return newCollectionSortOrders;
-                            });
+                          // Dismiss onboarding when user navigates to the highlighted environment
+                          if (docId === onboardingEnvWorkspaceId) {
+                            dismissEnvOnboarding();
                           }
-                        }}
-                        highlighted={item.doc._id === onboardingEnvWorkspaceId}
-                        nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
-                      />
-                    )}
+                        } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
+                          // Clicking anything inside a collection (folder, request, etc.) focuses it.
+                          // Guard so re-clicking within an already-focused collection doesn't replay the transition.
+                          if (enableCollectionFocus && focusedWorkspaceId !== item.workspace._id) {
+                            focusWorkspace(item.workspace._id, item.project._id);
+                          }
+                          if (
+                            routeInfo?.resourceId === docId &&
+                            models.requestGroup.isRequestGroupId(docId) &&
+                            routeInfo?.routeId !== 'runner'
+                          ) {
+                            toggleRequestGroups([docId], item.workspace);
+                          } else {
+                            tabNavigate(
+                              {
+                                organization: organizationId,
+                                project: item.project,
+                                workspace: item.workspace,
+                                item: item.doc,
+                              },
+                              { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                            );
+                          }
+                        }
+                      }}
+                      className={`group rounded-xs outline-hidden select-none data-focus-visible:z-10 data-focus-visible:ring-2 data-focus-visible:ring-(--color-surprise) data-focus-visible:ring-inset ${isShortcutTarget ? 'z-10 ring-2 ring-(--color-surprise) ring-inset' : ''}`}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${virtualItem.size}px`,
+                        transform: `translateY(${virtualItem.start}px)`,
+                      }}
+                    >
+                      {item.kind === 'project' && (
+                        <ProjectNode
+                          item={item}
+                          onToggle={toggleProjectOrWorkspace}
+                          storageRules={storageRules}
+                          sortOrder={projectWorkspaceSortOrder[item.doc._id] || 'type-manual'}
+                          onSortOrderChange={newSortOrder =>
+                            setProjectWorkspaceSortOrder(prev => {
+                              const newProjectWorkspaceSortOrder = { ...prev, [item.doc._id]: newSortOrder };
+                              return newProjectWorkspaceSortOrder;
+                            })
+                          }
+                          onDeleteProject={projectId =>
+                            deleteProjectFetcher.submit({
+                              organizationId,
+                              projectId,
+                            })
+                          }
+                        />
+                      )}
 
-                    {item.kind === 'pinnedHeader' && <PinnedHeaderNode depthOffset={treeDepthOffset} />}
+                      {item.kind === 'workspace' && (
+                        <WorkspaceNode
+                          item={item}
+                          onToggle={toggleProjectOrWorkspace}
+                          sortOrder={collectionSortOrders[item.doc._id] || 'type-manual'}
+                          onSortOrderChange={newSortOder => {
+                            if (item.doc.scope === 'collection') {
+                              setCollectionSortOrders(prev => {
+                                const newCollectionSortOrders = { ...prev, [item.doc._id]: newSortOder };
+                                return newCollectionSortOrders;
+                              });
+                            }
+                          }}
+                          highlighted={item.doc._id === onboardingEnvWorkspaceId}
+                          nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
+                        />
+                      )}
 
-                    {item.kind === 'collectionChild' && (
-                      <RequestNode item={item} onToggleFolder={toggleRequestGroups} depthOffset={treeDepthOffset} />
-                    )}
+                      {item.kind === 'pinnedHeader' && <PinnedHeaderNode depthOffset={treeDepthOffset} />}
 
-                    {item.kind === 'pinnedRequest' && (
-                      <RequestNode item={item} onToggleFolder={toggleRequestGroups} depthOffset={treeDepthOffset} />
-                    )}
+                      {item.kind === 'collectionChild' && (
+                        <RequestNode item={item} onToggleFolder={toggleRequestGroups} depthOffset={treeDepthOffset} />
+                      )}
 
-                    {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
+                      {item.kind === 'pinnedRequest' && (
+                        <RequestNode item={item} onToggleFolder={toggleRequestGroups} depthOffset={treeDepthOffset} />
+                      )}
 
-                    {item.kind === 'emptyProject' || item.kind === 'emptyCollection' || item.kind === 'emptyFolder' ? (
-                      <EmptyNode item={item} storageRules={storageRules} depthOffset={treeDepthOffset} />
-                    ) : null}
-                  </GridListItem>
-                );
-              }}
-            </GridList>
+                      {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
+
+                      {item.kind === 'emptyProject' ||
+                      item.kind === 'emptyCollection' ||
+                      item.kind === 'emptyFolder' ? (
+                        <EmptyNode item={item} storageRules={storageRules} depthOffset={treeDepthOffset} />
+                      ) : null}
+                    </GridListItem>
+                  );
+                }}
+              </GridList>
             </div>
           </div>
           {shortcutTargetItem && (
