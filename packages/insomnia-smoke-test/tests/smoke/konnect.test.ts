@@ -2,9 +2,10 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
-test.describe('Konnect sidebar tab', () => {
-  test('shows intro card without a PAT, configure it, then sync', async ({ page, insomnia }) => {
-    await page.getByTestId('sidebar-tab-konnect').click();
+test.describe('Control Planes organization', () => {
+  test('shows intro card without a PAT, configure it, then sync', async ({ page }) => {
+    await page.getByRole('button', { name: 'Organizations' }).click();
+    await page.getByRole('option', { name: 'Control Planes' }).click();
     await expect.soft(page.getByText('Auto-sync your gateway service routes')).toBeVisible();
 
     await page.getByRole('button', { name: 'Configure' }).click();
@@ -13,9 +14,8 @@ test.describe('Konnect sidebar tab', () => {
     await expect.soft(page.getByRole('heading', { name: 'Kong Konnect settings' })).toBeHidden();
 
     await expect.soft(page.getByRole('button', { name: 'Sync Konnect' })).toBeVisible();
-
-    await page.getByTestId('sidebar-tab-projects').click();
-    await expect.soft(page.getByRole('button', { name: 'Create new Project' })).toBeVisible();
+    // The Konnect organization never offers manual project creation.
+    await expect.soft(page.getByRole('button', { name: 'Create new Project' })).toBeHidden();
   });
 
   test.describe('with konnectSync feature flag disabled', () => {
@@ -31,9 +31,10 @@ test.describe('Konnect sidebar tab', () => {
       });
     });
 
-    test('hides the Konnect tab', async ({ page }) => {
+    test('hides the Control Planes organization', async ({ page }) => {
       await page.reload({ waitUntil: 'networkidle' });
-      await expect.soft(page.getByTestId('sidebar-tab-konnect')).toBeHidden();
+      await page.getByRole('button', { name: 'Organizations' }).click();
+      await expect.soft(page.getByRole('option', { name: 'Control Planes' })).toBeHidden();
     });
   });
 });

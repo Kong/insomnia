@@ -6,17 +6,16 @@ import { database } from '~/common/database';
 import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { runKonnectSync } from '~/ui/hooks/konnect-sync-trigger';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 
 export const KonnectSettingsModal = ({
   onClose,
-  syncKonnectProjectsAndNotifyRef,
   onDisconnect,
 }: {
   onClose: () => void;
-  syncKonnectProjectsAndNotifyRef: React.MutableRefObject<(konnectOrganizationId?: string | null) => Promise<void>>;
   onDisconnect?: () => void;
 }) => {
   const { settings } = useRootLoaderData()!;
@@ -74,7 +73,7 @@ export const KonnectSettingsModal = ({
     }
     await window.main.secretStorage.setSecret('konnectPat', trimmed);
     patchSettings({ hasKonnectPat: true, konnectOrganizationId: orgId ?? null });
-    syncKonnectProjectsAndNotifyRef.current(orgId ?? null);
+    runKonnectSync(orgId ?? null);
     onClose();
   };
 

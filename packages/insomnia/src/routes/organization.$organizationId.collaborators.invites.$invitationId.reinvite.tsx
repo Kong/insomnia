@@ -1,13 +1,19 @@
 import { reinvite } from 'insomnia-api';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, invitationId } = params;
+
+  invariant(
+    !models.organization.isLocalOrganizationId(organizationId),
+    'Invitations are not available for this organization',
+  );
 
   try {
     const user = await services.userSession.get();

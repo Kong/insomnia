@@ -1,9 +1,11 @@
 import type { CurrentPlan, Organization } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import { Fragment, useEffect, useState } from 'react';
 import { Button, Input, ListBox, ListBoxItem, Popover, SearchField, Select, SelectValue } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
+import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 
@@ -49,6 +51,7 @@ export const OrganizationSelect = ({
         value={organizationId}
       >
         <Button className="flex flex-1 items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
+          {models.organization.isKonnectOrganizationId(organizationId) && <KongLogo />}
           <SelectValue<Organization> className="flex items-center justify-center gap-2 truncate">
             {({ selectedItems }) => {
               return selectedItems?.[0]?.name || 'Select an organization';
@@ -99,6 +102,7 @@ export const OrganizationSelect = ({
               >
                 {({ isSelected }) => (
                   <Fragment>
+                    {models.organization.isKonnectOrganizationId(item.id) && <KongLogo />}
                     <span>{item.name}</span>
                     {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                   </Fragment>
