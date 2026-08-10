@@ -134,8 +134,8 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceId = 'wrk_1';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceId });
     const collectionChildren: CollectionWorkspaceChildren = {
-      children: { requestsAndGroups: [request as CollectionWorkspaceChildren['children']['requestsAndGroups'][0]] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), collectionChildren);
 
@@ -145,7 +145,7 @@ describe('updateAppDataOnDbChanges', () => {
     const updated = queryClient.getQueryData<CollectionWorkspaceChildren>(
       workspaceChildrenKeys.byWorkspaceId(workspaceId),
     );
-    expect(updated?.children.requestsAndGroups.find(r => r._id === 'req_1')?.name).toBe('renamed');
+    expect(updated?.data.requestsAndGroups.find(r => r._id === 'req_1')?.name).toBe('renamed');
     expect(queryClient.getQueryState(workspaceChildrenKeys.byWorkspaceId(workspaceId))?.isInvalidated).toBe(false);
   });
 
@@ -154,12 +154,12 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceBId = 'wrk_b';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceAId });
     const childrenA: CollectionWorkspaceChildren = {
-      children: { requestsAndGroups: [request as CollectionWorkspaceChildren['children']['requestsAndGroups'][0]] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB: CollectionWorkspaceChildren = {
-      children: { requestsAndGroups: [] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceAId), childrenA);
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceBId), childrenB);
@@ -202,12 +202,12 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('fetches all workspace ids in a single batched call when none are cached', async () => {
     const childrenA = {
-      children: { requestsAndGroups: [] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB = {
-      children: { requestsAndGroups: [] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(
       new Map([
@@ -226,14 +226,14 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('only fetches the uncached subset of workspace ids', async () => {
     const cachedChildren = {
-      children: { requestsAndGroups: [] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), cachedChildren);
 
     const fetchedChildren = {
-      children: { requestsAndGroups: [] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(new Map([['wrk_b', fetchedChildren]]));
 
@@ -245,8 +245,8 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('does not call the service when every workspace id is already cached', async () => {
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), {
-      children: { requestsAndGroups: [] },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      data: { requestsAndGroups: [] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
     await prefetchUncachedWorkspaceChildren(queryClient, ['wrk_a'], 'collection');

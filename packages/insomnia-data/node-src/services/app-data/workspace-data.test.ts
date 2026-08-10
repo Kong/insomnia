@@ -17,7 +17,7 @@ describe('getAllCollectionChildrenAndMetasByWorkspaceIds', () => {
 
     const result = await getAllCollectionChildrenAndMetasByWorkspaceIds([workspace._id]);
 
-    const ids = result.get(workspace._id)!.children.requestsAndGroups.map(doc => doc._id);
+    const ids = result.get(workspace._id)!.data.requestsAndGroups.map(doc => doc._id);
     expect(ids.sort()).toEqual([folder._id, request._id, subfolder._id].sort());
   });
 });
