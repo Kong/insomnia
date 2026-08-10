@@ -1,16 +1,14 @@
 // T1: the single source of truth for "does this plugin surface run in the sandbox?".
 //
-// Before T1 the condition `settings.templateTagSandboxEnabled && plugin.directory !== ''` was
-// duplicated across every execution surface (template tags, request/response hooks, actions, and
-// load-time discovery). T1 centralises it here so all surfaces agree, reads the superseding
-// `pluginSandboxEnabled` flag, and honours the per-plugin `elevated` escape hatch.
+// Before T1 a per-surface condition was duplicated across every execution surface (template tags,
+// request/response hooks, actions, and load-time discovery). T1 centralises it here so all surfaces
+// agree, reads the `pluginSandboxEnabled` flag, and honours the per-plugin `elevated` escape hatch.
 //
 // Pure and dependency-free (no electron, no node builtins) so it is safe to import from the main
 // process, the plugin (renderer) window, and the inso CLI's node runtime alike.
 
 /** The minimal settings shape the sandbox decision depends on. */
 export interface SandboxSettings {
-  templateTagSandboxEnabled?: boolean;
   pluginSandboxEnabled?: boolean;
 }
 
@@ -21,13 +19,9 @@ export interface SandboxPlugin {
   config?: { elevated?: boolean };
 }
 
-/**
- * Is the sandbox globally active? `pluginSandboxEnabled` supersedes/absorbs the older
- * `templateTagSandboxEnabled`: during migration either flag being on activates the sandbox, so
- * users who already opted into the template-tag experiment keep sandboxing without re-toggling.
- */
+/** Is the sandbox globally active? Driven by the single `pluginSandboxEnabled` setting. */
 export const isSandboxEnabled = (settings?: SandboxSettings): boolean =>
-  !!settings?.pluginSandboxEnabled || !!settings?.templateTagSandboxEnabled;
+  !!settings?.pluginSandboxEnabled;
 
 export type PluginExecutionMode =
   // Bundle/first-party plugin — shipped by us, always runs in-process with full host access.

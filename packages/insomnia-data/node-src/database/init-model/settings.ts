@@ -6,11 +6,26 @@ export function migrate(doc: Settings) {
   try {
     doc = migrateEnsureHotKeys(doc);
     doc = migrateCreateHTTPHotKey(doc);
+    doc = migratePluginSandboxFlag(doc);
     return doc;
   } catch (e) {
     console.log('[db] Error during settings migration', e);
     throw e;
   }
+}
+
+/**
+ * The experimental `templateTagSandboxEnabled` flag was retired and folded into `pluginSandboxEnabled`
+ * (which sandboxes every untrusted plugin surface, not just template tags). Carry a user's prior opt-in
+ * forward: if they had the old flag on, turn on the unified flag, then drop the stale field.
+ */
+function migratePluginSandboxFlag(settings: Settings): Settings {
+  const legacy = settings as Settings & { templateTagSandboxEnabled?: boolean };
+  if (legacy.templateTagSandboxEnabled === true && !legacy.pluginSandboxEnabled) {
+    legacy.pluginSandboxEnabled = true;
+  }
+  delete legacy.templateTagSandboxEnabled;
+  return legacy;
 }
 
 /**

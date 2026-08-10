@@ -330,7 +330,7 @@ export const maybeWarnMissingManifest = (
 
 // Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
 // process. The host bridge reuses the existing pluginToMainAPI handlers verbatim, plus a util.render
-// handler that recurses through main templating. Gated behind the templateTagSandboxEnabled setting.
+// handler that recurses through main templating. Gated behind the pluginSandboxEnabled setting.
 // The plugin's own source, either a single entry string (single-file plugins/tests) or a full
 // module map read from disk (M4 multi-file plugins).
 type PluginModuleSource = string | { moduleFiles: Record<string, string>; entryModuleKey: string };
@@ -890,22 +890,8 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
-        const settings = await services.settings.get();
-        // Bundle plugins are first-party/trusted, so the new pluginSandboxEnabled flag (which isolates
-        // *untrusted* plugins) deliberately leaves them in-process. Their tags run in the sandbox only
-        // under the legacy templateTagSandboxEnabled experiment, with the broad all-modules/all-caps
-        // profile — a hardening opt-in, not part of the T1 trust flip.
-        if (settings.templateTagSandboxEnabled) {
-          const { ALL_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
-          const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
-          // Bundle plugins are first-party and trusted: grant every module + capability.
-          return runPluginTagInSandbox(
-            readPluginModuleMap({ directory: '', name: pluginName }),
-            body,
-            [...ALL_SANDBOX_MODULES],
-            [...ALL_CAPABILITIES],
-          );
-        }
+        // Bundle plugins are first-party/trusted, so the pluginSandboxEnabled flag (which isolates
+        // *untrusted* plugins) deliberately leaves them in-process with full host access.
         return runPluginTag(targetTag.run, body);
       }
     }

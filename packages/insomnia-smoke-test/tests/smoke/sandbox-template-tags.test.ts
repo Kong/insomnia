@@ -152,14 +152,14 @@ const clearPluginToast = async (page: Page) => {
 // `assertTagPreviewEventually` canary, which polls the rendered output until it reports `sandbox`.
 const enableSandbox = async (page: Page) => {
   await page.getByTestId('settings-button').click();
-  const sandboxToggle = page.getByTestId('toggle-template-tag-sandbox');
+  const sandboxToggle = page.getByTestId('toggle-plugin-sandbox');
   await page.getByRole('tab', { name: 'Scripting' }).click();
   await sandboxToggle.getByRole('switch').waitFor();
   await sandboxToggle.click();
   await expect.soft(sandboxToggle.getByRole('switch')).toBeChecked();
   await page.locator('.app').press('Escape');
   // Wait for the settings modal to fully close before the caller renders anything.
-  await expect.soft(page.getByTestId('toggle-template-tag-sandbox')).toBeHidden();
+  await expect.soft(page.getByTestId('toggle-plugin-sandbox')).toBeHidden();
 };
 
 test('Template tag sandbox: flag routes plugin tag execution into the QuickJS sandbox', async ({
@@ -921,19 +921,6 @@ test('Plugin action sandbox (A1): a user plugin request action runs in the sandb
     .toContain('ranin-sandboxed|got-req');
 });
 
-// T1: enable the *new* pluginSandboxEnabled flag (distinct from templateTagSandboxEnabled) via
-// Preferences → Scripting. Same soft-assertion + Escape-to-close shape as enableSandbox.
-const enablePluginSandbox = async (page: Page) => {
-  await page.getByTestId('settings-button').click();
-  const toggle = page.getByTestId('toggle-plugin-sandbox');
-  await page.getByRole('tab', { name: 'Scripting' }).click();
-  await toggle.getByRole('switch').waitFor();
-  await toggle.click();
-  await expect.soft(toggle.getByRole('switch')).toBeChecked();
-  await page.locator('.app').press('Escape');
-  await expect.soft(page.getByTestId('toggle-plugin-sandbox')).toBeHidden();
-};
-
 // T1: toggle a user plugin's "Full host access" (elevated) in Preferences → Plugins, assert the mode
 // indicator reflects the new mode, then close. Toggling pluginConfig triggers a plugin reload (the
 // Plugins pane re-discovers on settings.pluginConfig change), so the plugin is re-loaded elevated.
@@ -1018,7 +1005,7 @@ test('Plugin sandbox trust flip (T1): pluginSandboxEnabled sandboxes a user plug
 
   // Turn on the NEW pluginSandboxEnabled flag (the legacy template-tag flag stays off). The user
   // plugin's action must now run in the QuickJS sandbox — proving the new flag drives every surface.
-  await enablePluginSandbox(page);
+  await enableSandbox(page);
   await expect
     .poll(
       async () => {
@@ -1093,7 +1080,7 @@ test('A hook throwing a crafted Error cannot self-elevate via a "plugin" propert
   await page.locator('.app').press('Escape').catch(() => {});
 
   // Enable the sandbox only after the poison attempt, since nothing else forces a plugin reload here.
-  await enablePluginSandbox(page);
+  await enableSandbox(page);
   await expect
     .poll(
       async () => {

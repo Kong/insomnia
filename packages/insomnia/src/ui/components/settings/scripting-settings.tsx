@@ -143,7 +143,6 @@ export const ScriptingSettings = () => {
 
   const sandboxEnabled = settings.scriptSandboxEnabled !== false;
   const strictModeEnabled = settings.scriptStrictModeEnabled !== false;
-  const templateTagSandboxEnabled = settings.templateTagSandboxEnabled === true;
   const pluginSandboxEnabled = settings.pluginSandboxEnabled === true;
   const disabledRules = settings.disabledSecurityRules ?? [];
   const disabledProperties = settings.disabledBlockedProperties ?? [];
@@ -317,27 +316,6 @@ export const ScriptingSettings = () => {
               onChange={enabled => patchSettings({ scriptStrictModeEnabled: enabled })}
             />
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-(--color-font)">Run template tags in sandbox (experimental)</span>
-            <p className="text-xs text-(--hl)">
-              Execute plugin template tags inside the QuickJS-WASM sandbox instead of directly in the main process.
-            </p>
-          </div>
-          <Switch
-            data-testid="toggle-template-tag-sandbox"
-            isSelected={templateTagSandboxEnabled}
-            onChange={enabled => patchSettings({ templateTagSandboxEnabled: enabled })}
-            className="group flex items-center gap-2"
-          >
-            <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-selected:bg-(--color-surprise)">
-              <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
-            </div>
-          </Switch>
         </div>
       </div>
 

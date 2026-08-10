@@ -379,7 +379,7 @@ describe('getPlugins: discovery', () => {
     vi.mocked(services.settings.get).mockResolvedValue({
       pluginConfig: {},
       pluginPath: pluginBase,
-      templateTagSandboxEnabled: false,
+      pluginSandboxEnabled: false,
     });
 
     const plugins = await getPlugins(true);
@@ -403,7 +403,7 @@ describe('getPlugins: discovery', () => {
     vi.mocked(services.settings.get).mockResolvedValue({
       pluginConfig: {},
       pluginPath: pluginBase,
-      templateTagSandboxEnabled: false,
+      pluginSandboxEnabled: false,
     });
 
     const plugins = await getPlugins(true);
