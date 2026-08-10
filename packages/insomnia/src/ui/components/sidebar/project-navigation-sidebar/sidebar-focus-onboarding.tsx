@@ -43,7 +43,7 @@ export const SidebarFocusOnboarding = ({ triggerElement, onDismiss }: SidebarFoc
         </button>
       </div>
       <p className="mt-2 text-sm text-(--hl)">
-        Insomnia now automatically narrows the sidebar to the collection you're working. Click the back arrow at the
+        Insomnia now automatically narrows the sidebar to the collection you're working on. Click the back arrow at the
         top to return, or turn this off anytime in Preferences with the{' '}
         <span className="font-bold text-(--color-font)">Sidebar focus for collections</span> setting.
       </p>
