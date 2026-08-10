@@ -1,10 +1,21 @@
 import { expect } from '@playwright/test';
 
-import { test } from '../../playwright/test';
+import { seedSettings } from '../../playwright/paths';
+import { test as baseTest } from '../../playwright/test';
 
-// sidebarFocusForCollections defaults to on, so creating a collection immediately focuses the
-// sidebar on it. This covers the one-time "Welcome to focus mode" nudge that explains that
-// behavior and confirms dismissing it is actually persisted, not just in-memory for the session.
+// sidebarFocusForCollections defaults to on for real users (creating a collection
+// immediately focuses the sidebar on it), but the smoke-test harness defaults it off so the
+// rest of the suite isn't affected by focus mode (see playwright/test.ts). This spec is about
+// focus mode itself, so turn it back on for these tests specifically.
+const test = baseTest.extend({
+  dataPath: async ({ dataPath }, use) => {
+    await seedSettings(dataPath, { sidebarFocusForCollections: true });
+    await use(dataPath);
+  },
+});
+
+// This covers the one-time "Welcome to focus mode" nudge that explains that behavior and
+// confirms dismissing it is actually persisted, not just in-memory for the session.
 test.describe('sidebar focus mode onboarding', () => {
   test('shows once on first focus and stays dismissed after reload', async ({ page, insomnia }) => {
     // A brand-new project starts empty, so the first collection comes from this welcome-state
@@ -15,7 +26,7 @@ test.describe('sidebar focus mode onboarding', () => {
     const onboarding = page.getByRole('dialog', { name: 'Sidebar focus mode onboarding' });
     await expect.soft(onboarding).toBeVisible();
     await expect.soft(onboarding.getByText('Welcome to focus mode')).toBeVisible();
-    await expect.soft(onboarding.getByText('Back to all projects')).toBeVisible();
+    await expect.soft(onboarding.getByText('back arrow')).toBeVisible();
     await expect.soft(onboarding.getByText('Sidebar focus for collections')).toBeVisible();
 
     await onboarding.getByRole('button', { name: 'Got It' }).click();
