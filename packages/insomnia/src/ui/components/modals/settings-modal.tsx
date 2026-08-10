@@ -42,7 +42,7 @@ type SettingsModalTabKey =
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
-  const { userSession } = useRootLoaderData()!;
+  const { userSession, settings } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
   const { organizationId } = useParams() as { organizationId?: string };
@@ -195,6 +195,13 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
                 placeholder="localhost,127.0.0.1"
               />
             </div>
+
+            <BooleanSetting
+              label="Use proxy for Insomnia's integrations"
+              setting="proxyIntegrations"
+              disabled={!settings.proxyEnabled}
+              help="If checked, the proxy above is also used for Insomnia's own integrations (the Insomnia API and website, mock service, AI helper, Konnect, and GitHub). Unchecked (default), those go direct and only your own requests use the proxy."
+            />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="data">
             <ImportExport

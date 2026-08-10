@@ -1,13 +1,45 @@
 import { session } from 'electron/main';
 import { models, services } from 'insomnia-data';
 
+import {
+  getAIServiceURL,
+  getApiBaseURL,
+  getAppWebsiteBaseURL,
+  getGitHubRestApiUrl,
+  getKonnectApiUrl,
+  getMockServiceURL,
+} from '~/common/constants';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
 import { type ChangeBufferEvent, database as db } from '../common/database';
 
+// Insomnia's own first-party integrations — fixed hosts, not user-configured targets like a
+// self-hosted GitLab or MCP server. Bypassed by default (see `proxyIntegrations` below) so a
+// user's proxy — typically set up for their own requests — doesn't also have to know how to
+// route to these, matching how this traffic behaved before the app's proxy setting covered it.
+function insomniaIntegrationHosts() {
+  const urls = [
+    getApiBaseURL(),
+    getAppWebsiteBaseURL(),
+    getMockServiceURL(),
+    getAIServiceURL(),
+    getKonnectApiUrl(),
+    getGitHubRestApiUrl(),
+  ];
+  return urls
+    .map(url => {
+      try {
+        return new URL(setDefaultProtocol(url)).host;
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
 // Update the proxy settings before making the request.
 async function updateProxy() {
-  const { proxyEnabled, httpProxy, httpsProxy, noProxy } = await services.settings.get();
+  const { proxyEnabled, httpProxy, httpsProxy, noProxy, proxyIntegrations } = await services.settings.get();
 
   if (proxyEnabled) {
     try {
@@ -26,10 +58,14 @@ async function updateProxy() {
         proxyRules.push(`https=${parseProxyFromUrl(httpsProxy)}`);
       }
 
+      const bypassRules = proxyIntegrations
+        ? (noProxy ?? '')
+        : [noProxy, ...insomniaIntegrationHosts()].filter(Boolean).join(',');
+
       // Set proxy rules in the main session https://www.electronjs.org/docs/latest/api/structures/proxy-config
       await session.defaultSession.setProxy({
         proxyRules: proxyRules.join(';'),
-        proxyBypassRules: noProxy ?? '',
+        proxyBypassRules: bypassRules,
         mode: 'fixed_servers',
       });
       return;
@@ -57,7 +93,8 @@ export async function watchProxySettings() {
           old.proxyEnabled !== doc.proxyEnabled ||
           old.httpProxy !== doc.httpProxy ||
           old.httpsProxy !== doc.httpsProxy ||
-          old.noProxy !== doc.noProxy;
+          old.noProxy !== doc.noProxy ||
+          old.proxyIntegrations !== doc.proxyIntegrations;
         if (hasProxyChanged) {
           await updateProxy();
           old = doc;

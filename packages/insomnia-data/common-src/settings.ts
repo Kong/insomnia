@@ -137,6 +137,12 @@ export interface Settings {
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
+  /**
+   * When false (default), the configured proxy is not used for Insomnia's own first-party
+   * integrations (the Insomnia API/website, mock service, AI helper, Konnect, GitHub) — only for
+   * the user's own requests. When true, that traffic is routed through the proxy too.
+   */
+  proxyIntegrations: boolean;
   showVariableSourceAndValue: boolean;
   lightTheme: string;
   lineWrapping?: boolean;
