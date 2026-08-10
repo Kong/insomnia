@@ -3177,7 +3177,13 @@ async function listGitProviders() {
   return providers;
 }
 
-async function initSignInToGitProvider({ provider }: { provider: GitRemoteProviderType }) {
+async function initSignInToGitProvider({
+  provider,
+  credentialId,
+}: {
+  provider: GitRemoteProviderType;
+  credentialId?: string;
+}) {
   const gitProvider = gitRemoteProviderRegistry.get(provider);
 
   invariant(gitProvider, `Git provider ${provider} not found`);
@@ -3185,7 +3191,7 @@ async function initSignInToGitProvider({ provider }: { provider: GitRemoteProvid
   invariant(gitProvider.initiateOAuth, `Git provider ${provider} does not support OAuth`);
 
   try {
-    await gitProvider.initiateOAuth();
+    await gitProvider.initiateOAuth(credentialId);
 
     return {};
   } catch (error) {
