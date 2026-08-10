@@ -485,6 +485,30 @@ describe('manifest-declared module grants (C3)', () => {
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
+
+  const punycodeTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var punycode = require('punycode'); return punycode.toASCII('bücher'); } }];";
+
+  it('a plugin granted "punycode" can use it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: punycodeTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['punycode'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('xn--bcher-kva');
+  });
+
+  it('a plugin without the grant is denied "punycode" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: punycodeTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'punycode' not permitted by manifest");
+  });
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
