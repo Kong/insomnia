@@ -430,9 +430,16 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
     yarnEnv.NODE_EXTRA_CA_CERTS = extraCerts;
   }
 
-  // Add proxy settings if enabled
+  // Add proxy settings if enabled. Yarn runs as a separate child process — it never touches
+  // Electron's session, so it needs its own HTTP_PROXY/HTTPS_PROXY env vars (main/proxy.ts's
+  // session-level bypass rules don't apply here). The default public npm registry is treated
+  // like Insomnia's other first-party integrations: bypassed unless proxyIntegrations is on. A
+  // custom registry is a user-configured target, so it always respects the proxy setting.
   if (settings.proxyEnabled === true) {
-    Object.assign(yarnEnv, buildProxyEnv(settings));
+    const usingDefaultRegistry = (await getRegistryUrl()) === DEFAULT_NPM_REGISTRY;
+    if (settings.proxyIntegrations === true || !usingDefaultRegistry) {
+      Object.assign(yarnEnv, buildProxyEnv(settings));
+    }
   }
 
   if (isDevelopment()) {

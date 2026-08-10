@@ -1,3 +1,5 @@
+import type * as Electron from 'electron';
+import { services } from 'insomnia-data';
 import type { GitHttpRequest, GitHttpResponse, HttpClient } from 'isomorphic-git';
 
 /**
@@ -52,6 +54,26 @@ function fromStream(stream: ReadableStream<Uint8Array>) {
   };
 }
 
+// All git-sync traffic (any remote — github.com, a self-hosted GitLab, GitHub Enterprise, etc.)
+// is treated as one Insomnia integration surface, same as main/proxy.ts's bypass list: enabling a
+// proxy for your own request testing shouldn't also break git-sync out of the box. When
+// proxyIntegrations is off (default), this session-scoped direct session is used instead of
+// electron.net.fetch (session.defaultSession), so only git-sync's own requests bypass — nothing
+// else that might share that session.
+let directSession: Electron.Session | undefined;
+async function getDirectSession(electron: typeof Electron) {
+  if (!directSession) {
+    directSession = electron.session.fromPartition('git-sync-direct', { cache: false });
+    await directSession.setProxy({ mode: 'direct' });
+  }
+  return directSession;
+}
+
+async function shouldBypassProxy(): Promise<boolean> {
+  const settings = await services.settings.get();
+  return settings.proxyEnabled === true && settings.proxyIntegrations !== true;
+}
+
 async function request({ url, method = 'GET', headers = {}, body }: GitHttpRequest): Promise<GitHttpResponse> {
   if (body) {
     body = await collect(body);
@@ -59,7 +81,9 @@ async function request({ url, method = 'GET', headers = {}, body }: GitHttpReque
 
   const electron = await import('electron');
 
-  const res = await electron.net.fetch(url, { method, headers, body });
+  const res = (await shouldBypassProxy())
+    ? await (await getDirectSession(electron)).fetch(url, { method, headers, body })
+    : await electron.net.fetch(url, { method, headers, body });
   const iter = res.body ? fromStream(res.body) : [new Uint8Array(await res.arrayBuffer())];
   // convert Header object to ordinary JSON
   headers = {};
