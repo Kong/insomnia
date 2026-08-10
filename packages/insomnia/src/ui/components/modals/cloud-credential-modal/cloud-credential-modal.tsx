@@ -1,7 +1,7 @@
 import type { CloudProviderCredential } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
-import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
+import { Button, Dialog, Form, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
@@ -182,8 +182,16 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                       If your browser does not open the Insomnia app automatically you can manually paste the redirect
                       URL in Azure to here.
                     </p>
-                    <div className="form-control form-control--outlined no-pad-top" style={{ display: 'flex' }}>
+                    <Form
+                      className="form-control form-control--outlined no-pad-top"
+                      style={{ display: 'flex' }}
+                      onSubmit={e => {
+                        e.preventDefault();
+                        exchangeAzureCode();
+                      }}
+                    >
                       <input
+                        autoFocus
                         type="text"
                         className="mr-(--padding-sm)"
                         placeholder="Manually paste the authentication url if you are not redirected"
@@ -193,7 +201,6 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                         className="btn btn--super-compact btn--outlined flex items-center gap-(--padding-xs)"
                         type="submit"
                         disabled={isAuthenticating}
-                        onClick={exchangeAzureCode}
                       >
                         <Icon
                           icon={isAuthenticating ? 'spinner' : 'sign-in'}
@@ -201,7 +208,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                         />
                         Auth
                       </button>
-                    </div>
+                    </Form>
                   </div>
                   {error && <p className="notice error margin-bottom-sm w-full">{error}</p>}
                 </div>

@@ -69,7 +69,12 @@ export const GitRepositorySelect = ({
           id: repo.cloneUrl,
           name: repo.fullName,
         }))}
-        menuTrigger="focus"
+        // Not "focus": that opens the menu whenever the field is focused for ANY
+        // reason, including native form-validation grabbing focus on an invalid
+        // submit — which would pop the menu open instead of just showing the
+        // inline error. Typing still opens/filters it, and the caret button (an
+        // explicit trigger, independent of menuTrigger) still opens it on click.
+        menuTrigger="input"
         defaultFilter={(repoName: string, inputValue: string) =>
           Boolean(fuzzyMatch(inputValue, repoName, { splitSpace: true, loose: false })?.indexes)
         }
