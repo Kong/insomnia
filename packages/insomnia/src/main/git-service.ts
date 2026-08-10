@@ -444,8 +444,14 @@ async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null
   if (!resolved) {
     // Should be unreachable — getGitRepoFolderName already validates folderSlug — but
     // fall back to the safe bare-id path rather than ever returning one outside gitRoot.
+    // Re-validate the fallback too: never return a path derived from untrusted input
+    // without confirming it still resolves inside gitRoot.
     console.warn('[git] Computed managed repo folder path escaped the git root, falling back to bare id:', folderName);
-    return path.join(gitRoot, gitRepositoryId);
+    const fallback = resolveWithinGitRoot(gitRoot, gitRepositoryId);
+    if (!fallback) {
+      throw new Error(`Unable to resolve a safe on-disk path for git repository "${gitRepositoryId}"`);
+    }
+    return fallback;
   }
   return resolved;
 }
