@@ -521,7 +521,7 @@ const ProjectNavigationSidebarInner = (
               workspaceId,
             ) as CollectionWorkspaceChildren;
             // Apply optimistic request-group collapse overrides on top of the fetched data.
-            const allRequestsAndMetaInWorkspace =
+            const allRequestsAndMetaInWorkspace: CollectionWorkspaceChildren =
               rawRequestsAndMetaInWorkspace && requestGroupCollapseOverrides.size > 0
                 ? {
                     ...rawRequestsAndMetaInWorkspace,
