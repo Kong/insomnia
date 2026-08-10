@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import os from 'node:os';
 import path from 'node:path';
 
 import { app, BrowserWindow, ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 
+import { getLogDirectory } from './log';
+import { appendPluginAuditLine, formatPluginAuditLine } from './plugin-audit-log';
 import { requestPromptFromRenderer } from './prompt-bridge';
 import { getMainWindow } from './window-utils';
 
@@ -310,7 +313,9 @@ export function registerPluginIpcHandlers() {
   handleFromMainWindow('plugins.getTemplateTags', () => invokeInPluginWindow('getTemplateTags'));
   handleFromMainWindow('plugins.runTemplateTagAction', args => invokeInPluginWindow('runTemplateTagAction', args));
   handleFromMainWindow('plugins.getBundlePlugins', () => invokeInPluginWindow('getBundlePlugins'));
-  handleFromMainWindow('plugins.executePluginMainAction', args => invokeInPluginWindow('executePluginMainAction', args));
+  handleFromMainWindow('plugins.executePluginMainAction', args =>
+    invokeInPluginWindow('executePluginMainAction', args),
+  );
   handleFromMainWindow('plugins.hasRequestHooks', async () => {
     if (cachedHasRequestHooks === null) {
       cachedHasRequestHooks = (await invokeInPluginWindow('hasRequestHooks')) as boolean;
@@ -326,6 +331,21 @@ export function registerPluginIpcHandlers() {
   handleFromMainWindow('plugins.applyRequestHooks', args => invokeInPluginWindow('applyRequestHooks', args));
   handleFromMainWindow('plugins.applyResponseHooks', args => invokeInPluginWindow('applyResponseHooks', args));
   handleFromMainWindow('plugins.getBridgeMetrics', () => getBridgeMetricsSnapshot());
+  // P1-B: audit the per-plugin "Full host access" (elevated) trust lever to plugin-audit.log, next to
+  // main.log / renderer.log. Handled in main (file I/O + log dir), via the main-window-only wrapper.
+  handleFromMainWindow('plugins.auditElevation', (args: { pluginName: string; elevated: boolean }) => {
+    let user: string | undefined;
+    try {
+      user = os.userInfo().username;
+    } catch {
+      user = undefined;
+    }
+    const line = formatPluginAuditLine(
+      { pluginName: args.pluginName, elevated: args.elevated, user },
+      new Date().toISOString(),
+    );
+    appendPluginAuditLine(getLogDirectory(), line);
+  });
 }
 
 export function getAppUserDataPath() {

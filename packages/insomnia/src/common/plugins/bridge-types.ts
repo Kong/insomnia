@@ -166,6 +166,13 @@ export interface PluginsBridgeAPI {
   applyRequestHooks: (args: ApplyRequestHooksArgs) => Promise<RenderedRequest>;
   applyResponseHooks: (args: ApplyResponseHooksArgs) => Promise<ResponsePatch>;
   getBridgeMetrics: () => Promise<PluginBridgeMetrics>;
+  /** P1-B: record a per-plugin "Full host access" (elevated) grant/revoke to the plugin audit log. */
+  auditElevation: (args: PluginElevationAuditArgs) => Promise<void>;
+}
+
+export interface PluginElevationAuditArgs {
+  pluginName: string;
+  elevated: boolean;
 }
 
 export interface PluginBridgeMethodMetrics {

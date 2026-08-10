@@ -6,6 +6,7 @@ import type {
   ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
+  PluginElevationAuditArgs,
   PluginsBridgeAPI,
   RunTemplateTagActionArgs,
 } from '~/common/plugins/bridge-types';
@@ -299,7 +300,10 @@ const main: Window['main'] = {
   deleteCompiledRuleset: options => invokeWithNormalizedError('deleteCompiledRuleset', options),
   refreshCompiledRuleset: options => invokeWithNormalizedError('refreshCompiledRuleset', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
-  getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }> =>
+  getAuthHeader: (
+    renderedRequest: RenderedRequest,
+    url: string,
+  ): Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }> =>
     invokeWithNormalizedError('getAuthHeader', renderedRequest, url),
   getOAuth2Token: (
     requestId: string,
@@ -449,6 +453,7 @@ const main: Window['main'] = {
     applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
+    auditElevation: (args: PluginElevationAuditArgs) => invokeWithNormalizedError('plugins.auditElevation', args),
   },
   notifyPromptResult: (id: string, value: string | null) => ipcRenderer.send('ui.promptResult', { id, value }),
   templatingDb: {

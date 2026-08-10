@@ -641,6 +641,11 @@ export const Plugins: FC = () => {
                                     },
                                   },
                                 });
+                                // P1-B: record the trust decision to plugin-audit.log (best-effort; a
+                                // failed audit write must never block the user's toggle).
+                                pluginsBridge
+                                  .auditElevation({ pluginName: plugin.name, elevated: isSelected })
+                                  .catch(() => {});
                               }}
                             >
                               <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">

@@ -27,4 +27,5 @@ export const plugins: PluginsBridgeAPI = {
   applyRequestHooks: args => call('applyRequestHooks', args),
   applyResponseHooks: args => call('applyResponseHooks', args),
   getBridgeMetrics: () => window.main.plugins.getBridgeMetrics(),
+  auditElevation: args => call('auditElevation', args),
 };
