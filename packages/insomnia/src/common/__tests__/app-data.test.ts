@@ -174,8 +174,8 @@ describe('updateAppDataOnDbChanges', () => {
   it('invalidates the parent workspace when a non-collection child type (mock server) is updated', () => {
     const workspaceId = 'wrk_1';
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
-      children: { mockServer: fakeDoc('MockServer', { _id: 'mock_1', parentId: workspaceId }) },
-      childrenMetas: {},
+      data: { mockServer: fakeDoc('MockServer', { _id: 'mock_1', parentId: workspaceId }) },
+      dataMetas: {},
     });
 
     const mockServer = fakeDoc('MockServer', { _id: 'mock_1', parentId: workspaceId, name: 'renamed-mock' });

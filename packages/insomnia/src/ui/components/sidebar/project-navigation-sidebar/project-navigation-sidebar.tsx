@@ -525,7 +525,7 @@ const ProjectNavigationSidebarInner = (
               rawRequestsAndMetaInWorkspace && requestGroupCollapseOverrides.size > 0
                 ? {
                     ...rawRequestsAndMetaInWorkspace,
-                    childrenMetas: {
+                    dataMetas: {
                       ...rawRequestsAndMetaInWorkspace.dataMetas,
                       requestGroupMetas: rawRequestsAndMetaInWorkspace.dataMetas.requestGroupMetas.map(
                         requestGroupMeta =>
