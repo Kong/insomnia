@@ -11,6 +11,7 @@ const createAppDataQueryClient = () =>
         staleTime: Infinity,
         gcTime: Infinity,
         retry: false,
+        // Local database queries should always be fetched regardless of network connectivity.
         networkMode: 'always',
       },
     },
