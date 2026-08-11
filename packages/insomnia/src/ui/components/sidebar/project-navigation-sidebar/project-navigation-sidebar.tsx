@@ -104,6 +104,12 @@ function getRelativeTimeString(timestamp: number, now: number = Date.now()): str
   return `${days}d ${hours % 24}h ago`;
 }
 
+const workspaceManualSortMethod = (a: Workspace, b: Workspace, localOrder: string[]) => {
+  const aIndex = localOrder.indexOf(a._id);
+  const bIndex = localOrder.indexOf(b._id);
+  return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
+};
+
 const ProjectNavigationSidebarInner = (
   { storageRules, konnectSyncEnabled, onCreateProject, activeTab, setActiveTab }: ProjectNavigationSidebarProps,
   ref: ForwardedRef<ProjectNavigationSidebarHandle>,
@@ -224,12 +230,6 @@ const ProjectNavigationSidebarInner = (
         .join(','),
     [cloudSyncProjects],
   );
-
-  const workspaceManualSortMethod = useCallback((a: Workspace, b: Workspace, localOrder: string[]) => {
-    const aIndex = localOrder.indexOf(a._id);
-    const bIndex = localOrder.indexOf(b._id);
-    return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
-  }, []);
 
   const getAllRemoteFilesByProjectId = useCallback(async () => {
     if (!cloudSyncProjectIdsKey) return new Map();
