@@ -48,6 +48,11 @@ export const General: FC = () => {
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
           {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
+          <BooleanSetting
+            label="Sidebar focus for collections"
+            setting="sidebarFocusForCollections"
+            help="If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible."
+          />
         </div>
       </div>
 

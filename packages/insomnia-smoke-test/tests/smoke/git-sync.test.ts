@@ -84,6 +84,8 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    // Creating the collection focused the sidebar on it; back out before selecting the project.
+    await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.selectProject(GIT_PROJECT_NAME);
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();

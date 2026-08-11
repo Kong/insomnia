@@ -3,7 +3,7 @@ import { fuzzyMatch } from 'insomnia-data/common';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
+export type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
 const filterClassnames =
   'mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
@@ -13,23 +13,15 @@ const activeFilterClassnames =
 export interface RequestTestResultRowsProps {
   requestTestResults: RequestTestResult[];
   resultFilter: string;
-  targetTests: string;
+  targetTests: TargetTestType;
 }
 
-export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
-  requestTestResults,
-  resultFilter,
-  targetTests,
-}: RequestTestResultRowsProps) => {
-  if (requestTestResults.length === 0) {
-    return (
-      <div className="my-2 w-full pl-3 text-sm text-neutral-400">
-        No test was detected, add test cases in scripts to see results.
-      </div>
-    );
-  }
-
-  const testResultRows = requestTestResults
+export function filterTestResults(
+  requestTestResults: RequestTestResult[],
+  targetTests: TargetTestType,
+  resultFilter: string,
+): { result: RequestTestResult; index: number }[] {
+  return requestTestResults
     .map((result, index) => ({ result, index }))
     .filter(({ result }) => {
       switch (targetTests) {
@@ -56,7 +48,38 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
       }
 
       return Boolean(fuzzyMatch(resultFilter, result.testCase, { splitSpace: false, loose: true })?.indexes);
-    })
+    });
+}
+
+export function isFilterEngaged(targetTests: TargetTestType, resultFilter: string): boolean {
+  return targetTests !== 'all' || resultFilter.trim() !== '';
+}
+
+export function hasMatchingTestResults(
+  requestTestResults: RequestTestResult[],
+  targetTests: TargetTestType,
+  resultFilter: string,
+): boolean {
+  return (
+    !isFilterEngaged(targetTests, resultFilter) ||
+    filterTestResults(requestTestResults, targetTests, resultFilter).length > 0
+  );
+}
+
+export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
+  requestTestResults,
+  resultFilter,
+  targetTests,
+}: RequestTestResultRowsProps) => {
+  if (requestTestResults.length === 0) {
+    return (
+      <div className="my-2 w-full pl-3 text-sm text-neutral-400">
+        No test was detected, add test cases in scripts to see results.
+      </div>
+    );
+  }
+
+  const testResultRows = filterTestResults(requestTestResults, targetTests, resultFilter)
     .map(({ result, index }) => {
       const statusText = {
         passed: 'PASS',

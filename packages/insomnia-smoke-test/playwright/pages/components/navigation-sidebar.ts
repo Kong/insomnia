@@ -94,6 +94,46 @@ export class NavigationSidebar {
     return this.navigationTree.getByRole('row', { name: workspaceName });
   }
 
+  // When collection focus mode narrows the sidebar to one collection, that collection's tree
+  // row is replaced by the back-arrow header (same `workspace-node-*` testid, no ARIA "row").
+  async isWorkspaceFocused(workspaceName: string): Promise<boolean> {
+    return (await this.workspaceRow(workspaceName).getByLabel('Back to all projects').count()) > 0;
+  }
+
+  // Exits collection focus mode if currently focused; no-op otherwise. Needed before
+  // interacting with a different collection or project, since focus mode hides everything
+  // outside the focused collection.
+  async backToAllProjects(): Promise<void> {
+    const backButton = this.root.getByLabel('Back to all projects');
+    if (await backButton.isVisible().catch(() => false)) {
+      await backButton.click();
+    }
+  }
+
+  async expectWorkspaceActive(workspaceName: string): Promise<void> {
+    await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
+    // In focus mode there's no grid row to check aria-selected on for this workspace — being
+    // shown as the focused header already proves it's the active one. Poll for either outcome
+    // rather than deciding up front: right after navigating in, there's a brief window where
+    // neither is true yet (focus mode hasn't finished swapping the row for the header), and a
+    // one-shot check can catch that transient state and commit to the wrong branch.
+    await expect
+      .poll(
+        async () => {
+          if (await this.isWorkspaceFocused(workspaceName)) {
+            return true;
+          }
+          const gridItem = this.workspaceGridListItem(workspaceName);
+          if ((await gridItem.count()) === 0) {
+            return false;
+          }
+          return (await gridItem.getAttribute('aria-selected')) === 'true';
+        },
+        { timeout: 25_000 },
+      )
+      .toBe(true);
+  }
+
   async selectWorkspace(workspaceName: string): Promise<void> {
     await this.workspaceRow(workspaceName).click();
   }

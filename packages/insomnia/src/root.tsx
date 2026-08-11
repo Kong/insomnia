@@ -47,6 +47,7 @@ import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/mo
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
+import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
@@ -736,7 +737,7 @@ const Root = () => {
   }, []);
 
   return (
-    <>
+    <ServerDataCacheProvider>
       <div className="app">
         <Outlet />
         <Toaster />
@@ -753,7 +754,7 @@ const Root = () => {
           from={importObject}
         />
       )}
-    </>
+    </ServerDataCacheProvider>
   );
 };
 
