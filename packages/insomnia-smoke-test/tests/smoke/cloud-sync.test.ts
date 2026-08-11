@@ -72,7 +72,10 @@ test.describe('Cloud Sync', () => {
     await page.getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.getByTestId('request-pane').getByText('foo=bar')).toBeHidden();
 
-    // select unsynced MCP project to check branch actions
+    // select unsynced MCP project to check branch actions. Sidebar is still focused on
+    // "My Collection R1"; unsynced workspace rows for any other workspace are hidden while
+    // focused, so back out first.
+    await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My MCP Client');
     await page.getByLabel('Git Sync').click();
     await page.getByText('Branches').click();

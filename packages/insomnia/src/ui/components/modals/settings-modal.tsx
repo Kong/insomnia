@@ -208,7 +208,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="keyboard">
             <Shortcuts />
           </TabPanel>
-          <TabPanel className="h-full w-full overflow-y-auto p-4" id="plugins">
+          <TabPanel className="h-full w-full overflow-x-hidden overflow-y-auto p-4" id="plugins">
             <Plugins />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="credentials">
