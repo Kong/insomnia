@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 
 import { app } from 'electron';
 import { services } from 'insomnia-data';
+import { ProxyScope } from 'insomnia-data/common';
 
 import { validatePluginName } from '~/common/utils/plugin-name';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
@@ -433,11 +434,11 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
   // Add proxy settings if enabled. Yarn runs as a separate child process — it never touches
   // Electron's session, so it needs its own HTTP_PROXY/HTTPS_PROXY env vars (main/proxy.ts's
   // session-level bypass rules don't apply here). The default public npm registry is treated
-  // like Insomnia's other first-party integrations: bypassed unless proxyIntegrations is on. A
+  // like Insomnia's other first-party integrations: bypassed unless `proxyScope` is 'all'. A
   // custom registry is a user-configured target, so it always respects the proxy setting.
   if (settings.proxyEnabled === true) {
     const usingDefaultRegistry = (await getRegistryUrl()) === DEFAULT_NPM_REGISTRY;
-    if (settings.proxyIntegrations === true || !usingDefaultRegistry) {
+    if (settings.proxyScope === ProxyScope.all || !usingDefaultRegistry) {
       Object.assign(yarnEnv, buildProxyEnv(settings));
     }
   }

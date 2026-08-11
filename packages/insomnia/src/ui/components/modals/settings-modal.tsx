@@ -1,3 +1,4 @@
+import { ProxyScope } from 'insomnia-data/common';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -15,6 +16,7 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { BooleanSetting } from '../settings/boolean-setting';
+import { EnumSetting } from '../settings/enum-setting';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { MaskedSetting } from '../settings/masked-setting';
@@ -175,6 +177,19 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
               help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
             />
 
+            <div className="pt-4">
+              <EnumSetting<ProxyScope>
+                label="Use proxy for"
+                setting="proxyScope"
+                disabled={!settings.proxyEnabled}
+                values={[
+                  { value: ProxyScope.requests, name: 'Only when sending requests in Insomnia' },
+                  { value: ProxyScope.all, name: 'All traffic sent by Insomnia' },
+                ]}
+                help="When All traffic is selected, Insomnia uses the configured proxy for all calls, including login, git, auto-updates, etc."
+              />
+            </div>
+
             <div className="form-row pad-top-sm">
               <MaskedSetting
                 label="Proxy for HTTP"
@@ -195,13 +210,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
                 placeholder="localhost,127.0.0.1"
               />
             </div>
-
-            <BooleanSetting
-              label="Use proxy for Insomnia's integrations"
-              setting="proxyIntegrations"
-              disabled={!settings.proxyEnabled}
-              help="If checked, the proxy above is also used for Insomnia's own services and integrations (the Insomnia API, website, mock service, AI helper, and CDN; Konnect; GitHub; auto-updates; and analytics/error monitoring). Unchecked (default), those go direct and only your own requests use the proxy."
-            />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="data">
             <ImportExport

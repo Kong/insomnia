@@ -1,5 +1,6 @@
 import { session } from 'electron/main';
 import { models, services } from 'insomnia-data';
+import { ProxyScope } from 'insomnia-data/common';
 
 import {
   getAIServiceURL,
@@ -17,7 +18,7 @@ import { type ChangeBufferEvent, database as db } from '../common/database';
 import { getUpdatesBaseURL } from './updates';
 
 // Insomnia's own first-party integrations — fixed hosts, not user-configured targets like a
-// self-hosted GitLab or MCP server. Bypassed by default (see `proxyIntegrations` below) so a
+// self-hosted GitLab or MCP server. Bypassed unless `proxyScope` is 'all' (see below), so a
 // user's proxy — typically set up for their own requests — doesn't also have to know how to
 // route to these, matching how this traffic behaved before the app's proxy setting covered it.
 function insomniaIntegrationHosts() {
@@ -38,7 +39,7 @@ function insomniaIntegrationHosts() {
     //
     // Actual git remote traffic (github.com, self-hosted GitLab, GitHub Enterprise, etc.) is
     // NOT listed here — it's handled directly in sync/git/http-client.ts, which treats all
-    // git-sync traffic uniformly under `proxyIntegrations` via its own dedicated direct session,
+    // git-sync traffic uniformly under `proxyScope` via its own dedicated direct session,
     // scoped to just those requests rather than this session-wide bypass list.
     getGitHubRestApiUrl(),
 
@@ -70,7 +71,7 @@ function insomniaIntegrationHosts() {
 
 // Update the proxy settings before making the request.
 async function updateProxy() {
-  const { proxyEnabled, httpProxy, httpsProxy, noProxy, proxyIntegrations } = await services.settings.get();
+  const { proxyEnabled, httpProxy, httpsProxy, noProxy, proxyScope } = await services.settings.get();
 
   if (proxyEnabled) {
     try {
@@ -89,9 +90,10 @@ async function updateProxy() {
         proxyRules.push(`https=${parseProxyFromUrl(httpsProxy)}`);
       }
 
-      const bypassRules = proxyIntegrations
-        ? (noProxy ?? '')
-        : [noProxy, ...insomniaIntegrationHosts()].filter(Boolean).join(',');
+      const bypassRules =
+        proxyScope === ProxyScope.all
+          ? (noProxy ?? '')
+          : [noProxy, ...insomniaIntegrationHosts()].filter(Boolean).join(',');
 
       // Set proxy rules in the main session https://www.electronjs.org/docs/latest/api/structures/proxy-config
       await session.defaultSession.setProxy({
@@ -125,7 +127,7 @@ export async function watchProxySettings() {
           old.httpProxy !== doc.httpProxy ||
           old.httpsProxy !== doc.httpsProxy ||
           old.noProxy !== doc.noProxy ||
-          old.proxyIntegrations !== doc.proxyIntegrations;
+          old.proxyScope !== doc.proxyScope;
         if (hasProxyChanged) {
           await updateProxy();
           old = doc;

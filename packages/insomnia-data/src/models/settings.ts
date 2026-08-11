@@ -4,6 +4,7 @@ import {
   getAppDefaultTheme,
   HttpVersions,
   newDefaultRegistry,
+  ProxyScope,
   type Settings as BaseSettings,
   UpdateChannel,
 } from 'insomnia-data/common';
@@ -61,7 +62,7 @@ export function init(): BaseSettings {
     maxTimelineDataSizeKB: 10,
     pluginNodeExtraCerts: '',
     noProxy: '',
-    proxyIntegrations: false,
+    proxyScope: ProxyScope.requests,
     nunjucksPowerUserMode: false,
     pluginConfig: {},
     pluginPath: '',
