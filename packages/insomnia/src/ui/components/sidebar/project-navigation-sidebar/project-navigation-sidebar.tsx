@@ -226,10 +226,9 @@ const ProjectNavigationSidebarInner = (
   );
 
   const workspaceManualSortMethod = (a: Workspace, b: Workspace, localOrder: string[]) => {
-    const orderIndexByWorkspaceId = new Map(localOrder.map((workspaceId, index) => [workspaceId, index]));
-    const ai = orderIndexByWorkspaceId.get(a._id) ?? Infinity;
-    const bi = orderIndexByWorkspaceId.get(b._id) ?? Infinity;
-    return ai - bi;
+    const aIndex = localOrder.indexOf(a._id);
+    const bIndex = localOrder.indexOf(b._id);
+    return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
   };
 
   const getAllRemoteFilesByProjectId = useCallback(async () => {
