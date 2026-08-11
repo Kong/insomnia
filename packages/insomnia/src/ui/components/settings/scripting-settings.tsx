@@ -324,9 +324,9 @@ export const ScriptingSettings = () => {
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium text-(--color-font)">Sandbox all plugin code (experimental)</span>
             <p className="text-xs text-(--hl)">
-              Run every untrusted plugin surface — template tags, request/response hooks, actions, and load-time code —
-              inside the QuickJS-WASM sandbox. Installed plugins are default-deny; grant an individual plugin full host
-              access with "Run with full host access" in Preferences → Plugins.
+              Isolates plugin code so it can't touch your system unless you allow it. Covers template tags, hooks,
+              actions, and plugin startup code. To trust a specific plugin fully, enable "Run with full host access" for
+              it in Preferences → Plugins.
             </p>
           </div>
           <Switch
