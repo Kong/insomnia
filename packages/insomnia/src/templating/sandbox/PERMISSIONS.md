@@ -23,7 +23,26 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `url` (and more via M2).
+    - `url` implements the legacy `parse`/`format` pair (verified against `node:url` across
+      protocol-relative/opaque/non-slash-protocol forms, auth/port/query/hash splitting, the
+      `%20`/`%22`/`%3C`/`%3E`/`%60`/`%5E`/`%7C`/`%7B`/`%7D` + C0-control-char escaping table,
+      `parseQueryString`/`slashesDenoteHost`, and IPv6 bracketed hosts) plus a thin re-export of the
+      ambient `URL`/`URLSearchParams` globals (`sandbox-globals.ts`, M2) so `require('url').URL`
+      resolves the way real Node's own `require('url').URL === global.URL` does. That identity is
+      intentional, not a leak: `URL`/`URLSearchParams` are already ungated ambient globals with or
+      without the `url` grant — see the reviewed exception in `sandbox-surface.test.ts`'s alias-leak
+      check.
+      Two deliberate divergences from real Node's `url.parse`, both documented rather than silently
+      matched: (1) `hostname` for a bracketed IPv6 literal is stored **without** brackets (e.g.
+      `"::1"`), matching `node:url.parse`'s own convention — a different, equally-real convention
+      from the ambient `URL` global's WHATWG-style bracket-inclusive `.hostname`, since the two are
+      independent implementations for two different APIs; (2) a literal backslash is never treated
+      as a path/host delimiter or as a stand-in for `"//"` after the protocol, unlike real Node's
+      legacy parser — that exact behavior is what Node's own deprecation notice on `url.parse` cites
+      as having "security implications," so it's intentionally not replicated. `url.inspect`/
+      `resolve`/`domainToASCII`/`domainToUnicode`/`pathToFileURL`/`fileURLToPath`/`Url` (the legacy
+      class) are not implemented at all.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
