@@ -36,26 +36,30 @@ const captureUnhandledRejections = () => {
 };
 
 describe('disposing a context with an unsettled bridge call still pending', () => {
-  // runTagInSandbox's `finally { ctx.dispose(); }` runs whenever drivePromiseToString gives up —
-  // including on its own timeout — with no regard for whether a __hostBridge call the guest is still
-  // awaiting has settled. Confirmed (not timing-dependent): a bridge call that simply never resolves
-  // reproduces this on every run, with no delay/race required.
-  it('a bridge call that never resolves crashes the timeout path instead of producing a clean timeout error', async () => {
-    const neverSettles: HostBridge = () => new Promise(() => {});
-    const error = await runTagInSandbox({
-      pluginSource: nodeOSTag,
-      tagName: 'g',
-      envelope: envelope([]),
-      bridge: neverSettles,
-      timeoutMs: 50,
-    }).catch((e: unknown) => e);
-    // Today this is QuickJS's own internal "Aborted(Assertion failed: list_empty(&rt->gc_obj_list) …
-    // JS_FreeRuntime)" — an engine-level invariant violation raised while freeing a runtime that still
-    // has a live (never-settled) promise/job in it — not the intended "Template tag sandbox timed
-    // out" message. Update this assertion once the timeout path is made safe to call with a bridge
-    // call still outstanding.
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toMatch(/gc_obj_list|JS_FreeRuntime|Aborted/);
+  // runTagInSandbox's `finally` runs whenever drivePromiseToString gives up — including on its own
+  // timeout — regardless of whether a __hostBridge call the guest is still awaiting has settled.
+  // Before the fix, disposing a context with a live bridge call left a promise/continuation
+  // referenced inside the runtime, and freeing that runtime crashed the QuickJS engine outright
+  // ("Aborted(Assertion failed: list_empty(&rt->gc_obj_list) ... JS_FreeRuntime)") instead of raising
+  // the intended timeout error. drivePromiseToString now force-settles any outstanding bridge calls
+  // (forceSettlePendingBridgeCalls) before giving up, so this reproduces as a clean, catchable error.
+  it('a bridge call that never resolves produces a clean timeout error, not an engine crash', async () => {
+    const capture = captureUnhandledRejections();
+    try {
+      const neverSettles: HostBridge = () => new Promise(() => {});
+      await expect(
+        runTagInSandbox({
+          pluginSource: nodeOSTag,
+          tagName: 'g',
+          envelope: envelope([]),
+          bridge: neverSettles,
+          timeoutMs: 50,
+        }),
+      ).rejects.toThrow('Template tag sandbox timed out');
+      expect(capture.seen).toHaveLength(0);
+    } finally {
+      capture.stop();
+    }
   });
 
   it('does not corrupt the shared WASM module for a later, unrelated render', async () => {
@@ -73,28 +77,38 @@ describe('disposing a context with an unsettled bridge call still pending', () =
     expect(actual).toBe('still-fine');
   });
 
-  it('a bridge handler returning a non-JSON-serializable value additionally raises a process-level unhandled rejection', async () => {
+  it('a bridge call resolving after the sandbox already gave up on it does not crash or leak an unhandled rejection', async () => {
+    const capture = captureUnhandledRejections();
+    try {
+      const bridge = createMapBridge({
+        nodeOS: () => new Promise(resolve => setTimeout(() => resolve({ arch: 'x64' }), 300)),
+      });
+      await expect(
+        runTagInSandbox({ pluginSource: nodeOSTag, tagName: 'g', envelope: envelope([]), bridge, timeoutMs: 50 }),
+      ).rejects.toThrow('Template tag sandbox timed out');
+      // The mocked handler above resolves ~250ms after runTagInSandbox already gave up and disposed
+      // its context. settleBridgeResult (plugin-tag-sandbox.ts) no-ops once ctx is no longer alive, so
+      // that late resolution must not surface as anything — give it time to actually land first.
+      await new Promise(resolve => setTimeout(resolve, 400));
+      expect(capture.seen).toHaveLength(0);
+    } finally {
+      capture.stop();
+    }
+  });
+
+  it('a bridge handler returning a non-JSON-serializable value surfaces as a normal tag error, not an unhandled rejection', async () => {
     const capture = captureUnhandledRejections();
     try {
       const circular: Record<string, unknown> = {};
       circular.self = circular;
       const bridge = createMapBridge({ nodeOS: async () => circular });
-      // encodeBridgeSuccess(value) (marshal.ts) calls JSON.stringify(value) inside
-      // installHostBridge's settle continuation, which has no .catch() and nothing awaits it — so a
-      // circular value throws there and becomes an unhandled rejection, distinct from (and in addition
-      // to) the deferred promise never settling, which separately trips the same timeout-path crash
-      // as the previous tests once the sandbox's own timeout elapses.
-      const pending = runTagInSandbox({
-        pluginSource: nodeOSTag,
-        tagName: 'g',
-        envelope: envelope([]),
-        bridge,
-        timeoutMs: 100,
-      });
-      await new Promise(resolve => setTimeout(resolve, 30));
-      expect(capture.seen).toHaveLength(1);
-      expect(String((capture.seen[0] as Error)?.message ?? capture.seen[0])).toMatch(/circular/i);
-      await expect(pending).rejects.toThrow(/gc_obj_list|JS_FreeRuntime|Aborted/);
+      // encodeBridgeSuccess(value) (marshal.ts) throwing on a circular value is now caught by
+      // settleBridgeResult and turned into an ordinary bridge failure instead of an unhandled
+      // rejection — the render fails fast with a catchable error, no timeout needed.
+      await expect(
+        runTagInSandbox({ pluginSource: nodeOSTag, tagName: 'g', envelope: envelope([]), bridge, timeoutMs: 2000 }),
+      ).rejects.toThrow(/circular/i);
+      expect(capture.seen).toHaveLength(0);
     } finally {
       capture.stop();
     }
