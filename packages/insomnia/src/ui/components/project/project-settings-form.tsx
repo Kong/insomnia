@@ -3,7 +3,7 @@ import type { GitCredentials, GitRepository, Project, ProviderEmail } from 'inso
 import { models } from 'insomnia-data';
 import { platform } from 'insomnia-data/common';
 import type { FC } from 'react';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Form,
@@ -43,8 +43,6 @@ import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
-const FORMID = 'git-repo-form';
-const UPSERT_FORM_ID = 'project-upsert-form';
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
@@ -87,6 +85,8 @@ export const ProjectSettingsForm: FC<Props> = ({
   onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
+  const gitFormId = useId();
+  const upsertFormId = useId();
 
   const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
@@ -191,44 +191,26 @@ export const ProjectSettingsForm: FC<Props> = ({
     (isSwitchingStorageType(project!, storageType) ||
       project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
       !gitRepository?.credentialsId);
-  const canScanForFiles = !(
-    (!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
-    isGitCredentialInvalid
-  );
-  const canUpsertProject = !(
-    updateProjectFetcher.state !== 'idle' ||
-    (!isSwitchingStorageType(project!, storageType) &&
-      project?.name.trim() === projectData.name.trim() &&
-      (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null))
-  );
+  const isGitSyncUnavailableForSwitch = !isGitSyncEnabled && isSwitchingStorageType(project!, storageType);
+  const canScanForFiles = !isGitSyncUnavailableForSwitch && !isGitCredentialInvalid;
+
+  const hasNoChangesToUpsert =
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.name.trim() === projectData.name.trim() &&
+    (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null);
+  const canUpsertProject = updateProjectFetcher.state === 'idle' && !hasNoChangesToUpsert;
   const canCloneAfterScan = updateProjectFetcher.state === 'idle' && initCloneGitRepositoryFetcher.state === 'idle';
 
-  // React Aria's FocusScope can hand initial focus to the modal header's close
-  // button ahead of this field's `autoFocus`; claim it back once mounted.
   const nameInputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    nameInputRef.current?.focus();
-  }, []);
-
-  // Choosing a type collapses the type list, unmounting the focused radio. The
-  // child restores focus to its collapsed summary, but Enter there would just
-  // reopen the list — put focus back on the name field so Enter runs the CTA.
-  // Child effects run before parent effects, so this wins.
   useEffect(() => {
     nameInputRef.current?.focus();
   }, [storageType]);
 
-  // The name field's correct submit-target is dynamic (Update vs. Scan for
-  // files), but that's fine inside a real <Form> — onSubmit is just a callback,
-  // it can dispatch on current state same as any other handler. This form wraps
-  // only the name field + type picker, stopping before the git-clone subtree:
-  // GitRepoForm owns its own separate, natively-submitting <Form id={FORMID}>,
-  // and nesting two <form> elements is invalid, so they must stay DOM siblings.
   const handleUpsertFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (isScanForFilesPrimaryAction) {
       if (canScanForFiles) {
-        (document.getElementById(FORMID) as HTMLFormElement | null)?.requestSubmit();
+        (document.getElementById(gitFormId) as HTMLFormElement | null)?.requestSubmit();
       }
       return;
     }
@@ -237,10 +219,6 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   };
 
-  // No inputs on this results screen, so there's nothing for native form
-  // submission to key off — focus the primary action button once it's ready,
-  // same as a native "default button" convention (its own Enter-activation
-  // then just works, like any other focused button).
   const cloneButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (activeView === 'git-results' && initCloneGitRepositoryFetcher.state === 'idle') {
@@ -359,7 +337,7 @@ export const ProjectSettingsForm: FC<Props> = ({
         <div
           className={`flex w-full flex-col justify-start gap-4 pb-2 text-left ${activeView === 'project' ? '' : 'hidden'}`}
         >
-          <Form id={UPSERT_FORM_ID} className="contents" onSubmit={handleUpsertFormSubmit}>
+          <Form id={upsertFormId} className="contents" onSubmit={handleUpsertFormSubmit}>
             <TextField
               autoFocus
               name="name"
@@ -637,7 +615,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               setActiveView={setActiveView}
               credentials={credentials}
               providers={providers}
-              formId={FORMID}
+              formId={gitFormId}
               onCredentialValidationChange={setIsGitCredentialInvalid}
             />
           )}
@@ -668,7 +646,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             {isScanForFilesPrimaryAction ? (
               <Button
                 isDisabled={!canScanForFiles}
-                form={FORMID}
+                form={gitFormId}
                 type="submit"
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
@@ -677,7 +655,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             ) : (
               <Button
                 type="submit"
-                form={UPSERT_FORM_ID}
+                form={upsertFormId}
                 isDisabled={!canUpsertProject}
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >

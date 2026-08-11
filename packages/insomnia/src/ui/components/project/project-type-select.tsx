@@ -67,6 +67,8 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
     setListOpen(true);
   };
 
+  // Picking a type unmounts the RadioGroup; claim focus on the summary button
+  // that replaces it before FocusScope's fallback grabs the modal's close button.
   useEffect(() => {
     if (shouldFocusSummaryRef.current && !listOpen && currentType) {
       shouldFocusSummaryRef.current = false;
@@ -74,6 +76,8 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
     }
   }, [listOpen, currentType]);
 
+  // Clicking "Change" unmounts the summary button; claim focus on the radio
+  // list that replaces it before FocusScope's fallback grabs the modal's close button.
   useEffect(() => {
     if (shouldFocusRadioRef.current && listOpen) {
       shouldFocusRadioRef.current = false;
@@ -91,11 +95,8 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
       {listOpen || !currentType ? (
         <div
           ref={radioGroupContainerRef}
-          onKeyDown={event => {
-            // Unlike text-like inputs, a focused radio button is spec'd to NOT
-            // trigger a form's implicit submission on Enter — so leaving the
-            // selection unchanged and pressing Enter here would otherwise do
-            // nothing at all. Restore parity with the rest of the form.
+          // Capture phase so we can intercept Enter before React Aria's own Radio handles it.
+          onKeyDownCapture={event => {
             if (event.key === 'Enter') {
               event.preventDefault();
               (event.target as HTMLElement).closest('form')?.requestSubmit();

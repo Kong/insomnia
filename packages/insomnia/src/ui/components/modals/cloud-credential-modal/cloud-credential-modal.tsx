@@ -183,8 +183,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                       URL in Azure to here.
                     </p>
                     <Form
-                      className="form-control form-control--outlined no-pad-top"
-                      style={{ display: 'flex' }}
+                      className="form-control form-control--outlined no-pad-top flex"
                       onSubmit={e => {
                         e.preventDefault();
                         exchangeAzureCode();

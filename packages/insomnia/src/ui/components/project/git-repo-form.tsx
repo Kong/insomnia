@@ -109,8 +109,6 @@ export const GitRepoForm: FC<Props> = ({
     onCredentialValidationChange?.(isCredentialInvalid);
   }, [isCredentialInvalid, onCredentialValidationChange]);
 
-  const showForm = !needToSetupCredentials && !projectData.connectRepositoryLater;
-
   return (
     <ErrorBoundary>
       <Checkbox
@@ -123,7 +121,7 @@ export const GitRepoForm: FC<Props> = ({
 
       {needToSetupCredentials && !projectData.connectRepositoryLater && <GitCredentialSetup providers={providers} />}
 
-      {showForm && (
+      {!needToSetupCredentials && !projectData.connectRepositoryLater && (
         <Form
           aria-label="Git Setup Form"
           id={formId}

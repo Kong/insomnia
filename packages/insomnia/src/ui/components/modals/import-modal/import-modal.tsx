@@ -627,7 +627,6 @@ const ScanResourcesForm = ({
 };
 
 const DEFAULT_NEW_PROJECT_NAME = 'New Project';
-const IMPORT_FORM_ID = 'import-resources-form';
 
 const ImportResourcesForm = ({
   onImport,
@@ -653,6 +652,7 @@ const ImportResourcesForm = ({
     organizationId: string;
     projectId: string;
   };
+  const formId = useId();
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
@@ -700,7 +700,7 @@ const ImportResourcesForm = ({
   return (
     <Fragment>
       <Form
-        id={IMPORT_FORM_ID}
+        id={formId}
         className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto"
         onSubmit={e => {
           e.preventDefault();
@@ -806,7 +806,7 @@ const ImportResourcesForm = ({
       <div className="flex w-full items-end justify-end gap-(--padding-sm)">
         <Button
           type="submit"
-          form={IMPORT_FORM_ID}
+          form={formId}
           variant="contained"
           bg="surprise"
           disabled={disabled || loading}

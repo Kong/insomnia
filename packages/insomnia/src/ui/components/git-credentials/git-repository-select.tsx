@@ -69,12 +69,7 @@ export const GitRepositorySelect = ({
           id: repo.cloneUrl,
           name: repo.fullName,
         }))}
-        // Not "focus": that opens the menu whenever the field is focused for ANY
-        // reason, including native form-validation grabbing focus on an invalid
-        // submit — which would pop the menu open instead of just showing the
-        // inline error. Typing still opens/filters it, and the caret button (an
-        // explicit trigger, independent of menuTrigger) still opens it on click.
-        menuTrigger="input"
+        menuTrigger="input" // focus causes the dropdown to open when no option is selected and scan for files is clicked, which is not the desired behaviour.
         defaultFilter={(repoName: string, inputValue: string) =>
           Boolean(fuzzyMatch(inputValue, repoName, { splitSpace: true, loose: false })?.indexes)
         }

@@ -1,7 +1,7 @@
 import type { BaseModel } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
-import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, { type FC, type MouseEventHandler, useEffect, useId, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
@@ -12,8 +12,6 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { Icon } from '../icon';
-
-const FORM_ID = 'add-request-to-collection-form';
 
 interface AddRequestModalProps extends ModalProps {
   onHide: () => void;
@@ -35,6 +33,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
 
   const requestFetcher = useRequestNewActionFetcher();
+  const formId = useId();
 
   useEffect(() => {
     (async () => {
@@ -90,7 +89,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
         <ModalHeader>Add Request</ModalHeader>
         <ModalBody className="wide">
           <form
-            id={FORM_ID}
+            id={formId}
             onSubmit={e => {
               e.preventDefault();
               if (!isBtnDisabled) {
@@ -161,7 +160,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
             >
               Cancel
             </button>
-            <button disabled={isBtnDisabled} type="submit" form={FORM_ID} className="btn">
+            <button disabled={isBtnDisabled} type="submit" form={formId} className="btn">
               {requestFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} Add
             </button>
           </div>

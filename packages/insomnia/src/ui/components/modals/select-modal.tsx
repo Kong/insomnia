@@ -1,12 +1,10 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useId, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { showModal } from '.';
-
-const FORM_ID = 'select-modal-form';
 
 export interface SelectModalOptions {
   message: string | null;
@@ -25,6 +23,7 @@ export interface SelectModalHandle {
 
 export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
+  const formId = useId();
   const [state, setState] = useState<SelectModalOptions>({
     message: null,
     options: [],
@@ -58,7 +57,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
       <ModalBody className="wide pad" data-testid="global-select-modal">
         <p>{message}</p>
         <form
-          id={FORM_ID}
+          id={formId}
           className="form-control form-control--outlined"
           onSubmit={e => {
             e.preventDefault();
@@ -79,7 +78,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
         </form>
       </ModalBody>
       <ModalFooter>
-        <button type="submit" form={FORM_ID} className="btn">
+        <button type="submit" form={formId} className="btn">
           Done
         </button>
       </ModalFooter>
