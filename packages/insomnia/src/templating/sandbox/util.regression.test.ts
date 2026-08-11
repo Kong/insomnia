@@ -38,9 +38,15 @@ const runFormat = (...args: unknown[]) =>
 // functions, -0/NaN/Infinity, circular references) — the literal is written directly into the
 // sandboxed source and compared against the identical literal evaluated by real node:util in the
 // same test, so no marshaling is required for the parity assertion to be meaningful.
+//
+// `body` is always a fixed string literal from a call site in this same test file (never data from
+// outside the process), and it's expected to contain arbitrary JS syntax including quote/backtick
+// characters (e.g. the quote-selection test below embeds a literal backtick) — escaping it would
+// corrupt those cases rather than add safety. The resulting source only ever runs inside the
+// disposable, isolated QuickJS sandbox this whole file is testing, never on the host.
 const runBody = (body: string) =>
   runTagInSandbox({
-    pluginSource: `module.exports.templateTags = [{ name: 'r', run: function () { ${body} } }];`,
+    pluginSource: `module.exports.templateTags = [{ name: 'r', run: function () { ${body} } }];`, // lgtm[js/bad-code-sanitization]
     tagName: 'r',
     envelope: envelope([]),
     bridge: noBridge,
@@ -75,27 +81,30 @@ describe('format — parity with node:util.format across JSON-transportable args
 });
 
 describe('format — parity for values that cannot cross the JSON envelope', () => {
-  const literalCases: [string, string][] = [
-    ['%s', '-0'],
-    ['%d', '-0'],
-    ['%i', '-0.5'],
-    ['%f', '"-0"'],
-    ['%s', 'NaN'],
-    ['%s', 'Infinity'],
-    ['%s', '-Infinity'],
-    ['%s', '10n'],
-    ['%d', '10n'],
-    ['%i', '10n'],
-    ['%f', '10n'],
-    ['%s', 'Symbol("s")'],
-    ['%d', 'Symbol("s")'],
-    ['%i', 'Symbol("s")'],
-    ['%f', 'Symbol("s")'],
+  // `literal` is the exact source text embedded into the sandboxed run() body; `value` builds the
+  // same value directly (no eval) for the real node:util comparison — both sides construct their
+  // own copy of the value from scratch, so no marshaling occurs either way.
+  const literalCases: { spec: string; literal: string; value: () => unknown }[] = [
+    { spec: '%s', literal: '-0', value: () => -0 },
+    { spec: '%d', literal: '-0', value: () => -0 },
+    { spec: '%i', literal: '-0.5', value: () => -0.5 },
+    { spec: '%f', literal: '"-0"', value: () => '-0' },
+    { spec: '%s', literal: 'NaN', value: () => Number.NaN },
+    { spec: '%s', literal: 'Infinity', value: () => Infinity },
+    { spec: '%s', literal: '-Infinity', value: () => -Infinity },
+    { spec: '%s', literal: '10n', value: () => 10n },
+    { spec: '%d', literal: '10n', value: () => 10n },
+    { spec: '%i', literal: '10n', value: () => 10n },
+    { spec: '%f', literal: '10n', value: () => 10n },
+    { spec: '%s', literal: 'Symbol("s")', value: () => Symbol('s') },
+    { spec: '%d', literal: 'Symbol("s")', value: () => Symbol('s') },
+    { spec: '%i', literal: 'Symbol("s")', value: () => Symbol('s') },
+    { spec: '%f', literal: 'Symbol("s")', value: () => Symbol('s') },
   ];
 
-  it.each(literalCases)('format("%s", %s) matches node:util', async (spec, literal) => {
+  it.each(literalCases)('format("%s", %s) matches node:util', async ({ spec, literal, value }) => {
     const actual = await runBody(`return require("util").format(${JSON.stringify(spec)}, ${literal});`);
-    const expected = nodeFormat(spec, eval(literal));
+    const expected = nodeFormat(spec, value());
     expect(actual).toBe(expected);
   });
 
