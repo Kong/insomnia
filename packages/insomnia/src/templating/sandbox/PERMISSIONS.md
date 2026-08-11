@@ -33,16 +33,20 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
       intentional, not a leak: `URL`/`URLSearchParams` are already ungated ambient globals with or
       without the `url` grant — see the reviewed exception in `sandbox-surface.test.ts`'s alias-leak
       check.
-      Two deliberate divergences from real Node's `url.parse`, both documented rather than silently
-      matched: (1) `hostname` for a bracketed IPv6 literal is stored **without** brackets (e.g.
-      `"::1"`), matching `node:url.parse`'s own convention — a different, equally-real convention
-      from the ambient `URL` global's WHATWG-style bracket-inclusive `.hostname`, since the two are
-      independent implementations for two different APIs; (2) a literal backslash is never treated
-      as a path/host delimiter or as a stand-in for `"//"` after the protocol, unlike real Node's
-      legacy parser — that exact behavior is what Node's own deprecation notice on `url.parse` cites
-      as having "security implications," so it's intentionally not replicated. `url.inspect`/
-      `resolve`/`domainToASCII`/`domainToUnicode`/`pathToFileURL`/`fileURLToPath`/`Url` (the legacy
-      class) are not implemented at all.
+      A backslash is treated as fully interchangeable with a forward slash, matching real Node's
+      `url.parse` exactly (a normalization pass applied before any other parsing), so a plugin
+      ported from the legacy sandbox behaves identically here — this was deliberately _not_ left as
+      a divergence, since real Node's own deprecation notice on `url.parse` cites exactly this
+      behavior as having "security implications," but this function has zero host-capability
+      surface either way and nothing in Insomnia's own host bridge trusts its output for a trust
+      decision, so matching it exactly costs nothing and avoids a silent behavioral break for ported
+      plugins that rely on it (intentionally or not). One remaining, genuinely necessary divergence:
+      `hostname` for a bracketed IPv6 literal is stored **without** brackets (e.g. `"::1"`), matching
+      `node:url.parse`'s own convention — a different, equally-real convention from the ambient
+      `URL` global's WHATWG-style bracket-inclusive `.hostname`, since the two are independent
+      implementations for two different APIs. `url.inspect`/`resolve`/`domainToASCII`/
+      `domainToUnicode`/`pathToFileURL`/`fileURLToPath`/`Url` (the legacy class) are not implemented
+      at all.
       `parse()` strips leading/trailing C0-control-or-space bytes before parsing (matching the WHATWG
       URL Standard's own input-trimming step, which `node:url`'s legacy parser also implements) so a
       leading control byte can't hide a scheme from protocol detection; a control byte elsewhere in

@@ -191,26 +191,22 @@ describe('URL / URLSearchParams passthrough', () => {
   });
 });
 
-describe('documented divergences from real node:url', () => {
-  it('does not treat a backslash as a path/host delimiter or as a "//" stand-in (intentional divergence)', async () => {
-    const input = 'http://good.com\\@evil.com/x';
+describe('backslash-as-slash normalization (parity with node:url)', () => {
+  // node:url treats "\" as fully interchangeable with "/" — as a path/host delimiter, as a
+  // stand-in for "//" right after the protocol, and everywhere else in the string. Matched exactly
+  // via a single normalization pass (backslash -> forward slash) before any other parsing runs, so
+  // an existing plugin ported from the legacy sandbox behaves identically here.
+  it.each([
+    'http://good.com\\@evil.com/x',
+    'http:\\\\evil.com\\x',
+    'http:/\\evil.com/x',
+    'http:\\/evil.com/x',
+    'http://good.com\\@evil.com\\path?q=1#h',
+    'http://a\\b\\c\\d',
+    'foo:bar\\baz',
+  ])('parse(%j) matches node:url', async input => {
     const actual = await runParse(input, false);
-    // Real node:url treats "\" as "/", terminating the host at "good.com" and reinterpreting the
-    // rest as path — exactly the parsing-confusion behavior its own deprecation notice warns about.
-    expect(nodeParse(input, false).hostname).toBe('good.com');
-    // This sandbox's parser leaves the backslash as an ordinary character: it's not a delimiter, so
-    // auth/host splitting proceeds on "@" alone, landing on a different (but internally consistent
-    // and predictable) result.
-    expect(actual.hostname).toBe('evil.com');
-    expect(actual.auth).toBe('good.com\\');
-  });
-
-  it('does not treat "\\\\" after the protocol as equivalent to "//"', async () => {
-    const input = 'http:\\\\evil.com\\x';
-    const actual = await runParse(input, false);
-    expect(nodeParse(input, false).host).toBe('evil.com');
-    expect(actual.slashes).toBeNull();
-    expect(actual.host).toBeNull();
+    expect(actual).toEqual(structuredClone(nodeParse(input, false)));
   });
 });
 

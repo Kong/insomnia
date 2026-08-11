@@ -243,6 +243,7 @@ const URL_FACTORY = [
   '  }',
   '  function parse(urlString, parseQueryString, slashesDenoteHost) {',
   '    var input = String(urlString).replace(/^[\\x00-\\x20]+/, "").replace(/[\\x00-\\x20]+$/, "");',
+  '    input = input.replace(/\\\\/g, "/");',
   '    var protocol = null, slashes = null, auth = null, hostname = null, port = null;',
   '    var rest = input;',
   '    var pm = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(input);',
