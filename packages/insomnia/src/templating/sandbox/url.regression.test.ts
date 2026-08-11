@@ -213,3 +213,31 @@ describe('documented divergences from real node:url', () => {
     expect(actual.host).toBeNull();
   });
 });
+
+describe('leading/trailing C0-control-or-space characters', () => {
+  it('a leading control character before a scheme does not prevent protocol detection', async () => {
+    const input = String.fromCodePoint(0) + 'javascript:alert(1)';
+    const actual = await runParse(input, false);
+    // node:url strips leading/trailing C0-control-or-space characters (matching the WHATWG URL
+    // Standard's own input-trimming step) before parsing, so a leading NUL byte doesn't hide the
+    // scheme from it.
+    expect(nodeParse(input, false).protocol).toBe('javascript:');
+    expect(actual.protocol).toBe('javascript:');
+  });
+
+  it('a trailing control character does not survive into the parsed pathname', async () => {
+    const input = 'http://host/path' + String.fromCodePoint(31);
+    const actual = await runParse(input, false);
+    expect(nodeParse(input, false).pathname).toBe('/path');
+    expect(actual.pathname).toBe('/path');
+  });
+});
+
+describe('unsafe-character escaping table', () => {
+  it('escapes a literal single quote, matching node:url', async () => {
+    const input = "http://host/a'b";
+    const actual = await runParse(input, false);
+    expect(nodeParse(input, false).pathname).toBe('/a%27b');
+    expect(actual.pathname).toBe('/a%27b');
+  });
+});
