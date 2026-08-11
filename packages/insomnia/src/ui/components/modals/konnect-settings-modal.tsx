@@ -174,6 +174,7 @@ export const KonnectSettingsModal = ({
                         Enter a Personal Access Token (PAT) to sync your Konnect control planes into Insomnia projects.
                       </p>
                       <button
+                        type="button"
                         className="w-fit text-sm text-(--hl) underline hover:opacity-80"
                         onClick={() => window.main.openInBrowser('https://cloud.konghq.com/global/account/tokens')}
                       >
