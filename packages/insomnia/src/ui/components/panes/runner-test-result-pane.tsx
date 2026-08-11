@@ -124,7 +124,7 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
               resultsByIteration
             ) : (
               <div className="mt-5 text-center">
-                <div>No "{resultFilter || targetTests}" requests/tests to display</div>
+                <div>No matching requests/tests to display</div>
               </div>
             )}
           </div>
