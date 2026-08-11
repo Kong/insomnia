@@ -120,6 +120,23 @@ function getModificationClassName(type: GitFileType) {
   return '';
 }
 
+// `pushToGitRemoteAction` (used by the AI multi-commit flow and by "Retry
+// push") normalizes a push-time 401/403 into this constant instead of the
+// raw isomorphic-git "HTTP Error: 40x" text that `isGitRepoLoadAuthHttp40Error`
+// looks for. Recognize both forms so those flows can still offer
+// re-authentication instead of a dead-end "Retry push" button.
+function isPushAuthError(errors: string[]): boolean {
+  return isGitRepoLoadAuthHttp40Error(errors) || errors.includes(GitVCSOperationErrors.AuthenticationRequiredError);
+}
+
+// GitOauthAuthBanner only renders for errors matching isGitRepoLoadAuthHttp40Error
+// (it does its own internal gating) — translate the normalized constant into an
+// equivalent it recognizes, so the banner actually shows instead of silently
+// rendering nothing.
+function toOAuthBannerErrors(errors: string[]): string[] {
+  return isGitRepoLoadAuthHttp40Error(errors) ? errors : ['HTTP Error: 401 Unauthorized, Authentication required'];
+}
+
 // Shown when a commit succeeded locally but the push that followed it failed
 // (e.g. a protected branch rejected it). The work is safe in a local commit —
 // this offers a retry instead of implying the changes were lost.
@@ -465,7 +482,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
       // An auth failure needs the re-auth banner (GitOauthAuthBanner), even if
       // it happened after a successful commit — a plain "retry push" button
       // would just fail again without letting the user re-authenticate.
-      if (pushFailedAfterCommit && !isGitRepoLoadAuthHttp40Error(errors)) {
+      if (pushFailedAfterCommit && !isPushAuthError(errors)) {
         setOperationError(null);
         setPushFailedError(errors.join('\n'));
       } else {
@@ -491,7 +508,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
     }
     const errors = pushRetryFetcher.data.errors;
     if (errors && errors.length > 0) {
-      if (isGitRepoLoadAuthHttp40Error(errors)) {
+      if (isPushAuthError(errors)) {
         setPushFailedError(null);
         setOperationError(errors.join('\n'));
         return;
@@ -714,11 +731,11 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           onRetry={retryPush}
           projectId={projectId}
         />
-      ) : operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+      ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
         <GitOauthAuthBanner
           selectedCredential={selectedCredential}
           gitRepository={gitRepository}
-          repoLoadErrors={[operationError]}
+          repoLoadErrors={toOAuthBannerErrors([operationError])}
           provider={selectedProvider}
         />
       ) : operationError && selectedCredential?.provider === 'custom' ? (
@@ -842,7 +859,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     if (errors && errors.length > 0) {
       if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         onPullRequired();
-      } else if (commitFetcher.data.pushFailedAfterCommit && !isGitRepoLoadAuthHttp40Error(errors)) {
+      } else if (commitFetcher.data.pushFailedAfterCommit && !isPushAuthError(errors)) {
         // The commit itself succeeded — only clear the message/error state
         // for that, and surface the push failure as a retryable banner.
         setMessage('');
@@ -878,7 +895,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         onPullRequired();
         return;
       }
-      if (isGitRepoLoadAuthHttp40Error(errors)) {
+      if (isPushAuthError(errors)) {
         setPushFailedError(null);
         setOperationError(errors.join('\n'));
         return;
@@ -1029,11 +1046,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           onRetry={retryPush}
           projectId={projectId}
         />
-        ) : operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+        ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
             gitRepository={gitRepository}
-            repoLoadErrors={[operationError]}
+            repoLoadErrors={toOAuthBannerErrors([operationError])}
             provider={selectedProvider}
           />
         ) : operationError && selectedCredential?.provider === 'custom' ? (
