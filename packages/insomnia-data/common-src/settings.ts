@@ -87,7 +87,7 @@ export enum UpdateChannel {
 }
 
 // How far the configured HTTP/HTTPS proxy reaches.
-export const ProxyScope = {
+export const ProxyScopes = {
   // Only requests sent from collections use the proxy (default, matches pre-13.1 behavior).
   // Insomnia's own traffic (login, git, Konnect, auto-updates, analytics, etc.) always goes direct.
   requests: 'requests',
@@ -95,7 +95,7 @@ export const ProxyScope = {
   all: 'all',
 } as const;
 
-export type ProxyScope = ValueOf<typeof ProxyScope>;
+export type ProxyScope = ValueOf<typeof ProxyScopes>;
 
 /** Gets a subset of Settings where the values match a condition */
 export type SettingsOfType<MatchType> = NonNullable<

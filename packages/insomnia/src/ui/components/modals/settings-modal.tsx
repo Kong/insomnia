@@ -1,4 +1,4 @@
-import { ProxyScope } from 'insomnia-data/common';
+import { type ProxyScope, ProxyScopes } from 'insomnia-data/common';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -183,8 +183,8 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
                 setting="proxyScope"
                 disabled={!settings.proxyEnabled}
                 values={[
-                  { value: ProxyScope.requests, name: 'Only when sending requests in Insomnia' },
-                  { value: ProxyScope.all, name: 'All traffic sent by Insomnia' },
+                  { value: ProxyScopes.requests, name: 'Only when sending requests in Insomnia' },
+                  { value: ProxyScopes.all, name: 'All traffic sent by Insomnia' },
                 ]}
                 help="When All traffic is selected, Insomnia uses the configured proxy for all calls, including login, git, auto-updates, etc."
               />

@@ -1,6 +1,6 @@
 import { session } from 'electron/main';
 import { models, services } from 'insomnia-data';
-import { ProxyScope } from 'insomnia-data/common';
+import { ProxyScopes } from 'insomnia-data/common';
 
 import {
   getAIServiceURL,
@@ -91,7 +91,7 @@ async function updateProxy() {
       }
 
       const bypassRules =
-        proxyScope === ProxyScope.all
+        proxyScope === ProxyScopes.all
           ? (noProxy ?? '')
           : [noProxy, ...insomniaIntegrationHosts()].filter(Boolean).join(',');
 

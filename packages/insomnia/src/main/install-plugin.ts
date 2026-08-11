@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 
 import { app } from 'electron';
 import { services } from 'insomnia-data';
-import { ProxyScope } from 'insomnia-data/common';
+import { ProxyScopes } from 'insomnia-data/common';
 
 import { validatePluginName } from '~/common/utils/plugin-name';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
@@ -438,7 +438,7 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
   // custom registry is a user-configured target, so it always respects the proxy setting.
   if (settings.proxyEnabled === true) {
     const usingDefaultRegistry = (await getRegistryUrl()) === DEFAULT_NPM_REGISTRY;
-    if (settings.proxyScope === ProxyScope.all || !usingDefaultRegistry) {
+    if (settings.proxyScope === ProxyScopes.all || !usingDefaultRegistry) {
       Object.assign(yarnEnv, buildProxyEnv(settings));
     }
   }

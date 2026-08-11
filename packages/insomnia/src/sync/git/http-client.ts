@@ -1,6 +1,6 @@
 import type * as Electron from 'electron';
 import { services } from 'insomnia-data';
-import { ProxyScope } from 'insomnia-data/common';
+import { ProxyScopes } from 'insomnia-data/common';
 import type { GitHttpRequest, GitHttpResponse, HttpClient } from 'isomorphic-git';
 
 /**
@@ -72,7 +72,7 @@ async function getDirectSession(electron: typeof Electron) {
 
 async function shouldBypassProxy(): Promise<boolean> {
   const settings = await services.settings.get();
-  return settings.proxyEnabled === true && settings.proxyScope !== ProxyScope.all;
+  return settings.proxyEnabled === true && settings.proxyScope !== ProxyScopes.all;
 }
 
 async function request({ url, method = 'GET', headers = {}, body }: GitHttpRequest): Promise<GitHttpResponse> {
