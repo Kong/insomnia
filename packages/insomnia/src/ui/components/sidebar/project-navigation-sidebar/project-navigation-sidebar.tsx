@@ -225,11 +225,11 @@ const ProjectNavigationSidebarInner = (
     [cloudSyncProjects],
   );
 
-  const workspaceManualSortMethod = (a: Workspace, b: Workspace, localOrder: string[]) => {
+  const workspaceManualSortMethod = useCallback((a: Workspace, b: Workspace, localOrder: string[]) => {
     const aIndex = localOrder.indexOf(a._id);
     const bIndex = localOrder.indexOf(b._id);
     return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
-  };
+  }, []);
 
   const getAllRemoteFilesByProjectId = useCallback(async () => {
     if (!cloudSyncProjectIdsKey) return new Map();
