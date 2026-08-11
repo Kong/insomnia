@@ -3,7 +3,7 @@ import { fuzzyMatch } from 'insomnia-data/common';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
+export type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
 const filterClassnames =
   'mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
@@ -13,12 +13,12 @@ const activeFilterClassnames =
 export interface RequestTestResultRowsProps {
   requestTestResults: RequestTestResult[];
   resultFilter: string;
-  targetTests: string;
+  targetTests: TargetTestType;
 }
 
 export function filterTestResults(
   requestTestResults: RequestTestResult[],
-  targetTests: string,
+  targetTests: TargetTestType,
   resultFilter: string,
 ): { result: RequestTestResult; index: number }[] {
   return requestTestResults
@@ -51,13 +51,13 @@ export function filterTestResults(
     });
 }
 
-export function isFilterEngaged(targetTests: string, resultFilter: string): boolean {
+export function isFilterEngaged(targetTests: TargetTestType, resultFilter: string): boolean {
   return targetTests !== 'all' || resultFilter.trim() !== '';
 }
 
 export function hasMatchingTestResults(
   requestTestResults: RequestTestResult[],
-  targetTests: string,
+  targetTests: TargetTestType,
   resultFilter: string,
 ): boolean {
   return (

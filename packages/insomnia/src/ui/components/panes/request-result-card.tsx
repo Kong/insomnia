@@ -11,12 +11,12 @@ import {
   type RunnerLiveItem,
 } from '../../../common/runner-feedback';
 import { RenderedText } from '../rendered-text';
-import { hasMatchingTestResults, RequestTestResultRows } from './request-test-result-pane';
+import { hasMatchingTestResults, RequestTestResultRows, type TargetTestType } from './request-test-result-pane';
 
 interface Props {
   item: RunnerResultPerRequest | RunnerLiveItem;
   resultFilter?: string;
-  targetTests?: string;
+  targetTests?: TargetTestType;
   onSkip?: () => void;
   testId?: string;
   defaultExpanded?: boolean;
