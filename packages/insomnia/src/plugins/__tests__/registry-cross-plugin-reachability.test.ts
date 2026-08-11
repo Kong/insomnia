@@ -139,7 +139,7 @@ describe('registry replacement via a held module-namespace reference', () => {
 });
 
 describe('directory-field mutation impact, assuming a live registry reference were reachable', () => {
-  it('would flip resolvePluginExecutionMode to trusted if a live registry reference were reachable', () => {
+  it('would flip resolvePluginExecutionMode to internal if a live registry reference were reachable', () => {
     // `_testOnlySetPlugins` is a test-only backdoor, not a real attack surface — this proves impact
     // only, on the explicit assumption reachability existed (which the tests above rule out).
     const pluginEntry = { directory: '/plugins/other-plugin', config: { elevated: false } };
@@ -147,7 +147,7 @@ describe('directory-field mutation impact, assuming a live registry reference we
 
     pluginEntry.directory = '';
 
-    expect(resolvePluginExecutionMode({ pluginSandboxEnabled: true }, pluginEntry)).toBe('trusted');
+    expect(resolvePluginExecutionMode({ pluginSandboxEnabled: true }, pluginEntry)).toBe('internal');
   });
 });
 

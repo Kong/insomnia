@@ -24,8 +24,8 @@ export const isSandboxEnabled = (settings?: SandboxSettings): boolean =>
   !!settings?.pluginSandboxEnabled;
 
 export type PluginExecutionMode =
-  // Bundle/first-party plugin — shipped by us, always runs in-process with full host access.
-  | 'trusted'
+  // Built-in/bundled plugin — ships with Insomnia, always runs in-process with full host access.
+  | 'internal'
   // User plugin, sandbox on, not elevated — runs in the QuickJS sandbox (default-deny).
   | 'sandboxed'
   // User plugin the user explicitly elevated — runs in-process with full host access.
@@ -41,9 +41,9 @@ export const resolvePluginExecutionMode = (
   settings: SandboxSettings | undefined,
   plugin: SandboxPlugin,
 ): PluginExecutionMode => {
-  // Bundle plugins are trusted by design (e.g. external-vault's unsafePluginMainActions).
+  // Built-in plugins are trusted by design (e.g. external-vault's unsafePluginMainActions).
   if (!plugin.directory) {
-    return 'trusted';
+    return 'internal';
   }
   // Sandbox off entirely → user plugins run in-process as they always did (legacy path).
   if (!isSandboxEnabled(settings)) {

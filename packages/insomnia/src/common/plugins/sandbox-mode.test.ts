@@ -17,11 +17,11 @@ describe('isSandboxEnabled', () => {
 });
 
 describe('resolvePluginExecutionMode', () => {
-  it('bundle plugins are always trusted, regardless of flags/elevated', () => {
-    expect(resolvePluginExecutionMode({ pluginSandboxEnabled: true }, bundlePlugin)).toBe('trusted');
-    expect(resolvePluginExecutionMode({}, bundlePlugin)).toBe('trusted');
+  it('bundle plugins are always internal, regardless of flags/elevated', () => {
+    expect(resolvePluginExecutionMode({ pluginSandboxEnabled: true }, bundlePlugin)).toBe('internal');
+    expect(resolvePluginExecutionMode({}, bundlePlugin)).toBe('internal');
   });
-  it('user plugin with sandbox off is unsandboxed (legacy in-process), not trusted', () => {
+  it('user plugin with sandbox off is unsandboxed (legacy in-process), not internal', () => {
     expect(resolvePluginExecutionMode({}, userPlugin())).toBe('unsandboxed');
   });
   it('user plugin with sandbox on and not elevated is sandboxed (default-deny)', () => {
