@@ -121,6 +121,17 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     return list.includes(docType);
   };
 
+  // Kept in sync with `tabList` via the effect below so `handleDelete` can read
+  // the current tab list without depending on it directly. `tabList` changes on
+  // every tab open/close/activate, and `handleDelete` is itself a dependency of
+  // the `db.changes` subscription effect further down — if `handleDelete`'s
+  // identity changed with `tabList`, that effect would unsubscribe/resubscribe
+  // on every tab change instead of only when the database service handlers change.
+  const tabListRef = React.useRef(tabList);
+  useEffect(() => {
+    tabListRef.current = tabList;
+  }, [tabList]);
+
   const handleDelete = useCallback(
     (doc: BaseModel) => {
       const { _id: docId, type: docType, parentId } = doc;
@@ -134,7 +145,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
         batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
       } else if (isRequestLikeDocType(docType)) {
-        const closingTab = tabList.find(tab => tab.id === docId);
+        const closingTab = tabListRef.current.find(tab => tab.id === docId);
         const fallbackUrl = getRequestDeleteFallbackUrl({ parentId, closingTab, organizationId, projectId });
         closeTabById(docId, { removeFromClosedTabs: true, fallbackUrl });
       } else {
@@ -142,7 +153,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         closeTabById(docId, { removeFromClosedTabs: true });
       }
     },
-    [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById, organizationId, projectId, tabList],
+    [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById, organizationId, projectId],
   );
 
   const handleUpdate = useCallback(
