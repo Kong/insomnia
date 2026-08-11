@@ -11,6 +11,7 @@ const createAppDataQueryClient = () =>
         staleTime: Infinity,
         gcTime: Infinity,
         retry: false,
+        networkMode: 'always',
       },
     },
   });
