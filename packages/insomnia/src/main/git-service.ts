@@ -2130,6 +2130,12 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
 
 export interface CommitToGitRepoResult {
   errors?: string[];
+  /**
+   * True when the local commit succeeded but the subsequent push failed (e.g. a
+   * protected branch rejected it). The user's work is safe in a local commit —
+   * callers should offer a way to retry the push rather than implying data loss.
+   */
+  pushFailedAfterCommit?: boolean;
 }
 
 export const commitToGitRepoAction = async ({
@@ -2298,14 +2304,21 @@ export const commitAndPushToGitRepoAction = async ({
   try {
     canPush = await GitVCS.canPush(repo.credentialsId);
   } catch (err) {
+    // The commit above already succeeded — a failure here is just the
+    // pushability check, so persist that the commit is still unpushed.
+    await services.gitRepository.update(repo, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
 
-    return { errors: [errorMessage] };
+    return { errors: [errorMessage], pushFailedAfterCommit: true };
   }
   // If nothing to push, display that to the user
   if (!canPush) {
@@ -2337,9 +2350,18 @@ export const commitAndPushToGitRepoAction = async ({
       cachedGitLastCommitTime: Date.now(),
     });
   } catch (err: unknown) {
+    // The commit above already succeeded and is safe on disk — only the push
+    // failed. Reflect that in the persisted repo state so indicators elsewhere
+    // in the app (e.g. the unpushed-changes badge) stay accurate, and flag it
+    // for the UI so it can offer a retry instead of implying data loss.
+    await services.gitRepository.update(repo, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
         errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2348,12 +2370,14 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+        pushFailedAfterCommit: true,
       };
     }
 
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
@@ -2366,6 +2390,7 @@ export const commitAndPushToGitRepoAction = async ({
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
+      pushFailedAfterCommit: true,
     };
   }
 
@@ -2393,13 +2418,34 @@ export const createNewGitBranchAction = async ({
   invariant(typeof branch === 'string', 'Branch name is required');
 
   try {
+    // `GitVCS.checkout()` silently falls back to checking out an existing branch
+    // of the same name instead of branching from HEAD (see its implementation) —
+    // which would strand any local commits on the branch the user is leaving,
+    // with no indication anything happened differently than a real "create".
+    // Since this action's whole contract is "create a NEW branch", refuse up
+    // front rather than let that ambiguity through.
+    const [localBranches, syncedBranches, remoteBranches] = await Promise.all([
+      GitVCS.listBranches(),
+      GitVCS.listRemoteBranches(),
+      GitVCS.fetchRemoteBranches(),
+    ]);
+    if ([...localBranches, ...syncedBranches, ...remoteBranches].includes(branch)) {
+      return {
+        errors: [`A branch named "${branch}" already exists. Choose a different name, or use "Switch branch" instead.`],
+      };
+    }
+
     let providerName = 'custom';
     if (gitRepository?.credentialsId) {
       const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
-    await GitVCS.checkout(branch);
+    // Create directly rather than GitVCS.checkout(branch) — the collision
+    // check above already ruled out an existing branch of this name, so
+    // checkout()'s own re-check (which repeats the same local/synced/remote
+    // lookups, including a network round-trip) would just be redundant work.
+    await GitVCS.branch(branch, true);
     trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
       ...vcsEventProperties('git', 'create_branch'),
       providerName,
@@ -2454,6 +2500,17 @@ export const checkoutGitBranchAction = async ({
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    // Capture the branch being left, and whether it has commits that haven't
+    // been pushed, before switching away from it — those commits aren't lost,
+    // but they won't be reachable again until the user switches back.
+    const previousBranch = await GitVCS.getCurrentBranch();
+    let hadUnpushedChangesOnPreviousBranch = false;
+    try {
+      hadUnpushedChangesOnPreviousBranch = await GitVCS.canPush(gitRepository.credentialsId);
+    } catch (err) {
+      console.error('Error checking for unpushed changes before branch switch', err);
+    }
+
     const bufferId = await database.bufferChanges();
     await GitVCS.checkout(branch);
 
@@ -2485,19 +2542,25 @@ export const checkoutGitBranchAction = async ({
 
     await database.flushChanges(bufferId);
 
+    const warnings: string[] = [];
+
+    if (hadUnpushedChangesOnPreviousBranch && previousBranch !== branch) {
+      warnings.push(
+        `"${previousBranch}" has commits that haven't been pushed. They're safe — switch back to "${previousBranch}" to push them.`,
+      );
+    }
+
     const branchRemoteInfo = await GitVCS.getBranchRemoteInfo(branch);
     if (!branchRemoteInfo.isOrigin) {
-      return {
-        success: true,
-        warnings: [
-          `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
-            `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
-        ],
-      };
+      warnings.push(
+        `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
+          `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
+      );
     }
 
     return {
       success: true,
+      ...(warnings.length > 0 ? { warnings } : {}),
     };
   } catch (err) {
     if (err instanceof Errors.HttpError) {
@@ -2656,6 +2719,12 @@ export interface PushToGitRemoteResult {
   errors?: string[];
   success?: boolean;
   gitRepository?: GitRepository;
+  /**
+   * True when the push failed but local commits exist and are safe on disk
+   * (i.e. this wasn't "nothing to push" or an upfront auth/connectivity check
+   * failure). Callers should offer a way to retry the push.
+   */
+  pushFailedAfterCommit?: boolean;
 }
 
 export const pushToGitRemoteAction = async ({
@@ -2728,11 +2797,18 @@ export const pushToGitRemoteAction = async ({
     });
     await database.flushChanges(bufferId);
   } catch (err: unknown) {
+    // The local commit(s) that made canPush true above are untouched by a
+    // failed push — persist that so indicators elsewhere in the app stay
+    // accurate, and flag it for the UI so it can offer a retry.
+    await services.gitRepository.update(gitRepository, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
         errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
-
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2741,6 +2817,7 @@ export const pushToGitRemoteAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2751,6 +2828,7 @@ export const pushToGitRemoteAction = async ({
       return {
         errors: [GitVCSOperationErrors.AuthenticationRequiredError],
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2758,6 +2836,7 @@ export const pushToGitRemoteAction = async ({
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
@@ -2771,6 +2850,7 @@ export const pushToGitRemoteAction = async ({
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
       gitRepository,
+      pushFailedAfterCommit: true,
     };
   }
 
