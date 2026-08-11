@@ -26,7 +26,7 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
   - Pure-JS reimplementations: `events`, `url` (and more via M2).
     - `url` implements the legacy `parse`/`format` pair (verified against `node:url` across
       protocol-relative/opaque/non-slash-protocol forms, auth/port/query/hash splitting, the
-      `%20`/`%22`/`%3C`/`%3E`/`%60`/`%5E`/`%7C`/`%7B`/`%7D` + C0-control-char escaping table,
+      `%20`/`%22`/`%27`/`%3C`/`%3E`/`%60`/`%5E`/`%7C`/`%7B`/`%7D` unsafe-character escaping table,
       `parseQueryString`/`slashesDenoteHost`, and IPv6 bracketed hosts) plus a thin re-export of the
       ambient `URL`/`URLSearchParams` globals (`sandbox-globals.ts`, M2) so `require('url').URL`
       resolves the way real Node's own `require('url').URL === global.URL` does. That identity is
@@ -43,6 +43,12 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
       as having "security implications," so it's intentionally not replicated. `url.inspect`/
       `resolve`/`domainToASCII`/`domainToUnicode`/`pathToFileURL`/`fileURLToPath`/`Url` (the legacy
       class) are not implemented at all.
+      `parse()` strips leading/trailing C0-control-or-space bytes before parsing (matching the WHATWG
+      URL Standard's own input-trimming step, which `node:url`'s legacy parser also implements) so a
+      leading control byte can't hide a scheme from protocol detection; a control byte elsewhere in
+      the string is left in place, then percent-escaped by the table above even in positions where
+      real Node leaves it raw — a deliberately more conservative, safe-direction difference, not a
+      parity gap.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at

@@ -113,10 +113,15 @@ const EVENTS_FACTORY = [
 //     stand-in for "//" after the protocol. Real Node's legacy parser does this for historical
 //     browser-compat reasons, and it's exactly the parsing-confusion behavior Node's own deprecation
 //     notice on url.parse cites as having "security implications" — intentionally not replicated.
-// Verified against node:url for every specifier/edge case exercised by url.regression.test.ts;
-// url.inspect's unsafe-character escaping table (space/quote/angle-brackets/backtick/caret/pipe/
-// braces + C0 controls) is replicated, but slashesDenoteHost's rarer host-detection quirks beyond
-// the tested cases are not guaranteed byte-for-byte.
+// Verified against node:url for every specifier/edge case exercised by url.regression.test.ts.
+// parse() strips leading/trailing C0-control-or-space bytes before parsing, matching the WHATWG URL
+// Standard's own input-trimming step that node:url's legacy parser also implements — this is an
+// edge-only strip; a control byte elsewhere in the string is left in place. The unsafe-character
+// escaping table (space/single+double-quote/angle-brackets/backtick/caret/pipe/braces) matches
+// node:url's own table; a C0 control byte that survives the edge strip is additionally
+// percent-escaped here even where real Node leaves it raw — a deliberately more conservative,
+// safe-direction difference, not a parity gap. slashesDenoteHost's rarer host-detection quirks
+// beyond the tested cases are not guaranteed byte-for-byte.
 const URL_FACTORY = [
   'function () {',
   '  var URLCtor = globalThis.URL;',
@@ -126,6 +131,7 @@ const URL_FACTORY = [
   '  var UNSAFE_CHAR_ESCAPES = {};',
   '  UNSAFE_CHAR_ESCAPES[" "] = "%20";',
   '  UNSAFE_CHAR_ESCAPES[String.fromCharCode(34)] = "%22";',
+  '  UNSAFE_CHAR_ESCAPES[String.fromCharCode(39)] = "%27";',
   '  UNSAFE_CHAR_ESCAPES["<"] = "%3C";',
   '  UNSAFE_CHAR_ESCAPES[">"] = "%3E";',
   '  UNSAFE_CHAR_ESCAPES["`"] = "%60";',
@@ -236,7 +242,7 @@ const URL_FACTORY = [
   '    return { auth: a.auth, hostname: a.hostname, port: a.port, rest: newRest };',
   '  }',
   '  function parse(urlString, parseQueryString, slashesDenoteHost) {',
-  '    var input = String(urlString).trim();',
+  '    var input = String(urlString).replace(/^[\\x00-\\x20]+/, "").replace(/[\\x00-\\x20]+$/, "");',
   '    var protocol = null, slashes = null, auth = null, hostname = null, port = null;',
   '    var rest = input;',
   '    var pm = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(input);',
