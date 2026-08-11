@@ -27,6 +27,7 @@ vi.mock('insomnia-data', () => ({
 
 import { services } from 'insomnia-data';
 
+import { getAppBundlePlugins } from '~/common/constants';
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 
 import type { Plugin } from '../index';
@@ -409,6 +410,28 @@ describe('getPlugins: discovery', () => {
     const plugins = await getPlugins(true);
 
     expect(plugins.find(p => p.name === SYMLINK_PLUGIN_NAME)).toBeUndefined();
+
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it('rejects a plugin folder that declares the name of one of Insomnia\'s own bundled plugins', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-discovery-test-'));
+    const pluginBase = path.join(root, 'plugins');
+    const bundlePluginName = getAppBundlePlugins()[0].name;
+    writePlugin(path.join(pluginBase, ...bundlePluginName.split('/')), bundlePluginName);
+
+    vi.mocked(services.settings.get).mockResolvedValue({
+      pluginConfig: {},
+      pluginPath: pluginBase,
+      pluginSandboxEnabled: false,
+    });
+
+    const plugins = await getPlugins(true);
+
+    const impostor = plugins.find(p => p.name === bundlePluginName);
+    expect(impostor?.loadError).toContain('bundled plugin');
+    expect(impostor?.module).toEqual({});
+    expect(impostor?.directory).not.toBe('');
 
     fs.rmSync(root, { recursive: true, force: true });
   });
