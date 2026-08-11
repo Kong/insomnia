@@ -1,10 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
 import { type Billing, type FeatureList, getOrganizationFeatures } from 'insomnia-api';
 import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
-import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
+import { useServerQuery } from '~/ui/hooks/use-query';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
   bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -37,24 +36,16 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
   const params = useParams() as { organizationId?: string };
   const organizationId = organizationIdParam ?? params.organizationId ?? '';
 
-  // Bind explicitly to the server-data client: inside the organization subtree
-  // the nearest QueryClientProvider is the local database cache, which is not
-  // where this network query belongs.
-  const serverDataQueryClient = useServerDataQueryClient();
-
   const isEnabled = !!organizationId && !models.organization.isScratchpadOrganizationId(organizationId);
 
-  const { data } = useQuery(
-    {
-      queryKey: ['organization-features', organizationId],
-      queryFn: async () => {
-        const { id: sessionId } = await services.userSession.get();
-        return getOrganizationFeatures({ organizationId, sessionId });
-      },
-      enabled: isEnabled,
+  const { data } = useServerQuery({
+    queryKey: ['organization-features', organizationId],
+    queryFn: async () => {
+      const { id: sessionId } = await services.userSession.get();
+      return getOrganizationFeatures({ organizationId, sessionId });
     },
-    serverDataQueryClient,
-  );
+    enabled: isEnabled,
+  });
 
   // Fall back to safe defaults while loading, when disabled (scratchpad), or on error.
   return {

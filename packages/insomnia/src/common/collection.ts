@@ -12,8 +12,8 @@ export function flattenCollectionChildren(
   sortOrder: keyof typeof sortMethodMap = 'type-manual',
 ): Child[] {
   const { isRequestGroup } = models.requestGroup;
-  const allRequests = collectionWorkspaceChildren.children.requestsAndGroups;
-  const { allRequestMetas, requestGroupMetas } = collectionWorkspaceChildren.childrenMetas;
+  const allRequests = collectionWorkspaceChildren.data.requestsAndGroups;
+  const { allRequestMetas, requestGroupMetas } = collectionWorkspaceChildren.dataMetas;
 
   const collection: Child[] = [];
 

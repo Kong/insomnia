@@ -46,10 +46,10 @@ import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/sidebar-focus-onboarding';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
+import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
-import { useProjectNavigationSidebarData } from '~/ui/hooks/use-navigation-sidebar-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
@@ -177,7 +177,8 @@ const ProjectNavigationSidebarInner = (
     organizationWorkspaces,
     workspaceMetas,
     activeProjects,
-    collectionByWorkspaceId,
+    collectionByWorkspaceIds,
+    pendingCollectionWorkspaceIds,
     nonKonnectProjects,
     konnectProjects,
   } = useProjectNavigationSidebarData(organizationId, {
@@ -413,7 +414,7 @@ const ProjectNavigationSidebarInner = (
       // Array of project and collection workspace ids that should get data from db
       const activeFilterLower = activeFilter.toLowerCase();
 
-      const collectionChildrenAndMetaByWorkspaceId = collectionByWorkspaceId;
+      const collectionChildrenAndMetaByWorkspaceIds = collectionByWorkspaceIds;
 
       for (const project of activeProjects) {
         const projectId = project._id;
@@ -516,17 +517,17 @@ const ProjectNavigationSidebarInner = (
               hidden: isProjectCollapsed,
             });
 
-            const rawRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceId.get(
+            const rawRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceIds.get(
               workspaceId,
             ) as CollectionWorkspaceChildren;
             // Apply optimistic request-group collapse overrides on top of the fetched data.
-            const allRequestsAndMetaInWorkspace =
+            const allRequestsAndMetaInWorkspace: CollectionWorkspaceChildren =
               rawRequestsAndMetaInWorkspace && requestGroupCollapseOverrides.size > 0
                 ? {
                     ...rawRequestsAndMetaInWorkspace,
-                    childrenMetas: {
-                      ...rawRequestsAndMetaInWorkspace.childrenMetas,
-                      requestGroupMetas: rawRequestsAndMetaInWorkspace.childrenMetas.requestGroupMetas.map(
+                    dataMetas: {
+                      ...rawRequestsAndMetaInWorkspace.dataMetas,
+                      requestGroupMetas: rawRequestsAndMetaInWorkspace.dataMetas.requestGroupMetas.map(
                         requestGroupMeta =>
                           requestGroupCollapseOverrides.has(requestGroupMeta.parentId)
                             ? {
@@ -631,7 +632,14 @@ const ProjectNavigationSidebarInner = (
               }
             });
 
-            if (collectionChildren.length === 0 && !shouldHideCollectionChildren && !activeFilter) {
+            // Data not loaded yet for this workspace (still fetching) — don't show the "empty collection" placeholder
+            const isCollectionDataPending = pendingCollectionWorkspaceIds.has(workspaceId);
+            if (
+              collectionChildren.length === 0 &&
+              !shouldHideCollectionChildren &&
+              !activeFilter &&
+              !isCollectionDataPending
+            ) {
               items.push({
                 kind: 'emptyCollection',
                 organizationId,
@@ -670,12 +678,13 @@ const ProjectNavigationSidebarInner = (
   }, [
     activeFilter,
     activeProjects,
-    collectionByWorkspaceId,
+    collectionByWorkspaceIds,
     collectionSortOrders,
     expandedProjectAndWorkspaceIds,
     localWorkspaceOrders,
     organizationId,
     organizationWorkspaces,
+    pendingCollectionWorkspaceIds,
     projectWorkspaceSortOrder,
     requestGroupCollapseOverrides,
     unsyncedFilesByProjectId,
@@ -900,9 +909,9 @@ const ProjectNavigationSidebarInner = (
       let changed = false;
       const next = new Map(previous);
       for (const [requestGroupId, overrideCollapsed] of previous) {
-        for (const data of collectionByWorkspaceId.values()) {
+        for (const data of collectionByWorkspaceIds.values()) {
           const collectionData = data;
-          const meta = collectionData?.childrenMetas?.requestGroupMetas?.find(m => m.parentId === requestGroupId);
+          const meta = collectionData?.dataMetas?.requestGroupMetas?.find(m => m.parentId === requestGroupId);
           if (meta && meta.collapsed === overrideCollapsed) {
             next.delete(requestGroupId);
             changed = true;
@@ -912,7 +921,7 @@ const ProjectNavigationSidebarInner = (
       }
       return changed ? next : previous;
     });
-  }, [collectionByWorkspaceId]);
+  }, [collectionByWorkspaceIds]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const shortcutCreateTriggerRef = useRef<HTMLElement | null>(null);

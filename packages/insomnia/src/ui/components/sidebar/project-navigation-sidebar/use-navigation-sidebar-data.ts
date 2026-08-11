@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
-import { useMultipleCollectionWorkspaceChildrenData, useOrganizationData } from '~/ui/hooks/use-insomnia-app-data';
+import { useOrganizationData } from '~/ui/hooks/use-organization-data';
+import { useMultipleWorkspacesData } from '~/ui/hooks/use-workspace-data';
 
 interface UseProjectNavigationSidebarDataOptions {
   isProjectTabActive: boolean;
@@ -39,7 +40,8 @@ export function useProjectNavigationSidebarData(
     return ids;
   }, [projectIds, workspaces, projectNavigationSidebarFilter, expandedProjectAndWorkspaceIds]);
 
-  const collectionByWorkspaceId = useMultipleCollectionWorkspaceChildrenData(collectionWorkspaceIds);
+  const { dataByWorkspaceId: collectionByWorkspaceIds, pendingWorkspaceIds: pendingCollectionWorkspaceIds } =
+    useMultipleWorkspacesData(collectionWorkspaceIds, 'collection');
 
   const nonKonnectProjects = useMemo(() => projects.filter(p => !p.konnectControlPlaneId), [projects]);
   const konnectProjects = useMemo(() => projects.filter(p => p.konnectControlPlaneId != null), [projects]);
@@ -51,7 +53,8 @@ export function useProjectNavigationSidebarData(
     activeProjects,
     projectIds,
     collectionWorkspaceIds,
-    collectionByWorkspaceId,
+    collectionByWorkspaceIds,
+    pendingCollectionWorkspaceIds,
     nonKonnectProjects,
     konnectProjects,
   };

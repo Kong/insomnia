@@ -181,14 +181,14 @@ function addOrganizationDataWorkspaceMeta(queryClient: QueryClient, organization
 
 function findWorkspaceIdForDoc(queryClient: QueryClient, doc: BaseModel): string | undefined {
   const cachedWorkspaces = queryClient.getQueriesData<WorkspaceChildren>({ queryKey: workspaceChildrenKeys.all });
-  for (const [queryKey, data] of cachedWorkspaces) {
+  for (const [queryKey, workspaceData] of cachedWorkspaces) {
     const workspaceId = queryKey[1] as string;
-    if (!data || !data.children || !('requestsAndGroups' in data.children)) {
+    if (!workspaceData || !workspaceData.data || !('requestsAndGroups' in workspaceData.data)) {
       continue;
     }
     if (
       doc.parentId === workspaceId ||
-      data.children.requestsAndGroups.some(r => r._id === doc._id || r._id === doc.parentId)
+      workspaceData.data.requestsAndGroups.some(r => r._id === doc._id || r._id === doc.parentId)
     ) {
       return workspaceId;
     }
@@ -215,21 +215,21 @@ function updateCollectionChildrenWithUpdatedDoc(
   doc: BaseModel,
 ): CollectionWorkspaceChildren | null {
   if (COLLECTION_REQUEST_DOC_TYPES.includes(doc.type)) {
-    const requestsAndGroups = replaceById(collectionChildren.children.requestsAndGroups, doc);
+    const requestsAndGroups = replaceById(collectionChildren.data.requestsAndGroups, doc);
     return requestsAndGroups
-      ? { ...collectionChildren, children: { ...collectionChildren.children, requestsAndGroups } }
+      ? { ...collectionChildren, data: { ...collectionChildren.data, requestsAndGroups } }
       : null;
   }
   if (COLLECTION_REQUEST_META_DOC_TYPES.includes(doc.type)) {
-    const allRequestMetas = replaceById(collectionChildren.childrenMetas.allRequestMetas, doc);
+    const allRequestMetas = replaceById(collectionChildren.dataMetas.allRequestMetas, doc);
     return allRequestMetas
-      ? { ...collectionChildren, childrenMetas: { ...collectionChildren.childrenMetas, allRequestMetas } }
+      ? { ...collectionChildren, dataMetas: { ...collectionChildren.dataMetas, allRequestMetas } }
       : null;
   }
   if (doc.type === models.requestGroupMeta.type) {
-    const requestGroupMetas = replaceById(collectionChildren.childrenMetas.requestGroupMetas, doc);
+    const requestGroupMetas = replaceById(collectionChildren.dataMetas.requestGroupMetas, doc);
     return requestGroupMetas
-      ? { ...collectionChildren, childrenMetas: { ...collectionChildren.childrenMetas, requestGroupMetas } }
+      ? { ...collectionChildren, dataMetas: { ...collectionChildren.dataMetas, requestGroupMetas } }
       : null;
   }
   return null;
@@ -315,21 +315,21 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
         let originDocWorkspaceId: string | undefined;
         let newDocWorkspaceId: string | undefined;
 
-        for (const [queryKey, data] of queryClient.getQueriesData<WorkspaceChildren>({
+        for (const [queryKey, workspaceData] of queryClient.getQueriesData<WorkspaceChildren>({
           queryKey: workspaceChildrenKeys.all,
         })) {
           const workspaceId = queryKey[1] as string;
           if (docNewParentId === workspaceId) {
             newDocWorkspaceId = workspaceId;
           }
-          if (!data || !data.children || !('requestsAndGroups' in data.children)) {
+          if (!workspaceData || !workspaceData.data || !('requestsAndGroups' in workspaceData.data)) {
             continue;
           }
-          if (data.children.requestsAndGroups.some(r => r._id === docId)) {
+          if (workspaceData.data.requestsAndGroups.some(r => r._id === docId)) {
             // find origin workspace id for doc by _id, since the parentId may have changed
             originDocWorkspaceId = workspaceId;
           }
-          if (data.children.requestsAndGroups.some(r => r._id === docNewParentId)) {
+          if (workspaceData.data.requestsAndGroups.some(r => r._id === docNewParentId)) {
             // find the new workspace id for doc by parentId
             newDocWorkspaceId = workspaceId;
           }
