@@ -6,6 +6,30 @@ The legacy pre/post-request scripting sandbox (`packages/insomnia/src/scripting/
 
 See `quickjs-legacy-module-porting-DELAYED.md` for modules explicitly excluded from this round and why.
 
+## Status
+
+| # | Module | PR | Status |
+| --- | --- | --- | --- |
+| 1 | `assert` | [#10360](https://github.com/Kong/insomnia/pull/10360) | **Done** — reviewed, one finding fixed inline (Map/Set/WeakMap/WeakSet/ArrayBuffer deep-equality guard bypass), out of draft. |
+| 2 | `querystring` | [#10362](https://github.com/Kong/insomnia/pull/10362) | **Done** — reviewed, one finding fixed inline (decode-fidelity gap sharing `unescape()`'s malformed-percent-encoding fallback), out of draft. |
+| 3 | `punycode` | [#10365](https://github.com/Kong/insomnia/pull/10365) | **Done** — reviewed, no findings, out of draft. |
+| 4 | `buffer` | [#10367](https://github.com/Kong/insomnia/pull/10367) | **Done** — reviewed, one finding fixed inline (`indexOf`/`includes` empty-needle clamping), out of draft. |
+| 5 | `string_decoder` | [#10368](https://github.com/Kong/insomnia/pull/10368) | **Blocked** — reviewed; a malformed-UTF-8 boundary-lookahead disagreement with `node:string_decoder` is confirmed and still unfixed (`SANDBOX-SECURITY-FINDINGS.md`, "Still unfixed"). PR remains in draft until it's patched. |
+| 6 | `util` | [#10374](https://github.com/Kong/insomnia/pull/10374) | **Done** — reviewed, one doc-gap finding fixed inline (`isAsyncFunction`/`isGeneratorFunction` spoofability undocumented), plus two post-review code-scanning findings resolved (Semgrep `eval-detected`, CodeQL `bad-code-sanitization`), out of draft. |
+| 7 | `url` | [#10378](https://github.com/Kong/insomnia/pull/10378) | **In progress** — reviewed, one finding fixed (`parse()`'s C0-control/space edge-trim + missing `%27` escape), plus an unprompted backslash-as-slash parity fix (matching `node:url` exactly instead of an earlier documented divergence). Both pushed. **Still in draft** pending final sign-off. |
+| 8 | `chai` | — | Not started. |
+| 9 | `crypto-js` | — | Not started. |
+| 10 | `csv-parse/lib/sync` | — | Not started. |
+| 11 | `lodash` | — | Not started. |
+| 12 | `xml2js` | — | Not started. |
+| 13 | `cheerio` | — | Not started. |
+| 14 | `moment` | — | Not started. |
+
+Related, non-milestone PRs produced by this effort:
+
+- [#10377](https://github.com/Kong/insomnia/pull/10377) `fix/sandbox-url-ipv6-host-parsing` — a pre-existing bug in the ambient `URL` global (M2, `sandbox-globals.ts`) found while building milestone 7: a bracketed IPv6 authority (`http://[::1]:8080/`) mis-split on the first colon inside the brackets. Independent branch/PR, out of draft, not yet merged.
+- [#10361](https://github.com/Kong/insomnia/pull/10361) `docs/quickjs-legacy-module-porting-plan` — this plan document's own PR (draft).
+
 ## Scope: 14 modules, in dependency/risk order
 
 `atob`/`btoa` are already implemented (pure-JS globals in `in-sandbox-bootstrap.ts`) — nothing to do.
