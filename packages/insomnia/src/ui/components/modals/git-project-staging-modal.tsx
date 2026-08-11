@@ -459,13 +459,18 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
       ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
       ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
     if (hasErrors && 'errors' in commitsFetcher.data) {
+      const errors = commitsFetcher.data.errors as string[];
       const pushFailedAfterCommit =
         'pushFailedAfterCommit' in commitsFetcher.data && commitsFetcher.data.pushFailedAfterCommit;
-      if (pushFailedAfterCommit) {
+      // An auth failure needs the re-auth banner (GitOauthAuthBanner), even if
+      // it happened after a successful commit — a plain "retry push" button
+      // would just fail again without letting the user re-authenticate.
+      if (pushFailedAfterCommit && !isGitRepoLoadAuthHttp40Error(errors)) {
         setOperationError(null);
-        setPushFailedError((commitsFetcher.data.errors as string[]).join('\n'));
+        setPushFailedError(errors.join('\n'));
       } else {
-        setOperationError((commitsFetcher.data.errors as string[]).join('\n'));
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
       }
       return;
     }
@@ -486,6 +491,11 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
     }
     const errors = pushRetryFetcher.data.errors;
     if (errors && errors.length > 0) {
+      if (isGitRepoLoadAuthHttp40Error(errors)) {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
+        return;
+      }
       setPushFailedError(errors.join('\n'));
       showToast({ icon: 'exclamation-triangle', title: 'Push failed again', status: 'error' });
       return;
@@ -832,13 +842,17 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     if (errors && errors.length > 0) {
       if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         onPullRequired();
-      } else if (commitFetcher.data.pushFailedAfterCommit) {
+      } else if (commitFetcher.data.pushFailedAfterCommit && !isGitRepoLoadAuthHttp40Error(errors)) {
         // The commit itself succeeded — only clear the message/error state
         // for that, and surface the push failure as a retryable banner.
         setMessage('');
         setOperationError(null);
         setPushFailedError(errors.join('\n'));
       } else {
+        // An auth failure needs the re-auth banner (GitOauthAuthBanner), even
+        // if it happened after a successful commit — a plain "retry push"
+        // button would just fail again without letting the user re-authenticate.
+        setPushFailedError(null);
         setOperationError(errors.join('\n'));
       }
       return;
@@ -862,6 +876,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
       if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         setPushFailedError(null);
         onPullRequired();
+        return;
+      }
+      if (isGitRepoLoadAuthHttp40Error(errors)) {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
         return;
       }
       setPushFailedError(errors.join('\n'));

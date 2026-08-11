@@ -2441,7 +2441,11 @@ export const createNewGitBranchAction = async ({
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
-    await GitVCS.checkout(branch);
+    // Create directly rather than GitVCS.checkout(branch) — the collision
+    // check above already ruled out an existing branch of this name, so
+    // checkout()'s own re-check (which repeats the same local/synced/remote
+    // lookups, including a network round-trip) would just be redundant work.
+    await GitVCS.branch(branch, true);
     trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
       ...vcsEventProperties('git', 'create_branch'),
       providerName,
