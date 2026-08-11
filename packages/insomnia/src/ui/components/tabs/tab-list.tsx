@@ -121,7 +121,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   };
 
   const handleDelete = useCallback(
-    (docId: string, docType: string) => {
+    (doc: BaseModel) => {
+      const { _id: docId, type: docType, parentId } = doc;
       if (docType === models.project.type) {
         // delete all tabs of this project
         closeAllTabsUnderProject?.(docId, { removeFromClosedTabs: true });
@@ -131,12 +132,28 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
         batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
+      } else if (
+        docType === models.request.type ||
+        docType === models.grpcRequest.type ||
+        docType === models.webSocketRequest.type ||
+        docType === models.socketIORequest.type
+      ) {
+        // when deleting a request that's the only open tab, land on its
+        // parent (the folder it was in, or the collection root) instead of
+        // bouncing all the way back to the project dashboard
+        const closingTab = tabList.find(tab => tab.id === docId);
+        const fallbackUrl = closingTab && parentId
+          ? models.requestGroup.isRequestGroupId(parentId)
+            ? `/organization/${organizationId}/project/${projectId}/workspace/${closingTab.workspaceId}/debug/request-group/${parentId}`
+            : `/organization/${organizationId}/project/${projectId}/workspace/${closingTab.workspaceId}/debug`
+          : undefined;
+        closeTabById(docId, { removeFromClosedTabs: true, fallbackUrl });
       } else {
         // delete tab by id
         closeTabById(docId, { removeFromClosedTabs: true });
       }
     },
-    [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById],
+    [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById, organizationId, projectId, tabList],
   );
 
   const handleUpdate = useCallback(
@@ -236,7 +253,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
-            handleDelete(doc._id, doc.type);
+            handleDelete(doc);
           } else if (changeType === 'update') {
             handleUpdate(doc, patches);
           }

@@ -1,4 +1,4 @@
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
@@ -27,6 +27,19 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     await services.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: null });
 
     if (request.url.includes(id)) {
+      // Navigate to the request's parent: the folder it lived in, or the
+      // collection root if it was a direct child of the workspace.
+      if (models.requestGroup.isRequestGroupId(req.parentId)) {
+        return redirect(
+          href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId', {
+            organizationId,
+            projectId,
+            workspaceId,
+            requestGroupId: req.parentId,
+          }),
+        );
+      }
+
       return redirect(
         href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
           organizationId,
