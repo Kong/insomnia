@@ -26,6 +26,7 @@ import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
+import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
 import { type BaseTab, InsomniaTab } from './tab';
 
 const { isRequest } = models.request;
@@ -132,21 +133,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
         batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
-      } else if (
-        docType === models.request.type ||
-        docType === models.grpcRequest.type ||
-        docType === models.webSocketRequest.type ||
-        docType === models.socketIORequest.type
-      ) {
-        // when deleting a request that's the only open tab, land on its
-        // parent (the folder it was in, or the collection root) instead of
-        // bouncing all the way back to the project dashboard
+      } else if (isRequestLikeDocType(docType)) {
         const closingTab = tabList.find(tab => tab.id === docId);
-        const fallbackUrl = closingTab && parentId
-          ? models.requestGroup.isRequestGroupId(parentId)
-            ? `/organization/${organizationId}/project/${projectId}/workspace/${closingTab.workspaceId}/debug/request-group/${parentId}`
-            : `/organization/${organizationId}/project/${projectId}/workspace/${closingTab.workspaceId}/debug`
-          : undefined;
+        const fallbackUrl = getRequestDeleteFallbackUrl({ parentId, closingTab, organizationId, projectId });
         closeTabById(docId, { removeFromClosedTabs: true, fallbackUrl });
       } else {
         // delete tab by id
