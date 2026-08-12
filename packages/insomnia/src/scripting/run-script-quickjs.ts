@@ -44,7 +44,7 @@ export const runScriptInQuickJs = async ({
     evalOrThrow(vm, BOOTSTRAP, '<quickjs-script-bootstrap>');
     evalOrThrow(vm, wrapUserScript(script), '<user-script>');
 
-    await driveTaskToCompletion(vm, deadline);
+    await driveTaskToCompletion(vm, deadline, timeoutMs);
   } finally {
     vm.dispose();
   }
@@ -77,7 +77,13 @@ globalThis.insomnia = {
     get: (key) => JSON.parse(__varGet(key)),
     set: (key, value) => { __varSet(key, JSON.stringify(value === undefined ? null : value)); },
   },
-  request: JSON.parse(__requestJSON),
+  request: (function deepFreeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(deepFreeze);
+      return Object.freeze(value);
+    }
+    return value;
+  })(JSON.parse(__requestJSON)),
   sendRequest: () => { throw new Error(${JSON.stringify(unsupportedApiMessage('insomnia.sendRequest()'))}); },
   test: () => { throw new Error(${JSON.stringify(unsupportedApiMessage('insomnia.test()/pm.test()'))}); },
 };
@@ -153,7 +159,7 @@ const evalOrThrow = (vm: QuickJSContext, code: string, filename: string): void =
 };
 
 /** Drives `globalThis.__task` (a VM promise wrapping the user script) to completion. */
-const driveTaskToCompletion = async (vm: QuickJSContext, deadline: number): Promise<void> => {
+const driveTaskToCompletion = async (vm: QuickJSContext, deadline: number, timeoutMs: number): Promise<void> => {
   const taskHandle = vm.getProp(vm.global, '__task');
   const resultPromise = vm.resolvePromise(taskHandle);
   taskHandle.dispose();
@@ -169,7 +175,7 @@ const driveTaskToCompletion = async (vm: QuickJSContext, deadline: number): Prom
       break;
     }
     if (Date.now() > deadline) {
-      throw new Error(`Executing script timeout: ${deadline}`);
+      throw new Error(`Executing script timeout: ${timeoutMs}`);
     }
     await new Promise(resolve => setTimeout(resolve, 0));
   }
