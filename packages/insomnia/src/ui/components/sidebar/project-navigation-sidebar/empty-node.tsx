@@ -19,6 +19,9 @@ import type { EmptyNodeFlatItem } from './types';
 interface EmptyNodeProps {
   item: EmptyNodeFlatItem;
   storageRules: StorageRules;
+  // Number of ancestor indent levels to strip when the sidebar is focused on a
+  // single collection (the project and workspace rows are no longer shown).
+  depthOffset?: number;
 }
 
 interface ActionItem {
@@ -29,7 +32,7 @@ interface ActionItem {
   action: () => void;
 }
 
-export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
+export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProps) => {
   const { organizationId, project, workspace, requestGroup, level = 0, kind } = item;
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
@@ -218,21 +221,25 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
     }
   };
 
-  const paddingLeft = kind === 'emptyProject' ? '2em' : `${level + 3}rem`;
+  const paddingLeft = kind === 'emptyProject' ? '2em' : `${Math.max(level + 3 - depthOffset, 1)}rem`;
 
   return (
     <div className={ROW_CLASS} style={{ paddingLeft }} data-testid={`empty-node-${kind}`}>
       <Button slot="drag" className="hidden" />
-      <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
-      {kind !== 'emptyProject' && <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />}
+      {depthOffset === 0 && <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />}
+      {kind !== 'emptyProject' && depthOffset === 0 && (
+        <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
+      )}
       {kind === 'emptyFolder' &&
-        Array.from({ length: level + 2 }, (_, i) => (
-          <span
-            key={i}
-            className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`}
-            style={{ left: `${i + 1.5}em` }}
-          />
-        ))}
+        Array.from({ length: level + 2 }, (_, i) => i)
+          .filter(i => i >= depthOffset)
+          .map(i => (
+            <span
+              key={i}
+              className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`}
+              style={{ left: `${i + 1.5 - depthOffset}em` }}
+            />
+          ))}
       <span className={`${kind === 'emptyFolder' ? 'ml-7' : 'ml-3'} min-w-0 flex-1 truncate text-sm`}>
         {getLabel()}
       </span>

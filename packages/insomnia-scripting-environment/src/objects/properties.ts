@@ -392,11 +392,17 @@ export class PropertyList<T extends Property> {
     this.populate(items);
   }
 
-  // TODO: unsupported yet
-
-  toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-    // it just dump all properties of each element without arguments
-    // then user is able to handle them by themself
+  // Fallback for lists whose items have no natural key (e.g. UrlMatchPatternList, or a
+  // PropertyList used directly rather than through a subclass) - just dumps each element's
+  // JSON and ignores all arguments. Subclasses backed by keyed items (CookieList, HeaderList,
+  // VariableList, ProxyConfigList) override this with a real key/value map that supports
+  // excludeDisabled and multiValue; caseSensitive and sanitizeKeys remain unsupported there too.
+  toObject(
+    _excludeDisabled?: boolean,
+    _caseSensitive?: boolean,
+    _multiValue?: boolean,
+    _sanitizeKeys?: boolean,
+  ): Record<string, any> | Record<string, any>[] {
     return this.list.map(elem => elem.toJSON());
   }
 

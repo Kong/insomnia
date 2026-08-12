@@ -1,0 +1,50 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Response Download Tests
+meta:
+  id: wrk_response_download_tests_001
+  created: 1776178027509
+  modified: 1776178027509
+collection:
+  - url: http://127.0.0.1:4010/pets/1
+    name: JSON Request
+    meta:
+      id: req_0d0ec3bafe584da3a3ecfc668bf2824a
+      created: 1776178029290
+      modified: 1776178033770
+      isPrivate: false
+      description: ""
+      sortKey: -1776178029290
+    method: GET
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/large-json
+    name: Large JSON Request
+    meta:
+      id: req_10813c5f0ea14388a5141987645e2e94
+      created: 1776178064890
+      modified: 1776178068539
+      isPrivate: false
+      description: ""
+      sortKey: -1776178064890
+    method: GET
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true

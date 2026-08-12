@@ -8,7 +8,7 @@ import { test as baseTest } from '@playwright/test';
 import type { EnvOptions } from './launch';
 import { launchInsomnia, liveApps } from './launch';
 import { InsomniaApp } from './pages';
-import { randomDataPath } from './paths';
+import { randomDataPath, seedSettings } from './paths';
 
 // Throw an error if the condition fails
 // > Not providing an inline default argument for message as the result is smaller
@@ -176,6 +176,12 @@ export const test = baseTest.extend<{
   },
   dataPath: async ({}, use) => {
     const insomniaDataPath = randomDataPath();
+    // `sidebarFocusForCollections` defaults to on for real users, but it narrows the
+    // sidebar to a single collection on any click into it — hiding other collections,
+    // projects, and the project tabs — which breaks the many existing specs that assume
+    // the full tree stays visible. Default it off here; specs that want to exercise
+    // focus mode itself (see sidebar-focus-onboarding.test.ts) turn it on explicitly.
+    await seedSettings(insomniaDataPath, { sidebarFocusForCollections: false });
 
     await use(insomniaDataPath);
   },

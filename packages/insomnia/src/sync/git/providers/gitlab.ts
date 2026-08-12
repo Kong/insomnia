@@ -30,9 +30,10 @@ const { isGitCredentialsV2 } = models.gitCredentials;
 
 /**
  * OAuth state cache for security validation with PKCE verifiers
- * Maps state -> code_verifier for GitLab PKCE flow
+ * Maps state -> code_verifier (for GitLab PKCE flow) and the credential ID being
+ * reauthorized, if any (undefined when adding a fresh credential).
  */
-const gitlabStatesCache = new Map<string, string>();
+const gitlabStatesCache = new Map<string, { verifier: string; credentialId?: string }>();
 
 type GitLabCredentialV2 = Extract<GitCredentialsV2, { provider: 'gitlab' }>;
 
@@ -331,11 +332,11 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
    * Initiate OAuth flow with PKCE
    * Opens the browser to GitLab OAuth page and manages state for security
    */
-  async initiateOAuth(): Promise<OAuthInitResult> {
+  async initiateOAuth(credentialId?: string): Promise<OAuthInitResult> {
     try {
       const state = v4();
       const verifier = base64URLEncode(randomBytes(32));
-      gitlabStatesCache.set(state, verifier);
+      gitlabStatesCache.set(state, { verifier, credentialId });
 
       const scopes = [
         // Needed to read the user's email address, username and avatar_url from the /user GitLab API
@@ -380,7 +381,8 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
   async completeOAuth(code: string, state: string): Promise<OAuthCompleteResult> {
     try {
       // Validate state and get verifier for PKCE
-      let verifier = gitlabStatesCache.get(state);
+      let verifier = gitlabStatesCache.get(state)?.verifier;
+      const reauthorizingCredentialId = gitlabStatesCache.get(state)?.credentialId;
 
       if (PLAYWRIGHT_TEST) {
         verifier = 'test-verifier';
@@ -436,24 +438,18 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
       };
 
-      // Upsert: update the existing GitLab credential when we can reliably identify it.
-      // Otherwise, create a new credential to avoid overwriting a different account.
-      const existingGitLabCredentials = (await services.gitCredentials.all()).filter(
-        (c): c is GitLabCredentialV2 => isGitCredentialsV2(c) && c.provider === 'gitlab',
-      );
-
-      const matchingByEmail = existingGitLabCredentials
-        .filter(c => {
-          return (
-            c.author.email === email ||
-            c.credentials.selectedEmail === email ||
-            c.credentials.emails?.some(e => e.email === email)
-          );
-        })
-        .sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0));
-
-      const existing =
-        matchingByEmail[0] || (existingGitLabCredentials.length === 1 ? existingGitLabCredentials[0] : undefined);
+      // Update the credential this flow was explicitly reauthorizing (see
+      // GitEditProviderOAuthForm's "Reauthorize" button), if any. Otherwise this is
+      // an "Add Credential" flow, so always create a new credential — never guess
+      // at an existing one to update, or a second account for this provider could
+      // silently overwrite the first.
+      const existingCredential = reauthorizingCredentialId
+        ? await services.gitCredentials.getById(reauthorizingCredentialId)
+        : null;
+      const existing: GitLabCredentialV2 | undefined =
+        existingCredential && isGitCredentialsV2(existingCredential) && existingCredential.provider === 'gitlab'
+          ? existingCredential
+          : undefined;
 
       const credential = await (existing
         ? services.gitCredentials.update(existing, {

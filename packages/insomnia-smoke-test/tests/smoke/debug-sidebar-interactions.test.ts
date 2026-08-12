@@ -16,27 +16,37 @@ test.describe('Debug-Sidebar', () => {
     //Open Properties in Global Sidebar
     await insomnia.navigationSidebar.openRequestActionsDropdown('example http');
     await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-    // Close settings modal
-    await page.locator('.app').press('Escape');
+    // Close settings modal. Click the explicit close button rather than pressing Escape on
+    // `.app`: Escape's target depends on where focus lands, which is unreliable right after a
+    // modal opens (flaky in CI) — the close button always works regardless of focus.
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     await insomnia.navigationSidebar.openRequestActionsDropdown('example grpc');
     await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-    // Close settings modal
-    await page.locator('.app').press('Escape');
+    // Close settings modal. Click the explicit close button rather than pressing Escape on
+    // `.app`: Escape's target depends on where focus lands, which is unreliable right after a
+    // modal opens (flaky in CI) — the close button always works regardless of focus.
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     await insomnia.navigationSidebar.openRequestActionsDropdown('example websocket');
     await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-    // Close settings modal
-    await page.locator('.app').press('Escape');
+    // Close settings modal. Click the explicit close button rather than pressing Escape on
+    // `.app`: Escape's target depends on where focus lands, which is unreliable right after a
+    // modal opens (flaky in CI) — the close button always works regardless of focus.
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     await insomnia.navigationSidebar.openRequestActionsDropdown('example graphql');
     await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-    // Close settings modal
-    await page.locator('.app').press('Escape');
+    // Close settings modal. Click the explicit close button rather than pressing Escape on
+    // `.app`: Escape's target depends on where focus lands, which is unreliable right after a
+    // modal opens (flaky in CI) — the close button always works regardless of focus.
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
     await insomnia.navigationSidebar.openRequestGroupActionsDropdown('test folder');
     await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-    // Close settings modal
-    await page.locator('.app').press('Escape');
+    // Close settings modal. Click the explicit close button rather than pressing Escape on
+    // `.app`: Escape's target depends on where focus lands, which is unreliable right after a
+    // modal opens (flaky in CI) — the close button always works regardless of focus.
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
     //Open properties of the collection
     await insomnia.navigationSidebar.openWorkspaceActionsDropdown('simple');
@@ -80,7 +90,7 @@ test.describe('Debug-Sidebar', () => {
     await insomnia.navigationSidebar.openRequestGroupActionsDropdown('test folder');
     await page.getByRole('menuitemradio', { name: 'Settings' }).click();
     await page.getByPlaceholder('test folder').fill('test folder1');
-    await page.locator('.app').press('Escape');
+    await page.getByRole('button', { name: 'Modal Close Button' }).click();
     await insomnia.navigationSidebar.clickRequestOrFolder('test folder1');
 
     // Rename a request

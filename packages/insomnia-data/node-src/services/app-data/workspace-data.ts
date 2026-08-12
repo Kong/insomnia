@@ -46,10 +46,10 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
     wsRequestToWorkspaceId.set(workspaceId, workspaceId);
     socketIORequestToWorkspaceId.set(workspaceId, workspaceId);
     allRequestsAndMetaByWorkspaceId.set(workspaceId, {
-      children: {
+      data: {
         requestsAndGroups: [],
       },
-      childrenMetas: { allRequestMetas: [], requestGroupMetas: [] },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
   });
 
@@ -118,7 +118,7 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
       }
       const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
       if (workspaceData) {
-        workspaceData.children.requestsAndGroups.push(request);
+        workspaceData.data.requestsAndGroups.push(request);
       }
     }
   });
@@ -128,7 +128,7 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
     if (workspaceId) {
       const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
       if (workspaceData) {
-        workspaceData.childrenMetas.requestGroupMetas.push(requestGroupMeta);
+        workspaceData.dataMetas.requestGroupMetas.push(requestGroupMeta);
       }
     }
   });
@@ -147,7 +147,7 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
     if (workspaceId) {
       const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
       if (workspaceData) {
-        workspaceData.childrenMetas.allRequestMetas.push(requestMeta);
+        workspaceData.dataMetas.allRequestMetas.push(requestMeta);
       }
     }
   });
@@ -164,13 +164,13 @@ export const getAllDesignChildrenByWorkspaceIds = async (workspaceIds: string[])
     const designRequestsAndMetas = await getAllCollectionChildrenAndMetasByWorkspaceIds(workspaceIds);
     workspaceIds.forEach(workspaceId => {
       map.set(workspaceId, {
-        children: {
+        data: {
           apiSpec: apiSpecs.find(apiSpec => apiSpec.parentId === workspaceId),
-          requestsAndGroups: designRequestsAndMetas.get(workspaceId)?.children.requestsAndGroups || [],
+          requestsAndGroups: designRequestsAndMetas.get(workspaceId)?.data.requestsAndGroups || [],
         },
-        childrenMetas: {
-          allRequestMetas: designRequestsAndMetas.get(workspaceId)?.childrenMetas.allRequestMetas || [],
-          requestGroupMetas: designRequestsAndMetas.get(workspaceId)?.childrenMetas.requestGroupMetas || [],
+        dataMetas: {
+          allRequestMetas: designRequestsAndMetas.get(workspaceId)?.dataMetas.allRequestMetas || [],
+          requestGroupMetas: designRequestsAndMetas.get(workspaceId)?.dataMetas.requestGroupMetas || [],
         },
       });
     });
@@ -186,10 +186,10 @@ export const getAllMcpChildrenByWorkspaceIds = async (workspaceIds: string[]) =>
     });
     workspaceIds.forEach(workspaceId => {
       map.set(workspaceId, {
-        children: {
+        data: {
           mcpRequest: mcpRequests.find(mcpRequest => mcpRequest.parentId === workspaceId)!,
         },
-        childrenMetas: {},
+        dataMetas: {},
       });
     });
   }
@@ -204,10 +204,10 @@ export const getAllEnvironmentChildrenByWorkspaceIds = async (workspaceIds: stri
     });
     workspaceIds.forEach(workspaceId => {
       map.set(workspaceId, {
-        children: {
+        data: {
           baseEnvironment: environments.find(environment => environment.parentId === workspaceId)!,
         },
-        childrenMetas: {},
+        dataMetas: {},
       });
     });
   }
@@ -222,10 +222,10 @@ export const getAllMockServerChildrenByWorkspaceIds = async (workspaceIds: strin
     });
     workspaceIds.forEach(workspaceId => {
       map.set(workspaceId, {
-        children: {
+        data: {
           mockServer: mockServers.find(mockServer => mockServer.parentId === workspaceId),
         },
-        childrenMetas: {},
+        dataMetas: {},
       });
     });
   }

@@ -170,9 +170,12 @@ export class ProjectPage extends BasePage {
     await this.page.locator('[data-test-id="project-modal-close-button"]').click();
 
     // The name/type fields were filled in, so closing can trigger a "discard unsaved changes" confirmation.
+    // App-side race: an in-flight navigation (e.g. from the project just being created) can force-close
+    // the whole modal - confirm dialog included - independent of this click, detaching the "Yes" button
+    // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
     const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
     if (await discardConfirmDialog.isVisible().catch(() => false)) {
-      await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click();
+      await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click({ timeout: 5000 }).catch(() => {});
     }
 
     await dialog.waitFor({ state: 'hidden' });
@@ -250,7 +253,20 @@ export class ProjectPage extends BasePage {
     await projectModalCloseButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     if (await projectModalCloseButton.isVisible()) {
       await projectModalCloseButton.click();
+      // The name/type fields were filled in, so closing can trigger a "discard unsaved changes" confirmation.
+      // App-side race: an in-flight navigation (e.g. from the project just being created) can force-close
+      // the whole modal - confirm dialog included - independent of this click, detaching the "Yes" button
+      // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
+      const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
+      if (await discardConfirmDialog.isVisible().catch(() => false)) {
+        await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click({ timeout: 5000 }).catch(() => {});
+      }
     }
+    // The modal's backdrop still intercepts clicks for a moment after closing
+    // (exit animation / unmount), which flakily blocks the click below. Named rather than a bare
+    // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
+    // a bare role locator matching both is a Playwright strict-mode violation.
+    await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
     await this.page.getByRole('button', { name: 'Personal workspace Organizations' }).click();
     await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();

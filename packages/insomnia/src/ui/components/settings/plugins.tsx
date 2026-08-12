@@ -658,7 +658,7 @@ export const Plugins: FC = () => {
                             </Checkbox>
                           )}
                           <div className="flex w-[8ch] cursor-auto items-center justify-center">{plugin.version}</div>
-                          <div className="flex w-[8ch] cursor-auto items-center gap-1">
+                          <div className="flex w-auto min-w-[8ch] cursor-auto items-center gap-1">
                             <CopyButton
                               size="small"
                               variant="text"

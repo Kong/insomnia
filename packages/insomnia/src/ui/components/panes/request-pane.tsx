@@ -366,7 +366,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               </Tab>
             </TabList>
             <TabPanel className="w-full flex-1" id="pre-request">
-              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
+              <ErrorBoundary
+                // Stable per-script key: a volatile key remounts the editor on every
+                // revalidation, clobbering undo. Scripts don't depend on env/response.
+                key={`${activeRequest._id}:pre-request-script`}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
                 <RequestScriptEditor
                   historyKey={`${activeRequest._id}:pre-request-script`}
                   defaultValue={activeRequest.preRequestScript || ''}
@@ -381,7 +386,10 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               </ErrorBoundary>
             </TabPanel>
             <TabPanel className="w-full flex-1" id="after-response">
-              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
+              <ErrorBoundary
+                key={`${activeRequest._id}:after-response-script`}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
                 <RequestScriptEditor
                   historyKey={`${activeRequest._id}:after-response-script`}
                   defaultValue={activeRequest.afterResponseScript || ''}
@@ -399,7 +407,11 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
-            key={uniqueKey}
+            // Stable per-request key: a volatile key here remounts the editor on
+            // every revalidation, resetting its internal state (content, active
+            // tab) and clobbering undo. Descriptions don't depend on env/response,
+            // so a stable key is safe.
+            key={`request-description::${requestId}`}
             historyKey={`request-description::${requestId}`}
             placeholder="Write a description"
             defaultValue={activeRequest.description}

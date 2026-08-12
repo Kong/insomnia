@@ -29,8 +29,8 @@ export interface OrganizationData {
 }
 
 interface CommonWorkspaceChildren<TChildren, TChildrenMeta extends object = {}> {
-  children: TChildren;
-  childrenMetas: TChildrenMeta;
+  data: TChildren;
+  dataMetas: TChildrenMeta;
 }
 
 type CollectionChildDoc = Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup;
