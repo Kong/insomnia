@@ -1,4 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
+import type { Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import type { RefObject } from 'react';
 import { useState } from 'react';
@@ -26,7 +27,7 @@ interface Props {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   triggerRef: RefObject<HTMLElement | null>;
-  onWorkspaceCreated: (workspaceId: string) => void;
+  onWorkspaceCreated: (workspaceId: string, workspace: Workspace) => void;
 }
 
 export const SidebarShortcutActionsDropdown = ({
