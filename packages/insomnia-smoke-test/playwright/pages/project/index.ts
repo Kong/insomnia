@@ -204,6 +204,10 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: 'Open', exact: true }).click();
     // Confirm the "Do you trust this folder?" dialog before the folder is opened/initialized.
     await this.page.getByRole('button', { name: 'Open folder' }).click();
+    // Same app-side race as createProject(): this flow chains two navigations (create,
+    // then the trust-confirmed git init/adopt), which widens the window for the "Create
+    // project" dialog to miss its self-close effect and leave its backdrop blocking clicks.
+    await this.closeProjectModalIfStuck();
   }
 
   /**
