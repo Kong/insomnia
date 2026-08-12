@@ -135,6 +135,7 @@ export const createNedbDatabase = <O = initOptions>(
         type: originalDoc.type,
       };
       const createdDoc = (await nedbBucket[originalDoc.type].insertAsync(rootDoc)) as T;
+      notifyOfChange('insert', createdDoc);
 
       // Duplicate all descendants
       for (const { doc, parentId } of allDocs) {
@@ -147,7 +148,8 @@ export const createNedbDatabase = <O = initOptions>(
           created: updateTime,
           type: doc.type,
         };
-        await nedbBucket[doc.type].insertAsync(newDoc);
+        const createdDescendant = await nedbBucket[doc.type].insertAsync(newDoc);
+        notifyOfChange('insert', createdDescendant);
       }
 
       await database.flushChanges(flushId);

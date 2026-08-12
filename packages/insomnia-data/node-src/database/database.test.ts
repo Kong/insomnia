@@ -617,6 +617,22 @@ describe('duplicate()', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
+  it('should emit insert changes when duplicating', async () => {
+    const workspace = await services.workspace.create({ name: 'Workspace' });
+    const folder = await services.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
+    await services.request.create({ parentId: folder._id, name: 'Request' });
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => changesSeen.push(changes));
+
+    const duplicatedFolder = await db.duplicate(folder);
+
+    expect(changesSeen).toHaveLength(1);
+    expect(changesSeen[0]).toEqual([
+      ['insert', duplicatedFolder, []],
+      ['insert', expect.objectContaining({ parentId: duplicatedFolder._id, type: models.request.type }), []],
+    ]);
+  });
+
   it('should rewrite chained request references when duplicating a folder', async () => {
     const workspace = await services.workspace.create({ name: 'Workspace' });
     const folder = await services.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
