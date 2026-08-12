@@ -7,7 +7,7 @@ import {
 import type { MockServer, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
-import React, { Fragment, useCallback, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
   Collection,
@@ -139,6 +139,13 @@ export const SidebarWorkspaceDropdown = ({
       console.error('Failed to get workspace action plugins', error);
     }
   }, []);
+
+  useEffect(() => {
+    // Fetch the action plugins when the dropdown is opened
+    if (isOpen) {
+      handleDropdownOpen();
+    }
+  }, [isOpen, handleDropdownOpen]);
 
   const handlePluginClick = async ({ pluginName, label }: SerializableActionMeta) => {
     try {
@@ -369,15 +376,7 @@ export const SidebarWorkspaceDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger
-        isOpen={isOpen}
-        onOpenChange={isOpen => {
-          onOpenChange(isOpen);
-          if (isOpen) {
-            handleDropdownOpen();
-          }
-        }}
-      >
+      <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           aria-label="SideBar Workspace Actions"
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
