@@ -1,3 +1,4 @@
+import { type ProxyScope, ProxyScopes } from 'insomnia-data/common';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -15,6 +16,7 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { BooleanSetting } from '../settings/boolean-setting';
+import { EnumSetting } from '../settings/enum-setting';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { MaskedSetting } from '../settings/masked-setting';
@@ -42,7 +44,7 @@ type SettingsModalTabKey =
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
-  const { userSession } = useRootLoaderData()!;
+  const { userSession, settings } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
   const { organizationId } = useParams() as { organizationId?: string };
@@ -174,6 +176,19 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
               setting="proxyEnabled"
               help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
             />
+
+            <div className="pt-4">
+              <EnumSetting<ProxyScope>
+                label="Use proxy for"
+                setting="proxyScope"
+                disabled={!settings.proxyEnabled}
+                values={[
+                  { value: ProxyScopes.requests, name: 'Only when sending requests in Insomnia' },
+                  { value: ProxyScopes.all, name: 'All traffic sent by Insomnia' },
+                ]}
+                help="When All traffic is selected, Insomnia uses the configured proxy for all calls, including login, git, auto-updates, etc."
+              />
+            </div>
 
             <div className="form-row pad-top-sm">
               <MaskedSetting

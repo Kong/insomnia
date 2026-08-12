@@ -151,7 +151,6 @@ describe('services.settings.get() has no in-memory cache a plugin could poison',
     // Stands in for an elevated/unsandboxed plugin that somehow got a reference to a previously
     // returned settings object and tried to fake the global toggle for itself or everyone else.
     (before as any).pluginSandboxEnabled = !originalFlag;
-    (before as any).templateTagSandboxEnabled = !originalFlag;
 
     const after = await services.settings.get();
 

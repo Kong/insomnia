@@ -118,6 +118,8 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
+// Customer.io CDP (analytics/in-app messaging) — see ui/hooks/use-cio.tsx
+export const getCioCdnUrl = () => 'https://cdp-eu.customer.io';
 export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
 export const getKonnectApiRegions = (): string[] => {
   const regions = (env.KONNECT_API_REGIONS ?? '')

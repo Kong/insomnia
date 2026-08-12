@@ -1,7 +1,7 @@
 import type { AnalyticsBrowser } from '@customerio/cdp-analytics-browser';
 import { useEffect, useRef } from 'react';
 
-import { getCioSiteId, getCioWriteKey } from '~/common/constants';
+import { getCioCdnUrl, getCioSiteId, getCioWriteKey } from '~/common/constants';
 import { useRootLoaderData } from '~/root';
 
 // Global singleton
@@ -45,7 +45,7 @@ export const useCio = () => {
       .then(({ AnalyticsBrowser }) => {
         globalAnalyticsInstance = AnalyticsBrowser.load(
           {
-            cdnURL: 'https://cdp-eu.customer.io',
+            cdnURL: getCioCdnUrl(),
             writeKey: getCioWriteKey(),
           },
           {

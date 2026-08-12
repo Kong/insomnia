@@ -1478,18 +1478,21 @@ const ProjectNavigationSidebarInner = (
               isOpen={isShortcutCreateOpen}
               onOpenChange={setIsShortcutCreateOpen}
               triggerRef={shortcutCreateTriggerRef}
-              onWorkspaceCreated={newWorkspaceId => {
+              onWorkspaceCreated={(newWorkspaceId, newWorkspace) => {
                 const projectId =
                   shortcutTargetItem.kind === 'workspace' ? shortcutTargetItem.project._id : shortcutTargetItem.doc._id;
                 const targetWorkspaceId = shortcutTargetItem.kind === 'workspace' ? shortcutTargetItem.doc._id : null;
+                // Reorder the new workspace to be after the focus workspace or project
                 handleLocalWorkspaceReorder(projectId, projectId, newWorkspaceId, targetWorkspaceId, 'after');
-                return navigate(
-                  href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
-                    organizationId,
-                    projectId,
-                    workspaceId: newWorkspaceId,
-                  }),
-                );
+                if (newWorkspace) {
+                  navigate(
+                    `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
+                      organizationId,
+                      projectId,
+                      workspaceId: newWorkspaceId,
+                    })}/${models.workspace.scopeToActivity(newWorkspace.scope)}`,
+                  );
+                }
               }}
             />
           )}
