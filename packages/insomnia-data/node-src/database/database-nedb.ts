@@ -102,58 +102,61 @@ export const createNedbDatabase = <O = initOptions>(
 
     /** duplicate doc and its descendents recursively */
     duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Partial<T> = {}) {
-      const flushId = await database.bufferChanges();
-      const descendantMap = models.getAllDescendantMap();
+      const flushId = await database.bufferChangesIndefinitely();
+      try {
+        const descendantMap = models.getAllDescendantMap();
 
-      const idMapping = new Map<string, string>();
-      const allDocs: { doc: BaseModel; parentId: string }[] = [];
+        const idMapping = new Map<string, string>();
+        const allDocs: { doc: BaseModel; parentId: string }[] = [];
 
-      async function collectDescendants(doc: BaseModel): Promise<void> {
-        const model = models.mustGetModel(doc.type);
-        idMapping.set(doc._id, generateId(model.prefix));
+        async function collectDescendants(doc: BaseModel): Promise<void> {
+          const model = models.mustGetModel(doc.type);
+          idMapping.set(doc._id, generateId(model.prefix));
 
-        const validChildTypes = (descendantMap[doc.type] ?? []).filter(t => models.canDuplicate(t));
-        for (const childType of validChildTypes) {
-          for (const child of await database.find(childType, { parentId: doc._id })) {
-            allDocs.push({ doc: child, parentId: doc._id });
-            await collectDescendants(child);
+          const validChildTypes = (descendantMap[doc.type] ?? []).filter(t => models.canDuplicate(t));
+          for (const childType of validChildTypes) {
+            for (const child of await database.find(childType, { parentId: doc._id })) {
+              allDocs.push({ doc: child, parentId: doc._id });
+              await collectDescendants(child);
+            }
           }
         }
-      }
-      await collectDescendants(originalDoc);
+        await collectDescendants(originalDoc);
 
-      const updateTime = Date.now();
+        const updateTime = Date.now();
 
-      // Duplicate the root document
-      const rootRewritten: T = models.rewriteReferences(originalDoc, idMapping);
-      const rootDoc = {
-        ...rootRewritten,
-        ...patch,
-        _id: idMapping.get(originalDoc._id)!,
-        modified: updateTime,
-        created: updateTime,
-        type: originalDoc.type,
-      };
-      const createdDoc = (await nedbBucket[originalDoc.type].insertAsync(rootDoc)) as T;
-      notifyOfChange('insert', createdDoc);
-
-      // Duplicate all descendants
-      for (const { doc, parentId } of allDocs) {
-        const rewritten = models.rewriteReferences(doc, idMapping);
-        const newDoc = {
-          ...rewritten,
-          _id: idMapping.get(doc._id)!,
-          parentId: idMapping.get(parentId)!,
+        // Duplicate the root document
+        const rootRewritten: T = models.rewriteReferences(originalDoc, idMapping);
+        const rootDoc = {
+          ...rootRewritten,
+          ...patch,
+          _id: idMapping.get(originalDoc._id)!,
           modified: updateTime,
           created: updateTime,
-          type: doc.type,
+          type: originalDoc.type,
         };
-        const createdDescendant = await nedbBucket[doc.type].insertAsync(newDoc);
-        notifyOfChange('insert', createdDescendant);
-      }
+        const createdDoc = (await nedbBucket[originalDoc.type].insertAsync(rootDoc)) as T;
+        notifyOfChange('insert', createdDoc);
 
-      await database.flushChanges(flushId);
-      return createdDoc;
+        // Duplicate all descendants
+        for (const { doc, parentId } of allDocs) {
+          const rewritten = models.rewriteReferences(doc, idMapping);
+          const newDoc = {
+            ...rewritten,
+            _id: idMapping.get(doc._id)!,
+            parentId: idMapping.get(parentId)!,
+            modified: updateTime,
+            created: updateTime,
+            type: doc.type,
+          };
+          const createdDescendant = await nedbBucket[doc.type].insertAsync(newDoc);
+          notifyOfChange('insert', createdDescendant);
+        }
+
+        return createdDoc;
+      } finally {
+        await database.flushChanges(flushId);
+      }
     },
     findOne: async function <T extends BaseModel>(
       type: AllTypes,
