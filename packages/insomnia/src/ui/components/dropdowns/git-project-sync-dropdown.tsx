@@ -487,7 +487,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         revalidate();
 
         return {
-          success: false,
+          success: true,
         };
       }
     } catch (err) {
