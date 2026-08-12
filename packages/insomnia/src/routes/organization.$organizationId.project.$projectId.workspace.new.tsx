@@ -231,6 +231,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         return {
           workspaceId: workspace._id,
           requestId: activeRequestId,
+          workspace: workspace,
         };
       }
 
@@ -247,6 +248,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     if (!redirectAfterCreate) {
       return {
         workspaceId: workspace._id,
+        workspace: workspace,
       };
     }
 
