@@ -20,6 +20,7 @@ import { href, useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { Button as BasicButton } from '~/basic-components/button';
+import { workspaceChildrenKeys } from '~/common/app-data';
 import { filterCollection, flattenCollectionChildren } from '~/common/collection';
 import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
@@ -50,6 +51,7 @@ import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sid
 import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/sidebar-focus-onboarding';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
+import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
@@ -115,6 +117,7 @@ const ProjectNavigationSidebarInner = (
   ref: ForwardedRef<ProjectNavigationSidebarHandle>,
 ) => {
   const navigate = useNavigate();
+  const queryClient = useDBQueryClient();
   const {
     organizationId,
     projectId: activeProjectId,
@@ -142,8 +145,6 @@ const ProjectNavigationSidebarInner = (
   const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
-  // Optimistic override for request-group collapsed states
-  const [requestGroupCollapseOverrides, setRequestGroupCollapseOverrides] = useState<Map<string, boolean>>(new Map());
   // Customized workspace sort orders by projectId
   const [localWorkspaceOrders, setLocalWorkspaceOrders] = reactUse.useLocalStorage<Record<string, string[]>>(
     `${organizationId}:local-workspace-orders`,
@@ -510,33 +511,14 @@ const ProjectNavigationSidebarInner = (
             const rawRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceIds.get(
               workspaceId,
             ) as CollectionWorkspaceChildren;
-            // Apply optimistic request-group collapse overrides on top of the fetched data.
-            const allRequestsAndMetaInWorkspace: CollectionWorkspaceChildren =
-              rawRequestsAndMetaInWorkspace && requestGroupCollapseOverrides.size > 0
-                ? {
-                    ...rawRequestsAndMetaInWorkspace,
-                    dataMetas: {
-                      ...rawRequestsAndMetaInWorkspace.dataMetas,
-                      requestGroupMetas: rawRequestsAndMetaInWorkspace.dataMetas.requestGroupMetas.map(
-                        requestGroupMeta =>
-                          requestGroupCollapseOverrides.has(requestGroupMeta.parentId)
-                            ? {
-                                ...requestGroupMeta,
-                                collapsed: requestGroupCollapseOverrides.get(requestGroupMeta.parentId)!,
-                              }
-                            : requestGroupMeta,
-                      ),
-                    },
-                  }
-                : rawRequestsAndMetaInWorkspace;
             // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
             const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
             let collectionChildren =
-              (!shouldHideCollectionChildren || !!activeFilter) && allRequestsAndMetaInWorkspace
+              (!shouldHideCollectionChildren || !!activeFilter) && rawRequestsAndMetaInWorkspace
                 ? flattenCollectionChildren(
                     workspaceId,
                     shouldHideCollectionChildren,
-                    allRequestsAndMetaInWorkspace,
+                    rawRequestsAndMetaInWorkspace,
                     collectionSortOrders[workspaceId] || 'type-manual',
                   )
                 : [];
@@ -676,7 +658,6 @@ const ProjectNavigationSidebarInner = (
     organizationWorkspaces,
     pendingCollectionWorkspaceIds,
     projectWorkspaceSortOrder,
-    requestGroupCollapseOverrides,
     unsyncedFilesByProjectId,
     workspaceMetas,
   ]);
@@ -854,7 +835,7 @@ const ProjectNavigationSidebarInner = (
   );
 
   const toggleRequestGroups = useCallback(
-    async (requestGroupIds: string[], _workspace: Workspace, collapsed?: boolean) => {
+    async (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => {
       if (requestGroupIds.length === 0) {
         return;
       }
@@ -863,24 +844,33 @@ const ProjectNavigationSidebarInner = (
         return;
       }
 
-      const requestGroupMetas = await Promise.all(
-        requestGroupIds.map(requestGroupId => services.requestGroupMeta.getByParentId(requestGroupId)),
-      );
+      const requestGroupMetas = await services.requestGroupMeta.list({
+        parentId: { $in: requestGroupIds },
+      });
+
       // Update the collapsed state of the toggled request groups.
-      const nextStates = requestGroupIds.map((requestGroupId, index) => {
-        const requestGroupMeta = requestGroupMetas[index];
+      const nextStates = requestGroupIds.map(requestGroupId => {
+        const requestGroupMeta = requestGroupMetas.find(meta => meta.parentId === requestGroupId);
         return {
           requestGroupId,
           collapsed: collapsed ?? (requestGroupMeta ? !requestGroupMeta.collapsed : false),
         };
       });
 
-      // Optimistically reflect the new collapsed state immediately
-      setRequestGroupCollapseOverrides(previous => {
-        const next = new Map(previous);
-        nextStates.forEach(({ requestGroupId, collapsed }) => next.set(requestGroupId, collapsed));
-        return next;
-      });
+      // Optimistically patch the query cache so the UI reflects the new collapsed state immediately.
+      queryClient.setQueryData<CollectionWorkspaceChildren>(
+        workspaceChildrenKeys.byWorkspaceId(workspace._id),
+        previous => {
+          if (!previous) {
+            return previous;
+          }
+          const requestGroupMetas = previous.dataMetas.requestGroupMetas.map(meta => {
+            const nextState = nextStates.find(({ requestGroupId }) => requestGroupId === meta.parentId);
+            return nextState ? { ...meta, collapsed: nextState.collapsed } : meta;
+          });
+          return { ...previous, dataMetas: { ...previous.dataMetas, requestGroupMetas } };
+        },
+      );
 
       // Persist the change to database
       await Promise.all(
@@ -889,31 +879,8 @@ const ProjectNavigationSidebarInner = (
         ),
       );
     },
-    [activeFilter],
+    [activeFilter, queryClient],
   );
-
-  // Update the requestGroupCollapseOverrides when the collectionByWorkspaceId changes to remove any overrides that are no longer needed.
-  useEffect(() => {
-    setRequestGroupCollapseOverrides(previous => {
-      if (previous.size === 0) {
-        return previous;
-      }
-      let changed = false;
-      const next = new Map(previous);
-      for (const [requestGroupId, overrideCollapsed] of previous) {
-        for (const data of collectionByWorkspaceIds.values()) {
-          const collectionData = data;
-          const meta = collectionData?.dataMetas?.requestGroupMetas?.find(m => m.parentId === requestGroupId);
-          if (meta && meta.collapsed === overrideCollapsed) {
-            next.delete(requestGroupId);
-            changed = true;
-            break;
-          }
-        }
-      }
-      return changed ? next : previous;
-    });
-  }, [collectionByWorkspaceIds]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const shortcutCreateTriggerRef = useRef<HTMLElement | null>(null);

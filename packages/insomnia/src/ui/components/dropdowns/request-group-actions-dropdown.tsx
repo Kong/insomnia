@@ -2,7 +2,7 @@ import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { Project, Request, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
-import React, { Fragment, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -84,10 +84,17 @@ export const RequestGroupActionsDropdown = ({
       },
     });
 
-  const onOpen = async () => {
+  const onOpen = useCallback(async () => {
     const actionPlugins = await plugins.getRequestGroupActions();
     setActionPlugins(actionPlugins);
-  };
+  }, []);
+
+  useEffect(() => {
+    // Fetch the action plugins when the dropdown is opened
+    if (isOpen) {
+      onOpen();
+    }
+  }, [isOpen, onOpen]);
 
   const handleRequestGroupDuplicate = () => {
     showModal(PromptModal, {
@@ -357,13 +364,7 @@ export const RequestGroupActionsDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger
-        isOpen={isOpen}
-        onOpenChange={isOpen => {
-          isOpen && onOpen();
-          onOpenChange(isOpen);
-        }}
-      >
+      <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
           aria-label="Request Group Actions"
