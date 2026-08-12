@@ -39,7 +39,7 @@ describe('runScriptInQuickJs', () => {
     const context = baseContext();
 
     const result = await runScriptInQuickJs({
-      script: `insomnia.variables.set('count', insomnia.variables.get('count') ?? 0 + 1);`,
+      script: `insomnia.variables.set('count', (insomnia.variables.get('count') ?? 0) + 1);`,
       context,
     });
 
@@ -55,6 +55,20 @@ describe('runScriptInQuickJs', () => {
     });
 
     expect((result.environment.data as Record<string, unknown>).requestName).toBe('Test request');
+  });
+
+  it('silently ignores attempts to mutate insomnia.request instead of faking success', async () => {
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        insomnia.request.name = 'mutated';
+        insomnia.environment.set('nameAfterMutationAttempt', insomnia.request.name);
+      `,
+      context,
+    });
+
+    expect((result.environment.data as Record<string, unknown>).nameAfterMutationAttempt).toBe('Test request');
   });
 
   it('captures console output into logs', async () => {
