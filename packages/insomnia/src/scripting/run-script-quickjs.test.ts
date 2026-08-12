@@ -1,12 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects/interfaces';
-import { runScriptInQuickJs } from './run-script-quickjs';
 
 const baseContext = (): RequestContext => ({
   request: { _id: 'req_1', name: 'Test request', url: 'https://example.com' } as any,
   timelinePath: '',
-  environment: { id: 'env_1', name: 'Base Environment', data: { foo: 'bar' } },
+  environment: { id: 'env_1', name: 'Base Environment', data: {} },
   baseEnvironment: { id: 'env_1', name: 'Base Environment', data: {} },
   timeout: 30_000,
   settings: { timeout: 30_000 } as any,
@@ -19,80 +18,123 @@ const baseContext = (): RequestContext => ({
   parentFolders: [],
 });
 
-describe('runScriptInQuickJs', () => {
-  it('reads and writes environment variables', async () => {
-    const context = baseContext();
+/**
+ * A minimal stand-in for the DOM `Worker` API, driven manually from the test — this suite verifies
+ * the message-correlation contract between `run-script-quickjs.ts` and `quickjs-script.worker.ts`
+ * without needing a real Worker runtime (not available in the Vitest/Node test environment).
+ */
+class FakeWorker {
+  postedMessages: any[] = [];
+  private messageListeners: ((event: { data: any }) => void)[] = [];
+  private errorListeners: ((event: { message: string }) => void)[] = [];
 
-    const result = await runScriptInQuickJs({
-      script: `
-        const current = insomnia.environment.get('foo');
-        insomnia.environment.set('foo', current + '-updated');
-        insomnia.environment.set('newKey', 42);
-      `,
-      context,
-    });
+  postMessage(data: any) {
+    this.postedMessages.push(data);
+  }
 
-    expect(result.environment.data).toEqual({ foo: 'bar-updated', newKey: 42 });
+  addEventListener(type: string, listener: any) {
+    if (type === 'message') {
+      this.messageListeners.push(listener);
+    } else if (type === 'error') {
+      this.errorListeners.push(listener);
+    }
+  }
+
+  removeEventListener() {
+    // not used by the client today
+  }
+
+  emitMessage(data: any) {
+    this.messageListeners.forEach(listener => listener({ data }));
+  }
+
+  emitError(message: string) {
+    this.errorListeners.forEach(listener => listener({ message }));
+  }
+}
+
+describe('runScriptInQuickJs (worker client)', () => {
+  let fakeWorker: FakeWorker;
+
+  beforeEach(async () => {
+    fakeWorker = new FakeWorker();
+    vi.stubGlobal('Worker', vi.fn(() => fakeWorker));
+    // The module keeps a lazily-created singleton worker at module scope — reset it between tests
+    // by re-importing fresh so each test gets its own FakeWorker instance.
+    vi.resetModules();
   });
 
-  it('reads and writes transient variables', async () => {
-    const context = baseContext();
-
-    const result = await runScriptInQuickJs({
-      script: `insomnia.variables.set('count', (insomnia.variables.get('count') ?? 0) + 1);`,
-      context,
-    });
-
-    expect(result.transientVariables?.data).toEqual({ count: 1 });
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
-  it('exposes a read-only insomnia.request', async () => {
+  it('posts a message and resolves with the worker\'s result for the matching id', async () => {
+    const { runScriptInQuickJs } = await import('./run-script-quickjs');
     const context = baseContext();
 
-    const result = await runScriptInQuickJs({
-      script: `insomnia.environment.set('requestName', insomnia.request.name);`,
-      context,
-    });
+    const promise = runScriptInQuickJs({ script: 'console.log(1)', context });
+    expect(fakeWorker.postedMessages).toHaveLength(1);
+    const { id } = fakeWorker.postedMessages[0];
+    expect(typeof id).toBe('string');
 
-    expect((result.environment.data as Record<string, unknown>).requestName).toBe('Test request');
+    const result = { ...context, logs: ['log: 1\n'] };
+    fakeWorker.emitMessage({ id, result });
+
+    await expect(promise).resolves.toEqual(result);
   });
 
-  it('silently ignores attempts to mutate insomnia.request instead of faking success', async () => {
+  it('rejects with the worker-reported error for the matching id', async () => {
+    const { runScriptInQuickJs } = await import('./run-script-quickjs');
     const context = baseContext();
 
-    const result = await runScriptInQuickJs({
-      script: `
-        insomnia.request.name = 'mutated';
-        insomnia.environment.set('nameAfterMutationAttempt', insomnia.request.name);
-      `,
-      context,
-    });
+    const promise = runScriptInQuickJs({ script: 'throw new Error("boom")', context });
+    const { id } = fakeWorker.postedMessages[0];
+    fakeWorker.emitMessage({ id, error: { message: 'boom', name: 'Error' } });
 
-    expect((result.environment.data as Record<string, unknown>).nameAfterMutationAttempt).toBe('Test request');
+    await expect(promise).rejects.toThrow('boom');
   });
 
-  it('captures console output into logs', async () => {
+  it('ignores a message whose id does not match any pending request', async () => {
+    const { runScriptInQuickJs } = await import('./run-script-quickjs');
     const context = baseContext();
 
-    const result = await runScriptInQuickJs({
-      script: `console.log('hello from quickjs');`,
-      context,
-    });
+    const promise = runScriptInQuickJs({ script: 'console.log(1)', context });
+    fakeWorker.emitMessage({ id: 'not-a-real-id', result: {} });
 
-    expect(result.logs.some(row => row.includes('hello from quickjs'))).toBe(true);
+    const { id } = fakeWorker.postedMessages[0];
+    const result = { ...context, logs: [] };
+    fakeWorker.emitMessage({ id, result });
+
+    await expect(promise).resolves.toEqual(result);
   });
 
-  it('throws a clear error when calling the unsupported sendRequest API', async () => {
+  it('rejects every in-flight call when the worker crashes', async () => {
+    const { runScriptInQuickJs } = await import('./run-script-quickjs');
     const context = baseContext();
 
-    await expect(
-      runScriptInQuickJs({ script: 'await insomnia.sendRequest("https://example.com");', context }),
-    ).rejects.toThrow(/insomnia\.sendRequest\(\) is not supported/);
+    const promise = runScriptInQuickJs({ script: 'while(true){}', context });
+    fakeWorker.emitError('script execution context has been aborted');
+
+    await expect(promise).rejects.toThrow(/QuickJS sandbox worker crashed/);
   });
 
-  it('propagates script errors with a useful message', async () => {
+  it('creates a fresh worker for the next call after a crash', async () => {
+    const { runScriptInQuickJs } = await import('./run-script-quickjs');
     const context = baseContext();
 
-    await expect(runScriptInQuickJs({ script: 'throw new Error("boom");', context })).rejects.toThrow('boom');
+    const firstCall = runScriptInQuickJs({ script: 'while(true){}', context });
+    fakeWorker.emitError('boom');
+    await expect(firstCall).rejects.toThrow();
+
+    const secondWorker = new FakeWorker();
+    vi.stubGlobal('Worker', vi.fn(() => secondWorker));
+
+    const secondCall = runScriptInQuickJs({ script: 'console.log(1)', context });
+    expect(secondWorker.postedMessages).toHaveLength(1);
+    const { id } = secondWorker.postedMessages[0];
+    const result = { ...context, logs: [] };
+    secondWorker.emitMessage({ id, result });
+
+    await expect(secondCall).resolves.toEqual(result);
   });
 });
