@@ -58,7 +58,10 @@ describe('runScriptInQuickJs (worker client)', () => {
 
   beforeEach(async () => {
     fakeWorker = new FakeWorker();
-    vi.stubGlobal('Worker', vi.fn(() => fakeWorker));
+    vi.stubGlobal(
+      'Worker',
+      vi.fn(() => fakeWorker),
+    );
     // The module keeps a lazily-created singleton worker at module scope — reset it between tests
     // by re-importing fresh so each test gets its own FakeWorker instance.
     vi.resetModules();
@@ -68,7 +71,7 @@ describe('runScriptInQuickJs (worker client)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('posts a message and resolves with the worker\'s result for the matching id', async () => {
+  it("posts a message and resolves with the worker's result for the matching id", async () => {
     const { runScriptInQuickJs } = await import('./run-script-quickjs');
     const context = baseContext();
 
@@ -127,7 +130,10 @@ describe('runScriptInQuickJs (worker client)', () => {
     await expect(firstCall).rejects.toThrow();
 
     const secondWorker = new FakeWorker();
-    vi.stubGlobal('Worker', vi.fn(() => secondWorker));
+    vi.stubGlobal(
+      'Worker',
+      vi.fn(() => secondWorker),
+    );
 
     const secondCall = runScriptInQuickJs({ script: 'console.log(1)', context });
     expect(secondWorker.postedMessages).toHaveLength(1);
