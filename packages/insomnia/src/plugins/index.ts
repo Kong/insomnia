@@ -162,12 +162,14 @@ async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>
   return new Set(Object.keys(nameCounts).filter(name => nameCounts[name] > 1));
 }
 
-// A name claimed by more than one folder is surfaced as a disabled row instead of being loaded.
+// A name claimed by more than one folder (or by one of Insomnia's own bundled plugins) is surfaced
+// as a disabled row instead of being loaded.
 function buildCollisionRow(
   pluginName: string,
   pluginJson: { name?: string; description?: string; version?: string; insomnia?: any },
   modulePath: string,
   parsedPermissions: ReturnType<typeof parsePluginPermissions>,
+  loadError = `Multiple plugin folders declare the name "${pluginName}"; none are loaded, to avoid an ambiguous or spoofed trust grant.`,
 ): Plugin {
   return {
     name: pluginName,
@@ -180,7 +182,7 @@ function buildCollisionRow(
     permissionWarnings: parsedPermissions.warnings,
     permissionsDeclared: parsedPermissions.declared,
     module: {},
-    loadError: `Multiple plugin folders declare the name "${pluginName}"; none are loaded, to avoid an ambiguous or spoofed trust grant.`,
+    loadError,
   };
 }
 
@@ -268,6 +270,21 @@ async function traversePluginPath(
         if (parsedPermissions.warnings.length > 0) {
           // Constant format string; interpolated values passed as args so a plugin name can't forge log output.
           console.warn('[plugin] %s has invalid insomnia.permissions: %o', pluginJson.name, parsedPermissions.warnings);
+        }
+
+        // A folder claiming the name of one of Insomnia's own bundled plugins is never loaded as
+        // active: it would otherwise display under that name with nothing in the UI to distinguish
+        // it from the real, trusted bundle plugin (whose row doesn't appear in this same list at
+        // all), which could mislead a user into treating it as already-trusted.
+        if (getAppBundlePlugins().some(p => p.name === pluginName)) {
+          pluginMap[modulePath] = buildCollisionRow(
+            pluginName,
+            pluginJson,
+            modulePath,
+            parsedPermissions,
+            `"${pluginName}" is the name of one of Insomnia's own bundled plugins; this folder is not loaded, to avoid an ambiguous or spoofed trust grant.`,
+          );
+          continue;
         }
 
         // A name claimed by more than one folder is never loaded as active: pluginConfig (incl. the

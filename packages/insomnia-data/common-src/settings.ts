@@ -185,12 +185,10 @@ export interface Settings {
   scriptSandboxEnabled: boolean;
   // Wraps the user script in 'use strict', preventing accidental globals and making `this` undefined.
   scriptStrictModeEnabled: boolean;
-  // Experimental: execute plugin template tags inside the QuickJS-WASM sandbox instead of directly in the main process.
-  templateTagSandboxEnabled: boolean;
   // T1: sandbox ALL untrusted (user) plugin surfaces — template tags, request/response hooks, actions,
-  // and load-time module code. Supersedes templateTagSandboxEnabled: either flag on activates the
-  // sandbox (migration bridge). User plugins are default-deny; per-plugin `pluginConfig.elevated` opts
-  // an individual plugin back into full-host in-process execution. Bundle plugins are always trusted.
+  // and load-time module code — inside the QuickJS-WASM sandbox. User plugins are default-deny;
+  // per-plugin `pluginConfig.elevated` opts an individual plugin back into full-host in-process
+  // execution. Bundle plugins are always trusted.
   pluginSandboxEnabled: boolean;
   // Names of security rules that have been individually disabled.
   disabledSecurityRules: string[];
