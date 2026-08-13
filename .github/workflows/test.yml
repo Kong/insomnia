@@ -266,8 +266,8 @@ jobs:
               const diff = prCount - baseCount;
               const markdownContent = generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch);
 
-              // Post PR comment
-              if (context.eventName === 'pull_request') {
+              // Post PR comment (skip if there's no change in circular references)
+              if (context.eventName === 'pull_request' && diff !== 0) {
                 try {
                   const { data: comments } = await github.rest.issues.listComments({
                     owner: context.repo.owner,
