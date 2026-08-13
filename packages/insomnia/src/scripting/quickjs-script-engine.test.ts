@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects/interfaces';
 import { getQuickJSModule } from '../templating/sandbox/quickjs-runtime';
@@ -83,14 +83,6 @@ describe('runScriptInQuickJs', () => {
     expect(result.logs.some(row => row.includes('hello from quickjs'))).toBe(true);
   });
 
-  it('throws a clear error when calling the unsupported sendRequest API', async () => {
-    const context = baseContext();
-
-    await expect(
-      runScriptInQuickJs({ script: 'await insomnia.sendRequest("https://example.com");', context }),
-    ).rejects.toThrow(/insomnia\.sendRequest\(\) is not supported/);
-  });
-
   it('propagates script errors with a useful message', async () => {
     const context = baseContext();
 
@@ -130,7 +122,7 @@ describe('runScriptInQuickJs', () => {
     expect((result.environment.data as Record<string, unknown>).prototype).toBeUndefined();
   });
 
-  it('keeps globalThis limited to standard intrinsics and this sandbox\'s own bridged names', async () => {
+  it("keeps globalThis limited to standard intrinsics and this sandbox's own bridged names", async () => {
     const context = baseContext();
 
     // Reports host globals and the full globalThis property list back through
@@ -162,7 +154,7 @@ describe('runScriptInQuickJs', () => {
       const dumped = bareVm.evalCode('Object.getOwnPropertyNames(globalThis)');
       if (dumped.error) {
         dumped.error.dispose();
-        throw new Error('failed to enumerate a bare QuickJS context\'s globals');
+        throw new Error("failed to enumerate a bare QuickJS context's globals");
       }
       bareGlobalNames = bareVm.dump(dumped.value) as string[];
       dumped.value.dispose();
@@ -173,8 +165,15 @@ describe('runScriptInQuickJs', () => {
 
     // Anything else reachable on globalThis fails this assertion instead of shipping silently.
     const ALLOWED_EXTRA_GLOBALS = new Set([
-      'console', '__envGet', '__envSet', '__varGet', '__varSet', '__requestJSON', '__task',
-      'insomnia', '$',
+      'console',
+      '__envGet',
+      '__envSet',
+      '__varGet',
+      '__varSet',
+      '__requestJSON',
+      '__task',
+      'insomnia',
+      '$',
     ]);
     const unexpectedGlobals = (data.sandboxGlobalNames as string[]).filter(
       name => !baseline.has(name) && !ALLOWED_EXTRA_GLOBALS.has(name),
@@ -186,9 +185,9 @@ describe('runScriptInQuickJs', () => {
     const context = baseContext();
     context.settings = { timeout: 30 } as any;
 
-    await expect(
-      runScriptInQuickJs({ script: 'await new Promise(() => {});', context }),
-    ).rejects.toThrow(/Executing script timeout: 30/);
+    await expect(runScriptInQuickJs({ script: 'await new Promise(() => {});', context })).rejects.toThrow(
+      /Executing script timeout: 30/,
+    );
 
     // A later, unrelated run must still complete normally afterward.
     const laterContext = baseContext();
@@ -197,5 +196,168 @@ describe('runScriptInQuickJs', () => {
       context: laterContext,
     });
     expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
+  });
+});
+
+// KNOWN BUG (unresolved): a real sendRequest() round trip crashes under the real Electron/Worker
+// environment (see quickjs-script-engine.ts's module doc comment and
+// packages/insomnia-smoke-test/tests/smoke/quickjs-sendrequest-bridge.test.ts, which reproduces it
+// end to end). These unit tests mock `fetch` entirely, so they only cover the bridge's own request
+// normalization / response reconstruction / error propagation logic — they pass even though the
+// real-environment crash is still open, which is exactly the gap this WIP branch exists to flag.
+describe('runScriptInQuickJs sendRequest bridge', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const stubFetchOnce = (response: { ok: boolean; status?: number; body: unknown }) => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: response.ok,
+      status: response.status ?? (response.ok ? 200 : 500),
+      text: () => Promise.resolve(JSON.stringify(response.body)),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  };
+
+  it('sends a real request through the bridge and resolves with a response object', async () => {
+    stubFetchOnce({
+      ok: true,
+      body: {
+        code: 200,
+        status: 'OK',
+        headers: [{ name: 'content-type', value: 'application/json' }],
+        body: '{"hello":"world"}',
+        responseTime: 12,
+      },
+    });
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        const response = await insomnia.sendRequest('https://example.com');
+        insomnia.environment.set('code', response.code);
+        insomnia.environment.set('parsedBody', response.json());
+      `,
+      context,
+    });
+
+    expect(result.environment.data).toMatchObject({ code: 200, parsedBody: { hello: 'world' } });
+  });
+
+  it('sends the auth token as a header on the bridge fetch call', async () => {
+    const fetchMock = stubFetchOnce({
+      ok: true,
+      body: { code: 204, status: 'No Content', headers: [], body: '', responseTime: 1 },
+    });
+    const context = baseContext();
+
+    await runScriptInQuickJs({
+      script: `await insomnia.sendRequest('https://example.com');`,
+      context,
+      authToken: 'super-secret-token',
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'insomnia-templating-worker-database://network.sendrequestwithoutsideeffects',
+      expect.objectContaining({ headers: { 'x-insomnia-templating-auth': 'super-secret-token' } }),
+    );
+  });
+
+  it('normalizes a bare URL string request with an explicit empty headers array', async () => {
+    // Regression: the host handler (network.sendRequestWithoutSideEffects) does not default
+    // `headers` itself — omitting it here crashes createConfiguredCurlInstance's
+    // `headers.find(...)` user-agent lookup with "Cannot read properties of undefined".
+    const fetchMock = stubFetchOnce({
+      ok: true,
+      body: { code: 200, status: 'OK', headers: [], body: '', responseTime: 1 },
+    });
+    const context = baseContext();
+
+    await runScriptInQuickJs({ script: `await insomnia.sendRequest('https://example.com');`, context });
+
+    const sentBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(sentBody.options.request).toEqual({ url: 'https://example.com', method: 'GET', headers: [] });
+  });
+
+  it('normalizes a plain-object request with headers and a string body', async () => {
+    const fetchMock = stubFetchOnce({
+      ok: true,
+      body: { code: 200, status: 'OK', headers: [], body: '', responseTime: 1 },
+    });
+    const context = baseContext();
+
+    await runScriptInQuickJs({
+      script: `
+        await insomnia.sendRequest({
+          url: 'https://example.com/items',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{"a":1}',
+        });
+      `,
+      context,
+    });
+
+    const sentBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(sentBody).toEqual({
+      options: {
+        request: {
+          url: 'https://example.com/items',
+          method: 'POST',
+          headers: [{ name: 'Content-Type', value: 'application/json' }],
+          body: { mimeType: 'text/plain', text: '{"a":1}' },
+        },
+        caCertficatePath: null,
+      },
+    });
+  });
+
+  it('supports the Postman-style (error, response) callback signature', async () => {
+    stubFetchOnce({ ok: true, body: { code: 200, status: 'OK', headers: [], body: 'ok', responseTime: 1 } });
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        await new Promise((resolve) => {
+          insomnia.sendRequest('https://example.com', (error, response) => {
+            insomnia.environment.set('callbackError', error ?? null);
+            insomnia.environment.set('callbackBody', response ? response.body : null);
+            resolve();
+          });
+        });
+      `,
+      context,
+    });
+
+    expect(result.environment.data).toMatchObject({ callbackError: null, callbackBody: 'ok' });
+  });
+
+  it('rejects with the bridge-reported error when the host handler fails', async () => {
+    stubFetchOnce({ ok: false, status: 500, body: { error: 'DNS resolution failed' } });
+    const context = baseContext();
+
+    await expect(
+      runScriptInQuickJs({ script: `await insomnia.sendRequest('https://unreachable.invalid');`, context }),
+    ).rejects.toThrow('DNS resolution failed');
+  });
+
+  it('reports the bridge error to the callback instead of throwing when a callback is given', async () => {
+    stubFetchOnce({ ok: false, status: 500, body: { error: 'DNS resolution failed' } });
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        await new Promise((resolve) => {
+          insomnia.sendRequest('https://unreachable.invalid', (error) => {
+            insomnia.environment.set('callbackError', error);
+            resolve();
+          });
+        });
+      `,
+      context,
+    });
+
+    expect((result.environment.data as Record<string, unknown>).callbackError).toBe('DNS resolution failed');
   });
 });
