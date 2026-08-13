@@ -122,7 +122,12 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
           provider={provider}
           providerCredential={selectedCredentialDoc}
           onClose={() => setShowModal(false)}
-          onComplete={() => onChange(configValue)}
+          onComplete={() =>
+            onChange(
+              // convert the configValue to base64 string to avoid special characters in the configValue
+              btoa(new TextEncoder().encode(configValue).reduce((data, byte) => data + String.fromCodePoint(byte), '')),
+            )
+          }
         />
       )}
     </>
