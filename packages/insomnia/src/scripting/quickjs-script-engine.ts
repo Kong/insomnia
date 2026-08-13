@@ -114,6 +114,10 @@ const installConsole = (vm: QuickJSContext, scriptConsole: Console): void => {
   consoleHandle.dispose();
 };
 
+// Using one of these as a bracket-assignment key on a plain object rewires its prototype or
+// shadows the name instead of setting an ordinary property.
+const DANGEROUS_BRIDGE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 /** Registers `<getName>(key)`/`<setName>(key, jsonValue)` host functions backed by a plain object. */
 const installKeyValueBridge = (
   vm: QuickJSContext,
@@ -130,6 +134,9 @@ const installKeyValueBridge = (
 
   const setFn = vm.newFunction(setName, (keyHandle, valueHandle) => {
     const key = vm.getString(keyHandle);
+    if (DANGEROUS_BRIDGE_KEYS.has(key)) {
+      return;
+    }
     const rawValue = vm.getString(valueHandle);
     try {
       store[key] = JSON.parse(rawValue);
