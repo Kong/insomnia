@@ -1,7 +1,7 @@
 import type { Project } from 'insomnia-data';
+import type { BackendProjectWithTeamsAndTeamProjectId } from 'insomnia-vcs';
 
 import { type InsomniaFile } from '~/common/project';
-import type { BackendProjectWithTeamsAndTeamProjectId } from '~/sync/types';
 
 export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { organizationId: string }) => {
   return window.main.sync.remoteBackendProjectsOfTeam({ teamId: organizationId });

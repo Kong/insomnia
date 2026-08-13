@@ -29,6 +29,7 @@ import type {
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { slugify } from 'insomnia-data/common';
+import type { AutoResolvedConflict, MergeConflict } from 'insomnia-vcs';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
@@ -67,7 +68,6 @@ import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client'
 import { RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
-import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
 import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 
@@ -425,7 +425,11 @@ function resolveWithinGitRoot(gitRoot: string, folderName: string): string | nul
  * the GitRepository document should pass `directory`/`folderSlug` to avoid a DB
  * lookup; otherwise both are resolved from the database by id.
  */
-async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null, folderSlug?: string | null): Promise<string> {
+async function getRepoBaseDir(
+  gitRepositoryId: string,
+  directory?: string | null,
+  folderSlug?: string | null,
+): Promise<string> {
   let dir = directory;
   let slug = folderSlug;
   if (dir === undefined) {
@@ -517,7 +521,10 @@ async function backfillManagedFolderSlug(repo: GitRepository, projectId: string)
 
       const gitRoot = getManagedGitRoot();
       const oldDir = resolveWithinGitRoot(gitRoot, models.gitRepository.getGitRepoFolderName(repo));
-      const newDir = resolveWithinGitRoot(gitRoot, models.gitRepository.getGitRepoFolderName({ _id: repo._id, folderSlug: slug }));
+      const newDir = resolveWithinGitRoot(
+        gitRoot,
+        models.gitRepository.getGitRepoFolderName({ _id: repo._id, folderSlug: slug }),
+      );
       if (!oldDir || !newDir) {
         // Should be unreachable — getGitRepoFolderName already validates folderSlug — but
         // never rename into/out of a path outside gitRoot.

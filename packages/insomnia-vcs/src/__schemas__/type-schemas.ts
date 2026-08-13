@@ -1,6 +1,5 @@
 import { createBuilder, type Schema } from '@develohpanda/fluent-builder';
 
-import { baseModelSchema } from '../../sync/__schemas__/model-schemas';
 import type {
   BackendProject,
   BackendProjectWithTeam,
@@ -10,6 +9,7 @@ import type {
   StatusCandidate,
   Team,
 } from '../types';
+import { baseModelSchema } from './model-schemas';
 
 export const projectSchema: Schema<BackendProject> = {
   id: () => 'id',
