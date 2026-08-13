@@ -12,6 +12,8 @@ interface WorkerRequest {
   id: string;
   script: string;
   context: RequestContext;
+  /** Auth token for the `insomnia-templating-worker-database://` bridge — see run-script-quickjs.ts. */
+  authToken?: string;
 }
 
 interface WorkerErrorResponse {
@@ -27,9 +29,9 @@ interface WorkerSuccessResponse {
 export type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
 
 self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
-  const { id, script, context } = event.data;
+  const { id, script, context, authToken } = event.data;
   try {
-    const result = await runScriptInQuickJs({ script, context });
+    const result = await runScriptInQuickJs({ script, context, authToken });
     self.postMessage({ id, result } satisfies WorkerSuccessResponse);
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
