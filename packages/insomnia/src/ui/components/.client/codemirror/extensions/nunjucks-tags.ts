@@ -213,10 +213,14 @@ async function _highlightNunjucksTags(
         // TODO: Actually only use dropEffect for this logic. For some reason
         // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
         if (droppedInSameEditor) {
-          // TODO: unsound non-null assertion
+          const pos = mark.find();
 
-          const { from, to } = mark.find()!;
-          this.replaceRange('', from, to, '+dnd');
+          if (pos) {
+            const { from, to } = pos;
+            this.replaceRange('', from, to, '+dnd');
+          } else {
+            console.warn('Tried to remove mark that did not exist', mark);
+          }
         }
 
         // Remove listeners we added
