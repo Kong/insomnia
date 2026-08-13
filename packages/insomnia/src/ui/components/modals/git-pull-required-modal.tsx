@@ -51,6 +51,7 @@ export const GitPullRequiredModal = ({ title, message, okLabel, onConfirm, onClo
                   Cancel
                 </Button>
                 <Button
+                  autoFocus
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   onPress={() => {
                     if (typeof onConfirm === 'function') {

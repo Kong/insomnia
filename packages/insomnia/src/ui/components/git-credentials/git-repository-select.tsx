@@ -69,7 +69,7 @@ export const GitRepositorySelect = ({
           id: repo.cloneUrl,
           name: repo.fullName,
         }))}
-        menuTrigger="focus"
+        menuTrigger="input" // focus causes the dropdown to open when no option is selected and scan for files is clicked, which is not the desired behaviour.
         defaultFilter={(repoName: string, inputValue: string) =>
           Boolean(fuzzyMatch(inputValue, repoName, { splitSpace: true, loose: false })?.indexes)
         }

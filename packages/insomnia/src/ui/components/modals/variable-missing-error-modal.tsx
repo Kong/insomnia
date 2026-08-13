@@ -50,6 +50,7 @@ export const VariableMissingErrorModal = ({
                 {cancelText || 'Cancel'}
               </Button>
               <Button
+                autoFocus
                 className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                 onPress={onOk}
               >
