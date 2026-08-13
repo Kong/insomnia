@@ -12,16 +12,6 @@ import type { WorkerResponse } from './quickjs-script.worker';
 let worker: Worker | null = null;
 const pending = new Map<string, { resolve: (value: RequestContext) => void; reject: (err: Error) => void }>();
 
-// The Worker has no window.main access, so this module fetches the auth token once (same pattern as
-// ui/worker/templating-handler.ts) and forwards it on every postMessage instead.
-let authTokenPromise: Promise<string> | null = null;
-const getAuthToken = (): Promise<string> => {
-  if (!authTokenPromise) {
-    authTokenPromise = window.main.templatingDb.getAuthToken();
-  }
-  return authTokenPromise;
-};
-
 const getWorker = (): Worker => {
   if (worker) {
     return worker;
@@ -67,17 +57,16 @@ const getWorker = (): Worker => {
   return instance;
 };
 
-export const runScriptInQuickJs = async ({
+export const runScriptInQuickJs = ({
   script,
   context,
 }: {
   script: string;
   context: RequestContext;
 }): Promise<RequestContext> => {
-  const authToken = await getAuthToken();
   const id = `quickjs-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   return new Promise<RequestContext>((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    getWorker().postMessage({ id, script, context, authToken });
+    getWorker().postMessage({ id, script, context });
   });
 };
