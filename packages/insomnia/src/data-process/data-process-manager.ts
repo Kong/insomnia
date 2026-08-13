@@ -134,6 +134,10 @@ function handleExit(dbPath: string): void {
   if (restartCount > MAX_RESTARTS) {
     console.error(`[data-process] exceeded ${MAX_RESTARTS} restarts within ${RESTART_WINDOW_MS / 1000}s - giving up`);
     mainRpc.invalidate('data-process crashed and could not be restarted');
+    // Renderer windows hold their own PortRpc instances (attached via attachDataPortRpc in
+    // preload). Without this, their pending/future invoke() calls hang forever instead of
+    // rejecting, since 'data-process.restarting' is the only signal that invalidates them.
+    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('data-process.restarting'));
     return;
   }
 
@@ -146,7 +150,10 @@ function handleExit(dbPath: string): void {
     spawnDataProcess(dbPath)
       .then(() => {
         console.log('[data-process] restarted, re-issuing ports');
-        restartCount = 0;
+        // Don't reset restartCount here: a process that reaches 'ready' and then crashes
+        // again seconds later would otherwise reset the counter on every attempt, defeating
+        // MAX_RESTARTS for a ready-then-crash loop. The RESTART_WINDOW_MS check above already
+        // decays the count correctly for restarts that are spaced apart.
         BrowserWindow.getAllWindows().forEach(w => issuePort(w));
       })
       .catch(e => {
