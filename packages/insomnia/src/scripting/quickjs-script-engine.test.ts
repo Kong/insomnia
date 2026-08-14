@@ -308,6 +308,78 @@ describe('runScriptInQuickJs sendRequest bridge', () => {
     });
   });
 
+  it('normalizes RequestOptions-shaped input: singular "header" with {key, value} entries and a Url-like object', async () => {
+    const fetchMock = stubFetchOnce({
+      ok: true,
+      body: { code: 200, status: 'OK', headers: [], body: '', responseTime: 1 },
+    });
+    const context = baseContext();
+
+    await runScriptInQuickJs({
+      script: `
+        await insomnia.sendRequest({
+          url: { toString: () => 'https://example.com/items' },
+          method: 'POST',
+          header: [{ key: 'Content-Type', value: 'application/json' }],
+        });
+      `,
+      context,
+    });
+
+    const sentBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(sentBody.options.request).toEqual({
+      url: 'https://example.com/items',
+      method: 'POST',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      body: undefined,
+    });
+  });
+
+  it('rejects with a clear error, not a raw SyntaxError, when the bridge returns a non-JSON body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, text: () => Promise.resolve('not json') });
+    vi.stubGlobal('fetch', fetchMock);
+    const context = baseContext();
+
+    await expect(
+      runScriptInQuickJs({ script: `await insomnia.sendRequest('https://example.com');`, context }),
+    ).rejects.toThrow(/non-JSON response/);
+  });
+
+  it('rejects with a status-based error, not a raw SyntaxError, when a failed response has a non-JSON body', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: false, status: 502, text: () => Promise.resolve('<html>Bad Gateway</html>') });
+    vi.stubGlobal('fetch', fetchMock);
+    const context = baseContext();
+
+    await expect(
+      runScriptInQuickJs({ script: `await insomnia.sendRequest('https://example.com');`, context }),
+    ).rejects.toThrow(/sendRequest failed with status 502/);
+  });
+
+  it("reports a usable callback error message even when the rejection is a raw SyntaxError, not the bridge's own Error", async () => {
+    // The callback handler's `err && err.message` guard should hold for any thrown error shape, not
+    // just the bridge's own `throw new Error(envelope.error)` — exercise it via a JSON.parse failure
+    // on the envelope itself, a different error-generation path than the "bridge-reported error" test.
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, text: () => Promise.resolve('not json') });
+    vi.stubGlobal('fetch', fetchMock);
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        await new Promise((resolve) => {
+          insomnia.sendRequest('https://example.com', (error) => {
+            insomnia.environment.set('callbackErrorIsNonEmptyString', typeof error === 'string' && error.length > 0);
+            resolve();
+          });
+        });
+      `,
+      context,
+    });
+
+    expect((result.environment.data as Record<string, unknown>).callbackErrorIsNonEmptyString).toBe(true);
+  });
+
   it('supports the Postman-style (error, response) callback signature', async () => {
     stubFetchOnce({ ok: true, body: { code: 200, status: 'OK', headers: [], body: 'ok', responseTime: 1 } });
     const context = baseContext();
