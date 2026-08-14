@@ -129,13 +129,17 @@ If you want to create a self-hosted mock server route from a request response in
                 h => h.name.toLowerCase() !== 'content-length',
               );
 
-              patchMockRoute(selectedMockRoute, {
+              await patchMockRoute(selectedMockRoute, {
                 body: body.toString(),
                 mimeType,
                 statusCode: activeResponse.statusCode,
                 headers: headersWithoutContentLength,
               });
             }
+            const mockWorkspaceId = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.parentId;
+            navigate(
+              `/organization/${organizationId}/project/${projectId}/workspace/${mockWorkspaceId}/mock-server/mock-route/${selectedMockRoute}`,
+            );
             return;
           }
           let path = '/new-route';
