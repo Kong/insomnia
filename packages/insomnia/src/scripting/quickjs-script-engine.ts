@@ -116,14 +116,25 @@ globalThis.insomnia = {
     return value;
   })(JSON.parse(__requestJSON)),
   sendRequest: (request, callback) => {
+    const normalizeHeaders = (raw) => {
+      if (Array.isArray(raw)) {
+        // Scripting-environment RequestOptions.header entries use {key, value}; accept {name, value}
+        // too since that's the shape the bridge itself (and the hidden-window Response) already uses.
+        return raw.map((h) => ({ name: h.name ?? h.key, value: String(h.value) }));
+      }
+      if (raw && typeof raw === 'object') {
+        return Object.entries(raw).map(([name, value]) => ({ name, value: String(value) }));
+      }
+      return [];
+    };
     const normalized = typeof request === 'string'
       ? { url: request, method: 'GET', headers: [] }
       : {
-          url: request.url,
+          // request.url may be a Url-like object (per RequestOptions); the host handler needs a string.
+          url: String(request.url),
           method: request.method || 'GET',
-          headers: Array.isArray(request.headers)
-            ? request.headers
-            : Object.entries(request.headers || {}).map(([name, value]) => ({ name, value: String(value) })),
+          // RequestOptions calls this field "header" (singular); accept the plural too.
+          headers: normalizeHeaders(request.headers ?? request.header),
           body: request.body !== undefined ? { mimeType: 'text/plain', text: String(request.body) } : undefined,
         };
     const bodyJson = JSON.stringify({ options: { request: normalized, caCertficatePath: null } });
@@ -146,7 +157,7 @@ globalThis.insomnia = {
     if (typeof callback === 'function') {
       promise.then(
         (response) => callback(undefined, response),
-        (err) => callback(err.message),
+        (err) => callback(err && err.message ? err.message : String(err)),
       );
       return undefined;
     }
@@ -194,11 +205,27 @@ const sendRequestViaFetch = async (requestBodyJson: string, authToken?: string):
     headers: authToken ? { [TEMPLATING_DB_AUTH_HEADER]: authToken } : undefined,
     body: requestBodyJson,
   });
-  const parsed = JSON.parse(await resp.text());
-  if (!resp.ok) {
-    throw new Error(typeof parsed?.error === 'string' ? parsed.error : `sendRequest failed with status ${resp.status}`);
+  const text = await resp.text();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    // A non-JSON body (e.g. an empty response, or an HTML error page from something in front of the
+    // protocol handler) would otherwise surface as an opaque SyntaxError that masks the real status.
+    throw new Error(
+      resp.ok
+        ? `sendRequest received a non-JSON response: ${text.slice(0, 200)}`
+        : `sendRequest failed with status ${resp.status}`,
+    );
   }
-  return parsed;
+  if (!resp.ok) {
+    const errorMessage =
+      typeof (parsed as { error?: unknown })?.error === 'string'
+        ? (parsed as { error: string }).error
+        : `sendRequest failed with status ${resp.status}`;
+    throw new Error(errorMessage);
+  }
+  return parsed as Record<string, unknown>;
 };
 
 /** Registers the async `__sendRequest(bodyJson)` bridge backing `insomnia.sendRequest()` in BOOTSTRAP. */
