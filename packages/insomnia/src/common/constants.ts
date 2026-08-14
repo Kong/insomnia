@@ -347,6 +347,7 @@ export const sortOrderName: Record<SortOrder, string> = {
 };
 
 export const EXTERNAL_VAULT_PLUGIN_NAME = '@kong/insomnia-plugin-external-vault';
+export const EXTERNAL_VAULT_TAG_ID_PREFIX = 'externalVaultTag';
 export const AI_PLUGIN_NAME = '@kong/insomnia-plugin-ai';
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
