@@ -266,8 +266,9 @@ jobs:
               const diff = prCount - baseCount;
               const markdownContent = generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch);
 
-              // Post PR comment (skip if there's no change in circular references)
-              if (context.eventName === 'pull_request' && diff !== 0) {
+              // Post PR comment (skip creating/updating if there's no change in circular references,
+              // but clean up a stale comment from a previous run where there was a change)
+              if (context.eventName === 'pull_request') {
                 try {
                   const { data: comments } = await github.rest.issues.listComments({
                     owner: context.repo.owner,
@@ -281,7 +282,18 @@ jobs:
                     comment.body?.includes('Circular References Report')
                   );
 
-                  if (botComment) {
+                  if (diff === 0) {
+                    if (botComment) {
+                      await github.rest.issues.deleteComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        comment_id: botComment.id,
+                      });
+                      console.log('Deleted stale PR comment (no change)');
+                    } else {
+                      console.log('No change in circular references, skipping PR comment');
+                    }
+                  } else if (botComment) {
                     await github.rest.issues.updateComment({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
