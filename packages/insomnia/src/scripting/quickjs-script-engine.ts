@@ -59,6 +59,13 @@ export const runScriptInQuickJs = async ({
     // Polled during synchronous execution so a tight sync loop in the script can't bypass the timeout.
     vm.runtime.setInterruptHandler(() => Date.now() > deadline);
     vm.runtime.setMemoryLimit(32 * 1024 * 1024);
+    // Without an explicit cap, unbounded guest recursion overflows the *host* WASM call stack
+    // before QuickJS's own bytecode-level depth check can catch it — that surfaces as an uncatchable
+    // host RangeError instead of a normal script error, and leaves the runtime's GC state
+    // inconsistent enough that the `vm.dispose()` below then aborts on a fatal internal assertion.
+    // 256KB reliably lets QuickJS's own check win first (verified empirically) while still allowing
+    // several hundred levels of legitimate recursion.
+    vm.runtime.setMaxStackSize(256 * 1024);
 
     installConsole(vm, scriptConsole);
     installKeyValueBridge(vm, '__envGet', '__envSet', environmentData);
