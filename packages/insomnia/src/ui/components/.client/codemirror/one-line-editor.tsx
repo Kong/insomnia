@@ -20,7 +20,7 @@ import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
 import {
-  containExternalVaultTag,
+  containsExternalVaultTag,
   extractNunjucksTagFromCoords,
   replaceVaultTagIdIfNeeded,
 } from '~/common/templating/utils';
@@ -213,7 +213,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             return;
           }
           let editorPasteText = change.text.join('').replace(/\n/g, ' ');
-          if (containExternalVaultTag(editorPasteText)) {
+          if (containsExternalVaultTag(editorPasteText)) {
             editorPasteText = replaceVaultTagIdIfNeeded(editorPasteText);
           }
           // If we're in single-line mode, merge all changed lines into one

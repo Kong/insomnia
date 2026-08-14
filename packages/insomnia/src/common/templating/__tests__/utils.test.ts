@@ -333,9 +333,8 @@ describe('decodeEncoding()', () => {
 });
 
 describe('replaceVaultTagIdIfNeeded()', () => {
-  const vaultTagIdRegex = new RegExp(`^${utils.externalVaultTagPrefix}_\\w+$`);
-  const normalTemplate =
-    "{% vault 'aws', 'externalVaultTag_0b1ea47e317f4f03ae147dcb6c5f66c6', 'eyJTZWNyZXRJZCI6IjEifQ==' %}";
+  const vaultTagIdRegex = utils.vaultTagIdRegex;
+  const normalTemplate = `{% vault 'aws', '${utils.generateExternalVaultTagId()}', 'eyJTZWNyZXRJZCI6IjEifQ==' %}`;
 
   it('leaves plain text without template tag symbols untouched', () => {
     const template = 'normal string';

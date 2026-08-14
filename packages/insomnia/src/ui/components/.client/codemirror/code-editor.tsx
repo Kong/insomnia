@@ -23,7 +23,7 @@ import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
 import {
-  containExternalVaultTag,
+  containsExternalVaultTag,
   extractNunjucksTagFromCoords,
   replaceVaultTagIdIfNeeded,
 } from '~/common/templating/utils';
@@ -498,7 +498,7 @@ export const CodeEditor = memo(
             if (onPaste) {
               translatedText = onPaste(translatedText);
             }
-            if (containExternalVaultTag(translatedText)) {
+            if (containsExternalVaultTag(translatedText)) {
               translatedText = replaceVaultTagIdIfNeeded(translatedText);
             }
             if (translatedText !== change.text.join('\n')) {
