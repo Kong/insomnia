@@ -185,6 +185,12 @@ export interface Settings {
   scriptSandboxEnabled: boolean;
   // Wraps the user script in 'use strict', preventing accidental globals and making `this` undefined.
   scriptStrictModeEnabled: boolean;
+  // PoC/experimental: execute pre-request/after-response scripts inside the QuickJS-WASM sandbox
+  // instead of the hidden Electron BrowserWindow. Supports only a minimal API surface (console,
+  // insomnia.environment/variables get/set, read-only insomnia.request) — insomnia.sendRequest()
+  // and insomnia.test()/pm.test() are not yet bridged and throw if called. Defaults to off so the
+  // full-featured hidden-window sandbox remains the default execution path.
+  useQuickJsScriptSandbox: boolean;
   // T1: sandbox ALL untrusted (user) plugin surfaces — template tags, request/response hooks, actions,
   // and load-time module code — inside the QuickJS-WASM sandbox. User plugins are default-deny;
   // per-plugin `pluginConfig.elevated` opts an individual plugin back into full-host in-process
