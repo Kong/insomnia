@@ -170,6 +170,7 @@ describe('runScriptInQuickJs', () => {
       '__envSet',
       '__varGet',
       '__varSet',
+      '__sendRequest',
       '__requestJSON',
       '__task',
       'insomnia',
