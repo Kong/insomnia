@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import type { EntityDiff } from './diff-engine';
-import { DiffCardShell, entityTypeLabel, formatValue, StatusBadge, ValueChange } from './shared';
+import { DiffCardShell, entityTypeLabel, FieldDiffRow, formatValue, StatusBadge } from './shared';
 
 // Fallback card for entity types that don't have a dedicated visual layout yet.
 // Renders a bullet list of raw field changes rather than a purpose-built layout.
@@ -31,9 +31,8 @@ export const GenericEntityDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
       {diff.status === 'modified' && (
         <ul className="flex flex-col gap-2">
           {diff.fieldChanges.map(change => (
-            <li key={change.path} className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-(--hl)">{change.label}</span>
-              <ValueChange before={change.before} after={change.after} />
+            <li key={change.path}>
+              <FieldDiffRow label={change.label} before={change.before} after={change.after} />
             </li>
           ))}
         </ul>

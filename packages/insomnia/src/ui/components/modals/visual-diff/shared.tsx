@@ -70,21 +70,30 @@ export function formatValue(value: unknown): string {
   }
 }
 
+// Lays before/after side-by-side when there's room for both (flex-wrap falls
+// back to stacked once the combined width no longer fits the container).
 export const ValueChange: FC<{ before: unknown; after: unknown }> = ({ before, after }) => {
   const hasBefore = before !== undefined;
   const hasAfter = after !== undefined;
   return (
-    <div className="flex flex-col gap-1 text-sm">
+    <div className="flex flex-wrap items-start gap-2 text-sm">
       {hasBefore && (
-        <pre className="overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font-danger) line-through">
+        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font-danger) line-through">
           {formatValue(before)}
         </pre>
       )}
       {hasAfter && (
-        <pre className="overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font-success)">
+        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font-success)">
           {formatValue(after)}
         </pre>
       )}
     </div>
   );
 };
+
+export const FieldDiffRow: FC<{ label: string; before: unknown; after: unknown }> = ({ label, before, after }) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-xs text-(--hl)">{label}</span>
+    <ValueChange before={before} after={after} />
+  </div>
+);

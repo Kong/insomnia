@@ -1,8 +1,8 @@
 import type { FC } from 'react';
 
 import { formatMethodName, getRequestBadgeClassName } from '../../tags/method-tag';
-import { diffByKey, type EntityDiff, type KeyedDiffRow } from './diff-engine';
-import { DiffCardShell, formatValue, StatusBadge, ValueChange } from './shared';
+import { computeFieldChanges, diffByKey, type EntityDiff, type KeyedDiffRow } from './diff-engine';
+import { DiffCardShell, FieldDiffRow, StatusBadge } from './shared';
 
 const HANDLED_FIELD_PATHS = new Set([
   'name',
@@ -16,7 +16,9 @@ const HANDLED_FIELD_PATHS = new Set([
   'meta.description',
 ]);
 
-const KeyedDiffRows: FC<{ title: string; rows: KeyedDiffRow[] }> = ({ title, rows }) => {
+// Renders a name/value key-value row the same way the app's own header/param
+// editors do, instead of dumping the raw {name, value, disabled} object as JSON.
+const KeyValueDiffRows: FC<{ title: string; rows: KeyedDiffRow[] }> = ({ title, rows }) => {
   if (rows.length === 0) {
     return null;
   }
@@ -24,25 +26,42 @@ const KeyedDiffRows: FC<{ title: string; rows: KeyedDiffRow[] }> = ({ title, row
     <div className="flex flex-col gap-2">
       <span className="text-sm font-semibold">{title}</span>
       <ul className="flex flex-col gap-2">
-        {rows.map(row => (
-          <li key={row.key} className="flex flex-col gap-1 rounded-xs bg-(--color-bg) p-2">
-            <div className="flex items-center gap-2">
-              <StatusBadge status={row.status} />
-              <span className="font-mono text-sm">{row.key}</span>
-            </div>
-            {row.status === 'modified' && <ValueChange before={row.before} after={row.after} />}
-            {row.status === 'added' && (
-              <pre className="overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-success)">
-                {formatValue(row.after)}
-              </pre>
-            )}
-            {row.status === 'removed' && (
-              <pre className="overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-danger)">
-                {formatValue(row.before)}
-              </pre>
-            )}
-          </li>
-        ))}
+        {rows.map(row => {
+          const item = (row.after ?? row.before) as { value?: string; fileName?: string; disabled?: boolean } | undefined;
+
+          if (row.status === 'modified') {
+            const fieldChanges = computeFieldChanges(row.before, row.after);
+            return (
+              <li key={row.key} className="flex flex-col gap-2 rounded-xs bg-(--color-bg) p-2">
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={row.status} />
+                  <span className="font-mono text-sm font-medium">{row.key}</span>
+                </div>
+                <div className="flex flex-col gap-2 pl-1">
+                  {fieldChanges.map(change => (
+                    <FieldDiffRow key={change.path} label={change.label} before={change.before} after={change.after} />
+                  ))}
+                </div>
+              </li>
+            );
+          }
+
+          const isAdded = row.status === 'added';
+          return (
+            <li key={row.key} className="flex flex-wrap items-center justify-between gap-2 rounded-xs bg-(--color-bg) p-2">
+              <div className="flex items-center gap-2">
+                <StatusBadge status={row.status} />
+                <span className="font-mono text-sm font-medium">{row.key}</span>
+                {item?.disabled && <span className="text-xs text-(--hl)">(disabled)</span>}
+              </div>
+              <span
+                className={`truncate font-mono text-sm ${isAdded ? 'text-(--color-font-success)' : 'text-(--color-font-danger) line-through'}`}
+              >
+                {item?.value ?? item?.fileName ?? '(empty)'}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -69,6 +88,8 @@ export const RequestDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
   const bodyMimeTypeChanged =
     diff.status === 'modified' && diff.before?.body?.mimeType !== diff.after?.body?.mimeType;
   const bodyTextChanged = diff.status === 'modified' && diff.before?.body?.text !== diff.after?.body?.text;
+
+  const authFieldChanges = authChanged ? computeFieldChanges(diff.before?.authentication, diff.after?.authentication) : [];
 
   return (
     <DiffCardShell status={diff.status}>
@@ -99,60 +120,40 @@ export const RequestDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
           {(nameChanged || urlChanged || methodChanged || descriptionChanged) && (
             <div className="flex flex-col gap-2">
               <span className="text-sm font-semibold">Overview</span>
-              {nameChanged && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-(--hl)">Name</span>
-                  <ValueChange before={nameChanged.before} after={nameChanged.after} />
-                </div>
-              )}
-              {urlChanged && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-(--hl)">URL</span>
-                  <ValueChange before={urlChanged.before} after={urlChanged.after} />
-                </div>
-              )}
-              {methodChanged && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-(--hl)">Method</span>
-                  <ValueChange before={methodChanged.before} after={methodChanged.after} />
-                </div>
-              )}
+              {nameChanged && <FieldDiffRow label="Name" before={nameChanged.before} after={nameChanged.after} />}
+              {urlChanged && <FieldDiffRow label="URL" before={urlChanged.before} after={urlChanged.after} />}
+              {methodChanged && <FieldDiffRow label="Method" before={methodChanged.before} after={methodChanged.after} />}
               {descriptionChanged && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-(--hl)">Description</span>
-                  <ValueChange before={descriptionChanged.before} after={descriptionChanged.after} />
-                </div>
+                <FieldDiffRow label="Description" before={descriptionChanged.before} after={descriptionChanged.after} />
               )}
             </div>
           )}
 
-          <KeyedDiffRows title="Headers" rows={headerRows} />
-          <KeyedDiffRows title="Query Parameters" rows={parameterRows} />
-          <KeyedDiffRows title="Path Parameters" rows={pathParameterRows} />
+          <KeyValueDiffRows title="Headers" rows={headerRows} />
+          <KeyValueDiffRows title="Query Parameters" rows={parameterRows} />
+          <KeyValueDiffRows title="Path Parameters" rows={pathParameterRows} />
 
           {bodyChanged && (
             <div className="flex flex-col gap-2">
               <span className="text-sm font-semibold">Body</span>
               {bodyMimeTypeChanged && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-(--hl)">Content Type</span>
-                  <ValueChange before={diff.before?.body?.mimeType} after={diff.after?.body?.mimeType} />
-                </div>
+                <FieldDiffRow label="Content Type" before={diff.before?.body?.mimeType} after={diff.after?.body?.mimeType} />
               )}
               {bodyTextChanged && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-(--hl)">Content</span>
-                  <ValueChange before={diff.before?.body?.text} after={diff.after?.body?.text} />
-                </div>
+                <FieldDiffRow label="Content" before={diff.before?.body?.text} after={diff.after?.body?.text} />
               )}
-              <KeyedDiffRows title="Body Parameters" rows={bodyParamRows} />
+              <KeyValueDiffRows title="Body Parameters" rows={bodyParamRows} />
             </div>
           )}
 
-          {authChanged && (
-            <div className="flex flex-col gap-1">
+          {authFieldChanges.length > 0 && (
+            <div className="flex flex-col gap-2">
               <span className="text-sm font-semibold">Authentication</span>
-              <ValueChange before={diff.before?.authentication} after={diff.after?.authentication} />
+              <div className="flex flex-col gap-2 pl-1">
+                {authFieldChanges.map(change => (
+                  <FieldDiffRow key={change.path} label={change.label} before={change.before} after={change.after} />
+                ))}
+              </div>
             </div>
           )}
 
@@ -161,9 +162,8 @@ export const RequestDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
               <span className="text-sm font-semibold">Other Changes</span>
               <ul className="flex flex-col gap-2">
                 {otherChanges.map(change => (
-                  <li key={change.path} className="flex flex-col gap-1">
-                    <span className="text-xs text-(--hl)">{change.label}</span>
-                    <ValueChange before={change.before} after={change.after} />
+                  <li key={change.path}>
+                    <FieldDiffRow label={change.label} before={change.before} after={change.after} />
                   </li>
                 ))}
               </ul>
