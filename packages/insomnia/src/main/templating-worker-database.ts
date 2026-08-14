@@ -846,7 +846,11 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
         }
       },
     };
-    return new Response(JSON.stringify(result));
+    // Every other handler in this map returns a plain value and lets the caller wrap it.
+    // `resolveDbByKey` does `JSON.stringify(await handler(body))` and `createMapBridge` hands the
+    // value straight to the sandbox — so returning a `Response` here stringified to `"{}"` and every
+    // caller got an empty object instead of the response.
+    return result;
   },
   // used to generate the template tags for the bundle plugins and send back to the web worker
   'plugin.getBundlePluginTemplateTags': async () => {

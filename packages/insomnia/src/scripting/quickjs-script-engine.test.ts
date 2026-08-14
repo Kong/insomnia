@@ -416,7 +416,8 @@ describe('runScriptInQuickJs sendRequest bridge teardown', () => {
     // unhandled QuickJSUseAfterFree rejection out of the settle callback.
     await new Promise(resolve => setTimeout(resolve, 250));
 
-    // A later run proving the shared WASM module survived — after an Emscripten abort this throws.
+    // A later run still works. Note this is NOT what detects the abort — a fresh context on the same
+    // WASM module succeeds even after one, so only the assertions above are load-bearing here.
     const laterResult = await runScriptInQuickJs({
       script: 'insomnia.environment.set("ranCleanly", true);',
       context: baseContext(),
@@ -481,5 +482,62 @@ describe('runScriptInQuickJs sendRequest bridge teardown', () => {
       context: baseContext(),
     });
     expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
+  });
+});
+
+/**
+ * A SECOND, UNRELATED `gc_obj_list` abort that the teardown fix above does not address, and that
+ * predates the sendRequest bridge — `git show develop:…/quickjs-script-engine.ts` aborts identically.
+ *
+ * Allocation-heavy work performed *inside* `runtime.executePendingJobs()` — i.e. anything after the
+ * script's first `await` — leaves live GC objects behind, and `JS_FreeRuntime` then asserts. The same
+ * work run synchronously (before any `await`) is clean at 6x the size, so it is the job context that
+ * matters, not the volume alone. Reduced to a host-free reproducer with no bridge, no host functions,
+ * no interrupt handler, no memory limit and no `resolvePromise`:
+ *
+ *   const vm = QuickJS.newContext();
+ *   vm.evalCode(`(async()=>{await Promise.resolve();` +
+ *     `const a=[];for(let i=0;i<100000;i++){a.push({i});}` +
+ *     `globalThis.__n=JSON.parse(JSON.stringify(a)).length;})();`);
+ *   vm.runtime.executePendingJobs().dispose();
+ *   vm.dispose();   // Aborted(Assertion failed: list_empty(&rt->gc_obj_list) …)
+ *
+ * Threshold is between 50k and 100k objects. Not fixable from the host: unaffected by removing the
+ * memory limit or the interrupt handler, by polling `getPromiseState` instead of `resolvePromise`, by
+ * extra `executePendingJobs()` passes, by `computeMemoryUsage()`, or by forcing further allocation to
+ * provoke a GC — and it reproduces on both the RELEASE_SYNC and DEBUG_SYNC quickjs-emscripten
+ * variants. It needs an upstream fix or an engine-version bump.
+ *
+ * Why it matters here: before the bridge existed, nothing put multi-megabyte host data into the VM.
+ * `insomnia.sendRequest()` does, on every response, so this turns a latent engine bug into a routine
+ * crash for any script that parses a large response body. Left as a `.fails()` test so it is tracked
+ * and flips red the moment an engine bump fixes it.
+ */
+describe('runScriptInQuickJs large-allocation abort (known engine bug, pre-existing)', () => {
+  it.fails('survives allocating ~100k objects after an await', async () => {
+    const result = await runScriptInQuickJs({
+      script: `
+        await Promise.resolve();
+        const arr = [];
+        for (let i = 0; i < 100000; i++) { arr.push({ i }); }
+        insomnia.environment.set('len', JSON.parse(JSON.stringify(arr)).length);
+      `,
+      context: baseContext(),
+    });
+
+    expect((result.environment.data as Record<string, unknown>).len).toBe(100_000);
+  });
+
+  it('is specific to the job context — the same work before any await is fine', async () => {
+    const result = await runScriptInQuickJs({
+      script: `
+        const arr = [];
+        for (let i = 0; i < 300000; i++) { arr.push({ i }); }
+        insomnia.environment.set('len', JSON.parse(JSON.stringify(arr)).length);
+      `,
+      context: baseContext(),
+    });
+
+    expect((result.environment.data as Record<string, unknown>).len).toBe(300_000);
   });
 });
