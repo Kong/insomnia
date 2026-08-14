@@ -16,28 +16,44 @@ interface WorkerRequest {
   authToken?: string;
 }
 
+/**
+ * `engineFaulted` asks the client to retire this worker — the WASM module aborted while tearing a
+ * context down, so the module it caches is not one we want to keep running scripts on. Set on both
+ * response shapes because the fault is independent of whether the script itself succeeded.
+ */
 interface WorkerErrorResponse {
   id: string;
   error: { message: string; name?: string; stack?: string };
+  engineFaulted?: boolean;
 }
 
 interface WorkerSuccessResponse {
   id: string;
   result: RequestContext;
+  engineFaulted?: boolean;
 }
 
 export type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
 
 self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   const { id, script, context, authToken } = event.data;
+  let engineFaulted = false;
   try {
-    const result = await runScriptInQuickJs({ script, context, authToken });
-    self.postMessage({ id, result } satisfies WorkerSuccessResponse);
+    const result = await runScriptInQuickJs({
+      script,
+      context,
+      authToken,
+      onEngineFault: () => {
+        engineFaulted = true;
+      },
+    });
+    self.postMessage({ id, result, engineFaulted } satisfies WorkerSuccessResponse);
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
     self.postMessage({
       id,
       error: { message: error.message, name: error.name, stack: error.stack },
+      engineFaulted,
     } satisfies WorkerErrorResponse);
   }
 };
