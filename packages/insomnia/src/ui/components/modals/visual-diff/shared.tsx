@@ -22,10 +22,25 @@ export function entityTypeLabel(type: VisualDiffEntityType): string {
   return ENTITY_TYPE_LABELS[type] ?? 'Item';
 }
 
-const STATUS_STYLES: Record<EntityChangeStatus, { className: string; icon: IconProp; label: string }> = {
-  added: { className: 'bg-(--color-success)/20 text-(--color-font-success)', icon: 'plus', label: 'Added' },
-  removed: { className: 'bg-(--color-danger)/20 text-(--color-font-danger)', icon: 'minus', label: 'Removed' },
-  modified: { className: 'bg-(--color-notice)/20 text-(--color-font-notice)', icon: 'pencil', label: 'Modified' },
+const STATUS_STYLES: Record<EntityChangeStatus, { className: string; dotClassName: string; icon: IconProp; label: string }> = {
+  added: {
+    className: 'bg-(--color-success)/20 text-(--color-font-success)',
+    dotClassName: 'bg-(--color-success)',
+    icon: 'plus',
+    label: 'Added',
+  },
+  removed: {
+    className: 'bg-(--color-danger)/20 text-(--color-font-danger)',
+    dotClassName: 'bg-(--color-danger)',
+    icon: 'minus',
+    label: 'Removed',
+  },
+  modified: {
+    className: 'bg-(--color-notice)/20 text-(--color-font-notice)',
+    dotClassName: 'bg-(--color-notice)',
+    icon: 'pencil',
+    label: 'Modified',
+  },
 };
 
 export const StatusBadge: FC<{ status: EntityChangeStatus }> = ({ status }) => {
@@ -36,6 +51,54 @@ export const StatusBadge: FC<{ status: EntityChangeStatus }> = ({ status }) => {
     </span>
   );
 };
+
+// Small colored dot conveying a section's dominant change status — used on tab
+// labels and chips, where a full StatusBadge would be too heavy.
+export const StatusDot: FC<{ status: EntityChangeStatus }> = ({ status }) => (
+  <span className={`inline-block size-2 shrink-0 rounded-full ${STATUS_STYLES[status].dotClassName}`} />
+);
+
+// Compact pill summarizing one changed section (eg. "Headers 2") — shown in a
+// card's collapsed state as a stand-in for the section's (hidden) tab, and
+// clickable to expand straight into that tab.
+export const ChangeChip: FC<{ label: string; status: EntityChangeStatus; count?: number; onPress?: () => void }> = ({
+  label,
+  status,
+  count,
+  onPress,
+}) => {
+  const content = (
+    <span className="flex items-center gap-1.5 rounded-full bg-(--color-bg) px-2 py-0.5 text-xs font-medium text-(--color-font)">
+      <StatusDot status={status} />
+      {label}
+      {count !== undefined && count > 0 && <span className="text-(--hl)">{count}</span>}
+    </span>
+  );
+
+  if (!onPress) {
+    return content;
+  }
+
+  return (
+    <Button
+      onPress={onPress}
+      className="cursor-pointer rounded-full ring-1 ring-transparent transition-all hover:brightness-110 focus:ring-(--hl-md) focus:ring-inset"
+    >
+      {content}
+    </Button>
+  );
+};
+
+// Chevron toggle for a card's collapsed/expanded state.
+export const CollapseToggleButton: FC<{ isExpanded: boolean; onPress: () => void }> = ({ isExpanded, onPress }) => (
+  <Button
+    onPress={onPress}
+    aria-label={isExpanded ? 'Collapse' : 'Expand'}
+    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--hl) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) hover:text-(--color-font) focus:ring-(--hl-md) focus:ring-inset"
+  >
+    <Icon icon={isExpanded ? 'chevron-down' : 'chevron-right'} />
+  </Button>
+);
 
 // Props every visual diff card accepts for its per-entity stage/unstage button.
 export interface EntityCardActionProps {

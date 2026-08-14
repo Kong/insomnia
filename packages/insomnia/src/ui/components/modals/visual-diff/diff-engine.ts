@@ -146,6 +146,38 @@ export interface KeyedDiffRow {
   after?: unknown;
 }
 
+// Single status representing a set of rows (eg. for a tab/chip badge): all-added
+// or all-removed collapse to that status, anything mixed (or any modified row)
+// reads as 'modified'.
+export function dominantStatus(statuses: EntityChangeStatus[]): EntityChangeStatus {
+  const hasAdded = statuses.includes('added');
+  const hasRemoved = statuses.includes('removed');
+  const hasModified = statuses.includes('modified');
+  if (hasModified || (hasAdded && hasRemoved)) {
+    return 'modified';
+  }
+  if (hasAdded) {
+    return 'added';
+  }
+  if (hasRemoved) {
+    return 'removed';
+  }
+  return 'modified';
+}
+
+// Status for a single before/after block (eg. a request's body or auth config)
+// based only on which side has content — content only on one side reads as
+// added/removed even when the entity itself is 'modified'.
+export function sideStatus(hasBefore: boolean, hasAfter: boolean): EntityChangeStatus {
+  if (!hasBefore && hasAfter) {
+    return 'added';
+  }
+  if (hasBefore && !hasAfter) {
+    return 'removed';
+  }
+  return 'modified';
+}
+
 // Diffs two arrays of objects by matching a key field (eg. header/parameter `name`) instead of position
 export function diffByKey<T extends Record<string, any>>(
   before: T[] = [],

@@ -60,27 +60,45 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
     );
   }
 
-  return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
-      {entities.map(diff => {
-        const actionProps = {
-          staged,
-          isPending: pendingEntityId === diff.id,
-          onStage: () => handleStage(diff.id),
-        };
+  const summary = entities.reduce(
+    (acc, entity) => {
+      acc[entity.status] += 1;
+      return acc;
+    },
+    { added: 0, removed: 0, modified: 0 },
+  );
 
-        switch (diff.type) {
-          case 'request': {
-            return <RequestDiffCard key={diff.id} diff={diff} {...actionProps} />;
+  return (
+    <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+      <div className="flex shrink-0 items-center gap-3 text-xs">
+        <span className="font-semibold text-(--color-font)">
+          {entities.length} {entities.length === 1 ? 'entity' : 'entities'} changed
+        </span>
+        {summary.added > 0 && <span className="text-(--color-font-success)">{summary.added} added</span>}
+        {summary.modified > 0 && <span className="text-(--color-font-notice)">{summary.modified} modified</span>}
+        {summary.removed > 0 && <span className="text-(--color-font-danger)">{summary.removed} removed</span>}
+      </div>
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+        {entities.map(diff => {
+          const actionProps = {
+            staged,
+            isPending: pendingEntityId === diff.id,
+            onStage: () => handleStage(diff.id),
+          };
+
+          switch (diff.type) {
+            case 'request': {
+              return <RequestDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'environment': {
+              return <EnvironmentDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            default: {
+              return <GenericEntityDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
           }
-          case 'environment': {
-            return <EnvironmentDiffCard key={diff.id} diff={diff} {...actionProps} />;
-          }
-          default: {
-            return <GenericEntityDiffCard key={diff.id} diff={diff} {...actionProps} />;
-          }
-        }
-      })}
+        })}
+      </div>
     </div>
   );
 };
