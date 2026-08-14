@@ -2,11 +2,16 @@ import { models } from 'insomnia-data';
 import type { FC } from 'react';
 
 import { diffRecord, type EntityDiff } from './diff-engine';
-import { DiffCardShell, formatValue, StatusBadge, ValueChange } from './shared';
+import { CardHeaderActions, DiffCardShell, type EntityCardActionProps, formatValue, StatusBadge, ValueChange } from './shared';
 
 const { vaultEnvironmentPath, vaultEnvironmentMaskValue } = models.environment;
 
-export const EnvironmentDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const EnvironmentDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({
+  diff,
+  staged,
+  isPending,
+  onStage,
+}) => {
   const environment = diff.after ?? diff.before;
 
   const beforeData = diff.before?.data ?? {};
@@ -34,7 +39,7 @@ export const EnvironmentDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
           )}
           <span className="font-semibold">{diff.name}</span>
         </div>
-        <StatusBadge status={diff.status} />
+        <CardHeaderActions status={diff.status} staged={staged} isPending={isPending} onStage={onStage} />
       </div>
 
       {diff.status !== 'modified' && Object.keys(afterData || beforeData).length > 0 && (

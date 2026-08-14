@@ -1,11 +1,16 @@
 import type { FC } from 'react';
 
 import type { EntityDiff } from './diff-engine';
-import { DiffCardShell, entityTypeLabel, FieldDiffRow, formatValue, StatusBadge } from './shared';
+import { CardHeaderActions, DiffCardShell, type EntityCardActionProps, entityTypeLabel, FieldDiffRow, formatValue } from './shared';
 
 // Fallback card for entity types that don't have a dedicated visual layout yet.
 // Renders a bullet list of raw field changes rather than a purpose-built layout.
-export const GenericEntityDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const GenericEntityDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({
+  diff,
+  staged,
+  isPending,
+  onStage,
+}) => {
   return (
     <DiffCardShell status={diff.status}>
       <div className="flex items-center justify-between gap-2">
@@ -13,7 +18,7 @@ export const GenericEntityDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
           <span className="font-semibold">{diff.name}</span>
           <span className="text-xs text-(--hl)">{entityTypeLabel(diff.type)}</span>
         </div>
-        <StatusBadge status={diff.status} />
+        <CardHeaderActions status={diff.status} staged={staged} isPending={isPending} onStage={onStage} />
       </div>
 
       {diff.status === 'added' && (

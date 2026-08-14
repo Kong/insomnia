@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { formatMethodName, getRequestBadgeClassName } from '../../tags/method-tag';
 import { computeFieldChanges, diffByKey, type EntityDiff, type KeyedDiffRow } from './diff-engine';
-import { DiffCardShell, FieldDiffRow, StatusBadge } from './shared';
+import { CardHeaderActions, DiffCardShell, type EntityCardActionProps, FieldDiffRow, StatusBadge } from './shared';
 
 const HANDLED_FIELD_PATHS = new Set([
   'name',
@@ -67,7 +67,7 @@ const KeyValueDiffRows: FC<{ title: string; rows: KeyedDiffRow[] }> = ({ title, 
   );
 };
 
-export const RequestDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const RequestDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, staged, isPending, onStage }) => {
   const request = diff.after ?? diff.before;
   const method = request?.method || 'GET';
 
@@ -100,7 +100,7 @@ export const RequestDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
           </span>
           <span className="truncate font-mono text-sm text-(--hl)">{request?.url || '(no url)'}</span>
         </div>
-        <StatusBadge status={diff.status} />
+        <CardHeaderActions status={diff.status} staged={staged} isPending={isPending} onStage={onStage} />
       </div>
 
       <span className="font-semibold">{diff.name}</span>
