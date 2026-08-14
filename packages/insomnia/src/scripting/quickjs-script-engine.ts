@@ -29,11 +29,19 @@ export const runScriptInQuickJs = async ({
   script,
   context,
   authToken,
+  onEngineFault,
 }: {
   script: string;
   context: RequestContext;
   /** Auth token for the `insomnia-templating-worker-database://` bridge — required for sendRequest. */
   authToken?: string;
+  /**
+   * Called when tearing the VM down aborts the WASM module — see `ENGINE_FAULT_MESSAGE`. The script
+   * itself already finished, so the run still returns its result; this is the signal to replace the
+   * engine rather than keep using a module that has aborted. Always fires when it happens, including
+   * on the error/timeout path.
+   */
+  onEngineFault?: (error: Error) => void;
 }): Promise<RequestContext> => {
   const QuickJS = await getQuickJSModule();
   const vm = QuickJS.newContext();
@@ -77,7 +85,18 @@ export const runScriptInQuickJs = async ({
     // already-settled deferreds still in the set are harmless.
     pendingDeferreds.forEach(deferred => deferred.dispose());
     pendingDeferreds.clear();
-    vm.dispose();
+    try {
+      vm.dispose();
+    } catch (err) {
+      // A known defect in quickjs-emscripten's WASM build (upstream issue #269) aborts the module
+      // here when the script allocated heavily after its first `await` — see ENGINE_FAULT_MESSAGE.
+      // The script has already run and everything we return is plain host-side JS, so swallowing
+      // this yields a complete result instead of destroying the run. Catching inside `finally` also
+      // means a genuine script error or timeout from the `try` above still wins.
+      const fault = err instanceof Error ? err : new Error(String(err));
+      scriptConsole.warn(ENGINE_FAULT_MESSAGE, fault.message);
+      onEngineFault?.(fault);
+    }
   }
 
   return {
@@ -94,6 +113,20 @@ export const runScriptInQuickJs = async ({
     logs: scriptConsole.dumpLogsAsArray(),
   };
 };
+
+/**
+ * Prefixes the warning a script sees when its run tripped the known WASM-build abort.
+ *
+ * Allocating ~100k+ objects after the script's first `await` — which a multi-megabyte
+ * `insomnia.sendRequest()` response body does on its own — leaves QuickJS's runtime un-freeable, and
+ * `JS_FreeRuntime` then aborts on `assert(list_empty(&rt->gc_obj_list))`. The same allocation done
+ * synchronously is fine at several times the size. It is a defect in quickjs-emscripten's *WASM
+ * build* rather than in QuickJS: the identical vendored engine source, built natively, is clean well
+ * past the failing size at every optimization level. Tracked upstream as
+ * https://github.com/justjake/quickjs-emscripten/issues/269.
+ */
+const ENGINE_FAULT_MESSAGE =
+  'The QuickJS engine faulted while cleaning up after this script, a known issue with large amounts of data handled after an await. The script finished and its results are intact; the engine will be replaced before the next run.';
 
 const unsupportedApiMessage = (name: string): string =>
   `${name} is not supported yet by the QuickJS sandbox (proof of concept). Disable "Use QuickJS sandbox for scripts" in Settings > Scripting to use it.`;
