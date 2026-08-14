@@ -7,7 +7,6 @@ import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { getAppBundlePlugins } from '~/common/constants';
-import { generateId } from '~/common/misc';
 import { localTemplateTags } from '~/common/templating/local-template-tags';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
 import * as templateUtils from '~/common/templating/utils';
@@ -193,7 +192,7 @@ export const TagEditor: FC<Props> = props => {
   // Generate a unique tag id for the vault and link it to the credential in pluginData.
   // Update the tag arg to store the unique id instead of the raw (per-user) credential id.
   function convertLegacyCredentialTag(legacyCredentialId: string, argIndex: number) {
-    const tagUniqueId = generateId('externalVaultTag');
+    const tagUniqueId = templateUtils.generateExternalVaultTagId();
     updateArg(tagUniqueId, argIndex);
     return services.pluginData
       .upsertByKey(vaultPluginName, tagUniqueId, legacyCredentialId)

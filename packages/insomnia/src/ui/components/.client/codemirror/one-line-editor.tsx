@@ -19,7 +19,11 @@ import * as reactUse from 'react-use';
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
-import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import {
+  containExternalVaultTag,
+  extractNunjucksTagFromCoords,
+  replaceVaultTagIdIfNeeded,
+} from '~/common/templating/utils';
 import { isCurlCommand } from '~/common/utils/curl';
 import { useRootLoaderData } from '~/root';
 import { showModal } from '~/ui/components/modals';
@@ -200,7 +204,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       };
       codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
       codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
-        const isPaste = change.text && change.text.length > 1;
+        const isPaste = change.origin === 'paste' && change.update;
         if (isPaste) {
           const pastedText = change.text.join('\n');
           const hasContent = pastedText.trim();
@@ -208,8 +212,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             change.cancel();
             return;
           }
+          let editorPasteText = change.text.join('').replace(/\n/g, ' ');
+          if (containExternalVaultTag(editorPasteText)) {
+            editorPasteText = replaceVaultTagIdIfNeeded(editorPasteText);
+          }
           // If we're in single-line mode, merge all changed lines into one
-          change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
+          change.update?.(change.from, change.to, [editorPasteText]);
         }
       });
       codeMirror.current.on('paste', (_, e: ClipboardEvent) => {
