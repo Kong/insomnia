@@ -170,9 +170,9 @@ export const responseTagRegex = new RegExp('{% *response *.* %}');
 export const externalVaultTagPrefix = 'externalVaultTag';
 export const generateExternalVaultTagId = () => generateId(externalVaultTagPrefix);
 const tagRegex = /{%[\s\S]+?%}/g;
-const vaultTagIdRegex = new RegExp(`${externalVaultTagPrefix}_\\w+`, 'g');
-export const containExternalVaultTag = (input: string) => {
-  const hasTemplateTagSymbols = input.includes('{%') && input.includes('%}');
+export const vaultTagIdRegex = new RegExp(`${externalVaultTagPrefix}_[a-z0-9]{32}`, 'g');
+export const containsExternalVaultTag = (input: string) => {
+  const hasTemplateTagSymbols = input.match(tagRegex);
   return hasTemplateTagSymbols && input.includes(externalVaultTagPrefix);
 };
 // Replace the unique id in vault tag with a new unique id to avoid duplicates when pasting
