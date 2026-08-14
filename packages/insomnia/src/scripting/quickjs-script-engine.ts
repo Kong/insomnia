@@ -1,4 +1,4 @@
-import type { QuickJSContext, QuickJSHandle } from 'quickjs-emscripten';
+import type { QuickJSContext, QuickJSDeferredPromise, QuickJSHandle } from 'quickjs-emscripten';
 
 import { Console } from '../../../insomnia-scripting-environment/src/objects/console';
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects/interfaces';
@@ -21,13 +21,6 @@ import { getQuickJSModule } from '../templating/sandbox/quickjs-runtime';
  * client certificates, cookies, or multipart/urlencoded bodies yet, and the response object exposes
  * only `code`/`status`/`headers`/`body`/`responseTime`/`json()`/`text()` (no chai assertions, no
  * `originalRequest`). Full parity with the hidden-window `Response` class is deferred.
- *
- * KNOWN BUG (unresolved): a real sendRequest() round trip crashes under the real Electron/Worker
- * environment with `Aborted(Assertion failed: list_empty(&rt->gc_obj_list), at:
- * .../quickjs.c,2036,JS_FreeRuntime)` — see installSendRequestBridge's comment and
- * packages/insomnia-smoke-test/tests/smoke/quickjs-sendrequest-bridge.test.ts, which reproduces it.
- * Never reproduces in vitest (mocked fetch, or a real Node http server) — only real Electron fetch()
- * timing inside the dedicated Worker.
  *
  * Not supported (throws inside the script if called): insomnia.test()/pm.test(), collectionVariables,
  * vault, cookies, client certificates, and mutating the request.
@@ -53,13 +46,14 @@ export const runScriptInQuickJs = async ({
   const environmentData: Record<string, unknown> = { ...context.environment.data };
   const variablesData: Record<string, unknown> = { ...context.transientVariables?.data };
 
-  // Set right after `vm.dispose()` below. The sendRequest bridge is a real async host round trip
-  // (a `fetch()` to the Electron main process) whose resolution isn't driven by QuickJS's own job
-  // queue the way in-VM promises are — checking this flag before ever touching `vm`/a promise
-  // handle from that callback is what makes a late-arriving response after this function has
-  // already returned (deadline/interrupt fired, or the caller otherwise moved on) a safe no-op
-  // instead of a `QuickJSUseAfterFree` (or a native WASM abort disposing an in-use runtime).
-  const disposedRef = { current: false };
+  // Every VM promise handed to the script by `installSendRequestBridge` that hasn't settled yet.
+  // Each one owns three JSValues — the promise plus its `resolve`/`reject` functions — and
+  // quickjs-emscripten only frees the two functions from inside `resolve()`/`reject()`. A VM
+  // promise still pending when the runtime is freed therefore leaks two live function objects,
+  // which trips QuickJS's `assert(list_empty(&rt->gc_obj_list))` in `JS_FreeRuntime`: a native
+  // Emscripten abort rather than a catchable error, so it takes the script worker down instead of
+  // surfacing as a script failure. `finally` below settles this set before disposing.
+  const pendingDeferreds = new Set<QuickJSDeferredPromise>();
 
   try {
     // Polled during synchronous execution so a tight sync loop in the script can't bypass the timeout.
@@ -69,7 +63,7 @@ export const runScriptInQuickJs = async ({
     installConsole(vm, scriptConsole);
     installKeyValueBridge(vm, '__envGet', '__envSet', environmentData);
     installKeyValueBridge(vm, '__varGet', '__varSet', variablesData);
-    installSendRequestBridge(vm, authToken, disposedRef);
+    installSendRequestBridge(vm, pendingDeferreds, authToken);
     setGlobalString(vm, '__requestJSON', JSON.stringify(context.request ?? {}));
 
     evalOrThrow(vm, BOOTSTRAP, '<quickjs-script-bootstrap>');
@@ -77,7 +71,12 @@ export const runScriptInQuickJs = async ({
 
     await driveTaskToCompletion(vm, deadline, timeoutMs);
   } finally {
-    disposedRef.current = true;
+    // Ordering matters: free the resolve/reject functions of anything still in flight (a script
+    // that never awaited its sendRequest, or a run that hit the deadline mid-request) *before*
+    // the runtime, or `JS_FreeRuntime` aborts. `dispose()` is documented as idempotent, so
+    // already-settled deferreds still in the set are harmless.
+    pendingDeferreds.forEach(deferred => deferred.dispose());
+    pendingDeferreds.clear();
     vm.dispose();
   }
 
@@ -203,44 +202,37 @@ const sendRequestViaFetch = async (requestBodyJson: string, authToken?: string):
 };
 
 /** Registers the async `__sendRequest(bodyJson)` bridge backing `insomnia.sendRequest()` in BOOTSTRAP. */
-const installSendRequestBridge = (vm: QuickJSContext, authToken?: string, disposedRef?: { current: boolean }): void => {
+const installSendRequestBridge = (
+  vm: QuickJSContext,
+  pendingDeferreds: Set<QuickJSDeferredPromise>,
+  authToken?: string,
+): void => {
   const fn = vm.newFunction('__sendRequest', bodyHandle => {
     const bodyJson = vm.getString(bodyHandle);
     const deferred = vm.newPromise();
+    // Registered so the run's `finally` can free this deferred's resolve/reject functions if the
+    // fetch is still outstanding when the VM is torn down — see `pendingDeferreds`' comment.
+    pendingDeferreds.add(deferred);
     // `Promise.resolve().then(...)` defers the real fetch() call by one microtask tick so it never
-    // runs while still nested inside this C-to-JS callback frame — matching host-bridge.ts's
-    // installHostBridge (the proven-working equivalent for the template-tag sandbox). Calling the
-    // async bridge function directly here instead (no extra tick) let its `await fetch(...)`
-    // resolve while still on that native callback's call stack, which corrupted the WASM heap under
-    // real Electron fetch() timing (reproduced as a `QuickJSUseAfterFree` / `gc_obj_list` abort on
-    // `vm.newString` inside the resolution handler) — a reentrancy window neither a mocked fetch in
-    // unit tests nor a plain Node http client ever hit, since both settle within the same tick.
-    // NOTE: this deferral alone did NOT resolve the crash (see the module doc comment above) — kept
-    // because it's still a real fix for the reentrancy hazard it targets, just not a sufficient one.
+    // runs while still nested inside this C-to-JS callback frame — matching plugin-tag-sandbox.ts's
+    // installHostBridge, the proven-working equivalent for the template-tag sandbox.
     Promise.resolve()
       .then(() => sendRequestViaFetch(bodyJson, authToken))
       .then(
-        value => {
-          if (!disposedRef?.current) {
-            resolveDeferredWithString(vm, deferred, JSON.stringify({ ok: true, value }));
-          }
-        },
-        err => {
-          if (!disposedRef?.current) {
-            resolveDeferredWithString(
-              vm,
-              deferred,
-              JSON.stringify({ ok: false, error: err instanceof Error ? err.message : String(err) }),
-            );
-          }
-        },
+        value => settle(vm, deferred, pendingDeferreds, JSON.stringify({ ok: true, value })),
+        err =>
+          settle(
+            vm,
+            deferred,
+            pendingDeferreds,
+            JSON.stringify({ ok: false, error: err instanceof Error ? err.message : String(err) }),
+          ),
       );
     // The settled VM promise schedules a job; pump it so the awaiting script resumes.
     deferred.settled.then(() => {
-      if (!disposedRef?.current) {
+      if (vm.alive) {
         // executePendingJobs() returns a DisposableResult — on failure its `.error` is a live
-        // QuickJSHandle. Discarding the result outright (as this used to) leaks that handle,
-        // which is exactly what trips "gc_obj_list not empty" on a later vm.dispose().
+        // QuickJSHandle that leaks if the result is discarded rather than disposed.
         vm.runtime.executePendingJobs().dispose();
       }
     });
@@ -249,14 +241,28 @@ const installSendRequestBridge = (vm: QuickJSContext, authToken?: string, dispos
   setGlobal(vm, '__sendRequest', fn);
 };
 
-const resolveDeferredWithString = (
+/**
+ * Resolve a bridge deferred with a JSON payload, if the VM is still around to receive it.
+ *
+ * A `fetch()` can land after the run has finished (the script never awaited it, or the deadline
+ * fired first), by which point the VM is gone: `vm.newString` on a disposed context throws
+ * `QuickJSUseAfterFree` synchronously inside this `.then`, i.e. an unhandled rejection in the
+ * worker. `deferred.alive` covers the narrower case of a deferred already force-disposed by the
+ * run's `finally` while the context itself is somehow still up.
+ */
+const settle = (
   vm: QuickJSContext,
-  deferred: ReturnType<QuickJSContext['newPromise']>,
+  deferred: QuickJSDeferredPromise,
+  pendingDeferreds: Set<QuickJSDeferredPromise>,
   value: string,
 ): void => {
+  if (!vm.alive || !deferred.alive) {
+    return;
+  }
   const handle = vm.newString(value);
   deferred.resolve(handle);
   handle.dispose();
+  pendingDeferreds.delete(deferred);
 };
 
 /** Registers `<getName>(key)`/`<setName>(key, jsonValue)` host functions backed by a plain object. */

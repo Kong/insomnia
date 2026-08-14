@@ -57,16 +57,35 @@ const getWorker = (): Worker => {
   return instance;
 };
 
-export const runScriptInQuickJs = ({
+// A Worker has no `window.main`, so — exactly as `ui/worker/templating-handler.ts` does for the
+// templating worker — fetch the `insomnia-templating-worker-database://` auth token here once and
+// forward it on every postMessage. Without it the engine's `insomnia.sendRequest()` bridge fetch is
+// rejected by the protocol's auth gate with a 401.
+let authTokenPromise: Promise<string> | null = null;
+const getTemplatingDbAuthToken = (): Promise<string> => {
+  if (!authTokenPromise) {
+    authTokenPromise = window.main.templatingDb.getAuthToken();
+  }
+  return authTokenPromise;
+};
+
+export const runScriptInQuickJs = async ({
   script,
   context,
 }: {
   script: string;
   context: RequestContext;
 }): Promise<RequestContext> => {
+  // The worker and the pending entry are set up before awaiting the token, so a crash during the
+  // token round trip still rejects this call through the `error` listener rather than hanging.
+  const instance = getWorker();
   const id = `quickjs-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  return new Promise<RequestContext>((resolve, reject) => {
+  const result = new Promise<RequestContext>((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    getWorker().postMessage({ id, script, context });
   });
+
+  const authToken = await getTemplatingDbAuthToken();
+  instance.postMessage({ id, script, context, authToken });
+
+  return result;
 };

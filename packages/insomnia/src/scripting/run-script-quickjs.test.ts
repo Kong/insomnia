@@ -56,12 +56,23 @@ class FakeWorker {
 describe('runScriptInQuickJs (worker client)', () => {
   let fakeWorker: FakeWorker;
 
+  /**
+   * The client fetches the templating-db auth token over IPC before posting, so the postMessage
+   * lands a microtask later than the call. Awaiting this lets a test assert on `postedMessages`.
+   */
+  const flushTokenFetch = () => new Promise(resolve => setTimeout(resolve, 0));
+
   beforeEach(async () => {
     fakeWorker = new FakeWorker();
     vi.stubGlobal(
       'Worker',
       vi.fn(() => fakeWorker),
     );
+    // A Worker can't reach `window.main`, so the client fetches the bridge auth token here and
+    // forwards it in every message — see `getTemplatingDbAuthToken`.
+    vi.stubGlobal('window', {
+      main: { templatingDb: { getAuthToken: vi.fn().mockResolvedValue('test-auth-token') } },
+    });
     // The module keeps a lazily-created singleton worker at module scope — reset it between tests
     // by re-importing fresh so each test gets its own FakeWorker instance.
     vi.resetModules();
@@ -76,9 +87,13 @@ describe('runScriptInQuickJs (worker client)', () => {
     const context = baseContext();
 
     const promise = runScriptInQuickJs({ script: 'console.log(1)', context });
+    await flushTokenFetch();
     expect(fakeWorker.postedMessages).toHaveLength(1);
-    const { id } = fakeWorker.postedMessages[0];
+    const { id, authToken } = fakeWorker.postedMessages[0];
     expect(typeof id).toBe('string');
+    // Forwarded so the engine's sendRequest bridge can authenticate against the templating-db
+    // protocol; without it every bridge fetch comes back 401.
+    expect(authToken).toBe('test-auth-token');
 
     const result = { ...context, logs: ['log: 1\n'] };
     fakeWorker.emitMessage({ id, result });
@@ -91,6 +106,7 @@ describe('runScriptInQuickJs (worker client)', () => {
     const context = baseContext();
 
     const promise = runScriptInQuickJs({ script: 'throw new Error("boom")', context });
+    await flushTokenFetch();
     const { id } = fakeWorker.postedMessages[0];
     fakeWorker.emitMessage({ id, error: { message: 'boom', name: 'Error' } });
 
@@ -102,6 +118,7 @@ describe('runScriptInQuickJs (worker client)', () => {
     const context = baseContext();
 
     const promise = runScriptInQuickJs({ script: 'console.log(1)', context });
+    await flushTokenFetch();
     fakeWorker.emitMessage({ id: 'not-a-real-id', result: {} });
 
     const { id } = fakeWorker.postedMessages[0];
@@ -136,6 +153,7 @@ describe('runScriptInQuickJs (worker client)', () => {
     );
 
     const secondCall = runScriptInQuickJs({ script: 'console.log(1)', context });
+    await flushTokenFetch();
     expect(secondWorker.postedMessages).toHaveLength(1);
     const { id } = secondWorker.postedMessages[0];
     const result = { ...context, logs: [] };

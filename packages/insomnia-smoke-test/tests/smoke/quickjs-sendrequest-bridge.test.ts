@@ -6,15 +6,13 @@ import { test } from '../../playwright/test';
 // PR 2 of the QuickJS script-sandbox rollout plan —
 // https://gist.github.com/jackkav/3ebf8768bf84be024a3a138874919354
 //
-// KNOWN BUG (unresolved): insomnia.sendRequest() crashes under the real Electron/Worker/QuickJS
-// environment with `Aborted(Assertion failed: list_empty(&rt->gc_obj_list), at:
-// .../quickjs.c,2036,JS_FreeRuntime)` on the first real network round trip, even after three
-// targeted fixes (see quickjs-script-engine.ts's module doc comment and installSendRequestBridge).
-// This never reproduces in vitest (mocked fetch, or a plain Node http server) — only real Electron
-// fetch() timing inside the dedicated Worker reproduces it. `test.fail()` marks this as an expected
-// failure: CI stays green while the bug is open, and flips red (telling us to remove the
-// annotation) the moment someone actually fixes it.
-test.describe('QuickJS sendRequest bridge (known bug)', () => {
+// End-to-end cover for the `insomnia.sendRequest()` bridge: the real Electron protocol handler, the
+// real auth token (forwarded by run-script-quickjs.ts), and real curl. The teardown hazard this used
+// to crash on is covered far more cheaply by
+// `packages/insomnia/src/scripting/quickjs-script-engine.test.ts`'s "sendRequest bridge teardown"
+// block, which reproduces the `gc_obj_list` abort in vitest by settling the mocked fetch on a later
+// macrotask.
+test.describe('QuickJS sendRequest bridge', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test.beforeEach(async ({ app, page }) => {
@@ -48,8 +46,6 @@ test.describe('QuickJS sendRequest bridge (known bug)', () => {
   };
 
   test('runs a real sendRequest() round trip through the QuickJS engine', async ({ page, insomnia }) => {
-    test.fail(true, 'insomnia.sendRequest() crashes under real Electron/Worker timing — see file header comment');
-
     await enableQuickJsSandbox(page);
 
     // "testQueryParams" has no body and no folder-inherited after-response script — see

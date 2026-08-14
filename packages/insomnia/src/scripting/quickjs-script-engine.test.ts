@@ -200,12 +200,6 @@ describe('runScriptInQuickJs', () => {
   });
 });
 
-// KNOWN BUG (unresolved): a real sendRequest() round trip crashes under the real Electron/Worker
-// environment (see quickjs-script-engine.ts's module doc comment and
-// packages/insomnia-smoke-test/tests/smoke/quickjs-sendrequest-bridge.test.ts, which reproduces it
-// end to end). These unit tests mock `fetch` entirely, so they only cover the bridge's own request
-// normalization / response reconstruction / error propagation logic — they pass even though the
-// real-environment crash is still open, which is exactly the gap this WIP branch exists to flag.
 describe('runScriptInQuickJs sendRequest bridge', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -360,5 +354,132 @@ describe('runScriptInQuickJs sendRequest bridge', () => {
     });
 
     expect((result.environment.data as Record<string, unknown>).callbackError).toBe('DNS resolution failed');
+  });
+});
+
+/**
+ * `vm.newPromise()` allocates three JSValues — the promise plus its `resolve`/`reject` functions —
+ * and quickjs-emscripten frees the latter two only from inside `resolve()`/`reject()`. Disposing the
+ * runtime while a bridge promise is still pending therefore leaks two live function objects and
+ * trips QuickJS's `assert(list_empty(&rt->gc_obj_list))` in `JS_FreeRuntime`. That is a native
+ * Emscripten `abort()`, not a normal exception, so it takes down the whole script worker rather than
+ * surfacing as a script error.
+ *
+ * The earlier bridge tests can't catch it because a `mockResolvedValue` fetch settles inside the
+ * same microtask checkpoint as the call, so the deferred is always settled before teardown. These
+ * tests deliberately settle the fetch on a *later macrotask* — the only thing real Electron `fetch()`
+ * timing adds — and each one aborts the module without the teardown fix in `runScriptInQuickJs`.
+ */
+describe('runScriptInQuickJs sendRequest bridge teardown', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const stubSlowFetch = (delayMs: number) => {
+    const fetchMock = vi.fn().mockImplementation(
+      () =>
+        new Promise(resolve =>
+          setTimeout(
+            () =>
+              resolve({
+                ok: true,
+                status: 200,
+                text: () =>
+                  Promise.resolve(
+                    JSON.stringify({ code: 200, status: 'OK', headers: [], body: 'late', responseTime: delayMs }),
+                  ),
+              }),
+            delayMs,
+          ),
+        ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  };
+
+  it('tears down cleanly when the script never awaits its sendRequest', async () => {
+    stubSlowFetch(120);
+    const context = baseContext();
+
+    // Postman-style fire-and-forget: the script returns while the request is still in flight.
+    const result = await runScriptInQuickJs({
+      script: `
+        insomnia.sendRequest('https://example.com', () => {});
+        insomnia.environment.set('finished', true);
+      `,
+      context,
+    });
+
+    expect((result.environment.data as Record<string, unknown>).finished).toBe(true);
+
+    // The response lands after teardown; it must be a silent no-op rather than an abort or an
+    // unhandled QuickJSUseAfterFree rejection out of the settle callback.
+    await new Promise(resolve => setTimeout(resolve, 250));
+
+    // A later run proving the shared WASM module survived — after an Emscripten abort this throws.
+    const laterResult = await runScriptInQuickJs({
+      script: 'insomnia.environment.set("ranCleanly", true);',
+      context: baseContext(),
+    });
+    expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
+  });
+
+  it('tears down cleanly when the deadline fires while a sendRequest is in flight', async () => {
+    stubSlowFetch(2000);
+    const context = baseContext();
+    context.settings = { timeout: 100 } as any;
+
+    await expect(
+      runScriptInQuickJs({ script: `await insomnia.sendRequest('https://example.com');`, context }),
+    ).rejects.toThrow(/Executing script timeout: 100/);
+
+    const laterResult = await runScriptInQuickJs({
+      script: 'insomnia.environment.set("ranCleanly", true);',
+      context: baseContext(),
+    });
+    expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
+  });
+
+  it('tears down cleanly when only some of several sendRequests have settled', async () => {
+    let call = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(
+        () =>
+          new Promise(resolve =>
+            // First call answers immediately, second is still outstanding at teardown.
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  status: 200,
+                  text: () =>
+                    Promise.resolve(
+                      JSON.stringify({ code: 200, status: 'OK', headers: [], body: 'x', responseTime: 1 }),
+                    ),
+                }),
+              call++ === 0 ? 0 : 2000,
+            ),
+          ),
+      ),
+    );
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        const first = await insomnia.sendRequest('https://example.com/one');
+        insomnia.sendRequest('https://example.com/two', () => {});
+        insomnia.environment.set('firstBody', first.body);
+      `,
+      context,
+    });
+
+    expect((result.environment.data as Record<string, unknown>).firstBody).toBe('x');
+
+    const laterResult = await runScriptInQuickJs({
+      script: 'insomnia.environment.set("ranCleanly", true);',
+      context: baseContext(),
+    });
+    expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
   });
 });
