@@ -1,0 +1,43 @@
+import type { FC } from 'react';
+
+import type { EntityDiff } from './diff-engine';
+import { DiffCardShell, entityTypeLabel, formatValue, StatusBadge, ValueChange } from './shared';
+
+// Fallback card for entity types that don't have a dedicated visual layout yet.
+// Renders a bullet list of raw field changes rather than a purpose-built layout.
+export const GenericEntityDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+  return (
+    <DiffCardShell status={diff.status}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col">
+          <span className="font-semibold">{diff.name}</span>
+          <span className="text-xs text-(--hl)">{entityTypeLabel(diff.type)}</span>
+        </div>
+        <StatusBadge status={diff.status} />
+      </div>
+
+      {diff.status === 'added' && (
+        <pre className="overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-success)">
+          {formatValue(diff.after)}
+        </pre>
+      )}
+
+      {diff.status === 'removed' && (
+        <pre className="overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-danger)">
+          {formatValue(diff.before)}
+        </pre>
+      )}
+
+      {diff.status === 'modified' && (
+        <ul className="flex flex-col gap-2">
+          {diff.fieldChanges.map(change => (
+            <li key={change.path} className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-(--hl)">{change.label}</span>
+              <ValueChange before={change.before} after={change.after} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </DiffCardShell>
+  );
+};
