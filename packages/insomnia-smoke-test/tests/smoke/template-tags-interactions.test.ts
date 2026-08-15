@@ -148,6 +148,6 @@ test('Critical Path For Template Tags Interactions', async ({ page, app, insomni
   await insomnia.navigationSidebar.requestRow('Prompt Tag').click({ modifiers: ['ControlOrMeta'] });
   await page.getByText('Body', { exact: true }).click();
   const { tagPrefix } = templateTagTestCases.prompt[0];
-  await page.locator(`[data-template^="${tagPrefix}"]`).isVisible();
+  await expect(page.locator(`[data-template^="${tagPrefix}"]`)).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 });
