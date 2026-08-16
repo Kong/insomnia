@@ -133,148 +133,156 @@ jobs:
         with:
           path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
 
-      - name: Create Tag and Release
-        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
-        id: core_tag_and_release
+      # - name: Create Tag and Release
+      #   uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
+      #   id: core_tag_and_release
+      #   with:
+      #     tag: ${{ env.RELEASE_CORE_TAG }}
+      #     name: '${{ env.RELEASE_VERSION }} 📦'
+      #     generateReleaseNotes: true
+      #     commit: ${{ env.RELEASE_BRANCH }}
+      #     prerelease: ${{ env.IS_PRERELEASE }}
+      #     draft: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Upload artifacts to release
+      #   uses: xresloader/upload-to-github-release@7c5757a90c0bcf0c0e1741da8f2abd7b85e675d0 # v1.6.2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     release_id: ${{ steps.core_tag_and_release.outputs.id }}
+      #     tag_name: ${{ env.RELEASE_CORE_TAG }}
+      #     file: './artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json'
+      #     prerelease: ${{ env.IS_PRERELEASE }}
+      #     draft: false
+      #     overwrite: true
+
+      # - name: Upload sourcemaps to Sentry
+      #   env:
+      #     SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
+      #     SENTRY_ORG: '${{ secrets.SENTRY_ORG }}'
+      #     SENTRY_PROJECT: '${{ secrets.SENTRY_PROJECT }}'
+      #   run: |
+      #     curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
+
+      #     sentry-cli releases new ${{ env.RELEASE_VERSION }}
+      #     sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
+      #     sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/macOS-X64-sentry
+
+      # # TODO: also take care of aarch64 image
+      # - name: Load the Inso CLI Docker Archive
+      #   run: |
+      #     docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+      #     docker image ls
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      #   with:
+      #     username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      #     password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+      # - name: Docker meta for Inso CLI Docker Image
+      #   id: inso_docker_meta
+      #   uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
+      #   with:
+      #     images: ${{ env.INSO_DOCKER_IMAGE }}
+      #     tags: |
+      #       type=raw,value=${{ env.RELEASE_VERSION }},priority=1000
+      #       type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
+      #       type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
+      #       type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
+      #     sep-tags: ','
+
+      # - name: Push Inso CLI docker image tags to Docker Hub
+      #   run: |
+      #     for tag in ${IMAGE_TAGS//,/ }; do \
+      #       docker tag insomnia-inso:temp $tag
+      #       docker push $tag; \
+      #     done
+      #   env:
+      #     IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
+
+      # # Setup regctl to parse platform specific image digest from image manifest
+      # - name: Install regctl
+      #   uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183 # main
+
+      # # The image manifest digest/sha is generated only after the image is published to registry
+      # - name: Parse architecture specific digest from image manifest
+      #   id: image_manifest_metadata
+      #   run: |
+      #     INSO_IMAGE=${{ env.INSO_DOCKER_IMAGE }}:${{ steps.inso_docker_meta.outputs.version }}
+      #     inso_image_sha="$(regctl image digest "${INSO_IMAGE}")"
+      #     echo "inso_image_sha=${inso_image_sha}" >> $GITHUB_OUTPUT
+
+      # # Signing images requires image manifest digest
+      # - name: Sign images
+      #   id: sign_images
+      #   if: ${{ steps.image_manifest_metadata.outputs.inso_image_sha != '' }}
+      #   uses: Kong/public-shared-actions/security-actions/sign-docker-image@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
+      #   with:
+      #     image_digest: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
+      #     tags: ${{ steps.inso_docker_meta.outputs.tags }}
+      #     registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      #     registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      #     # Optional: Central notary repository for image signatures
+      #     signature_registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      #     signature_registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      #     signature_registry: ${{ env.NOTARY_REPOSITORY }}
+
+      # - name: Publish beta/stable of Insomnia to Insomnia API
+      #   if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+      #   run: |
+      #     curl \
+      #       --fail \
+      #       --request POST \
+      #       --url $INSOMNIA_API_URL/v1/releases \
+      #       --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+      #       --header "Content-Type: application/json" \
+      #       --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+      #   env:
+      #     INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+      #     INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+      #     RELEASE_APP: com.insomnia.app
+      #     RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+      #     RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+
+      # - name: Publish beta/stable of inso to Insomnia API
+      #   if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+      #   run: |
+      #     curl \
+      #       --fail \
+      #       --request POST \
+      #       --url $INSOMNIA_API_URL/v1/releases \
+      #       --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+      #       --header "Content-Type: application/json" \
+      #       --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+      #   env:
+      #     INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+      #     INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+      #     RELEASE_APP: com.insomnia.inso
+      #     RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+      #     RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+
+      # - name: Upload x64 Linux snap to snapcraft (beta and stable only)
+      #   if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+      #   env:
+      #     SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
+      #     SNAP_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+      #   # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
+      #   run: |
+      #     sudo snap install snapcraft --classic
+      #     snapcraft upload \
+      #       --release="$SNAP_CHANNEL" \
+      #       "artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap"
+
+      - name: Get Cloudsmith OIDC token
+        id: cloudsmith_token
+        uses: cloudsmith-io/cloudsmith-cli-action@18665afcce9f859312b61989671af9af7402e4fb # v2.0.2
         with:
-          tag: ${{ env.RELEASE_CORE_TAG }}
-          name: '${{ env.RELEASE_VERSION }} 📦'
-          generateReleaseNotes: true
-          commit: ${{ env.RELEASE_BRANCH }}
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts to release
-        uses: xresloader/upload-to-github-release@7c5757a90c0bcf0c0e1741da8f2abd7b85e675d0 # v1.6.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: ${{ steps.core_tag_and_release.outputs.id }}
-          tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: './artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json'
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
-          overwrite: true
-
-      - name: Upload sourcemaps to Sentry
-        env:
-          SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
-          SENTRY_ORG: '${{ secrets.SENTRY_ORG }}'
-          SENTRY_PROJECT: '${{ secrets.SENTRY_PROJECT }}'
-        run: |
-          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
-
-          sentry-cli releases new ${{ env.RELEASE_VERSION }}
-          sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
-          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/macOS-X64-sentry
-
-      # TODO: also take care of aarch64 image
-      - name: Load the Inso CLI Docker Archive
-        run: |
-          docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
-          docker image ls
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          username: ${{ secrets.DOCKER_REGISTRY_USER }}
-          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-
-      - name: Docker meta for Inso CLI Docker Image
-        id: inso_docker_meta
-        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
-        with:
-          images: ${{ env.INSO_DOCKER_IMAGE }}
-          tags: |
-            type=raw,value=${{ env.RELEASE_VERSION }},priority=1000
-            type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
-            type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
-            type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ','
-
-      - name: Push Inso CLI docker image tags to Docker Hub
-        run: |
-          for tag in ${IMAGE_TAGS//,/ }; do \
-            docker tag insomnia-inso:temp $tag
-            docker push $tag; \
-          done
-        env:
-          IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
-
-      # Setup regctl to parse platform specific image digest from image manifest
-      - name: Install regctl
-        uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183 # main
-
-      # The image manifest digest/sha is generated only after the image is published to registry
-      - name: Parse architecture specific digest from image manifest
-        id: image_manifest_metadata
-        run: |
-          INSO_IMAGE=${{ env.INSO_DOCKER_IMAGE }}:${{ steps.inso_docker_meta.outputs.version }}
-          inso_image_sha="$(regctl image digest "${INSO_IMAGE}")"
-          echo "inso_image_sha=${inso_image_sha}" >> $GITHUB_OUTPUT
-
-      # Signing images requires image manifest digest
-      - name: Sign images
-        id: sign_images
-        if: ${{ steps.image_manifest_metadata.outputs.inso_image_sha != '' }}
-        uses: Kong/public-shared-actions/security-actions/sign-docker-image@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
-        with:
-          image_digest: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
-          tags: ${{ steps.inso_docker_meta.outputs.tags }}
-          registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
-          registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-          # Optional: Central notary repository for image signatures
-          signature_registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
-          signature_registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-          signature_registry: ${{ env.NOTARY_REPOSITORY }}
-
-      - name: Publish beta/stable of Insomnia to Insomnia API
-        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        run: |
-          curl \
-            --fail \
-            --request POST \
-            --url $INSOMNIA_API_URL/v1/releases \
-            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
-            --header "Content-Type: application/json" \
-            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
-        env:
-          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
-          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
-          RELEASE_APP: com.insomnia.app
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
-
-      - name: Publish beta/stable of inso to Insomnia API
-        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        run: |
-          curl \
-            --fail \
-            --request POST \
-            --url $INSOMNIA_API_URL/v1/releases \
-            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
-            --header "Content-Type: application/json" \
-            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
-        env:
-          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
-          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
-          RELEASE_APP: com.insomnia.inso
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
-
-      - name: Upload x64 Linux snap to snapcraft (beta and stable only)
-        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
-          SNAP_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
-        # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
-        run: |
-          sudo snap install snapcraft --classic
-          snapcraft upload \
-            --release="$SNAP_CHANNEL" \
-            "artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap"
+          oidc-namespace: ${{ vars.CLOUDSMITH_NAMESPACE }}
+          oidc-service-slug: ${{ secrets.CLOUDSMITH_SERVICE_SLUG }}
+          oidc-auth-only: true
 
       - name: Get Cloudsmith OIDC token
         if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
