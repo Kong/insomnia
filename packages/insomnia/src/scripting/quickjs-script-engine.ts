@@ -195,7 +195,45 @@ const DANGEROUS_BRIDGE_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 const SEND_REQUEST_ENDPOINT = 'insomnia-templating-worker-database://network.sendrequestwithoutsideeffects';
 const TEMPLATING_DB_AUTH_HEADER = 'x-insomnia-templating-auth';
 
+// insomnia.sendRequest()'s own doc comment above says this sandbox's request bridge supports only
+// a plain-text body -- "no auth, client certificates, cookies, or multipart/urlencoded bodies yet"
+// -- and the BOOTSTRAP wrapper only ever builds `{ mimeType: 'text/plain', text }`. That's guest-side
+// JS, though, not an enforcement boundary: a script can skip the wrapper and call the raw
+// `__sendRequest` global directly with a body of its own choosing. `network.sendRequestWithoutSideEffects`
+// (the shared host handler this bridges to) forwards a `body` unvalidated to `curlRequest`, and a
+// multipart body's file parts are read straight off disk by `buildMultipart` with no ownership/
+// allowlist check at all -- unlike every other local-file read reachable from a request definition.
+// That handler is also the one the legacy hidden-window script sandbox and the template-tag sandbox
+// use, each with its own, already-privileged execution model, so the fix belongs here, at this
+// QuickJS-specific bridge boundary, rather than in the shared handler itself.
+const SUPPORTED_SEND_REQUEST_BODY_MIME_TYPE = 'text/plain';
+
+const assertSupportedSendRequestBody = (requestBodyJson: string): void => {
+  let parsed: { options?: { request?: { body?: unknown } } };
+  try {
+    parsed = JSON.parse(requestBodyJson);
+  } catch {
+    // Malformed JSON fails downstream (the real handler's own JSON.parse) in the normal way.
+    return;
+  }
+  const body = parsed?.options?.request?.body;
+  if (body === undefined || body === null) {
+    return;
+  }
+  const { mimeType, ...rest } = (body ?? {}) as { mimeType?: unknown; [key: string]: unknown };
+  const hasUnsupportedShape =
+    typeof body !== 'object' ||
+    (mimeType !== undefined && mimeType !== SUPPORTED_SEND_REQUEST_BODY_MIME_TYPE) ||
+    Object.keys(rest).some(key => key !== 'text');
+  if (hasUnsupportedShape) {
+    throw new Error(
+      'insomnia.sendRequest() only supports a plain-text request body in the QuickJS sandbox — file uploads, multipart, and urlencoded form bodies are not supported.',
+    );
+  }
+};
+
 const sendRequestViaFetch = async (requestBodyJson: string, authToken?: string): Promise<Record<string, unknown>> => {
+  assertSupportedSendRequestBody(requestBodyJson);
   const resp = await fetch(SEND_REQUEST_ENDPOINT, {
     method: 'post',
     headers: authToken ? { [TEMPLATING_DB_AUTH_HEADER]: authToken } : undefined,
