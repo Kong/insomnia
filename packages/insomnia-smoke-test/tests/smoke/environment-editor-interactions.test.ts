@@ -241,8 +241,13 @@ test.describe('Environment Editor', () => {
     await exampleStringRow.getByRole('button', { name: 'Disable Row' }).click();
     await expect.soft(exampleStringRow).toHaveCSS('opacity', '0.4');
 
+    // wait for the disable-row edit's persistence to round-trip (Close is disabled while it's
+    // in-flight) before closing - clicking Close while it's still disabled is a no-op click
+    const closeButton = page.getByRole('button', { name: 'Close', exact: true });
+    await expect.soft(closeButton).toBeEnabled();
+
     // close the editor and wait for it to fully disappear
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    await closeButton.click();
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
     // dismiss the environment picker dropdown if it appeared
