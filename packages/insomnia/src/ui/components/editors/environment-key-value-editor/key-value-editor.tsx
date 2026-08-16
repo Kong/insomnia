@@ -32,6 +32,10 @@ import { PasswordInput } from './password-input';
 
 interface EditorProps {
   data: EnvironmentKvPairData[];
+  // Monotonic revision (e.g. the owning model's `modified` timestamp) tied to `data`. Lets
+  // the resync effect below tell a genuinely newer update apart from a stale one that was
+  // merely slow to arrive - see the effect for why that distinction matters.
+  dataRevision?: number;
   onChange: (newPair: EnvironmentKvPairData[]) => void;
   vaultKey?: string;
   isPrivate?: boolean;
@@ -64,6 +68,7 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
 
 export const EnvironmentKVEditor = ({
   data,
+  dataRevision,
   onChange,
   vaultKey = '',
   isPrivate = false,
@@ -88,10 +93,21 @@ export const EnvironmentKVEditor = ({
   // ourselves; the effect below still re-syncs from `data` for changes that didn't originate
   // here (e.g. switching to a different environment).
   const [persistedPairs, setPersistedPairs] = useState<EnvironmentKvPairData[]>(() => dedupe(data));
+  // Tracks the newest dataRevision this component has actually applied. `data` updates land
+  // via async fetcher/loader round-trips that don't resolve in submission order - an edit
+  // committed here can trigger a revalidation that overtakes an earlier, still-in-flight one
+  // (e.g. Delete All's own revalidation arriving after a faster edit that landed on top of
+  // it). Without this guard, that late/stale delivery would resync persistedPairs backwards,
+  // silently reintroducing rows the user already replaced or removed.
+  const lastAppliedRevisionRef = useRef(dataRevision);
   useEffect(() => {
+    if (dataRevision !== undefined && lastAppliedRevisionRef.current !== undefined && dataRevision < lastAppliedRevisionRef.current) {
+      return;
+    }
+    lastAppliedRevisionRef.current = dataRevision;
     setPersistedPairs(dedupe(data));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(data)]);
+  }, [JSON.stringify(data), dataRevision]);
   const commitPairs = (next: EnvironmentKvPairData[]) => {
     setPersistedPairs(next);
     onChange(next);

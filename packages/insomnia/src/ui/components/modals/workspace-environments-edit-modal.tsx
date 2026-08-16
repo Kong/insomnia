@@ -533,6 +533,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                     <EnvironmentKVEditor
                       key={selectedEnvironment._id}
                       data={selectedEnvironment.kvPairData || []}
+                      dataRevision={selectedEnvironment.modified}
                       onChange={handleKVPairChange}
                     />
                   )}
