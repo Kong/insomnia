@@ -25,11 +25,16 @@ const baseContext = (): RequestContext => ({
  */
 class FakeWorker {
   postedMessages: any[] = [];
+  terminated = false;
   private messageListeners: ((event: { data: any }) => void)[] = [];
   private errorListeners: ((event: { message: string }) => void)[] = [];
 
   postMessage(data: any) {
     this.postedMessages.push(data);
+  }
+
+  terminate() {
+    this.terminated = true;
   }
 
   addEventListener(type: string, listener: any) {
@@ -56,12 +61,23 @@ class FakeWorker {
 describe('runScriptInQuickJs (worker client)', () => {
   let fakeWorker: FakeWorker;
 
+  /**
+   * The client fetches the templating-db auth token over IPC before posting, so the postMessage
+   * lands a microtask later than the call. Awaiting this lets a test assert on `postedMessages`.
+   */
+  const flushTokenFetch = () => new Promise(resolve => setTimeout(resolve, 0));
+
   beforeEach(async () => {
     fakeWorker = new FakeWorker();
     vi.stubGlobal(
       'Worker',
       vi.fn(() => fakeWorker),
     );
+    // A Worker can't reach `window.main`, so the client fetches the bridge auth token here and
+    // forwards it in every message — see `getTemplatingDbAuthToken`.
+    vi.stubGlobal('window', {
+      main: { templatingDb: { getAuthToken: vi.fn().mockResolvedValue('test-auth-token') } },
+    });
     // The module keeps a lazily-created singleton worker at module scope — reset it between tests
     // by re-importing fresh so each test gets its own FakeWorker instance.
     vi.resetModules();
@@ -76,9 +92,13 @@ describe('runScriptInQuickJs (worker client)', () => {
     const context = baseContext();
 
     const promise = runScriptInQuickJs({ script: 'console.log(1)', context });
+    await flushTokenFetch();
     expect(fakeWorker.postedMessages).toHaveLength(1);
-    const { id } = fakeWorker.postedMessages[0];
+    const { id, authToken } = fakeWorker.postedMessages[0];
     expect(typeof id).toBe('string');
+    // Forwarded so the engine's sendRequest bridge can authenticate against the templating-db
+    // protocol; without it every bridge fetch comes back 401.
+    expect(authToken).toBe('test-auth-token');
 
     const result = { ...context, logs: ['log: 1\n'] };
     fakeWorker.emitMessage({ id, result });
@@ -91,6 +111,7 @@ describe('runScriptInQuickJs (worker client)', () => {
     const context = baseContext();
 
     const promise = runScriptInQuickJs({ script: 'throw new Error("boom")', context });
+    await flushTokenFetch();
     const { id } = fakeWorker.postedMessages[0];
     fakeWorker.emitMessage({ id, error: { message: 'boom', name: 'Error' } });
 
@@ -102,6 +123,7 @@ describe('runScriptInQuickJs (worker client)', () => {
     const context = baseContext();
 
     const promise = runScriptInQuickJs({ script: 'console.log(1)', context });
+    await flushTokenFetch();
     fakeWorker.emitMessage({ id: 'not-a-real-id', result: {} });
 
     const { id } = fakeWorker.postedMessages[0];
@@ -136,11 +158,68 @@ describe('runScriptInQuickJs (worker client)', () => {
     );
 
     const secondCall = runScriptInQuickJs({ script: 'console.log(1)', context });
+    await flushTokenFetch();
     expect(secondWorker.postedMessages).toHaveLength(1);
     const { id } = secondWorker.postedMessages[0];
     const result = { ...context, logs: [] };
     secondWorker.emitMessage({ id, result });
 
     await expect(secondCall).resolves.toEqual(result);
+  });
+
+  // The engine reports `engineFaulted` when tearing a context down aborted the WASM module (upstream
+  // quickjs-emscripten#269). The run itself is complete and must still resolve; the worker caching
+  // that module has to go.
+  describe('engine fault handling', () => {
+    it('still resolves the run, then retires the worker', async () => {
+      const { runScriptInQuickJs } = await import('./run-script-quickjs');
+      const context = baseContext();
+
+      const promise = runScriptInQuickJs({ script: 'await big()', context });
+      await flushTokenFetch();
+      const { id } = fakeWorker.postedMessages[0];
+      const result = { ...context, logs: ['warn: QuickJS engine faulted…\n'] };
+      fakeWorker.emitMessage({ id, result, engineFaulted: true });
+
+      await expect(promise).resolves.toEqual(result);
+      expect(fakeWorker.terminated).toBe(true);
+
+      // The next call must not reuse the faulted worker.
+      const nextWorker = new FakeWorker();
+      vi.stubGlobal(
+        'Worker',
+        vi.fn(() => nextWorker),
+      );
+      const nextCall = runScriptInQuickJs({ script: 'console.log(1)', context });
+      await flushTokenFetch();
+      expect(nextWorker.postedMessages).toHaveLength(1);
+      const next = { ...context, logs: [] };
+      nextWorker.emitMessage({ id: nextWorker.postedMessages[0].id, result: next });
+      await expect(nextCall).resolves.toEqual(next);
+    });
+
+    it('waits for a concurrent run to finish before terminating the faulted worker', async () => {
+      const { runScriptInQuickJs } = await import('./run-script-quickjs');
+      const context = baseContext();
+
+      // Two scripts in flight on the same worker — `self.onmessage` does not serialize.
+      const first = runScriptInQuickJs({ script: 'await big()', context });
+      const second = runScriptInQuickJs({ script: 'console.log(2)', context });
+      await flushTokenFetch();
+      expect(fakeWorker.postedMessages).toHaveLength(2);
+      const [firstMsg, secondMsg] = fakeWorker.postedMessages;
+
+      const firstResult = { ...context, logs: [] };
+      fakeWorker.emitMessage({ id: firstMsg.id, result: firstResult, engineFaulted: true });
+      await expect(first).resolves.toEqual(firstResult);
+
+      // Terminating now would strand `second`, so the worker stays alive until it drains.
+      expect(fakeWorker.terminated).toBe(false);
+
+      const secondResult = { ...context, logs: ['log: 2\n'] };
+      fakeWorker.emitMessage({ id: secondMsg.id, result: secondResult });
+      await expect(second).resolves.toEqual(secondResult);
+      expect(fakeWorker.terminated).toBe(true);
+    });
   });
 });
