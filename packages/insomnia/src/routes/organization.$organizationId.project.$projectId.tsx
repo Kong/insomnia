@@ -9,7 +9,6 @@ import * as reactUse from 'react-use';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { logout } from '~/ui/account/session';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
@@ -23,7 +22,7 @@ import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -151,13 +150,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [searchParams] = useSearchParams();
   const { activeProject, learningFeaturePromise } = loaderData;
 
-  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = reactUse.useLocalStorage(
     'learning-feature-dismissed',
     '',
   );
-  const { storagePromise } = storageRuleFetcher.data || {};
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+  const storageRules = useOrganizationStorageRule(organizationId);
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { isSidebarCollapsed } = useSidebarContext();
