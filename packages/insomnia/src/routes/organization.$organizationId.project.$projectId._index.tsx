@@ -101,6 +101,15 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
   }, [localFiles, remoteFiles]);
 
+  console.log(
+    '[remote files] all files',
+    allFiles.length,
+    'local files',
+    localFiles.length,
+    'remote files',
+    remoteFiles?.length,
+  );
+
   const { userSession } = useRootLoaderData()!;
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
   const loadingBackendProjects = useFetchers()

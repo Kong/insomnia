@@ -1,7 +1,9 @@
-import type { RemoteProject } from 'insomnia-data';
+import type { BaseModel, RemoteProject } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 
+import { invariant } from '~/common/utils/invariant';
 import type { VCS } from '~/main/cloud-sync/core/vcs';
+import { reconcileBackendProjectRootDocumentId } from '~/main/cloud-sync/root-document-id';
 import { interceptAccessError } from '~/sync/access-error';
 import type { BackendProjectWithTeam } from '~/sync/types';
 
@@ -50,15 +52,29 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
     projectId: remoteProject._id,
   }); // There won't be any existing docs since it's a new pull
 
+  const documents = (((await vcs.allDocuments()) as unknown as (BaseModel | null)[] | null) || []).filter(
+    (doc): doc is BaseModel => doc !== null,
+  );
+  const workspaces = documents.filter(models.workspace.isWorkspace);
+
+  // Validate before touching the database. A snapshot that does not describe exactly one workspace
+  // cannot produce a collection, and writing its other documents first would leave them orphaned.
+  invariant(
+    workspaces.length === 1,
+    `Backend project ${backendProject.id} has ${workspaces.length} workspaces in its latest snapshot, expected exactly 1`,
+  );
+
+  // The workspace identity comes from the snapshot, not from backendProject.rootDocumentId. When
+  // the two disagree the local pointer is repaired so this collection stays attached to its history.
+  const workspaceId = workspaces[0]._id;
+  await reconcileBackendProjectRootDocumentId({ vcs, backendProject, workspaceId });
+
   const flushId = await database.bufferChanges();
-  let workspaceId;
-  // @ts-expect-error -- TSCONVERSION
-  for (const doc of (await vcs.allDocuments()) || []) {
+  for (const doc of documents) {
     // When we pull a BackendProject we need to update the parent ID of the workspace so that it appears inside.
     // There can't be more than one workspace.
     if (models.workspace.isWorkspace(doc)) {
       doc.parentId = remoteProject._id;
-      workspaceId = doc._id;
     }
     // ProjectLintRuleset is parented to the project, whose _id is not stable across machines,
     // so its parentId is normalized to null in sync transit. Re-parent it to the local project.

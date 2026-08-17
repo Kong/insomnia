@@ -181,6 +181,7 @@ const sync: SyncBridgeAPI = {
   merge: (...args) => invokeSyncMethod('merge', ...args),
   pull: (...args) => invokeSyncMethod('pull', ...args),
   pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
+  reconcileLocalBackendProjects: () => invokeWithNormalizedError('sync.reconcileLocalBackendProjects'),
   push: (...args) => invokeSyncMethod('push', ...args),
   remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
   remoteBackendProjectsOfTeam: (...args) => invokeSyncMethod('remoteBackendProjectsOfTeam', ...args),

@@ -13,6 +13,7 @@ import type {
 
 import type { Operation } from '../../common/database';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { repairLocalBackendProjectRootDocuments } from './root-document-id';
 import {
   cancelPendingSyncConflict,
   invokeMainVCS,
@@ -58,6 +59,12 @@ export interface SyncBridgeMethods {
 export interface SyncBridgeAPI extends SyncBridgeMethods {
   getActiveBackendProject: () => Promise<BackendProject | null>;
   hasBackendProject: () => Promise<boolean>;
+  /**
+   * Repair local backend projects whose `rootDocumentId` no longer resolves to a workspace, then
+   * return the current local backend projects. Prefer this over `localBackendProjects` when the
+   * result is used to decide whether a remote collection still needs pulling.
+   */
+  reconcileLocalBackendProjects: () => Promise<BackendProject[]>;
   pullRemoteBackendProject: (options: PullRemoteBackendProjectOptions) => Promise<{
     projectId: string;
     workspaceId: string;
@@ -73,6 +80,10 @@ export const registerSyncHandlers = () => {
 
   ipcMainHandle('sync.pullRemoteBackendProject', (event, options: PullRemoteBackendProjectOptions) => {
     return pullRemoteBackendProjectWithSingleton(event.sender, options);
+  });
+
+  ipcMainHandle('sync.reconcileLocalBackendProjects', () => {
+    return repairLocalBackendProjectRootDocuments();
   });
 
   ipcMainOn('sync.resolveConflict', (event, options: { handlerId: string; conflicts: MergeConflict[] }) => {

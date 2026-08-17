@@ -3,6 +3,7 @@
 // - [ ] Make sure that pull handles updating the parentId to the current project._id
 import crypto from 'node:crypto';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 import clone from 'clone';
 import { runVcsGraphQL } from 'insomnia-api';
@@ -242,6 +243,45 @@ export class VCS {
       // A backend project is guaranteed to exist on exactly one team
       team: backend.teams[0],
     }));
+  }
+
+  /**
+   * State of the latest snapshot on the given backend project's current branch.
+   *
+   * Addresses the store directly instead of going through the `_get*` helpers, which all derive
+   * their paths from the active backend project. That keeps this read-only in both senses: it never
+   * touches `_backendProject`, so it is safe to call while another operation is in flight, and it
+   * never creates anything on the way (`_getHead` writes a default head, `_getOrCreateBranch`
+   * writes an empty branch).
+   *
+   * Returns an empty state when the project, its head, its branch or its snapshot is missing locally.
+   */
+  async latestSnapshotStateForBackendProject(backendProjectId: string): Promise<SnapshotState> {
+    const head: Head | null = await this._store.getItem(`/projects/${backendProjectId}/head.json`);
+
+    if (!head?.branch) {
+      return [];
+    }
+
+    // _storeBranch lowercases the filename but _getBranch does not, so prefer the name as written
+    // and fall back to the un-lowercased form for anything stored before that.
+    const branchesPath = `/projects/${backendProjectId}/branches`;
+    const encodedBranchName = encodeBranchName(head.branch);
+    const branch: Branch | null =
+      (await this._store.getItem(`${branchesPath}/${encodedBranchName.toLowerCase()}.json`)) ??
+      (await this._store.getItem(`${branchesPath}/${encodedBranchName}.json`));
+
+    const latestSnapshotId = branch?.snapshots?.[branch.snapshots.length - 1];
+
+    if (!latestSnapshotId) {
+      return [];
+    }
+
+    const snapshot: Snapshot | null = await this._store.getItem(
+      `/projects/${backendProjectId}/snapshots/${latestSnapshotId}.json`,
+    );
+
+    return snapshot?.state || [];
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -1127,6 +1167,11 @@ export class VCS {
         const encryptedResult = JSON.parse(blob.content);
         result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
       }
+    }
+
+    for (const [id, content] of Object.entries(result)) {
+      const decompressed = zlib.gunzipSync(content);
+      console.log(`[sync] Blob ${id}:`, decompressed.toString('utf8'));
     }
 
     return result;
