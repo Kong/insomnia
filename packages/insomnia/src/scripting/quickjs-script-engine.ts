@@ -29,11 +29,19 @@ export const runScriptInQuickJs = async ({
   script,
   context,
   authToken,
+  onEngineFault,
 }: {
   script: string;
   context: RequestContext;
   /** Auth token for the `insomnia-templating-worker-database://` bridge — required for sendRequest. */
   authToken?: string;
+  /**
+   * Called when tearing the VM down aborts the WASM module — see `ENGINE_FAULT_MESSAGE`. The script
+   * itself already finished, so the run still returns its result; this is the signal to replace the
+   * engine rather than keep using a module that has aborted. Always fires when it happens, including
+   * on the error/timeout path.
+   */
+  onEngineFault?: (error: Error) => void;
 }): Promise<RequestContext> => {
   const QuickJS = await getQuickJSModule();
   const vm = QuickJS.newContext();
@@ -84,7 +92,18 @@ export const runScriptInQuickJs = async ({
     // already-settled deferreds still in the set are harmless.
     pendingDeferreds.forEach(deferred => deferred.dispose());
     pendingDeferreds.clear();
-    vm.dispose();
+    try {
+      vm.dispose();
+    } catch (err) {
+      // A known defect in quickjs-emscripten's WASM build (upstream issue #269) aborts the module
+      // here when the script allocated heavily after its first `await` — see ENGINE_FAULT_MESSAGE.
+      // The script has already run and everything we return is plain host-side JS, so swallowing
+      // this yields a complete result instead of destroying the run. Catching inside `finally` also
+      // means a genuine script error or timeout from the `try` above still wins.
+      const fault = err instanceof Error ? err : new Error(String(err));
+      scriptConsole.warn(ENGINE_FAULT_MESSAGE, fault.message);
+      onEngineFault?.(fault);
+    }
   }
 
   return {
@@ -101,6 +120,20 @@ export const runScriptInQuickJs = async ({
     logs: scriptConsole.dumpLogsAsArray(),
   };
 };
+
+/**
+ * Prefixes the warning a script sees when its run tripped the known WASM-build abort.
+ *
+ * Allocating ~100k+ objects after the script's first `await` — which a multi-megabyte
+ * `insomnia.sendRequest()` response body does on its own — leaves QuickJS's runtime un-freeable, and
+ * `JS_FreeRuntime` then aborts on `assert(list_empty(&rt->gc_obj_list))`. The same allocation done
+ * synchronously is fine at several times the size. It is a defect in quickjs-emscripten's *WASM
+ * build* rather than in QuickJS: the identical vendored engine source, built natively, is clean well
+ * past the failing size at every optimization level. Tracked upstream as
+ * https://github.com/justjake/quickjs-emscripten/issues/269.
+ */
+const ENGINE_FAULT_MESSAGE =
+  'The QuickJS engine faulted while cleaning up after this script, a known issue with large amounts of data handled after an await. The script finished and its results are intact; the engine will be replaced before the next run.';
 
 const unsupportedApiMessage = (name: string): string =>
   `${name} is not supported yet by the QuickJS sandbox (proof of concept). Disable "Use QuickJS sandbox for scripts" in Settings > Scripting to use it.`;
@@ -123,14 +156,25 @@ globalThis.insomnia = {
     return value;
   })(JSON.parse(__requestJSON)),
   sendRequest: (request, callback) => {
+    const normalizeHeaders = (raw) => {
+      if (Array.isArray(raw)) {
+        // Scripting-environment RequestOptions.header entries use {key, value}; accept {name, value}
+        // too since that's the shape the bridge itself (and the hidden-window Response) already uses.
+        return raw.map((h) => ({ name: h.name ?? h.key, value: String(h.value) }));
+      }
+      if (raw && typeof raw === 'object') {
+        return Object.entries(raw).map(([name, value]) => ({ name, value: String(value) }));
+      }
+      return [];
+    };
     const normalized = typeof request === 'string'
       ? { url: request, method: 'GET', headers: [] }
       : {
-          url: request.url,
+          // request.url may be a Url-like object (per RequestOptions); the host handler needs a string.
+          url: String(request.url),
           method: request.method || 'GET',
-          headers: Array.isArray(request.headers)
-            ? request.headers
-            : Object.entries(request.headers || {}).map(([name, value]) => ({ name, value: String(value) })),
+          // RequestOptions calls this field "header" (singular); accept the plural too.
+          headers: normalizeHeaders(request.headers ?? request.header),
           body: request.body !== undefined ? { mimeType: 'text/plain', text: String(request.body) } : undefined,
         };
     const bodyJson = JSON.stringify({ options: { request: normalized, caCertficatePath: null } });
@@ -153,7 +197,7 @@ globalThis.insomnia = {
     if (typeof callback === 'function') {
       promise.then(
         (response) => callback(undefined, response),
-        (err) => callback(err.message),
+        (err) => callback(err && err.message ? err.message : String(err)),
       );
       return undefined;
     }
@@ -239,11 +283,27 @@ const sendRequestViaFetch = async (requestBodyJson: string, authToken?: string):
     headers: authToken ? { [TEMPLATING_DB_AUTH_HEADER]: authToken } : undefined,
     body: requestBodyJson,
   });
-  const parsed = JSON.parse(await resp.text());
-  if (!resp.ok) {
-    throw new Error(typeof parsed?.error === 'string' ? parsed.error : `sendRequest failed with status ${resp.status}`);
+  const text = await resp.text();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    // A non-JSON body (e.g. an empty response, or an HTML error page from something in front of the
+    // protocol handler) would otherwise surface as an opaque SyntaxError that masks the real status.
+    throw new Error(
+      resp.ok
+        ? `sendRequest received a non-JSON response: ${text.slice(0, 200)}`
+        : `sendRequest failed with status ${resp.status}`,
+    );
   }
-  return parsed;
+  if (!resp.ok) {
+    const errorMessage =
+      typeof (parsed as { error?: unknown })?.error === 'string'
+        ? (parsed as { error: string }).error
+        : `sendRequest failed with status ${resp.status}`;
+    throw new Error(errorMessage);
+  }
+  return parsed as Record<string, unknown>;
 };
 
 /** Registers the async `__sendRequest(bodyJson)` bridge backing `insomnia.sendRequest()` in BOOTSTRAP. */

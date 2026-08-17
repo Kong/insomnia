@@ -25,11 +25,16 @@ const baseContext = (): RequestContext => ({
  */
 class FakeWorker {
   postedMessages: any[] = [];
+  terminated = false;
   private messageListeners: ((event: { data: any }) => void)[] = [];
   private errorListeners: ((event: { message: string }) => void)[] = [];
 
   postMessage(data: any) {
     this.postedMessages.push(data);
+  }
+
+  terminate() {
+    this.terminated = true;
   }
 
   addEventListener(type: string, listener: any) {
@@ -160,5 +165,61 @@ describe('runScriptInQuickJs (worker client)', () => {
     secondWorker.emitMessage({ id, result });
 
     await expect(secondCall).resolves.toEqual(result);
+  });
+
+  // The engine reports `engineFaulted` when tearing a context down aborted the WASM module (upstream
+  // quickjs-emscripten#269). The run itself is complete and must still resolve; the worker caching
+  // that module has to go.
+  describe('engine fault handling', () => {
+    it('still resolves the run, then retires the worker', async () => {
+      const { runScriptInQuickJs } = await import('./run-script-quickjs');
+      const context = baseContext();
+
+      const promise = runScriptInQuickJs({ script: 'await big()', context });
+      await flushTokenFetch();
+      const { id } = fakeWorker.postedMessages[0];
+      const result = { ...context, logs: ['warn: QuickJS engine faulted…\n'] };
+      fakeWorker.emitMessage({ id, result, engineFaulted: true });
+
+      await expect(promise).resolves.toEqual(result);
+      expect(fakeWorker.terminated).toBe(true);
+
+      // The next call must not reuse the faulted worker.
+      const nextWorker = new FakeWorker();
+      vi.stubGlobal(
+        'Worker',
+        vi.fn(() => nextWorker),
+      );
+      const nextCall = runScriptInQuickJs({ script: 'console.log(1)', context });
+      await flushTokenFetch();
+      expect(nextWorker.postedMessages).toHaveLength(1);
+      const next = { ...context, logs: [] };
+      nextWorker.emitMessage({ id: nextWorker.postedMessages[0].id, result: next });
+      await expect(nextCall).resolves.toEqual(next);
+    });
+
+    it('waits for a concurrent run to finish before terminating the faulted worker', async () => {
+      const { runScriptInQuickJs } = await import('./run-script-quickjs');
+      const context = baseContext();
+
+      // Two scripts in flight on the same worker — `self.onmessage` does not serialize.
+      const first = runScriptInQuickJs({ script: 'await big()', context });
+      const second = runScriptInQuickJs({ script: 'console.log(2)', context });
+      await flushTokenFetch();
+      expect(fakeWorker.postedMessages).toHaveLength(2);
+      const [firstMsg, secondMsg] = fakeWorker.postedMessages;
+
+      const firstResult = { ...context, logs: [] };
+      fakeWorker.emitMessage({ id: firstMsg.id, result: firstResult, engineFaulted: true });
+      await expect(first).resolves.toEqual(firstResult);
+
+      // Terminating now would strand `second`, so the worker stays alive until it drains.
+      expect(fakeWorker.terminated).toBe(false);
+
+      const secondResult = { ...context, logs: ['log: 2\n'] };
+      fakeWorker.emitMessage({ id: secondMsg.id, result: secondResult });
+      await expect(second).resolves.toEqual(secondResult);
+      expect(fakeWorker.terminated).toBe(true);
+    });
   });
 });
