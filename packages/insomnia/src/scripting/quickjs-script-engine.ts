@@ -23,7 +23,9 @@ import { CHAI_FACTORY_SOURCE } from '../templating/sandbox/vendored/chai.generat
  * only `code`/`status`/`headers`/`body`/`responseTime`/`json()`/`text()` (no `originalRequest`). Full
  * parity with the hidden-window `Response` class is deferred.
  *
- * insomnia.test()/pm.test() run entirely inside the VM: `insomnia.expect` is the real `chai` library
+ * insomnia.test() (aka `pm.test()`, the Postman-compat name it's commonly called by — there is no
+ * `pm` global here, matching the hidden-window sandbox, which has none either) runs entirely inside
+ * the VM: `insomnia.expect` is the real `chai` library
  * (vendored the same way as the template-tag sandbox's M3 npm libs — see
  * `../templating/sandbox/vendored/chai.generated.ts` — so assertion messages match the hidden-window
  * path byte-for-byte instead of a hand-rolled reimplementation), and `requestTestResults` is built up
@@ -218,7 +220,9 @@ globalThis.insomnia = {
 globalThis.__testResults = [];
 // Every promise started by insomnia.test()/insomnia.test.skip() — awaited after the user script body
 // finishes, mirroring insomnia-scripting-environment/src/objects/test.ts's waitForAllTestsDone(), so
-// a script that calls pm.test() without awaiting it still has the result recorded before the run ends.
+// a script that calls insomnia.test() without awaiting it still has the result recorded before the
+// run ends. There is no globalThis.pm alias here, matching the hidden-window sandbox — only
+// insomnia and $ Postman-compat alias exist there too (see run-script.ts).
 globalThis.__testPromises = [];
 globalThis.insomnia.test = (msg, fn) => {
   const testPromise = (async () => {
@@ -231,7 +235,12 @@ globalThis.insomnia.test = (msg, fn) => {
         testCase: msg,
         status: 'failed',
         executionTime: Date.now() - started,
-        errorMessage: 'error: ' + e + ' | ACTUAL: ' + (e && e.actual) + ' | EXPECTED: ' + (e && e.expected),
+        // Matches insomnia-scripting-environment/src/objects/test.ts's template exactly, including
+        // reading .actual/.expected off e unguarded: e is a primitive (thrown by insomnia.expect()
+        // failures it's always a chai AssertionError, but a script can throw anything) only when a
+        // script throws a bare value, and property access on a primitive is legal JS returning
+        // undefined, not a crash — the same as the hidden-window path.
+        errorMessage: 'error: ' + e + ' | ACTUAL: ' + e.actual + ' | EXPECTED: ' + e.expected,
         category: 'unknown',
       });
     }
