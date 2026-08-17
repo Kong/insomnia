@@ -10,7 +10,38 @@ import type { WorkerResponse } from './quickjs-script.worker';
  */
 
 let worker: Worker | null = null;
-const pending = new Map<string, { resolve: (value: RequestContext) => void; reject: (err: Error) => void }>();
+interface PendingRun {
+  resolve: (value: RequestContext) => void;
+  reject: (err: Error) => void;
+  /** Which worker is running this, so retiring one can avoid killing another's in-flight work. */
+  instance: Worker;
+}
+const pending = new Map<string, PendingRun>();
+
+/** Workers taken out of rotation that still have runs in flight; terminated once they drain. */
+const retiring = new Set<Worker>();
+
+const terminateIfDrained = (instance: Worker): void => {
+  const stillBusy = [...pending.values()].some(run => run.instance === instance);
+  if (retiring.has(instance) && !stillBusy) {
+    retiring.delete(instance);
+    instance.terminate();
+  }
+};
+
+/**
+ * Take `instance` out of rotation so the next call lazily builds a replacement. Runs already in
+ * flight on it are left to finish — `self.onmessage` doesn't serialize, so a second script can be
+ * mid-execution, and terminating immediately would hang it. The worker is terminated once its last
+ * run settles.
+ */
+const retireWorker = (instance: Worker): void => {
+  if (worker === instance) {
+    worker = null;
+  }
+  retiring.add(instance);
+  terminateIfDrained(instance);
+};
 
 const getWorker = (): Worker => {
   if (worker) {
@@ -39,6 +70,16 @@ const getWorker = (): Worker => {
     } else {
       request.resolve(event.data.result);
     }
+
+    // The engine aborted its WASM module while cleaning up (see the script engine's
+    // ENGINE_FAULT_MESSAGE). The run above is still valid and has already been settled, but this
+    // worker caches that module for every later script, so take it out of rotation. Retiring after
+    // settling means the caller never sees this as a failure.
+    if (event.data.engineFaulted) {
+      retireWorker(instance);
+    } else {
+      terminateIfDrained(instance);
+    }
   });
 
   // A crash in the worker's global scope (e.g. an unhandled rejection outside our own try/catch)
@@ -46,8 +87,15 @@ const getWorker = (): Worker => {
   // next call gets a fresh one instead of reusing a dead thread.
   instance.addEventListener('error', event => {
     const err = new Error(`QuickJS sandbox worker crashed: ${event.message}`);
-    pending.forEach(request => request.reject(err));
-    pending.clear();
+    // Only this worker's runs — a retired worker draining alongside a live one must not take the
+    // live one's callers down with it.
+    pending.forEach((request, id) => {
+      if (request.instance === instance) {
+        pending.delete(id);
+        request.reject(err);
+      }
+    });
+    retiring.delete(instance);
     if (worker === instance) {
       worker = null;
     }
@@ -57,16 +105,35 @@ const getWorker = (): Worker => {
   return instance;
 };
 
-export const runScriptInQuickJs = ({
+// A Worker has no `window.main`, so — exactly as `ui/worker/templating-handler.ts` does for the
+// templating worker — fetch the `insomnia-templating-worker-database://` auth token here once and
+// forward it on every postMessage. Without it the engine's `insomnia.sendRequest()` bridge fetch is
+// rejected by the protocol's auth gate with a 401.
+let authTokenPromise: Promise<string> | null = null;
+const getTemplatingDbAuthToken = (): Promise<string> => {
+  if (!authTokenPromise) {
+    authTokenPromise = window.main.templatingDb.getAuthToken();
+  }
+  return authTokenPromise;
+};
+
+export const runScriptInQuickJs = async ({
   script,
   context,
 }: {
   script: string;
   context: RequestContext;
 }): Promise<RequestContext> => {
+  // The worker and the pending entry are set up before awaiting the token, so a crash during the
+  // token round trip still rejects this call through the `error` listener rather than hanging.
+  const instance = getWorker();
   const id = `quickjs-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  return new Promise<RequestContext>((resolve, reject) => {
-    pending.set(id, { resolve, reject });
-    getWorker().postMessage({ id, script, context });
+  const result = new Promise<RequestContext>((resolve, reject) => {
+    pending.set(id, { resolve, reject, instance });
   });
+
+  const authToken = await getTemplatingDbAuthToken();
+  instance.postMessage({ id, script, context, authToken });
+
+  return result;
 };
