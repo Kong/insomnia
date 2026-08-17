@@ -635,3 +635,59 @@ describe('runScriptInQuickJs large-allocation engine fault', () => {
     expect(faults).toEqual([]);
   });
 });
+
+/**
+ * A second, distinct way to trip the same `gc_obj_list` engine assertion as the large-allocation
+ * bug above — this one via ordinary unbounded recursion rather than allocation volume, needing no
+ * `await` at all, and (unlike that one) fixable from the embedding side: `setMaxStackSize` is a
+ * knob `quickjs-emscripten` already exposes for exactly this case.
+ *
+ * Before the fix: with no explicit stack limit, unbounded recursion overflows the *host* WASM call
+ * stack before QuickJS's own bytecode-level stack check can fire. `vm.evalCode()` then throws a
+ * plain `RangeError: Maximum call stack size exceeded` synchronously — bypassing both the guest
+ * script's own `try/catch` and `evalOrThrow`'s normal `result.error` handling — leaving the
+ * runtime's GC object list non-empty. The `finally` block's `vm.dispose()` then throws its own
+ * `Aborted(Assertion failed: list_empty(&rt->gc_obj_list) ...)`, which (per ordinary `try/finally`
+ * semantics) replaces the original error, so every caller only ever saw the internal engine
+ * assertion string, never the real cause.
+ */
+describe('runScriptInQuickJs deep-recursion handling (runtime stack-size limit)', () => {
+  it('surfaces a normal recursion error instead of a raw engine assertion when a script recurses without bound', async () => {
+    await expect(
+      runScriptInQuickJs({
+        script: `
+          function recurse(n) { return recurse(n + 1); }
+          recurse(0);
+        `,
+        context: baseContext(),
+      }),
+    ).rejects.toThrow(/stack overflow/i);
+  });
+
+  it('still allows several hundred levels of ordinary, bounded recursion', async () => {
+    const result = await runScriptInQuickJs({
+      script: `
+        function sum(n) { return n <= 0 ? 0 : n + sum(n - 1); }
+        insomnia.environment.set('total', sum(500));
+      `,
+      context: baseContext(),
+    });
+
+    expect((result.environment.data as Record<string, unknown>).total).toBe(125_250);
+  });
+
+  it('does not corrupt the shared QuickJS module for a later, unrelated script run', async () => {
+    await expect(
+      runScriptInQuickJs({
+        script: `function recurse(n) { return recurse(n + 1); } recurse(0);`,
+        context: baseContext(),
+      }),
+    ).rejects.toThrow();
+
+    const result = await runScriptInQuickJs({
+      script: `insomnia.environment.set('ok', 1 + 1);`,
+      context: baseContext(),
+    });
+    expect((result.environment.data as Record<string, unknown>).ok).toBe(2);
+  });
+});

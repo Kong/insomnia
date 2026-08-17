@@ -785,20 +785,28 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     return await services.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
   },
   // use libcurl to send request without side effects(do not write to database about request and response)
+  //
+  // This endpoint is reachable by any pre/post-request script or template-tag/plugin (via the
+  // QuickJS script sandbox's insomnia.sendRequest() bridge and the template-tag sandbox's
+  // context.network.sendRequestWithoutSideEffects(), respectively) with no ownership/entitlement
+  // check on the caller's identity beyond the templating-db auth token every call already needs —
+  // so it must never honor a caller-supplied client certificate path or authentication object.
+  // Both are host-privileged capabilities (an arbitrary local file read via `caCertficatePath`,
+  // credential injection via `authentication`) that this "without side effects" preview endpoint
+  // was never meant to carry; `network.sendRequest` (the DB-backed, side-effectful sibling) is the
+  // only handler that may use a request's real, ownership-scoped `clientCertificates`.
   'network.sendRequestWithoutSideEffects': async (body: {
     options: {
-      request: Pick<DBRequest, 'url' | 'method' | 'headers'> & Partial<Pick<DBRequest, 'body' | 'authentication'>>;
-      caCertficatePath: string;
+      request: Pick<DBRequest, 'url' | 'method' | 'headers'> & Partial<Pick<DBRequest, 'body'>>;
     };
   }) => {
     const requestId = uuidv4();
     const settings = await services.settings.get();
     const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
-    const { request: originRequest, caCertficatePath = null } = body.options;
+    const { request: originRequest } = body.options;
     const response = await curlRequest({
       requestId: `no-sideEffects-request-${requestId}`,
       req: {
-        authentication: { type: 'none' },
         body: {},
         cookieJar: {
           cookies: [],
@@ -809,11 +817,15 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
         settingRebuildPath: true,
         settingSendCookies: true,
         ...originRequest,
+        // Applied after the spread so a caller-supplied `authentication` on the request body can
+        // never override it — see the handler-level comment above.
+        authentication: { type: 'none' },
       },
       finalUrl: originRequest.url,
       settings,
       certificates: [],
-      caCertficatePath,
+      // Never sourced from the caller — see the handler-level comment above.
+      caCertficatePath: null,
     });
     const { headerResults, patch, responseBodyPath } = response;
     if (patch.error) {
