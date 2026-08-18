@@ -420,6 +420,75 @@ describe('jsonpath tag - standalone', () => {
   });
 });
 
+describe('prompt tag', () => {
+  const promptTag = localTemplateTags.find(p => p.templateTag.name === 'prompt')?.templateTag;
+  invariant(promptTag, 'missing prompt tag in localTemplateTags');
+
+  function makeFakeStore() {
+    const data = new Map<string, string>();
+    return {
+      data,
+      store: {
+        hasItem: vi.fn(async (key: string) => data.has(key)),
+        setItem: vi.fn(async (key: string, value: string) => {
+          data.set(key, value);
+        }),
+        getItem: vi.fn(async (key: string) => (data.has(key) ? data.get(key)! : null)),
+        removeItem: vi.fn(async (key: string) => {
+          data.delete(key);
+        }),
+        clear: vi.fn(async () => {
+          data.clear();
+        }),
+        all: vi.fn(async () => Array.from(data.entries()).map(([key, value]) => ({ key, value }))),
+      },
+    };
+  }
+
+  function makePromptContext(promptResult: string | null, storeOverride?: ReturnType<typeof makeFakeStore>) {
+    const { store } = storeOverride ?? makeFakeStore();
+    return {
+      context: { meta: {} },
+      meta: { requestId: 'req_1' },
+      renderPurpose: 'send',
+      store,
+      app: {
+        prompt: vi.fn(async () => promptResult),
+      },
+    } as unknown as PluginTemplateTagContext;
+  }
+
+  it('caches the submitted value under the explicit storage key', async () => {
+    const { store, data } = makeFakeStore();
+    const context = makePromptContext('typed-value', { store, data });
+    const result = await promptTag.run(context, 'Title', '', '', 'my-key', false, false);
+    expect(result).toBe('typed-value');
+    expect(data.get('my-key')).toBe('typed-value');
+  });
+
+  it('does not overwrite a previously cached value when the user cancels (prompt resolves null)', async () => {
+    // No explicit storage key, so the cache only pre-fills the default rather than skipping the
+    // prompt outright — otherwise there'd be no prompt call left to cancel.
+    const { store, data } = makeFakeStore();
+    data.set('req_1.Title', 'previously-typed-value');
+
+    const context = makePromptContext(null, { store, data });
+    const result = await promptTag.run(context, 'Title', '', '', '', false, true);
+
+    expect(result).toBeNull();
+    expect(data.get('req_1.Title')).toBe('previously-typed-value');
+  });
+
+  it('does not cache anything on cancel when there was no prior cached value', async () => {
+    const { store, data } = makeFakeStore();
+    const context = makePromptContext(null, { store, data });
+    const result = await promptTag.run(context, 'Title', '', '', 'my-key', false, false);
+
+    expect(result).toBeNull();
+    expect(data.has('my-key')).toBe(false);
+  });
+});
+
 describe('file tag: filesystem access isolation', () => {
   const fileTag = localTemplateTags.find(p => p.templateTag.name === 'file')?.templateTag;
   invariant(fileTag, 'missing file tag in localTemplateTags');
