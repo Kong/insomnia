@@ -119,6 +119,7 @@ export class VCS {
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
     console.debug(`[sync] Activated project ${backendProject.id}`);
+    console.log(`[RACE-REPRO] setBackendProject → id=${backendProject.id} rootDocumentId=${backendProject.rootDocumentId} name=${backendProject.name}`);
     // Store it because it might not be yet
     await this._storeBackendProject(backendProject);
   }
@@ -263,6 +264,7 @@ export class VCS {
 
   // similar to git status, returns staged and unstaged changes
   async status(candidates: StatusCandidate[]) {
+    console.log(`[RACE-REPRO] status() running against active project id=${this._backendProject?.id} rootDocumentId=${this._backendProject?.rootDocumentId}`);
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
@@ -330,6 +332,7 @@ export class VCS {
 
   /** add new stage entries to this._stageByBackendProjectId and save added and modified entries to blob */
   async stage(stageEntries: StageEntry[]) {
+    console.log(`[RACE-REPRO] stage() running against active project id=${this._backendProject?.id} rootDocumentId=${this._backendProject?.rootDocumentId}, keys=${stageEntries.map(e => e.key).join(',')}`);
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const blobsToStore: Record<string, string> = {};
 
@@ -612,6 +615,7 @@ export class VCS {
   }
 
   async takeSnapshot(name: string) {
+    console.log(`[RACE-REPRO] takeSnapshot() running against active project id=${this._backendProject?.id} rootDocumentId=${this._backendProject?.rootDocumentId}`);
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
 
     // Ensure there is something on the stage
@@ -663,6 +667,7 @@ export class VCS {
     }
     this._stageByBackendProjectId[this._backendProjectId()] = stage;
     console.log(`[sync] Created commit ${snapshot.id} (${name})`);
+    console.log(`[RACE-REPRO] takeSnapshot() committed snapshot ${snapshot.id} under project id=${this._backendProject?.id} rootDocumentId=${this._backendProject?.rootDocumentId}; entry keys=${newState.map(e => e.key).join(',')}`);
   }
 
   async pull({
@@ -730,6 +735,7 @@ export class VCS {
 
   // TODO: may be we can create another push function for initial push, so that we can reduce some api calls
   async push({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    console.log(`[RACE-REPRO] push() running against active project id=${this._backendProject?.id} rootDocumentId=${this._backendProject?.rootDocumentId}, teamId=${teamId} teamProjectId=${teamProjectId}`);
     await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts

@@ -281,6 +281,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   let vcsVersion = null;
   if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
     try {
+      console.log('-----------------------Initializing VCS for workspace', workspaceId, activeWorkspace.name);
       await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
       if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
         await pushSnapshotOnInitialize({ vcs: window.main.sync, workspace: activeWorkspace, project: activeProject });

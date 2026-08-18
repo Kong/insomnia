@@ -23,6 +23,20 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
   // Create local project
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
+  // TEMP DEBUG (race repro, remove after investigation): widen the window between activating
+  // this workspace's backend project and staging/committing into it, so that a concurrent
+  // switchAndCreateBackendProjectIfNotExist call for a DIFFERENT workspace (e.g. opening/
+  // switching to another cloud-synced tab) can land in between and hijack the singleton VCS's
+  // active project (docs/cloud-sync.md known defect #4: "单例 VCS 的可变状态").
+  const RACE_REPRO_DELAY_MS = 20_000;
+  console.log(
+    `[RACE-REPRO] initializeLocalBackendProjectAndMarkForSync: workspace=${workspace._id} (${workspace.name}) just activated its backend project. Entering a ${RACE_REPRO_DELAY_MS}ms window — switch to/open ANOTHER cloud-synced workspace tab NOW to trigger the race.`,
+  );
+  await new Promise(resolve => setTimeout(resolve, RACE_REPRO_DELAY_MS));
+  console.log(
+    `[RACE-REPRO] initializeLocalBackendProjectAndMarkForSync: workspace=${workspace._id} delay elapsed, resuming status/stage/takeSnapshot.`,
+  );
+
   // The lint ruleset is project-scoped (shared by every design document in the project),
   // so it is not a descendant of the workspace and must be added explicitly.
   const projectLintRuleset = await services.projectLintRuleset.getByParentId(workspace.parentId);
