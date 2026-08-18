@@ -378,6 +378,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
+            defaultProjectId={defaultProjectId}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -634,6 +635,7 @@ const ImportResourcesForm = ({
   errors,
   disabled,
   loading,
+  defaultProjectId,
   isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
@@ -646,17 +648,17 @@ const ImportResourcesForm = ({
   ) => void;
   disabled: boolean;
   loading: boolean;
+  defaultProjectId: string;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
-  const { organizationId, projectId } = useParams() as {
+  const { organizationId } = useParams() as {
     organizationId: string;
-    projectId: string;
   };
   const formId = useId();
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
-  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId);
   const [newProjectName, setNewProjectName] = useState(() => {
     for (const result of scanResults) {
       if (isApiSpecScanResult(result)) {
@@ -676,7 +678,7 @@ const ImportResourcesForm = ({
         projectId: selectedProjectId,
       });
     }
-  }, [organizationId, projectId, selectedProjectId, workspacesFetcher]);
+  }, [organizationId, selectedProjectId, workspacesFetcher]);
   // List collections for active project, sorted by last modified timestamp descending
   // Should we list design or mcp?
   const selectedNewProject = !selectedProjectId;
