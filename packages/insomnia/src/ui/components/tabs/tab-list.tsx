@@ -26,6 +26,7 @@ import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
+import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
 import { type BaseTab, InsomniaTab } from './tab';
 
 const { isRequest } = models.request;
@@ -120,8 +121,20 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     return list.includes(docType);
   };
 
+  // Kept in sync with `tabList` via the effect below so `handleDelete` can read
+  // the current tab list without depending on it directly. `tabList` changes on
+  // every tab open/close/activate, and `handleDelete` is itself a dependency of
+  // the `db.changes` subscription effect further down — if `handleDelete`'s
+  // identity changed with `tabList`, that effect would unsubscribe/resubscribe
+  // on every tab change instead of only when the database service handlers change.
+  const tabListRef = React.useRef(tabList);
+  useEffect(() => {
+    tabListRef.current = tabList;
+  }, [tabList]);
+
   const handleDelete = useCallback(
-    (docId: string, docType: string) => {
+    (doc: BaseModel) => {
+      const { _id: docId, type: docType, parentId } = doc;
       if (docType === models.project.type) {
         // delete all tabs of this project
         closeAllTabsUnderProject?.(docId, { removeFromClosedTabs: true });
@@ -131,12 +144,16 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
         batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
+      } else if (isRequestLikeDocType(docType)) {
+        const closingTab = tabListRef.current.find(tab => tab.id === docId);
+        const fallbackUrl = getRequestDeleteFallbackUrl({ parentId, closingTab, organizationId, projectId });
+        closeTabById(docId, { removeFromClosedTabs: true, fallbackUrl });
       } else {
         // delete tab by id
         closeTabById(docId, { removeFromClosedTabs: true });
       }
     },
-    [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById],
+    [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById, organizationId, projectId],
   );
 
   const handleUpdate = useCallback(
@@ -236,7 +253,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
-            handleDelete(doc._id, doc.type);
+            handleDelete(doc);
           } else if (changeType === 'update') {
             handleUpdate(doc, patches);
           }

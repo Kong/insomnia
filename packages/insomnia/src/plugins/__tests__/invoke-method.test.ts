@@ -20,7 +20,12 @@ vi.mock('insomnia-data', () => ({
   },
 }));
 
+vi.mock('~/common/templating/liquid-extension-worker', () => ({
+  fetchFromTemplateWorkerDatabase: vi.fn(),
+}));
+
 import type { Plugin } from '~/common/plugins/types';
+import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 
 import { _testOnlySetPlugins } from '../index';
 import { invokePluginMethod } from '../invoke-method';
@@ -76,6 +81,8 @@ describe('invokePluginMethod', () => {
   it('preserves plugin-prefixed request hook errors', async () => {
     const hook = vi.fn().mockRejectedValue(new Error('boom'));
     _testOnlySetPlugins([makePlugin({ module: { requestHooks: [hook] } })]);
+
+    vi.mocked(fetchFromTemplateWorkerDatabase).mockResolvedValue({});
 
     await expect(
       invokePluginMethod('applyRequestHooks', {

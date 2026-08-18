@@ -183,6 +183,7 @@ interface SpecActionItem {
   icon?: ReactNode;
   badge?: ReactNode;
   isDisabled?: boolean;
+  tooltip?: string;
   action: () => void;
 }
 
@@ -587,6 +588,10 @@ const Component = ({ params }: Route.ComponentProps) => {
         </span>
       ),
       isDisabled: !apiSpec.contents || lintErrors.length > 0 || generateRequestCollectionFetcher.state !== 'idle',
+      tooltip:
+        lintErrors.length > 0
+          ? 'You cannot generate a collection when spec errors exist. Fix the errors or change the ruleset first.'
+          : undefined,
       action: () =>
         generateRequestCollectionFetcher.submit({
           organizationId,
@@ -711,16 +716,26 @@ const Component = ({ params }: Route.ComponentProps) => {
             className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
             {item => (
-              <MenuItem
-                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-sm) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
-                aria-label={item.name}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-                {item.badge && (
-                  <span className="flex origin-left scale-90 items-center pl-2 text-xs">{item.badge}</span>
-                )}
-              </MenuItem>
+              <TooltipTrigger delay={0} isDisabled={!item.tooltip}>
+                <MenuItem
+                  id={item.id}
+                  textValue={item.name}
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-sm) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
+                  aria-label={item.name}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                  {item.badge && (
+                    <span className="flex origin-left scale-90 items-center pl-2 text-xs">{item.badge}</span>
+                  )}
+                </MenuItem>
+                <Tooltip
+                  offset={8}
+                  className="max-w-xs rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-sm text-(--color-font) shadow-lg"
+                >
+                  {item.tooltip}
+                </Tooltip>
+              </TooltipTrigger>
             )}
           </Menu>
         </Popover>

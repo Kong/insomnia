@@ -11,18 +11,26 @@ import {
   type RunnerLiveItem,
 } from '../../../common/runner-feedback';
 import { RenderedText } from '../rendered-text';
-import { RequestTestResultRows } from './request-test-result-pane';
+import { hasMatchingTestResults, RequestTestResultRows, type TargetTestType } from './request-test-result-pane';
 
 interface Props {
   item: RunnerResultPerRequest | RunnerLiveItem;
   resultFilter?: string;
-  targetTests?: string;
+  targetTests?: TargetTestType;
   onSkip?: () => void;
   testId?: string;
+  defaultExpanded?: boolean;
 }
 
-export const RequestResultCard: FC<Props> = ({ item, resultFilter = '', targetTests = 'all', onSkip, testId }) => {
-  const [isExpanded, setIsExpanded] = useState(!!targetTests);
+export const RequestResultCard: FC<Props> = ({
+  item,
+  resultFilter = '',
+  targetTests = 'all',
+  onSkip,
+  testId,
+  defaultExpanded = false,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const status: RunnerItemStatus =
     'status' in item ? item.status : item.skipped ? 'skipped' : item.responseCode > 0 ? 'completed' : 'failed';
   const isSkipped = status === 'skipped';
@@ -40,6 +48,10 @@ export const RequestResultCard: FC<Props> = ({ item, resultFilter = '', targetTe
   const showInlineStats = isExpanded && !isSkipped && stats;
 
   const requestId = 'requestId' in item ? item.requestId : undefined;
+
+  if (!hasMatchingTestResults(results, targetTests, resultFilter)) {
+    return null;
+  }
 
   return (
     <div data-testid={testId} className="m-3 rounded-sm border border-solid border-(--hl-md) p-3">

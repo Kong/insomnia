@@ -1,7 +1,7 @@
 import type { BaseModel } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
-import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, { type FC, type MouseEventHandler, useEffect, useId, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
@@ -33,6 +33,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
 
   const requestFetcher = useRequestNewActionFetcher();
+  const formId = useId();
 
   useEffect(() => {
     (async () => {
@@ -87,58 +88,68 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
       <Modal onHide={onHide} ref={modalRef}>
         <ModalHeader>Add Request</ModalHeader>
         <ModalBody className="wide">
-          <div className="form-control form-control--outlined">
-            <label>
-              {strings.project.plural}:
-              <select name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
-                {projectOptions.map(project => (
-                  <option key={project._id} value={project._id}>
-                    {project.name}
-                    {project._id === currentProjectId && ' (current)'}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          {!selectedProjectId && (
-            <p
-              className="margin-top-sm"
-              style={{
-                color: 'var(--color-danger)',
-              }}
-            >
-              Project is required
-            </p>
-          )}
-
-          <div className="form-control form-control--outlined">
-            <label>
-              {strings.collection.plural}:
-              <select
-                aria-label="Select Workspace"
-                name="workspaceId"
-                value={selectedWorkspaceId}
-                onChange={e => setSelectedWorkspaceId(e.target.value)}
+          <form
+            id={formId}
+            onSubmit={e => {
+              e.preventDefault();
+              if (!isBtnDisabled) {
+                createNewRequest();
+              }
+            }}
+          >
+            <div className="form-control form-control--outlined">
+              <label>
+                {strings.project.plural}:
+                <select autoFocus name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
+                  {projectOptions.map(project => (
+                    <option key={project._id} value={project._id}>
+                      {project.name}
+                      {project._id === currentProjectId && ' (current)'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {!selectedProjectId && (
+              <p
+                className="margin-top-sm"
+                style={{
+                  color: 'var(--color-danger)',
+                }}
               >
-                {workspaceOptions.map(workspace => (
-                  <option aria-label={workspace.name} key={workspace._id} value={workspace._id}>
-                    {workspace.name}
-                    {workspace._id === currentWorkspaceId && ' (current)'}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          {!selectedWorkspaceId && (
-            <p
-              className="margin-top-sm"
-              style={{
-                color: 'var(--color-danger)',
-              }}
-            >
-              Collection is required
-            </p>
-          )}
+                Project is required
+              </p>
+            )}
+
+            <div className="form-control form-control--outlined">
+              <label>
+                {strings.collection.plural}:
+                <select
+                  aria-label="Select Workspace"
+                  name="workspaceId"
+                  value={selectedWorkspaceId}
+                  onChange={e => setSelectedWorkspaceId(e.target.value)}
+                >
+                  {workspaceOptions.map(workspace => (
+                    <option aria-label={workspace.name} key={workspace._id} value={workspace._id}>
+                      {workspace.name}
+                      {workspace._id === currentWorkspaceId && ' (current)'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {!selectedWorkspaceId && (
+              <p
+                className="margin-top-sm"
+                style={{
+                  color: 'var(--color-danger)',
+                }}
+              >
+                Collection is required
+              </p>
+            )}
+          </form>
         </ModalBody>
         <ModalFooter>
           <div>
@@ -149,7 +160,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
             >
               Cancel
             </button>
-            <button disabled={isBtnDisabled} form="workspace-duplicate-form" className="btn" onClick={createNewRequest}>
+            <button disabled={isBtnDisabled} type="submit" form={formId} className="btn">
               {requestFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} Add
             </button>
           </div>

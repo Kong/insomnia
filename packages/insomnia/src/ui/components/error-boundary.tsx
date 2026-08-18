@@ -30,6 +30,9 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
     const { children } = this.props;
     const firstChild = Array.isArray(children) && children.length === 1 ? children[0] : children;
     this.setState({ error, info });
+    // The fallback below only shows error.message; log the full stack and component
+    // stack so a crash can actually be diagnosed from the console.
+    console.error('ErrorBoundary caught an error:', error, info.componentStack);
     let componentName = 'component';
 
     try {

@@ -288,7 +288,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
     const disableLogs = console.log;
-    console.log = () => {};
+    console.log = () => { };
     const scanResult = await importUtil.scanResources([
       {
         contentStr: content,
@@ -775,5 +775,82 @@ describe('MCP run deep-link import', () => {
     ]);
     const match = await importUtil.findExistingImportedWorkspace(project._id);
     expect(match).toBeUndefined();
+  });
+});
+
+describe('requiresNewWorkspace()', () => {
+  const base = { errors: [] as string[] };
+
+  it('returns false for collection-only imports', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        workspaces: [{ scope: 'collection' } as any],
+      }),
+    ).toBe(false);
+  });
+
+  it('returns false for request-only imports without workspaces', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        requests: [{ _id: 'req_1' } as any],
+      }),
+    ).toBe(false);
+  });
+
+  it.each(['mock-server', 'environment', 'design', 'mcp'] as const)(
+    'returns true when a %s workspace is present',
+    scope => {
+      expect(
+        importUtil.requiresNewWorkspace({
+          ...base,
+          workspaces: [{ scope } as any],
+        }),
+      ).toBe(true);
+    },
+  );
+
+  it('returns true when any non-collection workspace is mixed with collections', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        workspaces: [{ scope: 'collection' } as any, { scope: 'environment' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true for OpenAPI / Swagger scan results', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        type: { id: 'openapi3' } as any,
+      }),
+    ).toBe(true);
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        apiSpecs: [{ _id: 'spc_1' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true when mcpRequests are present', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        mcpRequests: [{ _id: 'mcp_1' } as any],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns true for Postman environment scan results', () => {
+    expect(
+      importUtil.requiresNewWorkspace({
+        ...base,
+        type: { id: 'postman-environment' } as any,
+        environments: [{ _id: '__ENV_1__' } as any],
+      }),
+    ).toBe(true);
   });
 });

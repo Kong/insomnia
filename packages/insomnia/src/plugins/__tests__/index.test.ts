@@ -1,4 +1,8 @@
 // @ts-nocheck
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../themes', () => ({ default: [] }));
@@ -23,14 +27,17 @@ vi.mock('insomnia-data', () => ({
 
 import { services } from 'insomnia-data';
 
+import { getAppBundlePlugins } from '~/common/constants';
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 
 import type { Plugin } from '../index';
 import {
+  _testOnlyIsContainedIn,
   _testOnlySetPlugins,
   executePluginMainAction,
   getDocumentActions,
   getPluginCommonContext,
+  getPlugins,
   getRequestActions,
   getRequestGroupActions,
   getRequestHooks,
@@ -345,5 +352,102 @@ describe('executePluginMainAction', () => {
     await expect(executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' })).rejects.toThrow(
       'IPC failure',
     );
+  });
+});
+
+describe('getPlugins: discovery', () => {
+  const SYMLINK_PLUGIN_NAME = 'insomnia-plugin-symlink-test';
+  const NORMAL_PLUGIN_NAME = 'insomnia-plugin-discovery-test-normal';
+
+  const writePlugin = (dir: string, name: string) => {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ name, version: '1.0.0', main: 'index.js', insomnia: {} }),
+    );
+    fs.writeFileSync(path.join(dir, 'index.js'), 'module.exports.templateTags = [];');
+  };
+
+  it('only loads plugins from within the configured plugin directory, even through a symlink', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-discovery-test-'));
+    const pluginBase = path.join(root, 'plugins');
+    const outsideDir = path.join(root, 'outside');
+    fs.mkdirSync(pluginBase, { recursive: true });
+    writePlugin(outsideDir, SYMLINK_PLUGIN_NAME);
+    fs.symlinkSync(outsideDir, path.join(pluginBase, SYMLINK_PLUGIN_NAME), 'dir');
+    writePlugin(path.join(pluginBase, NORMAL_PLUGIN_NAME), NORMAL_PLUGIN_NAME);
+
+    vi.mocked(services.settings.get).mockResolvedValue({
+      pluginConfig: {},
+      pluginPath: pluginBase,
+      pluginSandboxEnabled: false,
+    });
+
+    const plugins = await getPlugins(true);
+
+    expect(plugins.find(p => p.name === SYMLINK_PLUGIN_NAME)).toBeUndefined();
+    expect(plugins.find(p => p.name === NORMAL_PLUGIN_NAME)?.loadError).toBeUndefined();
+
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it('rejects a symlink into a sibling directory whose name merely prefix-matches the configured plugin path', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-discovery-test-'));
+    // Deliberately a *sibling* whose name starts with the plugin base's name, so a naive
+    // `realpath(target).startsWith(realpath(base))` check would wrongly treat it as contained.
+    const pluginBase = path.join(root, 'plugins');
+    const outsideDir = path.join(root, 'plugins-evil');
+    fs.mkdirSync(pluginBase, { recursive: true });
+    writePlugin(outsideDir, SYMLINK_PLUGIN_NAME);
+    fs.symlinkSync(outsideDir, path.join(pluginBase, SYMLINK_PLUGIN_NAME), 'dir');
+
+    vi.mocked(services.settings.get).mockResolvedValue({
+      pluginConfig: {},
+      pluginPath: pluginBase,
+      pluginSandboxEnabled: false,
+    });
+
+    const plugins = await getPlugins(true);
+
+    expect(plugins.find(p => p.name === SYMLINK_PLUGIN_NAME)).toBeUndefined();
+
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it('rejects a plugin folder that declares the name of one of Insomnia\'s own bundled plugins', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-discovery-test-'));
+    const pluginBase = path.join(root, 'plugins');
+    const bundlePluginName = getAppBundlePlugins()[0].name;
+    writePlugin(path.join(pluginBase, ...bundlePluginName.split('/')), bundlePluginName);
+
+    vi.mocked(services.settings.get).mockResolvedValue({
+      pluginConfig: {},
+      pluginPath: pluginBase,
+      pluginSandboxEnabled: false,
+    });
+
+    const plugins = await getPlugins(true);
+
+    const impostor = plugins.find(p => p.name === bundlePluginName);
+    expect(impostor?.loadError).toContain('bundled plugin');
+    expect(impostor?.module).toEqual({});
+    expect(impostor?.directory).not.toBe('');
+
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+});
+
+describe('_testOnlyIsContainedIn', () => {
+  it('accepts the base path itself and a real child path', () => {
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins')).toBe(true);
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins/my-plugin')).toBe(true);
+  });
+
+  it('rejects a sibling directory whose name merely prefix-matches the base', () => {
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins-evil/my-plugin')).toBe(false);
+  });
+
+  it('rejects a path that escapes the base via ..', () => {
+    expect(_testOnlyIsContainedIn('/plugins', '/plugins/../other')).toBe(false);
   });
 });

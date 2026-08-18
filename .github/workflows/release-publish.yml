@@ -42,6 +42,11 @@ jobs:
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
       - name: Check Release Build Confirmed
         env:
           IS_RELEASE_BUILD_TRIGGERED: ${{ github.event.inputs.release_build }}
@@ -128,6 +133,13 @@ jobs:
         with:
           path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
 
+      - name: Determine previous release tag
+        id: previous_tag
+        run: |
+          PREVIOUS_TAG=$(node ./.github/scripts/resolve-previous-release-tag.js "${RELEASE_CORE_TAG}")
+          echo "Resolved previous tag for changelog diff: ${PREVIOUS_TAG:-<none, will omit>}"
+          echo "PREVIOUS_TAG=${PREVIOUS_TAG}" >> "$GITHUB_ENV"
+
       - name: Create Tag and Release
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         id: core_tag_and_release
@@ -135,6 +147,7 @@ jobs:
           tag: ${{ env.RELEASE_CORE_TAG }}
           name: '${{ env.RELEASE_VERSION }} 📦'
           generateReleaseNotes: true
+          generateReleaseNotesPreviousTag: ${{ env.PREVIOUS_TAG }}
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
@@ -271,6 +284,15 @@ jobs:
             --release="$SNAP_CHANNEL" \
             "artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap"
 
+      - name: Get Cloudsmith OIDC token
+        if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
+        id: cloudsmith_token
+        uses: cloudsmith-io/cloudsmith-cli-action@18665afcce9f859312b61989671af9af7402e4fb # v2.0.2
+        with:
+          oidc-namespace: ${{ vars.CLOUDSMITH_NAMESPACE }}
+          oidc-service-slug: ${{ secrets.CLOUDSMITH_SERVICE_SLUG }}
+          oidc-auth-only: true
+
       # TODO: also release for aarch64 Linux?
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
@@ -280,7 +302,7 @@ jobs:
           PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}
           PULP_HOST: ${{ secrets.PULP_HOST }}
           VERBOSE: ${{ runner.debug == '1' && '1' || '' }}
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          CLOUDSMITH_API_KEY: ${{ steps.cloudsmith_token.outputs.oidc-token }}
           CLOUDSMITH_DRY_RUN: ''
           IGNORE_CLOUDSMITH_FAILURES: ${{ vars.IGNORE_CLOUDSMITH_FAILURES }}
           USE_CLOUDSMITH: ${{ vars.USE_CLOUDSMITH }}

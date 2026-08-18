@@ -28,6 +28,7 @@ import type {
   WorkspaceScope,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { slugify } from 'insomnia-data/common';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
@@ -386,6 +387,29 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
   }
 }
 
+function getManagedGitRoot(): string {
+  return path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'version-control', 'git');
+}
+
+/**
+ * Joins `folderName` onto `gitRoot` and refuses to return a path that would
+ * escape it, returning `null` instead. `folderName` comes from
+ * `models.gitRepository.getGitRepoFolderName`, which already restricts
+ * `folderSlug` to `[a-z0-9-]` — this is a second, independent guard at the
+ * point the path is actually used on disk, in case that invariant is ever
+ * broken upstream. (`path.join`/`path.normalize` alone would silently collapse
+ * a `..` segment instead of rejecting it.)
+ */
+function resolveWithinGitRoot(gitRoot: string, folderName: string): string | null {
+  const resolvedGitRoot = path.resolve(gitRoot);
+  const resolvedPath = path.resolve(gitRoot, folderName);
+  const relative = path.relative(resolvedGitRoot, resolvedPath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    return null;
+  }
+  return resolvedPath;
+}
+
 /**
  * Resolves the absolute base directory where a Git repository's working tree and
  * .git directory live on disk.
@@ -393,27 +417,43 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
  * - When the repository has a user-chosen `directory`, that path is used as-is
  *   (the user owns it; Insomnia must not delete it on project removal).
  * - Otherwise the repository lives in the app-managed location
- *   `{INSOMNIA_DATA_PATH || userData}/version-control/git/{id}`.
+ *   `{INSOMNIA_DATA_PATH || userData}/version-control/git/{folder}`, where
+ *   `folder` is computed by `models.gitRepository.getGitRepoFolderName` (the
+ *   bare id, or `git_<slug>_<hex>` once a `folderSlug` has been set).
  *
  * This is the single source of truth for repo paths. Callers that already have
- * the GitRepository document should pass `directory` to avoid a DB lookup;
- * otherwise the directory is resolved from the database by id.
+ * the GitRepository document should pass `directory`/`folderSlug` to avoid a DB
+ * lookup; otherwise both are resolved from the database by id.
  */
-async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null): Promise<string> {
+async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null, folderSlug?: string | null): Promise<string> {
   let dir = directory;
+  let slug = folderSlug;
   if (dir === undefined) {
     const repo = await services.gitRepository.getById(gitRepositoryId);
     dir = repo?.directory ?? null;
+    slug = repo?.folderSlug ?? null;
   }
 
   if (dir) {
     return dir;
   }
 
-  return path.join(
-    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}`,
-  );
+  const gitRoot = getManagedGitRoot();
+  const folderName = models.gitRepository.getGitRepoFolderName({ _id: gitRepositoryId, folderSlug: slug ?? null });
+  const resolved = resolveWithinGitRoot(gitRoot, folderName);
+  if (!resolved) {
+    // Should be unreachable — getGitRepoFolderName already validates folderSlug — but
+    // fall back to the safe bare-id path rather than ever returning one outside gitRoot.
+    // Re-validate the fallback too: never return a path derived from untrusted input
+    // without confirming it still resolves inside gitRoot.
+    console.warn('[git] Computed managed repo folder path escaped the git root, falling back to bare id:', folderName);
+    const fallback = resolveWithinGitRoot(gitRoot, gitRepositoryId);
+    if (!fallback) {
+      throw new Error(`Unable to resolve a safe on-disk path for git repository "${gitRepositoryId}"`);
+    }
+    return fallback;
+  }
+  return resolved;
 }
 
 /**
@@ -423,17 +463,99 @@ async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null
  * `directory` belongs to the user and must never be deleted when the project is
  * removed. Failures are logged, not thrown — losing a project record should not be blocked by a stale folder.
  */
-async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 'directory'>) {
+async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 'directory' | 'folderSlug'>) {
   if (repo.directory) {
     // User-owned folder — leave it on disk.
     return;
   }
 
-  const baseDir = await getRepoBaseDir(repo._id, null);
+  const baseDir = await getRepoBaseDir(repo._id, null, repo.folderSlug);
   try {
     await fs.promises.rm(baseDir, { recursive: true, force: true });
   } catch (e) {
     console.warn('[git] Failed to remove managed repo folder', baseDir, e);
+  }
+}
+
+// Defensive in-process guard against calling this twice for the same repo
+// concurrently (only matters if `backfillAllManagedGitFolderSlugs` is ever
+// invoked more than once in a process) — the second call reuses the first
+// call's in-flight result instead of racing it on the same rename.
+const foldersBeingBackfilled = new Map<string, Promise<GitRepository>>();
+
+/**
+ * One-time, best-effort backfill: gives an app-managed repo folder a
+ * human-readable name derived from its owning project's name.
+ *
+ * MUST only be called from `backfillAllManagedGitFolderSlugs` at main-process
+ * startup, before the app window/renderer exists. Renaming a folder that any
+ * other code might concurrently read (a file watcher, a route loader's git
+ * call) is unsafe: a reader holding the old path can recreate it via the FS
+ * client's auto-mkdir-on-write behavior microseconds after the rename,
+ * silently forking the repo's files across both directories. Before startup
+ * completes, nothing else can be touching these folders yet, so no such
+ * reader exists.
+ *
+ * No-ops (returns `repo` unchanged) when there's nothing on disk yet to rename,
+ * the target name is already taken, the project has no usable name, or any I/O
+ * error occurs — callers keep working against the legacy (unslugged) folder
+ * name via `getRepoBaseDir`'s fallback. Never throws.
+ */
+async function backfillManagedFolderSlug(repo: GitRepository, projectId: string): Promise<GitRepository> {
+  const inFlight = foldersBeingBackfilled.get(repo._id);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const promise = (async () => {
+    try {
+      const project = await services.project.getById(projectId);
+      const slug = project ? slugify(project.name) : '';
+      if (!slug) {
+        return repo;
+      }
+
+      const gitRoot = getManagedGitRoot();
+      const oldDir = resolveWithinGitRoot(gitRoot, models.gitRepository.getGitRepoFolderName(repo));
+      const newDir = resolveWithinGitRoot(gitRoot, models.gitRepository.getGitRepoFolderName({ _id: repo._id, folderSlug: slug }));
+      if (!oldDir || !newDir) {
+        // Should be unreachable — getGitRepoFolderName already validates folderSlug — but
+        // never rename into/out of a path outside gitRoot.
+        console.warn('[git] Computed managed repo folder path escaped the git root, skipping backfill for', repo._id);
+        return repo;
+      }
+
+      const oldDirExists = await fs.promises
+        .stat(oldDir)
+        .then(stat => stat.isDirectory())
+        .catch(() => false);
+      if (!oldDirExists) {
+        // Nothing on disk yet — just record the slug so it's used from now on.
+        return await services.gitRepository.update(repo, { folderSlug: slug });
+      }
+
+      const newDirExists = await fs.promises
+        .access(newDir)
+        .then(() => true)
+        .catch(() => false);
+      if (newDirExists) {
+        console.warn('[git] Skipping managed repo folder rename — target already exists:', newDir);
+        return repo;
+      }
+
+      await fs.promises.rename(oldDir, newDir);
+      return await services.gitRepository.update(repo, { folderSlug: slug });
+    } catch (e) {
+      console.warn('[git] Failed to give managed repo folder a readable name', e);
+      return repo;
+    }
+  })();
+
+  foldersBeingBackfilled.set(repo._id, promise);
+  try {
+    return await promise;
+  } finally {
+    foldersBeingBackfilled.delete(repo._id);
   }
 }
 
@@ -445,6 +567,7 @@ async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 
  * @param workspaceId - Optional workspace ID (if provided, uses workspace-specific client)
  * @param gitRepositoryId - The Git repository ID
  * @param directory - Optional user-chosen repo directory (resolved from DB when omitted)
+ * @param folderSlug - Optional pre-fetched `GitRepository.folderSlug` (resolved from DB when omitted)
  * @returns File system client configured for the appropriate context
  */
 
@@ -453,14 +576,16 @@ async function getGitFSClient({
   workspaceId,
   gitRepositoryId,
   directory,
+  folderSlug,
 }: {
   projectId: string;
   workspaceId?: string;
   gitRepositoryId: string;
   directory?: string | null;
+  folderSlug?: string | null;
 }) {
   // Base directory where Git data is stored
-  const baseDir = await getRepoBaseDir(gitRepositoryId, directory);
+  const baseDir = await getRepoBaseDir(gitRepositoryId, directory, folderSlug);
 
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
@@ -594,7 +719,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
-    const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
+    const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
 
     // For a user-owned folder, detect that it has been moved/renamed/deleted (or
     // its drive unmounted) BEFORE creating the FS client — `fsClient` auto-creates
@@ -626,6 +751,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       projectId,
       workspaceId,
       directory: gitRepository.directory,
+      folderSlug: gitRepository.folderSlug,
     });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
@@ -1332,9 +1458,10 @@ export const cloneGitRepoAction = async ({
         projectId: project._id,
         gitRepositoryId: gitRepository._id,
         directory: gitRepository.directory,
+        folderSlug: gitRepository.folderSlug,
       });
 
-      const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
+      const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
 
       if (gitRepository.needsFullClone) {
         await GitVCS.initFromClone({
@@ -1788,7 +1915,7 @@ export const relocateGitRepoAction = async ({
   const repo = await services.gitRepository.getById(gitRepositoryId);
   invariant(repo, 'Git Repository not found');
 
-  const currentBaseDir = await getRepoBaseDir(repo._id, repo.directory);
+  const currentBaseDir = await getRepoBaseDir(repo._id, repo.directory, repo.folderSlug);
   if (path.resolve(currentBaseDir) === targetDir) {
     return { errors: ['The repository is already in that folder.'] };
   }
@@ -1937,7 +2064,7 @@ export const updateGitRepoAction = async ({
       credentialsId: credentialsId,
       legacyDiff: Boolean(workspaceId),
       ref,
-      repoPath: await getRepoBaseDir(gitRepository._id, gitRepository.directory),
+      repoPath: await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug),
     });
 
     await GitVCS.setAuthor();
@@ -2003,6 +2130,12 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
 
 export interface CommitToGitRepoResult {
   errors?: string[];
+  /**
+   * True when the local commit succeeded but the subsequent push failed (e.g. a
+   * protected branch rejected it). The user's work is safe in a local commit —
+   * callers should offer a way to retry the push rather than implying data loss.
+   */
+  pushFailedAfterCommit?: boolean;
 }
 
 export const commitToGitRepoAction = async ({
@@ -2171,14 +2304,21 @@ export const commitAndPushToGitRepoAction = async ({
   try {
     canPush = await GitVCS.canPush(repo.credentialsId);
   } catch (err) {
+    // The commit above already succeeded — a failure here is just the
+    // pushability check, so persist that the commit is still unpushed.
+    await services.gitRepository.update(repo, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
 
-    return { errors: [errorMessage] };
+    return { errors: [errorMessage], pushFailedAfterCommit: true };
   }
   // If nothing to push, display that to the user
   if (!canPush) {
@@ -2210,9 +2350,18 @@ export const commitAndPushToGitRepoAction = async ({
       cachedGitLastCommitTime: Date.now(),
     });
   } catch (err: unknown) {
+    // The commit above already succeeded and is safe on disk — only the push
+    // failed. Reflect that in the persisted repo state so indicators elsewhere
+    // in the app (e.g. the unpushed-changes badge) stay accurate, and flag it
+    // for the UI so it can offer a retry instead of implying data loss.
+    await services.gitRepository.update(repo, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
         errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2221,12 +2370,14 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+        pushFailedAfterCommit: true,
       };
     }
 
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
@@ -2239,6 +2390,7 @@ export const commitAndPushToGitRepoAction = async ({
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
+      pushFailedAfterCommit: true,
     };
   }
 
@@ -2266,13 +2418,34 @@ export const createNewGitBranchAction = async ({
   invariant(typeof branch === 'string', 'Branch name is required');
 
   try {
+    // `GitVCS.checkout()` silently falls back to checking out an existing branch
+    // of the same name instead of branching from HEAD (see its implementation) —
+    // which would strand any local commits on the branch the user is leaving,
+    // with no indication anything happened differently than a real "create".
+    // Since this action's whole contract is "create a NEW branch", refuse up
+    // front rather than let that ambiguity through.
+    const [localBranches, syncedBranches, remoteBranches] = await Promise.all([
+      GitVCS.listBranches(),
+      GitVCS.listRemoteBranches(),
+      GitVCS.fetchRemoteBranches(),
+    ]);
+    if ([...localBranches, ...syncedBranches, ...remoteBranches].includes(branch)) {
+      return {
+        errors: [`A branch named "${branch}" already exists. Choose a different name, or use "Switch branch" instead.`],
+      };
+    }
+
     let providerName = 'custom';
     if (gitRepository?.credentialsId) {
       const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
       invariant(credentials, 'Git Credentials not found');
       providerName = credentials.provider;
     }
-    await GitVCS.checkout(branch);
+    // Create directly rather than GitVCS.checkout(branch) — the collision
+    // check above already ruled out an existing branch of this name, so
+    // checkout()'s own re-check (which repeats the same local/synced/remote
+    // lookups, including a network round-trip) would just be redundant work.
+    await GitVCS.branch(branch, true);
     trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
       ...vcsEventProperties('git', 'create_branch'),
       providerName,
@@ -2327,6 +2500,17 @@ export const checkoutGitBranchAction = async ({
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    // Capture the branch being left, and whether it has commits that haven't
+    // been pushed, before switching away from it — those commits aren't lost,
+    // but they won't be reachable again until the user switches back.
+    const previousBranch = await GitVCS.getCurrentBranch();
+    let hadUnpushedChangesOnPreviousBranch = false;
+    try {
+      hadUnpushedChangesOnPreviousBranch = await GitVCS.canPush(gitRepository.credentialsId);
+    } catch (err) {
+      console.error('Error checking for unpushed changes before branch switch', err);
+    }
+
     const bufferId = await database.bufferChanges();
     await GitVCS.checkout(branch);
 
@@ -2358,19 +2542,25 @@ export const checkoutGitBranchAction = async ({
 
     await database.flushChanges(bufferId);
 
+    const warnings: string[] = [];
+
+    if (hadUnpushedChangesOnPreviousBranch && previousBranch !== branch) {
+      warnings.push(
+        `"${previousBranch}" has commits that haven't been pushed. They're safe — switch back to "${previousBranch}" to push them.`,
+      );
+    }
+
     const branchRemoteInfo = await GitVCS.getBranchRemoteInfo(branch);
     if (!branchRemoteInfo.isOrigin) {
-      return {
-        success: true,
-        warnings: [
-          `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
-            `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
-        ],
-      };
+      warnings.push(
+        `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
+          `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
+      );
     }
 
     return {
       success: true,
+      ...(warnings.length > 0 ? { warnings } : {}),
     };
   } catch (err) {
     if (err instanceof Errors.HttpError) {
@@ -2529,6 +2719,12 @@ export interface PushToGitRemoteResult {
   errors?: string[];
   success?: boolean;
   gitRepository?: GitRepository;
+  /**
+   * True when the push failed but local commits exist and are safe on disk
+   * (i.e. this wasn't "nothing to push" or an upfront auth/connectivity check
+   * failure). Callers should offer a way to retry the push.
+   */
+  pushFailedAfterCommit?: boolean;
 }
 
 export const pushToGitRemoteAction = async ({
@@ -2601,11 +2797,18 @@ export const pushToGitRemoteAction = async ({
     });
     await database.flushChanges(bufferId);
   } catch (err: unknown) {
+    // The local commit(s) that made canPush true above are untouched by a
+    // failed push — persist that so indicators elsewhere in the app stay
+    // accurate, and flag it for the UI so it can offer a retry.
+    await services.gitRepository.update(gitRepository, {
+      hasUnpushedChanges: true,
+    });
+
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
         errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
-
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2614,6 +2817,7 @@ export const pushToGitRemoteAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2624,6 +2828,7 @@ export const pushToGitRemoteAction = async ({
       return {
         errors: [GitVCSOperationErrors.AuthenticationRequiredError],
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
 
@@ -2631,6 +2836,7 @@ export const pushToGitRemoteAction = async ({
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
+        pushFailedAfterCommit: true,
       };
     }
     const errorMessage = getErrorMessage(err);
@@ -2644,6 +2850,7 @@ export const pushToGitRemoteAction = async ({
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
       gitRepository,
+      pushFailedAfterCommit: true,
     };
   }
 
@@ -3177,7 +3384,13 @@ async function listGitProviders() {
   return providers;
 }
 
-async function initSignInToGitProvider({ provider }: { provider: GitRemoteProviderType }) {
+async function initSignInToGitProvider({
+  provider,
+  credentialId,
+}: {
+  provider: GitRemoteProviderType;
+  credentialId?: string;
+}) {
   const gitProvider = gitRemoteProviderRegistry.get(provider);
 
   invariant(gitProvider, `Git provider ${provider} not found`);
@@ -3185,7 +3398,7 @@ async function initSignInToGitProvider({ provider }: { provider: GitRemoteProvid
   invariant(gitProvider.initiateOAuth, `Git provider ${provider} does not support OAuth`);
 
   try {
-    await gitProvider.initiateOAuth();
+    await gitProvider.initiateOAuth(credentialId);
 
     return {};
   } catch (error) {
@@ -3311,6 +3524,52 @@ async function getCurrentBranchByRepositoryId({
   return GitVCSClass.getRepoCurrentBranch({
     fs,
   });
+}
+
+/**
+ * Best-effort startup pass: gives every app-managed git folder that predates
+ * `folderSlug` a human-readable name.
+ *
+ * MUST be awaited before the app window/renderer is created (see
+ * `entry.main.ts`) and MUST NOT be called again afterwards. Renaming these
+ * folders is only safe while nothing else — a file watcher, a route loader's
+ * git call — can be concurrently reading or writing them; once the renderer
+ * exists, it can trigger exactly that, and a rename racing a reader can
+ * silently fork a repo's files across the old and new folder (a reader that
+ * already resolved the old path can recreate it via the FS client's
+ * auto-mkdir-on-write behavior microseconds after the rename moves it away).
+ *
+ * Skips user-owned `directory` repos and already-slugged repos. Failures are
+ * logged, never thrown — this is a purely cosmetic upgrade, not worth failing
+ * startup over.
+ */
+export async function backfillAllManagedGitFolderSlugs(): Promise<void> {
+  try {
+    const allProjects = await services.project.list();
+    const gitProjects = allProjects.filter((p): p is GitProject => models.project.isConnectedGitProject(p));
+    if (gitProjects.length === 0) {
+      return;
+    }
+
+    const repoIds = gitProjects.map(p => models.project.getEffectiveRepoId(p)).filter(Boolean) as string[];
+    const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+      _id: { $in: repoIds },
+    });
+    const repoById = new Map(gitRepositories.map(r => [r._id, r]));
+
+    await Promise.all(
+      gitProjects.map(async project => {
+        const repoId = models.project.getEffectiveRepoId(project);
+        const repo = repoId ? repoById.get(repoId) : undefined;
+        if (!repo || repo.directory || repo.folderSlug || GitVCS.isInitializedForRepo(repo._id)) {
+          return;
+        }
+        await backfillManagedFolderSlug(repo, project._id);
+      }),
+    );
+  } catch (e) {
+    console.warn('[git] Failed to backfill managed repo folder names on startup', e);
+  }
 }
 
 export interface MigrationSummary {

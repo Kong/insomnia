@@ -11,12 +11,34 @@ worker.addEventListener('error', event => {
   console.error('Error from worker:', event.message);
 });
 
-export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
+// The Worker has no window.main access, so this module fetches the auth token once and forwards
+// it in on every postMessage instead.
+let authTokenPromise: Promise<string> | null = null;
+function getTemplatingDbAuthToken(): Promise<string> {
+  if (!authTokenPromise) {
+    authTokenPromise = window.main.templatingDb.getAuthToken();
+  }
+  return authTokenPromise;
+}
+
+// Invalidate this persistent worker's cached Liquid engine so its next render re-fetches plugin
+// tags from main, instead of reusing whatever was baked in the first time it ever rendered. Also
+// forces the plugin registry that fetch reaches (main/templating-worker-database.ts) to rescan —
+// see `plugin.reloadPlugins`. That fetch needs an auth token; if Reload is clicked before this
+// worker has ever handled a render job, it has none yet, so fetch one here rather than reusing the
+// render path's lazily-populated one.
+export async function reloadTemplatingWorker(): Promise<void> {
+  const authToken = await getTemplatingDbAuthToken();
+  worker.postMessage(JSON.stringify({ type: 'reload', authToken }));
+}
+
+export async function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
   const newContext = serializeRenderContext(context);
+  const authToken = await getTemplatingDbAuthToken();
 
   // Id to avoid race conditions
   const id = window.crypto.randomUUID();
-  const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable });
+  const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable, authToken });
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {
     const messageHandler = (event: MessageEvent) => {

@@ -2,9 +2,11 @@ import type { BaseRunnerTestResult, RunnerResultPerRequest } from 'insomnia-data
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import { RequestResultCard } from './request-result-card';
+import { useRootLoaderData } from '~/root';
+import { Hotkey } from '~/ui/components/hotkey';
 
-type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
+import { RequestResultCard } from './request-result-card';
+import { hasMatchingTestResults, type TargetTestType } from './request-test-result-pane';
 
 const filterClassnames =
   'mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
@@ -18,15 +20,30 @@ interface Props {
 export const RunnerTestResultPane: FC<Props> = ({ result }) => {
   const [targetTests, setTargetTests] = useState<TargetTestType>('all');
   const [resultFilter, setResultFilter] = useState('');
+  const { settings } = useRootLoaderData()!;
 
-  const noTestFoundPage = (
-    <div className="mt-5 text-center">
-      <div className="">No test result found</div>
-      <div className="text-sm text-neutral-400">Add test cases in scripts and run them to see results.</div>
-    </div>
-  );
-  if (!result || result.iterationResults.length === 0) {
-    return noTestFoundPage;
+  if (!result) {
+    return (
+      <div className="mt-5 text-center">
+        <div>Run results will appear here</div>
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-sm text-neutral-400">
+          <span>Select requests and press</span>
+          <code>
+            <Hotkey keyBindings={settings.hotKeyRegistry.request_send} useFallbackMessage />
+          </code>
+          <span>to run</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (result.iterationResults.length === 0) {
+    return (
+      <div className="mt-5 text-center">
+        <div>No results from this run</div>
+        <div className="text-sm text-neutral-400">Add test cases in scripts and run them to see results.</div>
+      </div>
+    );
   }
 
   const selectAllTests = () => setTargetTests('all');
@@ -38,6 +55,14 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
     const key = `runner-test-result-iteration-${i + 1}`;
 
     if (Array.isArray(iterationResults)) {
+      const hasVisibleRequest = iterationResults.some(
+        requestTestResult => hasMatchingTestResults(requestTestResult.results ?? [], targetTests, resultFilter),
+      );
+
+      if (!hasVisibleRequest) {
+        return null;
+      }
+
       const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, reqIndex: number) => {
         const key = `request-test-result-${reqIndex}`;
         return (
@@ -47,6 +72,7 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
             resultFilter={resultFilter}
             targetTests={targetTests}
             testId={key}
+            defaultExpanded
           />
         );
       });
@@ -61,9 +87,11 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
     return <div key={key}>Invalid test result format</div>;
   });
 
+  const hasVisibleResults = resultsByIteration.some(Boolean);
+
   return (
     <>
-      <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
+      <div className="flex h-[calc(100%-var(--line-height-sm))] flex-col divide-y divide-solid divide-(--hl-md)">
         <div className="h-[calc(100%-var(--line-height-sm))]">
           <Toolbar className="box-border flex h-(--line-height-sm) flex-row items-center overflow-x-auto border-b border-solid border-b-(--hl-md) pl-2 text-(--font-size-sm)">
             <button
@@ -92,7 +120,13 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
             </button>
           </Toolbar>
           <div className="h-[calc(100%-var(--line-height-sm))] w-auto overflow-x-auto overflow-y-auto">
-            {resultsByIteration}
+            {hasVisibleResults ? (
+              resultsByIteration
+            ) : (
+              <div className="mt-5 text-center">
+                <div>No matching requests/tests to display</div>
+              </div>
+            )}
           </div>
         </div>
         <Toolbar className="box-border flex h-(--line-height-sm) shrink-0 flex-row items-center overflow-x-auto text-(--font-size-sm)">

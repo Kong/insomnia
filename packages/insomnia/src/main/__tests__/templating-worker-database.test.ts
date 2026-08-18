@@ -29,7 +29,11 @@ vi.mock('insomnia-data', () => ({
   },
   models: {},
 }));
-vi.mock('~/plugins', () => ({ getPluginCommonContext: vi.fn(), getTemplateTags: vi.fn().mockResolvedValue([]) }));
+vi.mock('~/plugins', () => ({
+  getPluginCommonContext: vi.fn(),
+  getTemplateTags: vi.fn().mockResolvedValue([]),
+  getPlugins: vi.fn().mockResolvedValue([]),
+}));
 vi.mock('~/common/cookies', () => ({ jarFromCookies: vi.fn() }));
 vi.mock('../common/database', () => ({ database: {} }));
 vi.mock('../network/network', () => ({
@@ -43,13 +47,16 @@ vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
 import { parsePluginPermissions } from '~/common/plugins/permissions';
 
+import { requestPromptFromRenderer } from '../prompt-bridge';
 import {
   _testOnlyResetMigrationWarnings,
   getPluginEntrySource,
   maybeWarnMissingManifest,
   readPluginModuleMap,
+  resolveDbByKey,
   runPluginTagInSandbox,
 } from '../templating-worker-database';
+import { getOrCreateTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from '../templating-worker-database-auth';
 
 describe('readPluginModuleMap (M4 multi-file plugin reader)', () => {
   let dir: string;
@@ -97,7 +104,7 @@ describe('readPluginModuleMap (M4 multi-file plugin reader)', () => {
 
   it('rejects a plugin with more than MAX_PLUGIN_MODULE_FILES source files', () => {
     fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ main: 'index.js' }));
-    fs.writeFileSync(path.join(dir, 'index.js'), "module.exports = {};");
+    fs.writeFileSync(path.join(dir, 'index.js'), 'module.exports = {};');
     for (let i = 0; i < 500; i++) {
       fs.writeFileSync(path.join(dir, `f${i}.js`), 'module.exports = {};');
     }
@@ -245,5 +252,31 @@ describe('runPluginTagInSandbox — util.render escape', () => {
         context: { meta: {}, renderPurpose: 'send' as const, context: { name: 'kyle' } as any },
       }),
     ).resolves.toBe('hello kyle');
+  });
+});
+
+describe('resolveDbByKey — app.prompt', () => {
+  it('routes prompt requests to the renderer prompt bridge', async () => {
+    vi.mocked(requestPromptFromRenderer).mockResolvedValueOnce('typed value');
+    const token = getOrCreateTemplatingDbAuthToken();
+
+    const response = await resolveDbByKey(
+      new Request('insomnia-templating-worker-database://app.prompt', {
+        method: 'post',
+        headers: { [TEMPLATING_DB_AUTH_HEADER]: token },
+        body: JSON.stringify({
+          title: 'Title',
+          options: { label: 'Label', defaultValue: 'cached value', inputType: 'password' },
+        }),
+      }),
+    );
+
+    await expect(response.json()).resolves.toBe('typed value');
+    expect(requestPromptFromRenderer).toHaveBeenCalledWith({
+      title: 'Title',
+      label: 'Label',
+      defaultValue: 'cached value',
+      inputType: 'password',
+    });
   });
 });

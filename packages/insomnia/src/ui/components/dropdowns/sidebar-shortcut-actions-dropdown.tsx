@@ -1,4 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
+import type { Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import type { RefObject } from 'react';
 import { useState } from 'react';
@@ -26,9 +27,17 @@ interface Props {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   triggerRef: RefObject<HTMLElement | null>;
+  onWorkspaceCreated: (workspaceId: string, workspace: Workspace) => void;
 }
 
-export const SidebarShortcutActionsDropdown = ({ target, storageRules, isOpen, onOpenChange, triggerRef }: Props) => {
+export const SidebarShortcutActionsDropdown = ({
+  target,
+  storageRules,
+  isOpen,
+  onOpenChange,
+  triggerRef,
+  onWorkspaceCreated,
+}: Props) => {
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: 'collection' | 'design' | 'mock-server' | 'environment' | 'mcp';
     isOpen: boolean;
@@ -166,6 +175,8 @@ export const SidebarShortcutActionsDropdown = ({ target, storageRules, isOpen, o
           project={target.kind === 'project' ? target.doc : target.project}
           storageRules={storageRules}
           scope={newWorkspaceModalState.scope}
+          redirectAfterCreate={false}
+          onCreateWorkspace={onWorkspaceCreated}
           onOpenChange={nextIsOpen => {
             setNewWorkspaceModalState(prev =>
               prev

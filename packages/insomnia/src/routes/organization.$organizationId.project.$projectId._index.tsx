@@ -57,6 +57,7 @@ import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-s
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
@@ -80,12 +81,14 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { localFiles, remoteFilesPromise } = loaderData;
-  const { activeProject, activeProjectGitRepository, projects } = useProjectLoaderData()!;
+  const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
   const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
+  const { projects } = useOrganizationData(organizationId);
+
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
 
   useEffect(() => {

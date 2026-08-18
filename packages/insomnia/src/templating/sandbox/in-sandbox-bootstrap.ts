@@ -324,6 +324,168 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return ctx;',
   '  };',
 
+  // --- request-hook API rebuilt in-sandbox over the copied-in renderedRequest (`req`) ---
+  // Mirrors packages/insomnia/src/plugins/context/request.ts. Getters always present; mutators
+  // present only when !readOnly (matching request.ts's delete list, lines 221-258). Header matching
+  // is CASE-INSENSITIVE (misc.filterHeaders, misc.ts:21); parameter matching is CASE-SENSITIVE
+  // (filterParameters, request.ts:11). No host/bridge calls: every method is a sync read/write on req.
+  '  function __buildRequestApi(req, readOnly) {',
+  '    if (!req) { throw new Error("contexts.request initialized without request"); }',
+  '    if (!(req.headers instanceof Array)) { req.headers = []; }',
+  '    if (!(req.parameters instanceof Array)) { req.parameters = []; }',
+  '    if (!(req.cookies instanceof Array)) { req.cookies = []; }',
+  '    if (!req.authentication || typeof req.authentication !== "object") { req.authentication = {}; }',
+  '    if (!req.body || typeof req.body !== "object") { req.body = {}; }',
+  '    function __filterHeaders(name) {',
+  '      if (!(req.headers instanceof Array) || !name || typeof name !== "string") { return []; }',
+  '      var out = [];',
+  '      for (var i = 0; i < req.headers.length; i++) {',
+  '        var h = req.headers[i];',
+  '        if (!h || !h.name || typeof h.name !== "string") { continue; }',
+  '        if (h.name.toLowerCase() === name.toLowerCase()) { out.push(h); }',
+  '      }',
+  '      return out;',
+  '    }',
+  '    function __filterParameters(name) {',
+  '      if (!(req.parameters instanceof Array) || !name) { return []; }',
+  '      var out = [];',
+  '      for (var i = 0; i < req.parameters.length; i++) {',
+  '        var p = req.parameters[i];',
+  '        if (!p || !p.name) { continue; }',
+  '        if (p.name === name) { out.push(p); }',
+  '      }',
+  '      return out;',
+  '    }',
+  '    var api = {',
+  '      getId: function () { return req._id; },',
+  '      getName: function () { return req.name; },',
+  '      getUrl: function () { return req.url; },',
+  '      getMethod: function () { return req.method; },',
+  '      setMethod: function (method) { req.method = method; },',
+  '      setUrl: function (url) { req.url = url; },',
+  '      setCookie: function (name, value) {',
+  '        var cookie = null;',
+  '        for (var i = 0; i < req.cookies.length; i++) { if (req.cookies[i] && req.cookies[i].name === name) { cookie = req.cookies[i]; break; } }',
+  '        if (cookie) { cookie.value = value; } else { req.cookies.push({ name: name, value: value }); }',
+  '      },',
+  '      getEnvironmentVariable: function (name) { return __env.context[name]; },',
+  '      getEnvironment: function () { return __env.context; },',
+  '      settingSendCookies: function (enabled) { req.settingSendCookies = enabled; },',
+  '      settingStoreCookies: function (enabled) { req.settingStoreCookies = enabled; },',
+  '      settingEncodeUrl: function (enabled) { req.settingEncodeUrl = enabled; },',
+  '      settingDisableRenderRequestBody: function (enabled) { req.settingDisableRenderRequestBody = enabled; },',
+  '      settingFollowRedirects: function (enabled) { req.settingFollowRedirects = enabled; },',
+  '      getHeader: function (name) {',
+  '        var headers = __filterHeaders(name);',
+  '        if (headers.length) { var header = headers[headers.length - 1]; return header.value || ""; }',
+  '        return null;',
+  '      },',
+  '      getHeaders: function () {',
+  '        var out = [];',
+  '        for (var i = 0; i < req.headers.length; i++) { out.push({ name: req.headers[i].name, value: req.headers[i].value }); }',
+  '        return out;',
+  '      },',
+  '      hasHeader: function (name) { return this.getHeader(name) !== null; },',
+  '      removeHeader: function (name) {',
+  '        var headers = __filterHeaders(name);',
+  '        var out = [];',
+  '        for (var i = 0; i < req.headers.length; i++) { if (__arrIndexOf(headers, req.headers[i]) === -1) { out.push(req.headers[i]); } }',
+  '        req.headers = out;',
+  '      },',
+  '      setHeader: function (name, value) {',
+  '        var header = __filterHeaders(name)[0];',
+  '        if (header) { header.value = value; } else { this.addHeader(name, value); }',
+  '      },',
+  '      addHeader: function (name, value) {',
+  '        var header = __filterHeaders(name)[0];',
+  '        if (!header) { req.headers.push({ name: name, value: value }); }',
+  '      },',
+  '      getParameter: function (name) {',
+  '        var parameters = __filterParameters(name);',
+  '        if (parameters.length) { var parameter = parameters[parameters.length - 1]; return parameter.value || ""; }',
+  '        return null;',
+  '      },',
+  '      getParameters: function () {',
+  '        var out = [];',
+  '        for (var i = 0; i < req.parameters.length; i++) { out.push({ name: req.parameters[i].name, value: req.parameters[i].value }); }',
+  '        return out;',
+  '      },',
+  '      hasParameter: function (name) { return this.getParameter(name) !== null; },',
+  '      removeParameter: function (name) {',
+  '        var parameters = __filterParameters(name);',
+  '        var out = [];',
+  '        for (var i = 0; i < req.parameters.length; i++) { if (__arrIndexOf(parameters, req.parameters[i]) === -1) { out.push(req.parameters[i]); } }',
+  '        req.parameters = out;',
+  '      },',
+  '      setParameter: function (name, value) {',
+  '        var parameter = __filterParameters(name)[0];',
+  '        if (parameter) { parameter.value = value; } else { this.addParameter(name, value); }',
+  '      },',
+  '      addParameter: function (name, value) {',
+  '        var parameter = __filterParameters(name)[0];',
+  '        if (!parameter) { req.parameters.push({ name: name, value: value }); }',
+  '      },',
+  '      setAuthenticationParameter: function (name, value) { req.authentication[name] = value; },',
+  '      getAuthentication: function () { return req.authentication; },',
+  '      getBody: function () { return req.body; },',
+  '      setBody: function (body) { req.body = body; },',
+  '      getBodyText: function () { console.warn("request.getBodyText() is deprecated. Use request.getBody() instead."); return req.body.text || ""; },',
+  '      setBodyText: function (text) { console.warn("request.setBodyText() is deprecated. Use request.setBody() instead."); req.body.text = text; }',
+  '    };',
+  '    if (readOnly) {',
+  '      delete api.setUrl; delete api.setMethod; delete api.setBodyText; delete api.setCookie;',
+  '      delete api.settingSendCookies; delete api.settingStoreCookies; delete api.settingEncodeUrl;',
+  '      delete api.settingDisableRenderRequestBody; delete api.settingFollowRedirects;',
+  '      delete api.removeHeader; delete api.setHeader; delete api.addHeader;',
+  '      delete api.removeParameter; delete api.setParameter; delete api.addParameter;',
+  '      delete api.setAuthenticationParameter; delete api.setBody;',
+  '    }',
+  '    return api;',
+  '  }',
+
+  // --- response-hook API rebuilt in-sandbox over the copied-in response object (`resp`) ---
+  // Mirrors packages/insomnia/src/plugins/context/response.ts. No readOnly variant (response.ts has
+  // none). Header matching is CASE-INSENSITIVE and hand-rolled (NOT misc.filterHeaders); getHeader
+  // returns string | string[] | null exactly as response.ts:91-101. Sync field reads never touch the
+  // host; getBody/setBody route through __bridge (no fs in the sandbox). setBody sends the body as
+  // base64 so the bytes survive the JSON bridge; the host decodes and writes the file.
+  '  function __buildResponseApi(resp) {',
+  '    if (!resp) { throw new Error("contexts.response initialized without response"); }',
+  '    var api = {',
+  '      getRequestId: function () { return resp.parentId || ""; },',
+  '      getStatusCode: function () { return resp.statusCode || 0; },',
+  '      getStatusMessage: function () { return resp.statusMessage || ""; },',
+  '      getBytesRead: function () { return resp.bytesRead || 0; },',
+  '      getTime: function () { return resp.elapsedTime || 0; },',
+  // The host returns a Buffer; the JSON bridge marshals it as { type: "Buffer", data: [...] }. Revive
+  // it to a real (shimmed) Buffer so hooks consume getBody() the same as the in-process response API.
+  '      getBody: function () { return __bridge("response.getBodyBuffer", { response: { bodyPath: resp.bodyPath, bodyCompression: resp.bodyCompression } }).then(function (raw) { if (raw && typeof raw === "object" && raw.type === "Buffer" && raw.data) { return Buffer.from(raw.data); } return raw; }); },',
+  '      getBodyStream: function () { throw new Error("response.getBodyStream() is not available in the sandbox; use getBody()"); },',
+  '      setBody: function (body) {',
+  '        if (!resp.bodyPath) { throw new Error("Could not set body without existing body path"); }',
+  '        resp.bytesContent = (body && body.length) || 0;',
+  '        var b64 = (typeof body === "string") ? Buffer.from(body, "utf8").toString("base64") : Buffer.from(body || []).toString("base64");',
+  '        return __bridge("response.setBody", { bodyPath: resp.bodyPath, bodyBase64: b64, parentId: resp.parentId });',
+  '      },',
+  '      getHeader: function (name) {',
+  '        var headers = resp.headers || [];',
+  '        var matched = [];',
+  '        for (var i = 0; i < headers.length; i++) { if (headers[i].name.toLowerCase() === name.toLowerCase()) { matched.push(headers[i]); } }',
+  '        if (matched.length > 1) { var vals = []; for (var j = 0; j < matched.length; j++) { vals.push(matched[j].value); } return vals; }',
+  '        if (matched.length === 1) { return matched[0].value; }',
+  '        return null;',
+  '      },',
+  '      getHeaders: function () {',
+  '        if (!resp.headers) { return undefined; }',
+  '        var out = [];',
+  '        for (var i = 0; i < resp.headers.length; i++) { out.push({ name: resp.headers[i].name, value: resp.headers[i].value }); }',
+  '        return out;',
+  '      },',
+  '      hasHeader: function (name) { return this.getHeader(name) !== null; }',
+  '    };',
+  '    return api;',
+  '  }',
+
   // --- load the plugin (its entry module, resolving any relative requires) and run the tag ---
   '  globalThis.__invoke = function () {',
   '    var env = __env;',
@@ -337,14 +499,103 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
   '  };',
 
+  // --- run a request/response hook (H1) and marshal the mutated request/response back out ---
+  // The hook mutates context.request (and context.response) in place, exactly like the in-process
+  // path; we rebuild those APIs over the copied-in envelope data and JSON-return the mutated data so
+  // the host can merge it. The side-effecting surfaces (app/store/network/util) come from
+  // __buildContext and stay capability-gated.
+  '  globalThis.__invokeHook = function () {',
+  '    var env = __env;',
+  '    var ctx = globalThis.__buildContext(env);',
+  '    var mod = globalThis.__loadPluginEntry();',
+  '    var isResponse = env.hookKind === "response";',
+  '    var hooks = (isResponse ? (mod && mod.responseHooks) : (mod && mod.requestHooks)) || [];',
+  '    var hook = hooks[env.hookIndex];',
+  '    if (typeof hook !== "function") { throw new Error("Plugin " + (isResponse ? "response" : "request") + " hook not found at index " + env.hookIndex); }',
+  // Response hooks get a read-only request view (matches pluginRequest.init(..., true)) plus the
+  // response API; request hooks get a mutable request only. Pass hookRequest/hookResponse through
+  // directly (no `|| {}`): __buildRequestApi/__buildResponseApi throw on missing data, matching the
+  // in-process pluginRequest.init()/pluginResponse.init(), and keep the marshaled-back objects === the
+  // ones the hook mutated.
+  '    ctx.request = __buildRequestApi(env.hookRequest, isResponse);',
+  '    if (isResponse) { ctx.response = __buildResponseApi(env.hookResponse); }',
+  '    return Promise.resolve(hook(ctx)).then(function () { return JSON.stringify({ request: env.hookRequest, response: env.hookResponse }); });',
+  '  };',
+
+  // --- run a plugin action (A1) ---
+  // Actions are fire-and-effect: action(context, domainData) returns void and performs side effects
+  // only through the capability-gated context.* bridge (built by __buildContext). The domain models
+  // are copied in as plain data; nothing is marshaled back. The action is found by its label within
+  // the kind-specific list (request/requestGroup/workspace/document Actions).
+  '  globalThis.__invokeAction = function () {',
+  '    var env = __env;',
+  '    var ctx = globalThis.__buildContext(env);',
+  '    var mod = globalThis.__loadPluginEntry() || {};',
+  '    var lists = { request: mod.requestActions, requestGroup: mod.requestGroupActions, workspace: mod.workspaceActions, document: mod.documentActions };',
+  '    var actions = lists[env.actionKind] || [];',
+  '    var entry = null;',
+  '    for (var i = 0; i < actions.length; i++) { if (actions[i] && actions[i].label === env.actionLabel) { entry = actions[i]; break; } }',
+  '    if (!entry || typeof entry.action !== "function") { throw new Error("Plugin " + env.actionKind + " action not found: " + env.actionLabel); }',
+  '    return Promise.resolve(entry.action(ctx, env.actionDomainData)).then(function () { return "{}"; });',
+  '  };',
+
+  // --- describe the plugin's exports without running any of them (L1 load-time discovery) ---
+  // Evaluates the plugin entry (its top-level code runs here, in the sandbox — never on the host)
+  // and returns a JSON-serializable manifest of what it exports: template-tag metadata, hook counts,
+  // action labels/icons, and theme data. The host reads this instead of nodeRequire()ing the module,
+  // so installing/enabling a user plugin no longer executes its top-level code with Node privileges.
+  // Only DATA crosses back — function-valued members (tag.run, hook fns, action fns) are dropped;
+  // execution is routed separately (tags already go through __invoke; hooks/actions land in PR 10/11).
+  '  globalThis.__describeExports = function () {',
+  '    var mod = globalThis.__loadPluginEntry() || {};',
+  '    var isObj = function (x) { return !!x && typeof x === "object"; };',
+  '    var mapArr = function (arr, fn) { var out = []; if (arr && arr.length) { for (var i = 0; i < arr.length; i++) { var d = fn(arr[i]); if (d) { out.push(d); } } } return out; };',
+  '    var tagDesc = function (t) { return isObj(t) ? { name: t.name, displayName: t.displayName, description: t.description, args: t.args || [] } : null; };',
+  '    var actionDesc = function (a) { return isObj(a) ? { label: a.label, icon: a.icon } : null; };',
+  '    var themeDesc = function (t) { return isObj(t) ? { name: t.name, displayName: t.displayName, theme: t.theme } : null; };',
+  // Report a hook count, not the array itself — but a plugin could export a non-array with a huge
+  // `.length` to make the host allocate `Array.from({length})` (DoS). Coerce to a finite, non-negative
+  // integer and cap it; the host clamps again as defense in depth.
+  '    var hookCount = function (arr) { var n = arr && arr.length; n = (typeof n === "number" && isFinite(n)) ? Math.floor(n) : 0; if (n < 0) { n = 0; } return n > 1000 ? 1000 : n; };',
+  '    var manifest = {',
+  '      templateTags: mapArr(mod.templateTags, tagDesc),',
+  '      requestHooks: hookCount(mod.requestHooks),',
+  '      responseHooks: hookCount(mod.responseHooks),',
+  '      requestActions: mapArr(mod.requestActions, actionDesc),',
+  '      requestGroupActions: mapArr(mod.requestGroupActions, actionDesc),',
+  '      workspaceActions: mapArr(mod.workspaceActions, actionDesc),',
+  '      documentActions: mapArr(mod.documentActions, actionDesc),',
+  '      themes: mapArr(mod.themes, themeDesc)',
+  '    };',
+  '    return JSON.stringify(manifest);',
+  '  };',
+
   // --- lock the sandbox-internal globals ---
   // Plugin code runs after this bootstrap; pin these so it can't reassign the require gate or the
   // context/invocation entry points. __registerModule is intentionally left mutable — the module
   // registry source deletes it once the registry is populated.
   '  var __lock = function (n) { Object.defineProperty(globalThis, n, { value: globalThis[n], writable: false, configurable: false }); };',
-  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry");',
+  '  __lock("__require"); __lock("__buildContext"); __lock("__invoke"); __lock("__loadPluginEntry"); __lock("__describeExports"); __lock("__invokeHook"); __lock("__invokeAction");',
   '})();',
 ].join('\n');
 
 /** The runner: kicks off the async invocation and parks the VM promise on `globalThis.__task`. */
 export const RUNNER = 'globalThis.__task = globalThis.__invoke();';
+
+/**
+ * Discovery runner: parks a resolved promise of the export manifest (JSON string) on `globalThis.__task`.
+ * Used at plugin load instead of {@link RUNNER} to enumerate exports without invoking any of them.
+ */
+export const DESCRIBE_RUNNER = 'globalThis.__task = Promise.resolve(globalThis.__describeExports());';
+
+/**
+ * Hook runner (H1): parks a resolved promise of the mutated request/response (JSON string) on
+ * `globalThis.__task`. Used instead of {@link RUNNER} to run a request/response hook.
+ */
+export const HOOK_RUNNER = 'globalThis.__task = globalThis.__invokeHook();';
+
+/**
+ * Action runner (A1): parks a resolved promise on `globalThis.__task` after running the plugin
+ * action. Actions are fire-and-effect, so the resolved value is an empty JSON object.
+ */
+export const ACTION_RUNNER = 'globalThis.__task = globalThis.__invokeAction();';

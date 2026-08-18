@@ -200,4 +200,63 @@ describe('test CookieJar', () => {
     cookieList.upsert(upsertedC1);
     expect(cookieList.one('c1')).toEqual(upsertedC1.valueOf());
   });
+
+  it('toObject returns {} when there are no cookies', () => {
+    expect(new CookieList([]).toObject()).toEqual({});
+    expect(new CookieObject(null).toObject()).toEqual({});
+  });
+
+  it('toObject returns a key-value map when there are cookies', () => {
+    const cookieList = new CookieList([new Cookie({ key: 'c1', value: 'v1' }), new Cookie({ key: 'c2', value: 'v2' })]);
+    expect(cookieList.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
+
+    const cookieObject = new CookieObject({
+      _id: '',
+      type: 'CookieJar',
+      parentId: '',
+      modified: 0,
+      created: 0,
+      isPrivate: false,
+      name: 'my jar',
+      cookies: [
+        { id: '1', key: 'c1', value: 'v1', domain: 'inso.com', expires: null, path: '/', secure: false, httpOnly: false },
+        { id: '2', key: 'c2', value: 'v2', domain: 'inso.com', expires: null, path: '/', secure: false, httpOnly: false },
+      ],
+    });
+    expect(cookieObject.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
+  });
+
+  it('toObject includes disabled cookies by default but excludes them when excludeDisabled is true', () => {
+    const c1 = new Cookie({ key: 'c1', value: 'v1' });
+    const c2 = new Cookie({ key: 'c2', value: 'v2' });
+    c2.disabled = true;
+    const cookieList = new CookieList([c1, c2]);
+
+    expect(cookieList.toObject()).toEqual({ c1: 'v1', c2: 'v2' });
+    expect(cookieList.toObject(true)).toEqual({ c1: 'v1' });
+  });
+
+  it('toObject collapses duplicate keys to the last value by default, but collects them into an array when multiValue is true', () => {
+    const cookieList = new CookieList([
+      new Cookie({ key: 'c1', value: 'v1' }),
+      new Cookie({ key: 'c1', value: 'v1b' }),
+      new Cookie({ key: 'c2', value: 'v2' }),
+    ]);
+
+    expect(cookieList.toObject()).toEqual({ c1: 'v1b', c2: 'v2' });
+    expect(cookieList.toObject(false, false, true)).toEqual({ c1: ['v1', 'v1b'], c2: 'v2' });
+  });
+
+  it('toObject does not pollute the prototype for dangerous cookie keys', () => {
+    const cookieList = new CookieList([
+      new Cookie({ key: '__proto__', value: 'polluted' }),
+      new Cookie({ key: 'constructor', value: 'polluted' }),
+    ]);
+
+    const obj = cookieList.toObject();
+    expect(Object.getPrototypeOf(obj)).toBeNull();
+    expect(({} as any).polluted).toBeUndefined();
+    expect(obj.__proto__).toEqual('polluted');
+    expect(obj.constructor).toEqual('polluted');
+  });
 });

@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { ALL_SANDBOX_MODULES } from './module-registry';
 import {
   findLeakedGatedReferences,
+  findSandboxInternalGlobals,
   findUnaccountedHostNatives,
   formatSurfaceEntries,
   getSandboxEscapeProbe,
   getSandboxSurface,
+  SANDBOX_INTERNAL_GLOBALS,
 } from './sandbox-surface';
 
 describe('sandbox surface', () => {
@@ -74,5 +76,13 @@ describe('sandbox', () => {
   it('no gated reference leaks onto bare globalThis (alias resolver)', async () => {
     const entries = await getSandboxSurface();
     expect(findLeakedGatedReferences(entries)).toEqual([]);
+  }, 20_000);
+
+  // Completeness tripwire: any new sandbox-internal global must be added here deliberately, so its
+  // safety story (who can reach it, what it can do during discovery) gets reviewed rather than
+  // slipping in unnoticed.
+  it('exposes exactly the reviewed set of sandbox-internal globals', async () => {
+    const entries = await getSandboxSurface();
+    expect(findSandboxInternalGlobals(entries)).toEqual([...SANDBOX_INTERNAL_GLOBALS].sort());
   }, 20_000);
 });

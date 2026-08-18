@@ -3,7 +3,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { models } from 'insomnia-data';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { Heading, Link } from 'react-aria-components';
+import { Form, Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
@@ -19,6 +19,8 @@ import {
   findExistingImportedWorkspace,
   findRequestInExistingWorkspace,
   type ImportSourceType,
+  isApiSpecScanResult,
+  requiresNewWorkspace,
   type ScanResult,
 } from '../../../../common/import';
 import {
@@ -33,14 +35,7 @@ import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
-import {
-  CurlIcon,
-  isApiSpecScanResult,
-  requiresNewWorkspace,
-  ScanResultsTable,
-  SupportedFormats,
-  validImportExtensions,
-} from './shared';
+import { CurlIcon, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 export const Radio: FC<{
   name: string;
@@ -383,7 +378,6 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
-            autoScan={autoScan}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -640,7 +634,6 @@ const ImportResourcesForm = ({
   errors,
   disabled,
   loading,
-  autoScan,
   isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
@@ -653,17 +646,16 @@ const ImportResourcesForm = ({
   ) => void;
   disabled: boolean;
   loading: boolean;
-  autoScan: boolean;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
-    workspaceId: string;
   };
+  const formId = useId();
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(autoScan ? '' : workspaceId || '');
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   const [newProjectName, setNewProjectName] = useState(() => {
     for (const result of scanResults) {
@@ -696,9 +688,27 @@ const ImportResourcesForm = ({
         .filter(isNotNullOrUndefined)
         .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
   const shouldShowWorkspaceSelect = !scanResults.some(requiresNewWorkspace) && workspacesForActiveProject.length > 0;
+
+  const handleImport = () =>
+    onImport(
+      overrideBaseEnvironmentData,
+      selectedProjectId,
+      selectedWorkspaceId,
+      selectedNewProject ? newProjectName || 'New Project' : undefined,
+    );
+
   return (
     <Fragment>
-      <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
+      <Form
+        id={formId}
+        className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto"
+        onSubmit={e => {
+          e.preventDefault();
+          if (!disabled && !loading) {
+            handleImport();
+          }
+        }}
+      >
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
           <div className="form-row mt-2">
@@ -706,6 +716,7 @@ const ImportResourcesForm = ({
               <label>
                 Select Project:
                 <select
+                  autoFocus
                   aria-label="Select Project"
                   name="projectId"
                   value={selectedProjectId}
@@ -790,21 +801,15 @@ const ImportResourcesForm = ({
             </div>
           )}
         </div>
-      </div>
+      </Form>
 
       <div className="flex w-full items-end justify-end gap-(--padding-sm)">
         <Button
+          type="submit"
+          form={formId}
           variant="contained"
           bg="surprise"
           disabled={disabled || loading}
-          onClick={() =>
-            onImport(
-              overrideBaseEnvironmentData,
-              selectedProjectId,
-              selectedWorkspaceId,
-              selectedNewProject ? newProjectName || 'New Project' : undefined,
-            )
-          }
           className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (

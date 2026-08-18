@@ -23,9 +23,10 @@ const { isGitCredentialsV2 } = models.gitCredentials;
 
 /**
  * OAuth state cache for security validation
- * Stores states that are generated for the OAuth flow to verify callback legitimacy
+ * Stores states that are generated for the OAuth flow to verify callback legitimacy,
+ * mapped to the credential ID being reauthorized (undefined when adding a fresh credential).
  */
-const githubStatesCache = new Set<string>();
+const githubStatesCache = new Map<string, string | undefined>();
 
 type GitHubCredentialV2 = Extract<GitCredentialsV2, { provider: 'github' }>;
 
@@ -262,10 +263,10 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    * Initiate OAuth flow
    * Opens the browser to GitHub OAuth page and manages state for security
    */
-  async initiateOAuth(): Promise<OAuthInitResult> {
+  async initiateOAuth(credentialId?: string): Promise<OAuthInitResult> {
     try {
       const state = v4();
-      githubStatesCache.add(state);
+      githubStatesCache.set(state, credentialId);
       const url = new URL(getAppWebsiteBaseURL() + '/oauth/github-app');
 
       url.search = new URLSearchParams({
@@ -295,6 +296,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       if (!PLAYWRIGHT_TEST && !githubStatesCache.has(state)) {
         throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
       }
+      const reauthorizingCredentialId = githubStatesCache.get(state);
 
       // Exchange code for access token via Insomnia backend
       const response = await net.fetch(getApiBaseURL() + '/v1/oauth/github-app', {
@@ -333,31 +335,22 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
       const credentials = {
         token: data.access_token,
         emails,
-        // Ensure the credential has a selectedEmail for consistent matching later.
         selectedEmail: email || undefined,
         ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
       };
 
-      // Upsert: update the existing GitHub credential when we can reliably identify it.
-      // Otherwise, create a new credential to avoid overwriting a different account.
-      const existingGitHubCredentials = (await services.gitCredentials.all()).filter(
-        (c): c is GitHubCredentialV2 => isGitCredentialsV2(c) && c.provider === 'github',
-      );
-
-      const matchingByEmail = email
-        ? existingGitHubCredentials
-            .filter(c => {
-              return (
-                c.author.email === email ||
-                c.credentials.selectedEmail === email ||
-                c.credentials.emails?.some(e => e.email === email)
-              );
-            })
-            .sort((a, b) => (b.modified ?? 0) - (a.modified ?? 0))
-        : [];
-
-      const existing =
-        matchingByEmail[0] || (existingGitHubCredentials.length === 1 ? existingGitHubCredentials[0] : undefined);
+      // Update the credential this flow was explicitly reauthorizing (see
+      // GitEditProviderOAuthForm's "Reauthorize" button), if any. Otherwise this is
+      // an "Add Credential" flow, so always create a new credential — never guess
+      // at an existing one to update, or a second account for this provider could
+      // silently overwrite the first.
+      const existingCredential = reauthorizingCredentialId
+        ? await services.gitCredentials.getById(reauthorizingCredentialId)
+        : null;
+      const existing: GitHubCredentialV2 | undefined =
+        existingCredential && isGitCredentialsV2(existingCredential) && existingCredential.provider === 'github'
+          ? existingCredential
+          : undefined;
 
       await (existing
         ? services.gitCredentials.update(existing, {

@@ -41,7 +41,7 @@ const isUpdateSupported = () => {
   return true;
 };
 
-const getUpdatesBaseURL = process.env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
+export const getUpdatesBaseURL = process.env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
 export const getUpdateUrl = (updateChannel: string): string | null => {
   const fullUrl = new URL(
     process.platform === 'win32' ? getUpdatesBaseURL + '/updates/win' : getUpdatesBaseURL + '/builds/check/mac',

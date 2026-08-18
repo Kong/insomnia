@@ -92,7 +92,7 @@ const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix: string;
   selectedFormat: SelectedFormat;
 }) => {
-  const date = format(Date.now(), 'yyyy-MM-dd');
+  const date = format(Date.now(), 'yyyy-MM-dd-HH-mm-ss');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || window.app.getPath('desktop');
@@ -653,8 +653,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
 
   const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { workspaceCount, userSession } = useRootLoaderData()!;
+  const { userSession } = useRootLoaderData()!;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
+  const [workspaceCount, setWorkspaceCount] = useState(0);
+
+  useEffect(() => {
+    services.workspace.count().then(setWorkspaceCount);
+  }, []);
+
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (
