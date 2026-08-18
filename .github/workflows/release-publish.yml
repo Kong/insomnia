@@ -133,6 +133,13 @@ jobs:
         with:
           path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
 
+      - name: Determine previous release tag
+        id: previous_tag
+        run: |
+          PREVIOUS_TAG=$(node ./.github/scripts/resolve-previous-release-tag.js "${RELEASE_CORE_TAG}")
+          echo "Resolved previous tag for changelog diff: ${PREVIOUS_TAG:-<none, will omit>}"
+          echo "PREVIOUS_TAG=${PREVIOUS_TAG}" >> "$GITHUB_ENV"
+
       - name: Create Tag and Release
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         id: core_tag_and_release
@@ -140,6 +147,7 @@ jobs:
           tag: ${{ env.RELEASE_CORE_TAG }}
           name: '${{ env.RELEASE_VERSION }} 📦'
           generateReleaseNotes: true
+          generateReleaseNotesPreviousTag: ${{ env.PREVIOUS_TAG }}
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
