@@ -8,9 +8,11 @@ import * as reactUse from 'react-use';
 
 import { getAppBundlePlugins } from '~/common/constants';
 import { generateId } from '~/common/misc';
+import { localTemplateTags } from '~/common/templating/local-template-tags';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
 import * as templateUtils from '~/common/templating/utils';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { init as initPluginStore } from '~/plugins/context/store';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import * as templating from '~/ui/templating/renderer-safe';
 
@@ -645,6 +647,12 @@ export const TagEditor: FC<Props> = props => {
                         tagName: bridgeTag.templateTag.name as string,
                         actionName: action.name,
                       });
+                    } else {
+                      const localTag = localTemplateTags.find(t => t.templateTag.name === state.activeTagData?.name);
+                      const localAction = localTag?.templateTag.actions?.find(a => a.name === action.name);
+                      if (localTag && localAction) {
+                        await localAction.run(initPluginStore({ name: localTag.plugin.name }));
+                      }
                     }
                     update(state.tagDefinitions, state.activeTagDefinition, state.activeTagData, true);
                   }}

@@ -190,25 +190,19 @@ test('Prompt tag caches values under the storage key and re-prompts once cleared
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('super-secret-value');
 
-  // KNOWN BUG: clicking the tag editor's "Clear" action for a BUILT-IN tag (like prompt) is a silent
-  // no-op. tag-editor.tsx's onClick handler looks up the tag via `plugins.getTemplateTags()`
-  // (packages/insomnia/src/plugins/index.ts getTemplateTags(), which is backed by getActivePlugins()
-  // and only enumerates user-installed/bundled plugins), then only calls `runTemplateTagAction` if a
-  // match is found. Built-in tags from common/templating/local-template-tags.ts are never included in
-  // that list (they are merged in separately by templating/index.ts's getTagDefinitions(), which is a
-  // different function used only to populate the editor form), so the lookup fails, the `if (bridgeTag)`
-  // guard skips the call, and the cached value is never actually cleared.
-  // This assertion documents the CURRENT (buggy) behavior: clicking Clear does not clear the cache, so
-  // sending again reuses the previously-submitted value instead of re-prompting.
+  // Clicking the tag editor's "Clear" action for the prompt tag clears the cached value, so sending
+  // again re-prompts instead of reusing the previously-submitted value.
   await tagPill.click();
   await modal.getByRole('button', { name: 'Clear' }).click();
   await expect.soft(previewResult).not.toHaveText('rendering...');
   await modal.getByRole('button', { name: 'Done' }).click();
 
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-  await expect.soft(page.getByRole('dialog').filter({ hasText: 'masked prompt test' })).toHaveCount(0);
+  await expect.soft(promptDialog).toBeVisible();
+  await promptInput.fill('super-secret-value-2');
+  await promptDialog.getByRole('button', { name: 'Submit' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('super-secret-value');
+  await expect.soft(responseBody).toContainText('super-secret-value-2');
 });
 
 test('File tag renders a legible error for a non-existent file path', async ({ page, app, insomnia }) => {
