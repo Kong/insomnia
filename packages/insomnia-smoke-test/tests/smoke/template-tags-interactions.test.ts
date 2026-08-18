@@ -175,11 +175,7 @@ test('Prompt tag caches values under the storage key and re-prompts once cleared
   const promptDialog = page.getByRole('dialog').filter({ hasText: 'masked prompt test' });
   await expect.soft(promptDialog).toBeVisible();
   const promptInput = promptDialog.locator('#prompt-input');
-  // KNOWN BUG: the "Mask Text" prompt-tag arg is not actually wired through the main-process IPC bridge
-  // (see requestPromptFromRenderer in packages/insomnia/src/main/prompt-bridge.ts, which never forwards
-  // inputType/maskText from context.app.prompt in local-template-tags.ts), so the field renders as plain
-  // text instead of a password field. This assertion documents the CURRENT (buggy) behavior.
-  await expect.soft(promptInput).toHaveAttribute('type', 'text');
+  await expect.soft(promptInput).toHaveAttribute('type', 'password');
   await promptInput.fill('super-secret-value');
   await promptDialog.getByRole('button', { name: 'Submit' }).click();
 
