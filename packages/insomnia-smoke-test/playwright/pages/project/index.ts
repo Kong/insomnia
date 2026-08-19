@@ -182,16 +182,9 @@ export class ProjectPage extends BasePage {
   }
 
   /**
-   * Clicks a locator, tolerating the app-side race where a just-closed modal's
-   * backdrop lingers and keeps intercepting pointer events after its dialog element
-   * already reports itself hidden (see the "modal's backdrop still intercepts
-   * clicks" comments above and in createGitSyncProject below). A plain `.click()`
-   * already retries actionability checks for its own timeout; if it still can't
-   * get through because of a stale backdrop, fall back to a forced click, which
-   * skips the "receives pointer events" check but still dispatches on the real
-   * target element.
+   * Clicks a locator, falling back to a forced click if the normal click doesn't go through.
    */
-  private async clickThroughStaleOverlay(locator: Locator, timeout = 10_000): Promise<void> {
+  private async clickReliably(locator: Locator, timeout = 10_000): Promise<void> {
     await locator.click({ timeout }).catch(() => locator.click({ force: true }));
   }
 
@@ -285,7 +278,7 @@ export class ProjectPage extends BasePage {
     // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
     // a bare role locator matching both is a Playwright strict-mode violation.
     await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
-    await this.clickThroughStaleOverlay(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
+    await this.clickReliably(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
     await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
