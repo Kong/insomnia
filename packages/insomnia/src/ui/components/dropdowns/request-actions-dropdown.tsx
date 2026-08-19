@@ -90,8 +90,13 @@ export const RequestActionsDropdown = ({
   };
 
   const onOpen = useCallback(async () => {
-    const actionPlugins = await plugins.getRequestActions();
-    setActionPlugins(actionPlugins);
+    try {
+      const actionPlugins = await plugins.getRequestActions();
+      setActionPlugins(actionPlugins);
+    } catch (error) {
+      setActionPlugins([]);
+      console.error('Failed to get request plugin actions', error);
+    }
   }, []);
 
   useEffect(() => {

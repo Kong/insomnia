@@ -85,8 +85,13 @@ export const RequestGroupActionsDropdown = ({
     });
 
   const onOpen = useCallback(async () => {
-    const actionPlugins = await plugins.getRequestGroupActions();
-    setActionPlugins(actionPlugins);
+    try {
+      const actionPlugins = await plugins.getRequestGroupActions();
+      setActionPlugins(actionPlugins);
+    } catch (error) {
+      setActionPlugins([]);
+      console.error('Failed to get request group plugin actions', error);
+    }
   }, []);
 
   useEffect(() => {
