@@ -1358,7 +1358,22 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </Button>
           <TooltipTrigger>
             <Button
-              onPress={() => window.shell.openPath(repoPath)}
+              onPress={async () => {
+                if (!gitRepository?._id) {
+                  return;
+                }
+                // Resolve (and confirm it still exists) before opening — unlike a
+                // plain `window.shell.openPath`, this never recreates a folder
+                // that was renamed, moved, or deleted outside Insomnia.
+                const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
+                if ('errors' in result && result.errors) {
+                  showToast({ icon: 'exclamation-triangle', title: 'Folder not found', description: result.errors.join(', '), status: 'error' });
+                  return;
+                }
+                if (result.path) {
+                  window.shell.openPath(result.path);
+                }
+              }}
               className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
               aria-label="Open in file system"
             >

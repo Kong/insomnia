@@ -141,10 +141,14 @@ export const ProjectCreateForm: FC<Props> = ({
     }
 
     // For a custom clone location, the picked folder is the parent — clone into
-    // `<parent>/<repo-name>`, matching `git clone` behaviour.
+    // `<parent>/<folder-name>`, matching `git clone` behaviour. The folder name
+    // defaults to the repo's own name but can be overridden in the form.
     const directory =
       storageType === 'git' && !isGitOpen && !projectData.connectRepositoryLater && projectData.cloneParentDir
-        ? window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))
+        ? window.path.join(
+            projectData.cloneParentDir,
+            projectData.cloneFolderName?.trim() || deriveRepoName(projectData.uri),
+          )
         : undefined;
 
     newProjectFetcher.submit({

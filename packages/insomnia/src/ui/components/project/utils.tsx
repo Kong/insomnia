@@ -17,10 +17,16 @@ export interface ProjectData {
   selectedAuthorEmail?: string | null;
   /**
    * Optional user-chosen parent folder to clone into. When set, the repo is
-   * cloned into `<cloneParentDir>/<repo-name>`; when unset, Insomnia manages the
-   * location.
+   * cloned into `<cloneParentDir>/<cloneFolderName || deriveRepoName(uri)>`;
+   * when unset, Insomnia manages the location.
    */
   cloneParentDir?: string;
+  /**
+   * Optional user-chosen override for the folder name the repo is cloned into
+   * (only meaningful alongside `cloneParentDir`). Falls back to
+   * `deriveRepoName(uri)` (the git repo's own name) when unset.
+   */
+  cloneFolderName?: string;
 }
 
 const LAST_CLONE_DIR_KEY = 'insomnia.git.lastCloneParentDir';

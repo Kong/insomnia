@@ -470,6 +470,21 @@ class RepoFileWatcher {
    * blocking import problem that the user must resolve first.
    */
   private async flushWorkspacesToDisk(workspaceIds?: Set<string>): Promise<void> {
+    // Mirror importAllFiles' guard: this runs on every DB change (debounced)
+    // AND on every explicit flushNow() (e.g. git-status polling), regardless
+    // of whether the user did anything. Without this check, a repo folder
+    // that was deleted/renamed/moved outside Insomnia (or whose drive was
+    // unmounted) gets silently resurrected as an empty directory — via
+    // mkdir -p below — the next time either trigger fires, with no action
+    // from the user at all.
+    if (!(await this.repoDirIsAvailable())) {
+      console.warn(
+        '[repo-file-watcher] Repo directory unavailable — skipping DB→FS flush to avoid resurrecting it:',
+        this.repoDir,
+      );
+      return;
+    }
+
     const entries = await this.getWorkspacesWithMeta(workspaceIds);
     const currentWorkspaceIds = new Set(entries.map(({ workspace }) => workspace._id));
 
