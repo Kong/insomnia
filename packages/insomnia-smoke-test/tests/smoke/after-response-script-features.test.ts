@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('after-response script features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('all', async ({ page, app, insomnia }) => {
+  test('after-response scripts: transient vars, assertions, and environment/global persistence', async ({ page, app, insomnia }) => {
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
@@ -139,5 +139,41 @@ test.describe('after-response script features tests', () => {
       __env_source: 'base',
       __fromBaseGlobals: 'selectedBaseGlobal',
     });
+  });
+
+  test('insomnia.expect covers each matcher (equal/property/lengthOf/include/within/keys) and test.skip is reported', async ({ page, app, insomnia }) => {
+    const text = await loadFixture('after-response-collection.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+    const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+    await insomnia.navigationSidebar.clickRequestOrFolder('assertion matchers with skip');
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify response
+    await expect.soft(statusTag).toContainText('200 OK');
+
+    // verify
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Tests' }).click();
+    const responsePane = page.getByTestId('response-pane');
+
+    await expect.soft(responsePane).toContainText('PASSequal matcher passes');
+    await expect.soft(responsePane).toContainText('PASSproperty matcher passes');
+    await expect.soft(responsePane).toContainText('PASSlengthOf matcher passes');
+    await expect.soft(responsePane).toContainText('PASSinclude matcher passes');
+    await expect.soft(responsePane).toContainText('PASSwithin matcher passes');
+    await expect.soft(responsePane).toContainText('PASSkeys matcher passes');
+    await expect
+      .soft(responsePane)
+      .toContainText(
+        'FAILequal matcher fails | error: AssertionError: expected 200 to equal 199 | ACTUAL: 200 | EXPECTED: 199',
+      );
+    await expect.soft(responsePane).toContainText('SKIPskipped test');
   });
 });

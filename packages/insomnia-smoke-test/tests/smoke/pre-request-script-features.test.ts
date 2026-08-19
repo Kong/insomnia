@@ -633,6 +633,25 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('key=fromEditorValue');
     await expect.soft(responsePane).toContainText('key=%2F');
   });
+
+  test('get sendRequest error through callback and rejected await', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('get sendRequest error through callback and rejected await');
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify the request itself succeeds (the sendRequest failures are handled inside the script)
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+
+    // the pre-request script logs both error paths to the console timeline;
+    // asserting them there avoids writing to the shared collection environment.
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
+
+    // callback receives an error (not undefined) for a connection failure
+    await expect.soft(page.getByText('errFromCallback:', { exact: false })).toContainText('Error');
+    // awaiting sendRequest with no callback rejects with an error
+    await expect.soft(page.getByText('errFromAwait:', { exact: false })).toContainText('Error');
+  });
 });
 
 test.describe('unhappy paths', () => {
@@ -685,6 +704,22 @@ test.describe('unhappy paths', () => {
     await expect
       .soft(page.getByTestId('response-pane'))
       .toContainText(`Cannot read properties of undefined (reading 'set')`);
+  });
+
+  test('undefined variable surfaces a missing-variable error naming the key', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('request with undefined variable');
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify: modal names the missing variable
+    const modal = page.getByRole('dialog').filter({ hasText: 'environment variable is missing' });
+    await expect.soft(modal).toBeVisible();
+    await expect.soft(modal).toContainText('missingVariable');
+
+    // execute anyway (ignore undefined variable) — request proceeds and returns a response
+    await modal.getByRole('button', { name: 'Execute anyway' }).click();
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
   });
 });
 
