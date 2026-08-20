@@ -438,6 +438,17 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [defaultValue, historyKey, type, updateTooltipValue]);
 
     useEffect(() => {
+      // Type password will apply the `-webkit-text-security` CSS on .CodeMirror-line, which changes glyph widths.
+      // CodeMirror isn't aware of it, so the cursor/selection stay positioned using stale widths until a manual re-measure.
+      const cm = codeMirror.current;
+      if (!cm) {
+        return;
+      }
+      const raf = requestAnimationFrame(() => cm.refresh());
+      return () => cancelAnimationFrame(raf);
+    }, [type]);
+
+    useEffect(() => {
       // Prevent these things if we're type === "password"
       const preventDefault = (_: CodeMirror.Editor, event: Event) =>
         type?.toLowerCase() === 'password' && event.preventDefault();
