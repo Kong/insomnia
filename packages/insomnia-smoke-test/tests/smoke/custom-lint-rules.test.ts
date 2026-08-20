@@ -131,10 +131,21 @@ async function createGitDesignDocument(insomnia: InsomniaApp, page: Page, projec
   await expect.soft(page.locator('.pane-one').getByTestId('CodeEditor')).toContainText('openapi: 3.0');
 }
 
+// Mirrors models.gitRepository.getGitRepoFolderName()'s safety check on
+// `folderSlug` before baking it into a filesystem path.
+const SAFE_FOLDER_SLUG_PATTERN = /^[a-z0-9-]+$/;
+
 /**
  * Find the RepoFileWatcher mirror directory for the first GitRepository in
  * `dataPath`.  Polls for up to 6 seconds because NeDB flushes to disk
  * asynchronously after the project is created.
+ *
+ * Mirrors the app's own path resolution (see `getRepoBaseDir` /
+ * `models.gitRepository.getGitRepoFolderName`): a user-chosen `directory`
+ * wins when set; otherwise the managed folder is named `git_<slug>_<hex>`
+ * once a `folderSlug` has been recorded (set at clone time, or by the
+ * one-time startup backfill for older repos), falling back to the bare id
+ * only when neither applies.
  */
 async function gitRepoMirrorPath(dataPath: string): Promise<string> {
   const dbPath = path.join(dataPath, 'insomnia.GitRepository.db');
@@ -147,7 +158,16 @@ async function gitRepoMirrorPath(dataPath: string): Promise<string> {
         .map((l: string) => JSON.parse(l))
         .filter((r: any) => !r.$$deleted);
       if (repos.length > 0) {
-        return path.join(dataPath, 'version-control', 'git', repos[0]._id);
+        const repo = repos[0];
+        if (repo.directory) {
+          return repo.directory;
+        }
+        const slug = repo.folderSlug;
+        const folderName =
+          typeof slug === 'string' && SAFE_FOLDER_SLUG_PATTERN.test(slug)
+            ? `git_${slug}_${(repo._id as string).replace(/^git_/, '')}`
+            : repo._id;
+        return path.join(dataPath, 'version-control', 'git', folderName);
       }
     } catch {
       // file not yet written
