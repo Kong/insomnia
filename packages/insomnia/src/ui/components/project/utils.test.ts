@@ -53,6 +53,23 @@ describe('resolveCloneFolderName', () => {
     expect(resolveCloneFolderName('   ', 'https://github.com/org/repo-name.git')).toBe('repo-name');
   });
 
+  // Regression: a bare "." or ".." would join into the current/parent
+  // directory of the chosen clone location instead of a new folder inside
+  // it — must fall back to the derived repo name instead, same as
+  // deriveRepoName's own guard.
+  it('falls back to the derived repo name when the override is "." or ".."', () => {
+    expect(resolveCloneFolderName('.', 'https://github.com/org/repo-name.git')).toBe('repo-name');
+    expect(resolveCloneFolderName('..', 'https://github.com/org/repo-name.git')).toBe('repo-name');
+  });
+
+  // Regression: an override containing a path separator would let the clone
+  // land somewhere other than a single new folder directly inside the chosen
+  // parent — must fall back to the derived repo name instead.
+  it('falls back to the derived repo name when the override contains a path separator', () => {
+    expect(resolveCloneFolderName('foo/bar', 'https://github.com/org/repo-name.git')).toBe('repo-name');
+    expect(resolveCloneFolderName('foo\\bar', 'https://github.com/org/repo-name.git')).toBe('repo-name');
+  });
+
   it('falls back to the derived repo name when no override is given', () => {
     expect(resolveCloneFolderName(undefined, 'https://github.com/org/repo-name.git')).toBe('repo-name');
   });

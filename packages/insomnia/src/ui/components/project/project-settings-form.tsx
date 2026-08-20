@@ -261,7 +261,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     // Start browsing from the current parent folder, not $HOME — makes it easy
     // to spot a sibling folder the repo was renamed/moved to (the main reason
     // to use this when the stored path is broken).
-    const currentParentDir = window.path.dirname(repoPath || window.app.getPath('home'));
+    const currentParentDir = repoPath ? window.path.dirname(repoPath) : window.app.getPath('home');
     const picked = await selectFileOrFolder({
       itemTypes: ['directory'],
       defaultPath: currentParentDir,

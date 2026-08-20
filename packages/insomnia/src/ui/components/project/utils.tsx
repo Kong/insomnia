@@ -66,8 +66,18 @@ export const deriveRepoName = (uri?: string): string => {
  * explicit override (from the "Folder name" field, only shown once a custom
  * clone location is picked) when set, otherwise the repo's own name derived
  * from its URL.
+ *
+ * `.`, `..`, and embedded path separators are rejected (falling back to the
+ * derived name instead) — same invariant `deriveRepoName` already enforces —
+ * since a bare `..` here would join into the parent of the chosen clone
+ * location instead of a new folder inside it.
  */
-export const resolveCloneFolderName = (cloneFolderName?: string, uri?: string): string =>
-  cloneFolderName?.trim() || deriveRepoName(uri);
+export const resolveCloneFolderName = (cloneFolderName?: string, uri?: string): string => {
+  const trimmed = cloneFolderName?.trim();
+  if (trimmed && trimmed !== '.' && trimmed !== '..' && !/[/\\]/.test(trimmed)) {
+    return trimmed;
+  }
+  return deriveRepoName(uri);
+};
 
 export type ProjectType = 'local' | 'remote' | 'git';
