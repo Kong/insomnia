@@ -178,8 +178,6 @@ export const test = baseTest.extend<{
     for (const live of Array.from(liveApps)) {
       try {
         await Promise.race([
-          // Swallow a late resolution of the losing side explicitly so it doesn't
-          // surface as an unhandled rejection once we've already moved on to kill().
           live.close().catch(() => {}),
           new Promise<void>((_, reject) => setTimeout(() => reject(new Error('close timeout')), 5000)),
         ]);

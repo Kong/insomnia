@@ -612,7 +612,7 @@ const sendWebSocketEvent = async (options: { payload: string; requestId: string 
 // server) leaves the underlying TCP socket open indefinitely, which can in turn
 // keep the Electron process (and anything waiting on it, e.g. e2e test runners)
 // from exiting cleanly.
-const CLOSE_HANDSHAKE_TIMEOUT_MS = 2000;
+const CLOSE_HANDSHAKE_TIMEOUT_MS = 3000;
 
 const closeConnectionGracefully = (ws: WebSocket): void => {
   if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
