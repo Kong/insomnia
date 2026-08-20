@@ -61,4 +61,13 @@ export const deriveRepoName = (uri?: string): string => {
   return name;
 };
 
+/**
+ * The folder name a git clone into a custom location should use: the user's
+ * explicit override (from the "Folder name" field, only shown once a custom
+ * clone location is picked) when set, otherwise the repo's own name derived
+ * from its URL.
+ */
+export const resolveCloneFolderName = (cloneFolderName?: string, uri?: string): string =>
+  cloneFolderName?.trim() || deriveRepoName(uri);
+
 export type ProjectType = 'local' | 'remote' | 'git';

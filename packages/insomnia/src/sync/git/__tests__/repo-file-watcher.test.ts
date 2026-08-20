@@ -88,6 +88,54 @@ describe('RepoFileWatcher orphan reconciliation', () => {
   });
 });
 
+describe('RepoFileWatcher deleted-folder resurrection', () => {
+  let repoDir: string;
+  let registry: RepoFileWatcherRegistry;
+
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+    repoDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-repo-watcher-resurrect-'));
+    registry = makeRegistry();
+  });
+
+  afterEach(async () => {
+    registry.stopAll();
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    vi.clearAllMocks();
+  });
+
+  const folderExists = (dir: string) =>
+    fs.promises
+      .access(dir)
+      .then(() => true)
+      .catch(() => false);
+
+  // Regression: a repo folder renamed/moved/deleted outside Insomnia must stay
+  // gone. Previously, flushWorkspacesToDisk() — which every git-status poll
+  // triggers via flushNow(), and every DB edit triggers via its debounced
+  // listener — unconditionally `mkdir -p`d the repo's base directory before
+  // writing, silently resurrecting it as an empty folder with no relocate/
+  // reclone action from the user at all.
+  it('does not resurrect the repo folder via flushNow() after it is deleted externally', async () => {
+    const workspace = await createWorkspaceWithMeta('insomnia.wrk_local.yaml', Date.now());
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    expect(await folderExists(repoDir)).toBe(true);
+
+    // Simulate the user deleting/renaming the folder outside Insomnia.
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    expect(await folderExists(repoDir)).toBe(false);
+
+    // Mirrors gitStatusAction's status-poll flush — the passive trigger that
+    // used to resurrect the folder with no user action at all.
+    await registry.flushNow(REPO_ID);
+
+    expect(await folderExists(repoDir)).toBe(false);
+    // The workspace itself must survive too — it wasn't actually deleted, its
+    // folder was just temporarily unavailable.
+    expect(await services.workspace.getById(workspace._id)).not.toBeNull();
+  });
+});
+
 describe('RepoFileWatcher ruleset import problems', () => {
   let repoDir: string;
   let registry: RepoFileWatcherRegistry;

@@ -15,10 +15,10 @@ import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result'
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import {
-  deriveRepoName,
   getLastCloneParentDir,
   type ProjectData,
   type ProjectType,
+  resolveCloneFolderName,
   useActiveView,
 } from '~/ui/components/project/utils';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
@@ -147,7 +147,7 @@ export const ProjectCreateForm: FC<Props> = ({
       storageType === 'git' && !isGitOpen && !projectData.connectRepositoryLater && projectData.cloneParentDir
         ? window.path.join(
             projectData.cloneParentDir,
-            projectData.cloneFolderName?.trim() || deriveRepoName(projectData.uri),
+            resolveCloneFolderName(projectData.cloneFolderName, projectData.uri),
           )
         : undefined;
 

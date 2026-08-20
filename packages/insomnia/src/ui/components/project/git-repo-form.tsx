@@ -30,7 +30,14 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { ErrorBoundary } from '../error-boundary';
-import { type ActiveView, deriveRepoName, getLastCloneParentDir, type ProjectData, setLastCloneParentDir } from './utils';
+import {
+  type ActiveView,
+  deriveRepoName,
+  getLastCloneParentDir,
+  type ProjectData,
+  resolveCloneFolderName,
+  setLastCloneParentDir,
+} from './utils';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
@@ -348,7 +355,7 @@ export const GitRepoForm: FC<Props> = ({
                   <MiddleTruncate
                     value={window.path.join(
                       projectData.cloneParentDir,
-                      projectData.cloneFolderName?.trim() || deriveRepoName(projectData.uri),
+                      resolveCloneFolderName(projectData.cloneFolderName, projectData.uri),
                     )}
                     className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
                   />
