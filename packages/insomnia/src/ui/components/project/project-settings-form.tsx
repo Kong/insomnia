@@ -34,7 +34,7 @@ import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { deriveRepoName, useActiveView } from '~/ui/components/project/utils';
+import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
@@ -103,6 +103,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [project, storageType]);
 
   const [error, setError] = useState<string | null>(null);
+  const [relocateSuccessMessage, setRelocateSuccessMessage] = useState<string | null>(null);
   const [isGitCredentialInvalid, setIsGitCredentialInvalid] = useState(false);
 
   const [projectData, setProjectData] = useState<{
@@ -155,13 +156,18 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [onDirtyChange, changedFieldCount]);
 
   useEffect(() => {
-    if (
-      relocateFetcher.state === 'idle' &&
-      relocateFetcher.data &&
-      'errors' in relocateFetcher.data &&
-      relocateFetcher.data.errors
-    ) {
+    if (relocateFetcher.state !== 'idle' || !relocateFetcher.data) {
+      return;
+    }
+    if ('errors' in relocateFetcher.data && relocateFetcher.data.errors) {
       setError(relocateFetcher.data.errors.join(', '));
+      setRelocateSuccessMessage(null);
+    } else if ('directory' in relocateFetcher.data && relocateFetcher.data.directory) {
+      // The move already happened at this point — it isn't gated by the
+      // "Update" button below, which only tracks name/author/storage-type
+      // changes. Confirm it explicitly so the button staying disabled doesn't
+      // read as "nothing happened".
+      setRelocateSuccessMessage(`Repository moved to ${relocateFetcher.data.directory}`);
     }
   }, [relocateFetcher.data, relocateFetcher.state]);
 
@@ -252,23 +258,55 @@ export const ProjectSettingsForm: FC<Props> = ({
     if (!project || !gitRepository) {
       return;
     }
+    // Start browsing from the current parent folder, not $HOME — makes it easy
+    // to spot a sibling folder the repo was renamed/moved to (the main reason
+    // to use this when the stored path is broken).
+    const currentParentDir = repoPath ? window.path.dirname(repoPath) : window.app.getPath('home');
     const picked = await selectFileOrFolder({
       itemTypes: ['directory'],
-      defaultPath: window.app.getPath('home'),
+      defaultPath: currentParentDir,
     });
     if (picked.canceled || !picked.filePath) {
       return;
     }
-    // Move into `<chosen-parent>/<repo-name>`, matching the clone flow.
-    const folderName = deriveRepoName(gitRepository.uri) || gitRepository._id;
-    const newDirectory = window.path.join(picked.filePath, folderName);
+    // The picked folder IS the new location itself, not a parent to nest a
+    // repo-named subfolder under. That lets this double as "reconnect" when the
+    // stored path is broken: pick the folder the repo now actually lives in
+    // (already containing its .git data) and relocateGitRepoAction adopts it in
+    // place instead of trying to move files into/over it.
+    const newDirectory = picked.filePath;
 
     setError(null);
+    setRelocateSuccessMessage(null);
     relocateFetcher.submit({
       gitRepositoryId: gitRepository._id,
       projectId: project._id,
       newDirectory,
     });
+  };
+
+  const [isOpeningRepoFolder, setIsOpeningRepoFolder] = useState(false);
+  const onOpenRepoInFileSystem = async () => {
+    if (!gitRepository) {
+      return;
+    }
+    setIsOpeningRepoFolder(true);
+    setError(null);
+    try {
+      // Resolve (and confirm the folder still exists) before opening — unlike a
+      // plain `window.shell.openPath`, this never recreates a folder that was
+      // renamed, moved, or deleted outside Insomnia.
+      const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
+      if ('errors' in result && result.errors) {
+        setError(result.errors.join(', '));
+        return;
+      }
+      if (result.path) {
+        window.shell.openPath(result.path);
+      }
+    } finally {
+      setIsOpeningRepoFolder(false);
+    }
   };
 
   const showGitRepoForm =
@@ -330,6 +368,13 @@ export const ProjectSettingsForm: FC<Props> = ({
           <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
             <Icon icon="triangle-exclamation" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {relocateSuccessMessage && (
+          <div className="flex items-center gap-2 rounded-xs bg-(--color-surprise)/50 px-2 py-1 text-sm text-(--color-font)">
+            <Icon icon="circle-check" />
+            <span>{relocateSuccessMessage}</span>
           </div>
         )}
 
@@ -466,7 +511,8 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </Button>
                   <TooltipTrigger>
                     <Button
-                      onPress={() => window.shell.openPath(repoPath)}
+                      onPress={onOpenRepoInFileSystem}
+                      isDisabled={isOpeningRepoFolder}
                       className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
                       aria-label="Open in file system"
                     >
@@ -495,7 +541,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                       offset={8}
                       className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
                     >
-                      Move to another folder
+                      Move to another folder (applies immediately)
                     </Tooltip>
                   </TooltipTrigger>
                 </div>
