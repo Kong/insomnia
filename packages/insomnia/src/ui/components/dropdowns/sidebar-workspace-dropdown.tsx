@@ -136,7 +136,7 @@ export const SidebarWorkspaceDropdown = ({
       setActionPlugins(actionPlugins);
     } catch (error) {
       setActionPlugins([]);
-      console.error('Failed to get workspace action plugins', error);
+      console.error('Failed to get workspace plugin actions', error);
     }
   }, []);
 

@@ -10,7 +10,7 @@ import type {
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
-import React, { Fragment, useCallback, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -90,9 +90,21 @@ export const RequestActionsDropdown = ({
   };
 
   const onOpen = useCallback(async () => {
-    const actionPlugins = await plugins.getRequestActions();
-    setActionPlugins(actionPlugins);
+    try {
+      const actionPlugins = await plugins.getRequestActions();
+      setActionPlugins(actionPlugins);
+    } catch (error) {
+      setActionPlugins([]);
+      console.error('Failed to get request plugin actions', error);
+    }
   }, []);
+
+  useEffect(() => {
+    // Fetch the action plugins when the dropdown is opened
+    if (isOpen) {
+      onOpen();
+    }
+  }, [isOpen, onOpen]);
 
   const handleDuplicateRequest = () => {
     if (!request) {
@@ -321,13 +333,7 @@ export const RequestActionsDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger
-        isOpen={isOpen}
-        onOpenChange={isOpen => {
-          isOpen && onOpen();
-          onOpenChange(isOpen);
-        }}
-      >
+      <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           data-testid={`Dropdown-${toKebabCase(request.name)}`}
           aria-label="Request Actions"

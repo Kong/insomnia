@@ -30,25 +30,15 @@ export const PasswordInput = (props: PasswordInputProps) => {
   return (
     <div className={`flex h-full w-full items-center justify-between ${className}`}>
       <div className="h-full w-full flex-1">
-        {isHidden ? (
-          <input
-            value={value}
-            className="h-full w-full placeholder-(--hl-lg)"
-            onChange={event => onChange(event.target.value)}
-            placeholder={placeholder}
-            readOnly={!enabled}
-            type={'password'}
-          />
-        ) : (
-          <OneLineEditor
-            id={`environment-kv-editor-value-${itemId}`}
-            historyKey={`environment-kv-editor-value-${itemId}`}
-            placeholder={placeholder}
-            defaultValue={value}
-            readOnly={!enabled}
-            onChange={newValue => onChange(newValue)}
-          />
-        )}
+        <OneLineEditor
+          id={`environment-kv-editor-value-${itemId}`}
+          historyKey={`environment-kv-editor-value-${itemId}`}
+          type={isHidden ? 'password' : 'text'}
+          placeholder={placeholder}
+          defaultValue={value}
+          readOnly={!enabled}
+          onChange={onChange}
+        />
       </div>
       <button className="m-0 h-full items-center px-1" onClick={handleShowHidePassword}>
         {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}

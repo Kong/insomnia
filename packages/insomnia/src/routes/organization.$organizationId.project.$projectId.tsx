@@ -121,6 +121,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     queryKey: ['learning-feature'],
     queryFn: getLearningFeature,
     enabled: !isLearningFeatureDismissed,
+    staleTime: 1000 * 60 * 60 * 24, // 1 day
+    refetchOnWindowFocus: true,
   });
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { isSidebarCollapsed } = useSidebarContext();
