@@ -446,6 +446,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }
       const raf = requestAnimationFrame(() => cm.refresh());
       return () => cancelAnimationFrame(raf);
+      // `type` is intentionally included here to make sure the re-measure triggers when the type changes
     }, [type]);
 
     useEffect(() => {
