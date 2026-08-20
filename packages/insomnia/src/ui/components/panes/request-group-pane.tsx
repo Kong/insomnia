@@ -143,12 +143,12 @@ export const RequestGroupPane: FC = () => {
               aria-label="Request scripts tabs"
             >
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+                className="flex h-(--line-height-xxs) w-46 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
                 id="pre-request"
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-to-bracket" />
-                  <span>Pre-request</span>
+                  <span className="whitespace-nowrap">Pre-request</span>
                 </div>
                 {Boolean(activeRequestGroup.preRequestScript) && (
                   <span className="rounded-lg p-2">
@@ -157,12 +157,12 @@ export const RequestGroupPane: FC = () => {
                 )}
               </Tab>
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+                className="flex h-(--line-height-xxs) w-46 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
                 id="after-response"
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-from-bracket" />
-                  <span>After-response</span>
+                  <span className="whitespace-nowrap">After-response</span>
                 </div>
                 {Boolean(activeRequestGroup.afterResponseScript) && (
                   <span className="rounded-lg p-2">
