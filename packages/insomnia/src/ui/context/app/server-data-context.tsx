@@ -11,7 +11,7 @@ const createServerDataQueryClient = () =>
     defaultOptions: {
       queries: {
         retry: 2,
-        staleTime: Infinity,
+        refetchOnWindowFocus: false,
       },
     },
   });
