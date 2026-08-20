@@ -47,7 +47,6 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
-import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { Badge } from '~/ui/components/base/badge';
@@ -65,10 +64,9 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast, showToast } from '~/ui/components/toast-notification';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
+import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
@@ -213,17 +211,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
 
-  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
-
-  useEffect(() => {
-    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
-      const load = storageRuleFetcher.load;
-      load({ organizationId });
-    }
-  }, [organizationId, storageRuleFetcher.load]);
-
-  const { storagePromise } = storageRuleFetcher.data || {};
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+  const storageRules = useOrganizationStorageRule(organizationId);
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
