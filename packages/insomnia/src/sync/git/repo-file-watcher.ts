@@ -529,8 +529,20 @@ class RepoFileWatcher {
 
         const hash = contentHash(yamlContent);
 
+        // The hash cache only tells us the DB side hasn't changed since our
+        // last write — it says nothing about whether that write still exists
+        // on disk. If the repo folder was deleted and came back (e.g. via
+        // relocate/adopt, or a drive remount), the file may be gone even
+        // though its content hash is unchanged; skipping the write here would
+        // leave it missing indefinitely.
         if (this.lastWrittenHash.get(absPath) === hash) {
-          continue;
+          const stillOnDisk = await fs.promises
+            .access(absPath)
+            .then(() => true)
+            .catch(() => false);
+          if (stillOnDisk) {
+            continue;
+          }
         }
 
         await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
