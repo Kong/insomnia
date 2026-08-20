@@ -161,7 +161,56 @@ collection:
       cookies:
         send: true
         store: true
-      rebuildPath: true  
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: assertion matchers with skip
+    meta:
+      id: req_2c1e6a8b5e4d4f0a9b3c7d5e6f8a9b1c
+      created: 1707808697304
+      modified: 1707809218855
+      isPrivate: false
+      sortKey: -1707809028499
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{}"
+    headers:
+      - name: Content-Type
+        value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('equal matcher passes', () => {
+          insomnia.expect(insomnia.response.code).to.equal(200);
+        });
+        insomnia.test('property matcher passes', () => {
+          insomnia.expect({ id: 1, name: 'test' }).to.have.property('name');
+        });
+        insomnia.test('lengthOf matcher passes', () => {
+          insomnia.expect([1, 2, 3]).to.have.lengthOf(3);
+        });
+        insomnia.test('include matcher passes', () => {
+          insomnia.expect('hello world').to.include('world');
+        });
+        insomnia.test('within matcher passes', () => {
+          insomnia.expect(150).to.be.within(100, 200);
+        });
+        insomnia.test('keys matcher passes', () => {
+          insomnia.expect({ a: 1, b: 2 }).to.have.all.keys('a', 'b');
+        });
+        insomnia.test('equal matcher fails', () => {
+          insomnia.expect(insomnia.response.code).to.equal(199);
+        });
+        insomnia.test.skip('skipped test', () => {
+          insomnia.expect(true).to.equal(false);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:

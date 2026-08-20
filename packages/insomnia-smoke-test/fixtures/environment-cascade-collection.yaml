@@ -1,0 +1,105 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Environment Cascade
+meta:
+  id: wrk_7c1e4a8f9b2d4c6e8f1a3b5c7d9e0f11
+  created: 1739887154405
+  modified: 1739887154405
+collection:
+  - url: http://127.0.0.1:4010/echo
+    name: cascade request no folder
+    meta:
+      id: req_4c6e8a0b2d4f6a8c0e2b4d6f8a0c2e18
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
+      sortKey: -1636141014554
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "cascadeVar": "{{ _.cascadeVar }}"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - name: cascadeFolder
+    meta:
+      id: fld_5b2c9e1a7d3f4a6b8c0d2e4f6a8b0c12
+      created: 1668533312225
+      modified: 1668533312225
+      sortKey: -1668533312225
+    children:
+      - url: http://127.0.0.1:4010/echo
+        name: cascade request
+        meta:
+          id: req_1f3e5a7c9b1d3f5a7c9e1b3d5f7a9c13
+          created: 1636141014552
+          modified: 1636707449231
+          isPrivate: false
+          sortKey: -1636141014553
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "cascadeVar": "{{ _.cascadeVar }}",
+              "subOnlyVar": "{{ _.subOnlyVar }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+    environment:
+      cascadeVar: fromFolder
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_8e2f4a6c1b3d5f7a9c1e3b5d7f9a1c14
+    created: 1707808692807
+    modified: 1707808692807
+environments:
+  name: Base Environment
+  meta:
+    id: env_9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c15
+    created: 1670587793246
+    modified: 1670587811762
+    isPrivate: false
+  data:
+    cascadeVar: fromBase
+    subOnlyVar: subOnly_base
+  subEnvironments:
+    - name: SubEnvA
+      meta:
+        id: env_2a4c6e8b0d2f4a6c8e0b2d4f6a8c0e16
+        created: 1670587812382
+        modified: 1670587818649
+        isPrivate: false
+      data:
+        cascadeVar: fromSubA
+        subOnlyVar: subOnly_A
+    - name: SubEnvB
+      meta:
+        id: env_3b5d7f9c1e3a5c7e9b1d3f5a7c9e1f17
+        created: 1670587826837
+        modified: 1736605621292
+        isPrivate: false
+      data:
+        cascadeVar: fromSubB
+        subOnlyVar: subOnly_B
