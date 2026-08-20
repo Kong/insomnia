@@ -9,11 +9,11 @@ import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
-import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
+import { useInvalidateOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -98,7 +98,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const { submit: syncOrganizationsSubmit } = useOrganizationSyncActionFetcher();
-  const { submit: syncStorageRulesSubmit } = useStorageRulesActionFetcher();
+  const invalidateStorageRule = useInvalidateOrganizationStorageRule();
   const { submit: syncProjectsSubmit } = useOrganizationSyncProjectsActionFetcher();
   const { submit: syncDataSubmit } = useInsomniaSyncDataActionFetcher();
   const { submit: clearVaultKeySubmit } = useClearVaultKeyFetcher();
@@ -185,9 +185,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               }
               syncOrganizationsSubmit();
             } else if (event.type === 'StorageRuleChanged' && (event.team.startsWith('org_') || event.team.startsWith('team_'))) {
-              syncStorageRulesSubmit({
-                organizationId: event.team,
-              });
+              invalidateStorageRule(event.team);
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
               syncProjectsSubmit({
                 organizationId,
@@ -253,7 +251,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     syncDataSubmit,
     syncOrganizationsSubmit,
     syncProjectsSubmit,
-    syncStorageRulesSubmit,
+    invalidateStorageRule,
     userSession.accountId,
     userSession.id,
     latestInSubmission,
