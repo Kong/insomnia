@@ -63,10 +63,10 @@ export const McpUrlActionBar = ({
   const requestTransportType = request.transportType;
   const requestTransportTypeLabel = getTransportLabel(requestTransportType);
   const modalRef = useRef<MCPStdioAccessModalHandle>(null);
-  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, activeGlobalEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   const gitVersion = useGitVCSVersion();
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
+  const uniqueKey = `${activeEnvironment?._id}::${activeEnvironment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
 
   useLayoutEffect(() => {
     oneLineEditorRef.current?.focusEnd();
