@@ -152,11 +152,19 @@ async function gitRepoMirrorPath(dataPath: string): Promise<string> {
   for (let attempt = 0; attempt < 30; attempt++) {
     try {
       const content = await fs.promises.readFile(dbPath, 'utf8');
-      const repos = content
-        .split('\n')
-        .filter(Boolean)
-        .map((l: string) => JSON.parse(l))
-        .filter((r: any) => !r.$$deleted);
+      // NeDB's on-disk format is an append-only log: an update appends a new
+      // line for the same `_id` rather than rewriting it in place (e.g. the
+      // folderSlug update that follows creation). Replay all lines in order,
+      // keyed by `_id`, so the last write for a given repo wins.
+      const byId = new Map<string, any>();
+      for (const line of content.split('\n')) {
+        if (!line) {
+          continue;
+        }
+        const doc = JSON.parse(line);
+        byId.set(doc._id, doc);
+      }
+      const repos = [...byId.values()].filter((r: any) => !r.$$deleted);
       if (repos.length > 0) {
         const repo = repos[0];
         if (repo.directory) {
