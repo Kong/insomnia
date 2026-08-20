@@ -607,35 +607,15 @@ const sendWebSocketEvent = async (options: { payload: string; requestId: string 
   sendPayload(ws, options);
 };
 
-// Number of ms to wait for a graceful close handshake before forcing the socket shut.
-// Without this, a peer that never acks the close frame (e.g. a slow/unresponsive
-// server) leaves the underlying TCP socket open indefinitely, which can in turn
-// keep the Electron process (and anything waiting on it, e.g. e2e test runners)
-// from exiting cleanly.
-const CLOSE_HANDSHAKE_TIMEOUT_MS = 3000;
-
-const closeConnectionGracefully = (ws: WebSocket): void => {
-  if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
-    return;
-  }
-  const forceCloseTimer = setTimeout(() => {
-    if (ws.readyState !== WebSocket.CLOSED) {
-      ws.terminate();
-    }
-  }, CLOSE_HANDSHAKE_TIMEOUT_MS);
-  ws.once('close', () => clearTimeout(forceCloseTimer));
-  ws.close();
-};
-
 const closeWebSocketConnection = (options: { requestId: string }): void => {
   const ws = WebSocketConnections.get(options.requestId);
   if (!ws) {
     return;
   }
-  closeConnectionGracefully(ws);
+  ws.close();
 };
 
-const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(closeConnectionGracefully);
+const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
 
 const findMany = async (options: { responseId: string }): Promise<WebSocketEvent[]> => {
   const response = await services.webSocketResponse.getById(options.responseId);
