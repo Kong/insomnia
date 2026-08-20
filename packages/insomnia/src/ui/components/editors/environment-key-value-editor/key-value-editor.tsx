@@ -561,7 +561,7 @@ export const EnvironmentKVEditor = ({
         aria-label="Environment Key Value Pair"
         selectionMode="none"
         dragAndDropHooks={dragAndDropHooks}
-        dependencies={[kvPairError, data, symmetricKey, blankId]}
+        dependencies={[kvPairError, data, symmetricKey, blankId, decryptedValues]}
         className="h-full w-full overflow-y-auto p-(--padding-sm)"
         items={kvPairs}
         // Let React Aria place focus on the trailing blank row so the editor is ready to type into on
