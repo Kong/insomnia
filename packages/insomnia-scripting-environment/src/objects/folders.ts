@@ -70,7 +70,7 @@ export class ParentFolders {
   /**
    * Creates an instance of the class with a list of folders.
    *
-   * @param folders - An array of `Folder` objects to initialize the instance with, from bottom to top.
+   * @param folders - An array of `Folder` objects to initialize the instance with, from top to bottom.
    */
   constructor(private folders: Folder[]) {}
 

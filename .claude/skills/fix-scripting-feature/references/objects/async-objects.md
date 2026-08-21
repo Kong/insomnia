@@ -37,13 +37,19 @@ None of these names are called directly by a user script. However, the mechanism
 script-facing surface indirectly: `packages/insomnia/src/entry.hidden-window-preload.ts` replaces
 the sandbox's global `Promise` with `ProxiedPromise`
 (`contextBridge.exposeInMainWorld('Promise', ProxiedPromise); window.Promise = ProxiedPromise;`),
-so every `new Promise(...)`, `async function`, `Promise.resolve(...)`, `Promise.all(...)`, etc. a
-script writes is transparently tracked. `packages/insomnia/src/scripting/run-script.ts` injects
+so `new Promise(...)`, `Promise.resolve(...)`, `Promise.all(...)`, etc. — anything that references
+the (now-reassigned) global `Promise` binding — is transparently tracked. **`async function` is not
+in that list**: per spec, an async function's returned promise is created against the realm's
+intrinsic `%Promise%` (`NewPromiseCapability(%Promise%)`), not whatever the mutable global `Promise`
+binding currently points to, so reassigning `window.Promise` does not make it a `ProxiedPromise`.
+`packages/insomnia/src/scripting/run-script.ts` injects
 `resetAsyncTasks`/`stopMonitorAsyncTasks`/`asyncTasksAllSettled` into the executed script function
 as `__bridgeReset__`/`__bridgeStop__`/`__bridgeSettle__`, calling `__bridgeReset__()` before the
 user script body runs and `await __bridgeSettle__()` after it, right before returning the mutated
-`insomnia` object. This is what makes an un-awaited `pm.sendRequest(...)` callback or stray
-`.then()` still resolve before the script's result is used.
+`insomnia` object. This drains explicitly-tracked promises, but an un-awaited `pm.sendRequest(...)`
+call or stray `.then()` chain is only guaranteed to resolve before the script's result is used if
+every promise in its chain was created via a tracked constructor/helper — not guaranteed just
+because it originated from an `async function`.
 
 ## Gotchas / notable behavior
 - `Promise.any(...)` and `Promise.withResolvers()` are **explicitly unsupported**: calling either
@@ -59,9 +65,20 @@ user script body runs and `await __bridgeSettle__()` after it, right before retu
   being called at the start of every run; if it's ever skipped, promises from a previous run could
   leak into the next run's settle-and-drain step.
 - Constructing a promise while `monitoring === false` silently skips tracking — no error or warning is raised.
+- Promises returned by an `async function` are **not guaranteed to be added to `scriptPromises`**,
+  even though `window.Promise`/`Promise` was replaced with `ProxiedPromise` — the JS engine builds
+  an async function's result promise from the realm's intrinsic `%Promise%`, bypassing the
+  reassigned global binding entirely. `send-request.ts`'s exported `sendRequest` is itself an
+  `async function` that internally does `return new Promise(async (resolve, reject) => {...})`; the
+  inner explicit `new Promise(...)` is tracked, but the promise actually returned to the caller of
+  `sendRequest(...)` (i.e. what `pm.sendRequest()` hands back to a script when not passed a callback)
+  is not. Symptom: a script that fires `pm.sendRequest(...)` without `await`ing it (or awaiting a
+  `.then()` derived from it) may see the request silently abandoned or racing past
+  `asyncTasksAllSettled()`'s drain, instead of being reliably completed first.
 
 ## Related
 - `test.ts` — `resetTestPromises()` is called once at this module's import time; test assertion promises are tracked separately from `scriptPromises`.
 - `packages/insomnia/src/scripting/run-script.ts` — wires `resetAsyncTasks`/`stopMonitorAsyncTasks`/`asyncTasksAllSettled` into the sandboxed script's `__bridgeReset__`/`__bridgeStop__`/`__bridgeSettle__` calls.
 - `packages/insomnia/src/entry.hidden-window-preload.ts` — replaces the sandbox's global `Promise` with `ProxiedPromise`.
 - `packages/insomnia/src/scripting/sandbox.ts` — prepares the broader sandbox execution context that this async tracking runs inside.
+  

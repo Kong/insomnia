@@ -47,11 +47,11 @@ Public/exposed properties:
 - `vault?: Vault` — secret vault accessor, gated by `settings.enableVaultInScripts`.
 - `clientCertificates: ClientCertificate[]` — raw client certs available to the request.
 
-Private/internal properties: `_expect` (chai `expect`), `_test`/`_skip` (from `./test`),
-`iterationData: Environment`, `globals: Environment`, `baseGlobals: Environment` (marked
-`// TODO: follows will be enabled after Insomnia supports them` — held internally but not exposed
-as public class fields), `_settings: Settings`, `requestTestResults: RequestTestResult[]`,
-`parentFolders: ParentFolders`.
+Private/internal properties (TypeScript-only — see Gotchas for why this doesn't restrict scripts at
+runtime): `_expect` (chai `expect`), `_test`/`_skip` (from `./test`), `iterationData: Environment`,
+`globals: Environment`, `baseGlobals: Environment` (marked
+`// TODO: follows will be enabled after Insomnia supports them`), `_settings: Settings`,
+`requestTestResults: RequestTestResult[]`, `parentFolders: ParentFolders`.
 
 Methods:
 - `sendRequest(request: string | ScriptRequest, cb: (error?: string, response?: ScriptResponse) => void)` — delegates to `sendRequest()` from `./send-request`, passing the internal `_settings`.
@@ -128,9 +128,7 @@ user script returns early or otherwise breaks that invariant, `runScript` throws
   `return;`s nothing, even though the real `Settings` object is held internally as `_settings` (used
   only for `sendRequest`'s proxy/certificate resolution). `toObject().settings` is therefore always
   `undefined` too, regardless of what `Settings` were passed in.
-- **`globals`/`baseGlobals` are not public** — unlike `environment`/`baseEnvironment`, they are
-  `private` class fields (with a `// TODO: follows will be enabled after Insomnia supports them`
-  comment), so scripts cannot currently read/write `insomnia.globals`.
+- **`globals`/`baseGlobals` are `private` in name only** — `private` is TypeScript-only and erased at runtime, and the constructor's `Proxy` forwards them (via `Reflect.get`, no `set` trap) same as any other property, so scripts can read *and* write `insomnia.globals`/`insomnia.baseGlobals` despite them being absent from the TS-declared public surface. Accidental exposure, not a supported feature.
 - **The `test` proxy is easy to miss when reading the class** — the `test = () => {}` field looks
   like the real implementation, but any actual call to `insomnia.test(...)` is intercepted by the
   constructor's `Proxy` `get` trap before it ever reaches that field.

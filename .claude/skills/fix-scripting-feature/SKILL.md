@@ -14,14 +14,15 @@ argument-hint: 'Provide the failing script snippet, the error message, and wheth
 
 ## Architecture (read this first)
 
-Pre-request/after-response/test scripts (the Postman-compatible `pm`/`insomnia` API) have **two execution paths** depending on where the script runs:
+Pre-request/after-response/test scripts (the Postman-compatible `pm`/`insomnia` API) have **three execution paths** depending on where the script runs:
 
 | Path | Entry point | Sandboxing |
 |---|---|---|
 | Electron app (default) | `packages/insomnia/src/entry.hidden-window.ts` → `packages/insomnia/src/scripting/run-script.ts`, run in a hidden `BrowserWindow` (see `packages/insomnia/src/main/window-utils.ts`) | AST-based via `packages/insomnia/src/scripting/sandbox.ts` + `script-security-rules.ts` + `require-interceptor.ts`, toggled by `context.settings.scriptSandboxEnabled` (default on) |
-| `inso` CLI | `packages/insomnia/src/script-executor.ts` (plain `AsyncFunction`/`eval`, no Electron) | None — `script-executor.ts` never calls `sandbox.ts`'s `prepareSandbox`, it's a structurally separate implementation. (Don't confuse this with `canSandbox = !!process.type` in `packages/insomnia/src/runtimes/network/network-adapter.node.ts` — that gates **plugin** request/response hook sandboxing, an unrelated subsystem.) |
+| Electron app, opt-in QuickJS sandbox | `packages/insomnia/src/network/concurrency.renderer.ts` → `packages/insomnia/src/scripting/run-script-quickjs.ts`, run in a Web Worker over a WASM QuickJS VM (`quickjs-script-engine.ts`) | Gated by `settings.useQuickJsScriptSandbox` (default off). PoC with a **deliberately minimal, hand-rolled `insomnia`/`$` API** — not the shared SDK below — with no `test()`/`pm.test()`, `collectionVariables`, vault, cookies, client certificates, or request mutation, and a `sendRequest()` limited to plain-text bodies |
+| `inso` CLI and other Node-runtime callers (e.g. `packages/insomnia/src/runtimes/network/network-adapter.node.ts`) | `packages/insomnia/src/script-executor.ts` (plain `AsyncFunction`/`eval`, no Electron) | None — `script-executor.ts` never calls `sandbox.ts`'s `prepareSandbox`, it's a structurally separate implementation. (Don't confuse this with `canSandbox = !!process.type` in `network-adapter.node.ts` — that gates **plugin** request/response hook sandboxing, an unrelated subsystem.) |
 
-The SDK object model (`InsomniaObject`, `Request`, `Response`, `Environment`, `Variables`, `Collection`, `Test`, console/send-request shims) lives in `packages/insomnia-scripting-environment/src/objects/` and is shared across both paths.
+The full SDK object model (`InsomniaObject`, `Request`, `Response`, `Environment`, `Variables`, `Collection`, `Test`, console/send-request shims) lives in `packages/insomnia-scripting-environment/src/objects/` and is shared across the Electron (default) and `inso`/Node paths only — the QuickJS sandbox does not use it.
 
 ## `insomnia-scripting-environment` Folder Hierarchy
 
@@ -55,7 +56,7 @@ insomnia-scripting-environment/
 │   │   ├── async-objects.ts       # ProxiedPromise — Promise plumbing so async script code can be awaited by the host
 │   │   ├── interpolator.ts        # template-tag ({{ }}) interpolation used when resolving variable values
 │   │   ├── utils.ts               # misc helpers (e.g. checkIfUrlIncludesTag)
-│   │   └── __tests__/             # one test file per object above (request.test.ts, response.test.ts, etc.)
+│   │   └── __tests__/             # tests for selected objects above (request.test.ts, response.test.ts, etc.)
 │   └── autocomplete-snippets.json # generated editor autocomplete data — see scripts/generate-autocomplete.ts
 ├── scripts/
 │   └── generate-autocomplete.ts   # regenerates autocomplete-snippets.json from the objects/ source (CI-checked)

@@ -87,7 +87,7 @@ Implements [Chrome extension match patterns](https://developer.chrome.com/docs/e
 
 `QueryParam` instances populate `pm.request.url.query` and `RequestBody.urlencoded`.
 
-`UrlMatchPattern`/`UrlMatchPatternList` aren't constructed directly from a typical script, but are reachable via `pm.request.proxy.match` (see `proxy-configs.ts`) and `pm.request.certificate.matches` (see `certificates.ts`) — both store their match rule(s) as `UrlMatchPattern`/`UrlMatchPatternList` internally.
+`UrlMatchPattern`/`UrlMatchPatternList` aren't constructed directly from a typical script, but are reachable via `pm.request.certificate.matches` (see `certificates.ts`), which stores its match rule(s) as a `UrlMatchPatternList` directly. `pm.request.proxy.match` (see `proxy-configs.ts`) is different: it's a raw `string` on the instance, with a `UrlMatchPattern` built on the fly, temporarily, inside `ProxyConfig.test()`/`.getProtocols()` — and `ProxyConfig.bypass` is a plain `string[]` checked by exact string equality, not a `UrlMatchPatternList` at all (that type only appears as an unused `static bypass` field on the class, separate from the instance field of the same name).
 
 ## Gotchas / notable behavior
 
@@ -106,6 +106,6 @@ Implements [Chrome extension match patterns](https://developer.chrome.com/docs/e
 - `packages/insomnia-scripting-environment/src/objects/utils.ts` — `checkIfUrlIncludesTag`, used by `Url.initFields` to avoid mangling template tags.
 - `packages/insomnia-scripting-environment/src/objects/request.ts` — `Request.url: Url`; `toUrlObject` used when constructing a `Request`; `RequestBody.urlencoded: PropertyList<QueryParam>`.
 - `packages/insomnia-scripting-environment/src/objects/certificates.ts` — `Certificate.matches: UrlMatchPatternList<UrlMatchPattern>`.
-- `packages/insomnia-scripting-environment/src/objects/proxy-configs.ts` — `ProxyConfig.match` constructs a `UrlMatchPattern`; `ProxyConfig.bypass: UrlMatchPatternList`.
+- `packages/insomnia-scripting-environment/src/objects/proxy-configs.ts` — `ProxyConfig.match: string` is used to construct a `UrlMatchPattern` on demand inside `test()`/`getProtocols()`; the instance's `ProxyConfig.bypass` is a plain `string[]` (exact-match only), not a `UrlMatchPatternList`.
 - `packages/insomnia-scripting-environment/src/objects/collection.ts` — re-exports `QueryParam`, `Url`, `UrlMatchPattern`, `UrlMatchPatternList` as part of the public collection API surface.
 - `packages/insomnia-scripting-environment/src/objects/insomnia.ts` — uses `resolveProtocolForProxy` and `toUrlObject` in `initInsomniaObject`.

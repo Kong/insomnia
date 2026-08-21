@@ -51,7 +51,7 @@ Full input/output snapshot for one script execution. Fields of note:
 - `globals`/`baseGlobals` — optional; per the inline comment, "activated only when selected".
 - `iterationData`/`transientVariables` — typed as `Omit<IEnvironment, 'id'>` (no `id` field needed for these).
 - `response?: any` — deliberately untyped; comment notes "Callback types defined elsewhere to avoid circular imports".
-- `requestInfo: RequestInfoOption` and `execution: ExecutionOption` — imported from `./execution` and `./request-info` respectively; these are the plain-object option shapes consumed by the `Execution`/`RequestInfo` constructors (see `execution.md`/`request-info.md`).
+- `requestInfo: RequestInfoOption` and `execution: ExecutionOption` — imported from `./request-info` and `./execution` respectively; these are the plain-object option shapes consumed by the `RequestInfo`/`Execution` constructors (see `request-info.md`/`execution.md`).
 - `parentFolders` — array of plain folder descriptors (`id`, `name`, `environment` data), consumed by `ParentFolders`/`Folder` in `folders.ts`.
 
 Both interfaces are marked `/** @ignore */`, meaning they're internal/plumbing types not meant to
