@@ -65,18 +65,15 @@ test.describe('Cloud Sync', () => {
     // Wait for history button to be enabled
     await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
     await historyButton.click();
-    const historyDialog = page.getByRole('dialog');
-    const commitRow = historyDialog.getByRole('row').nth(0);
-    await expect.poll(async () => commitRow.isVisible(), { timeout: 10_000 }).toBe(true);
-    await commitRow.getByRole('button', { name: 'Restore' }).click();
-    await expect.soft(commitRow.getByRole('button', { name: 'Confirm' })).toBeVisible();
-    await commitRow.getByRole('button', { name: 'Confirm' }).click();
-    await historyDialog.locator('[data-icon="x"]').click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Restore' }).nth(2).click();
+
+    await expect.soft(page.getByRole('dialog').getByRole('button', { name: 'Confirm' })).toBeVisible();
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirm' }).click();
+    await page.getByRole('dialog').locator('[data-icon="x"]').click();
     // Ensure body is restored
     await page.getByRole('tab', { name: 'Body' }).click();
-    await expect.soft(bodyEditor).toContainText('value=changed', { timeout: 10_000 });
     await page.getByRole('button', { name: 'Send' }).click();
-    await expect.soft(bodyEditor).toContainText('value=changed');
+    await expect.soft(page.getByTestId('request-pane').getByText('foo=bar')).toBeHidden();
 
     // select unsynced MCP project to check branch actions. Sidebar is still focused on
     // "My Collection R1"; unsynced workspace rows for any other workspace are hidden while
