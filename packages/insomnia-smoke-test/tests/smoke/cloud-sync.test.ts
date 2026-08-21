@@ -69,8 +69,7 @@ test.describe('Cloud Sync', () => {
     // Wait for history button to be enabled
     await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
     await historyButton.click();
-    const commitRow = page.getByRole('dialog').getByRole('row', { name: 'Smoke test: modify request body' });
-    await commitRow.getByRole('button', { name: 'Restore' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Restore' }).nth(2).click();
 
     await expect.soft(page.getByRole('dialog').getByRole('button', { name: 'Confirm' })).toBeVisible();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirm' }).click();
