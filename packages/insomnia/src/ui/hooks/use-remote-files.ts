@@ -1,7 +1,7 @@
 import type { Project } from 'insomnia-data';
 import { useEffect, useMemo } from 'react';
 
-import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
+import { type InsomniaFile } from '~/common/project';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
@@ -65,30 +65,37 @@ export function useUnsyncedFilesByProjectId(organizationId: string, projects: Pr
 }
 
 /**
- * The unsynced remote files for a single project, already diffed against that project's local
- * workspaces. Recomputes reactively when the shared query refreshes or when local workspaces
- * change (via db.changes-backed useOrganizationData).
+ * The unsynced remote files for a single project, diffed against the caller's own `localFiles`.
+ *
+ * The diff is computed against the exact list the component renders — not a separate snapshot such
+ * as db.changes-backed useOrganizationData — so a workspace can never appear as both a local and an
+ * unsynced entry. That would otherwise produce duplicate ids in the merged list and crash the
+ * GridList when the two sources are momentarily out of sync (e.g. right after a pull).
  */
-export function useUnsyncedFilesForProject(organizationId: string, projectId: string): InsomniaFile[] {
-  const { projects, workspaces } = useOrganizationData(organizationId);
+export function useUnsyncedFilesForProject(
+  organizationId: string,
+  projectId: string,
+  localFiles: InsomniaFile[],
+): InsomniaFile[] {
+  const { projects } = useOrganizationData(organizationId);
   const filesByProjectId = useUnsyncedFilesByProjectId(organizationId, projects);
 
-  const { unsyncedFiles, localWorkspaceCount, remoteFileCount } = useMemo(() => {
+  const { unsyncedFiles, localFileCount, remoteFileCount } = useMemo(() => {
     const remoteFiles = filesByProjectId.get(projectId) ?? [];
-    const projectWorkspaces = workspaces.filter(w => w.parentId === projectId);
+    const localIds = new Set(localFiles.map(f => f.id));
     return {
-      unsyncedFiles: getUnsyncedRemoteWorkspaces(remoteFiles, projectWorkspaces),
-      localWorkspaceCount: projectWorkspaces.length,
+      unsyncedFiles: remoteFiles.filter(file => !localIds.has(file.id)),
+      localFileCount: localFiles.length,
       remoteFileCount: remoteFiles.length,
     };
-  }, [filesByProjectId, workspaces, projectId]);
+  }, [filesByProjectId, projectId, localFiles]);
 
   useEffect(() => {
     console.log(
-      `[remote-files] project ${projectId}: ${localWorkspaceCount} local workspace(s), ` +
+      `[remote-files] project ${projectId}: ${localFileCount} local file(s), ` +
         `${remoteFileCount} remote backend project(s), ${unsyncedFiles.length} unsynced`,
     );
-  }, [projectId, localWorkspaceCount, remoteFileCount, unsyncedFiles.length]);
+  }, [projectId, localFileCount, remoteFileCount, unsyncedFiles.length]);
 
   return unsyncedFiles;
 }

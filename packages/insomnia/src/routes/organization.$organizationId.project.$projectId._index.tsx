@@ -85,7 +85,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   };
   const { projects } = useOrganizationData(organizationId);
 
-  const remoteFiles = useUnsyncedFilesForProject(organizationId, projectId);
+  const remoteFiles = useUnsyncedFilesForProject(organizationId, projectId, localFiles);
 
   const allFiles = useMemo(() => [...localFiles, ...remoteFiles], [localFiles, remoteFiles]);
 
