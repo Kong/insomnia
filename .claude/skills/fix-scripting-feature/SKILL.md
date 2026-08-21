@@ -18,8 +18,8 @@ Pre-request/after-response/test scripts (the Postman-compatible `pm`/`insomnia` 
 
 | Path | Entry point | Sandboxing |
 |---|---|---|
-| Electron app (default) | `packages/insomnia/src/entry.hidden-window.ts` → `packages/insomnia/src/scripting/run-script.ts`, run in a hidden `BrowserWindow` (see `packages/insomnia/src/main/window-utils.ts`) | AST-based via `packages/insomnia/src/scripting/sandbox.ts` + `script-security-rules.ts` + `require-interceptor.ts` |
-| `inso` CLI | `packages/insomnia/src/script-executor.ts` (plain `AsyncFunction`/`eval`, no Electron) | None — `canSandbox = !!process.type` in `packages/insomnia/src/runtimes/network/network-adapter.node.ts` gates this |
+| Electron app (default) | `packages/insomnia/src/entry.hidden-window.ts` → `packages/insomnia/src/scripting/run-script.ts`, run in a hidden `BrowserWindow` (see `packages/insomnia/src/main/window-utils.ts`) | AST-based via `packages/insomnia/src/scripting/sandbox.ts` + `script-security-rules.ts` + `require-interceptor.ts`, toggled by `context.settings.scriptSandboxEnabled` (default on) |
+| `inso` CLI | `packages/insomnia/src/script-executor.ts` (plain `AsyncFunction`/`eval`, no Electron) | None — `script-executor.ts` never calls `sandbox.ts`'s `prepareSandbox`, it's a structurally separate implementation. (Don't confuse this with `canSandbox = !!process.type` in `packages/insomnia/src/runtimes/network/network-adapter.node.ts` — that gates **plugin** request/response hook sandboxing, an unrelated subsystem.) |
 
 The SDK object model (`InsomniaObject`, `Request`, `Response`, `Environment`, `Variables`, `Collection`, `Test`, console/send-request shims) lives in `packages/insomnia-scripting-environment/src/objects/` and is shared across both paths.
 
@@ -74,8 +74,9 @@ For property/method-level detail on any single object above (real signatures, sc
 2. **Reproduce with the narrowest test** before touching app code:
    - Unit tests for the sandbox/security logic:
      ```bash
-     npx vitest run src/scripting -w insomnia
+     npm test -w insomnia -- src/scripting
      ```
+     (not `npx vitest run src/scripting -w insomnia` — Vitest's own CLI already owns `-w`/`--watch`, so that form drops into watch mode instead of selecting the `insomnia` workspace.)
      Relevant files: `packages/insomnia/src/scripting/__tests__/sandbox.test.ts`, `__tests__/script-security-policy.test.ts`, `__tests__/require-interceptor.test.ts`.
    - SDK object-model unit tests:
      ```bash
@@ -101,7 +102,14 @@ For property/method-level detail on any single object above (real signatures, sc
 
 - Common failure patterns and where to look:
   - `SECURITY_POLICY_VIOLATION` / script blocked for using `this`, `globalThis`, `__proto__`, `constructor`, or `import` → AST rule in `packages/insomnia/src/scripting/sandbox.ts` (`checkSandboxViolations`) or the rule lists in `script-security-rules.ts`. These are Electron-app-only; `inso` has no AST sandbox at all.
-  - `no module is found for "..."` → the module isn't on the allowlist in `packages/insomnia/src/scripting/require-interceptor.ts` (currently: `path`, `assert`, `url`, `lodash`, `moment`, `chai`, `ajv`, `crypto-js`, `xml2js`, `uuid`, `csv-parse`, `tv4`, `cheerio`). Adding a module means adding it here, not just installing the npm package.
+  - `no module is found for "..."` → the module isn't on the allowlist in `packages/insomnia/src/scripting/require-interceptor.ts`. Currently allowed:
+    - Full-access Node builtins: `path`, `assert`, `url`, `punycode`, `querystring`, `string_decoder`, `stream`, `events`
+    - Method-restricted Node builtins (some methods throw): `timers` (`setImmediate` blocked), `buffer` (`allocUnsafe`/`allocUnsafeSlow` blocked), `util` (`inherits`/`debuglog` blocked)
+    - Shims: `atob`, `btoa`
+    - External/npm modules: `ajv`, `chai`, `cheerio`, `crypto-js`, `csv-parse/lib/sync` (note: not bare `csv-parse`), `lodash` (backed by `es-toolkit/compat`), `moment`, `tv4`, `uuid`, `xml2js`
+    - Special-cased: `insomnia-collection` / `postman-collection` (resolves to the SDK's own `Collection` module)
+
+    Adding a module means adding it here, not just installing the npm package.
   - `Timeout: Running script took too long` (Electron app) → default 5000ms in `entry.hidden-window.ts:39` (`data.context.timeout`).
   - `insomnia object is invalid or script returns earlier than expected.` → thrown when the wrapped `AsyncFunction` doesn't resolve to an `InsomniaObject` instance; check both `run-script.ts` and `script-executor.ts` since the same invariant is duplicated in each path.
   - Hidden window "closed unexpectedly" / "froze" / busy errors → restart/health-check race conditions in `packages/insomnia/src/main/window-utils.ts` (`hiddenWindowIsBusy`, `createHiddenBrowserWindow`).
