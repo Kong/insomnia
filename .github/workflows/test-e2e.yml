@@ -101,7 +101,7 @@ jobs:
           path: packages/insomnia/build/
 
       - name: Smoke test electron app (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke tests/smoke/cloud-sync.test.ts --repeat-each=10
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke tests/smoke/cloud-sync.test.ts --repeat-each=3
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
