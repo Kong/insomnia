@@ -66,16 +66,8 @@ test.describe('Cloud Sync', () => {
     await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
     await historyButton.click();
     const historyDialog = page.getByRole('dialog');
-    // The history list comes from a fetcher that's revalidated in the background after the
-    // "Commit and push" above, so the commit we just made may not be in it yet (or may still be
-    // shifting other rows down) the moment the dialog opens. Poll for the row of that specific
-    // commit by its message rather than assuming a fixed position (e.g. nth(2)).
     const commitRow = historyDialog.getByRole('row', { name: 'Smoke test: modify request body' });
     await expect.poll(async () => commitRow.isVisible(), { timeout: 10_000 }).toBe(true);
-    // Restore is a two-click confirm (PromptButton) that swaps its own label to "Confirm" rather
-    // than rendering a new element. Re-locating by name for the second click (instead of a
-    // coordinate-reusing dblclick()) avoids landing on the wrong row if the list reorders between
-    // the two clicks, and asserting the label change first confirms the arm click hit this row.
     await commitRow.getByRole('button', { name: 'Restore' }).click();
     await expect.soft(commitRow.getByRole('button', { name: 'Confirm' })).toBeVisible();
     await commitRow.getByRole('button', { name: 'Confirm' }).click();
