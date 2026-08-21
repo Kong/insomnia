@@ -182,10 +182,12 @@ export class ProjectPage extends BasePage {
   }
 
   /**
-   * Clicks a locator, falling back to a forced click if the normal click doesn't go through.
+   * Waits for a locator to become clickable (visible, stable, enabled, and not
+   * obscured by e.g. a closing modal's backdrop) before clicking it.
    */
   private async clickReliably(locator: Locator, timeout = 10_000): Promise<void> {
-    await locator.click({ timeout }).catch(() => locator.click({ force: true }));
+    await locator.waitFor({ state: 'visible', timeout });
+    await locator.click({ timeout });
   }
 
   /**
