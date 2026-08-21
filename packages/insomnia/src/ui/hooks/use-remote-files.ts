@@ -56,10 +56,10 @@ export function useRemoteBackendProjects(organizationId: string) {
 }
 
 /**
- * Remote (unsynced) files grouped by local projectId. Does not diff against local workspaces —
+ * Remote files grouped by local projectId. Does not diff against local workspaces —
  * callers apply `getUnsyncedRemoteWorkspaces` against the relevant project's workspaces.
  */
-export function useUnsyncedFilesByProjectId(organizationId: string, projects: Project[]): Map<string, InsomniaFile[]> {
+export function useRemoteFilesByProjectId(organizationId: string, projects: Project[]): Map<string, InsomniaFile[]> {
   const remoteBackendProjects = useRemoteBackendProjects(organizationId);
   return useMemo(() => groupRemoteFilesByProjectId(remoteBackendProjects, projects), [remoteBackendProjects, projects]);
 }
@@ -78,7 +78,7 @@ export function useUnsyncedFilesForProject(
   localFiles: InsomniaFile[],
 ): InsomniaFile[] {
   const { projects } = useOrganizationData(organizationId);
-  const filesByProjectId = useUnsyncedFilesByProjectId(organizationId, projects);
+  const filesByProjectId = useRemoteFilesByProjectId(organizationId, projects);
 
   const { unsyncedFiles, localFileCount, remoteFileCount } = useMemo(() => {
     const remoteFiles = filesByProjectId.get(projectId) ?? [];

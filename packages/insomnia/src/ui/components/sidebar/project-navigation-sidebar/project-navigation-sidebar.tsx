@@ -53,7 +53,7 @@ import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { useUnsyncedFilesByProjectId } from '~/ui/hooks/use-remote-files';
+import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
@@ -217,7 +217,7 @@ const ProjectNavigationSidebarInner = (
 
   // Unsynced remote files grouped by projectId, sourced from a shared server-data query
   // (deduped with the project view). Refresh is handled inside the hook via CLOUD_SYNC_FILE_CHANGE.
-  const unsyncedFilesByProjectId = useUnsyncedFilesByProjectId(organizationId, organizationProjects);
+  const unsyncedFilesByProjectId = useRemoteFilesByProjectId(organizationId, organizationProjects);
 
   const syncKonnectProjectsAndNotify = async (konnectOrganizationId?: string | null) => {
     setLastSyncResult(null);
