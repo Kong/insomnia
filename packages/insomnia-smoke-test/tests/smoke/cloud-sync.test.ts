@@ -74,8 +74,9 @@ test.describe('Cloud Sync', () => {
     await historyDialog.locator('[data-icon="x"]').click();
     // Ensure body is restored
     await page.getByRole('tab', { name: 'Body' }).click();
+    await expect.soft(bodyEditor).toContainText('value=changed', { timeout: 10_000 });
     await page.getByRole('button', { name: 'Send' }).click();
-    await expect.soft(page.getByTestId('request-pane').getByText('foo=bar')).toBeHidden();
+    await expect.soft(bodyEditor).toContainText('value=changed');
 
     // select unsynced MCP project to check branch actions. Sidebar is still focused on
     // "My Collection R1"; unsynced workspace rows for any other workspace are hidden while
