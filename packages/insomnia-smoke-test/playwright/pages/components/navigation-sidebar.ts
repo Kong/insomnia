@@ -200,6 +200,7 @@ export class NavigationSidebar {
 
   async clickRequestOrFolder(requestOrGroupName: string, workspaceName?: string): Promise<void> {
     const row = this.requestRow(requestOrGroupName, workspaceName);
+    await expect.soft(row).toBeVisible({ timeout: 45_000 });
     await row.click();
     await expect.soft(row).toHaveAttribute('data-selected', 'true');
   }
