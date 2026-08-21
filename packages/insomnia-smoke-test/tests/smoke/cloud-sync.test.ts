@@ -66,7 +66,7 @@ test.describe('Cloud Sync', () => {
     await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
     await historyButton.click();
     const historyDialog = page.getByRole('dialog');
-    const commitRow = historyDialog.getByRole('row').nth(2);
+    const commitRow = historyDialog.getByRole('row').nth(1);
     await expect.poll(async () => commitRow.isVisible(), { timeout: 10_000 }).toBe(true);
     await commitRow.getByRole('button', { name: 'Restore' }).click();
     await expect.soft(commitRow.getByRole('button', { name: 'Confirm' })).toBeVisible();
