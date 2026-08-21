@@ -15,6 +15,10 @@ test.describe('Cloud Sync', () => {
     });
   });
 
+  test.beforeEach(async () => {
+    await fetch(`${devServerUrl}/__test-config/cloud-sync/reset`, { method: 'POST' });
+  });
+
   test.afterAll(async () => {
     await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
       method: 'POST',
@@ -65,7 +69,10 @@ test.describe('Cloud Sync', () => {
     // Wait for history button to be enabled
     await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
     await historyButton.click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Restore' }).nth(2).click();
+    // Locate the commit row by its message rather than a positional index, so
+    // an unrelated extra/missing commit in the history doesn't select the wrong row.
+    const commitRow = page.getByRole('dialog').getByRole('row', { name: 'Smoke test: modify request body' });
+    await commitRow.getByRole('button', { name: 'Restore' }).click();
 
     await expect.soft(page.getByRole('dialog').getByRole('button', { name: 'Confirm' })).toBeVisible();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirm' }).click();
