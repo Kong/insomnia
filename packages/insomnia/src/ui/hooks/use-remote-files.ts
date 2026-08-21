@@ -40,11 +40,17 @@ export function useRemoteBackendProjectsInvalidation(organizationId: string): vo
  * CLOUD_SYNC_FILE_CHANGE, which invalidates the query.
  */
 export function useRemoteBackendProjects(organizationId: string) {
-  const { data } = useServerQuery({
+  const { data, error } = useServerQuery({
     queryKey: remoteBackendProjectsKey(organizationId),
     queryFn: () => getAllRemoteBackendProjectsOfOrg({ organizationId }),
     enabled: !!organizationId,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error(`[remote-files] Failed to fetch remote backend projects for organization ${organizationId}`, error);
+    }
+  }, [error, organizationId]);
 
   return data ?? [];
 }
@@ -55,10 +61,7 @@ export function useRemoteBackendProjects(organizationId: string) {
  */
 export function useUnsyncedFilesByProjectId(organizationId: string, projects: Project[]): Map<string, InsomniaFile[]> {
   const remoteBackendProjects = useRemoteBackendProjects(organizationId);
-  return useMemo(
-    () => groupRemoteFilesByProjectId(remoteBackendProjects, projects),
-    [remoteBackendProjects, projects],
-  );
+  return useMemo(() => groupRemoteFilesByProjectId(remoteBackendProjects, projects), [remoteBackendProjects, projects]);
 }
 
 /**
@@ -70,9 +73,22 @@ export function useUnsyncedFilesForProject(organizationId: string, projectId: st
   const { projects, workspaces } = useOrganizationData(organizationId);
   const filesByProjectId = useUnsyncedFilesByProjectId(organizationId, projects);
 
-  return useMemo(() => {
-    const files = filesByProjectId.get(projectId) ?? [];
+  const { unsyncedFiles, localWorkspaceCount, remoteFileCount } = useMemo(() => {
+    const remoteFiles = filesByProjectId.get(projectId) ?? [];
     const projectWorkspaces = workspaces.filter(w => w.parentId === projectId);
-    return getUnsyncedRemoteWorkspaces(files, projectWorkspaces);
+    return {
+      unsyncedFiles: getUnsyncedRemoteWorkspaces(remoteFiles, projectWorkspaces),
+      localWorkspaceCount: projectWorkspaces.length,
+      remoteFileCount: remoteFiles.length,
+    };
   }, [filesByProjectId, workspaces, projectId]);
+
+  useEffect(() => {
+    console.log(
+      `[remote-files] project ${projectId}: ${localWorkspaceCount} local workspace(s), ` +
+        `${remoteFileCount} remote backend project(s), ${unsyncedFiles.length} unsynced`,
+    );
+  }, [projectId, localWorkspaceCount, remoteFileCount, unsyncedFiles.length]);
+
+  return unsyncedFiles;
 }
