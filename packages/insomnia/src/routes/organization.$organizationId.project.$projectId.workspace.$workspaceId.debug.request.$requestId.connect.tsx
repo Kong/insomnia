@@ -84,7 +84,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
-    const authHeader = await window.main.getAuthHeader(renderedRequest, rendered.url);
+    const { header: authHeader } = await window.main.getAuthHeader(renderedRequest, rendered.url);
     window.main.curl.open({
       requestId,
       workspaceId,

@@ -158,7 +158,7 @@ const GitEditProviderOAuthForm = ({
               className="text-(--color-surprise)"
               onPress={() => {
                 setIsAuthenticating(true);
-                initSignInFetcher.submit({ provider: provider.type });
+                initSignInFetcher.submit({ provider: provider.type, credentialId: gitCredentialToEdit?._id });
               }}
             >
               Reauthorize

@@ -337,7 +337,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               aria-label="Request scripts tabs"
             >
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
+                className="flex h-(--line-height-xxs) w-40 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
                 id="pre-request"
               >
                 <div className="flex flex-1 items-center gap-2">
@@ -351,12 +351,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 )}
               </Tab>
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
+                className="flex h-(--line-height-xxs) w-46 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
                 id="after-response"
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-from-bracket" />
-                  <span>After-response</span>
+                  <span className="whitespace-nowrap">After-response</span>
                 </div>
                 {Boolean(activeRequest.afterResponseScript) && (
                   <span className="rounded-lg p-2">
@@ -366,7 +366,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               </Tab>
             </TabList>
             <TabPanel className="w-full flex-1" id="pre-request">
-              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
+              <ErrorBoundary
+                // Stable per-script key: a volatile key remounts the editor on every
+                // revalidation, clobbering undo. Scripts don't depend on env/response.
+                key={`${activeRequest._id}:pre-request-script`}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
                 <RequestScriptEditor
                   historyKey={`${activeRequest._id}:pre-request-script`}
                   defaultValue={activeRequest.preRequestScript || ''}
@@ -381,7 +386,10 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               </ErrorBoundary>
             </TabPanel>
             <TabPanel className="w-full flex-1" id="after-response">
-              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
+              <ErrorBoundary
+                key={`${activeRequest._id}:after-response-script`}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
                 <RequestScriptEditor
                   historyKey={`${activeRequest._id}:after-response-script`}
                   defaultValue={activeRequest.afterResponseScript || ''}
@@ -399,7 +407,11 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
-            key={uniqueKey}
+            // Stable per-request key: a volatile key here remounts the editor on
+            // every revalidation, resetting its internal state (content, active
+            // tab) and clobbering undo. Descriptions don't depend on env/response,
+            // so a stable key is safe.
+            key={`request-description::${requestId}`}
             historyKey={`request-description::${requestId}`}
             placeholder="Write a description"
             defaultValue={activeRequest.description}

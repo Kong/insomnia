@@ -6,6 +6,15 @@ import type CodeMirror from 'codemirror';
 // fields are only populated by the richer multi-line CodeEditor.
 export interface CachedEditorState {
   history: any;
+  // The editor content at unmount, plus the `defaultValue` baseline it was cached
+  // against. On remount the value + history are only reused when the current
+  // `defaultValue` still equals `valueSeed` — i.e. the model has NOT changed
+  // externally since. This keeps content consistent with the restored history when
+  // `defaultValue` merely lags (markdown write<->preview toggle), while letting a
+  // genuinely-updated model win (e.g. a pre-request script or sync changed the
+  // environment/response between two mounts sharing a historyKey).
+  value?: string;
+  valueSeed?: string;
   scroll?: CodeMirror.ScrollInfo;
   selections?: CodeMirror.Range[];
   cursor?: CodeMirror.Position;

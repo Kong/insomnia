@@ -35,7 +35,7 @@ export class Environment {
    * It is intended to be a private field and should not be accessed directly outside the class.
    */
   private _name: string;
-  private kvs = new Map<string, boolean | number | string | undefined>();
+  private kvs = new Map<string, boolean | number | string | null | undefined>();
 
   /**
    * Constructs an instance of the environment object.
@@ -81,15 +81,15 @@ export class Environment {
 
   /**
    * Sets a variable in the key-value store with the specified name and value.
-   * If the provided value is `null`, a warning is logged and the variable is not set.
+   * If the provided value is `NaN`, a warning is logged and the variable is not set.
    *
    * @param variableName - The name of the variable to set.
    * @param variableValue - The value to assign to the variable. Can be a boolean, number, string, undefined, or null.
-   *                        If `null`, the variable will not be set, and a warning will be logged.
+   *                        If `NaN`, the variable will not be set, and a warning will be logged.
    */
   set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
-    if (variableValue === null) {
-      getExistingConsole().warn(`Variable "${variableName}" has a null value`);
+    if (Number.isNaN(variableValue)) {
+      getExistingConsole().warn(`Variable "${variableName}" has a NaN value`);
       return;
     }
     this.kvs.set(variableName, variableValue);
@@ -285,8 +285,7 @@ export class Variables {
    * @returns The value of the variable if found, otherwise undefined
    */
   get = (variableName: string) => {
-    let finalVal: boolean | number | string | object | undefined;
-    [
+    const scope = [
       this.localVars,
       mergeFolderLevelVars(this.folderLevelVars),
       this.iterationDataVars,
@@ -294,27 +293,22 @@ export class Variables {
       this.collectionVars,
       this.globalVars,
       this.baseGlobalVars,
-    ].forEach(vars => {
-      const value = vars.get(variableName);
-      if (!finalVal && value) {
-        finalVal = value;
-      }
-    });
+    ].find(vars => vars.has(variableName));
 
-    return finalVal;
+    return scope?.get(variableName);
   };
 
   /**
    * Sets a local variable with the specified name and value.
-   * If the provided value is `null`, a warning is logged and the variable is not set.
+   * If the provided value is `NaN`, a warning is logged and the variable is not set.
    *
    * @param variableName - The name of the variable to set.
    * @param variableValue - The value to assign to the variable. Can be a boolean, number, string, undefined, or null.
-   *                        If `null`, the variable will not be set and a warning will be logged.
+   *                        If `NaN`, the variable will not be set and a warning will be logged.
    */
   set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
-    if (variableValue === null) {
-      getExistingConsole().warn(`Variable "${variableName}" has a null value`);
+    if (Number.isNaN(variableValue)) {
+      getExistingConsole().warn(`Variable "${variableName}" has a NaN value`);
       return;
     }
 

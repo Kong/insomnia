@@ -6,8 +6,7 @@ import { useRootLoaderData } from '~/root';
 import { Hotkey } from '~/ui/components/hotkey';
 
 import { RequestResultCard } from './request-result-card';
-
-type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
+import { hasMatchingTestResults, type TargetTestType } from './request-test-result-pane';
 
 const filterClassnames =
   'mx-1 w-24 text-center rounded-md h-(--line-height-xxs) text-sm cursor-pointer outline-hidden select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-(--hl) aria-selected:text-(--color-font-surprise) hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300';
@@ -56,6 +55,14 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
     const key = `runner-test-result-iteration-${i + 1}`;
 
     if (Array.isArray(iterationResults)) {
+      const hasVisibleRequest = iterationResults.some(
+        requestTestResult => hasMatchingTestResults(requestTestResult.results ?? [], targetTests, resultFilter),
+      );
+
+      if (!hasVisibleRequest) {
+        return null;
+      }
+
       const resultByRequest = iterationResults.map((requestTestResult: RunnerResultPerRequest, reqIndex: number) => {
         const key = `request-test-result-${reqIndex}`;
         return (
@@ -80,9 +87,11 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
     return <div key={key}>Invalid test result format</div>;
   });
 
+  const hasVisibleResults = resultsByIteration.some(Boolean);
+
   return (
     <>
-      <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
+      <div className="flex h-[calc(100%-var(--line-height-sm))] flex-col divide-y divide-solid divide-(--hl-md)">
         <div className="h-[calc(100%-var(--line-height-sm))]">
           <Toolbar className="box-border flex h-(--line-height-sm) flex-row items-center overflow-x-auto border-b border-solid border-b-(--hl-md) pl-2 text-(--font-size-sm)">
             <button
@@ -111,7 +120,13 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
             </button>
           </Toolbar>
           <div className="h-[calc(100%-var(--line-height-sm))] w-auto overflow-x-auto overflow-y-auto">
-            {resultsByIteration}
+            {hasVisibleResults ? (
+              resultsByIteration
+            ) : (
+              <div className="mt-5 text-center">
+                <div>No matching requests/tests to display</div>
+              </div>
+            )}
           </div>
         </div>
         <Toolbar className="box-border flex h-(--line-height-sm) shrink-0 flex-row items-center overflow-x-auto text-(--font-size-sm)">

@@ -1,5 +1,6 @@
 /* eslint-disable no-empty-pattern */
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 import type { ElectronApplication, PlaywrightWorkerArgs, TraceMode } from '@playwright/test';
@@ -8,7 +9,37 @@ import { test as baseTest } from '@playwright/test';
 import type { EnvOptions } from './launch';
 import { launchInsomnia, liveApps } from './launch';
 import { InsomniaApp } from './pages';
-import { randomDataPath } from './paths';
+import { randomDataPath, seedSettings } from './paths';
+
+/**
+ * Kills a process and all of its descendants. A plain `process.kill()` only signals
+ * the top-level Electron process; its GPU/utility/renderer helper processes can survive
+ * (reparented) and keep holding onto stdio pipes inherited from this worker process,
+ * which then never sees EOF and hangs past Playwright's "Worker teardown timeout"
+ * even though every test already reported as passed.
+ */
+function killProcessTree(pid: number): void {
+  if (process.platform === 'win32') {
+    try {
+      execFileSync('taskkill', ['/pid', String(pid), '/T', '/F']);
+    } catch {}
+    return;
+  }
+  let childPids: number[] = [];
+  try {
+    childPids = execFileSync('pgrep', ['-P', String(pid)])
+      .toString()
+      .split('\n')
+      .filter(Boolean)
+      .map(Number);
+  } catch {
+    // pgrep exits non-zero and prints nothing when a process has no children
+  }
+  childPids.forEach(killProcessTree);
+  try {
+    process.kill(pid, 'SIGKILL');
+  } catch {}
+}
 
 // Throw an error if the condition fails
 // > Not providing an inline default argument for message as the result is smaller
@@ -147,13 +178,21 @@ export const test = baseTest.extend<{
     for (const live of Array.from(liveApps)) {
       try {
         await Promise.race([
-          live.close(),
+          live.close().catch(() => {}),
           new Promise<void>((_, reject) => setTimeout(() => reject(new Error('close timeout')), 5000)),
         ]);
       } catch {
+        const pid = live.process().pid;
         try {
-          live.process().kill();
-        } catch {}
+          if (pid === undefined) {
+            throw new Error('no pid to kill');
+          }
+          killProcessTree(pid);
+        } catch {
+          try {
+            live.process().kill();
+          } catch {}
+        }
       }
     }
   },
@@ -176,6 +215,12 @@ export const test = baseTest.extend<{
   },
   dataPath: async ({}, use) => {
     const insomniaDataPath = randomDataPath();
+    // `sidebarFocusForCollections` defaults to on for real users, but it narrows the
+    // sidebar to a single collection on any click into it — hiding other collections,
+    // projects, and the project tabs — which breaks the many existing specs that assume
+    // the full tree stays visible. Default it off here; specs that want to exercise
+    // focus mode itself (see sidebar-focus-onboarding.test.ts) turn it on explicitly.
+    await seedSettings(insomniaDataPath, { sidebarFocusForCollections: false });
 
     await use(insomniaDataPath);
   },

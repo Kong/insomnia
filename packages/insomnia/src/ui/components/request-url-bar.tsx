@@ -109,7 +109,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       setSearchParams({});
     }, [searchParams, setSearchParams]);
 
-    const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
+    const { activeWorkspace, activeEnvironment, activeGlobalEnvironment } = useWorkspaceLoaderData()!;
     const { settings } = useRootLoaderData()!;
     const { hotKeyRegistry } = settings;
     const {
@@ -317,7 +317,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             // Remount on request switch or environment change (switch/edit) so nunjucks
             // previews refresh. Excludes the response id / sync versions that churn on
             // send and local edits, which used to remount and blur the editor mid-edit.
-            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}`}
+            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}`}
             // Stable across that remount, so undo history is restored from the cache.
             historyKey={historyKey}
             ref={inputRef}

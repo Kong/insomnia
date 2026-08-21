@@ -1,5 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
-import type { ApiSpec, Project, WorkspaceScope } from 'insomnia-data';
+import type { ApiSpec, Project, Workspace, WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -64,7 +64,7 @@ export const NewWorkspaceModal = ({
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
   storageRules: StorageRules;
-  onCreateWorkspace?: (workspaceId: string) => void;
+  onCreateWorkspace?: (workspaceId: string, workspace: Workspace) => void;
   redirectAfterCreate?: boolean;
   scope: WorkspaceScope;
   sourceApiSpec?: ApiSpec;
@@ -141,10 +141,11 @@ export const NewWorkspaceModal = ({
 
     if (
       createNewWorkspaceFetcher.data &&
-      'workspaceId' in createNewWorkspaceFetcher.data &&
-      createNewWorkspaceFetcher.data.workspaceId
+      'workspace' in createNewWorkspaceFetcher.data &&
+      createNewWorkspaceFetcher.data.workspace
     ) {
-      onCreateWorkspace?.(createNewWorkspaceFetcher.data.workspaceId);
+      const newWorkspace = createNewWorkspaceFetcher.data.workspace;
+      onCreateWorkspace?.(newWorkspace._id, newWorkspace);
     }
 
     onOpenChange(false);

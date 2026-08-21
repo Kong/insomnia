@@ -62,13 +62,13 @@ const clearPluginToast = async (page: Page) => {
 // Enables the sandbox via the real Preferences → Scripting UI toggle, not a pre-set settings object.
 const enableSandbox = async (page: Page) => {
   await page.getByTestId('settings-button').click();
-  const sandboxToggle = page.getByTestId('toggle-template-tag-sandbox');
+  const sandboxToggle = page.getByTestId('toggle-plugin-sandbox');
   await page.getByRole('tab', { name: 'Scripting' }).click();
   await sandboxToggle.getByRole('switch').waitFor();
   await sandboxToggle.click();
   await expect.soft(sandboxToggle.getByRole('switch')).toBeChecked();
   await page.locator('.app').press('Escape');
-  await expect.soft(page.getByTestId('toggle-template-tag-sandbox')).toBeHidden();
+  await expect.soft(page.getByTestId('toggle-plugin-sandbox')).toBeHidden();
 };
 
 test('response.getBodyBuffer restricts a zero-permission template tag to known response bodyPaths', async ({

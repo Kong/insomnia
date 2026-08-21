@@ -60,6 +60,21 @@ const LocalBranchItem = ({
 
   useEffect(() => {
     if (
+      checkoutBranchFetcher.data &&
+      'warnings' in checkoutBranchFetcher.data &&
+      checkoutBranchFetcher.data.warnings &&
+      checkoutBranchFetcher.data.warnings.length > 0 &&
+      checkoutBranchFetcher.state === 'idle'
+    ) {
+      showModal(AlertModal, {
+        title: 'Heads up',
+        message: checkoutBranchFetcher.data.warnings.join('\n\n'),
+      });
+    }
+  }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);
+
+  useEffect(() => {
+    if (
       deleteBranchFetcher.data &&
       'errors' in deleteBranchFetcher.data &&
       deleteBranchFetcher.data.errors &&
@@ -224,6 +239,21 @@ const RemoteBranchItem = ({
       showModal(AlertModal, {
         title: 'Error while pulling branch.',
         message: error,
+      });
+    }
+  }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);
+
+  useEffect(() => {
+    if (
+      checkoutBranchFetcher.data &&
+      'warnings' in checkoutBranchFetcher.data &&
+      checkoutBranchFetcher.data.warnings &&
+      checkoutBranchFetcher.data.warnings.length > 0 &&
+      checkoutBranchFetcher.state === 'idle'
+    ) {
+      showModal(AlertModal, {
+        title: 'Heads up',
+        message: checkoutBranchFetcher.data.warnings.join('\n\n'),
       });
     }
   }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);

@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import clone from 'clone';
-import type { Cookie, RequestHeader } from 'insomnia-data';
+import type { Cookie, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
+import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import type { RenderedRequest } from '~/common/templating/types';
 
 import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
@@ -19,6 +20,16 @@ import * as pluginRequest from '../../plugins/context/request';
 import * as pluginResponse from '../../plugins/context/response';
 import * as pluginStore from '../../plugins/context/store';
 import { runScript as executeScript } from '../../script-executor';
+
+// Uses defineProperty, not assignment, so a plugin-thrown error can't define its own `plugin` setter
+// to intercept the write and grab a live, mutable reference to its own cached registry entry.
+const attachPluginToError = (error: Error, plugin: unknown): void => {
+  try {
+    Object.defineProperty(error, 'plugin', { value: plugin, enumerable: true, configurable: true });
+  } catch {
+    // Best-effort annotation only; nothing downstream depends on this property.
+  }
+};
 
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
@@ -38,7 +49,7 @@ export const appendToTimelineOnError = (timelinePath: string, data: string): Pro
 export const appendTimelineLines = (timelinePath: string, logs: string[]): Promise<void> =>
   fs.promises.appendFile(timelinePath, logs.join('\n'));
 
-export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHeader | undefined> =>
+export const getAuthHeader = (r: RenderedRequest, u: string): Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }> =>
   getAuthHeaderFromMain(r, u);
 
 export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> => curlRequest(options);
@@ -85,14 +96,18 @@ export async function applyRequestHooks(
   // reached from an Electron process. This node runtime also backs the pure-Node inso CLI, which has
   // no `electron` — there the sandbox is unavailable, so hooks run in-process as they always have.
   const canSandbox = !!process.type;
-  const sandboxEnabled = canSandbox && (await services.settings.get()).templateTagSandboxEnabled;
+  // Only fetch settings when a sandbox host is reachable — the pure-Node inso CLI (process.type
+  // falsy) can never sandbox, so skip the read entirely; shouldSandboxPlugin treats undefined as off.
+  const settings = canSandbox ? await services.settings.get() : undefined;
   // getRequestHooks flattens each plugin's requestHooks in order, so a per-plugin running counter
   // recovers the hook's index within its own array (what the sandbox loads by).
   const hookIndexByPlugin: Record<string, number> = {};
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
     const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);
     try {
-      if (sandboxEnabled && plugin.directory !== '') {
+      // T1: sandbox a user plugin unless it's elevated; bundle + flag-off run in-process. canSandbox
+      // stays gated on process.type because the inso CLI has no Electron sandbox host.
+      if (canSandbox && shouldSandboxPlugin(settings, plugin)) {
         const { runRequestHookInSandbox } = await import('../../main/templating-worker-database');
         const { mergeHookRequestMutation } = await import('../../templating/sandbox/marshal');
         // The hook mutates the request in the sandbox; merge the returned fields back so the next
@@ -112,7 +127,7 @@ export async function applyRequestHooks(
       await hook(context);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      (error as any).plugin = plugin;
+      attachPluginToError(error, plugin);
       throw error;
     }
   }
@@ -132,12 +147,15 @@ export async function applyResponseHooks(
   // only from an Electron process. This node runtime also backs the pure-Node inso CLI (no electron),
   // where the sandbox is unavailable and hooks run in-process — gate on process.type accordingly.
   const canSandbox = !!process.type;
-  const sandboxEnabled = canSandbox && (await services.settings.get()).templateTagSandboxEnabled;
+  // Only fetch settings when a sandbox host is reachable — the pure-Node inso CLI (process.type
+  // falsy) can never sandbox, so skip the read entirely; shouldSandboxPlugin treats undefined as off.
+  const settings = canSandbox ? await services.settings.get() : undefined;
   const hookIndexByPlugin: Record<string, number> = {};
   for (const { plugin, hook } of await pluginIndex.getResponseHooks()) {
     const hookIndex = (hookIndexByPlugin[plugin.name] = (hookIndexByPlugin[plugin.name] ?? -1) + 1);
     try {
-      if (sandboxEnabled && plugin.directory !== '') {
+      // T1: sandbox a user plugin unless it's elevated; bundle + flag-off run in-process.
+      if (canSandbox && shouldSandboxPlugin(settings, plugin)) {
         const { runResponseHookInSandbox } = await import('../../main/templating-worker-database');
         // The hook rewrites the body via the response.setBody bridge (on-disk) and returns the
         // mutated response fields (e.g. bytesContent); merge them so downstream sees the change.
@@ -156,7 +174,7 @@ export async function applyResponseHooks(
       await hook(context);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      (error as any).plugin = plugin;
+      attachPluginToError(error, plugin);
       throw error;
     }
   }

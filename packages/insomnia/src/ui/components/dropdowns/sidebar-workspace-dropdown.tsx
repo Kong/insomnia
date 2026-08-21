@@ -7,7 +7,7 @@ import {
 import type { MockServer, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
   Collection,
@@ -28,19 +28,22 @@ import {
 } from 'react-aria-components';
 import { href } from 'react-router';
 
+import { database as db } from '~/common/database';
+import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { AnalyticsEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
-import { showModal } from '../modals';
+import { showError, showModal } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal/import-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
@@ -95,6 +98,7 @@ export const SidebarWorkspaceDropdown = ({
   const [settingsData, setSettingsData] = useState<{ mockServer: MockServer | null; gitFilePath: string | null }>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
+  const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
 
   const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
@@ -124,6 +128,43 @@ export const SidebarWorkspaceDropdown = ({
       { organization: organizationId, project, workspace, item: workspace },
       isRunner ? { shouldNavigate: true, asRunner: true } : { withTab: true, shouldNavigate: true },
     );
+  };
+
+  const handleDropdownOpen = useCallback(async () => {
+    try {
+      const actionPlugins = await plugins.getWorkspaceActions();
+      setActionPlugins(actionPlugins);
+    } catch (error) {
+      setActionPlugins([]);
+      console.error('Failed to get workspace plugin actions', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch the action plugins when the dropdown is opened
+    if (isOpen) {
+      handleDropdownOpen();
+    }
+  }, [isOpen, handleDropdownOpen]);
+
+  const handlePluginClick = async ({ pluginName, label }: SerializableActionMeta) => {
+    try {
+      const docs = await db.getWithDescendants(workspace, [models.request.type, models.requestGroup.type]);
+      const requests = docs.filter(models.request.isRequest).filter(doc => !doc.isPrivate);
+      const requestGroups = docs.filter(models.requestGroup.isRequestGroup);
+      await plugins.executeAction({
+        type: 'workspace',
+        pluginName,
+        label,
+        projectId: project._id,
+        domainData: { workspace, requests, requestGroups },
+      });
+    } catch (error) {
+      showError({
+        title: 'Plugin Action Failed',
+        error,
+      });
+    }
   };
 
   const createSection: ActionSection = {
@@ -317,18 +358,25 @@ export const SidebarWorkspaceDropdown = ({
     ],
   };
 
+  const pluginActionSection: ActionSection = {
+    name: 'Plugins',
+    id: 'plugins',
+    icon: 'plug' as IconName,
+    items: actionPlugins.map(plugin => ({
+      id: `${plugin.pluginName}:${plugin.label}`,
+      name: plugin.label,
+      icon: (plugin.icon as IconName) || 'plug',
+      action: () => handlePluginClick(plugin),
+    })),
+  };
+
   const allSections: ActionSection[] = isScratchpadWorkspace
     ? [...createSections, scratchpadActionList]
-    : [...createSections, actionSection];
+    : [...createSections, actionSection, ...(actionPlugins.length > 0 ? [pluginActionSection] : [])];
 
   return (
     <Fragment>
-      <MenuTrigger
-        isOpen={isOpen}
-        onOpenChange={isOpen => {
-          onOpenChange(isOpen);
-        }}
-      >
+      <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           aria-label="SideBar Workspace Actions"
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"

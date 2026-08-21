@@ -11,6 +11,7 @@ import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type {
   AppPromptOptions,
@@ -19,7 +20,11 @@ import type {
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
 import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
-import { HOOK_REQUEST_FIELDS, type PluginExportManifest, stripDangerousKeysReviver } from '~/templating/sandbox/marshal';
+import {
+  HOOK_REQUEST_FIELDS,
+  type PluginExportManifest,
+  stripDangerousKeysReviver,
+} from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
@@ -325,7 +330,7 @@ export const maybeWarnMissingManifest = (
 
 // Execute a plugin template tag inside the QuickJS-WASM sandbox instead of directly in the main
 // process. The host bridge reuses the existing pluginToMainAPI handlers verbatim, plus a util.render
-// handler that recurses through main templating. Gated behind the templateTagSandboxEnabled setting.
+// handler that recurses through main templating. Gated behind the pluginSandboxEnabled setting.
 // The plugin's own source, either a single entry string (single-file plugins/tests) or a full
 // module map read from disk (M4 multi-file plugins).
 type PluginModuleSource = string | { moduleFiles: Record<string, string>; entryModuleKey: string };
@@ -707,6 +712,12 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     if (relative.startsWith('..') || path.isAbsolute(relative)) {
       throw new Error('response.setBody path escapes the responses directory');
     }
+    // Re-check after resolving symlinks, mirroring getPluginEntrySource/readPluginModuleMap: a
+    // symlinked directory entry under responsesDir could otherwise resolve outside it despite the
+    // string-based check above passing.
+    if (!isContainedIn(fs.realpathSync(responsesDir), fs.realpathSync(path.dirname(target)))) {
+      throw new Error('response.setBody path escapes the responses directory');
+    }
     fs.writeFileSync(target, Buffer.from(body.bodyBase64, 'base64'));
     return null;
   },
@@ -774,20 +785,28 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     return await services.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
   },
   // use libcurl to send request without side effects(do not write to database about request and response)
+  //
+  // This endpoint is reachable by any pre/post-request script or template-tag/plugin (via the
+  // QuickJS script sandbox's insomnia.sendRequest() bridge and the template-tag sandbox's
+  // context.network.sendRequestWithoutSideEffects(), respectively) with no ownership/entitlement
+  // check on the caller's identity beyond the templating-db auth token every call already needs —
+  // so it must never honor a caller-supplied client certificate path or authentication object.
+  // Both are host-privileged capabilities (an arbitrary local file read via `caCertficatePath`,
+  // credential injection via `authentication`) that this "without side effects" preview endpoint
+  // was never meant to carry; `network.sendRequest` (the DB-backed, side-effectful sibling) is the
+  // only handler that may use a request's real, ownership-scoped `clientCertificates`.
   'network.sendRequestWithoutSideEffects': async (body: {
     options: {
-      request: Pick<DBRequest, 'url' | 'method' | 'headers'> & Partial<Pick<DBRequest, 'body' | 'authentication'>>;
-      caCertficatePath: string;
+      request: Pick<DBRequest, 'url' | 'method' | 'headers'> & Partial<Pick<DBRequest, 'body'>>;
     };
   }) => {
     const requestId = uuidv4();
     const settings = await services.settings.get();
     const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
-    const { request: originRequest, caCertficatePath = null } = body.options;
+    const { request: originRequest } = body.options;
     const response = await curlRequest({
       requestId: `no-sideEffects-request-${requestId}`,
       req: {
-        authentication: { type: 'none' },
         body: {},
         cookieJar: {
           cookies: [],
@@ -798,11 +817,15 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
         settingRebuildPath: true,
         settingSendCookies: true,
         ...originRequest,
+        // Applied after the spread so a caller-supplied `authentication` on the request body can
+        // never override it — see the handler-level comment above.
+        authentication: { type: 'none' },
       },
       finalUrl: originRequest.url,
       settings,
       certificates: [],
-      caCertficatePath,
+      // Never sourced from the caller — see the handler-level comment above.
+      caCertficatePath: null,
     });
     const { headerResults, patch, responseBodyPath } = response;
     if (patch.error) {
@@ -835,7 +858,11 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
         }
       },
     };
-    return new Response(JSON.stringify(result));
+    // Every other handler in this map returns a plain value and lets the caller wrap it.
+    // `resolveDbByKey` does `JSON.stringify(await handler(body))` and `createMapBridge` hands the
+    // value straight to the sandbox — so returning a `Response` here stringified to `"{}"` and every
+    // caller got an empty object instead of the response.
+    return result;
   },
   // used to generate the template tags for the bundle plugins and send back to the web worker
   'plugin.getBundlePluginTemplateTags': async () => {
@@ -879,18 +906,8 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
-        const settings = await services.settings.get();
-        if (settings.templateTagSandboxEnabled) {
-          const { ALL_CAPABILITIES } = await import('../templating/sandbox/host-bridge');
-          const { ALL_SANDBOX_MODULES } = await import('../templating/sandbox/module-registry');
-          // Bundle plugins are first-party and trusted: grant every module + capability.
-          return runPluginTagInSandbox(
-            readPluginModuleMap({ directory: '', name: pluginName }),
-            body,
-            [...ALL_SANDBOX_MODULES],
-            [...ALL_CAPABILITIES],
-          );
-        }
+        // Bundle plugins are first-party/trusted, so the pluginSandboxEnabled flag (which isolates
+        // *untrusted* plugins) deliberately leaves them in-process with full host access.
         return runPluginTag(targetTag.run, body);
       }
     }
@@ -913,6 +930,16 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
         },
         templateTag,
       }));
+  },
+  // `getPlugins`/`getTemplateTags` cache their discovered plugin list in this module's own scope —
+  // and this file's plugin registry is a separate instance from the one the Settings > Plugins
+  // page reloads (that one lives in the plugin window's own realm; see `plugin-window.ts`). Without
+  // this, a plugin that's missing when this registry first populates (e.g. a discovery race) never
+  // becomes visible to template rendering, no matter how many times "Reload" is clicked —
+  // reloading has to reach *this* registry too, not just the plugin window's.
+  'plugin.reloadPlugins': async () => {
+    await getPlugins(true);
+    return null;
   },
   // L1: discover a user plugin's exports by evaluating its source in the sandbox (no host execution),
   // returning a serializable manifest. The plugin loader (plugins/index.ts) calls this instead of
@@ -996,7 +1023,9 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
     if (targetTag) {
       const settings = await services.settings.get();
-      if (settings.templateTagSandboxEnabled) {
+      // T1: a user plugin's tag runs in the sandbox unless the plugin is elevated (then its `run` is a
+      // live in-process fn from nodeRequire discovery). Bundle tags are handled by the sibling handler.
+      if (shouldSandboxPlugin(settings, targetTag.plugin)) {
         const { resolveTemplateTagModules, resolveTemplateTagCapabilities } = await import(
           '../templating/sandbox/surface-profiles'
         );
