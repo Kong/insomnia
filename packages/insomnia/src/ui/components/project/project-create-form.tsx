@@ -15,10 +15,10 @@ import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result'
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import {
-  deriveRepoName,
   getLastCloneParentDir,
   type ProjectData,
   type ProjectType,
+  resolveCloneFolderName,
   useActiveView,
 } from '~/ui/components/project/utils';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
@@ -141,10 +141,14 @@ export const ProjectCreateForm: FC<Props> = ({
     }
 
     // For a custom clone location, the picked folder is the parent — clone into
-    // `<parent>/<repo-name>`, matching `git clone` behaviour.
+    // `<parent>/<folder-name>`, matching `git clone` behaviour. The folder name
+    // defaults to the repo's own name but can be overridden in the form.
     const directory =
       storageType === 'git' && !isGitOpen && !projectData.connectRepositoryLater && projectData.cloneParentDir
-        ? window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))
+        ? window.path.join(
+            projectData.cloneParentDir,
+            resolveCloneFolderName(projectData.cloneFolderName, projectData.uri),
+          )
         : undefined;
 
     newProjectFetcher.submit({

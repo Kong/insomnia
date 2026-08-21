@@ -470,6 +470,21 @@ class RepoFileWatcher {
    * blocking import problem that the user must resolve first.
    */
   private async flushWorkspacesToDisk(workspaceIds?: Set<string>): Promise<void> {
+    // Mirror importAllFiles' guard: this runs on every DB change (debounced)
+    // AND on every explicit flushNow() (e.g. git-status polling), regardless
+    // of whether the user did anything. Without this check, a repo folder
+    // that was deleted/renamed/moved outside Insomnia (or whose drive was
+    // unmounted) gets silently resurrected as an empty directory — via
+    // mkdir -p below — the next time either trigger fires, with no action
+    // from the user at all.
+    if (!(await this.repoDirIsAvailable())) {
+      console.warn(
+        '[repo-file-watcher] Repo directory unavailable — skipping DB→FS flush to avoid resurrecting it:',
+        this.repoDir,
+      );
+      return;
+    }
+
     const entries = await this.getWorkspacesWithMeta(workspaceIds);
     const currentWorkspaceIds = new Set(entries.map(({ workspace }) => workspace._id));
 
@@ -514,8 +529,20 @@ class RepoFileWatcher {
 
         const hash = contentHash(yamlContent);
 
+        // The hash cache only tells us the DB side hasn't changed since our
+        // last write — it says nothing about whether that write still exists
+        // on disk. If the repo folder was deleted and came back (e.g. via
+        // relocate/adopt, or a drive remount), the file may be gone even
+        // though its content hash is unchanged; skipping the write here would
+        // leave it missing indefinitely.
         if (this.lastWrittenHash.get(absPath) === hash) {
-          continue;
+          const stillOnDisk = await fs.promises
+            .access(absPath)
+            .then(() => true)
+            .catch(() => false);
+          if (stillOnDisk) {
+            continue;
+          }
         }
 
         await fs.promises.mkdir(path.dirname(absPath), { recursive: true });

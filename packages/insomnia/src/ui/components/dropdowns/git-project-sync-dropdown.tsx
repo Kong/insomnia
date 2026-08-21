@@ -572,7 +572,27 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       label: 'Open folder',
       isDisabled: !repoPath,
       icon: 'folder-open',
-      action: () => window.shell.openPath(repoPath),
+      action: async () => {
+        if (!gitRepository?._id) {
+          return;
+        }
+        // Resolve (and confirm it still exists) before opening — unlike a plain
+        // `window.shell.openPath`, this never recreates a folder that was
+        // renamed, moved, or deleted outside Insomnia.
+        const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
+        if ('errors' in result && result.errors) {
+          showToast({
+            icon,
+            title: 'Folder not found',
+            description: result.errors.join(', '),
+            status: 'error',
+          });
+          return;
+        }
+        if (result.path) {
+          window.shell.openPath(result.path);
+        }
+      },
     },
     {
       id: 'branches',
