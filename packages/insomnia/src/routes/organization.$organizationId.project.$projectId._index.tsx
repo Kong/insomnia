@@ -29,7 +29,7 @@ import {
   getAppWebsiteBaseURL,
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { getAllLocalFiles, type InsomniaFile } from '~/common/project';
+import { getAllLocalFiles } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
@@ -55,12 +55,11 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useUnsyncedFilesForProject } from '~/ui/hooks/use-remote-files';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { getAllRemoteFiles } from '~/ui/utils/remote-projects';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
 
@@ -69,17 +68,15 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
 
-  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const localFiles = await getAllLocalFiles({ projectId });
 
   return {
     localFiles,
-    remoteFilesPromise,
   };
 }
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { localFiles, remoteFilesPromise } = loaderData;
+  const { localFiles } = loaderData;
   const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
   const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
@@ -88,17 +85,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   };
   const { projects } = useOrganizationData(organizationId);
 
-  const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+  const remoteFiles = useUnsyncedFilesForProject(organizationId, projectId);
 
-  useEffect(() => {
-    if (activeProject?.remoteId && remoteFiles) {
-      console.log('[remote files] remote files loaded for project ui', remoteFiles.length);
-    }
-  }, [activeProject?.remoteId, remoteFiles]);
-
-  const allFiles = useMemo(() => {
-    return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
-  }, [localFiles, remoteFiles]);
+  const allFiles = useMemo(() => [...localFiles, ...remoteFiles], [localFiles, remoteFiles]);
 
   const { userSession } = useRootLoaderData()!;
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();

@@ -23,7 +23,7 @@ import { Button as BasicButton } from '~/basic-components/button';
 import { filterCollection, flattenCollectionChildren } from '~/common/collection';
 import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
+import { getUnsyncedRemoteWorkspaces } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
@@ -50,14 +50,13 @@ import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sid
 import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/sidebar-focus-onboarding';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
-import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { useUnsyncedFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
 
 import { Icon } from '../../icon';
 import { getSidebarGridListItemId } from './project-navigation-sidebar-utils';
@@ -141,7 +140,6 @@ const ProjectNavigationSidebarInner = (
   const [renamingWorkspaceValue, setRenamingWorkspaceValue] = useState('');
   const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
-  const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   // Optimistic override for request-group collapsed states
   const [requestGroupCollapseOverrides, setRequestGroupCollapseOverrides] = useState<Map<string, boolean>>(new Map());
   // Customized workspace sort orders by projectId
@@ -210,7 +208,6 @@ const ProjectNavigationSidebarInner = (
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
   reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
   const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
-  const isFetchingUnsyncedFilesRef = useRef(false);
 
   const syncKonnectProjectsAndNotifyRef = useRef<(konnectOrganizationId?: string | null) => Promise<void>>(
     async () => {},
@@ -218,75 +215,9 @@ const ProjectNavigationSidebarInner = (
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
-  const cloudSyncProjects = useMemo(
-    () => activeProjects.filter(p => models.project.isRemoteProject(p)),
-    [activeProjects],
-  ); // Generate a stable string key to trigger getOrFetchUnsyncedFiles when the list of cloud sync projects changes.
-  const cloudSyncProjectIdsKey = useMemo(
-    () =>
-      cloudSyncProjects
-        .map(p => p._id)
-        .sort()
-        .join(','),
-    [cloudSyncProjects],
-  );
-
-  const getAllRemoteFilesByProjectId = useCallback(async () => {
-    if (!cloudSyncProjectIdsKey) return new Map();
-    // Avoid duplicate fetch
-    if (isFetchingUnsyncedFilesRef.current) {
-      return;
-    }
-    const cloudSyncProjectIds = cloudSyncProjectIdsKey.split(',');
-    const result = new Map<string, InsomniaFile[]>();
-    isFetchingUnsyncedFilesRef.current = true;
-
-    // set up a map of remoteId to projectId for all cloud sync projects.
-    const remoteIdToProjectIdMap = new Map<string, string>();
-    for (const projectId of cloudSyncProjectIds) {
-      const project = await services.project.getById(projectId);
-      if (project && 'remoteId' in project && project.remoteId) {
-        remoteIdToProjectIdMap.set(project.remoteId, projectId);
-      }
-    }
-
-    try {
-      const files = await getAllRemoteBackendProjectsOfOrg({ organizationId });
-      const filesByProjectId = new Map<string, InsomniaFile[]>();
-      // group files by projectId
-      for (const file of files) {
-        const projectId = remoteIdToProjectIdMap.get(file.teamProjectId);
-        if (projectId) {
-          const projectFiles = filesByProjectId.get(projectId) ?? [];
-          if (projectFiles.some(f => f.id === file.rootDocumentId)) {
-            continue;
-          }
-          projectFiles.push({
-            id: file.rootDocumentId,
-            name: file.name,
-            scope: 'unsynced',
-            label: 'Unsynced',
-            remoteId: file.id,
-            created: 0,
-            lastModifiedTimestamp: 0,
-          });
-          filesByProjectId.set(projectId, projectFiles);
-        }
-      }
-
-      for (const [projectId, files] of filesByProjectId.entries()) {
-        result.set(projectId, files);
-      }
-    } catch (error) {
-      console.error(`Failed to fetch unsynced files for organization ${organizationId}`, error);
-      for (const projectId of cloudSyncProjectIds) {
-        result.set(projectId, []);
-      }
-    }
-
-    isFetchingUnsyncedFilesRef.current = false;
-    return setUnsyncedFilesByProjectId(result);
-  }, [organizationId, cloudSyncProjectIdsKey]);
+  // Unsynced remote files grouped by projectId, sourced from a shared server-data query
+  // (deduped with the project view). Refresh is handled inside the hook via CLOUD_SYNC_FILE_CHANGE.
+  const unsyncedFilesByProjectId = useUnsyncedFilesByProjectId(organizationId, organizationProjects);
 
   const syncKonnectProjectsAndNotify = async (konnectOrganizationId?: string | null) => {
     setLastSyncResult(null);
@@ -394,16 +325,6 @@ const ProjectNavigationSidebarInner = (
       });
     }
   }, [projectNavigationSidebarFilter, konnectFilter, activeProjectId]);
-
-  useEffect(() => {
-    getAllRemoteFilesByProjectId();
-    const updateUnsyncedFiles = () => {
-      getAllRemoteFilesByProjectId();
-    };
-    // Subscribe to changes in unsynced workspace files to keep the sidebar up to date.
-    // The subscribe is triggered in insomnia-event-stream-context when cloud sync files is changed remotely
-    return uiEventBus.on(CLOUD_SYNC_FILE_CHANGE, updateUnsyncedFiles);
-  }, [getAllRemoteFilesByProjectId, organizationId]);
 
   const flatItems = useMemo<FlatItem[]>(() => {
     const buildWorkspaceAndCollectionData = (): FlatItem[] => {
