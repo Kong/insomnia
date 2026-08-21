@@ -136,7 +136,9 @@ export class ProjectPage extends BasePage {
    * @param storageType - The storage type: 'local' (Local Vault), 'remote' (Cloud Sync), or 'git' (Git Sync)
    */
   private async selectStorageType(storageType: ProjectStorageType): Promise<void> {
-    await this.page.getByText(storageTypeNames[storageType]).click();
+    // Scoped to the dialog: the "Git Sync" label also appears outside it (e.g. the
+    // org plan's storage-type warning banner), which is an unscoped strict-mode hazard.
+    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType]).click();
   }
 
   /**
@@ -195,7 +197,10 @@ export class ProjectPage extends BasePage {
    */
   async chooseGitProjectFolderForOpen(name: string, folderPath: string): Promise<void> {
     await mockOpenDialogForDirectory(this.app, folderPath);
-    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    // clickReliably, not a bare click: callers chain this right after a previous
+    // adoption's "Create project" dialog closes (see closeProjectModalIfStuck), and
+    // its backdrop can still intercept clicks for a moment after being reported hidden.
+    await this.clickReliably(this.page.getByRole('button', { name: 'Create new Project' }));
     await this.setProjectName(name);
     await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Open local folder' }).click();
