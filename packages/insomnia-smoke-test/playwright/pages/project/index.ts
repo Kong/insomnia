@@ -186,8 +186,7 @@ export class ProjectPage extends BasePage {
    * obscured by e.g. a closing modal's backdrop) before clicking it.
    */
   private async clickReliably(locator: Locator, timeout = 10_000): Promise<void> {
-    await locator.waitFor({ state: 'visible', timeout });
-    await locator.click({ timeout });
+    await locator.waitFor({ state: 'visible', timeout }).then(() => locator.click({ timeout }));
   }
 
   /**
