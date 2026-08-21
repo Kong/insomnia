@@ -397,7 +397,7 @@ const ProjectNavigationSidebarInner = (
             });
           } else {
             const { scope, _id: workspaceId } = workspace as Workspace;
-            const isCollection = scope === 'collection';
+            const isCollection = scope === 'collection' || scope === 'design';
             // Only collection workspace has nested children
             const isWorkspaceCollapsed = !(
               isCollection && (expandedProjectAndWorkspaceIds ?? []).includes(workspaceId)
