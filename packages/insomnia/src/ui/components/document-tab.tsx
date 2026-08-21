@@ -13,7 +13,6 @@ export const DocumentTab = ({ organizationId, projectId, workspaceId, className 
     <nav className={`flex h-[40px] w-full items-center ${className} justify-around px-1`}>
       {[
         { id: 'spec', name: 'Spec' },
-        { id: 'debug', name: 'Collection' },
         { id: 'test', name: 'Tests' },
       ].map(item => (
         <NavLink

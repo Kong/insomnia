@@ -716,7 +716,14 @@ function importData(rawData: string) {
   if (fileSchemaParser.success) {
     const file = fileSchemaParser.data;
     if (file.type === 'collection.insomnia.rest/5.0') {
-      return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
+      return [
+        getWorkspace(file),
+        ...getEnvironments(file),
+        ...getCookieJar(file),
+        ...getCollection(file),
+        ...getApiSpec(file),
+        ...getTestSuites(file),
+      ];
     }
 
     if (file.type === 'spec.insomnia.rest/5.0') {
@@ -1167,8 +1174,18 @@ export async function getInsomniaV5DataExport({
     }
 
     if (workspace.scope === 'collection') {
+      const collectionApiSpec = exportableResources.filter(models.apiSpec.isApiSpec);
+      const collectionTestSuites = exportableResources.filter(
+        resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource),
+      );
+      const collectionContainsApiSpecOrTestSuites = collectionApiSpec.length > 0 || collectionTestSuites.length > 0;
       const collection: InsomniaFile = {
-        type: 'collection.insomnia.rest/5.0',
+        type: collectionContainsApiSpecOrTestSuites
+          ? // We added api spec and test suites to the collection workspace in V13.3.
+            // In order not to break legacy versions which only handles api spec and test suites in the spec workspace for git sync.
+            // We export collection workspaces type as spec.insomnia.rest/5.0 if it contains api spec or test suites.
+            'spec.insomnia.rest/5.0'
+          : 'collection.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
@@ -1187,6 +1204,12 @@ export async function getInsomniaV5DataExport({
         environments: getEnvironmentsFromResources(
           exportableResources.filter(models.environment.isEnvironment),
           includePrivateEnvironments,
+        ),
+        spec: collectionApiSpec.length > 0 ? getSpecFromResources(collectionApiSpec) : {},
+        testSuites: getTestSuitesFromResources(
+          exportableResources.filter(
+            resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource),
+          ),
         ),
       };
 

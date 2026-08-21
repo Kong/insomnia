@@ -7,6 +7,7 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-compone
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { showModal } from '~/ui/components/modals';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
@@ -52,6 +53,8 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
+  const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
+
   const parentId = requestGroup?._id || workspace?._id || project._id;
 
   const createRequest = ({ requestType }: { requestType: CreateRequestType }) => {
@@ -193,6 +196,9 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
         return 'Project is empty';
       }
       case 'emptyCollection': {
+        if (workspace?.scope === 'design') {
+          return 'Document is empty';
+        }
         return 'Collection is empty';
       }
       case 'emptyFolder': {
@@ -243,50 +249,66 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
       <span className={`${kind === 'emptyFolder' ? 'ml-7' : 'ml-3'} min-w-0 flex-1 truncate text-sm`}>
         {getLabel()}
       </span>
-      <MenuTrigger>
+      {workspace?.scope === 'design' ? (
         <Button
           aria-label={`Create in ${getAriaLabel()}`}
           className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          onPress={() => {
+            generateRequestCollectionFetcher.submit({
+              organizationId,
+              projectId: project._id,
+              workspaceId: workspace._id,
+            });
+          }}
         >
-          <Icon icon="plus" /> <span className="hidden md:block">Create</span>
+          <span className="hidden md:block">Generate</span>
         </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden">
-          <Menu
-            aria-label={`Create in ${getAriaLabel()} actions`}
-            selectionMode="single"
-            onAction={key => {
-              const item = (kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems).find(
-                item => item.id === key,
-              );
-              if (item) {
-                item.action();
-              }
-            }}
-            items={kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems}
-            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+      ) : (
+        <MenuTrigger>
+          <Button
+            aria-label={`Create in ${getAriaLabel()}`}
+            className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
-            {item => (
-              <MenuItem
-                key={item.id}
-                id={item.id}
-                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                aria-label={item.name}
-              >
-                {item.scope ? (
-                  <div
-                    className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
-                  >
-                    <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
-                  </div>
-                ) : (
-                  <Icon icon={item.icon} className="h-4 w-3" />
-                )}
-                <span>{item.name}</span>
-              </MenuItem>
-            )}
-          </Menu>
-        </Popover>
-      </MenuTrigger>
+            <Icon icon="plus" /> <span className="hidden md:block">Create</span>
+          </Button>
+          <Popover className="flex min-w-max flex-col overflow-y-hidden">
+            <Menu
+              aria-label={`Create in ${getAriaLabel()} actions`}
+              selectionMode="single"
+              onAction={key => {
+                const item = (kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems).find(
+                  item => item.id === key,
+                );
+                if (item) {
+                  item.action();
+                }
+              }}
+              items={kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems}
+              className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+            >
+              {item => (
+                <MenuItem
+                  key={item.id}
+                  id={item.id}
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                  aria-label={item.name}
+                >
+                  {item.scope ? (
+                    <div
+                      className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                    >
+                      <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                    </div>
+                  ) : (
+                    <Icon icon={item.icon} className="h-4 w-3" />
+                  )}
+                  <span>{item.name}</span>
+                </MenuItem>
+              )}
+            </Menu>
+          </Popover>
+        </MenuTrigger>
+      )}
       {newWorkspaceModalState?.isOpen && (
         <NewWorkspaceModal
           isOpen
