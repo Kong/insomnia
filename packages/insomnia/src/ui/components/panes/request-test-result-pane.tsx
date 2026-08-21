@@ -126,8 +126,8 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
             <div className="mx-1 leading-4">
               <span className="mr-2 ml-2">{statusTag}</span>
             </div>
-            <div className="mr-2 leading-4">
-              <div className="mt-1 mr-2 w-auto text-nowrap">{message}</div>
+            <div className="mr-2 min-w-0 leading-4">
+              <div className="mt-1 mr-2 w-auto break-words">{message}</div>
               <div className="mt-1 text-sm text-neutral-400">
                 {`${testCategory} (`}
                 {executionTime}
