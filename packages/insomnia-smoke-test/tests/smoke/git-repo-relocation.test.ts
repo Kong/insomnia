@@ -38,7 +38,7 @@ test.describe('Git repository relocation', () => {
       await openProjectSettingsModal(insomnia, GIT_PROJECT_NAME);
 
       await mockOpenDialogForDirectory(insomnia.app, destDir);
-      await page.getByRole('button', { name: 'Move repository to another folder' }).click();
+      await insomnia.projectPage.moveRepositoryToAnotherFolder();
 
       // Path display updates immediately from the action result (before the loader revalidates).
       await expect.soft(page.getByTitle(destDir)).toBeVisible({ timeout: 30_000 });
@@ -63,7 +63,7 @@ test.describe('Git repository relocation', () => {
       await openProjectSettingsModal(insomnia, GIT_PROJECT_NAME);
 
       await mockOpenDialogForDirectory(insomnia.app, destDir);
-      await page.getByRole('button', { name: 'Move repository to another folder' }).click();
+      await insomnia.projectPage.moveRepositoryToAnotherFolder();
 
       await expect.soft(page.getByTitle(destDir)).toBeVisible({ timeout: 30_000 });
       await expect.soft(page.getByText(/Repository moved to/i)).toBeVisible({ timeout: 15_000 });
@@ -85,7 +85,7 @@ test.describe('Git repository relocation', () => {
       await openProjectSettingsModal(insomnia, GIT_PROJECT_NAME);
 
       await mockOpenDialogForDirectory(insomnia.app, destDir);
-      await page.getByRole('button', { name: 'Move repository to another folder' }).click();
+      await insomnia.projectPage.moveRepositoryToAnotherFolder();
 
       // Error banner text matches relocateGitRepoAction's non-empty/non-git message.
       await expect.soft(page.getByText(/isn't a git repository/i)).toBeVisible({ timeout: 15_000 });
