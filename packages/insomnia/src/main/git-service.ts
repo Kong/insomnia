@@ -1877,6 +1877,7 @@ export const openGitRepoAction = async ({
       fs: fsClient,
       gitDirectory: GIT_INTERNAL_DIR,
       credentialsId,
+      repoPath: resolvedDirectory,
     });
 
     await GitVCS.setAuthor();
