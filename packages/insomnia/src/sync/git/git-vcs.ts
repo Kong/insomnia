@@ -1144,6 +1144,10 @@ export class GitVCS {
       email = author.email;
     }
 
+    if (!name && !email) {
+      return;
+    }
+
     await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
     await git.setConfig({
       ...this._baseOpts,
