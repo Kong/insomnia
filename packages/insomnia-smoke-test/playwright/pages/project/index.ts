@@ -229,7 +229,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).click();
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
-    await this.page.getByText('Git Sync').click();
+    await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Git Credentials Authorized as' }).click();
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
@@ -249,7 +249,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).click();
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
-    await this.page.getByText('Git Sync').click();
+    await this.selectStorageType('git');
     // The credential select defaults to whichever credential is first (which can be
     // the "System Git Credentials" native provider). Open it via its stable label and
     // explicitly pick the custom Access Token credential rather than relying on the default.
@@ -284,6 +284,16 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
     await this.sidebar.selectProject(name);
+  }
+
+  /**
+   * Clicks "Move repository to another folder" in the project settings modal.
+   * Chains right after that modal opens (which itself follows the "Create or
+   * update dialog" from createGitSyncProject closing) - same stale-backdrop
+   * race as chooseGitProjectFolderForOpen(), so this needs the same guard.
+   */
+  async moveRepositoryToAnotherFolder(): Promise<void> {
+    await this.clickReliably(this.page.getByRole('button', { name: 'Move repository to another folder' }));
   }
 
   // ===========================================================================
