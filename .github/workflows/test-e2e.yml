@@ -68,8 +68,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        shardTotal: [9]
+        shardIndex: [1, 2, 3, 4, 5, 6]
+        shardTotal: [6]
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -101,7 +101,7 @@ jobs:
           path: packages/insomnia/build/
 
       - name: Smoke test electron app (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-        run: npm run test:build -w packages/insomnia-smoke-test --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --repeat-each=3 tests/smoke/git-repo-relocation.test.ts
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
