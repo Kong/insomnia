@@ -136,7 +136,7 @@ export class ProjectPage extends BasePage {
    * @param storageType - The storage type: 'local' (Local Vault), 'remote' (Cloud Sync), or 'git' (Git Sync)
    */
   private async selectStorageType(storageType: ProjectStorageType): Promise<void> {
-    await this.page.getByText(storageTypeNames[storageType]).click();
+    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType]).click();
   }
 
   /**
@@ -195,7 +195,7 @@ export class ProjectPage extends BasePage {
    */
   async chooseGitProjectFolderForOpen(name: string, folderPath: string): Promise<void> {
     await mockOpenDialogForDirectory(this.app, folderPath);
-    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    await this.clickReliably(this.page.getByRole('button', { name: 'Create new Project' }));
     await this.setProjectName(name);
     await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Open local folder' }).click();
