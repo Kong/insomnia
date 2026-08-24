@@ -527,6 +527,10 @@ class RepoFileWatcher {
           includePrivateEnvironments: false,
         });
 
+        if (!yamlContent?.trim()) {
+          return;
+        }
+
         const hash = contentHash(yamlContent);
 
         // The hash cache only tells us the DB side hasn't changed since our

@@ -1,4 +1,4 @@
-import type { ElectronApplication, Page } from '@playwright/test';
+import type { ElectronApplication, Locator, Page } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
 import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
@@ -182,6 +182,14 @@ export class ProjectPage extends BasePage {
   }
 
   /**
+   * Waits for a locator to become clickable (visible, stable, enabled, and not
+   * obscured by e.g. a closing modal's backdrop) before clicking it.
+   */
+  private async clickReliably(locator: Locator, timeout = 10_000): Promise<void> {
+    await locator.waitFor({ state: 'visible', timeout }).then(() => locator.click({ timeout }));
+  }
+
+  /**
    * Selects an existing local folder in the Git project form without opening it.
    * The native directory picker is mocked to return `folderPath`.
    */
@@ -271,7 +279,7 @@ export class ProjectPage extends BasePage {
     // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
     // a bare role locator matching both is a Playwright strict-mode violation.
     await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
-    await this.page.getByRole('button', { name: 'Personal workspace Organizations' }).click();
+    await this.clickReliably(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
     await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
