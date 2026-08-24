@@ -65,11 +65,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-    strategy:
-      fail-fast: false
-      matrix:
-        shardIndex: [1, 2, 3, 4, 5, 6]
-        shardTotal: [6]
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -100,20 +95,22 @@ jobs:
           name: app-build
           path: packages/insomnia/build/
 
-      - name: Smoke test electron app (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      # TEMPORARY: stress-testing git-repo-relocation.test.ts for flakiness.
+      # Revert to the sharded `--project=Smoke` run before merging.
+      - name: Stress test git-repo-relocation.test.ts (10 workers x 5 repeats)
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke tests/smoke/git-repo-relocation.test.ts --workers=10 --repeat-each=5
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: ignore
-          name: ubuntu-smoke-test-traces-${{ github.run_number }}-shard-${{ matrix.shardIndex }}
+          name: ubuntu-smoke-test-traces-${{ github.run_number }}
           path: packages/insomnia-smoke-test/traces
       - name: Upload junit results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: ignore
-          name: junit-results-${{ github.run_number }}-shard-${{ matrix.shardIndex }}
+          name: junit-results-${{ github.run_number }}
           path: packages/insomnia-smoke-test/test-results.xml
