@@ -23,6 +23,7 @@ import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-g
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { useServerQuery } from '~/ui/hooks/use-query';
+import { useRemoteBackendProjectsInvalidation } from '~/ui/hooks/use-remote-files';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -162,6 +163,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       navigationSidebarRef.current.expandProject(activeProject._id);
     }
   }, [searchParams, activeProject]);
+
+  useRemoteBackendProjectsInvalidation(organizationId);
 
   return (
     <>
