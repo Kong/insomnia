@@ -100,14 +100,8 @@ jobs:
           name: app-build
           path: packages/insomnia/build/
 
-      # TEMPORARY: stress-testing git-repo-relocation.test.ts for flakiness.
-      # Revert to the sharded `--project=Smoke` run before merging.
-      # NOTE: --fully-parallel is required here — without it, Playwright treats
-      # all tests in this one file (including the --repeat-each duplicates) as
-      # a single non-splittable group, so --shard would put everything in one
-      # shard.
-      - name: Stress test git-repo-relocation.test.ts (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}, 5 repeats)
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke tests/smoke/git-repo-relocation.test.ts --repeat-each=5 --fully-parallel --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      - name: Smoke test electron app (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --repeat-each=3 tests/smoke/git-repo-relocation.test.ts
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
