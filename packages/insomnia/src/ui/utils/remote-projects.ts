@@ -1,65 +1,53 @@
-import { services } from 'insomnia-data';
+import type { Project } from 'insomnia-data';
 
 import { type InsomniaFile } from '~/common/project';
+import type { BackendProjectWithTeamsAndTeamProjectId } from '~/sync/types';
 
 export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { organizationId: string }) => {
   return window.main.sync.remoteBackendProjectsOfTeam({ teamId: organizationId });
 };
 
-export async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
-  try {
-    const project = await services.project.getById(projectId);
-
-    const remoteId = project?.remoteId;
-    if (!remoteId) {
-      return [];
+/**
+ * Groups the organization's remote backend projects into unsynced InsomniaFiles keyed by local
+ * projectId. Pure/sync: the remoteId -> projectId mapping is built from the in-memory projects
+ * (which already carry `remoteId`), so no database round-trip is needed.
+ *
+ * Note: this does NOT filter out already-synced files — callers apply
+ * `getUnsyncedRemoteWorkspaces(files, workspaces)` against the relevant local workspaces.
+ */
+export function groupRemoteFilesByProjectId(
+  remoteBackendProjects: BackendProjectWithTeamsAndTeamProjectId[],
+  projects: Project[],
+): Map<string, InsomniaFile[]> {
+  const remoteIdToProjectId = new Map<string, string>();
+  for (const project of projects) {
+    if (project.remoteId) {
+      remoteIdToProjectId.set(project.remoteId, project._id);
     }
-
-    console.log(
-      '[getAllRemoteFiles] start fetching remote backend workspaces for project',
-      projectId,
-      `remoteId: ${remoteId}`,
-    );
-
-    const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
-      window.main.sync.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
-      // Remote backend projects are fetched from the backend since they are not stored locally
-      window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
-    ]);
-    console.log(
-      `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,
-    );
-    // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await services.workspace.list({
-      _id: {
-        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(
-          p => p.rootDocumentId,
-        ),
-      },
-      parentId: project._id,
-    });
-    console.log(`[getAllRemoteFiles] found workspacesWithBackendProjects: ${workspacesWithBackendProjects.length}`);
-    // Get the list of remote backend projects that we need to pull
-    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId.filter(
-      p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId),
-    );
-    console.log(`[getAllRemoteFiles] get ${backendProjectsToPull.length} unsynced files`);
-    return backendProjectsToPull.map(backendProject => {
-      const file: InsomniaFile = {
-        id: backendProject.rootDocumentId,
-        name: backendProject.name,
-        scope: 'unsynced',
-        label: 'Unsynced',
-        remoteId: backendProject.id,
-        created: 0,
-        lastModifiedTimestamp: 0,
-      };
-
-      return file;
-    });
-  } catch (e) {
-    console.warn('Failed to load backend projects', e);
   }
 
-  return [];
+  const result = new Map<string, InsomniaFile[]>();
+  for (const file of remoteBackendProjects) {
+    const projectId = remoteIdToProjectId.get(file.teamProjectId);
+    if (!projectId) {
+      continue;
+    }
+    const files = result.get(projectId) ?? [];
+    // De-dupe by rootDocumentId in case the backend returns the same project twice.
+    if (files.some(f => f.id === file.rootDocumentId)) {
+      continue;
+    }
+    files.push({
+      id: file.rootDocumentId,
+      name: file.name,
+      scope: 'unsynced',
+      label: 'Unsynced',
+      remoteId: file.id,
+      created: 0,
+      lastModifiedTimestamp: 0,
+    });
+    result.set(projectId, files);
+  }
+
+  return result;
 }
