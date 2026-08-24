@@ -13,6 +13,10 @@ const GIT_PROJECT_NAME = 'Relocation Test Project';
 const makeTempDir = (prefix: string) => fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 
 test.describe('Git repository relocation', () => {
+  // Scoped to this file only (not global playwright.config.ts): lets Playwright split
+  // the individual tests/repeat-each instances into separate shard groups instead of
+  // bundling the whole file into one indivisible group that a single --shard=N/M run claims.
+  test.describe.configure({ mode: 'parallel' });
   test.slow();
 
   test.beforeEach(async ({ insomnia, request }) => {
