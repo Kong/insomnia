@@ -24,6 +24,10 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Discard, branch and commit actions', async ({ page, insomnia }) => {
+    // This test's own wait below can approach the default 60s (CI) test timeout on a slow runner;
+    // give it real headroom so a slow-but-eventually-successful run doesn't get torn down mid-wait
+    // and reported as a confusing "page has been closed" error instead of a clean timeout.
+    test.slow();
     // Sync My Collection R1
     await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1');
     // The request tree loads asynchronously after the workspace is selected (a separate step from
