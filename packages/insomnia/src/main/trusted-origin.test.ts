@@ -42,6 +42,10 @@ describe('isTrustedAppOrigin', () => {
     expect(isTrustedAppOrigin('not-a-valid-url', appUrl)).toBe(false);
   });
 
+  it('rejects a blob URL that merely embeds the app origin in its text', () => {
+    expect(isTrustedAppOrigin('blob:https://insomnia-app.local/9a1c-uuid', appUrl)).toBe(false);
+  });
+
   it('applies the same suffix-bypass check against a non-default appUrl (e.g. dev server)', () => {
     const devAppUrl = 'http://localhost:3334';
     expect(isTrustedAppOrigin('http://localhost:3334', devAppUrl)).toBe(true);
