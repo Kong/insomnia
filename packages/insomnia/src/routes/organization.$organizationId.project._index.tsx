@@ -20,11 +20,7 @@ export interface ProjectIndexLoaderData {
   projects: (Project & { gitRepository?: GitRepository })[];
 }
 
-const shouldAutoCreateInitialProject = async ({
-  accountId,
-}: {
-  accountId: string | null | undefined;
-}) => {
+const shouldAutoCreateInitialProject = async ({ accountId }: { accountId: string | null | undefined }) => {
   if (!accountId) {
     return false;
   }
