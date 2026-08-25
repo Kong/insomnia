@@ -173,6 +173,8 @@ export interface Settings {
   updateChannel: UpdateChannel;
   useBulkHeaderEditor: boolean;
   useBulkParametersEditor: boolean;
+  /** Edit form-data and url-encoded request bodies as text instead of key-value rows. */
+  useBulkFormEditor: boolean;
   validateAuthSSL: boolean;
   validateSSL: boolean;
   // vault related settings

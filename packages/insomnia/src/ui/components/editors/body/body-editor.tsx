@@ -3,8 +3,11 @@ import type { Request, RequestBodyParameter } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders } from 'insomnia-data/common';
 import React, { type FC, useCallback } from 'react';
-import { Toolbar } from 'react-aria-components';
+import { ToggleButton, Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
+
+import { useRootLoaderData } from '~/root';
+import { AnalyticsEvent } from '~/ui/analytics';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
@@ -25,7 +28,7 @@ const lookupMimeType = (path: string) => {
   };
   return mimeMap[ext || ''];
 };
-import { useRequestPatcher } from '../../../hooks/use-request';
+import { useRequestPatcher, useSettingsPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
@@ -47,6 +50,8 @@ interface Props {
 export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
+  const patchSettings = useSettingsPatcher();
+  const { settings } = useRootLoaderData()!;
   const handleRawChange = useCallback(
     (rawValue: string) => {
       const body =
@@ -130,18 +135,29 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
   const fileName = request.body.fileName;
   const mimeType = request.body.mimeType;
   const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
+  const isFormBody = mimeType === CONTENT_TYPE_FORM_DATA || mimeType === CONTENT_TYPE_FORM_URLENCODED;
 
   function renderBodyEditor() {
     if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
       return (
         <UrlEncodedEditor
           key={uniqueKey}
+          bulk={settings.useBulkFormEditor}
+          requestId={requestId}
           onChange={handleFormUrlEncodedChange}
           parameters={request.body.params || []}
         />
       );
     } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-      return <FormEditor key={uniqueKey} onChange={handleFormChange} parameters={request.body.params || []} />;
+      return (
+        <FormEditor
+          key={uniqueKey}
+          bulk={settings.useBulkFormEditor}
+          requestId={requestId}
+          onChange={handleFormChange}
+          parameters={request.body.params || []}
+        />
+      );
     } else if (mimeType === CONTENT_TYPE_FILE) {
       return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
@@ -188,6 +204,18 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
     <>
       <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
         <ContentTypeDropdown />
+        {isFormBody && (
+          <ToggleButton
+            className="ml-auto flex h-full items-center justify-center rounded-xs px-2 text-xs text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+            isSelected={settings.useBulkFormEditor}
+            onChange={isSelected => {
+              patchSettings({ useBulkFormEditor: isSelected });
+              window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestBodyBulkEditToggled });
+            }}
+          >
+            {({ isSelected }) => (isSelected ? 'Key-Value Edit' : 'Bulk Edit')}
+          </ToggleButton>
+        )}
       </Toolbar>
       {renderBodyEditor()}
     </>
