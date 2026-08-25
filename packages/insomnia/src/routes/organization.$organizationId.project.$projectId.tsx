@@ -9,7 +9,6 @@ import * as reactUse from 'react-use';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { logout } from '~/ui/account/session';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
@@ -21,38 +20,12 @@ import {
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
 import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useServerQuery } from '~/ui/hooks/use-query';
+import { useRemoteBackendProjectsInvalidation } from '~/ui/hooks/use-remote-files';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
-
-interface LearningFeature {
-  active: boolean;
-  title: string;
-  message: string;
-  cta: string;
-  url: string;
-}
-
-const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
-  let learningFeature = fallbackLearningFeature;
-  const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
-  const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
-  const oneDay = 86_400_000;
-  const hasOneDayPassedSinceLastFetch = Date.now() - lastFetched > oneDay;
-  const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
-  const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
-  if (wasNotDismissedAndOneDayHasPassed) {
-    try {
-      learningFeature = await getLearningFeature();
-      window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
-    } catch {
-      console.log('[project] Could not fetch learning feature data.');
-    }
-  }
-  return learningFeature;
-};
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
@@ -107,16 +80,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     console.log('[organizations] Failed to set first account landing flag', error);
   }
 
-  const fallbackLearningFeature = {
-    active: false,
-    title: '',
-    message: '',
-    cta: '',
-    url: '',
-  };
-
-  const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
-
   const activeProjectGitRepository =
     project && models.project.isGitProject(project)
       ? await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '')
@@ -125,7 +88,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return {
     activeProject: project,
     activeProjectGitRepository,
-    learningFeaturePromise,
   };
 }
 
@@ -149,16 +111,20 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   };
 
   const [searchParams] = useSearchParams();
-  const { activeProject, learningFeaturePromise } = loaderData;
+  const { activeProject } = loaderData;
 
-  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = reactUse.useLocalStorage(
     'learning-feature-dismissed',
     '',
   );
-  const { storagePromise } = storageRuleFetcher.data || {};
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
-  const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
+  const storageRules = useOrganizationStorageRule(organizationId);
+  const { data: learningFeature } = useServerQuery({
+    queryKey: ['learning-feature'],
+    queryFn: getLearningFeature,
+    enabled: !isLearningFeatureDismissed,
+    staleTime: 1000 * 60 * 60 * 24, // 1 day
+    refetchOnWindowFocus: true,
+  });
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { isSidebarCollapsed } = useSidebarContext();
 
@@ -197,6 +163,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       navigationSidebarRef.current.expandProject(activeProject._id);
     }
   }, [searchParams, activeProject]);
+
+  useRemoteBackendProjectsInvalidation(organizationId);
 
   return (
     <>
