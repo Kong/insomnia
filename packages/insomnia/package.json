@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
-    "@apidevtools/swagger-parser": "10.1.1",
+    "@apidevtools/swagger-parser": "12.1.0",
     "@bufbuild/protobuf": "^1.10.0",
     "@connectrpc/connect": "^1.6.1",
     "@connectrpc/connect-node": "^1.6.1",
