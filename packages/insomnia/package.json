@@ -83,7 +83,7 @@
     "@xmldom/xmldom": "^0.9.12",
     "acorn": "^8.16.0",
     "acorn-walk": "^8.3.5",
-    "ajv": "^8.17.1",
+    "ajv": "^8.20.0",
     "apiconnect-wsdl": "2.0.36",
     "assert": "^2.1.0",
     "aws4": "^1.13.2",
