@@ -13,6 +13,18 @@ type FSWraps =
   | typeof fs.promises.readlink
   | typeof fs.promises.symlink;
 
+// path.normalize() collapses "./" but leaves a leading ".." untouched, so a git tree entry
+// literally named ".." (isomorphic-git only rejects entries containing "/" or "\\", not a bare
+// "..") would otherwise let path.join(basePath, "..") escape the sandboxed checkout directory.
+const resolveWithinBase = (basePath: string, relativePath: string): string => {
+  const resolved = path.join(basePath, path.normalize(relativePath));
+  const relative = path.relative(basePath, resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`fsClient: path "${relativePath}" escapes the repository directory`);
+  }
+  return resolved;
+};
+
 /** This is a client for isomorphic-git. {@link https://isomorphic-git.org/docs/en/fs} */
 export const fsClient = (basePath: string) => {
   console.log(`[fsClient] Created in ${basePath}`);
@@ -21,7 +33,7 @@ export const fsClient = (basePath: string) => {
   const wrap =
     (fn: FSWraps) =>
     async (filePath: string, ...args: any[]) => {
-      const modifiedPath = path.join(basePath, path.normalize(filePath));
+      const modifiedPath = resolveWithinBase(basePath, filePath);
 
       // @ts-expect-error -- TSCONVERSION
       return fn(modifiedPath, ...args);
@@ -30,8 +42,8 @@ export const fsClient = (basePath: string) => {
   const wrapSymlink =
     (fn: typeof fs.promises.symlink) =>
     async (filePath: string, target: string, ...args: any[]) => {
-      const modifiedPath = path.join(basePath, path.normalize(filePath));
-      const modifiedTarget = path.join(basePath, path.normalize(target));
+      const modifiedPath = resolveWithinBase(basePath, filePath);
+      const modifiedTarget = resolveWithinBase(basePath, target);
 
       return fn(modifiedPath, modifiedTarget, ...args);
     };
