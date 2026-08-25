@@ -633,7 +633,12 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const folderPath = path.join(app.getPath('userData'), options.folder);
+    // options.folder must resolve inside userData.
+    const userDataDir = app.getPath('userData');
+    const folderPath = path.resolve(userDataDir, options.folder);
+    if (!(folderPath + path.sep).startsWith(userDataDir + path.sep)) {
+      throw new Error('readOrCreateDataDir: folder is outside the allowed userData directory');
+    }
     mkdirSync(folderPath, { recursive: true });
     try {
       return await readDir(_, { path: folderPath });
