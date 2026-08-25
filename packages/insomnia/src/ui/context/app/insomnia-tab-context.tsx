@@ -16,6 +16,9 @@ interface UpdateInsomniaTabParams {
 interface CloseTabOptions {
   removeFromClosedTabs?: boolean;
   navigateOnAllClose?: boolean;
+  // Where to navigate when closing the tab leaves no other tabs open. Falls
+  // back to the project dashboard when not provided.
+  fallbackUrl?: string;
 }
 
 interface ContextProps {
@@ -201,10 +204,11 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
         }
       }
 
-      // If the tab being deleted is the only tab and is active, navigate to the project dashboard
+      // If the tab being deleted is the only tab and is active, navigate to its
+      // fallback (e.g. the parent folder/collection) or the project dashboard
       if (currentTabs.activeTabId === id && currentTabs.tabList.length === 1) {
         if (!models.organization.isScratchpadOrganizationId(organizationId)) {
-          navigate(`/organization/${organizationId}/project/${projectId}`);
+          navigate(options.fallbackUrl || `/organization/${organizationId}/project/${projectId}`);
         }
         updateInsomniaTabs({
           organizationId,

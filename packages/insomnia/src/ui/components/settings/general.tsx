@@ -48,6 +48,11 @@ export const General: FC = () => {
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
           {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
+          <BooleanSetting
+            label="Sidebar focus for collections"
+            setting="sidebarFocusForCollections"
+            help="If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible."
+          />
         </div>
       </div>
 
@@ -217,7 +222,7 @@ export const General: FC = () => {
           help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
-          className="pointer h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
+          className="pointer flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
           onClick={clearOAuthWindowSessionId}
         >
           Clear OAuth 2 session

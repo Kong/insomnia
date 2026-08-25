@@ -143,7 +143,8 @@ export const ScriptingSettings = () => {
 
   const sandboxEnabled = settings.scriptSandboxEnabled !== false;
   const strictModeEnabled = settings.scriptStrictModeEnabled !== false;
-  const templateTagSandboxEnabled = settings.templateTagSandboxEnabled === true;
+  const useQuickJsScriptSandbox = settings.useQuickJsScriptSandbox === true;
+  const pluginSandboxEnabled = settings.pluginSandboxEnabled === true;
   const disabledRules = settings.disabledSecurityRules ?? [];
   const disabledProperties = settings.disabledBlockedProperties ?? [];
   const disabledRoots = settings.disabledBlockedRoots ?? [];
@@ -322,15 +323,44 @@ export const ScriptingSettings = () => {
       <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-(--color-font)">Run template tags in sandbox (experimental)</span>
+            <span className="text-sm font-medium text-(--color-font)">
+              Use QuickJS sandbox for scripts (proof of concept)
+            </span>
             <p className="text-xs text-(--hl)">
-              Execute plugin template tags inside the QuickJS-WASM sandbox instead of directly in the main process.
+              Run pre-request and after-response scripts inside the QuickJS-WASM sandbox instead of the hidden browser
+              window. Only a minimal API is supported so far (console, insomnia.environment/variables get/set, read-only
+              insomnia.request) — scripts calling insomnia.sendRequest() or insomnia.test()/pm.test() will throw. Leave
+              this off to keep using the full-featured hidden-window sandbox.
             </p>
           </div>
           <Switch
-            data-testid="toggle-template-tag-sandbox"
-            isSelected={templateTagSandboxEnabled}
-            onChange={enabled => patchSettings({ templateTagSandboxEnabled: enabled })}
+            aria-label="Use QuickJS sandbox for scripts (proof of concept)"
+            data-testid="toggle-quickjs-script-sandbox"
+            isSelected={useQuickJsScriptSandbox}
+            onChange={enabled => patchSettings({ useQuickJsScriptSandbox: enabled })}
+            className="group flex items-center gap-2"
+          >
+            <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-selected:bg-(--color-surprise)">
+              <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+            </div>
+          </Switch>
+        </div>
+      </div>
+
+      <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-(--color-font)">Sandbox all plugin code (experimental)</span>
+            <p className="text-xs text-(--hl)">
+              Isolates plugin code so it can't touch your system unless you allow it. Covers template tags, hooks,
+              actions, and plugin startup code. To trust a specific plugin fully, enable "Run with full host access" for
+              it in Preferences → Plugins.
+            </p>
+          </div>
+          <Switch
+            data-testid="toggle-plugin-sandbox"
+            isSelected={pluginSandboxEnabled}
+            onChange={enabled => patchSettings({ pluginSandboxEnabled: enabled })}
             className="group flex items-center gap-2"
           >
             <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-selected:bg-(--color-surprise)">

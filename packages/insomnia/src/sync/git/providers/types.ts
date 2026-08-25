@@ -170,9 +170,12 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
 
   /**
    * Initiate OAuth flow
-   * Only for providers that support OAuth
+   * Only for providers that support OAuth. When `credentialId` is provided, the
+   * flow is reauthorizing that specific existing credential rather than adding a
+   * new one — completeOAuth uses it to update that exact credential instead of
+   * guessing which (if any) existing credential to update.
    */
-  initiateOAuth?(): Promise<OAuthInitResult>;
+  initiateOAuth?(credentialId?: string): Promise<OAuthInitResult>;
 
   /**
    * Complete OAuth flow

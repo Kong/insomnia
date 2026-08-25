@@ -1,8 +1,8 @@
 import type { StorageRules } from 'insomnia-api';
 import type { GitCredentials } from 'insomnia-data';
 import type { FC } from 'react';
-import React, { useEffect, useState } from 'react';
-import { Button, Input, Label, TextField } from 'react-aria-components';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { Button, Form, Input, Label, TextField } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
@@ -14,14 +14,18 @@ import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { deriveRepoName, getLastCloneParentDir, type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
+import {
+  getLastCloneParentDir,
+  type ProjectData,
+  type ProjectType,
+  resolveCloneFolderName,
+  useActiveView,
+} from '~/ui/components/project/utils';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { Icon } from '../icon';
-
-const FORMID = 'git-repo-form';
 
 interface Props {
   storageRules: StorageRules;
@@ -44,6 +48,8 @@ export const ProjectCreateForm: FC<Props> = ({
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
   const navigate = useNavigate();
+  const gitFormId = useId();
+  const upsertFormId = useId();
 
   const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
@@ -135,10 +141,14 @@ export const ProjectCreateForm: FC<Props> = ({
     }
 
     // For a custom clone location, the picked folder is the parent — clone into
-    // `<parent>/<repo-name>`, matching `git clone` behaviour.
+    // `<parent>/<folder-name>`, matching `git clone` behaviour. The folder name
+    // defaults to the repo's own name but can be overridden in the form.
     const directory =
       storageType === 'git' && !isGitOpen && !projectData.connectRepositoryLater && projectData.cloneParentDir
-        ? window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))
+        ? window.path.join(
+            projectData.cloneParentDir,
+            resolveCloneFolderName(projectData.cloneFolderName, projectData.uri),
+          )
         : undefined;
 
     newProjectFetcher.submit({
@@ -172,6 +182,54 @@ export const ProjectCreateForm: FC<Props> = ({
   const hideActionButtons =
     storageType === 'git' && gitMode === 'clone' && !projectData.connectRepositoryLater && credentials.length === 0;
 
+  // Local/cloud projects (and the git "connect later"/"open folder" variants) create
+  // directly; a fresh git clone scans the remote for files first.
+  const isUpsertPrimaryAction = storageType !== 'git' || projectData.connectRepositoryLater || isGitOpen;
+  const isAdoptingInvalidFolder = isGitOpen && (!openExistingDir || !!existingFolderProject);
+  const canUpsertProject = !!storageType && newProjectFetcher.state === 'idle' && !isAdoptingInvalidFolder;
+  const canScanForFiles = isGitSyncEnabled && !isGitCredentialInvalid;
+  const canCloneAfterScan = newProjectFetcher.state === 'idle' && initCloneGitRepositoryFetcher.state === 'idle';
+
+  // Choosing a type collapses the type list, unmounting the focused radio. The
+  // child restores focus to its collapsed summary, but Enter there would just
+  // reopen the list — put focus back on the name field so Enter runs the CTA.
+  // Child effects run before parent effects, so this wins.
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (storageType) {
+      nameInputRef.current?.focus();
+    }
+  }, [storageType]);
+
+  const handleUpsertFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    // for cloud / local projects CTA trigger (create)
+    if (isUpsertPrimaryAction) {
+      if (canUpsertProject) {
+        onUpsertProject();
+      }
+      return;
+    }
+    // for fresh git projects CTA trigger (scan for files)
+    if (canScanForFiles) {
+      // GitRepoForm's scan logic lives inside its own <Form onSubmit>, reading
+      // field values via `new FormData(e.currentTarget)` — there's no exposed
+      // callback to call directly. requestSubmit() dispatches a real `submit`
+      // event on that form (unlike `.submit()`, which skips it entirely), so
+      // this reruns GitRepoForm's own onSubmit as if its button were clicked.
+      (document.getElementById(gitFormId) as HTMLFormElement | null)?.requestSubmit();
+    }
+  };
+
+  // No input fields on this results screen, so there's nothing for native form
+  // submission to key off — focus the primary action button once it's ready.
+  const cloneButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (activeView === 'git-results' && initCloneGitRepositoryFetcher.state === 'idle') {
+      cloneButtonRef.current?.focus();
+    }
+  }, [activeView, initCloneGitRepositoryFetcher.state]);
+
   return (
     <>
       {/* Content */}
@@ -187,29 +245,32 @@ export const ProjectCreateForm: FC<Props> = ({
         <div
           className={`flex w-full flex-col justify-start gap-4 pb-2 text-left ${activeView === 'project' ? '' : 'hidden'}`}
         >
-          <TextField
-            autoFocus
-            name="name"
-            value={projectData.name}
-            onChange={name => setProjectData({ ...projectData, name })}
-            className="group relative flex flex-col gap-2 px-0.5"
-          >
-            <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
-            <Input
-              placeholder={defaultProjectName}
-              className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+          <Form id={upsertFormId} className="contents" onSubmit={handleUpsertFormSubmit}>
+            <TextField
+              autoFocus
+              name="name"
+              value={projectData.name}
+              onChange={name => setProjectData({ ...projectData, name })}
+              className="group relative flex flex-col gap-2 px-0.5"
+            >
+              <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
+              <Input
+                ref={nameInputRef}
+                placeholder={defaultProjectName}
+                className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+              />
+            </TextField>
+            <ProjectTypeSelect
+              storageRules={storageRules}
+              value={storageType}
+              onChange={v => setStorageType(v as ProjectType)}
             />
-          </TextField>
-          <ProjectTypeSelect
-            storageRules={storageRules}
-            value={storageType}
-            onChange={v => setStorageType(v as ProjectType)}
-          />
-          <ProjectTypeWarning
-            isGitSyncEnabled={isGitSyncEnabled}
-            storageType={storageType}
-            storageRules={storageRules}
-          />
+            <ProjectTypeWarning
+              isGitSyncEnabled={isGitSyncEnabled}
+              storageType={storageType}
+              storageRules={storageRules}
+            />
+          </Form>
           {storageType === 'git' && isGitSyncEnabled && (
             <>
               <div className="flex w-full gap-2">
@@ -231,7 +292,7 @@ export const ProjectCreateForm: FC<Props> = ({
 
               {gitMode === 'clone' ? (
                 <GitRepoForm
-                  formId={FORMID}
+                  formId={gitFormId}
                   projectData={projectData}
                   setProjectData={setProjectData}
                   initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
@@ -320,14 +381,11 @@ export const ProjectCreateForm: FC<Props> = ({
                 Cancel
               </Button>
             )}
-            {storageType !== 'git' || projectData.connectRepositoryLater || isGitOpen ? (
+            {isUpsertPrimaryAction ? (
               <Button
-                onPress={onUpsertProject}
-                isDisabled={
-                  !storageType ||
-                  newProjectFetcher.state !== 'idle' ||
-                  (isGitOpen && (!openExistingDir || !!existingFolderProject))
-                }
+                type="submit"
+                form={upsertFormId}
+                isDisabled={!canUpsertProject}
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
@@ -336,8 +394,8 @@ export const ProjectCreateForm: FC<Props> = ({
             ) : (
               <Button
                 type="submit"
-                form={FORMID}
-                isDisabled={!isGitSyncEnabled || isGitCredentialInvalid}
+                form={gitFormId}
+                isDisabled={!canScanForFiles}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 <span>Scan for files</span>
@@ -350,7 +408,7 @@ export const ProjectCreateForm: FC<Props> = ({
       {activeView === 'git-results' && (
         <div className="flex items-center justify-end gap-2">
           <Button
-            isDisabled={newProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
+            isDisabled={!canCloneAfterScan}
             onPress={() => {
               setActiveView('project');
               setError(null);
@@ -370,6 +428,7 @@ export const ProjectCreateForm: FC<Props> = ({
             </Button>
           ) : (
             <Button
+              ref={cloneButtonRef}
               isDisabled={newProjectFetcher.state !== 'idle'}
               onPress={onUpsertProject}
               className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

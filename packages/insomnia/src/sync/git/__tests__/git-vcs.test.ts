@@ -15,6 +15,21 @@ describe('Git-VCS', () => {
   });
 
   describe('common operations', () => {
+    it('setAuthor() does not write empty user.name/user.email into git config when no author is resolvable', async () => {
+      const fsClient = MemClient.createClient();
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+      });
+
+      await GitVCS.setAuthor();
+
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: 'user.name' })).toBeUndefined();
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: 'user.email' })).toBeUndefined();
+    });
+
     it('stage and unstage file', async () => {
       // Write the files to the repository directory
       const fsClient = MemClient.createClient();

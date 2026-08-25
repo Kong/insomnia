@@ -47,6 +47,7 @@ import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/mo
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
+import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
@@ -178,7 +179,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
 export interface RootLoaderData {
   settings: Settings;
-  workspaceCount: number;
   userSession: UserSession;
 }
 
@@ -188,13 +188,11 @@ export const useRootLoaderData = () => {
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
-  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
-    workspaceCount,
     userSession,
     cloudCredentials,
   };
@@ -739,7 +737,7 @@ const Root = () => {
   }, []);
 
   return (
-    <>
+    <ServerDataCacheProvider>
       <div className="app">
         <Outlet />
         <Toaster />
@@ -756,7 +754,7 @@ const Root = () => {
           from={importObject}
         />
       )}
-    </>
+    </ServerDataCacheProvider>
   );
 };
 

@@ -12,6 +12,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { trackCioEvent } from '~/ui/hooks/use-cio';
 import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
+import { recordAction } from '~/ui/utils/record-action';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
@@ -191,6 +192,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       },
     });
 
+    if (event === AnalyticsEvent.documentCreate) {
+      recordAction('document_created');
+    }
+
     if (workspaceData.withRequest) {
       const activeRequestId = (
         await services.request.create({
@@ -220,10 +225,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       // user's email-bearing profile (only fires when logged in). See INS-2678.
       trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
 
+      recordAction('request_created');
+
       if (!redirectAfterCreate) {
         return {
           workspaceId: workspace._id,
           requestId: activeRequestId,
+          workspace: workspace,
         };
       }
 
@@ -240,6 +248,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     if (!redirectAfterCreate) {
       return {
         workspaceId: workspace._id,
+        workspace: workspace,
       };
     }
 

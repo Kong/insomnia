@@ -109,11 +109,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
+    const isPasswordEditor = type?.toLowerCase() === 'password';
 
     // Update the tooltip value, including rendering the value of a nunjucks tag if necessary
     const updateTooltipValue = useCallback(
       async (rawValue: string) => {
-        if (type?.toLowerCase() === 'password') {
+        if (isPasswordEditor) {
           return;
         }
         if (!handleRender || !/{{|{%/.test(rawValue)) {
@@ -127,7 +128,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           setTooltipValue(rawValue);
         }
       },
-      [handleRender, type],
+      [handleRender, isPasswordEditor],
     );
 
     const getKeyMap = useCallback(() => {
@@ -437,6 +438,18 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [defaultValue, historyKey, type, updateTooltipValue]);
 
     useEffect(() => {
+      // Type password will apply the `-webkit-text-security` CSS on .CodeMirror-line, which changes glyph widths.
+      // CodeMirror isn't aware of it, so the cursor/selection stay positioned using stale widths until a manual re-measure.
+      const cm = codeMirror.current;
+      if (!cm) {
+        return;
+      }
+      const raf = requestAnimationFrame(() => cm.refresh());
+      return () => cancelAnimationFrame(raf);
+      // `type` is intentionally included here to make sure the re-measure triggers when the type changes
+    }, [type]);
+
+    useEffect(() => {
       // Prevent these things if we're type === "password"
       const preventDefault = (_: CodeMirror.Editor, event: Event) =>
         type?.toLowerCase() === 'password' && event.preventDefault();
@@ -478,7 +491,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
           if (id === key) {
             if (needsEnterprisePlan && !isEnterprisePlan) {
-              // show modal if current user is not an enteprise user and the command is an enterprise feature
+              // show modal if current user is not an enterprise user and the command is an enterprise feature
               showModal(UpgradeModal, {
                 newPlan: 'enterprise',
                 featureName: displayName,
@@ -563,7 +576,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         delay={1000}
         className="h-full w-full"
         followCursor
-        shouldShow={() => Boolean(tooltipValue) && !isPointerOverNunjucksTag.current && isContentTruncated()}
+        shouldShow={() =>
+          Boolean(tooltipValue) && !isPasswordEditor && !isPointerOverNunjucksTag.current && isContentTruncated()
+        }
       >
         <div
           className={classnames('editor--single-line', {

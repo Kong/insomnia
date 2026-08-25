@@ -13,6 +13,7 @@ interface Props<T> {
     name: string;
     value: T;
   }[];
+  disabled?: boolean;
 }
 
 export const EnumSetting = <T extends string | number>({
@@ -20,6 +21,7 @@ export const EnumSetting = <T extends string | number>({
   label,
   setting,
   values,
+  disabled = false,
 }: PropsWithChildren<Props<T>>) => {
   const { settings } = useRootLoaderData()!;
 
@@ -34,6 +36,7 @@ export const EnumSetting = <T extends string | number>({
           value={String(settings[setting]) || '__NULL__'}
           name={setting}
           onChange={event => patchSettings({ [setting]: event.currentTarget.value })}
+          disabled={disabled}
         >
           {values.map(({ name, value }) => (
             <option key={value} value={value}>

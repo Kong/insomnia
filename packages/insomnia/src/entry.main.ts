@@ -29,7 +29,7 @@ import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
-import { registerGitServiceAPI } from './main/git-service';
+import { backfillAllManagedGitFolderSlugs, registerGitServiceAPI } from './main/git-service';
 import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
@@ -150,6 +150,12 @@ app.on('ready', async () => {
   sentryWatchAnalyticsEnabled();
 
   await runGitCredentialsMigration();
+  // Must run — and finish — before the window/renderer exists: it's the only
+  // point in the app's lifecycle where nothing else (a file watcher, a git
+  // operation kicked off by a route loader) can be concurrently reading or
+  // writing these same folders, so the rename can never race another reader
+  // into resurrecting the old path (see backfillManagedFolderSlug).
+  await backfillAllManagedGitFolderSlugs();
 
   await _launchApp();
 

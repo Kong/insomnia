@@ -3,9 +3,10 @@ import type { GitCredentials, GitRepository, Project, ProviderEmail } from 'inso
 import { models } from 'insomnia-data';
 import { platform } from 'insomnia-data/common';
 import type { FC } from 'react';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   Button,
+  Form,
   Input,
   Label,
   ListBox,
@@ -33,7 +34,7 @@ import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { deriveRepoName, useActiveView } from '~/ui/components/project/utils';
+import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
@@ -42,7 +43,6 @@ import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
-const FORMID = 'git-repo-form';
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
@@ -85,6 +85,8 @@ export const ProjectSettingsForm: FC<Props> = ({
   onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
+  const gitFormId = useId();
+  const upsertFormId = useId();
 
   const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
 
@@ -101,6 +103,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [project, storageType]);
 
   const [error, setError] = useState<string | null>(null);
+  const [relocateSuccessMessage, setRelocateSuccessMessage] = useState<string | null>(null);
   const [isGitCredentialInvalid, setIsGitCredentialInvalid] = useState(false);
 
   const [projectData, setProjectData] = useState<{
@@ -153,13 +156,18 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [onDirtyChange, changedFieldCount]);
 
   useEffect(() => {
-    if (
-      relocateFetcher.state === 'idle' &&
-      relocateFetcher.data &&
-      'errors' in relocateFetcher.data &&
-      relocateFetcher.data.errors
-    ) {
+    if (relocateFetcher.state !== 'idle' || !relocateFetcher.data) {
+      return;
+    }
+    if ('errors' in relocateFetcher.data && relocateFetcher.data.errors) {
       setError(relocateFetcher.data.errors.join(', '));
+      setRelocateSuccessMessage(null);
+    } else if ('directory' in relocateFetcher.data && relocateFetcher.data.directory) {
+      // The move already happened at this point — it isn't gated by the
+      // "Update" button below, which only tracks name/author/storage-type
+      // changes. Confirm it explicitly so the button staying disabled doesn't
+      // read as "nothing happened".
+      setRelocateSuccessMessage(`Repository moved to ${relocateFetcher.data.directory}`);
     }
   }, [relocateFetcher.data, relocateFetcher.state]);
 
@@ -180,6 +188,49 @@ export const ProjectSettingsForm: FC<Props> = ({
   const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
 
   const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+
+  // Switching to git (or reconnecting an empty/unauthenticated git project) scans
+  // the remote for files first; every other case updates directly.
+  const isScanForFilesPrimaryAction =
+    storageType === 'git' &&
+    !projectData.connectRepositoryLater &&
+    (isSwitchingStorageType(project!, storageType) ||
+      project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
+      !gitRepository?.credentialsId);
+  const isGitSyncUnavailableForSwitch = !isGitSyncEnabled && isSwitchingStorageType(project!, storageType);
+  const canScanForFiles = !isGitSyncUnavailableForSwitch && !isGitCredentialInvalid;
+
+  const hasNoChangesToUpsert =
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.name.trim() === projectData.name.trim() &&
+    (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null);
+  const canUpsertProject = updateProjectFetcher.state === 'idle' && !hasNoChangesToUpsert;
+  const canCloneAfterScan = updateProjectFetcher.state === 'idle' && initCloneGitRepositoryFetcher.state === 'idle';
+
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    nameInputRef.current?.focus();
+  }, [storageType]);
+
+  const handleUpsertFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isScanForFilesPrimaryAction) {
+      if (canScanForFiles) {
+        (document.getElementById(gitFormId) as HTMLFormElement | null)?.requestSubmit();
+      }
+      return;
+    }
+    if (canUpsertProject) {
+      onUpsertProject();
+    }
+  };
+
+  const cloneButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (activeView === 'git-results' && initCloneGitRepositoryFetcher.state === 'idle') {
+      cloneButtonRef.current?.focus();
+    }
+  }, [activeView, initCloneGitRepositoryFetcher.state]);
 
   const showGitConnectionInfo =
     storageType === 'git' &&
@@ -207,23 +258,55 @@ export const ProjectSettingsForm: FC<Props> = ({
     if (!project || !gitRepository) {
       return;
     }
+    // Start browsing from the current parent folder, not $HOME — makes it easy
+    // to spot a sibling folder the repo was renamed/moved to (the main reason
+    // to use this when the stored path is broken).
+    const currentParentDir = repoPath ? window.path.dirname(repoPath) : window.app.getPath('home');
     const picked = await selectFileOrFolder({
       itemTypes: ['directory'],
-      defaultPath: window.app.getPath('home'),
+      defaultPath: currentParentDir,
     });
     if (picked.canceled || !picked.filePath) {
       return;
     }
-    // Move into `<chosen-parent>/<repo-name>`, matching the clone flow.
-    const folderName = deriveRepoName(gitRepository.uri) || gitRepository._id;
-    const newDirectory = window.path.join(picked.filePath, folderName);
+    // The picked folder IS the new location itself, not a parent to nest a
+    // repo-named subfolder under. That lets this double as "reconnect" when the
+    // stored path is broken: pick the folder the repo now actually lives in
+    // (already containing its .git data) and relocateGitRepoAction adopts it in
+    // place instead of trying to move files into/over it.
+    const newDirectory = picked.filePath;
 
     setError(null);
+    setRelocateSuccessMessage(null);
     relocateFetcher.submit({
       gitRepositoryId: gitRepository._id,
       projectId: project._id,
       newDirectory,
     });
+  };
+
+  const [isOpeningRepoFolder, setIsOpeningRepoFolder] = useState(false);
+  const onOpenRepoInFileSystem = async () => {
+    if (!gitRepository) {
+      return;
+    }
+    setIsOpeningRepoFolder(true);
+    setError(null);
+    try {
+      // Resolve (and confirm the folder still exists) before opening — unlike a
+      // plain `window.shell.openPath`, this never recreates a folder that was
+      // renamed, moved, or deleted outside Insomnia.
+      const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
+      if ('errors' in result && result.errors) {
+        setError(result.errors.join(', '));
+        return;
+      }
+      if (result.path) {
+        window.shell.openPath(result.path);
+      }
+    } finally {
+      setIsOpeningRepoFolder(false);
+    }
   };
 
   const showGitRepoForm =
@@ -288,47 +371,57 @@ export const ProjectSettingsForm: FC<Props> = ({
           </div>
         )}
 
+        {relocateSuccessMessage && (
+          <div className="flex items-center gap-2 rounded-xs bg-(--color-surprise)/50 px-2 py-1 text-sm text-(--color-font)">
+            <Icon icon="circle-check" />
+            <span>{relocateSuccessMessage}</span>
+          </div>
+        )}
+
         {/* Important Note: We want to keep the state of the components so we only hide the contents */}
         <div
           className={`flex w-full flex-col justify-start gap-4 pb-2 text-left ${activeView === 'project' ? '' : 'hidden'}`}
         >
-          <TextField
-            autoFocus
-            name="name"
-            value={projectData.name}
-            onChange={name => setProjectData({ ...projectData, name })}
-            className="group relative flex flex-col gap-2 px-0.5"
-          >
-            <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
-            <Input
-              placeholder="My project"
-              className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-            />
-          </TextField>
-          {project?.konnectControlPlaneId ? (
-            <div className="flex flex-col gap-2">
-              <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
-                Type
-              </Label>
-              <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
-                <div className="flex items-center gap-2">
-                  <Icon icon="laptop" />
-                  <span>Synced from Konnect</span>
+          <Form id={upsertFormId} className="contents" onSubmit={handleUpsertFormSubmit}>
+            <TextField
+              autoFocus
+              name="name"
+              value={projectData.name}
+              onChange={name => setProjectData({ ...projectData, name })}
+              className="group relative flex flex-col gap-2 px-0.5"
+            >
+              <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
+              <Input
+                ref={nameInputRef}
+                placeholder="My project"
+                className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+              />
+            </TextField>
+            {project?.konnectControlPlaneId ? (
+              <div className="flex flex-col gap-2">
+                <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                  Type
+                </Label>
+                <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
+                  <div className="flex items-center gap-2">
+                    <Icon icon="laptop" />
+                    <span>Synced from Konnect</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <ProjectTypeSelect
+            ) : (
+              <ProjectTypeSelect
+                storageRules={storageRules}
+                value={storageType}
+                onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+              />
+            )}
+            <ProjectTypeWarning
+              isGitSyncEnabled={isGitSyncEnabled}
+              storageType={storageType}
               storageRules={storageRules}
-              value={storageType}
-              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
             />
-          )}
-          <ProjectTypeWarning
-            isGitSyncEnabled={isGitSyncEnabled}
-            storageType={storageType}
-            storageRules={storageRules}
-          />
+          </Form>
 
           {showSwitchBanner && storageType === 'remote' && (
             <Banner
@@ -418,7 +511,8 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </Button>
                   <TooltipTrigger>
                     <Button
-                      onPress={() => window.shell.openPath(repoPath)}
+                      onPress={onOpenRepoInFileSystem}
+                      isDisabled={isOpeningRepoFolder}
                       className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
                       aria-label="Open in file system"
                     >
@@ -447,7 +541,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                       offset={8}
                       className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
                     >
-                      Move to another folder
+                      Move to another folder (applies immediately)
                     </Tooltip>
                   </TooltipTrigger>
                 </div>
@@ -567,7 +661,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               setActiveView={setActiveView}
               credentials={credentials}
               providers={providers}
-              formId={FORMID}
+              formId={gitFormId}
               onCredentialValidationChange={setIsGitCredentialInvalid}
             />
           )}
@@ -595,16 +689,10 @@ export const ProjectSettingsForm: FC<Props> = ({
                 Cancel
               </Button>
             )}
-            {storageType === 'git' &&
-            !projectData.connectRepositoryLater &&
-            (isSwitchingStorageType(project!, storageType) ||
-              project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
-              !gitRepository?.credentialsId) ? (
+            {isScanForFilesPrimaryAction ? (
               <Button
-                isDisabled={
-                  (!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) || isGitCredentialInvalid
-                }
-                form={FORMID}
+                isDisabled={!canScanForFiles}
+                form={gitFormId}
                 type="submit"
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
@@ -612,13 +700,9 @@ export const ProjectSettingsForm: FC<Props> = ({
               </Button>
             ) : (
               <Button
-                onPress={onUpsertProject}
-                isDisabled={
-                  updateProjectFetcher.state !== 'idle' ||
-                  (!isSwitchingStorageType(project!, storageType) &&
-                    project?.name.trim() === projectData.name.trim() &&
-                    (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null))
-                }
+                type="submit"
+                form={upsertFormId}
+                isDisabled={!canUpsertProject}
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {updateProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
@@ -632,7 +716,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       {activeView === 'git-results' && (
         <div className="flex items-center justify-end gap-2">
           <Button
-            isDisabled={updateProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
+            isDisabled={!canCloneAfterScan}
             onPress={() => {
               setActiveView('project');
               setError(null);
@@ -652,6 +736,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             </Button>
           ) : (
             <Button
+              ref={cloneButtonRef}
               isDisabled={updateProjectFetcher.state !== 'idle'}
               onPress={onUpsertProject}
               className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

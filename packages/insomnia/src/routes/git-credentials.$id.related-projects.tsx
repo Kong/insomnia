@@ -19,7 +19,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { accountId } = await services.userSession.get();
   let organizations: Organization[] = [];
   try {
-    organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+    organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
   } catch {
     // If parsing fails, fall through with empty array
   }

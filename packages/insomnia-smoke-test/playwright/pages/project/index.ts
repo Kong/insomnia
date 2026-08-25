@@ -1,4 +1,4 @@
-import type { ElectronApplication, Page } from '@playwright/test';
+import type { ElectronApplication, Locator, Page } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
 import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
@@ -136,7 +136,7 @@ export class ProjectPage extends BasePage {
    * @param storageType - The storage type: 'local' (Local Vault), 'remote' (Cloud Sync), or 'git' (Git Sync)
    */
   private async selectStorageType(storageType: ProjectStorageType): Promise<void> {
-    await this.page.getByText(storageTypeNames[storageType]).click();
+    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType]).click();
   }
 
   /**
@@ -149,6 +149,44 @@ export class ProjectPage extends BasePage {
     await this.setProjectName(name);
     await this.selectStorageType(storageType);
     await this.page.getByRole('button', { name: 'Create', exact: true }).click();
+    await this.closeProjectModalIfStuck();
+  }
+
+  /**
+   * Known app-side race: the "Create project" dialog can fail to close itself
+   * even though the project was created and the app already navigated to it.
+   */
+  private async closeProjectModalIfStuck(timeout = 5000): Promise<void> {
+    const dialog = this.page.getByRole('dialog', { name: 'Create or update dialog' });
+    const closedOnItsOwn = await dialog
+      .waitFor({ state: 'hidden', timeout })
+      .then(() => true)
+      .catch(() => false);
+
+    if (closedOnItsOwn) {
+      return;
+    }
+
+    await this.page.locator('[data-test-id="project-modal-close-button"]').click();
+
+    // The name/type fields were filled in, so closing can trigger a "discard unsaved changes" confirmation.
+    // App-side race: an in-flight navigation (e.g. from the project just being created) can force-close
+    // the whole modal - confirm dialog included - independent of this click, detaching the "Yes" button
+    // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
+    const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
+    if (await discardConfirmDialog.isVisible().catch(() => false)) {
+      await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click({ timeout: 5000 }).catch(() => {});
+    }
+
+    await dialog.waitFor({ state: 'hidden' });
+  }
+
+  /**
+   * Waits for a locator to become clickable (visible, stable, enabled, and not
+   * obscured by e.g. a closing modal's backdrop) before clicking it.
+   */
+  private async clickReliably(locator: Locator, timeout = 10_000): Promise<void> {
+    await locator.waitFor({ state: 'visible', timeout }).then(() => locator.click({ timeout }));
   }
 
   /**
@@ -157,7 +195,7 @@ export class ProjectPage extends BasePage {
    */
   async chooseGitProjectFolderForOpen(name: string, folderPath: string): Promise<void> {
     await mockOpenDialogForDirectory(this.app, folderPath);
-    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    await this.clickReliably(this.page.getByRole('button', { name: 'Create new Project' }));
     await this.setProjectName(name);
     await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Open local folder' }).click();
@@ -174,6 +212,10 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: 'Open', exact: true }).click();
     // Confirm the "Do you trust this folder?" dialog before the folder is opened/initialized.
     await this.page.getByRole('button', { name: 'Open folder' }).click();
+    // Same app-side race as createProject(): this flow chains two navigations (create,
+    // then the trust-confirmed git init/adopt), which widens the window for the "Create
+    // project" dialog to miss its self-close effect and leave its backdrop blocking clicks.
+    await this.closeProjectModalIfStuck();
   }
 
   /**
@@ -187,7 +229,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).click();
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
-    await this.page.getByText('Git Sync').click();
+    await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Git Credentials Authorized as' }).click();
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
@@ -207,7 +249,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).click();
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
-    await this.page.getByText('Git Sync').click();
+    await this.selectStorageType('git');
     // The credential select defaults to whichever credential is first (which can be
     // the "System Git Credentials" native provider). Open it via its stable label and
     // explicitly pick the custom Access Token credential rather than relying on the default.
@@ -223,12 +265,35 @@ export class ProjectPage extends BasePage {
     await projectModalCloseButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     if (await projectModalCloseButton.isVisible()) {
       await projectModalCloseButton.click();
+      // The name/type fields were filled in, so closing can trigger a "discard unsaved changes" confirmation.
+      // App-side race: an in-flight navigation (e.g. from the project just being created) can force-close
+      // the whole modal - confirm dialog included - independent of this click, detaching the "Yes" button
+      // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
+      const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
+      if (await discardConfirmDialog.isVisible().catch(() => false)) {
+        await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click({ timeout: 5000 }).catch(() => {});
+      }
     }
-    await this.page.getByRole('button', { name: 'Personal workspace Organizations' }).click();
+    // The modal's backdrop still intercepts clicks for a moment after closing
+    // (exit animation / unmount), which flakily blocks the click below. Named rather than a bare
+    // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
+    // a bare role locator matching both is a Playwright strict-mode violation.
+    await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
+    await this.clickReliably(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
     await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
     await this.sidebar.selectProject(name);
+  }
+
+  /**
+   * Clicks "Move repository to another folder" in the project settings modal.
+   * Chains right after that modal opens (which itself follows the "Create or
+   * update dialog" from createGitSyncProject closing) - same stale-backdrop
+   * race as chooseGitProjectFolderForOpen(), so this needs the same guard.
+   */
+  async moveRepositoryToAnotherFolder(): Promise<void> {
+    await this.clickReliably(this.page.getByRole('button', { name: 'Move repository to another folder' }));
   }
 
   // ===========================================================================

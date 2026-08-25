@@ -38,7 +38,7 @@
     "socket.io": "^4.8.1",
     "statuses": "^2.0.1",
     "toidentifier": "^1.0.1",
-    "uuid": "^9.0.1",
+    "uuid": "^11.1.1",
     "ws": "^8.18.1",
     "xvfb-maybe": "^0.2.1",
     "yaml": "^2.7.1"

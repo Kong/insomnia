@@ -70,16 +70,20 @@ export type GenerateMcpSamplingResponseFunction = (parameters: {
 
 export interface Plugin {
   name: string;
+  /** The plugin's own display name from `insomnia.name` in its manifest, if it declared one — distinct from `name` (the npm package name). */
+  displayName?: string;
   description: string;
   version: string;
   directory: string;
-  config: { disabled: boolean };
+  config: { disabled: boolean; elevated?: boolean };
   /** Parsed, validated `insomnia.permissions` manifest (sandbox plan C3). */
   permissions: PluginPermissions;
   /** Validation warnings from parsing `permissions`; shown on the plugin card. Empty when clean. */
   permissionWarnings: string[];
   /** True when the plugin declared a valid `permissions` object (even if empty); false = baseline access (no/malformed manifest). */
   permissionsDeclared: boolean;
+  /** Set when the plugin's own code threw while loading; `module` is empty and it's shown disabled with this message. */
+  loadError?: string;
   module: {
     templateTags?: PluginTemplateTag[];
     requestHooks?: ((requestContext: any) => void)[];

@@ -29,7 +29,7 @@ import {
   getAppWebsiteBaseURL,
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { getAllLocalFiles, type InsomniaFile } from '~/common/project';
+import { getAllLocalFiles } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
@@ -37,7 +37,6 @@ import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
-import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
@@ -56,11 +55,11 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useUnsyncedFilesForProject } from '~/ui/hooks/use-remote-files';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { getAllRemoteFiles } from '~/ui/utils/remote-projects';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
 
@@ -69,34 +68,26 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
 
-  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const localFiles = await getAllLocalFiles({ projectId });
 
   return {
     localFiles,
-    remoteFilesPromise,
   };
 }
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { localFiles, remoteFilesPromise } = loaderData;
-  const { activeProject, activeProjectGitRepository, projects } = useProjectLoaderData()!;
+  const { localFiles } = loaderData;
+  const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
   const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
-  const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+  const { projects } = useOrganizationData(organizationId);
 
-  useEffect(() => {
-    if (activeProject?.remoteId && remoteFiles) {
-      console.log('[remote files] remote files loaded for project ui', remoteFiles.length);
-    }
-  }, [activeProject?.remoteId, remoteFiles]);
+  const remoteFiles = useUnsyncedFilesForProject(organizationId, projectId, localFiles);
 
-  const allFiles = useMemo(() => {
-    return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
-  }, [localFiles, remoteFiles]);
+  const allFiles = useMemo(() => [...localFiles, ...remoteFiles], [localFiles, remoteFiles]);
 
   const { userSession } = useRootLoaderData()!;
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
@@ -109,7 +100,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const { issuesByWorkspaceId } = useGitFileIssues();
-  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+  const storageRules = useOrganizationStorageRule(organizationId);
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const { billing } = useOrganizationPermissions();
 
@@ -117,17 +108,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const hasProjectFileIssues = projectFileIssues.length > 0;
   const projectFileIssuesMessage =
     'There are issues with one or more Insomnia files in this project. Use the git CLI and your local file system to resolve them and continue.';
-
-  useEffect(() => {
-    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
-      const load = storageRuleFetcher.load;
-      load({ organizationId });
-    }
-  }, [organizationId, storageRuleFetcher.load]);
-
-  const { storagePromise } = storageRuleFetcher.data || {};
-
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
 
   const [workspaceListFilter, setWorkspaceListFilter] = reactUse.useLocalStorage(
     `${projectId}:workspace-list-filter`,

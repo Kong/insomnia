@@ -1,10 +1,10 @@
-import type { User, UserEncryptionKeys, UserOnboarding } from '@getinsomnia/insomnia-v3-fetch';
-import { UserOnboardingFirstRequestTreatmentEnum } from '@getinsomnia/insomnia-v3-fetch';
+import type { CurrentUserActionCreate, User, UserEncryptionKeys, UserOnboarding } from '@getinsomnia/insomnia-v3-fetch';
+import { CurrentUserActionCreateActionTypeEnum, UserOnboardingFirstRequestTreatmentEnum } from '@getinsomnia/insomnia-v3-fetch';
 
 import { fetch } from './fetch';
 
-export type { User, UserEncryptionKeys, UserOnboarding };
-export { UserOnboardingFirstRequestTreatmentEnum };
+export type { CurrentUserActionCreate, User, UserEncryptionKeys, UserOnboarding };
+export { CurrentUserActionCreateActionTypeEnum, UserOnboardingFirstRequestTreatmentEnum };
 
 // POST /auth/logout
 export const logout = ({ sessionId }: { sessionId: string }) => {
@@ -40,6 +40,25 @@ export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: s
     method: 'POST',
     path: '/v3/users/me/onboarding/request-threshold',
     sessionId,
+  });
+};
+
+// POST /v3/users/me/actions
+export const recordUserAction = async ({
+  sessionId,
+  eventId,
+  actionType,
+}: {
+  sessionId: string;
+  eventId: string;
+  actionType: CurrentUserActionCreateActionTypeEnum;
+}): Promise<void> => {
+  const data: CurrentUserActionCreate = { event_id: eventId, action_type: actionType };
+  return fetch<void>({
+    method: 'POST',
+    path: '/v3/users/me/actions',
+    sessionId,
+    data,
   });
 };
 

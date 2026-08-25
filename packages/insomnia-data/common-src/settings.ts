@@ -86,6 +86,17 @@ export enum UpdateChannel {
   beta = 'beta',
 }
 
+// How far the configured HTTP/HTTPS proxy reaches.
+export const ProxyScopes = {
+  // Only requests sent from collections use the proxy (default, matches pre-13.1 behavior).
+  // Insomnia's own traffic (login, git, Konnect, auto-updates, analytics, etc.) always goes direct.
+  requests: 'requests',
+  // Every outbound call Insomnia makes, including its own traffic above, uses the proxy.
+  all: 'all',
+} as const;
+
+export type ProxyScope = ValueOf<typeof ProxyScopes>;
+
 /** Gets a subset of Settings where the values match a condition */
 export type SettingsOfType<MatchType> = NonNullable<
   {
@@ -95,9 +106,12 @@ export type SettingsOfType<MatchType> = NonNullable<
 
 export interface PluginConfig {
   disabled: boolean;
+  // T1: per-plugin escape hatch. When true, a user plugin runs in-process with full host access
+  // instead of the sandbox, even while the sandbox is enabled. Off/absent = sandboxed (default-deny).
+  elevated?: boolean;
 }
 
-export type PluginConfigMap = Record<string, { disabled: boolean }>;
+export type PluginConfigMap = Record<string, PluginConfig>;
 
 export interface Settings {
   autoDetectColorScheme: boolean;
@@ -134,6 +148,8 @@ export interface Settings {
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
+  /** How far the configured proxy reaches — see `ProxyScope`. */
+  proxyScope: ProxyScope;
   showVariableSourceAndValue: boolean;
   lightTheme: string;
   lineWrapping?: boolean;
@@ -148,6 +164,9 @@ export interface Settings {
   preferredHttpVersion: HttpVersion;
   proxyEnabled: boolean;
   showPasswords: boolean;
+  sidebarFocusForCollections: boolean;
+  /** True once the user has dismissed the one-time "Welcome to focus mode" onboarding popup. */
+  hasSeenSidebarFocusOnboarding: boolean;
   theme: string;
   timeout: number;
   updateAutomatically: boolean;
@@ -166,8 +185,17 @@ export interface Settings {
   scriptSandboxEnabled: boolean;
   // Wraps the user script in 'use strict', preventing accidental globals and making `this` undefined.
   scriptStrictModeEnabled: boolean;
-  // Experimental: execute plugin template tags inside the QuickJS-WASM sandbox instead of directly in the main process.
-  templateTagSandboxEnabled: boolean;
+  // PoC/experimental: execute pre-request/after-response scripts inside the QuickJS-WASM sandbox
+  // instead of the hidden Electron BrowserWindow. Supports only a minimal API surface (console,
+  // insomnia.environment/variables get/set, read-only insomnia.request) — insomnia.sendRequest()
+  // and insomnia.test()/pm.test() are not yet bridged and throw if called. Defaults to off so the
+  // full-featured hidden-window sandbox remains the default execution path.
+  useQuickJsScriptSandbox: boolean;
+  // T1: sandbox ALL untrusted (user) plugin surfaces — template tags, request/response hooks, actions,
+  // and load-time module code — inside the QuickJS-WASM sandbox. User plugins are default-deny;
+  // per-plugin `pluginConfig.elevated` opts an individual plugin back into full-host in-process
+  // execution. Bundle plugins are always trusted.
+  pluginSandboxEnabled: boolean;
   // Names of security rules that have been individually disabled.
   disabledSecurityRules: string[];
   // AST blocked-property names that have been individually disabled.

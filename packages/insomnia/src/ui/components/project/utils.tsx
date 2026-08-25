@@ -17,10 +17,16 @@ export interface ProjectData {
   selectedAuthorEmail?: string | null;
   /**
    * Optional user-chosen parent folder to clone into. When set, the repo is
-   * cloned into `<cloneParentDir>/<repo-name>`; when unset, Insomnia manages the
-   * location.
+   * cloned into `<cloneParentDir>/<cloneFolderName || deriveRepoName(uri)>`;
+   * when unset, Insomnia manages the location.
    */
   cloneParentDir?: string;
+  /**
+   * Optional user-chosen override for the folder name the repo is cloned into
+   * (only meaningful alongside `cloneParentDir`). Falls back to
+   * `deriveRepoName(uri)` (the git repo's own name) when unset.
+   */
+  cloneFolderName?: string;
 }
 
 const LAST_CLONE_DIR_KEY = 'insomnia.git.lastCloneParentDir';
@@ -53,6 +59,25 @@ export const deriveRepoName = (uri?: string): string => {
     return 'repository';
   }
   return name;
+};
+
+/**
+ * The folder name a git clone into a custom location should use: the user's
+ * explicit override (from the "Folder name" field, only shown once a custom
+ * clone location is picked) when set, otherwise the repo's own name derived
+ * from its URL.
+ *
+ * `.`, `..`, and embedded path separators are rejected (falling back to the
+ * derived name instead) — same invariant `deriveRepoName` already enforces —
+ * since a bare `..` here would join into the parent of the chosen clone
+ * location instead of a new folder inside it.
+ */
+export const resolveCloneFolderName = (cloneFolderName?: string, uri?: string): string => {
+  const trimmed = cloneFolderName?.trim();
+  if (trimmed && trimmed !== '.' && trimmed !== '..' && !/[/\\]/.test(trimmed)) {
+    return trimmed;
+  }
+  return deriveRepoName(uri);
 };
 
 export type ProjectType = 'local' | 'remote' | 'git';

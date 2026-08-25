@@ -17,6 +17,7 @@ import {
   GridList,
   GridListItem,
   Heading,
+  Input,
   isTextDropItem,
   Label,
   Modal,
@@ -36,11 +37,13 @@ import { Button as BasicButton } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
+import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
 import { useGitProjectCommitsActionFetcher } from '~/routes/git.commits';
 import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
+import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
@@ -116,6 +119,141 @@ function getModificationClassName(type: GitFileType) {
 
   return '';
 }
+
+// `pushToGitRemoteAction` (used by the AI multi-commit flow and by "Retry
+// push") normalizes a push-time 401/403 into this constant instead of the
+// raw isomorphic-git "HTTP Error: 40x" text that `isGitRepoLoadAuthHttp40Error`
+// looks for. Recognize both forms so those flows can still offer
+// re-authentication instead of a dead-end "Retry push" button.
+function isPushAuthError(errors: string[]): boolean {
+  return isGitRepoLoadAuthHttp40Error(errors) || errors.includes(GitVCSOperationErrors.AuthenticationRequiredError);
+}
+
+// GitOauthAuthBanner only renders for errors matching isGitRepoLoadAuthHttp40Error
+// (it does its own internal gating) — translate the normalized constant into an
+// equivalent it recognizes, so the banner actually shows instead of silently
+// rendering nothing.
+function toOAuthBannerErrors(errors: string[]): string[] {
+  return isGitRepoLoadAuthHttp40Error(errors) ? errors : ['HTTP Error: 401 Unauthorized, Authentication required'];
+}
+
+// Shown when a commit succeeded locally but the push that followed it failed
+// (e.g. a protected branch rejected it). The work is safe in a local commit —
+// this offers a retry instead of implying the changes were lost.
+// Some errors (e.g. GitHub's protected-branch rejection) are pre-formatted
+// by the backend as "Error Pushing Repository, <raw remote message>" for use
+// in the plain-text error banner elsewhere. Here the banner title already
+// says "push failed", so that prefix is just noise — strip it if present.
+function stripRedundantPushErrorPrefix(error: string) {
+  return error.replace(/^Error Pushing Repository,\s*/, '');
+}
+
+// Recognize GitHub's protected-branch push rejection (GH006) so we can show a
+// concrete next step instead of just the raw remote log. Other providers/errors
+// fall back to the generic message — this only covers the one pattern we know.
+function getGitHubProtectedBranchTip(error: string): string | null {
+  if (/protected branch/i.test(error) || /\bGH006\b/.test(error)) {
+    return 'This branch is protected, your commit is safe locally. Push to a new branch and open a pull request, or ask an admin to allow it.';
+  }
+  return null;
+}
+
+const PushFailedAfterCommitBanner = (props: {
+  error: string;
+  isRetrying: boolean;
+  onRetry: () => void;
+  projectId: string;
+}) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const [isCreateBranchModalOpen, setIsCreateBranchModalOpen] = useState(false);
+  const detail = stripRedundantPushErrorPrefix(props.error);
+  const tip = getGitHubProtectedBranchTip(detail);
+
+  const createBranchFetcher = useGitProjectNewBranchActionFetcher();
+  const isCreatingBranch = createBranchFetcher.state !== 'idle';
+  const createBranchError =
+    createBranchFetcher.data?.errors && createBranchFetcher.data.errors.length > 0
+      ? createBranchFetcher.data.errors.join('\n')
+      : null;
+
+  const { onRetry } = props;
+  const prevCreateBranchStateRef = useRef(createBranchFetcher.state);
+  useEffect(() => {
+    const prevState = prevCreateBranchStateRef.current;
+    prevCreateBranchStateRef.current = createBranchFetcher.state;
+    if (!(prevState !== 'idle' && createBranchFetcher.state === 'idle' && createBranchFetcher.data)) {
+      return;
+    }
+    if (createBranchFetcher.data.errors && createBranchFetcher.data.errors.length > 0) {
+      // Most likely a name collision — let the user try a different name.
+      return;
+    }
+    // The branch was created from (and includes) the commit that failed to
+    // push, and is now checked out — push it right away.
+    setIsCreateBranchModalOpen(false);
+    onRetry();
+  }, [createBranchFetcher.state, createBranchFetcher.data, onRetry]);
+
+  return (
+    <Banner
+      type="warning"
+      title="Push failed"
+      message={
+        <div className="flex flex-col gap-2">
+          <p>
+            {tip ?? "Your commit is safe locally — it just hasn't been pushed yet."}{' '}
+            <Button
+              type="button"
+              onPress={() => setShowDetails(!showDetails)}
+              className="inline cursor-pointer border-0 bg-transparent p-0 underline"
+            >
+              {showDetails ? 'Show less' : 'Show more'}
+            </Button>
+          </p>
+          {showDetails && (
+            <p className="rounded-xs bg-(--hl-xs) p-2 font-mono text-xs whitespace-pre-wrap text-(--color-font-danger)">
+              {detail}
+            </p>
+          )}
+        </div>
+      }
+      footer={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            isDisabled={props.isRetrying}
+            onPress={props.onRetry}
+            className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+          >
+            <Icon
+              icon={props.isRetrying ? 'spinner' : 'cloud-arrow-up'}
+              className={props.isRetrying ? 'animate-spin' : ''}
+            />
+            Retry push
+          </Button>
+          {tip && (
+            <Button
+              type="button"
+              onPress={() => setIsCreateBranchModalOpen(true)}
+              className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+            >
+              <Icon icon="code-branch" />
+              Create branch &amp; push
+            </Button>
+          )}
+          {isCreateBranchModalOpen && (
+            <CreateBranchAndPushModal
+              isCreating={isCreatingBranch}
+              error={createBranchError}
+              onClose={() => setIsCreateBranchModalOpen(false)}
+              onSubmit={branch => createBranchFetcher.submit({ projectId: props.projectId, branch })}
+            />
+          )}
+        </div>
+      }
+    />
+  );
+};
 
 interface GeneratedCommitsFormProps {
   commits: { id: string; message: string; files: string[] }[];
@@ -296,9 +434,13 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   isNonOriginBranch,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
+  const pushRetryFetcher = useGitProjectPushActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [operationError, setOperationError] = useState<string | null>(null);
+  // Set when the commits succeeded but the push that followed them failed —
+  // the commits are safe locally, so we offer a retry rather than a plain error.
+  const [pushFailedError, setPushFailedError] = useState<string | null>(null);
   const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
@@ -334,14 +476,54 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
       ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
       ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
     if (hasErrors && 'errors' in commitsFetcher.data) {
-      setOperationError((commitsFetcher.data.errors as string[]).join('\n'));
+      const errors = commitsFetcher.data.errors as string[];
+      const pushFailedAfterCommit =
+        'pushFailedAfterCommit' in commitsFetcher.data && commitsFetcher.data.pushFailedAfterCommit;
+      // An auth failure needs the re-auth banner (GitOauthAuthBanner), even if
+      // it happened after a successful commit — a plain "retry push" button
+      // would just fail again without letting the user re-authenticate.
+      if (pushFailedAfterCommit && !isPushAuthError(errors)) {
+        setOperationError(null);
+        setPushFailedError(errors.join('\n'));
+      } else {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
+      }
       return;
     }
     if (isSuccess && !hasErrors) {
       setOperationError(null);
+      setPushFailedError(null);
       onCommitSuccess({ push: action === 'commit-push' });
     }
   }, [commitsFetcher.data, onCommitSuccess, isCommitting]);
+
+  const isRetryingPush = pushRetryFetcher.state !== 'idle';
+  const prevPushRetryStateRef = useRef(pushRetryFetcher.state);
+  useEffect(() => {
+    const prevState = prevPushRetryStateRef.current;
+    prevPushRetryStateRef.current = pushRetryFetcher.state;
+    if (!(prevState !== 'idle' && pushRetryFetcher.state === 'idle' && pushRetryFetcher.data)) {
+      return;
+    }
+    const errors = pushRetryFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (isPushAuthError(errors)) {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
+        return;
+      }
+      setPushFailedError(errors.join('\n'));
+      showToast({ icon: 'exclamation-triangle', title: 'Push failed again', status: 'error' });
+      return;
+    }
+    setPushFailedError(null);
+    onCommitSuccess({ push: true });
+  }, [pushRetryFetcher.state, pushRetryFetcher.data, onCommitSuccess]);
+
+  const retryPush = () => {
+    pushRetryFetcher.submit({ projectId });
+  };
 
   const moveFileToDoNotCommit = (fileItem: FileItem) => {
     try {
@@ -542,11 +724,18 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           </Button>
         </div>
       )}
-      {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+      {pushFailedError ? (
+        <PushFailedAfterCommitBanner
+          error={pushFailedError}
+          isRetrying={isRetryingPush}
+          onRetry={retryPush}
+          projectId={projectId}
+        />
+      ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
         <GitOauthAuthBanner
           selectedCredential={selectedCredential}
           gitRepository={gitRepository}
-          repoLoadErrors={[operationError]}
+          repoLoadErrors={toOAuthBannerErrors([operationError])}
           provider={selectedProvider}
         />
       ) : operationError && selectedCredential?.provider === 'custom' ? (
@@ -610,6 +799,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   isNonOriginBranch,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
+  const pushRetryFetcher = useGitProjectPushActionFetcher();
 
   const stagedCount = changes.staged.length;
   const unstagedCount = changes.unstaged.length;
@@ -620,6 +810,9 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   const [pendingCommit, setPendingCommit] = useState<{ message: string; push: boolean } | null>(null);
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  // Set when a commit succeeded but the push that followed it failed — the
+  // commit is safe locally, so we offer a retry rather than a plain error.
+  const [pushFailedError, setPushFailedError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const repoPath = gitRepository?._id ? resolveGitRepoBaseDir(gitRepository) : '';
@@ -666,15 +859,58 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     if (errors && errors.length > 0) {
       if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         onPullRequired();
+      } else if (commitFetcher.data.pushFailedAfterCommit && !isPushAuthError(errors)) {
+        // The commit itself succeeded — only clear the message/error state
+        // for that, and surface the push failure as a retryable banner.
+        setMessage('');
+        setOperationError(null);
+        setPushFailedError(errors.join('\n'));
       } else {
+        // An auth failure needs the re-auth banner (GitOauthAuthBanner), even
+        // if it happened after a successful commit — a plain "retry push"
+        // button would just fail again without letting the user re-authenticate.
+        setPushFailedError(null);
         setOperationError(errors.join('\n'));
       }
       return;
     }
     setMessage('');
     setOperationError(null);
+    setPushFailedError(null);
     onCommitSuccess({ push: action === 'commit-push' });
   }, [commitFetcher.data, onCommitSuccess, onPullRequired, isCommitting]);
+
+  const isRetryingPush = pushRetryFetcher.state !== 'idle';
+  const prevPushRetryStateRef = useRef(pushRetryFetcher.state);
+  useEffect(() => {
+    const prevState = prevPushRetryStateRef.current;
+    prevPushRetryStateRef.current = pushRetryFetcher.state;
+    if (!(prevState !== 'idle' && pushRetryFetcher.state === 'idle' && pushRetryFetcher.data)) {
+      return;
+    }
+    const errors = pushRetryFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+        setPushFailedError(null);
+        onPullRequired();
+        return;
+      }
+      if (isPushAuthError(errors)) {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
+        return;
+      }
+      setPushFailedError(errors.join('\n'));
+      showToast({ icon: 'exclamation-triangle', title: 'Push failed again', status: 'error' });
+      return;
+    }
+    setPushFailedError(null);
+    onCommitSuccess({ push: true });
+  }, [pushRetryFetcher.state, pushRetryFetcher.data, onCommitSuccess, onPullRequired]);
+
+  const retryPush = () => {
+    pushRetryFetcher.submit({ projectId });
+  };
 
   return (
     <>
@@ -803,11 +1039,18 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             )}
           </div>
         )}
-        {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+        {pushFailedError ? (
+          <PushFailedAfterCommitBanner
+          error={pushFailedError}
+          isRetrying={isRetryingPush}
+          onRetry={retryPush}
+          projectId={projectId}
+        />
+        ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
             gitRepository={gitRepository}
-            repoLoadErrors={[operationError]}
+            repoLoadErrors={toOAuthBannerErrors([operationError])}
             provider={selectedProvider}
           />
         ) : operationError && selectedCredential?.provider === 'custom' ? (
@@ -1115,7 +1358,22 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </Button>
           <TooltipTrigger>
             <Button
-              onPress={() => window.shell.openPath(repoPath)}
+              onPress={async () => {
+                if (!gitRepository?._id) {
+                  return;
+                }
+                // Resolve (and confirm it still exists) before opening — unlike a
+                // plain `window.shell.openPath`, this never recreates a folder
+                // that was renamed, moved, or deleted outside Insomnia.
+                const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
+                if ('errors' in result && result.errors) {
+                  showToast({ icon: 'exclamation-triangle', title: 'Folder not found', description: result.errors.join(', '), status: 'error' });
+                  return;
+                }
+                if (result.path) {
+                  window.shell.openPath(result.path);
+                }
+              }}
               className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
               aria-label="Open in file system"
             >
@@ -1692,6 +1950,102 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
   );
 };
 
+// Focused, single-purpose modal for the "push failed" banner's branch-creation
+// shortcut. Deliberately not the full Branches modal — that has checkout/delete/
+// merge actions for every branch, which would distract from this one specific
+// recovery step.
+const CreateBranchAndPushModal = ({
+  isCreating,
+  error,
+  onSubmit,
+  onClose,
+}: {
+  isCreating: boolean;
+  error: string | null;
+  onSubmit: (branchName: string) => void;
+  onClose: () => void;
+}) => {
+  const [branchName, setBranchName] = useState('');
+
+  return (
+    <ModalOverlay
+      isOpen
+      onOpenChange={isOpen => {
+        !isOpen && onClose();
+      }}
+      isDismissable
+      className="fixed top-[50%] left-0 z-10 flex h-(--visual-viewport-height) w-full translate-y-[-50%] items-center justify-center bg-black/30"
+    >
+      <Modal
+        onOpenChange={isOpen => {
+          !isOpen && onClose();
+        }}
+        className="flex w-full max-w-md flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
+      >
+        <Dialog className="outline-hidden">
+          {({ close }) => (
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                const name = branchName.trim();
+                if (!name) {
+                  return;
+                }
+                onSubmit(name);
+              }}
+              className="flex flex-col gap-4"
+            >
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <Heading slot="title" className="flex items-center gap-2 text-2xl">
+                  Create branch &amp; push
+                </Heading>
+                <Button
+                  type="button"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  onPress={close}
+                >
+                  <Icon icon="x" />
+                </Button>
+              </div>
+              <TextField autoFocus className="flex flex-col gap-2">
+                <Label className="font-bold">Branch name</Label>
+                <Input
+                  value={branchName}
+                  onChange={e => setBranchName(e.target.value)}
+                  placeholder="e.g. fix/protected-branch"
+                  className="h-8 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                />
+              </TextField>
+              {error && (
+                <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
+                  <Icon icon="exclamation-triangle" /> {error}
+                </p>
+              )}
+              <div className="flex h-10 shrink-0 items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
+                  onPress={close}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  isDisabled={isCreating || !branchName.trim()}
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80 disabled:opacity-50"
+                >
+                  <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
+                  Create branch &amp; push
+                </Button>
+              </div>
+            </form>
+          )}
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
+  );
+};
+
 // Asks the user whether to stage all changes and commit them directly when
 // nothing is staged (mirrors VSCode, without the "Always"/"Never" options).
 const ConfirmCommitAllModal = ({ onConfirm, onClose }: Omit<ConfirmModalProps, 'message'>) => {
@@ -1726,7 +2080,8 @@ const ConfirmCommitAllModal = ({ onConfirm, onClose }: Omit<ConfirmModalProps, '
                 </Button>
               </div>
               <div className="">
-                There are no staged changes to commit. Would you like to stage all your changes and commit them directly?
+                There are no staged changes to commit. Would you like to stage all your changes and commit them
+                directly?
               </div>
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button

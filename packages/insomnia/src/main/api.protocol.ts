@@ -5,6 +5,7 @@ import { parse as urlParse } from 'node:url';
 import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
+import { ProxyScopes } from 'insomnia-data/common';
 
 import { getApiBaseURL } from '../common/constants';
 import { parseResolvedProxy, setDefaultProtocol, shouldBypassProxyForHost } from './network/libcurl-promise';
@@ -81,6 +82,8 @@ export async function registerInsomniaProtocols() {
             } else {
               curl.setOpt(Curl.option.PROXY, '');
             }
+          } else if (settings.proxyScope !== ProxyScopes.all) {
+            curl.setOpt(Curl.option.PROXY, '');
           } else {
             const { protocol, hostname } = urlParse(urlStr);
             const { httpProxy, httpsProxy, noProxy } = settings;

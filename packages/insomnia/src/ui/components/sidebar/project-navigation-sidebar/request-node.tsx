@@ -27,13 +27,7 @@ import { useReadyState } from '~/ui/hooks/use-ready-state';
 import { useRequestGroupPatcher, useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { Icon } from '../../icon';
-import {
-  ACTIVE_BORDER_CLASS,
-  GUIDE_LINE_CSS,
-  ICON_CLASS,
-  ROW_CLASS,
-  TOGGLE_BTN_CLASS,
-} from './project-navigation-sidebar-utils';
+import { ACTIVE_BORDER_CLASS, GUIDE_LINE_CSS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 
 function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest }) {
   if (models.request.isRequest(doc)) {
@@ -132,9 +126,12 @@ interface RequestNodeProps {
   item: CollectionChildFlatItem | PinnedRequestFlatItem;
   onToggleFolder: (requestGroupIds: string[], workspace: Workspace) => void;
   className?: string;
+  // Number of ancestor indent levels to strip when the sidebar is focused on a
+  // single collection (the project and workspace rows are no longer shown).
+  depthOffset?: number;
 }
 
-export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProps) => {
+export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
   const isPinnedRequest = kind === 'pinnedRequest';
   const isLastPinned = item.kind === 'pinnedRequest' && item.isLastPinned;
@@ -247,7 +244,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
   return (
     <div
       className={`${ROW_CLASS} ${className ?? ''} ${isPinnedRequest ? 'h-full! group-hover:bg-transparent! group-focus:bg-transparent!' : ''}`}
-      style={{ paddingLeft: `${level + 3}rem` }}
+      style={{ paddingLeft: `${Math.max(level + 3 - depthOffset, 1)}rem` }}
       data-testid={
         isPinnedRequest
           ? `pinned-request-node-${getRequestNameOrFallback(doc)}`
@@ -261,23 +258,25 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
       data-workspace={workspace.name}
       data-selected={isSelected}
     >
-      {isPinnedRequest ? (
-        <>
-          <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
-          <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
-        </>
-      ) : (
-        Array.from({ length: level + 2 }, (_, i) => {
-          const isActive = i === level + 1;
-          return (
-            <span
-              key={i}
-              className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm) ${isActive ? 'group-hover:bg-(--hl-sm)' : ''}`}
-              style={{ left: `${i + 1.5}em` }}
-            />
-          );
-        })
-      )}
+      {isPinnedRequest
+        ? depthOffset === 0 && (
+            <>
+              <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
+              <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
+            </>
+          )
+        : Array.from({ length: level + 2 }, (_, i) => i)
+            .filter(i => i >= depthOffset)
+            .map(i => {
+              const isActive = i === level + 1;
+              return (
+                <span
+                  key={i}
+                  className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm) ${isActive ? 'group-hover:bg-(--hl-sm)' : ''}`}
+                  style={{ left: `${i + 1.5 - depthOffset}em` }}
+                />
+              );
+            })}
       <span className={ACTIVE_BORDER_CLASS} />
       {isPinnedRequest ? (
         <div
@@ -292,15 +291,19 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
   );
 };
 
-export const PinnedHeaderNode = () => {
+export const PinnedHeaderNode = ({ depthOffset = 0 }: { depthOffset?: number }) => {
   return (
     <div
-      className={`${ROW_CLASS} group h-full! pl-12 group-hover:bg-transparent!`}
+      className={`${ROW_CLASS} group h-full! ${depthOffset > 0 ? 'pl-4' : 'pl-12'} group-hover:bg-transparent!`}
       data-testid="pinned-requests-header"
     >
       <Button slot="drag" className="hidden" />
-      <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
-      <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
+      {depthOffset === 0 && (
+        <>
+          <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
+          <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
+        </>
+      )}
       <div className="ml-1 flex w-full items-center self-stretch rounded-t-sm border border-b-0 border-solid border-(--hl-md) bg-(--hl-xs) px-2 pt-1 text-(--hl)">
         <Icon icon="thumb-tack" className="h-4 w-4 shrink-0" />
         <span className="ml-1 text-base">Pinned</span>
