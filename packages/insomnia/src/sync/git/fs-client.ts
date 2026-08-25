@@ -40,11 +40,12 @@ export const fsClient = (basePath: string) => {
 
   const wrapSymlink =
     (fn: typeof fs.promises.symlink) =>
-    async (filePath: string, target: string, ...args: any[]) => {
+    // Node's symlink signature is (target, path): target is the arbitrary text stored as the
+    // link's contents (not itself a location to contain), path is where the link file is created.
+    async (target: string, filePath: string, ...args: any[]) => {
       const modifiedPath = resolveWithinBase(basePath, filePath);
-      const modifiedTarget = resolveWithinBase(basePath, target);
 
-      return fn(modifiedPath, modifiedTarget, ...args);
+      return fn(target, modifiedPath, ...args);
     };
 
   return {
