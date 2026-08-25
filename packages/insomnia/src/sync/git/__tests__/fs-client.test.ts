@@ -35,9 +35,15 @@ describe('fsClient', () => {
     await expect(client.promises.readFile('../../../etc/passwd')).rejects.toThrow('escapes the repository directory');
   });
 
-  it('rejects a symlink target that resolves outside basePath', async () => {
+  it('rejects a symlink whose own location resolves outside basePath', async () => {
     const client = fsClient(basePath);
     await expect(client.promises.symlink('link', '..')).rejects.toThrow('escapes the repository directory');
+  });
+
+  it('allows a symlink whose target content points outside basePath', async () => {
+    const client = fsClient(basePath);
+    await client.promises.symlink('../shared/config.json', 'link');
+    expect(fs.readlinkSync(path.join(basePath, 'link'))).toBe('../shared/config.json');
   });
 
   it('still allows nested paths that stay inside basePath', async () => {
