@@ -62,7 +62,14 @@ export async function backup() {
 export async function restoreBackup(version: string) {
   try {
     const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-    const versionPath = path.join(dataPath, 'backups', version);
+    const backupsPath = path.join(dataPath, 'backups');
+    const versionPath = path.join(backupsPath, version);
+    // version must resolve inside backupsPath.
+    const rel = path.relative(backupsPath, versionPath);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      console.log('[main] Refusing to restore backup outside of backups dir:', versionPath);
+      return;
+    }
     const files = await readdir(versionPath);
     if (!files.length) {
       console.log('[main] No backup found at:', versionPath);
