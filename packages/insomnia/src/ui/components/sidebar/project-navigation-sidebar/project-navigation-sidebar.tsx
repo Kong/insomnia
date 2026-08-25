@@ -20,10 +20,11 @@ import { href, useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { Button as BasicButton } from '~/basic-components/button';
+import { workspaceChildrenKeys } from '~/common/app-data';
 import { filterCollection, flattenCollectionChildren } from '~/common/collection';
 import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
+import { getUnsyncedRemoteWorkspaces } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
@@ -50,14 +51,14 @@ import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sid
 import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/sidebar-focus-onboarding';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
-import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
 
 import { Icon } from '../../icon';
 import { getSidebarGridListItemId } from './project-navigation-sidebar-utils';
@@ -115,6 +116,7 @@ const ProjectNavigationSidebarInner = (
   ref: ForwardedRef<ProjectNavigationSidebarHandle>,
 ) => {
   const navigate = useNavigate();
+  const queryClient = useDBQueryClient();
   const {
     organizationId,
     projectId: activeProjectId,
@@ -141,9 +143,6 @@ const ProjectNavigationSidebarInner = (
   const [renamingWorkspaceValue, setRenamingWorkspaceValue] = useState('');
   const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
-  const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
-  // Optimistic override for request-group collapsed states
-  const [requestGroupCollapseOverrides, setRequestGroupCollapseOverrides] = useState<Map<string, boolean>>(new Map());
   // Customized workspace sort orders by projectId
   const [localWorkspaceOrders, setLocalWorkspaceOrders] = reactUse.useLocalStorage<Record<string, string[]>>(
     `${organizationId}:local-workspace-orders`,
@@ -210,7 +209,6 @@ const ProjectNavigationSidebarInner = (
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
   reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
   const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
-  const isFetchingUnsyncedFilesRef = useRef(false);
 
   const syncKonnectProjectsAndNotifyRef = useRef<(konnectOrganizationId?: string | null) => Promise<void>>(
     async () => {},
@@ -218,75 +216,9 @@ const ProjectNavigationSidebarInner = (
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
-  const cloudSyncProjects = useMemo(
-    () => activeProjects.filter(p => models.project.isRemoteProject(p)),
-    [activeProjects],
-  ); // Generate a stable string key to trigger getOrFetchUnsyncedFiles when the list of cloud sync projects changes.
-  const cloudSyncProjectIdsKey = useMemo(
-    () =>
-      cloudSyncProjects
-        .map(p => p._id)
-        .sort()
-        .join(','),
-    [cloudSyncProjects],
-  );
-
-  const getAllRemoteFilesByProjectId = useCallback(async () => {
-    if (!cloudSyncProjectIdsKey) return new Map();
-    // Avoid duplicate fetch
-    if (isFetchingUnsyncedFilesRef.current) {
-      return;
-    }
-    const cloudSyncProjectIds = cloudSyncProjectIdsKey.split(',');
-    const result = new Map<string, InsomniaFile[]>();
-    isFetchingUnsyncedFilesRef.current = true;
-
-    // set up a map of remoteId to projectId for all cloud sync projects.
-    const remoteIdToProjectIdMap = new Map<string, string>();
-    for (const projectId of cloudSyncProjectIds) {
-      const project = await services.project.getById(projectId);
-      if (project && 'remoteId' in project && project.remoteId) {
-        remoteIdToProjectIdMap.set(project.remoteId, projectId);
-      }
-    }
-
-    try {
-      const files = await getAllRemoteBackendProjectsOfOrg({ organizationId });
-      const filesByProjectId = new Map<string, InsomniaFile[]>();
-      // group files by projectId
-      for (const file of files) {
-        const projectId = remoteIdToProjectIdMap.get(file.teamProjectId);
-        if (projectId) {
-          const projectFiles = filesByProjectId.get(projectId) ?? [];
-          if (projectFiles.some(f => f.id === file.rootDocumentId)) {
-            continue;
-          }
-          projectFiles.push({
-            id: file.rootDocumentId,
-            name: file.name,
-            scope: 'unsynced',
-            label: 'Unsynced',
-            remoteId: file.id,
-            created: 0,
-            lastModifiedTimestamp: 0,
-          });
-          filesByProjectId.set(projectId, projectFiles);
-        }
-      }
-
-      for (const [projectId, files] of filesByProjectId.entries()) {
-        result.set(projectId, files);
-      }
-    } catch (error) {
-      console.error(`Failed to fetch unsynced files for organization ${organizationId}`, error);
-      for (const projectId of cloudSyncProjectIds) {
-        result.set(projectId, []);
-      }
-    }
-
-    isFetchingUnsyncedFilesRef.current = false;
-    return setUnsyncedFilesByProjectId(result);
-  }, [organizationId, cloudSyncProjectIdsKey]);
+  // Unsynced remote files grouped by projectId, sourced from a shared server-data query
+  // (deduped with the project view). Refresh is handled inside the hook via CLOUD_SYNC_FILE_CHANGE.
+  const unsyncedFilesByProjectId = useRemoteFilesByProjectId(organizationId, organizationProjects);
 
   const syncKonnectProjectsAndNotify = async (konnectOrganizationId?: string | null) => {
     setLastSyncResult(null);
@@ -395,16 +327,6 @@ const ProjectNavigationSidebarInner = (
     }
   }, [projectNavigationSidebarFilter, konnectFilter, activeProjectId]);
 
-  useEffect(() => {
-    getAllRemoteFilesByProjectId();
-    const updateUnsyncedFiles = () => {
-      getAllRemoteFilesByProjectId();
-    };
-    // Subscribe to changes in unsynced workspace files to keep the sidebar up to date.
-    // The subscribe is triggered in insomnia-event-stream-context when cloud sync files is changed remotely
-    return uiEventBus.on(CLOUD_SYNC_FILE_CHANGE, updateUnsyncedFiles);
-  }, [getAllRemoteFilesByProjectId, organizationId]);
-
   const flatItems = useMemo<FlatItem[]>(() => {
     const buildWorkspaceAndCollectionData = (): FlatItem[] => {
       const items: FlatItem[] = [];
@@ -507,36 +429,17 @@ const ProjectNavigationSidebarInner = (
               hidden: isProjectCollapsed,
             });
 
-            const rawRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceIds.get(
+            const requestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceIds.get(
               workspaceId,
             ) as CollectionWorkspaceChildren;
-            // Apply optimistic request-group collapse overrides on top of the fetched data.
-            const allRequestsAndMetaInWorkspace: CollectionWorkspaceChildren =
-              rawRequestsAndMetaInWorkspace && requestGroupCollapseOverrides.size > 0
-                ? {
-                    ...rawRequestsAndMetaInWorkspace,
-                    dataMetas: {
-                      ...rawRequestsAndMetaInWorkspace.dataMetas,
-                      requestGroupMetas: rawRequestsAndMetaInWorkspace.dataMetas.requestGroupMetas.map(
-                        requestGroupMeta =>
-                          requestGroupCollapseOverrides.has(requestGroupMeta.parentId)
-                            ? {
-                                ...requestGroupMeta,
-                                collapsed: requestGroupCollapseOverrides.get(requestGroupMeta.parentId)!,
-                              }
-                            : requestGroupMeta,
-                      ),
-                    },
-                  }
-                : rawRequestsAndMetaInWorkspace;
             // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
             const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
             let collectionChildren =
-              (!shouldHideCollectionChildren || !!activeFilter) && allRequestsAndMetaInWorkspace
+              (!shouldHideCollectionChildren || !!activeFilter) && requestsAndMetaInWorkspace
                 ? flattenCollectionChildren(
                     workspaceId,
                     shouldHideCollectionChildren,
-                    allRequestsAndMetaInWorkspace,
+                    requestsAndMetaInWorkspace,
                     collectionSortOrders[workspaceId] || 'type-manual',
                   )
                 : [];
@@ -676,7 +579,6 @@ const ProjectNavigationSidebarInner = (
     organizationWorkspaces,
     pendingCollectionWorkspaceIds,
     projectWorkspaceSortOrder,
-    requestGroupCollapseOverrides,
     unsyncedFilesByProjectId,
     workspaceMetas,
   ]);
@@ -854,7 +756,7 @@ const ProjectNavigationSidebarInner = (
   );
 
   const toggleRequestGroups = useCallback(
-    async (requestGroupIds: string[], _workspace: Workspace, collapsed?: boolean) => {
+    async (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => {
       if (requestGroupIds.length === 0) {
         return;
       }
@@ -863,24 +765,33 @@ const ProjectNavigationSidebarInner = (
         return;
       }
 
-      const requestGroupMetas = await Promise.all(
-        requestGroupIds.map(requestGroupId => services.requestGroupMeta.getByParentId(requestGroupId)),
-      );
+      const requestGroupMetas = await services.requestGroupMeta.list({
+        parentId: { $in: requestGroupIds },
+      });
+
       // Update the collapsed state of the toggled request groups.
-      const nextStates = requestGroupIds.map((requestGroupId, index) => {
-        const requestGroupMeta = requestGroupMetas[index];
+      const nextStates = requestGroupIds.map(requestGroupId => {
+        const requestGroupMeta = requestGroupMetas.find(meta => meta.parentId === requestGroupId);
         return {
           requestGroupId,
           collapsed: collapsed ?? (requestGroupMeta ? !requestGroupMeta.collapsed : false),
         };
       });
 
-      // Optimistically reflect the new collapsed state immediately
-      setRequestGroupCollapseOverrides(previous => {
-        const next = new Map(previous);
-        nextStates.forEach(({ requestGroupId, collapsed }) => next.set(requestGroupId, collapsed));
-        return next;
-      });
+      // Optimistically patch the query cache so the UI reflects the new collapsed state immediately.
+      queryClient.setQueryData<CollectionWorkspaceChildren>(
+        workspaceChildrenKeys.byWorkspaceId(workspace._id),
+        previous => {
+          if (!previous) {
+            return previous;
+          }
+          const requestGroupMetas = previous.dataMetas.requestGroupMetas.map(meta => {
+            const nextState = nextStates.find(({ requestGroupId }) => requestGroupId === meta.parentId);
+            return nextState ? { ...meta, collapsed: nextState.collapsed } : meta;
+          });
+          return { ...previous, dataMetas: { ...previous.dataMetas, requestGroupMetas } };
+        },
+      );
 
       // Persist the change to database
       await Promise.all(
@@ -889,31 +800,8 @@ const ProjectNavigationSidebarInner = (
         ),
       );
     },
-    [activeFilter],
+    [activeFilter, queryClient],
   );
-
-  // Update the requestGroupCollapseOverrides when the collectionByWorkspaceId changes to remove any overrides that are no longer needed.
-  useEffect(() => {
-    setRequestGroupCollapseOverrides(previous => {
-      if (previous.size === 0) {
-        return previous;
-      }
-      let changed = false;
-      const next = new Map(previous);
-      for (const [requestGroupId, overrideCollapsed] of previous) {
-        for (const data of collectionByWorkspaceIds.values()) {
-          const collectionData = data;
-          const meta = collectionData?.dataMetas?.requestGroupMetas?.find(m => m.parentId === requestGroupId);
-          if (meta && meta.collapsed === overrideCollapsed) {
-            next.delete(requestGroupId);
-            changed = true;
-            break;
-          }
-        }
-      }
-      return changed ? next : previous;
-    });
-  }, [collectionByWorkspaceIds]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const shortcutCreateTriggerRef = useRef<HTMLElement | null>(null);

@@ -1,0 +1,139 @@
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects/interfaces';
+import type { WorkerResponse } from './quickjs-script.worker';
+
+/**
+ * Client side of the QuickJS-sandbox worker boundary. Runs a script by posting it to a dedicated
+ * Web Worker (`quickjs-script.worker.ts`) instead of calling the engine (`quickjs-script-engine.ts`)
+ * directly on the renderer's main thread — a runaway script blocks only that disposable worker, the
+ * app stays responsive. The worker is created lazily on first use, since most users never enable
+ * `settings.useQuickJsScriptSandbox` and shouldn't pay for a QuickJS-WASM load they never trigger.
+ */
+
+let worker: Worker | null = null;
+interface PendingRun {
+  resolve: (value: RequestContext) => void;
+  reject: (err: Error) => void;
+  /** Which worker is running this, so retiring one can avoid killing another's in-flight work. */
+  instance: Worker;
+}
+const pending = new Map<string, PendingRun>();
+
+/** Workers taken out of rotation that still have runs in flight; terminated once they drain. */
+const retiring = new Set<Worker>();
+
+const terminateIfDrained = (instance: Worker): void => {
+  const stillBusy = [...pending.values()].some(run => run.instance === instance);
+  if (retiring.has(instance) && !stillBusy) {
+    retiring.delete(instance);
+    instance.terminate();
+  }
+};
+
+/**
+ * Take `instance` out of rotation so the next call lazily builds a replacement. Runs already in
+ * flight on it are left to finish — `self.onmessage` doesn't serialize, so a second script can be
+ * mid-execution, and terminating immediately would hang it. The worker is terminated once its last
+ * run settles.
+ */
+const retireWorker = (instance: Worker): void => {
+  if (worker === instance) {
+    worker = null;
+  }
+  retiring.add(instance);
+  terminateIfDrained(instance);
+};
+
+const getWorker = (): Worker => {
+  if (worker) {
+    return worker;
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see templating-handler.ts's identical pattern
+  // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
+  const instance = new Worker(new URL('quickjs-script.worker.ts', import.meta.url), { type: 'module' });
+
+  instance.addEventListener('message', (event: MessageEvent<WorkerResponse>) => {
+    const { id } = event.data;
+    const request = pending.get(id);
+    if (!request) {
+      return;
+    }
+    pending.delete(id);
+    if ('error' in event.data) {
+      const err = new Error(event.data.error.message);
+      if (event.data.error.name) {
+        err.name = event.data.error.name;
+      }
+      if (event.data.error.stack) {
+        err.stack = event.data.error.stack;
+      }
+      request.reject(err);
+    } else {
+      request.resolve(event.data.result);
+    }
+
+    // The engine aborted its WASM module while cleaning up (see the script engine's
+    // ENGINE_FAULT_MESSAGE). The run above is still valid and has already been settled, but this
+    // worker caches that module for every later script, so take it out of rotation. Retiring after
+    // settling means the caller never sees this as a failure.
+    if (event.data.engineFaulted) {
+      retireWorker(instance);
+    } else {
+      terminateIfDrained(instance);
+    }
+  });
+
+  // A crash in the worker's global scope (e.g. an unhandled rejection outside our own try/catch)
+  // otherwise leaves every in-flight caller hanging forever. Reject them and drop the worker so the
+  // next call gets a fresh one instead of reusing a dead thread.
+  instance.addEventListener('error', event => {
+    const err = new Error(`QuickJS sandbox worker crashed: ${event.message}`);
+    // Only this worker's runs — a retired worker draining alongside a live one must not take the
+    // live one's callers down with it.
+    pending.forEach((request, id) => {
+      if (request.instance === instance) {
+        pending.delete(id);
+        request.reject(err);
+      }
+    });
+    retiring.delete(instance);
+    if (worker === instance) {
+      worker = null;
+    }
+  });
+
+  worker = instance;
+  return instance;
+};
+
+// A Worker has no `window.main`, so — exactly as `ui/worker/templating-handler.ts` does for the
+// templating worker — fetch the `insomnia-templating-worker-database://` auth token here once and
+// forward it on every postMessage. Without it the engine's `insomnia.sendRequest()` bridge fetch is
+// rejected by the protocol's auth gate with a 401.
+let authTokenPromise: Promise<string> | null = null;
+const getTemplatingDbAuthToken = (): Promise<string> => {
+  if (!authTokenPromise) {
+    authTokenPromise = window.main.templatingDb.getAuthToken();
+  }
+  return authTokenPromise;
+};
+
+export const runScriptInQuickJs = async ({
+  script,
+  context,
+}: {
+  script: string;
+  context: RequestContext;
+}): Promise<RequestContext> => {
+  // The worker and the pending entry are set up before awaiting the token, so a crash during the
+  // token round trip still rejects this call through the `error` listener rather than hanging.
+  const instance = getWorker();
+  const id = `quickjs-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const result = new Promise<RequestContext>((resolve, reject) => {
+    pending.set(id, { resolve, reject, instance });
+  });
+
+  const authToken = await getTemplatingDbAuthToken();
+  instance.postMessage({ id, script, context, authToken });
+
+  return result;
+};

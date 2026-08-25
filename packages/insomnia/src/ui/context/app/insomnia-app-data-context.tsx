@@ -13,6 +13,7 @@ const createAppDataQueryClient = () =>
         retry: false,
         // Local database queries should always be fetched regardless of network connectivity.
         networkMode: 'always',
+        refetchOnWindowFocus: false,
       },
     },
   });

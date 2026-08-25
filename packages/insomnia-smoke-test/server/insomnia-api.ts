@@ -497,6 +497,14 @@ export default function setup(app: Application) {
     res.status(200).send({ is_new_signup: false, first_request_treatment: null });
   });
 
+  app.post('/v3/users/me/onboarding/request-threshold', (_req, res) => {
+    res.status(204).send();
+  });
+
+  app.post('/v3/users/me/actions', (_req, res) => {
+    res.status(204).send();
+  });
+
   app.get('/v1/organizations/:orgId/features', (_req, res) => {
     res.status(200).send(organizationFeatures);
   });

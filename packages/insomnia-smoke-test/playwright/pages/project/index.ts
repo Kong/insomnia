@@ -1,4 +1,4 @@
-import type { ElectronApplication, Page } from '@playwright/test';
+import type { ElectronApplication, Locator, Page } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
 import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
@@ -136,7 +136,7 @@ export class ProjectPage extends BasePage {
    * @param storageType - The storage type: 'local' (Local Vault), 'remote' (Cloud Sync), or 'git' (Git Sync)
    */
   private async selectStorageType(storageType: ProjectStorageType): Promise<void> {
-    await this.page.getByText(storageTypeNames[storageType]).click();
+    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType]).click();
   }
 
   /**
@@ -182,12 +182,20 @@ export class ProjectPage extends BasePage {
   }
 
   /**
+   * Waits for a locator to become clickable (visible, stable, enabled, and not
+   * obscured by e.g. a closing modal's backdrop) before clicking it.
+   */
+  private async clickReliably(locator: Locator, timeout = 10_000): Promise<void> {
+    await locator.waitFor({ state: 'visible', timeout }).then(() => locator.click({ timeout }));
+  }
+
+  /**
    * Selects an existing local folder in the Git project form without opening it.
    * The native directory picker is mocked to return `folderPath`.
    */
   async chooseGitProjectFolderForOpen(name: string, folderPath: string): Promise<void> {
     await mockOpenDialogForDirectory(this.app, folderPath);
-    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    await this.clickReliably(this.page.getByRole('button', { name: 'Create new Project' }));
     await this.setProjectName(name);
     await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Open local folder' }).click();
@@ -221,7 +229,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).click();
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
-    await this.page.getByText('Git Sync').click();
+    await this.selectStorageType('git');
     await this.page.getByRole('button', { name: 'Git Credentials Authorized as' }).click();
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
@@ -241,7 +249,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('textbox', { name: 'Project name' }).click();
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
-    await this.page.getByText('Git Sync').click();
+    await this.selectStorageType('git');
     // The credential select defaults to whichever credential is first (which can be
     // the "System Git Credentials" native provider). Open it via its stable label and
     // explicitly pick the custom Access Token credential rather than relying on the default.
@@ -271,11 +279,21 @@ export class ProjectPage extends BasePage {
     // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
     // a bare role locator matching both is a Playwright strict-mode violation.
     await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
-    await this.page.getByRole('button', { name: 'Personal workspace Organizations' }).click();
+    await this.clickReliably(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
     await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
     await this.sidebar.selectProject(name);
+  }
+
+  /**
+   * Clicks "Move repository to another folder" in the project settings modal.
+   * Chains right after that modal opens (which itself follows the "Create or
+   * update dialog" from createGitSyncProject closing) - same stale-backdrop
+   * race as chooseGitProjectFolderForOpen(), so this needs the same guard.
+   */
+  async moveRepositoryToAnotherFolder(): Promise<void> {
+    await this.clickReliably(this.page.getByRole('button', { name: 'Move repository to another folder' }));
   }
 
   // ===========================================================================

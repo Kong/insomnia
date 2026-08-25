@@ -577,15 +577,53 @@ async function getGitFSClient({
   gitRepositoryId,
   directory,
   folderSlug,
+  requireExisting,
 }: {
   projectId: string;
   workspaceId?: string;
   gitRepositoryId: string;
   directory?: string | null;
   folderSlug?: string | null;
+  /**
+   * When true, refuses to hand back an fs client for a user-owned folder
+   * (`directory` set) that isn't currently on disk, throwing instead.
+   *
+   * Every `fsClient()` below `mkdir -p`s its base path on construction — fine
+   * for a brand-new clone/adopt into a not-yet-existing folder, but for any
+   * caller that's just *reading* an already-established repo (branch lookups,
+   * the file-tree view, etc.) that eager mkdir would silently resurrect a
+   * folder the user moved, renamed, or deleted outside Insomnia (or whose
+   * drive is unmounted) — with no clone/relocate action from the user at all.
+   * Callers that legitimately create the folder (clone, adopt, relocate)
+   * must leave this unset. Irrelevant for app-managed folders, which are
+   * always safe to lazily create.
+   */
+  requireExisting?: boolean;
 }) {
+  let dir = directory;
+  let slug = folderSlug;
+  if (dir === undefined) {
+    const repo = await services.gitRepository.getById(gitRepositoryId);
+    dir = repo?.directory ?? null;
+    slug = repo?.folderSlug ?? null;
+  }
+
   // Base directory where Git data is stored
-  const baseDir = await getRepoBaseDir(gitRepositoryId, directory, folderSlug);
+  const baseDir = await getRepoBaseDir(gitRepositoryId, dir, slug);
+
+  if (requireExisting && dir) {
+    let isAvailable = false;
+    try {
+      isAvailable = (await fs.promises.stat(baseDir)).isDirectory();
+    } catch {
+      isAvailable = false;
+    }
+    if (!isAvailable) {
+      throw new Error(
+        `Repository folder not found at "${baseDir}". It may have been moved, renamed, or deleted outside Insomnia. Use "Move to another folder" to reconnect it to its new location.`,
+      );
+    }
+  }
 
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
@@ -752,6 +790,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       workspaceId,
       directory: gitRepository.directory,
       folderSlug: gitRepository.folderSlug,
+      requireExisting: true,
     });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
@@ -1428,7 +1467,7 @@ export const cloneGitRepoAction = async ({
       }
       const bufferId = await database.bufferChanges();
 
-      const gitRepository = await services.gitRepository.create(repoSettingsPatch);
+      let gitRepository = await services.gitRepository.create(repoSettingsPatch);
 
       async function getProject() {
         if (cloneIntoProjectId) {
@@ -1453,6 +1492,17 @@ export const cloneGitRepoAction = async ({
       }
 
       const project = await getProject();
+
+      // Give the app-managed folder a readable name derived from the project's
+      // name up front, instead of leaving it as the bare-id `git_<hex>` folder
+      // until the next app-startup backfill pass (see `backfillManagedFolderSlug`).
+      // Irrelevant when the user picked a `directory` — that folder name is theirs.
+      if (!gitRepository.directory) {
+        const slug = slugify(project.name);
+        if (slug) {
+          gitRepository = await services.gitRepository.update(gitRepository, { folderSlug: slug });
+        }
+      }
 
       const fsClient = await getGitFSClient({
         projectId: project._id,
@@ -1535,6 +1585,16 @@ export const cloneGitRepoAction = async ({
 
     const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
+
+    // Give the app-managed folder a readable name up front (see the
+    // `folderSlug`-at-clone-time comment above) — irrelevant when the user
+    // picked a `directory`.
+    if (!repoSettingsPatch.directory) {
+      const slug = slugify(project.name);
+      if (slug) {
+        repoSettingsPatch.folderSlug = slug;
+      }
+    }
 
     trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
       ...vcsEventProperties('git', 'clone'),
@@ -1817,6 +1877,7 @@ export const openGitRepoAction = async ({
       fs: fsClient,
       gitDirectory: GIT_INTERNAL_DIR,
       credentialsId,
+      repoPath: resolvedDirectory,
     });
 
     await GitVCS.setAuthor();
@@ -1891,12 +1952,21 @@ export const cleanupGitRepoStorageAction = async ({ gitRepositoryId }: { gitRepo
 };
 
 /**
- * Move a Git project's on-disk repository to a user-chosen folder and record the
- * new location on `GitRepository.directory`.
+ * Point a Git project at a user-chosen folder and record the new location on
+ * `GitRepository.directory`. The picked folder IS the new location itself
+ * (not a parent to nest a repo-named subfolder under), so this doubles as two
+ * different operations depending on what's found there:
  *
- * The whole repository (working tree + `.git`) is moved, so history and
- * uncommitted changes are preserved. If the previous location was the managed
- * folder it is left empty by the move (rename) or removed (cross-device copy).
+ * - Empty (or non-existent) folder: the whole repository (working tree +
+ *   `.git`) is MOVED there, preserving history and uncommitted changes. If the
+ *   previous location was the managed folder it is left empty by the move
+ *   (rename) or removed (cross-device copy).
+ * - Folder that already contains a `.git`: ADOPTED in place instead — only
+ *   `directory` is repointed, nothing is moved or copied. This is the
+ *   "reconnect" path for when the repo's folder was renamed or moved outside
+ *   Insomnia: the data already lives there, so there's nothing to move.
+ * - Folder that exists, is non-empty, and has no `.git`: refused, to never
+ *   clobber unrelated user data.
  */
 export const relocateGitRepoAction = async ({
   gitRepositoryId,
@@ -1917,7 +1987,16 @@ export const relocateGitRepoAction = async ({
 
   const currentBaseDir = await getRepoBaseDir(repo._id, repo.directory, repo.folderSlug);
   if (path.resolve(currentBaseDir) === targetDir) {
-    return { errors: ['The repository is already in that folder.'] };
+    const currentIsAvailable = await fs.promises
+      .stat(currentBaseDir)
+      .then(stat => stat.isDirectory())
+      .catch(() => false);
+    if (currentIsAvailable) {
+      return { errors: ['The repository is already in that folder.'] };
+    }
+    // Same path, but nothing is there right now (e.g. the folder was renamed
+    // away and back, or this happens to be the parent the recovery flow tried)
+    // — fall through instead of refusing; the checks below handle it correctly.
   }
 
   // Hard-block if another project already owns the target.
@@ -1926,12 +2005,57 @@ export const relocateGitRepoAction = async ({
     return { errors: [`A project is already connected to this folder: ${targetDir}`] };
   }
 
-  // Refuse to move onto an existing path — never clobber user data.
+  // Adopt in place when the target already contains a git repo — see the
+  // "reconnect" case in the doc comment above. No files are moved or copied.
+  const targetHasGitRepo = await fs.promises
+    .access(path.join(targetDir, '.git'))
+    .then(() => true)
+    .catch(() => false);
+
+  if (targetHasGitRepo) {
+    repoFileWatcherRegistry.stopWatcher(repo._id);
+    await services.gitRepository.update(repo, { directory: targetDir });
+
+    const adoptedFsClient = await getGitFSClient({ projectId, gitRepositoryId: repo._id, directory: targetDir });
+    if (GitVCS.isInitializedForRepo(repo._id)) {
+      await GitVCS.init({
+        repoId: repo._id,
+        uri: repo.uri,
+        directory: GIT_CLONE_DIR,
+        fs: adoptedFsClient,
+        gitDirectory: GIT_INTERNAL_DIR,
+        credentialsId: repo.credentialsId,
+      });
+    }
+    await repoFileWatcherRegistry.startWatcher(repo._id, targetDir, projectId);
+
+    return { directory: targetDir };
+  }
+
+  // Not a git repo — refuse to move onto it unless it's empty, to never
+  // clobber unrelated user data. macOS's auto-generated `.DS_Store` doesn't
+  // count against "empty".
   try {
-    await fs.promises.stat(targetDir);
-    return { errors: [`That folder already exists: ${targetDir}. Choose a folder that does not exist yet.`] };
+    const stat = await fs.promises.stat(targetDir);
+    if (!stat.isDirectory()) {
+      return { errors: [`That path exists and is not a folder: ${targetDir}`] };
+    }
+    const entries = await fs.promises.readdir(targetDir);
+    if (entries.some(entry => entry !== '.DS_Store')) {
+      return {
+        errors: [
+          `That folder already has files in it and isn't a git repository: ${targetDir}. Choose an empty folder, or the folder containing the repository you want to reconnect.`,
+        ],
+      };
+    }
+    // Exists and is (effectively) empty — clear it so the move below can
+    // create it fresh; fs.rename's cross-platform behaviour when the target
+    // already exists is inconsistent.
+    await fs.promises.rm(targetDir, { recursive: true, force: true });
   } catch {
-    // Good — the destination does not exist.
+    // Either the destination does not exist at all (the common case), or some
+    // other stat/readdir error — either way, fall through and let the parent
+    // writable check and the move below surface anything that's actually wrong.
   }
 
   // The destination's parent must exist and be writable.
@@ -3331,7 +3455,16 @@ const getRepositoryDirectoryTree = async ({
   }
 
   const gitRepository = await getGitRepository({ projectId });
-  const fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
+
+  const emptyTree = { repositoryTree: { id: '', name: 'Repository', type: 'root' as const, children: [] }, folderList: {} };
+
+  let fs: Awaited<ReturnType<typeof getGitFSClient>>;
+  try {
+    fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id, requireExisting: true });
+  } catch (e) {
+    console.warn('[git] Could not read repository directory tree:', e);
+    return emptyTree;
+  }
 
   const rootContents = await fs.promises.readdir(GIT_CLONE_DIR);
 
@@ -3520,10 +3653,15 @@ async function getCurrentBranchByRepositoryId({
   repositoryId: string;
   projectId: string;
 }): Promise<any> {
-  const fs = await getGitFSClient({ gitRepositoryId: repositoryId, projectId });
-  return GitVCSClass.getRepoCurrentBranch({
-    fs,
-  });
+  try {
+    const fs = await getGitFSClient({ gitRepositoryId: repositoryId, projectId, requireExisting: true });
+    return await GitVCSClass.getRepoCurrentBranch({
+      fs,
+    });
+  } catch (e) {
+    console.warn('[git] Could not read current branch:', e);
+    return '';
+  }
 }
 
 /**
@@ -3706,6 +3844,51 @@ export const checkGitRepoDirectoryAction = async ({
   }
 };
 
+/**
+ * Resolves the on-disk path for a Git repository's "Open in file system" /
+ * "Open folder" actions, WITHOUT creating anything. Unlike the generic
+ * `openPath` IPC handler (which eagerly `mkdir -p`s to support opening
+ * arbitrary app-output locations that may not exist yet), a git repo's folder
+ * must already exist — silently recreating it as an empty directory when it
+ * was renamed, moved, or deleted outside Insomnia would hide that from the
+ * user (and risk the watcher treating the resurrected empty folder as a
+ * legitimately empty repo). Callers should surface `errors` instead of opening
+ * anything when the folder is missing.
+ */
+export const resolveGitRepoFolderPathAction = async ({
+  gitRepositoryId,
+}: {
+  gitRepositoryId: string;
+}): Promise<{ path?: string; errors?: string[] }> => {
+  try {
+    const gitRepository = await services.gitRepository.getById(gitRepositoryId);
+    if (!gitRepository) {
+      return { errors: ['Git repository not found.'] };
+    }
+
+    const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
+
+    let isAvailable = false;
+    try {
+      isAvailable = (await fs.promises.stat(baseDir)).isDirectory();
+    } catch {
+      isAvailable = false;
+    }
+
+    if (!isAvailable) {
+      return {
+        errors: [
+          `Repository folder not found at "${baseDir}". It may have been moved, renamed, or deleted outside Insomnia. Use "Move to another folder" to reconnect it to its new location.`,
+        ],
+      };
+    }
+
+    return { path: baseDir };
+  } catch (e) {
+    return { errors: [e instanceof Error ? e.message : 'Error resolving git repository folder.'] };
+  }
+};
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -3717,6 +3900,7 @@ export interface GitServiceAPI {
   cloneGitRepo: typeof cloneGitRepoAction;
   openGitRepo: typeof openGitRepoAction;
   checkGitRepoDirectory: typeof checkGitRepoDirectoryAction;
+  resolveGitRepoFolderPath: typeof resolveGitRepoFolderPathAction;
   cleanupGitRepoStorage: typeof cleanupGitRepoStorageAction;
   relocateGitRepo: typeof relocateGitRepoAction;
   updateGitRepo: typeof updateGitRepoAction;
@@ -3790,6 +3974,9 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) => openGitRepoAction(options));
   ipcMainHandle('git.checkGitRepoDirectory', (_, options: Parameters<typeof checkGitRepoDirectoryAction>[0]) =>
     checkGitRepoDirectoryAction(options),
+  );
+  ipcMainHandle('git.resolveGitRepoFolderPath', (_, options: Parameters<typeof resolveGitRepoFolderPathAction>[0]) =>
+    resolveGitRepoFolderPathAction(options),
   );
   ipcMainHandle('git.cleanupGitRepoStorage', (_, options: Parameters<typeof cleanupGitRepoStorageAction>[0]) =>
     cleanupGitRepoStorageAction(options),

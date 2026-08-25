@@ -462,7 +462,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           inputType: maskText ? 'password' : 'text',
         });
 
-        if (storageKey) {
+        if (storageKey && value !== null) {
           console.log(`[prompt] Stored value under ${storageKey}`);
           await context.store.setItem(storageKey, value);
         }

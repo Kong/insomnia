@@ -215,6 +215,7 @@ const git: GitServiceAPI = {
   cloneGitRepo: options => invokeWithNormalizedError('git.cloneGitRepo', options),
   openGitRepo: options => invokeWithNormalizedError('git.openGitRepo', options),
   checkGitRepoDirectory: options => invokeWithNormalizedError('git.checkGitRepoDirectory', options),
+  resolveGitRepoFolderPath: options => invokeWithNormalizedError('git.resolveGitRepoFolderPath', options),
   cleanupGitRepoStorage: options => invokeWithNormalizedError('git.cleanupGitRepoStorage', options),
   relocateGitRepo: options => invokeWithNormalizedError('git.relocateGitRepo', options),
   initGitRepoClone: options => invokeWithNormalizedError('git.initGitRepoClone', options),
