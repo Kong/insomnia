@@ -12,8 +12,16 @@ export const BULK_EDIT_PLACEHOLDER = [
 const DISABLED_PATTERN = /^\s*\/\/ ?/;
 const LINE_ENDING = /\r\n|\r|\n/;
 
+// Serializing these names would not parse back to itself: the separator splits the name, a leading
+// `//` reads as the disabled marker, and surrounding whitespace is trimmed.
+const hasUnrepresentableName = (name: string): boolean =>
+  name !== name.trim() || name.includes(SEPARATOR) || DISABLED_PATTERN.test(name);
+
 const isUnrepresentable = (pair: RequestBodyParameter): boolean =>
-  pair.type === 'file' || Boolean(pair.multiline) || /[\n\r]/.test(pair.value || '');
+  pair.type === 'file' ||
+  Boolean(pair.multiline) ||
+  hasUnrepresentableName(pair.name || '') ||
+  /[\n\r]/.test(pair.value || '');
 
 const isBlank = (pair: Pick<RequestBodyParameter, 'name' | 'value'>): boolean => !pair.name && !pair.value;
 

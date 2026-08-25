@@ -271,8 +271,34 @@ describe('parameter ids', () => {
   });
 });
 
+describe('names the line format cannot round-trip', () => {
+  it('holds aside a name containing the separator', () => {
+    const pairs = [text('lake', 'Victoria'), text('xml:lang', 'en')];
+    expect(serializePairs(pairs)).toBe('lake:Victoria');
+    expect(parsePairs('lake:Victoria', pairs)).toEqual(pairs);
+  });
+
+  it('holds aside a name starting with the disabled marker, which would flip it to disabled', () => {
+    const pairs = [text('lake', 'Victoria'), text('//river', 'Nile')];
+    expect(serializePairs(pairs)).toBe('lake:Victoria');
+    expect(parsePairs('lake:Victoria', pairs)).toEqual(pairs);
+  });
+
+  it('holds aside a name with surrounding whitespace, which would be trimmed away', () => {
+    const pairs = [text('lake', 'Victoria'), text('  river  ', 'Nile')];
+    expect(serializePairs(pairs)).toBe('lake:Victoria');
+    expect(parsePairs('lake:Victoria', pairs)).toEqual(pairs);
+  });
+
+  it('leaves such a row untouched when an unrelated row is edited', () => {
+    const pairs = [text('xml:lang', 'en'), text('lake', 'Victoria')];
+    const edited = parsePairs('lake:Bunyonyi', pairs);
+    expect(edited).toEqual([text('xml:lang', 'en'), text('lake', 'Bunyonyi')]);
+  });
+});
+
 describe('known limitations', () => {
-  it('cannot represent a name containing the separator', () => {
+  it('a typed row is still split on its first separator', () => {
     expect(parsePairs('xml:lang:en')).toEqual([text('xml', 'lang:en')]);
   });
 
