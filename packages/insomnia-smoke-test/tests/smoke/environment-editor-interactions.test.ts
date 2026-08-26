@@ -16,10 +16,9 @@ test.describe('Environment Editor', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // create a new shared environment (becomes active on creation)
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
-    await page.getByTestId('CreateEnvironmentDropdown').click();
-    await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
+    await page.getByTestId('AddSubEnvironment').click();
 
     // wait for the new row to appear before clicking it
     await page.getByRole('row', { name: 'New Environment' }).waitFor({ state: 'visible' });
@@ -44,7 +43,7 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('baseenv1')).toBeVisible();
 
     // duplicate ExampleA and rename the copy to Gandalf
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByRole('row', { name: 'ExampleA' }).getByLabel('Environment Actions').click();
     await page.getByText('Duplicate').click();
@@ -81,7 +80,7 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('subenvB1')).toBeVisible();
 
     // add new variables to Gandalf via JSON editor
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.locator('pre').filter({ hasText: '"exampleNumber": 2222,' }).click();
     const dialog = page.getByRole('dialog');
@@ -100,7 +99,7 @@ test.describe('Environment Editor', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
 
     // switch to table view and edit Gandalf environment
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
 
     // explicitly select Gandalf so table edits target the correct sub-environment
@@ -217,7 +216,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // activate ExampleA environment
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('option', { name: 'ExampleA' }).press('Enter');
     await page.getByRole('option', { name: 'ExampleA' }).press('Escape');
 
@@ -230,7 +229,7 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('subenvA0')).toBeVisible();
 
     // open env editor, select ExampleA, switch to table view, disable exampleString
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
@@ -260,5 +259,67 @@ test.describe('Environment Editor', () => {
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('baseenv0')).toBeVisible();
     await expect.soft(page.getByText('subenvA0')).toBeHidden();
+  });
+
+  test('project and collection environment dropdowns open and close independently', async ({ page }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    const projectListbox = page.getByRole('listbox', { name: 'Select a Project Environment' });
+    const collectionListbox = page.getByRole('listbox', { name: 'Select a Collection Environment' });
+
+    // opening the collection dropdown does not open the project dropdown
+    await page.getByLabel('Select a Collection Environment').click();
+    await expect.soft(collectionListbox).toBeVisible();
+    await expect.soft(projectListbox).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect.soft(collectionListbox).toBeHidden();
+
+    // opening the project dropdown does not open the collection dropdown
+    await page.getByLabel('Select a Project Environment').click();
+    await expect.soft(projectListbox).toBeVisible();
+    await expect.soft(collectionListbox).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect.soft(projectListbox).toBeHidden();
+  });
+
+  test('Add Project Environment creates a project environment without activating it', async ({ page, insomnia }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    // the "+" button in the project dropdown header opens the create-workspace modal
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByLabel('Add Project Environment').click();
+    await page.getByPlaceholder('Enter a name for your Environment').fill('My New Project Env');
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
+
+    // creating navigates into the new environment's own page; go back to the collection
+    await insomnia.navigationSidebar.selectWorkspace('My first collection');
+
+    // the new environment shows up in the project dropdown's list, but is not auto-selected
+    await expect.soft(page.getByLabel('Select a Project Environment')).toContainText('No Project Environment');
+    await page.getByLabel('Select a Project Environment').click();
+    await expect.soft(page.getByRole('option', { name: 'My New Project Env' })).toBeVisible();
+  });
+
+  test('Add Sub Environment and Add Private Sub Environment create environments with the correct privacy', async ({ page }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    await page.getByLabel('Select a Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+
+    // create the shared sub-environment and rename it so it can be told apart from the private one
+    await page.getByTestId('AddSubEnvironment').click();
+    const sharedRow = page.getByRole('row', { name: 'New Environment' });
+    await sharedRow.waitFor({ state: 'visible' });
+    await sharedRow.locator('[data-editable=true]').dblclick();
+    await sharedRow.locator('input').fill('Shared Sub Env');
+    await sharedRow.locator('input').press('Enter');
+    await page.getByRole('row', { name: 'Shared Sub Env' }).waitFor({ state: 'visible' });
+    await expect.soft(page.getByRole('row', { name: 'Shared Sub Env' }).locator('.fa-lock')).toHaveCount(0);
+
+    // create the private sub-environment
+    await page.getByTestId('AddPrivateSubEnvironment').click();
+    const privateRow = page.getByRole('row', { name: 'New Environment' });
+    await privateRow.waitFor({ state: 'visible' });
+    await expect.soft(privateRow.locator('.fa-lock')).toBeVisible();
   });
 });

@@ -41,7 +41,7 @@ test.describe('environment cascade / override', () => {
   };
 
   const selectEnvironment = async (page: Page, insomnia: any, environmentName: string, requestName: string) => {
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     // wait for the Manage Environments dialog to close before interacting with the picker
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
