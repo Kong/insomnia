@@ -6,13 +6,6 @@ import { test } from '../../playwright/test';
 // @ts-expect-error playwrightConfig.webServer.url must exists
 const devServerUrl = playwrightConfig?.webServer?.url || 'http://127.0.0.1:4010';
 
-// Retries opening the "Git Sync" dropdown and clicking the given menu item as one unit. Needed
-// right after switching workspaces: the dropdown is remounted (keyed by workspace id) while the
-// new workspace's route loader is still resolving several sequential IPC calls, so a click can
-// open a popover that's destroyed by the next remount before it can be acted on - repeatedly, for
-// longer than a single click's default timeout. Splitting "confirm it opened" from "click it" into
-// two separate steps leaves a gap for the same remount to close it again in between, so both steps
-// are retried together here instead.
 async function clickGitSyncMenuItem(page: Page, menuItemText: string): Promise<void> {
   const gitSyncButton = page.getByLabel('Git Sync');
   const menuItem = page.getByText(menuItemText);
@@ -47,13 +40,7 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Discard, branch and commit actions', async ({ page, insomnia }) => {
-    // This test's own wait below can approach the default 60s (CI) test timeout on a slow runner;
-    // give it real headroom so a slow-but-eventually-successful run doesn't get torn down mid-wait
-    // and reported as a confusing "page has been closed" error instead of a clean timeout.
     test.slow();
-    // Sync My Collection R1. fetchUnsyncedWorkspace verifies "New Request" itself renders (with a
-    // retry in between) rather than just that the workspace got selected - see its own comment for
-    // why that distinction matters on CI.
     await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1', insomnia.navigationSidebar.requestRow('New Request'));
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // Send request and check body

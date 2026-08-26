@@ -309,22 +309,9 @@ export class NavigationSidebar {
     return this.unsyncedWorkspaceRow(workspaceName).getByRole('button', { name: 'Fetch unsynced workspace' });
   }
 
-  // `verifyVisible`, when passed, is a locator for something inside the workspace (e.g. a known
-  // child request row) that only appears once the workspace's content has actually rendered —
-  // being selected (aria-selected) doesn't guarantee that. On CI this content render has been
-  // observed stalling for a fixed ~60s stretch with zero renderer/main-process activity,
-  // consistent with Chromium's background-tab JS throttling kicking in on the main window right
-  // around a workspace switch (the main window, unlike the plugin window, doesn't set
-  // `backgroundThrottling: false`). Re-clicking the workspace row is a cheap way to generate fresh
-  // input activity that may help unstick a throttled renderer, so retry with a fresh click in
-  // between instead of only waiting once.
   async fetchUnsyncedWorkspace(name: string, verifyVisible?: Locator): Promise<void> {
     const unsyncedWorkspaceButton = this.unsyncedWorkspaceButton(name);
     await unsyncedWorkspaceButton.click();
-    // The fetch button has a hover tooltip ("Click to fetch this file"). Its trigger element gets
-    // replaced by the click above rather than the mouse actually leaving it, so the tooltip can be
-    // left rendered at the same screen position and intercept the workspace-row click below. Move
-    // the mouse off the sidebar so it dismisses before we click there again.
     await this.page.mouse.move(0, 0);
     await expect.soft(this.unsyncedWorkspaceRow(name)).toBeHidden({ timeout: 5000 });
     await expect.soft(this.workspaceRow(name)).toBeVisible();
