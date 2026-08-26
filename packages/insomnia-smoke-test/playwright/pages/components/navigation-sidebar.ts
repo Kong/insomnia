@@ -312,6 +312,11 @@ export class NavigationSidebar {
   async fetchUnsyncedWorkspace(name: string): Promise<void> {
     const unsyncedWorkspaceButton = this.unsyncedWorkspaceButton(name);
     await unsyncedWorkspaceButton.click();
+    // The fetch button has a hover tooltip ("Click to fetch this file"). Its trigger element gets
+    // replaced by the click above rather than the mouse actually leaving it, so the tooltip can be
+    // left rendered at the same screen position and intercept the workspace-row click below. Move
+    // the mouse off the sidebar so it dismisses before we click there again.
+    await this.page.mouse.move(0, 0);
     await expect.soft(this.unsyncedWorkspaceRow(name)).toBeHidden({ timeout: 5000 });
     await expect.soft(this.workspaceRow(name)).toBeVisible();
     // The sidebar list is still settling right after the unsynced row disappears
