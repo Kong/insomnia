@@ -31,11 +31,12 @@ import type {
   StatusCandidate,
 } from './types';
 import {
+  applyStageToState,
   compareBranches,
   generateCandidateMap,
+  generateStateMap,
   getRootSnapshot,
   getStagable,
-  hash,
   hashDocument,
   preMergeCheck,
   stateDelta,
@@ -281,15 +282,20 @@ export class VCS {
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
+    // Diff the working tree against the index (HEAD with the stage overlaid), not against HEAD
+    // alone, so a key whose working tree content has returned to HEAD's while the stage still
+    // holds a stale entry still shows up (as a revert the user can stage to clear the stale entry).
+    const indexState = applyStageToState(state, stage);
     const unstaged: Record<DocumentKey, StageEntry> = {};
 
-    for (const entry of getStagable(state, candidates)) {
+    for (const entry of getStagable(indexState, candidates)) {
       const { key } = entry;
       const stageEntry = stage[key];
 
-      // The entry is not staged
       if (!stageEntry) {
+        // Not staged: the index equals HEAD for this key, so `entry` is HEAD vs working tree.
         if ('deleted' in entry) {
+          // HEAD has it, the working tree doesn't.
           let previousBlobContent: BaseModel | null = null;
           try {
             previousBlobContent = await this.blobFromLastSnapshot(key);
@@ -302,6 +308,7 @@ export class VCS {
             };
           }
         } else {
+          // HEAD lacks it (or differs), the working tree has it.
           const blobId = snapshot ? snapshot.state.find(s => s.key === key)?.blob || '' : '';
           let previousBlobContent: BaseModel | null = null;
           try {
@@ -315,22 +322,32 @@ export class VCS {
             };
           }
         }
-      } else if (stageEntry.blobId !== entry.blobId) {
-        if ('blobContent' in entry) {
-          let previousBlobContent: BaseModel | null = null;
-          try {
-            previousBlobContent = 'blobContent' in stageEntry ? JSON.parse(stageEntry.blobContent) : {};
-          } catch {
-            // No previous blob found
-          } finally {
-            unstaged[key] = {
-              ...entry,
-              blobId: entry.blobId || stageEntry.blobId,
-              previousBlobContent: JSON.stringify(previousBlobContent),
-            };
-          }
+      } else if ('deleted' in stageEntry) {
+        // Staged as deleted: applyStageToState excludes this key from the index entirely, so
+        // getStagable can only have produced this entry because the working tree has it again —
+        // it can never itself be a deletion (there would be nothing left in the index to diff).
+        if ('deleted' in entry) {
+          throw new Error(`status() hit an impossible state: entry and stageEntry are both deletions for key=${key}`);
         } else {
-          unstaged[key] = entry;
+          unstaged[key] = {
+            ...entry,
+            previousBlobContent: JSON.stringify(null),
+          };
+        }
+      } else {
+        // Staged as added/modified: the index holds stageEntry's content for this key. Whether
+        // the working tree went on to modify it further or delete it outright, the diff base to
+        // show the user is the same: what's currently staged.
+        let previousBlobContent: BaseModel | null = null;
+        try {
+          previousBlobContent = JSON.parse(stageEntry.blobContent);
+        } catch {
+          // No previous blob found
+        } finally {
+          unstaged[key] = {
+            ...entry,
+            previousBlobContent: JSON.stringify(previousBlobContent),
+          };
         }
       }
     }
@@ -338,7 +355,6 @@ export class VCS {
     return {
       stage,
       unstaged,
-      key: hash({ stage, unstaged }).hash,
     };
   }
 
@@ -347,7 +363,23 @@ export class VCS {
     const stage = clone<Stage>(this._stageByBackendProjectId[this._backendProjectId()] || {});
     const blobsToStore: Record<string, string> = {};
 
+    const branch = await this._getCurrentBranch();
+    const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
+    const headStateMap = generateStateMap(snapshot ? snapshot.state : []);
+
     for (const entry of stageEntries) {
+      const headBlobId = headStateMap[entry.key]?.blob;
+      // A revert (content back to what HEAD already has) or a deletion of a document that was
+      // only ever staged and never committed both leave nothing to track relative to HEAD. Since
+      // the stage is a sparse diff-from-HEAD map (not a full index like git's), the only faithful
+      // representation of "no diff" is no entry at all — otherwise it would keep showing as staged
+      // and let takeSnapshot() produce a commit with no actual content change.
+      const isNoOpAgainstHead = 'deleted' in entry ? headBlobId === undefined : entry.blobId === headBlobId;
+
+      if (isNoOpAgainstHead) {
+        delete stage[entry.key];
+        continue;
+      }
       stage[entry.key] = entry;
 
       // Only store blobs if we're not deleting it
@@ -642,34 +674,7 @@ export class VCS {
       throw new Error('Commit must have a message');
     }
 
-    const newState: SnapshotState = [];
-
-    // Add everything from the old state
-    for (const entry of parent ? parent.state : []) {
-      // Don't add anything that's in the stage (this covers deleted things too :])
-      if (stage[entry.key]) {
-        continue;
-      }
-
-      newState.push(entry);
-    }
-
-    // Add the rest of the staged items
-    for (const key of Object.keys(stage)) {
-      const entry = stage[key];
-
-      // @ts-expect-error -- TSCONVERSION find out where this is coming from the Stage union
-      if (entry.deleted) {
-        continue;
-      }
-
-      const { name, blobId: blob } = entry;
-      newState.push({
-        key,
-        name,
-        blob,
-      });
-    }
+    const newState = applyStageToState(parent ? parent.state : [], stage);
 
     const snapshot = await this._createSnapshotFromState(branch, newState, name);
 

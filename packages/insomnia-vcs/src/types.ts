@@ -132,7 +132,6 @@ export interface StatusCandidate {
 export type StatusCandidateMap = Record<DocumentKey, StatusCandidate>;
 
 export interface Status {
-  key: string;
   stage: Stage;
   unstaged: Record<DocumentKey, StageEntry>;
 }
