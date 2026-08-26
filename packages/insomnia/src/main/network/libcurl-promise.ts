@@ -125,8 +125,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = await createConfiguredCurlInstance({
-        req,
-        finalUrl,
+        req: { ...req, url: finalUrl },
         settings,
         caCert,
         certificates,
@@ -343,7 +342,6 @@ export function parseResolvedProxy(pacString: string | undefined): { proxyUrl: s
 
 export const createConfiguredCurlInstance = async ({
   req,
-  finalUrl,
   settings,
   caCert,
   certificates,
@@ -351,7 +349,6 @@ export const createConfiguredCurlInstance = async ({
   noDecompress = false,
 }: {
   req: RequestUsedHere;
-  finalUrl: string;
   settings: SettingsUsedHere;
   certificates: ClientCertificate[];
   caCert: string | null;
@@ -360,6 +357,7 @@ export const createConfiguredCurlInstance = async ({
 }) => {
   const debugTimeline: ResponseTimelineEntry[] = [];
   const curl = new Curl();
+  const finalUrl = req.url;
   curl.setOpt(Curl.option.URL, finalUrl);
   socketPath && curl.setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
 
@@ -436,7 +434,7 @@ export const createConfiguredCurlInstance = async ({
       curl.setOpt(Curl.option.PROXY, '');
     }
   } else {
-    const { protocol, hostname } = urlParse(req.url);
+    const { protocol, hostname } = urlParse(finalUrl);
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = !shouldBypassProxyForHost(hostname, noProxy) && proxyHost ? setDefaultProtocol(proxyHost) : '';

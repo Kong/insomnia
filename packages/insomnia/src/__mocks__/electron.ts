@@ -19,6 +19,7 @@ const remote = {
     },
 
     exit: vi.fn(),
+    on: vi.fn(),
   },
   net: {
     request() {
