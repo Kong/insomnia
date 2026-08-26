@@ -1,4 +1,4 @@
-import type { CookieJar, Request, RequestAuthentication, RequestGroup, RequestHeader, RequestParameter, SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import type { CookieJar, Request, RequestAuthentication, RequestBody, RequestGroup, RequestHeader, RequestParameter, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
@@ -13,6 +13,7 @@ export interface RenderedRealtimeConnectPayload {
   url: string;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
+  body?: RequestBody;
   parameters: RequestParameter[];
   workspaceCookieJar: CookieJar;
   suppressUserAgent: boolean;
@@ -34,6 +35,7 @@ export async function renderRealtimeConnectPayload({
   const requestGroups = ancestors.filter(isRequestGroup);
   const headers = getOrInheritHeaders({ request, requestGroups });
   const authentication = getOrInheritAuthentication({ request, requestGroups });
+  const body = 'body' in request ? request.body : undefined;
 
   const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
     request,
@@ -42,6 +44,7 @@ export async function renderRealtimeConnectPayload({
       url: request.url,
       headers,
       authentication,
+      body,
       parameters: request.parameters.filter(p => !p.disabled),
       pathParameters: request.pathParameters,
       workspaceCookieJar,
@@ -60,6 +63,7 @@ export async function renderRealtimeConnectPayload({
     url,
     headers: rendered.headers,
     authentication: rendered.authentication,
+    body: rendered.body,
     parameters: rendered.parameters,
     workspaceCookieJar: rendered.workspaceCookieJar,
     suppressUserAgent,

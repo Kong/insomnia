@@ -207,6 +207,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
                 headers: rendered.headers,
                 authentication: rendered.authentication,
+                body: rendered.body,
                 cookieJar: rendered.workspaceCookieJar,
                 suppressUserAgent: rendered.suppressUserAgent,
               });
