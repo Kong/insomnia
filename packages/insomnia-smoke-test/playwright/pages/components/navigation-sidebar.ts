@@ -309,7 +309,16 @@ export class NavigationSidebar {
     return this.unsyncedWorkspaceRow(workspaceName).getByRole('button', { name: 'Fetch unsynced workspace' });
   }
 
-  async fetchUnsyncedWorkspace(name: string): Promise<void> {
+  // `verifyVisible`, when passed, is a locator for something inside the workspace (e.g. a known
+  // child request row) that only appears once the workspace's content has actually rendered —
+  // being selected (aria-selected) doesn't guarantee that. On CI this content render has been
+  // observed stalling for a fixed ~60s stretch with zero renderer/main-process activity,
+  // consistent with Chromium's background-tab JS throttling kicking in on the main window right
+  // around a workspace switch (the main window, unlike the plugin window, doesn't set
+  // `backgroundThrottling: false`). Re-clicking the workspace row is a cheap way to generate fresh
+  // input activity that may help unstick a throttled renderer, so retry with a fresh click in
+  // between instead of only waiting once.
+  async fetchUnsyncedWorkspace(name: string, verifyVisible?: Locator): Promise<void> {
     const unsyncedWorkspaceButton = this.unsyncedWorkspaceButton(name);
     await unsyncedWorkspaceButton.click();
     // The fetch button has a hover tooltip ("Click to fetch this file"). Its trigger element gets
@@ -332,6 +341,20 @@ export class NavigationSidebar {
           console.warn(`Clicking workspace row "${name}" did not select it after 3 attempts`);
           throw new Error(`Clicking workspace row "${name}" did not select it after 3 attempts`);
         }
+      }
+    }
+    if (!verifyVisible) {
+      return;
+    }
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        await verifyVisible.waitFor({ state: 'visible', timeout: 60_000 });
+        return;
+      } catch {
+        if (attempt === 2) {
+          throw new Error(`Workspace "${name}" was selected but its content did not render after 2 attempts`);
+        }
+        await this.workspaceRow(name).click();
       }
     }
   }

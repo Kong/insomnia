@@ -51,15 +51,10 @@ test.describe('Cloud Sync', () => {
     // give it real headroom so a slow-but-eventually-successful run doesn't get torn down mid-wait
     // and reported as a confusing "page has been closed" error instead of a clean timeout.
     test.slow();
-    // Sync My Collection R1
-    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1');
-    // The request tree loads asynchronously after the workspace is selected (a separate step from
-    // the fetch/pull spinner above). On CI this has been observed stalling for a fixed ~60s stretch
-    // with zero renderer/main-process activity, consistent with Chromium's background-tab JS
-    // throttling kicking in on the main window right around this workspace switch (the main window,
-    // unlike the plugin window, doesn't set `backgroundThrottling: false`). 60s of wait budget lands
-    // right on that boundary, so give real margin above it instead of chasing the exact stall length.
-    await insomnia.navigationSidebar.requestRow('New Request').waitFor({ state: 'visible', timeout: 120_000 });
+    // Sync My Collection R1. fetchUnsyncedWorkspace verifies "New Request" itself renders (with a
+    // retry in between) rather than just that the workspace got selected - see its own comment for
+    // why that distinction matters on CI.
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1', insomnia.navigationSidebar.requestRow('New Request'));
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // Send request and check body
     await page.getByRole('button', { name: 'Send' }).click();
