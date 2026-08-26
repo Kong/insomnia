@@ -59,7 +59,7 @@ test.describe('Cloud Sync', () => {
     // throttling kicking in on the main window right around this workspace switch (the main window,
     // unlike the plugin window, doesn't set `backgroundThrottling: false`). 60s of wait budget lands
     // right on that boundary, so give real margin above it instead of chasing the exact stall length.
-    await insomnia.navigationSidebar.requestRow('New Request').waitFor({ state: 'visible', timeout: 90_000 });
+    await insomnia.navigationSidebar.requestRow('New Request').waitFor({ state: 'visible', timeout: 120_000 });
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // Send request and check body
     await page.getByRole('button', { name: 'Send' }).click();
