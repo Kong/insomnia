@@ -176,7 +176,6 @@ export const SyncDropdown: FC<Props> = () => {
     status: {
       stage: {},
       unstaged: {},
-      key: '',
     },
     localBranches: [],
     remoteBranches: [],
