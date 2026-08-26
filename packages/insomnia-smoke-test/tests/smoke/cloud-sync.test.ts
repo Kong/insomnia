@@ -1,10 +1,31 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import playwrightConfig from '../../playwright.config';
 import { test } from '../../playwright/test';
 
 // @ts-expect-error playwrightConfig.webServer.url must exists
 const devServerUrl = playwrightConfig?.webServer?.url || 'http://127.0.0.1:4010';
+
+// Retries clicking the "Git Sync" dropdown trigger until the given menu item is visible. Needed
+// right after switching workspaces: the dropdown is remounted (keyed by workspace id) while the
+// new workspace's route loader is still resolving several sequential IPC calls, so a single click
+// can land on the outgoing workspace's instance and open a popover that's destroyed by the
+// remount, leaving the incoming instance closed with nothing to reopen it.
+async function openGitSyncMenuItem(page: Page, menuItemText: string): Promise<void> {
+  const gitSyncButton = page.getByLabel('Git Sync');
+  const menuItem = page.getByText(menuItemText);
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    await gitSyncButton.click();
+    try {
+      await menuItem.waitFor({ state: 'visible', timeout: 2000 });
+      return;
+    } catch {
+      if (attempt === 3) {
+        throw new Error(`Git Sync dropdown did not open with "${menuItemText}" menu item visible after 3 attempts`);
+      }
+    }
+  }
+}
 
 test.describe('Cloud Sync', () => {
   test.beforeAll(async () => {
@@ -85,7 +106,7 @@ test.describe('Cloud Sync', () => {
     // focused, so back out first.
     await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My MCP Client');
-    await page.getByLabel('Git Sync').click();
+    await openGitSyncMenuItem(page, 'Branches');
     await page.getByText('Branches').click();
 
     const branchModal = page.getByRole('dialog');
