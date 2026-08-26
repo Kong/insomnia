@@ -3,7 +3,7 @@ import { href } from 'react-router';
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
-import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 import { getSyncItems, remoteCompareCache, reparentSyncDelta } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 

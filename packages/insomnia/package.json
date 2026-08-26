@@ -137,7 +137,6 @@
     "mocha": "^11.7.5",
     "monaco-editor": "^0.52.2",
     "multiparty": "^4.2.3",
-    "node-forge": "^1.3.1",
     "oauth-1.0a": "^2.2.6",
     "objectpath": "^2.0.0",
     "papaparse": "^5.5.2",
@@ -166,7 +165,6 @@
     "zod": "^3.25.75"
   },
   "devDependencies": {
-    "@develohpanda/fluent-builder": "^2.1.2",
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@react-router/dev": "7.18.2",
     "@tailwindcss/vite": "^4.1.17",
@@ -192,7 +190,6 @@
     "@types/multiparty": "^0.0.36",
     "@types/ncp": "^2.0.8",
     "@types/nedb": "^1.8.16",
-    "@types/node-forge": "^1.3.11",
     "@types/papaparse": "^5.3.15",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",

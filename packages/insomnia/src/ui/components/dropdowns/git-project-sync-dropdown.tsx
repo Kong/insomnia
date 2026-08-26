@@ -1,5 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitProject, GitRepository } from 'insomnia-data';
+import type { MergeConflict } from 'insomnia-vcs';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -29,7 +30,6 @@ import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
-import type { MergeConflict } from '../../../sync/types';
 import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
 import { Icon } from '../icon';
 import { showModal } from '../modals';

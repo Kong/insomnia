@@ -1,8 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { describe, expect, it } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../__schemas__/model-schemas';
-import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
+import { baseModelSchema, workspaceModelSchema } from '../../../__schemas__/model-schemas';
+import { deleteKeys, resetKeys, shouldIgnoreKey } from './ignore-keys';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);

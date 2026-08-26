@@ -6,15 +6,16 @@ import path from 'node:path';
 
 import clone from 'clone';
 import { runVcsGraphQL } from 'insomnia-api';
-import type { BaseModel } from 'insomnia-data';
+import type { BaseModel, UserSession } from 'insomnia-data';
+import type { Operation } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { deterministicStringify, generateId } from 'insomnia-data/common';
 
-import * as crypt from '~/common/account/crypt';
-import * as session from '~/common/account/session';
-import { PLAYWRIGHT_TEST } from '~/common/constants';
-import { deterministicStringify } from '~/sync/lib/deterministic-stringify';
-
-import type { Operation } from '../../../common/database';
-import { generateId } from '../../../common/misc';
+import * as crypt from './crypt';
+import Store from './store';
+import type { BaseDriver } from './store/drivers/base';
+import FileSystemDriver from './store/drivers/file-system-driver';
+import compress from './store/hooks/compress';
 import type {
   BackendProject,
   BackendProjectWithTeams,
@@ -28,10 +29,7 @@ import type {
   Stage,
   StageEntry,
   StatusCandidate,
-} from '../../../sync/types';
-import Store from './store';
-import type { BaseDriver } from './store/drivers/base';
-import compress from './store/hooks/compress';
+} from './types';
 import {
   compareBranches,
   generateCandidateMap,
@@ -86,10 +84,24 @@ const generateAES256KeyInNode = async (): Promise<JsonWebKey> => {
   };
 };
 
+export type VcsOptions = {
+  conflictHandler?: ConflictHandler;
+  testMode?: boolean;
+} & (
+  | {
+      driver?: undefined;
+      dataPath: string;
+    }
+  | {
+      driver: BaseDriver;
+      dataPath?: undefined;
+    }
+);
+
 // Stage/Unstage
 // Staged items are about to be committed
 // Unstaged items have changed compared to staged or not and can be staged
-//
+// VCS is only for cloud sync
 export class VCS {
   async getVersion(): Promise<string> {
     const branch = await this._getCurrentBranch();
@@ -106,12 +118,14 @@ export class VCS {
   // stored by key `/projects/${project.id}/meta.json`
   _backendProject: BackendProject | null;
   _conflictHandler?: ConflictHandler | null;
+  _testMode: boolean | undefined;
   _stageByBackendProjectId: Record<string, Stage> = {};
 
-  constructor(driver: BaseDriver, conflictHandler?: ConflictHandler) {
-    this._store = new Store(driver, [compress]);
+  constructor({ driver, dataPath, conflictHandler, testMode }: VcsOptions) {
+    this._driver = driver || FileSystemDriver.create(dataPath!);
+    this._store = new Store(this._driver, [compress]);
+    this._testMode = testMode;
     this._conflictHandler = conflictHandler;
-    this._driver = driver;
     // To be set later
     this._backendProject = null;
   }
@@ -479,6 +493,8 @@ export class VCS {
       remove: await this._getBlobs(remove.map(e => e.blob)),
     };
   }
+
+  // rename preMergeCheck to instance getCandidateStatus
 
   async handleAnyConflicts(
     conflicts: MergeConflict[],
@@ -1358,7 +1374,7 @@ export class VCS {
   async _getBackendProjectSymmetricKey() {
     const { privateKey, symmetricKey } = await this._assertSession();
 
-    if (PLAYWRIGHT_TEST) {
+    if (this._testMode) {
       // use the session symmetric key in playwright tests
       return symmetricKey;
     }
@@ -1366,6 +1382,22 @@ export class VCS {
     const encSymmetricKey = await this._queryBackendProjectKey();
     const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
     return JSON.parse(symmetricKeyStr);
+  }
+
+  // TODO: This is a temporary solution to get the private key from the session.
+  async _getPrivateKey(sessionData?: UserSession): Promise<JsonWebKey> {
+    if (!sessionData) {
+      throw new Error("Can't get private key: session is blank.");
+    }
+
+    const { symmetricKey, encPrivateKey } = sessionData;
+
+    if (!symmetricKey || !encPrivateKey) {
+      throw new Error("Can't get private key: session is missing keys.");
+    }
+
+    const privateKeyStr = await crypt.decryptAES(symmetricKey, encPrivateKey);
+    return JSON.parse(privateKeyStr) as JsonWebKey;
   }
 
   async _assertBackendProject() {
@@ -1411,8 +1443,10 @@ export class VCS {
   }
 
   async _assertSession() {
-    const { accountId, id, publicKey, symmetricKey } = await session.getUserSession();
-    const privateKey = await session.getPrivateKey();
+    const sessionData = await services.userSession.get();
+    const { accountId, id, publicKey, symmetricKey } = sessionData;
+    const privateKey = await this._getPrivateKey(sessionData);
+
     if (!id) {
       throw new Error('Not logged in');
     }
@@ -1560,21 +1594,25 @@ export class VCS {
   }
 
   async _assertSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(`/projects/${this._backendProjectId()}/snapshots/${id}.json`);
-
-    if (snapshot && typeof snapshot.created === 'string') {
-      snapshot.created = new Date(snapshot.created);
-    }
+    const snapshot: Snapshot | null = await this._store.getItem(
+      `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
+    );
 
     if (!snapshot) {
       throw new Error(`Failed to find commit id=${id}`);
+    }
+
+    if (snapshot && typeof snapshot.created === 'string') {
+      snapshot.created = new Date(snapshot.created);
     }
 
     return snapshot;
   }
 
   async _getSnapshot(id: string) {
-    const snapshot: Snapshot = await this._store.getItem(`/projects/${this._backendProjectId()}/snapshots/${id}.json`);
+    const snapshot: Snapshot | null = await this._store.getItem(
+      `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
+    );
 
     if (snapshot && typeof snapshot.created === 'string') {
       snapshot.created = new Date(snapshot.created);

@@ -1,44 +1,14 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
+import type { BackendProject } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { deterministicStringify } from 'insomnia-data/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../../../../sync/__schemas__/model-schemas';
-import { projectSchema } from '../../../../sync/__schemas__/type-schemas';
-import { shouldIgnoreKey } from '../../../../sync/ignore-keys';
-import { deterministicStringify } from '../../../../sync/lib/deterministic-stringify';
-import type { BackendProject } from '../../../../sync/types';
+import { baseModelSchema, workspaceModelSchema } from '../__schemas__/model-schemas';
+import { projectSchema } from '../__schemas__/type-schemas';
 import MemoryDriver from '../store/drivers/memory-driver';
 import { chunkArray, VCS } from '../vcs';
-
-// Every snapshot id asserted in this file is a sha1 over the backend project id, which comes from
-// generateId('prj'). generateId ultimately calls uuid.v4(), which the shared setup mock
-// (setup-vitest.ts) replaces with a fixed pool. That setup mock is declared *after* a top-level
-// `await` that loads the cross-package insomnia-data graph, so in CI it is applied
-// non-deterministically — when it misses, generateId returns a real random uuid and every asserted
-// hash changes, which is what made this file flake (the same commit passing on one Test run and
-// failing on another).
-//
-// Pin it deterministically here instead: mock generateId at this in-package module boundary (a
-// test-file-local vi.mock of insomnia's own module, which is applied reliably) with a private
-// counter over the same id array. generateId('prj') is the only uuid consumer these tests exercise,
-// so drawing the array in order reproduces the exact sequence the assertions were recorded against,
-// independent of whether the ambient uuid mock happened to apply.
-vi.mock('~/common/misc', async importActual => {
-  const actual = await importActual<Record<string, unknown>>();
-  const { v4UUIDs } = await import('../../../../../../insomnia-data/__mocks__/uuid');
-  let i = 0;
-  return {
-    ...actual,
-    generateId: (prefix?: string) => {
-      const uuid = v4UUIDs[i++];
-      if (!uuid) {
-        throw new Error('Not enough mocked v4 UUIDs to go around in vcs.test.ts');
-      }
-      const id = uuid.replace(/-/g, '');
-      return prefix ? `${prefix}_${id}` : id;
-    },
-  };
-});
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
@@ -49,7 +19,7 @@ function newDoc(id) {
 }
 
 async function vcs(branch) {
-  const v = new VCS(new MemoryDriver());
+  const v = new VCS({ driver: new MemoryDriver() });
   await v.switchAndCreateBackendProjectIfNotExist('workspace_1', 'Test Workspace');
   await v.checkout([], branch);
   return v;
@@ -67,7 +37,7 @@ function describeChanges(a, b): string[] {
   const allKeys = Object.keys({ ...a, ...b });
 
   for (const key of allKeys) {
-    if (shouldIgnoreKey(key, a)) {
+    if (models.shouldIgnoreKey(key, a)) {
       continue;
     }
 
@@ -1014,7 +984,7 @@ describe('VCS', () => {
       backendProject = projectBuilder.reset().build();
 
       const driver = new MemoryDriver();
-      vcs = new VCS(driver);
+      vcs = new VCS({ driver });
 
       driver.setItem('/projects/', Buffer.from(JSON.stringify([backendProject])));
       driver.setItem(`/projects/${backendProject.id}/`, Buffer.from(''));
@@ -1041,7 +1011,7 @@ describe('VCS', () => {
 
     beforeEach(() => {
       driver = new MemoryDriver();
-      vcs = new VCS(driver);
+      vcs = new VCS({ driver });
       backendProject = projectBuilder.reset().build();
     });
 
@@ -1051,10 +1021,7 @@ describe('VCS', () => {
       await vcs._storeBackendProject(backendProject);
 
       expect(setItemSpy).toHaveBeenCalledTimes(1);
-      expect(setItemSpy).toHaveBeenCalledWith(
-        `/projects/${backendProject.id}/meta.json`,
-        expect.any(Buffer),
-      );
+      expect(setItemSpy).toHaveBeenCalledWith(`/projects/${backendProject.id}/meta.json`, expect.any(Buffer));
       expect(await vcs._getBackendProjectById(backendProject.id)).toEqual(backendProject);
     });
 
@@ -1092,10 +1059,7 @@ describe('VCS', () => {
       await vcs._storeBackendProject(backendProject);
 
       expect(setItemSpy).toHaveBeenCalledTimes(1);
-      expect(setItemSpy).toHaveBeenCalledWith(
-        `/projects/${backendProject.id}/meta.json`,
-        expect.any(Buffer),
-      );
+      expect(setItemSpy).toHaveBeenCalledWith(`/projects/${backendProject.id}/meta.json`, expect.any(Buffer));
     });
   });
 
