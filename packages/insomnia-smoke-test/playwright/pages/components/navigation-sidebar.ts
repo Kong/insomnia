@@ -333,9 +333,9 @@ export class NavigationSidebar {
     if (!verifyVisible) {
       return;
     }
-    for (let attempt = 1; attempt <= 2; attempt++) {
+    for (let attempt = 0; attempt <= 2; attempt++) {
       try {
-        await verifyVisible.waitFor({ state: 'visible', timeout: 60_000 });
+        await verifyVisible.waitFor({ state: 'visible', timeout: 10_000 });
         return;
       } catch {
         if (attempt === 2) {
