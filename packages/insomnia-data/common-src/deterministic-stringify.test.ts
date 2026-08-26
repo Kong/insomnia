@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { deterministicStringify } from '../deterministic-stringify';
+import { deterministicStringify } from './deterministic-stringify';
 
 describe('deterministicStringify()', () => {
   it('sorts object keys', () => {

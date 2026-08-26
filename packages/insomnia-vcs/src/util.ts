@@ -2,9 +2,9 @@ import crypto from 'node:crypto';
 
 import clone from 'clone';
 import type { BaseModel } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { deterministicStringify } from 'insomnia-data/common';
 
-import { deleteKeys, resetKeys } from '../../../sync/ignore-keys';
-import { deterministicStringify } from '../../../sync/lib/deterministic-stringify';
 import type {
   Branch,
   Compare,
@@ -17,7 +17,7 @@ import type {
   StageEntry,
   StatusCandidate,
   StatusCandidateMap,
-} from '../../../sync/types';
+} from './types';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
@@ -455,8 +455,8 @@ export function hashDocument(doc?: BaseModel) {
   const newDoc = clone(doc);
 
   if (newDoc) {
-    deleteKeys(newDoc);
-    resetKeys(newDoc);
+    models.deleteKeys(newDoc);
+    models.resetKeys(newDoc);
   }
 
   return hash(newDoc);

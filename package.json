@@ -18,6 +18,7 @@
     "packages/insomnia-testing",
     "packages/insomnia",
     "packages/insomnia-data",
+    "packages/insomnia-vcs",
     "packages/insomnia-analytics",
     "packages/insomnia-api",
     "packages/insomnia-inso",
@@ -47,6 +48,7 @@
     "check-cycle-references": "madge --circular --extensions ts,tsx packages"
   },
   "devDependencies": {
+    "@develohpanda/fluent-builder": "^2.1.2",
     "@eslint/js": "^9.23.0",
     "@types/chai": "^4.3.14",
     "@types/har-format": "^1.2.15",

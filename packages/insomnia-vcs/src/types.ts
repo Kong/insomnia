@@ -94,12 +94,7 @@ export interface StageEntryModify {
 
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;
 
-export const RESOLUTION_SOURCE = {
-  CHOOSE: 'choose',
-  MANUAL: 'manual',
-} as const;
-
-export type ResolutionSource = (typeof RESOLUTION_SOURCE)[keyof typeof RESOLUTION_SOURCE];
+export type ResolutionSource = 'choose' | 'manual';
 
 export interface MergeConflict {
   name: string;

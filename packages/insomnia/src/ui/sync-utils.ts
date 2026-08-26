@@ -15,10 +15,10 @@ import type {
   Workspace,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import type { BackendProject, Compare, StatusCandidate } from 'insomnia-vcs';
 
 import { database, type Operation } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
-import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
 
 type PushPull = 'push' | 'pull';
 type VCSAction =

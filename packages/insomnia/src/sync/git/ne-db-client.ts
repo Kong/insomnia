@@ -21,7 +21,6 @@ import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
 import { database as db } from '../../common/database';
-import { resetKeys } from '../ignore-keys';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import Stat from './stat';
@@ -85,7 +84,7 @@ export class NeDBClient {
     }
 
     // When git is reading from NeDb, reset keys we wish to ignore to their original values
-    resetKeys(doc);
+    models.resetKeys(doc);
 
     // It would be nice to be able to add this check here but we can't since
     // isomorphic-git may have just deleted the workspace from the FS. This

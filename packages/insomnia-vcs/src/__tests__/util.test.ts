@@ -1,11 +1,11 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
+import type { StageEntry } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../../../../sync/__schemas__/model-schemas';
-import { branchSchema, mergeConflictSchema, statusCandidateSchema } from '../../../../sync/__schemas__/type-schemas';
-import type { StageEntry } from '../../../../sync/types';
+import { baseModelSchema, workspaceModelSchema } from '../__schemas__/model-schemas';
+import { branchSchema, mergeConflictSchema, statusCandidateSchema } from '../__schemas__/type-schemas';
 import {
   combinedMapKeys,
   compareBranches,
