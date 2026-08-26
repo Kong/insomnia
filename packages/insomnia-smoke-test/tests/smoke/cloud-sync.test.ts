@@ -6,22 +6,24 @@ import { test } from '../../playwright/test';
 // @ts-expect-error playwrightConfig.webServer.url must exists
 const devServerUrl = playwrightConfig?.webServer?.url || 'http://127.0.0.1:4010';
 
-// Retries clicking the "Git Sync" dropdown trigger until the given menu item is visible. Needed
+// Retries opening the "Git Sync" dropdown and clicking the given menu item as one unit. Needed
 // right after switching workspaces: the dropdown is remounted (keyed by workspace id) while the
-// new workspace's route loader is still resolving several sequential IPC calls, so a single click
-// can land on the outgoing workspace's instance and open a popover that's destroyed by the
-// remount, leaving the incoming instance closed with nothing to reopen it.
-async function openGitSyncMenuItem(page: Page, menuItemText: string): Promise<void> {
+// new workspace's route loader is still resolving several sequential IPC calls, so a click can
+// open a popover that's destroyed by the next remount before it can be acted on - repeatedly, for
+// longer than a single click's default timeout. Splitting "confirm it opened" from "click it" into
+// two separate steps leaves a gap for the same remount to close it again in between, so both steps
+// are retried together here instead.
+async function clickGitSyncMenuItem(page: Page, menuItemText: string): Promise<void> {
   const gitSyncButton = page.getByLabel('Git Sync');
   const menuItem = page.getByText(menuItemText);
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 10; attempt++) {
     await gitSyncButton.click();
     try {
-      await menuItem.waitFor({ state: 'visible', timeout: 2000 });
+      await menuItem.click({ timeout: 3000 });
       return;
     } catch {
-      if (attempt === 3) {
-        throw new Error(`Git Sync dropdown did not open with "${menuItemText}" menu item visible after 3 attempts`);
+      if (attempt === 10) {
+        throw new Error(`Could not click "${menuItemText}" in the Git Sync dropdown after 10 attempts`);
       }
     }
   }
@@ -106,8 +108,7 @@ test.describe('Cloud Sync', () => {
     // focused, so back out first.
     await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My MCP Client');
-    await openGitSyncMenuItem(page, 'Branches');
-    await page.getByText('Branches').click();
+    await clickGitSyncMenuItem(page, 'Branches');
 
     const branchModal = page.getByRole('dialog');
     const localBranchDiv = branchModal.getByLabel('Branches list', { exact: true });
