@@ -100,7 +100,7 @@ jobs:
           path: packages/insomnia/build/
 
       - name: Stress test flaky case (run ${{ matrix.runIndex }}/10, repeat-each=3)
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --repeat-each=3 --retries=0 tests/smoke/cloud-sync.test.ts
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --repeat-each=3 --max-failures=1 --retries=0 tests/smoke/cloud-sync.test.ts
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
