@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { baseModelSchema, workspaceModelSchema } from '../__schemas__/model-schemas';
 import { projectSchema } from '../__schemas__/type-schemas';
 import MemoryDriver from '../store/drivers/memory-driver';
+import { hashDocument } from '../util';
 import { chunkArray, VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
@@ -86,7 +87,6 @@ describe('VCS', () => {
         },
       ]);
       expect(status).toEqual({
-        key: '6dbc95d09d310cf9d8561bc46da440d8197c3bf1',
         stage: {},
         unstaged: {
           foo: {
@@ -190,7 +190,6 @@ describe('VCS', () => {
         {},
       );
       expect(status).toEqual({
-        key: '3314d88d8a8c307083414ca93b2e35bc5233e292',
         stage: {},
         unstaged: {
           a: {
@@ -253,7 +252,6 @@ describe('VCS', () => {
         },
       ]);
       expect(status2).toEqual({
-        key: '872dd92bb678f7e26b8610e4d37c0438f2f04beb',
         stage: {
           a: {
             deleted: true,
@@ -325,7 +323,6 @@ describe('VCS', () => {
         },
       ]);
       expect(status2).toEqual({
-        key: '7e7b488b9010839218f8e8c7d1d48b0e0e6b5f8c',
         stage: {
           a: {
             added: true,
@@ -338,7 +335,7 @@ describe('VCS', () => {
         },
         unstaged: {
           a: {
-            added: true,
+            modified: true,
             blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
             key: 'a',
             name: 'A',
@@ -384,7 +381,6 @@ describe('VCS', () => {
         {},
       );
       expect(status2).toEqual({
-        key: 'ca455b43c1e992812d81032e79e037a8db85fa8b',
         stage: {},
         unstaged: {},
       });
@@ -433,7 +429,6 @@ describe('VCS', () => {
         },
       ]);
       expect(status2).toEqual({
-        key: 'cfd47b8a7d50f39dfa1ca956ac2ab60427d6351b',
         stage: {
           foo: {
             name: 'Foo',
@@ -1085,6 +1080,121 @@ describe('VCS', () => {
     expect(VCS.validateBranchName('feature/A.lock/B')).toEqual(
       'No slash-separated component in branch name can end with the sequence .lock',
     );
+  });
+
+  // Placed last: every other test in this file pins snapshot ids drawn in order from a mocked
+  // uuid pool (see the vi.mock('~/common/misc', ...) note at the top of the file), so inserting
+  // a test earlier that calls generateId would shift every id literal below it.
+  it('surfaces a stale staged entry as unstaged once the working tree reverts to HEAD (INS-3520)', async () => {
+    const v = await vcs('master');
+
+    // baseline commit: a = 'original'
+    const s1 = await v.status([{ key: 'a', name: 'A', document: newDoc('original') }]);
+    await v.stage([s1.unstaged.a]);
+    await v.takeSnapshot('baseline');
+
+    // modify and stage: a = 'modified'
+    const s2 = await v.status([{ key: 'a', name: 'A', document: newDoc('modified') }]);
+    await v.stage([s2.unstaged.a]);
+
+    // revert the working tree back to the committed content
+    const s3 = await v.status([{ key: 'a', name: 'A', document: newDoc('original') }]);
+
+    // the stale 'modified' entry is still sitting in the stage...
+    expect(s3.stage.a).toMatchObject({ blobId: hashDocument(newDoc('modified')).hash });
+    // ...but it's no longer invisible: it now surfaces as an unstaged revert (index vs working
+    // tree), instead of `unstaged` coming back empty while a phantom change waits to be committed.
+    expect(s3.unstaged.a).toMatchObject({ modified: true, blobId: hashDocument(newDoc('original')).hash });
+
+    // staging that revert clears the stale content instead of letting it get committed silently:
+    // stage() drops any entry whose content round-trips back to what HEAD already has.
+    await v.stage([s3.unstaged.a]);
+    const s4 = await v.status([{ key: 'a', name: 'A', document: newDoc('original') }]);
+    expect(s4.stage).toEqual({});
+    expect(s4.unstaged).toEqual({});
+    await expect(v.takeSnapshot('no-op revert')).rejects.toThrow(
+      'No changes to commit. Please stage your changes first.',
+    );
+  });
+
+  it('drops a staged addition once its deletion is staged, when it was never committed', async () => {
+    const v = await vcs('master');
+    const { hash: blobId, content: blobContent } = hashDocument(newDoc('new'));
+
+    // stage a brand new (never committed) document
+    const afterAdd = await v.stage([{ key: 'n', name: 'N', blobId, blobContent, added: true }]);
+    expect(afterAdd.n).toBeDefined();
+
+    // stage its deletion before it was ever committed: HEAD never had this key, so the net
+    // effect relative to HEAD is nothing, not a "staged delete" of something that never existed.
+    const afterDelete = await v.stage([{ key: 'n', name: 'N', blobId, deleted: true }]);
+    expect(afterDelete.n).toBeUndefined();
+  });
+
+  it('surfaces a never-committed staged addition as unstaged once it is deleted from the working tree', async () => {
+    const v = await vcs('master');
+    const { hash: blobId, content: blobContent } = hashDocument(newDoc('new'));
+
+    const s1 = await v.status([{ key: 'n', name: 'N', document: newDoc('new') }]);
+    await v.stage([s1.unstaged.n]);
+
+    // delete it from the working tree before it was ever committed
+    const s2 = await v.status([]);
+
+    expect(s2.stage.n).toMatchObject({ added: true, blobId });
+    // stageEntry ('n' staged as added) still holds real content, so the diff base shown to the
+    // user is that staged content, not `null` — only a stage entry that is itself a deletion
+    // (see the sibling test below) has nothing left in the index to show as previous content.
+    expect(s2.unstaged.n).toMatchObject({ deleted: true, blobId, previousBlobContent: blobContent });
+  });
+
+  it('surfaces a re-added document as unstaged once its prior deletion is staged', async () => {
+    const v = await vcs('master');
+
+    // baseline commit: r = 'original'
+    const s1 = await v.status([{ key: 'r', name: 'R', document: newDoc('original') }]);
+    await v.stage([s1.unstaged.r]);
+    await v.takeSnapshot('baseline');
+
+    // delete it and stage the deletion
+    const s2 = await v.status([]);
+    await v.stage([s2.unstaged.r]);
+
+    // it comes back with new content before the deletion was ever committed
+    const s3 = await v.status([{ key: 'r', name: 'R', document: newDoc('recreated') }]);
+
+    expect(s3.stage.r).toMatchObject({ deleted: true });
+    // the index has nothing for 'r' at this point (it was staged as deleted), so there is no
+    // staged content to show as the diff base.
+    expect(s3.unstaged.r).toMatchObject({
+      added: true,
+      blobId: hashDocument(newDoc('recreated')).hash,
+      previousBlobContent: JSON.stringify(null),
+    });
+  });
+
+  it('surfaces a committed document staged as modified as unstaged once it is deleted from the working tree', async () => {
+    const v = await vcs('master');
+
+    // baseline commit: f = 'original'
+    const s1 = await v.status([{ key: 'f', name: 'F', document: newDoc('original') }]);
+    await v.stage([s1.unstaged.f]);
+    await v.takeSnapshot('baseline');
+
+    // modify and stage: f = 'modified'
+    const s2 = await v.status([{ key: 'f', name: 'F', document: newDoc('modified') }]);
+    await v.stage([s2.unstaged.f]);
+
+    // delete it from the working tree before committing the modification
+    const s3 = await v.status([]);
+
+    const modifiedBlob = hashDocument(newDoc('modified'));
+    expect(s3.stage.f).toMatchObject({ modified: true, blobId: modifiedBlob.hash });
+    expect(s3.unstaged.f).toMatchObject({
+      deleted: true,
+      blobId: modifiedBlob.hash,
+      previousBlobContent: JSON.stringify(JSON.parse(modifiedBlob.content)),
+    });
   });
 });
 

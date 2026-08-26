@@ -14,6 +14,7 @@ import type {
   SnapshotState,
   SnapshotStateEntry,
   SnapshotStateMap,
+  Stage,
   StageEntry,
   StatusCandidate,
   StatusCandidateMap,
@@ -365,6 +366,35 @@ export function getStagable(state: SnapshotState, candidates: StatusCandidate[])
   }
 
   return stagable;
+}
+
+// Overlays a stage on top of a base state, producing the state that would result from committing
+// the stage right now. Used both to build the actual next snapshot's state (takeSnapshot) and to
+// give status() an index to diff the working tree against (instead of diffing against HEAD alone).
+export function applyStageToState(baseState: SnapshotState, stage: Stage): SnapshotState {
+  const newState: SnapshotState = [];
+
+  for (const entry of baseState) {
+    // Don't add anything that's in the stage (this covers deleted things too :])
+    if (stage[entry.key]) {
+      continue;
+    }
+
+    newState.push(entry);
+  }
+
+  for (const key of Object.keys(stage)) {
+    const entry = stage[key];
+
+    if ('deleted' in entry && entry.deleted) {
+      continue;
+    }
+
+    const { name, blobId: blob } = entry;
+    newState.push({ key, name, blob });
+  }
+
+  return newState;
 }
 
 export function getRootSnapshot(a: Branch | null, b: Branch | null): string | null {
