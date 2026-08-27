@@ -18,7 +18,14 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry, Services, TestResults } from 'insomnia-data';
+import type {
+  AuthTypeOAuth2,
+  OAuth2Token,
+  RequestHeader,
+  ResponseTimelineEntry,
+  Services,
+  TestResults,
+} from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
@@ -35,7 +42,6 @@ import type {
 import type { RenderedRequest } from '~/common/templating/types';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
-import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import {
   exportHarCurrentRequest,
   exportHarRequest,
@@ -242,7 +248,10 @@ export interface RendererToMainBridgeAPI {
     destinationPath: string;
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
-  getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }>;
+  getAuthHeader: (
+    renderedRequest: RenderedRequest,
+    url: string,
+  ) => Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }>;
   getOAuth2Token: (
     requestId: string,
     authentication: AuthTypeOAuth2,
@@ -271,7 +280,6 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
-  sync: SyncBridgeAPI;
   trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
@@ -474,10 +482,13 @@ export function registerMainHandlers() {
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
   });
-  ipcMainHandle('getOAuth2Token', async (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
-    const { token } = await getOAuth2TokenInMain(requestId, authentication, forceRefresh);
-    return token;
-  });
+  ipcMainHandle(
+    'getOAuth2Token',
+    async (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
+      const { token } = await getOAuth2TokenInMain(requestId, authentication, forceRefresh);
+      return token;
+    },
+  );
   ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
     try {
       const content = await bundleSpectralRuleset(options.sourcePath);

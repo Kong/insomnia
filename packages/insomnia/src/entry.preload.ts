@@ -18,7 +18,6 @@ import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
-import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
 import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
@@ -148,60 +147,6 @@ const secretStorage: secretStorageBridgeAPI = {
 const electronStorage: electronStorageBridgeAPI = {
   getItem: key => invokeWithNormalizedError('electronStorage.getItem', key),
   setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
-};
-
-const invokeSyncMethod = async <T>(workspaceId: string, methodName: string, ...args: unknown[]) => {
-  try {
-    return (await invokeWithNormalizedError('sync.invoke', workspaceId, methodName, ...args)) as T;
-  } catch (error) {
-    if (isUserAbortResolveMergeConflictError(error)) {
-      throw new UserAbortResolveMergeConflictError(
-        'message' in error && typeof error.message === 'string' ? error.message : undefined,
-      );
-    }
-
-    throw error;
-  }
-};
-
-const invokeGlobalSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
-  return (await invokeWithNormalizedError('sync.invokeGlobal', methodName, ...args)) as T;
-};
-
-const sync: SyncBridgeAPI = {
-  archiveProject: workspaceId => invokeSyncMethod(workspaceId, 'archiveProject'),
-  checkout: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'checkout', ...args),
-  compareRemoteBranch: workspaceId => invokeSyncMethod(workspaceId, 'compareRemoteBranch'),
-  fork: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'fork', ...args),
-  getActiveBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'getActiveBackendProject'),
-  getBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getBranchNames'),
-  getCurrentBranchName: workspaceId => invokeSyncMethod(workspaceId, 'getCurrentBranchName'),
-  getHistory: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'getHistory', ...args),
-  getHistoryCount: workspaceId => invokeSyncMethod(workspaceId, 'getHistoryCount'),
-  getRemoteBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getRemoteBranchNames'),
-  getVersion: workspaceId => invokeSyncMethod(workspaceId, 'getVersion'),
-  hasBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'hasBackendProject'),
-  localBackendProjects: () => invokeGlobalSyncMethod('localBackendProjects'),
-  merge: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'merge', ...args),
-  pull: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'pull', ...args),
-  pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
-  push: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'push', ...args),
-  remoteBackendProjects: (...args) => invokeGlobalSyncMethod('remoteBackendProjects', ...args),
-  remoteBackendProjectsOfTeam: (...args) => invokeGlobalSyncMethod('remoteBackendProjectsOfTeam', ...args),
-  hasBackendProjectForRootDocument: (...args) => invokeGlobalSyncMethod('hasBackendProjectForRootDocument', ...args),
-  removeBackendProjectsForRoot: (...args) => invokeGlobalSyncMethod('removeBackendProjectsForRoot', ...args),
-  removeBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeBranch', ...args),
-  removeRemoteBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeRemoteBranch', ...args),
-  rollback: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollback', ...args),
-  rollbackToLatest: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollbackToLatest', ...args),
-  resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
-  cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
-  stage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'stage', ...args),
-  status: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'status', ...args),
-  switchAndCreateBackendProjectIfNotExist: (workspaceId, ...args) =>
-    invokeSyncMethod(workspaceId, 'switchAndCreateBackendProjectIfNotExist', ...args),
-  takeSnapshot: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'takeSnapshot', ...args),
-  unstage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'unstage', ...args),
 };
 
 const git: GitServiceAPI = {
@@ -343,7 +288,6 @@ const main: Window['main'] = {
   curl,
   secretStorage,
   electronStorage,
-  sync,
   trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
@@ -548,6 +492,20 @@ const env: Window['env'] = {
   INSOMNIA_GITHUB_API_URL: process.env.INSOMNIA_GITHUB_API_URL,
 };
 
+const invokeSyncMethod = async (methodName: string, ...args: unknown[]) => {
+  try {
+    return await invokeWithNormalizedError('sync.invoke', methodName, ...args);
+  } catch (error) {
+    if (isUserAbortResolveMergeConflictError(error)) {
+      throw new UserAbortResolveMergeConflictError(
+        'message' in error && typeof error.message === 'string' ? error.message : undefined,
+      );
+    }
+
+    throw error;
+  }
+};
+
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
@@ -564,6 +522,22 @@ if (process.contextIsolated) {
     (serviceName: string, methodName: string, ...args: unknown[]) =>
       invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args),
   );
+
+  contextBridge.exposeInMainWorld('_mainInvoke', (domain: string, methodName: string, ...args: unknown[]) => {
+    if (domain === 'sync') {
+      if (methodName !== 'pullRemoteBackendProject') {
+        return invokeSyncMethod(methodName, ...args);
+      }
+
+      // TODO: try to remove send?
+      if (['resolveConflict', 'cancelConflict'].includes(methodName)) {
+        return ipcRenderer.send(`${domain}:on`, methodName, ...args);
+      }
+    }
+
+    return invokeWithNormalizedError(`${domain}.invoke`, methodName, ...args);
+  });
+
   contextBridge.exposeInMainWorld('env', env);
 } else {
   window.main = main;

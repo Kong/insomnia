@@ -5,6 +5,7 @@ import { href, redirect } from 'react-router';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { sync } from '~/ui/ipc';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
@@ -15,11 +16,9 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
 
   if (models.project.isRemoteProject(project) && !isGitSync) {
     try {
-      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace._id, workspace.name);
+      await sync.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace._id, workspace.name);
       // For cloud sync workspaces, delete only local file or also delete remote copy
-      await (localOnly
-        ? window.main.sync.removeBackendProjectsForRoot(workspace._id)
-        : window.main.sync.archiveProject(workspace._id));
+      await (localOnly ? sync.removeBackendProjectsForRoot(workspace._id) : sync.archiveProject(workspace._id));
       // Emit cloud sync file change event when cloud sync workspace is deleted to refresh the remote projects list cache
       uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
     } catch (err) {
