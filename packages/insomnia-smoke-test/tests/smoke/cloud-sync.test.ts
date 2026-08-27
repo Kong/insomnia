@@ -1,10 +1,26 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import playwrightConfig from '../../playwright.config';
 import { test } from '../../playwright/test';
 
 // @ts-expect-error playwrightConfig.webServer.url must exists
 const devServerUrl = playwrightConfig?.webServer?.url || 'http://127.0.0.1:4010';
+
+async function clickGitSyncMenuItem(page: Page, menuItemText: string): Promise<void> {
+  const gitSyncButton = page.getByLabel('Git Sync');
+  const menuItem = page.getByText(menuItemText);
+  for (let attempt = 1; attempt <= 10; attempt++) {
+    await gitSyncButton.click();
+    try {
+      await menuItem.click({ timeout: 1000 });
+      return;
+    } catch {
+      if (attempt === 10) {
+        throw new Error(`Could not click "${menuItemText}" in the Git Sync dropdown after 10 attempts`);
+      }
+    }
+  }
+}
 
 test.describe('Cloud Sync', () => {
   test.beforeAll(async () => {
@@ -24,8 +40,8 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Discard, branch and commit actions', async ({ page, insomnia }) => {
-    // Sync My Collection R1
-    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1');
+    test.slow();
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1', insomnia.navigationSidebar.requestRow('New Request'));
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // Send request and check body
     await page.getByRole('button', { name: 'Send' }).click();
@@ -77,8 +93,7 @@ test.describe('Cloud Sync', () => {
     // focused, so back out first.
     await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My MCP Client');
-    await page.getByLabel('Git Sync').click();
-    await page.getByText('Branches').click();
+    await clickGitSyncMenuItem(page, 'Branches');
 
     const branchModal = page.getByRole('dialog');
     const localBranchDiv = branchModal.getByLabel('Branches list', { exact: true });
