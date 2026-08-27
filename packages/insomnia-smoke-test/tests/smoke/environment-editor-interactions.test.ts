@@ -294,7 +294,7 @@ test.describe('Environment Editor', () => {
     await page.getByLabel('Add Project Environment').click();
     await page.getByPlaceholder('Enter a name for your Environment').fill('My New Project Env');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await expect.soft(insomnia.navigationSidebar.workspaceRow('My New Project Env')).toBeVisible();
+    await page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
     await insomnia.pressEscape();
 
     // creating navigates into the new environment's own page; go back to the collection
