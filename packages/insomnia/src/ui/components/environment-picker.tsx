@@ -237,7 +237,7 @@ export const EnvironmentPicker = ({
                               `/organization/${organizationId}/project/${projectId}/workspace/${item.workspaceId}/environment`,
                             )
                           }
-                          className="hide aspect-square h-5 shrink-0 items-center justify-center rounded-xs text-xs text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset"
+                          className="hide aspect-square h-5 shrink-0 items-center justify-center rounded-xs text-xs text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset"
                         >
                           <Icon icon="edit" />
                         </Button>

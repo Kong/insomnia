@@ -24,7 +24,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('row', { name: 'New Environment' }).waitFor({ state: 'visible' });
     await page.getByRole('row', { name: 'New Environment' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
-    
+
     // wait for the Manage Environments dialog to close before interacting with the picker
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
@@ -35,7 +35,7 @@ test.describe('Environment Editor', () => {
     // send request: verify variables fall back to base env (new env is empty)
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
-    
+
     // wait for a response before switching to console
     await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
@@ -91,7 +91,7 @@ test.describe('Environment Editor', () => {
 
     // blur the editor before closing so the debounce flush is triggered by the button's mousedown
     await dialog.getByRole('button', { name: 'Close' }).click();
-    
+
     // wait for the Manage Environments dialog to fully close before navigating
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
     await page.getByLabel('Manage collection environments').press('Escape');
@@ -166,14 +166,14 @@ test.describe('Environment Editor', () => {
     await page.getByRole('menuitemradio', { name: 'JSON' }).click();
     await waitForSync();
     await secondRow.getByRole('button', { name: 'Edit JSON' }).click();
-    
+
     // wait for the JSON modal before typing
     await page.getByRole('dialog').getByTestId('CodeEditor').waitFor({ state: 'visible' });
     const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
     await bodyEditor.focus();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
-    
+
     // submit and wait for the JSON modal to fully close before proceeding
     await page.getByRole('button', { name: 'Modal Submit' }).click();
     await page.getByRole('dialog', { name: 'Modal' }).waitFor({ state: 'hidden' });
@@ -186,7 +186,9 @@ test.describe('Environment Editor', () => {
     // dismiss the environment picker dropdown if it appeared
     await page.locator('body').click();
     try {
-      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+      await page
+        .getByRole('listbox', { name: 'Select a Collection Environment' })
+        .waitFor({ state: 'hidden', timeout: 3000 });
     } catch {
       await page.keyboard.press('Escape');
     }
@@ -245,7 +247,9 @@ test.describe('Environment Editor', () => {
     // dismiss the environment picker dropdown if it appeared
     await page.locator('body').click();
     try {
-      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+      await page
+        .getByRole('listbox', { name: 'Select a Collection Environment' })
+        .waitFor({ state: 'hidden', timeout: 3000 });
     } catch {
       await page.keyboard.press('Escape');
     }
@@ -290,6 +294,8 @@ test.describe('Environment Editor', () => {
     await page.getByLabel('Add Project Environment').click();
     await page.getByPlaceholder('Enter a name for your Environment').fill('My New Project Env');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await expect.soft(insomnia.navigationSidebar.workspaceRow('My New Project Env')).toBeVisible();
+    await insomnia.pressEscape();
 
     // creating navigates into the new environment's own page; go back to the collection
     await insomnia.navigationSidebar.selectWorkspace('My first collection');
@@ -300,7 +306,9 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByRole('option', { name: 'My New Project Env' })).toBeVisible();
   });
 
-  test('Add Sub Environment and Add Private Sub Environment create environments with the correct privacy', async ({ page }) => {
+  test('Add Sub Environment and Add Private Sub Environment create environments with the correct privacy', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
     await page.getByLabel('Select a Collection Environment').click();

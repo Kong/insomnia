@@ -6,7 +6,11 @@ import { test } from '../../playwright/test';
 test.describe('after-response script features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('after-response scripts: transient vars, assertions, and environment/global persistence', async ({ page, app, insomnia }) => {
+  test('after-response scripts: transient vars, assertions, and environment/global persistence', async ({
+    page,
+    app,
+    insomnia,
+  }) => {
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
@@ -118,6 +122,7 @@ test.describe('after-response script features tests', () => {
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
     await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).hover();
     await page.getByLabel('Edit Script Environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
     let globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
@@ -139,7 +144,11 @@ test.describe('after-response script features tests', () => {
     });
   });
 
-  test('insomnia.expect covers each matcher (equal/property/lengthOf/include/within/keys) and test.skip is reported', async ({ page, app, insomnia }) => {
+  test('insomnia.expect covers each matcher (equal/property/lengthOf/include/within/keys) and test.skip is reported', async ({
+    page,
+    app,
+    insomnia,
+  }) => {
     const text = await loadFixture('after-response-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
