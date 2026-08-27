@@ -4,6 +4,7 @@ import { href } from 'react-router';
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { sync } from '~/ui/ipc';
 import { getSyncItems, remoteCompareCache, reparentSyncDelta, vcsEventProperties } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -17,7 +18,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
     invariant(project.remoteId, 'Project is not remote');
-    const delta = await window.main.sync.pull(workspaceId, {
+    const delta = await sync.pull(workspaceId, {
       candidates: syncItems,
       teamId: project.parentId,
       teamProjectId: project.remoteId,

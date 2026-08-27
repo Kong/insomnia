@@ -2,9 +2,10 @@ import type { Project } from 'insomnia-data';
 import type { BackendProjectWithTeamsAndTeamProjectId } from 'insomnia-vcs';
 
 import { type InsomniaFile } from '~/common/project';
+import { sync } from '~/ui/ipc';
 
 export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { organizationId: string }) => {
-  return window.main.sync.remoteBackendProjectsOfTeam({ teamId: organizationId });
+  return sync.remoteBackendProjectsOfTeam({ teamId: organizationId });
 };
 
 /**
@@ -16,7 +17,7 @@ export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { org
  * `getUnsyncedRemoteWorkspaces(files, workspaces)` against the relevant local workspaces.
  */
 export function groupRemoteFilesByProjectId(
-  remoteBackendProjects: BackendProjectWithTeamsAndTeamProjectId[],
+  remoteBackendProjects: Omit<BackendProjectWithTeamsAndTeamProjectId, 'teams'>[],
   projects: Project[],
 ): Map<string, InsomniaFile[]> {
   const remoteIdToProjectId = new Map<string, string>();

@@ -4,6 +4,7 @@ import { href } from 'react-router';
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
+import { sync } from '~/ui/ipc';
 import { getSyncItems, remoteCompareCache, reparentSyncDelta } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -17,7 +18,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof id === 'string', 'Id is required');
   try {
     const { syncItems } = await getSyncItems({ workspaceId });
-    const delta = (await window.main.sync.rollback(workspaceId, id, syncItems)) as unknown as Operation;
+    const delta = (await sync.rollback(workspaceId, id, syncItems)) as unknown as Operation;
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
     delete remoteCompareCache[workspaceId];
