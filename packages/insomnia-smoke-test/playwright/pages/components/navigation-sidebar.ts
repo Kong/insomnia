@@ -333,13 +333,13 @@ export class NavigationSidebar {
     if (!verifyVisible) {
       return;
     }
-    for (let attempt = 0; attempt <= 2; attempt++) {
+    for (let attempt = 0; attempt <= 10; attempt++) {
       try {
-        await verifyVisible.waitFor({ state: 'visible', timeout: 10_000 });
+        await verifyVisible.waitFor({ state: 'visible', timeout: 1000 });
         return;
       } catch {
-        if (attempt === 2) {
-          throw new Error(`Workspace "${name}" was selected but its content did not render after 2 attempts`);
+        if (attempt === 10) {
+          throw new Error(`Workspace "${name}" was selected but its content did not render after 10 attempts`);
         }
         await this.workspaceRow(name).click();
       }

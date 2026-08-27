@@ -9,10 +9,10 @@ const devServerUrl = playwrightConfig?.webServer?.url || 'http://127.0.0.1:4010'
 async function clickGitSyncMenuItem(page: Page, menuItemText: string): Promise<void> {
   const gitSyncButton = page.getByLabel('Git Sync');
   const menuItem = page.getByText(menuItemText);
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 10; attempt++) {
     await gitSyncButton.click();
     try {
-      await menuItem.click({ timeout: 3000 });
+      await menuItem.click({ timeout: 1000 });
       return;
     } catch {
       if (attempt === 10) {
