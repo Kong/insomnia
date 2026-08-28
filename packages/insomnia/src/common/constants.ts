@@ -7,11 +7,12 @@ import {
   isMac,
   isWindows,
   METHOD_GET,
-  platform,
 } from 'insomnia-data/common';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
+
+export { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT_TEST } from 'insomnia-api';
 
 // In the renderer (nodeIntegration disabled) env vars come from the preload via window.env.
 // In the inso CLI and main process, fall back to process.env.
@@ -23,7 +24,6 @@ const env = typeof window !== 'undefined' && window.env ? window.env : process[E
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
-export const PLAYWRIGHT_TEST = env.PLAYWRIGHT_TEST;
 export const OAUTH_WINDOW_SESSION_ID_KEY = 'current-oauth-session-id';
 
 // App Stuff
@@ -69,8 +69,6 @@ export function updatesSupported() {
 
 export type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'readyToRestart';
 
-export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
-
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
 
@@ -104,7 +102,6 @@ export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.
 export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
 
 // API
-export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
 
 export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
@@ -541,9 +538,6 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
   598: 'Network read timeout error',
   599: 'Network Connect Timeout Error',
 };
-
-// (ms) curently server timeout is 30s
-export const INSOMNIA_FETCH_TIME_OUT = 30_000;
 
 // channel names for real time events (websocket/socket-io/mcp)
 export const REALTIME_EVENTS_CHANNELS = {
