@@ -839,3 +839,140 @@ describe('getWithDescendants()', () => {
     );
   });
 });
+
+describe('removeWhere()', () => {
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+  });
+
+  it('cascades to descendants of every matched doc, leaving unmatched docs alone', async () => {
+    const workspace = await services.workspace.create({ name: 'W1' });
+    const folder = await services.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
+    const request = await services.request.create({ parentId: folder._id, name: 'Request' });
+    const otherWorkspace = await services.workspace.create({ name: 'W2' });
+
+    await db.removeWhere(models.workspace.type, { _id: workspace._id });
+
+    expect(await db.findOne(models.workspace.type, { _id: workspace._id })).toBeUndefined();
+    expect(await db.findOne(models.requestGroup.type, { _id: folder._id })).toBeUndefined();
+    expect(await db.findOne(models.request.type, { _id: request._id })).toBeUndefined();
+    expect(await db.findOne(models.workspace.type, { _id: otherWorkspace._id })).toEqual(otherWorkspace);
+  });
+
+  it('emits a single batched remove notification covering all cascaded docs', async () => {
+    const workspace = await services.workspace.create({ name: 'W1' });
+    const request = await services.request.create({ parentId: workspace._id, name: 'Request' });
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => changesSeen.push(changes));
+
+    await db.removeWhere(models.workspace.type, { _id: workspace._id });
+
+    expect(changesSeen).toHaveLength(1);
+    const removedIds = changesSeen[0].map(([, doc]) => doc._id);
+    expect(removedIds).toEqual(expect.arrayContaining([workspace._id, request._id]));
+  });
+});
+
+describe('unsafeRemove()', () => {
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+  });
+
+  it('removes only the given doc, without cascading to descendants', async () => {
+    const workspace = await services.workspace.create({ name: 'W1' });
+    const request = await services.request.create({ parentId: workspace._id, name: 'Request' });
+
+    await db.unsafeRemove(workspace);
+
+    expect(await db.findOne(models.workspace.type, { _id: workspace._id })).toBeUndefined();
+    // Unlike remove(), the child is orphaned rather than cascaded away
+    expect(await db.findOne(models.request.type, { _id: request._id })).toEqual(request);
+  });
+
+  it('notifies listeners with a single remove event for just that doc', async () => {
+    const workspace = await services.workspace.create({ name: 'W1' });
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => changesSeen.push(changes));
+
+    await db.unsafeRemove(workspace);
+
+    expect(changesSeen).toEqual([[['remove', workspace, []]]]);
+  });
+});
+
+describe('batchModifyDocs()', () => {
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+  });
+
+  it('upserts and removes in one buffered flush, and removes do not cascade', async () => {
+    const toRename = await services.workspace.create({ name: 'W1' });
+    const toRemove = await services.workspace.create({ name: 'W2' });
+    const orphanedChild = await services.request.create({ parentId: toRemove._id, name: 'Request' });
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => changesSeen.push(changes));
+
+    await db.batchModifyDocs({
+      upsert: [{ ...toRename, name: 'W1 renamed' }],
+      remove: [toRemove],
+    });
+
+    // Both operations land in a single flush
+    expect(changesSeen).toHaveLength(1);
+    expect(changesSeen[0].map(([event]) => event)).toEqual(['update', 'remove']);
+
+    expect((await db.findOne(models.workspace.type, { _id: toRename._id }))?.name).toBe('W1 renamed');
+    expect(await db.findOne(models.workspace.type, { _id: toRemove._id })).toBeUndefined();
+    // remove uses unsafeRemove semantics under the hood: descendants are left behind
+    expect(await db.findOne(models.request.type, { _id: orphanedChild._id })).toEqual(orphanedChild);
+  });
+});
+
+describe('count()', () => {
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+  });
+
+  it('counts only docs matching the query', async () => {
+    await services.workspace.create({ name: 'W1' });
+    await services.workspace.create({ name: 'W2' });
+    await services.workspace.create({ name: 'W3' });
+
+    expect(await db.count(models.workspace.type)).toBe(3);
+    expect(await db.count(models.workspace.type, { name: 'W1' })).toBe(1);
+    expect(await db.count(models.workspace.type, { name: 'nonexistent' })).toBe(0);
+  });
+});
+
+describe('flushChanges()', () => {
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+  });
+
+  it('drops buffered changes without notifying listeners when fake=true', async () => {
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => changesSeen.push(changes));
+
+    const flushId = await db.bufferChangesIndefinitely();
+    await services.workspace.create({ name: 'Dropped' });
+    await db.flushChanges(flushId, true);
+
+    expect(changesSeen).toHaveLength(0);
+
+    // The fake flush still turns off buffering, so the next write flushes for real
+    const workspace = await services.workspace.create({ name: 'Kept' });
+    expect(changesSeen).toEqual([[['insert', workspace, []]]]);
+  });
+
+  it('is a no-op when passed a stale buffer id', async () => {
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => changesSeen.push(changes));
+
+    const staleId = await db.bufferChangesIndefinitely();
+    await services.workspace.create({ name: 'Still buffered' });
+    // A flush with a mismatched (stale) id must not release the buffer
+    await db.flushChanges(staleId + 999);
+
+    expect(changesSeen).toHaveLength(0);
+  });
+});
