@@ -76,6 +76,56 @@ describe('test Url object', () => {
     );
   });
 
+  it('test getHost, getPath, getRemote fallback for URLs with template tags', () => {
+    // URL with template variable in host - urlObject will be undefined
+    const urlWithTagHost = new Url('http://{{ host }}/api/v1/users?q=1');
+    expect(urlWithTagHost.getHost()).toEqual('{{ host }}');
+    expect(urlWithTagHost.getPath()).toEqual('/api/v1/users');
+    expect(urlWithTagHost.getRemote()).toEqual('{{ host }}');
+
+    // URL with template tag in path
+    const urlWithTagPath = new Url('http://example.com/{{ path }}/resource');
+    expect(urlWithTagPath.getHost()).toEqual('example.com');
+    expect(urlWithTagPath.getPath()).toEqual('/{{ path }}/resource');
+    expect(urlWithTagPath.getRemote()).toEqual('example.com');
+
+    // URL with port and template variable in host
+    const urlWithTagHostAndPort = new Url('http://{{ host }}:8080/api');
+    expect(urlWithTagHostAndPort.getHost()).toEqual('{{ host }}');
+    expect(urlWithTagHostAndPort.getPath()).toEqual('/api');
+    expect(urlWithTagHostAndPort.getRemote()).toEqual('{{ host }}:8080');
+
+    // URL with Nunjucks block tag
+    const urlWithBlockTag = new Url("http://httpbin.org/{{ method }}/{% uuid 'v4' %}");
+    expect(urlWithBlockTag.getHost()).toEqual('httpbin.org');
+    expect(urlWithBlockTag.getPath()).toEqual("/{{ method }}/{% uuid 'v4' %}");
+    expect(urlWithBlockTag.getRemote()).toEqual('httpbin.org');
+
+    // URL with no path
+    const urlNoPath = new Url('http://{{ host }}');
+    expect(urlNoPath.getHost()).toEqual('{{ host }}');
+    expect(urlNoPath.getPath()).toEqual('');
+    expect(urlNoPath.getRemote()).toEqual('{{ host }}');
+
+    // URL with query but no explicit path
+    const urlWithQueryNoPath = new Url('http://{{ host }}?q=1');
+    expect(urlWithQueryNoPath.getHost()).toEqual('{{ host }}');
+    expect(urlWithQueryNoPath.getPath()).toEqual('');
+    expect(urlWithQueryNoPath.getRemote()).toEqual('{{ host }}');
+
+    // URL with userinfo and template host
+    const urlWithUserInfoAndTagHost = new Url('http://user:pass@{{ host }}/p');
+    expect(urlWithUserInfoAndTagHost.getHost()).toEqual('{{ host }}');
+    expect(urlWithUserInfoAndTagHost.getPath()).toEqual('/p');
+    expect(urlWithUserInfoAndTagHost.getRemote()).toEqual('{{ host }}');
+
+    // Non-HTTP scheme with template host and port
+    const nonHttpUrlWithTagHostAndPort = new Url('grpc://{{ host }}:50051');
+    expect(nonHttpUrlWithTagHostAndPort.getHost()).toEqual('{{ host }}');
+    expect(nonHttpUrlWithTagHostAndPort.getPath()).toEqual('');
+    expect(nonHttpUrlWithTagHostAndPort.getRemote()).toEqual('{{ host }}:50051');
+  });
+
   it('test Url static methods', () => {
     // static methods
     const urlStr = 'https://myhost.com/path1/path2';
