@@ -332,6 +332,72 @@ describe('decodeEncoding()', () => {
   });
 });
 
+describe('replaceVaultTagIdIfNeeded()', () => {
+  const vaultTagIdRegex = utils.vaultTagIdRegex;
+  const normalTemplate = `{% vault 'aws', '${utils.generateExternalVaultTagId()}', 'eyJTZWNyZXRJZCI6IjEifQ==' %}`;
+
+  it('leaves plain text without template tag symbols untouched', () => {
+    const template = 'normal string';
+    expect(utils.replaceVaultTagIdIfNeeded(template)).toBe(template);
+  });
+
+  it('leaves multiple line of input unchanged', () => {
+    const input = 'line 1\nline 2\nline 3';
+    expect(utils.replaceVaultTagIdIfNeeded(input)).toBe(input);
+  });
+
+  it('leaves a template tag with no vault tag id untouched', () => {
+    const template = "{% response 'body', 'req_123', 'b64', '' %}";
+    expect(utils.replaceVaultTagIdIfNeeded(template)).toBe(template);
+  });
+
+  it('replaces the vault tag id inside a template tag with a freshly generated one', () => {
+    const result = utils.replaceVaultTagIdIfNeeded(normalTemplate);
+
+    expect(result).not.toBe(normalTemplate);
+    expect(result).not.toContain('externalVaultTag_0b1ea47e317f4f03ae147dcb6c5f66c6');
+
+    const [, newId] = result.match(/'(externalVaultTag_\w+)'/) || [];
+    expect(newId).toMatch(vaultTagIdRegex);
+  });
+
+  it('generates a different id on each call', () => {
+    const first = utils.replaceVaultTagIdIfNeeded(normalTemplate);
+    const second = utils.replaceVaultTagIdIfNeeded(normalTemplate);
+    expect(first).not.toBe(second);
+  });
+
+  it('does not replace a vault tag id-like string outside of a {% %} block', () => {
+    const idLikeString = 'externalVaultTag_0b1ea47e317f4f03ae147dcb6c5f66c6';
+    const template = `see ${idLikeString} for reference ${normalTemplate}`;
+
+    const result = utils.replaceVaultTagIdIfNeeded(template);
+
+    // the id-like text outside the tag is left alone
+    expect(result).toContain(idLikeString);
+    // the id inside the {% %} tag is still replaced
+    expect(result).not.toContain(normalTemplate);
+  });
+
+  it('replaces each vault tag id with a distinct new id when the template contains multiple tags', () => {
+    const template =
+      'templateStart' +
+      "{% vault 'aws', 'externalVaultTag_0b1ef47e317f4f03ae147dcb6c5f66c6', 'eyJTZWNyZXRJZCI6IjEifQ==' %}" +
+      "{% vault 'aws', 'externalVaultTag_1b1ef47e317f4f03ae147dcb6c5f66c6', 'eyJTZWNyZXRJZCI6IjEifQ==' %}" +
+      "{% vault 'aws', 'externalVaultTag_2b1ef47e317f4f03ae147dcb6c5f66c6', 'eyJTZWNyZXRJZCI6IjEifQ==' %}" +
+      'templateEnd';
+
+    const result = utils.replaceVaultTagIdIfNeeded(template);
+
+    const newIds = result.match(new RegExp(`${utils.externalVaultTagPrefix}_\\w+`, 'g')) || [];
+    expect(newIds).toHaveLength(3);
+    expect(new Set(newIds).size).toBe(3);
+    newIds.forEach(id => expect(id).toMatch(vaultTagIdRegex));
+    expect(result.startsWith('templateStart')).toBe(true);
+    expect(result.endsWith('templateEnd')).toBe(true);
+  });
+});
+
 describe('extractUndefinedVariableKey()', () => {
   it('extract nunjucks variable key', () => {
     expect(extractUndefinedVariableKey('{{name}}', {})).toEqual(['name']);
