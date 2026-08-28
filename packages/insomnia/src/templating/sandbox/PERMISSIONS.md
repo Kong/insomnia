@@ -23,7 +23,18 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `buffer` (and more via M2).
+    - `buffer` is a thin re-export of the ambient `Buffer` global (`sandbox-globals.ts`), matching
+      real Node's `require('buffer').Buffer === global.Buffer` identity — it is **not an actual
+      capability boundary**. `Buffer` itself is always reachable with zero manifest declaration at
+      all, the same as `atob`/`URL`, so declaring `"buffer"` doesn't restrict anything beyond what
+      every plugin already has; it exists only so `var { Buffer } = require('buffer')`-style code
+      resolves. The `Buffer` shim itself implements `from`/`alloc`/`isBuffer`/`concat`/`compare`/
+      `toString`/`slice`/`subarray`/`indexOf`/`lastIndexOf`/`includes`/`equals`/`fill` (numeric byte
+      value only — a string fill pattern throws rather than silently misbehaving). Not implemented:
+      the numeric `read*`/`write*` family, `copy()`, the three-argument `Buffer.from(arrayBuffer,
+      byteOffset, length)` overload, `SlowBuffer`, `transcode`, `isUtf8`/`isAscii`, `Blob`/`File`,
+      and `constants`.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
