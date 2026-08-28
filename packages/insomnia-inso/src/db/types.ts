@@ -1,14 +1,17 @@
-import type { CaCertificate, ClientCertificate, CloudProviderCredential, CookieJar, Settings } from 'insomnia-data';
-
 import type {
   ApiSpec,
   BaseModel,
+  CaCertificate,
+  ClientCertificate,
+  CloudProviderCredential,
+  CookieJar,
   Environment,
+  Settings,
   UnitTest,
   UnitTestSuite,
   Workspace,
   WorkspaceMeta,
-} from './models/types';
+} from 'insomnia-data';
 
 export interface Database {
   ApiSpec: ApiSpec[];

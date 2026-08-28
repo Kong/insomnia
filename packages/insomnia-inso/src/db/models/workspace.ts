@@ -1,9 +1,9 @@
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
+import type { Workspace } from 'insomnia-data';
 
 import { logger } from '../../logger';
 import type { Database } from '../types';
-import type { Workspace } from './types';
 import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 const entity = 'workspace';
 export const loadWorkspace = (db: Database, identifier: string) => {
