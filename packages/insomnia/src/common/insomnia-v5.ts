@@ -837,6 +837,23 @@ export async function getInsomniaV5DataExport({
       return false;
     });
 
+    // When a requestIds filter is supplied, pre-compute the set of folders that
+    // are ancestors of at least one selected resource. Folders outside this set
+    // are excluded so users who pick a subset of requests don't end up with an
+    // export that drags in every unrelated folder and its docs.
+    const hasRequestFilter = Array.isArray(requestIds) && requestIds.length > 0;
+    const selectedAncestorGroupIds = new Set<string>();
+    if (hasRequestFilter) {
+      const resourcesById = new Map(workspaceDescendants.map(resource => [resource._id, resource]));
+      for (const id of requestIds!) {
+        let parent = resourcesById.get(resourcesById.get(id)?.parentId ?? '');
+        while (parent && models.requestGroup.isRequestGroup(parent) && !selectedAncestorGroupIds.has(parent._id)) {
+          selectedAncestorGroupIds.add(parent._id);
+          parent = resourcesById.get(parent.parentId);
+        }
+      }
+    }
+
     /**
      * Recursively builds a collection structure from flat resource list
      * This function converts the flat list of resources into a hierarchical structure
@@ -855,12 +872,16 @@ export async function getInsomniaV5DataExport({
       // Filter resources based on requestIds filter and parent relationship
       resources
         .filter(resource => {
-          // Include all request groups, or filter by requestIds if specified
-          if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource)) {
+          if (!hasRequestFilter) {
             return true;
           }
 
-          return requestIds.includes(resource._id);
+          // Only include folders that are ancestors of a selected request.
+          if (models.requestGroup.isRequestGroup(resource)) {
+            return selectedAncestorGroupIds.has(resource._id);
+          }
+
+          return requestIds!.includes(resource._id);
         })
         .filter(resource => resource.parentId === parentId)
         .forEach(resource => {
