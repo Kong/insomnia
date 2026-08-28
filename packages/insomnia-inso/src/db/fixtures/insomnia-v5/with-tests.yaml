@@ -6,7 +6,7 @@ meta:
   created: 1639600546875
   modified: 1639600569168
 collection:
-  - url: mock.insomnia.run
+  - url: mock.insomnia.moe
     name: Simple request
     meta:
       id: req_01e2be4c819d44948d045c9a7ee5c02c
