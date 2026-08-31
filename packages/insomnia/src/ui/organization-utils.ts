@@ -1,17 +1,10 @@
-import {
-  createTeamProject,
-  fetchTeamProjects,
-  getCurrentPlan,
-  getUserProfile,
-  isApiError,
-  type Organization,
-} from 'insomnia-api';
+import { createTeamProject, isApiError, type Organization } from 'insomnia-api';
 import type { Project } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
-import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 
+// TODO: move vcs into services so we can remove this file.
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -21,38 +14,6 @@ import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
-export { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-
-export async function syncCurrentPlan(sessionId: string, accountId: string) {
-  const [currentPlanResult] = await Promise.allSettled([getCurrentPlan({ sessionId })]);
-  if (currentPlanResult.status === 'fulfilled' && currentPlanResult.value) {
-    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlanResult.value));
-  } else {
-    console.log('[current-plan] Failed to load current-plan', currentPlanResult.status);
-  }
-}
-
-export async function syncOrganizations(sessionId: string, accountId: string) {
-  try {
-    const [organizations, user, currentPlan] = await Promise.all([
-      services.organization.list(),
-      getUserProfile({ sessionId }),
-      getCurrentPlan({ sessionId }),
-    ]);
-
-    invariant(organizations, 'Failed to load organizations');
-    invariant(user && user.id, 'Failed to load user');
-    invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
-
-    invariant(accountId, 'Account ID is not defined');
-
-    localStorage.setItem(`${accountId}:spaces`, JSON.stringify(organizations));
-    localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
-    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
-  } catch (error) {
-    console.log('[organization] Failed to load Organizations', error);
-  }
-}
 
 export async function updateLocalProjectToRemote({
   project,
@@ -154,98 +115,3 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
     }
   }
 }
-
-interface TeamProject {
-  id: string;
-  name: string;
-}
-
-async function getAllTeamProjects(organizationId: string) {
-  const { id: sessionId } = await services.userSession.get();
-  if (!sessionId) {
-    return [];
-  }
-
-  console.log('[project] Fetching', organizationId);
-  const response = await fetchTeamProjects({ sessionId, organizationId });
-
-  return response.data;
-}
-
-async function syncTeamProjects({
-  organizationId,
-  teamProjects,
-}: {
-  teamProjects: TeamProject[];
-  organizationId: string;
-}) {
-  // assumption: api teamProjects is the source of truth for migrated projects
-  // once migrated orgs become the source of truth for projects
-  // its important that migration be completed before this code is run
-  const existingRemoteProjects = await services.project.list({
-    remoteId: { $in: teamProjects.map(p => p.id) },
-  });
-
-  const existingRemoteProjectsRemoteIds = existingRemoteProjects.map(p => p.remoteId);
-  const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
-
-  // this will create a new project for any remote projects that don't exist in the current organization
-  await Promise.all(
-    remoteProjectsThatNeedToBeCreated.map(async prj => {
-      await services.project.create({
-        remoteId: prj.id,
-        name: prj.name,
-        parentId: organizationId,
-      });
-    }),
-  );
-
-  const remoteProjectsThatNeedToBeUpdated = await services.project.list({
-    // Remote ID is in the list of remote projects
-    remoteId: { $in: teamProjects.map(p => p.id) },
-  });
-
-  await Promise.all(
-    remoteProjectsThatNeedToBeUpdated.map(async prj => {
-      const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
-      if (remoteProject && remoteProject.name !== prj.name) {
-        await services.project.update(prj, {
-          name: remoteProject.name,
-        });
-      }
-    }),
-  );
-
-  // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
-  const removedRemoteProjects = await services.project.list({
-    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
-    parentId: organizationId,
-    // Remote ID is not in the list of remote projects.
-    // add `$ne: null` condition because if remoteId is already null, we dont need to remove it again.
-    // nedb use append-only format, all updates and deletes actually result in lines added
-    remoteId: {
-      $nin: teamProjects.map(p => p.id),
-      $ne: null,
-    },
-  });
-
-  await Promise.all(
-    removedRemoteProjects.map(async prj => {
-      await services.project.update(prj, {
-        remoteId: null,
-      });
-    }),
-  );
-}
-
-export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
-  const user = await services.userSession.get();
-  const teamProjects = await getAllTeamProjects(organizationId);
-  // ensure we don't sync projects in the wrong place
-  if (Array.isArray(teamProjects) && user.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
-    await syncTeamProjects({
-      organizationId,
-      teamProjects,
-    });
-  }
-});

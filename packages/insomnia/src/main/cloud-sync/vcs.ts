@@ -4,13 +4,13 @@ import { randomUUID } from 'node:crypto';
 import { app, type WebContents } from 'electron';
 import type { RemoteProject } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import type { BackendProjectWithTeam, MergeConflict } from 'insomnia-vcs';
+import { VCS } from 'insomnia-vcs';
 
+import { PLAYWRIGHT_TEST } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import type { VCS } from '~/main/cloud-sync/core/vcs';
-import { createVCS } from '~/main/cloud-sync/create-vcs';
 import { pullBackendProject } from '~/main/cloud-sync/pull-backend-project';
-import type { BackendProjectWithTeam, MergeConflict } from '~/sync/types';
-import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 
 interface SyncInvocationContext {
   sender: WebContents;
@@ -53,16 +53,19 @@ const requestConflictResolution = (conflicts: MergeConflict[], labels: { ours: s
   });
 };
 
+function createVCS() {
+  return new VCS({
+    dataPath: process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+    conflictHandler: requestConflictResolution,
+    testMode: !!PLAYWRIGHT_TEST,
+  });
+}
+
 export const getMainVCS = () => {
   if (mainVCS) {
     return mainVCS;
   }
-
-  mainVCS = createVCS({
-    dataPath: process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    conflictHandler: requestConflictResolution,
-  });
-
+  mainVCS = createVCS();
   return mainVCS;
 };
 
@@ -136,10 +139,7 @@ export const pullRemoteBackendProjectWithSingleton = async (
     const project = await services.project.getByRemoteId(remoteId);
     invariant(project?.remoteId, 'Project is not a remote project');
 
-    const pullVCS = createVCS({
-      dataPath: process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-      conflictHandler: requestConflictResolution,
-    });
+    const pullVCS = createVCS();
 
     await pullVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
     const { workspaceId } = await pullBackendProject({

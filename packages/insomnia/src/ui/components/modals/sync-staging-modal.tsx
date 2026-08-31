@@ -1,4 +1,5 @@
 import { models } from 'insomnia-data';
+import type { StageEntry, Status, StatusCandidate } from 'insomnia-vcs';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -21,7 +22,6 @@ import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organizatio
 import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
 
-import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 

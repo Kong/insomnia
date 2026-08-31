@@ -1,11 +1,11 @@
-import type { MergeConflict } from '~/sync/types';
+import type { MergeConflict } from 'insomnia-vcs';
 
 import { showModal } from '../components/modals';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 
 let hasRegisteredConflictListener = false;
 
-export { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+export { UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 
 export const registerSyncMergeConflictListener = () => {
   if (hasRegisteredConflictListener) {

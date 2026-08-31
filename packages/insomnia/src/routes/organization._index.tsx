@@ -2,9 +2,10 @@ import type { Organization } from 'insomnia-api';
 import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
+import { syncOrganizations } from '~/common/organization';
 import { invariant } from '~/common/utils/invariant';
 import * as session from '~/ui/account/session';
-import { findMigrationTargetSpaceId, migrateProjectsUnderOrganization, syncOrganizations } from '~/ui/organization-utils';
+import { findMigrationTargetSpaceId, migrateProjectsUnderOrganization } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization._index';
 

@@ -11,3 +11,4 @@ export * from './hotkeys';
 export * from './settings';
 export * from './keyboard-keys';
 export * from './search';
+export * from './deterministic-stringify';
