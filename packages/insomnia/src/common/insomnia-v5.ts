@@ -289,7 +289,8 @@ export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): Workspace
   } else if (type === 'environment.insomnia.rest/5.0') {
     return 'environment';
   } else if (type === 'spec.insomnia.rest/5.0') {
-    return 'design';
+    // The legacy spec type is treated as collection scope for now. We keep the spec type for backward compatibility.
+    return 'collection';
   } else if (type === 'mcpClient.insomnia/5.0') {
     return 'mcp';
   }
@@ -305,7 +306,7 @@ function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
     ),
     type: 'Workspace',
     _type: 'workspace',
-    name: file.name || 'Imported Collection',
+    name: file.name || 'Imported API Collection',
     parentId: '',
     scope: insomniaSchemaTypeToScope(file.type),
   };
@@ -1206,11 +1207,7 @@ export async function getInsomniaV5DataExport({
           includePrivateEnvironments,
         ),
         spec: collectionApiSpec.length > 0 ? getSpecFromResources(collectionApiSpec) : {},
-        testSuites: getTestSuitesFromResources(
-          exportableResources.filter(
-            resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource),
-          ),
-        ),
+        testSuites: getTestSuitesFromResources(collectionTestSuites),
       };
 
       const parsedCollection = InsomniaFileSchema.parse(collection);

@@ -272,12 +272,12 @@ export const EnvironmentPicker = ({
                 position="top"
                 message="Used only by this collection. Click the edit icon to manage its environments."
               >
-                <span>Collection Environment</span>
+                <span>API Collection Environment</span>
               </Tooltip>
               <div className="flex shrink-0 items-center gap-2">
                 <Button
                   onPress={onOpenEnvironmentSettingsModal}
-                  aria-label="Manage collection environments"
+                  aria-label="Manage API collection environments"
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="edit" />
@@ -286,7 +286,7 @@ export const EnvironmentPicker = ({
               </div>
             </Heading>
             <ListBox
-              aria-label="Select a Collection Environment"
+              aria-label="Select an API Collection Environment"
               selectionMode="single"
               key={activeEnvironment._id}
               items={collectionEnvironmentList}

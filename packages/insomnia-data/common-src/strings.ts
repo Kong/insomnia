@@ -18,16 +18,16 @@ type StringId =
 
 export const strings: Record<StringId, StringInfo> = {
   collection: {
-    singular: 'Collection',
-    plural: 'Collections',
+    singular: 'API Collection',
+    plural: 'API Collections',
   },
   mock: {
     singular: 'Mock',
     plural: 'Mocks',
   },
   document: {
-    singular: 'Document',
-    plural: 'Documents',
+    singular: 'API Collection',
+    plural: 'API Collections',
   },
   organization: {
     singular: 'Organization',

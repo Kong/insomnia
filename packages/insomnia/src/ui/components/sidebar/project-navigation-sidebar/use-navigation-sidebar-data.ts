@@ -22,8 +22,8 @@ export function useProjectNavigationSidebarData(
     [projects, isProjectTabActive],
   );
   const projectIds = useMemo(() => activeProjects.map(p => p._id), [activeProjects]);
-  // Get the list of collection workspace ids that should be cached based on the current filter and expanded projects/workspaces.
 
+  // Get the list of collection/design workspace ids that should be cached based on the current filter and expanded projects/workspaces.
   const collectionOrDesignWorkspaceIds = useMemo(() => {
     const ids: string[] = [];
     projectIds.forEach(projectId => {

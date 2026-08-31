@@ -737,7 +737,7 @@ const ProjectNavigationSidebarInner = (
       return;
     }
     prevActiveWorkspaceIdRef.current = activeWorkspaceId;
-    if (workspaceItem.doc.scope === 'collection') {
+    if (workspaceItem.doc.scope === 'collection' || workspaceItem.doc.scope === 'design') {
       focusWorkspace(activeWorkspaceId, workspaceItem.project._id);
     } else {
       // Design docs, mock servers, environments etc. show the full tree.
@@ -832,6 +832,7 @@ const ProjectNavigationSidebarInner = (
         : undefined,
     [flatItems, focusedWorkspaceId],
   );
+  const focusedWorkspaceScope = focusedWorkspaceItem?.doc.scope ?? 'collection';
   // In focus mode the project + workspace rows are hidden, so strip those two
   // ancestor indent levels and let the tree indent from its first level.
   const treeDepthOffset = focusedWorkspaceId ? 2 : 0;
@@ -1008,9 +1009,9 @@ const ProjectNavigationSidebarInner = (
                   </Tooltip>
                 </TooltipTrigger>
                 <div
-                  className={`${scopeToBgColorMap.collection} ${scopeToTextColorMap.collection} flex h-5 w-5 shrink-0 items-center justify-center rounded-sm`}
+                  className={`${scopeToBgColorMap[focusedWorkspaceScope]} ${scopeToTextColorMap[focusedWorkspaceScope]} flex h-5 w-5 shrink-0 items-center justify-center rounded-sm`}
                 >
-                  <Icon icon={scopeToIconMap.collection} className="h-3 w-3" />
+                  <Icon icon={scopeToIconMap[focusedWorkspaceScope]} className="h-3 w-3" />
                 </div>
                 {isRenamingFocusedWorkspace ? (
                   <input
@@ -1047,7 +1048,7 @@ const ProjectNavigationSidebarInner = (
                     }}
                     className="flex-1 truncate rounded-xs p-1 font-semibold text-(--color-font) transition-colors hover:cursor-text hover:bg-(--hl-xs)"
                   >
-                    {focusedWorkspaceItem?.doc.name || 'Collection'}
+                    {focusedWorkspaceItem?.doc.name || 'API Collection'}
                   </span>
                 )}
                 <div className="ml-auto shrink-0">
@@ -1060,6 +1061,7 @@ const ProjectNavigationSidebarInner = (
                       onSortOrderChange={(newOrder: SortOrder) => {
                         setCollectionSortOrders(prev => ({ ...prev, [focusedWorkspaceId]: newOrder }));
                       }}
+                      forceShowTrigger
                       isOpen={isFocusedWorkspaceMenuOpen}
                       onOpenChange={setIsFocusedWorkspaceMenuOpen}
                     />

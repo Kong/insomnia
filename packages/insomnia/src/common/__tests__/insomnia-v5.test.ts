@@ -45,7 +45,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
     it('maps v5 schema types to workspace scopes', () => {
       expect(insomniaSchemaTypeToScope('collection.insomnia.rest/5.0')).toBe('collection');
       expect(insomniaSchemaTypeToScope('environment.insomnia.rest/5.0')).toBe('environment');
-      expect(insomniaSchemaTypeToScope('spec.insomnia.rest/5.0')).toBe('design');
+      expect(insomniaSchemaTypeToScope('spec.insomnia.rest/5.0')).toBe('collection');
       expect(insomniaSchemaTypeToScope('mock.insomnia.rest/5.0')).toBe('mock-server');
       expect(insomniaSchemaTypeToScope('mcpClient.insomnia/5.0')).toBe('mcp');
     });
