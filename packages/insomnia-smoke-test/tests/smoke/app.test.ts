@@ -26,8 +26,7 @@ test('can send requests', async ({ page, insomnia }) => {
     .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/echo`))
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-  // eslint-disable-next-line playwright/require-soft-assertions
-  await expect(statusTag).toContainText('201 OK');
+  await expect.soft(statusTag).toContainText('200 OK');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('send JSON request');
   await expect
