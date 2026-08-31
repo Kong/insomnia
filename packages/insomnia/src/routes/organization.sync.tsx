@@ -1,6 +1,6 @@
 import { services } from 'insomnia-data';
 
-import { syncOrganizations } from '~/ui/organization-utils';
+import { syncOrganizations } from '~/common/organization';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.sync';

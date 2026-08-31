@@ -26,6 +26,7 @@ import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
+import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
@@ -227,10 +228,10 @@ export function createWindow(): ElectronBrowserWindow {
     showUnresponsiveModal();
   });
 
-  // Open generic links (<a .../>) in default browser
-  mainBrowserWindow.webContents.on('will-navigate', (event, url) => {
+  // Open generic links (<a .../>) in default browser; also covers redirects.
+  const guardNavigation = (event: Electron.Event, url: string) => {
     // Prevents local dev full-reload events from opening browser window, see https://github.com/Kong/insomnia/pull/4925
-    if (url.startsWith(appUrl)) {
+    if (isTrustedAppOrigin(url, appUrl)) {
       return;
     }
 
@@ -240,14 +241,27 @@ export function createWindow(): ElectronBrowserWindow {
     if (protocol === 'http:' || protocol === 'https:') {
       shell.openExternal(url);
     }
-  });
+  };
+  mainBrowserWindow.webContents.on('will-navigate', guardNavigation);
+  mainBrowserWindow.webContents.on('will-redirect', guardNavigation);
 
   mainBrowserWindow.webContents.setWindowOpenHandler(() => {
     return { action: 'deny' };
   });
 
   // Load the html of the app.
-  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
+  let appUrl: string;
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const port = fs.readFileSync(path.resolve(__dirname, '..', '.vite-port'), 'utf8').trim();
+      appUrl = `http://localhost:${port}`;
+    } catch {
+      console.warn('[main] .vite-port not found, falling back to default port 3334');
+      appUrl = 'http://localhost:3334';
+    }
+  } else {
+    appUrl = 'https://insomnia-app.local';
+  }
 
   console.log(`[main] Loading ${appUrl}`);
 

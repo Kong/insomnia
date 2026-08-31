@@ -1,6 +1,6 @@
 import { redirect } from 'react-router';
 
-import { syncProjects } from '~/ui/organization-utils';
+import { syncProjects } from '~/common/project';
 import { getInitialRouteForOrganization } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId._index';

@@ -1,7 +1,16 @@
+import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 
 import type { PlaywrightTestConfig } from '@playwright/test';
 const isWindows = os.platform() === 'win32';
+
+// Reused across runs within this worktree only: .vite-port is written per-worktree by vite.config.ts,
+// so reading it here lets playwright reuse an already-running dev server instead of always starting a new one.
+let existingVitePort: string | undefined;
+try {
+  existingVitePort = fs.readFileSync(path.join(__dirname, '../insomnia/.vite-port'), 'utf8').trim();
+} catch {}
 const echoServer: PlaywrightTestConfig['webServer'] = {
   name: 'Echo server',
   command: 'npm run serve',
@@ -18,7 +27,7 @@ const viteServer: PlaywrightTestConfig['webServer'] = {
   name: 'Vite Server',
   cwd: '../../',
   command: 'npm run watch:app',
-  url: 'http://localhost:3334',
+  ...(existingVitePort ? { url: `http://localhost:${existingVitePort}` } : {}),
   timeout: 120 * 1000,
   reuseExistingServer: !process.env.CI,
   stdout: 'pipe',

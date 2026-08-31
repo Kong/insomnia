@@ -255,3 +255,7 @@ export async function getProjectsWithGitRepositories({
     };
   });
 }
+
+export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
+  await services.project.syncProjects(organizationId);
+});

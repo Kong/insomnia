@@ -14,7 +14,8 @@ await initDatabase(mainDatabase, { inMemoryOnly: true }, true);
 await initServices(servicesNodeImpl);
 initRuntime(nodeRuntime);
 
-vi.mock('electron', () => ({ default: electronMock }));
+// spread as named exports too, so `import { ipcMain, BrowserWindow, app } from 'electron'` resolves
+vi.mock('electron', () => ({ default: electronMock, ...electronMock }));
 
 vi.mock('uuid', () => ({
   v4: () => v4Mock(),

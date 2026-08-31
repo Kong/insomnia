@@ -1,8 +1,8 @@
 import type { BaseModel, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import type { Stage, StageEntry, Status, StatusCandidate } from 'insomnia-vcs';
 
 import { database } from '../../common/database';
-import type { Stage, StageEntry, Status, StatusCandidate } from '../types';
 
 export interface SyncVCSLike {
   hasBackendProject: () => boolean | Promise<boolean>;

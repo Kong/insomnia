@@ -4,6 +4,7 @@ import { fuzzyMatchAll } from 'insomnia-data/common';
 
 import { sortMethodMap } from '~/common/sorting';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { dedupeCollectionItems } from '~/ui/utils/dedupe-collection-items';
 
 export function flattenCollectionChildren(
   workspaceId: string,
@@ -17,16 +18,7 @@ export function flattenCollectionChildren(
 
   const collection: Child[] = [];
 
-  const seenIds = new Set<string>();
-  // Dedup requests with same ID, keeping the first occurrence of each ID
-  const uniqueRequests = allRequests.filter(doc => {
-    if (seenIds.has(doc._id)) {
-      console.warn(`Duplicate request or request group ID found in workspace ${workspaceId}: ${doc._id}`);
-      return false;
-    }
-    seenIds.add(doc._id);
-    return true;
-  });
+  const uniqueRequests = dedupeCollectionItems(allRequests, doc => doc._id);
 
   // map of parentId to its direct children requests and request groups
   const requestsByParentId = new Map<string, CollectionChildDoc[]>();
