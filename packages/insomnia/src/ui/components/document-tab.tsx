@@ -1,33 +1,45 @@
 import classnames from 'classnames';
-import { NavLink } from 'react-router';
+import { Link } from 'react-router';
+
+type DocumentTabId = 'spec' | 'test';
 
 interface Props {
   organizationId: string;
   projectId: string;
   workspaceId: string;
+  activeItemId: DocumentTabId;
+  enableLegacyUnitTests: boolean;
   className?: string;
 }
 
-export const DocumentTab = ({ organizationId, projectId, workspaceId, className }: Props) => {
+export const DocumentTab = ({
+  organizationId,
+  projectId,
+  workspaceId,
+  activeItemId,
+  enableLegacyUnitTests,
+  className,
+}: Props) => {
+  const base = `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}`;
+
+  const items: { id: DocumentTabId; name: string; to: string }[] = [
+    { id: 'spec', name: 'Spec', to: `${base}/debug` },
+    ...(enableLegacyUnitTests ? [{ id: 'test' as const, name: 'Tests', to: `${base}/test` }] : []),
+  ];
+
   return (
-    <nav className={`flex h-[40px] w-full items-center ${className} justify-around px-1`}>
-      {[
-        { id: 'spec', name: 'Spec' },
-        { id: 'test', name: 'Tests' },
-      ].map(item => (
-        <NavLink
+    <nav className={`flex h-10 w-full items-center ${className} justify-around px-1`}>
+      {items.map(item => (
+        <Link
           key={item.id}
-          to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
-          className={({ isActive, isPending }) =>
-            classnames('rounded-full px-2 text-center', {
-              'bg-(--color-surprise) text-(--color-font-surprise)': isActive,
-              'animate-pulse': isPending,
-            })
-          }
+          to={item.to}
+          className={classnames('rounded-full px-2 text-center', {
+            'bg-(--color-surprise) text-(--color-font-surprise)': item.id === activeItemId,
+          })}
           data-testid={`workspace-${item.id}`}
         >
           {item.name}
-        </NavLink>
+        </Link>
       ))}
     </nav>
   );

@@ -236,7 +236,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     [setNewWorkspaceModalState],
   );
   const createNewDocument = useCallback(
-    (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source }),
+    // Create collection instead of design document for now.
+    (source: string) => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source }),
     [setNewWorkspaceModalState],
   );
   const createNewMockServer = useCallback(
@@ -280,17 +281,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     () => [
       {
         id: 'new-collection',
-        name: 'Collection',
+        name: 'API Collection',
         icon: 'bars',
         action: () => createNewCollection('navbar'),
         scope: 'collection',
-      },
-      {
-        id: 'new-document',
-        name: 'Document',
-        icon: 'file',
-        action: () => createNewDocument('navbar'),
-        scope: 'design',
       },
       {
         id: 'new-mcp-client',
@@ -318,14 +312,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         scope: 'environment',
       },
     ],
-    [
-      canCreateMockServer,
-      createNewCollection,
-      createNewDocument,
-      createNewGlobalEnvironment,
-      createNewMcpClient,
-      createNewMockServer,
-    ],
+    [canCreateMockServer, createNewCollection, createNewGlobalEnvironment, createNewMcpClient, createNewMockServer],
   );
 
   const isRemoteProjectInconsistent =

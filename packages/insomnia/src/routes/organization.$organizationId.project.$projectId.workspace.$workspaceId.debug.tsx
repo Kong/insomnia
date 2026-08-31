@@ -1,9 +1,11 @@
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
-import type { ChangeBufferEvent, Request } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import type { ChangeBufferEvent, Request, UnitTestSuite } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
+import type { OpenAPIV3 } from 'openapi-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, Navigate, redirect, useMatch, useNavigate, useParams } from 'react-router';
+import { href, redirect, useLoaderData, useMatch, useParams } from 'react-router';
+import YAML from 'yaml';
 
 import { getProductName } from '~/common/constants';
 import { generateId } from '~/common/misc';
@@ -33,11 +35,11 @@ import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { RequestSettingsModal } from '~/ui/components/modals/request-settings-modal';
 import { GrpcRequestPane } from '~/ui/components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '~/ui/components/panes/grpc-response-pane';
-import { PlaceholderRequestPane } from '~/ui/components/panes/placeholder-request-pane';
 import { RequestGroupPane } from '~/ui/components/panes/request-group-pane';
 import { RequestPane } from '~/ui/components/panes/request-pane';
 import { ResponsePane } from '~/ui/components/panes/response-pane';
 import { SocketIORequestPane } from '~/ui/components/socket-io/request-pane';
+import { SpecView } from '~/ui/components/spec-view';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
@@ -45,6 +47,7 @@ import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-reque
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { type CreateRequestType, useRequestMetaPatcher } from '~/ui/hooks/use-request';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/ui/utils/grpc';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
@@ -78,34 +81,82 @@ const INITIAL_GRPC_REQUEST_STATE = {
 };
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+  const { organizationId, projectId, workspaceId } = params;
+
+  const activeProject = await services.project.getById(projectId);
+  if (!activeProject) {
+    showResourceNotFoundToast(`Project not found: ${projectId}`);
+    throw redirect(href('/organization/:organizationId/project', { organizationId }));
+  }
+
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
-
-    const activeProject = await services.project.getById(projectId);
-    if (!activeProject) {
-      showResourceNotFoundToast(`Project not found: ${projectId}`);
-      throw redirect(href('/organization/:organizationId/project', { organizationId }));
-    }
 
     const activeWorkspace = await services.workspace.getById(workspaceId);
     if (!activeWorkspace) {
       showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
       throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
     }
-
-    const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
-    if (activeWorkspace.scope === 'collection' && activeApiSpec) {
-      // redirect to the spec view for the new collection workspace with an API spec
-      return redirect(
-        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec', {
-          organizationId,
-          projectId,
-          workspaceId,
-        }),
-      );
-    }
   }
-  return null;
+
+  // Add spec & test suites to the debug loader data
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
+  const isConnectedGitProject = models.project.isConnectedGitProject(activeProject);
+
+  const gitRepositoryId = isConnectedGitProject
+    ? models.project.getEffectiveRepoId(activeProject)
+    : workspaceMeta?.gitRepositoryId;
+  // we don't run the lint here because it is expensive and slows first render too much
+  // TODO: add this in once we run this loader outside the renderer
+  // Honour user-chosen repo locations: the ruleset lives at the repo root, which
+  // is the GitRepository's `directory` when set, else the managed location.
+  const gitRepository = gitRepositoryId ? await services.gitRepository.getById(gitRepositoryId) : null;
+  const gitSyncRulesetPath = gitRepository
+    ? window.path.join(resolveGitRepoBaseDir(gitRepository), '.spectral.yaml')
+    : '';
+
+  // The ProjectLintRuleset record is the source of truth for both git and cloud projects.
+  // For git, the RepoFileWatcher keeps .spectral.yaml in sync with this record.
+  const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
+  const rulesetContent = projectLintRuleset?.rulesetContent || '';
+  const rulesetLastCompiledAt = projectLintRuleset?.modified ?? null;
+
+  // For git projects, surface a committed .spectral.yaml that was rejected as
+  // invalid on import (so the user learns it wasn't applied and why, instead of
+  // silently falling back to the default ruleset). Refreshed automatically via
+  // the git.db-synced → revalidate flow in root.tsx.
+  const rulesetImportIssue =
+    isConnectedGitProject && gitRepositoryId
+      ? await window.main.git.getProjectRulesetImportIssue({ projectId, gitRepositoryId })
+      : null;
+
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
+  let parsedSpec: OpenAPIV3.Document | undefined;
+  try {
+    if (apiSpec) {
+      parsedSpec = YAML.parse(apiSpec.contents) as OpenAPIV3.Document;
+    }
+  } catch {}
+  const unitTestSuites = await database.find<UnitTestSuite>(
+    models.unitTestSuite.type,
+    {
+      parentId: workspaceId,
+    },
+    {
+      metaSortKey: 1,
+    },
+  );
+
+  return {
+    apiSpec,
+    gitSyncRulesetPath,
+    isConnectedGitProject,
+    parsedSpec,
+    rulesetContent,
+    rulesetLastCompiledAt,
+    rulesetImportIssue,
+    unitTestSuites,
+  };
 }
 
 const DebugEntry = () => {
@@ -124,9 +175,17 @@ const Debug = () => {
     activeProject,
     activeEnvironment,
     grpcRequests,
-    activeApiSpec,
     collection: _collection,
   } = useWorkspaceLoaderData()!;
+  const {
+    gitSyncRulesetPath,
+    isConnectedGitProject,
+    rulesetContent,
+    rulesetLastCompiledAt,
+    rulesetImportIssue,
+    parsedSpec,
+    apiSpec,
+  } = useLoaderData<typeof clientLoader>();
 
   const requestData = useRequestLoaderData();
   const { activeRequest } = requestData || {};
@@ -151,7 +210,6 @@ const Debug = () => {
   const isRunner = Boolean(
     useMatch('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner'),
   );
-  const navigate = useNavigate();
 
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
@@ -176,21 +234,6 @@ const Debug = () => {
       unsubscribe();
     };
   }, []);
-
-  useEffect(() => {
-    if (activeApiSpec && activeWorkspace.scope === 'collection' && Boolean(!requestId && !requestGroupId)) {
-      navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/spec`);
-    }
-  }, [
-    activeApiSpec,
-    activeWorkspace.scope,
-    requestId,
-    requestGroupId,
-    navigate,
-    organizationId,
-    projectId,
-    workspaceId,
-  ]);
 
   const { settings } = useRootLoaderData()!;
 
@@ -490,7 +533,20 @@ const Debug = () => {
                           }}
                         />
                       )}
-                      {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
+                      {Boolean(!requestId && !requestGroupId) && (
+                        <SpecView
+                          organizationId={organizationId}
+                          projectId={projectId}
+                          workspaceId={workspaceId}
+                          gitSyncRulesetPath={gitSyncRulesetPath}
+                          isConnectedGitProject={isConnectedGitProject}
+                          rulesetContent={rulesetContent}
+                          rulesetLastCompiledAt={rulesetLastCompiledAt}
+                          rulesetImportIssue={rulesetImportIssue}
+                          parsedSpec={parsedSpec}
+                          apiSpec={apiSpec}
+                        />
+                      )}
                       {isRequestSettingsModalOpen && activeRequest && (
                         <RequestSettingsModal
                           request={activeRequest}

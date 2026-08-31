@@ -92,7 +92,9 @@ const NAVIGATION_ROUTES = [
   },
   {
     id: 'workspace:design',
-    path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
+    // This route is used for design workspaces, which has been deprecated in favor of collection workspaces.
+    // We still need to support this route for existing design workspaces.
+    path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
     getResourceId: params => params.workspaceId,
     getResource: (resourceId: string) => services.workspace.getById(resourceId),
   },

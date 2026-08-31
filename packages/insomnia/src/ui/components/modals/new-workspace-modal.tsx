@@ -34,18 +34,18 @@ import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
-  [models.workspace.WorkspaceScopeKeys.collection]: 'Request Collection',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'API Collection',
   [models.workspace.WorkspaceScopeKeys.environment]: 'Environment',
   [models.workspace.WorkspaceScopeKeys.mockServer]: 'Mock Server',
-  [models.workspace.WorkspaceScopeKeys.design]: 'Design Document',
+  [models.workspace.WorkspaceScopeKeys.design]: 'API Collection',
   [models.workspace.WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
-  [models.workspace.WorkspaceScopeKeys.collection]: 'My Collection',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'My API Collection',
   [models.workspace.WorkspaceScopeKeys.environment]: 'My Environment',
   [models.workspace.WorkspaceScopeKeys.mockServer]: 'My Mock Server',
-  [models.workspace.WorkspaceScopeKeys.design]: 'My Design Document',
+  [models.workspace.WorkspaceScopeKeys.design]: 'My API Collection',
   [models.workspace.WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
