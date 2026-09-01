@@ -19,6 +19,11 @@ interface UseCommandSearchReturn {
 
 const TOMBSTONE = 'CLOSED';
 
+const log = (...args: unknown[]) => {
+   
+  console.log('[use-command-search]', new Date().toISOString(), ...args);
+};
+
 export function useCommandSearch({
   accountId,
   organizationId,
@@ -38,9 +43,11 @@ export function useCommandSearch({
       const requestId = crypto.randomUUID();
       currentRequestIdRef.current = requestId;
       setIsSearching(true);
+      log('runSearch start', { requestId, filter, prevRequestId });
 
       // Don't abort the initial search — ComboBox needs baseline items or it hides the menu permanently.
       if (prevRequestId && prevRequestId !== TOMBSTONE && hasReceivedResultsRef.current) {
+        log('aborting previous', prevRequestId);
         services.helpers.abortCommandSearch(prevRequestId).catch(() => {});
       }
 
@@ -57,16 +64,22 @@ export function useCommandSearch({
           filter,
           requestId,
         });
+        log('runSearch got result', { requestId, resultRequestId: result.requestId });
         if (result.requestId === currentRequestIdRef.current) {
           setResults(result);
           setIsSearching(false);
           hasReceivedResultsRef.current = true;
+          log('setResults applied', { requestId });
         } else if (!hasReceivedResultsRef.current) {
           // Warm baseline — CommandPalette sets defaultFilter={() => true}, so filtering is done server-side via fuzzy match.
           setResults(result);
           hasReceivedResultsRef.current = true;
+          log('setResults applied (warm baseline)', { requestId });
+        } else {
+          log('result discarded (stale)', { requestId });
         }
       } catch (err) {
+        log('runSearch error', { requestId, err: err instanceof Error ? err.message : err });
         if (!(err instanceof Error && err.name === 'AbortError')) {
           console.error('[command-search] unexpected error:', err);
         }
@@ -89,11 +102,15 @@ export function useCommandSearch({
 
   const search = useCallback(
     (filter?: string) => {
+      log('search() called', JSON.stringify(filter));
       setInputValue(filter ?? '');
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
-      debounceTimerRef.current = setTimeout(() => runSearch(filter), 250);
+      debounceTimerRef.current = setTimeout(() => {
+        log('debounce fired', JSON.stringify(filter));
+        runSearch(filter);
+      }, 250);
     },
     [runSearch],
   );
@@ -101,6 +118,7 @@ export function useCommandSearch({
   const abort = useCallback(() => {
     const prev = currentRequestIdRef.current;
     currentRequestIdRef.current = TOMBSTONE;
+    log('abort() called', { prev });
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
