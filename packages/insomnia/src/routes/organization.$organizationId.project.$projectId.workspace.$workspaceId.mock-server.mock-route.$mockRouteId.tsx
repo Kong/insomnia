@@ -127,7 +127,7 @@ export const useMockRoutePatcher = () => {
   const { submit } = useMockRouteUpdateActionFetcher();
   return useCallback(
     (id: string, patch: Partial<MockRoute>) => {
-      submit({
+      return submit({
         mockRouteId: id,
         organizationId,
         projectId,
