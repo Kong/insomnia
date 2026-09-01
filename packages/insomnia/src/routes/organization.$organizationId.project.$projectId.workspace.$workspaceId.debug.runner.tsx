@@ -33,7 +33,6 @@ import { buildRunnerItemKey, type RunnerItemStatus, type RunnerLiveItem } from '
 import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -55,6 +54,7 @@ import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
 import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import {
@@ -155,7 +155,7 @@ export const Runner: FC = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
-  const organizationData = useOrganizationLoaderData();
+  const currentPlan = useCurrentPlan();
   const targetFolderId = searchParams.get('folder') || '';
 
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -290,7 +290,7 @@ export const Runner: FC = () => {
 
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.collectionRunExecute,
-      properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
+      properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
 
     updateTabById?.(buildRunnerTabId(workspaceId, targetFolderId), { temporary: false });

@@ -19,7 +19,6 @@ import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } f
 import { href, useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
 import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
@@ -27,6 +26,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { usePlanData } from '~/ui/hooks/use-plan';
 
@@ -633,8 +633,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     projectId: string;
     workspaceId?: string;
   };
-  const organizationData = useOrganizationLoaderData();
-  const organizations = organizationData?.organizations || [];
+  const organizations = useOrganizations();
 
   const { features } = useOrganizationPermissions();
   const { isEnterprisePlan } = usePlanData();
@@ -681,7 +680,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
   const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.name || 'Organization';
+    organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
