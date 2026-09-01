@@ -1,146 +1,161 @@
-# Cloud Sync 底层实现
+# Cloud Sync Internals
 
-Insomnia Cloud Sync（对应 UI 里的 "Insomnia Sync"）是一套**自研的、类 Git 的分布式版本控制系统**，跑在 Electron 主进程里，把工作区（Workspace/Collection）内的文档以内容寻址的快照形式存到本地磁盘，并通过 GraphQL 端到端加密地同步到 Insomnia Cloud。
+Insomnia Cloud Sync (shown in the UI as "Insomnia Sync") is a **custom-built, Git-like distributed version control system** that runs in the Electron main process. It stores a workspace's (Workspace/Collection) documents on local disk as content-addressed snapshots, and syncs them end-to-end encrypted to Insomnia Cloud over GraphQL.
 
-它和 [Git Sync](../packages/insomnia/src/sync/git/)（`sync/git/`，基于 isomorphic-git）是**两套完全独立**的实现，共用的只有冲突解决弹窗组件，以及少量底层工具函数（见下文）。一个 workspace 要么走 Git Sync（`workspaceMeta.gitRepositoryId` 有值），要么走 Cloud Sync。
+It is **completely separate** from [Git Sync](../packages/insomnia/src/sync/git/) (`sync/git/`, built on isomorphic-git) — the only things they share are the conflict-resolution modal component and a handful of low-level utility functions (see below). A workspace goes through either Git Sync (`workspaceMeta.gitRepositoryId` is set) or Cloud Sync, never both.
 
-VCS 引擎本体是一个独立的 npm workspace 包 [`packages/insomnia-vcs/`](../packages/insomnia-vcs/)，只依赖 `insomnia-data` 和 `insomnia-api`，不反向依赖 `packages/insomnia`。主进程侧的编排代码在 [`packages/insomnia/src/main/cloud-sync/`](../packages/insomnia/src/main/cloud-sync/)，只有 4 个文件：单例管理（`vcs.ts`）、IPC 注册（`ipc.ts`）、拉取远端 collection 的编排（`pull-backend-project.ts`）和启动期初始化（`initialization.ts`）。
-
----
-
-## 目录
-
-1. [TL;DR：一次 push 都发生了什么](#tldr一次-push-都发生了什么)
-2. [进程分层与 IPC 桥](#进程分层与-ipc-桥)
-3. [核心数据模型](#核心数据模型)
-4. [本地存储层](#本地存储层)
-5. [内容寻址与哈希规范化](#内容寻址与哈希规范化)
-6. [同步候选集：哪些文档会被同步](#同步候选集哪些文档会被同步)
-7. [本地工作流：status → stage → takeSnapshot](#本地工作流status--stage--takesnapshot)
-8. [远端工作流：push / pull / fetch](#远端工作流push--pull--fetch)
-9. [合并算法](#合并算法)
-10. [冲突解决的跨进程往返](#冲突解决的跨进程往返)
-11. [加密模型](#加密模型)
-12. [网络层与 GraphQL 契约](#网络层与-graphql-契约)
-13. [生命周期：初始化、拉取、删除](#生命周期初始化拉取删除)
-14. [渲染进程集成](#渲染进程集成)
-15. [已知缺陷与设计债](#已知缺陷与设计债)
-16. [测试](#测试)
+The VCS engine itself lives in its own npm workspace package, [`packages/insomnia-vcs/`](../packages/insomnia-vcs/), which only depends on `insomnia-data` and `insomnia-api` and never depends back on `packages/insomnia`. The main-process orchestration code lives in [`packages/insomnia/src/main/cloud-sync/`](../packages/insomnia/src/main/cloud-sync/) — just 4 files: the VCS instance pool keyed by `workspaceId` (`vcs.ts`), IPC registration (`ipc.ts`), the orchestration for pulling a remote collection (`pull-backend-project.ts`), and startup-time initialization (`initialization.ts`).
 
 ---
 
-## TL;DR：一次 push 都发生了什么
+## Table of Contents
+
+1. [TL;DR: What a Single Push Actually Does](#tldr-what-a-single-push-actually-does)
+2. [Process Layering and the IPC Bridge](#process-layering-and-the-ipc-bridge)
+3. [Core Data Model](#core-data-model)
+4. [Local Storage Layer](#local-storage-layer)
+5. [Content Addressing and Hash Normalization](#content-addressing-and-hash-normalization)
+6. [Sync Candidate Set: Which Documents Get Synced](#sync-candidate-set-which-documents-get-synced)
+7. [Local Workflow: status → stage → takeSnapshot](#local-workflow-status--stage--takesnapshot)
+8. [Remote Workflow: push / pull / fetch](#remote-workflow-push--pull--fetch)
+9. [Merge Algorithm](#merge-algorithm)
+10. [Cross-Process Round Trip for Conflict Resolution](#cross-process-round-trip-for-conflict-resolution)
+11. [Encryption Model](#encryption-model)
+12. [Network Layer and GraphQL Contract](#network-layer-and-graphql-contract)
+13. [Lifecycle: Initialization, Pull, Deletion](#lifecycle-initialization-pull-deletion)
+14. [Renderer Process Integration](#renderer-process-integration)
+15. [Known Issues and Design Debt](#known-issues-and-design-debt)
+16. [Testing](#testing)
+
+---
+
+## TL;DR: What a Single Push Actually Does
 
 ```
-渲染进程                          主进程 (VCS 单例)                      Insomnia Cloud
-────────                          ─────────────────                      ──────────────
+Renderer process                  Main process (one VCS instance per workspace)   Insomnia Cloud
+─────────────────                 ─────────────────────────────────────────       ──────────────
 getSyncItems(workspaceId)
   → StatusCandidate[]
         │
-        │ window.main.sync.status(candidates)
-        ├──── ipcRenderer.invoke('sync.invoke','status',…) ──►
-        │                          getStagable(索引态 = HEAD⊕暂存区, candidates)
+        │ window.main.sync.status(workspaceId, candidates)
+        ├──── ipcRenderer.invoke('sync.invoke', workspaceId, 'status', …) ──►
+        │                          getVCSForWorkspace(workspaceId) looks up/creates that workspace's VCS instance
+        │                          getStagable(index state = HEAD⊕stage, candidates)
         │                          → { stage, unstaged }
         │ ◄────────────────────────
-        │ sync.stage(unstaged)
-        ├────────────────────────► 把 blobContent 写进 blobs/（gzip，明文）
-        │                          stage 存在内存 _stageByBackendProjectId
-        │ sync.takeSnapshot(msg)
-        ├────────────────────────► newState = 父快照 state ⊖ staged ⊕ staged
-        │                          id = sha1(projectId ‖ parentId ‖ 排序后的 blobIds)
-        │                          追加到 branch.snapshots，落盘
-        │ sync.push({teamId,…})
-        ├────────────────────────► 确保远端 project 存在（首次会生成 AES-256 密钥
-        │                            并用每个成员的 RSA 公钥包一份）
-        │                          线性历史检查 → blobsMissing ──────────────►
+        │ sync.stage(workspaceId, unstaged)
+        ├────────────────────────► writes blobContent into blobs/ (gzip, plaintext)
+        │                          stage lives in memory, in _stageByBackendProjectId
+        │ sync.takeSnapshot(workspaceId, msg)
+        ├────────────────────────► newState = parent snapshot's state ⊖ staged ⊕ staged
+        │                          id = sha1(projectId ‖ parentId ‖ sorted blobIds)
+        │                          appended to branch.snapshots, persisted to disk
+        │ sync.push(workspaceId, {teamId,…})
+        ├────────────────────────► ensures the remote project exists (first time generates an
+        │                            AES-256 key and wraps it with each member's RSA public key)
+        │                          linear history check → blobsMissing ────────────►
         │                          ◄────────────────────────── missing[]
-        │                          对每个 missing blob：读原始 gzip 字节
-        │                            → AES-256-GCM 加密 → JSON
-        │                          blobsCreate（≤2MB / ≤200 条一批）─────────►
-        │                          snapshotsCreate（20 条一批）──────────────►
+        │                          for each missing blob: read raw gzip bytes
+        │                            → AES-256-GCM encrypt → JSON
+        │                          blobsCreate (batches of ≤2MB / ≤200) ───────────►
+        │                          snapshotsCreate (batches of 20) ────────────────►
 ```
 
-关键点：
+Key points:
 
-- **blob 在本地是 gzip 明文，只有上传前才加密。** 磁盘上的 `version-control/` 目录不是加密存储。
-- **stage 只存在内存中**，重启 App 会丢失（blob 内容已落盘，但暂存列表没有）。
-- **快照 ID 只由内容决定**，不含消息和时间戳。
-- **status 的枚举基准是"索引"（HEAD 叠加暂存区），不是 HEAD 本身**，见[本地工作流](#本地工作流status--stage--takesnapshot)。
+- **Blobs are gzip plaintext on disk; encryption only happens right before upload.** The `version-control/` directory on disk is not an encrypted store.
+- **The stage exists only in memory** — it's lost on app restart (the blob content is already on disk, but the staged list isn't).
+- **The snapshot ID is derived purely from content** — it includes no message and no timestamp.
+- **`status` enumerates against the "index" (HEAD overlaid with the stage), not HEAD itself** — see [Local Workflow](#local-workflow-status--stage--takesnapshot).
 
 ---
 
-## 进程分层与 IPC 桥
+## Process Layering and the IPC Bridge
 
-| 层 | 文件 | 职责 |
+| Layer | File | Responsibility |
 | --- | --- | --- |
-| 纯算法 | [`insomnia-vcs/src/util.ts`](../packages/insomnia-vcs/src/util.ts)（526 行） | 无副作用的 diff / 三方合并 / 哈希 / 索引态计算（`applyStageToState`） |
-| VCS 引擎 | [`insomnia-vcs/src/vcs.ts`](../packages/insomnia-vcs/src/vcs.ts)（1766 行） | 分支、快照、blob、暂存、push/pull、GraphQL 查询 |
-| 存储抽象 | [`insomnia-vcs/src/store/`](../packages/insomnia-vcs/src/store/) | key→Buffer 的 KV 存储 + 读写 hook |
-| 加密原语 | [`insomnia-vcs/src/crypt.ts`](../packages/insomnia-vcs/src/crypt.ts) | RSA/AES-GCM，基于 node-forge |
-| 单例 / 上下文 | [`main/cloud-sync/vcs.ts`](../packages/insomnia/src/main/cloud-sync/vcs.ts) | 主进程 VCS 单例、冲突回调、`AsyncLocalStorage` |
-| IPC 注册 | [`main/cloud-sync/ipc.ts`](../packages/insomnia/src/main/cloud-sync/ipc.ts) | `sync.invoke` 等 4 个通道 |
-| 预加载桥 | [`entry.preload.ts:153-200`](../packages/insomnia/src/entry.preload.ts#L153-L200) | `window.main.sync` |
+| Pure algorithms | [`insomnia-vcs/src/util.ts`](../packages/insomnia-vcs/src/util.ts) (526 lines) | Side-effect-free diff / three-way merge / hashing / index-state computation (`applyStageToState`) |
+| VCS engine | [`insomnia-vcs/src/vcs.ts`](../packages/insomnia-vcs/src/vcs.ts) (1492 lines) | Branches, snapshots, blobs, staging, push/pull, GraphQL queries; each instance carries a readonly `workspaceId` |
+| Project directory | [`insomnia-vcs/src/backend-projects.ts`](../packages/insomnia-vcs/src/backend-projects.ts) | Operations that don't depend on a "currently active project": listing/creating/removing local projects, querying the remote project list |
+| Session and network | [`insomnia-vcs/src/session.ts`](../packages/insomnia-vcs/src/session.ts) | `assertSession`/`getPrivateKey`/the generic `runGraphQL` |
+| Storage abstraction | [`insomnia-vcs/src/store/`](../packages/insomnia-vcs/src/store/) | A key→Buffer KV store plus read/write hooks; [`store/current-store.ts`](../packages/insomnia-vcs/src/store/current-store.ts) is a module-level `Store` singleton (`configureStore`/`getStore`) |
+| Crypto primitives | [`insomnia-vcs/src/crypt.ts`](../packages/insomnia-vcs/src/crypt.ts) | RSA/AES-GCM, built on node-forge |
+| Instance pool / context | [`main/cloud-sync/vcs.ts`](../packages/insomnia/src/main/cloud-sync/vcs.ts) | The VCS instance pool keyed by `workspaceId`, the conflict callback, `AsyncLocalStorage` |
+| IPC registration | [`main/cloud-sync/ipc.ts`](../packages/insomnia/src/main/cloud-sync/ipc.ts) | `sync.invoke` and 4 other channels |
+| Preload bridge | [`entry.preload.ts:153-205`](../packages/insomnia/src/entry.preload.ts#L153-L205) | `window.main.sync` |
 
-> `insomnia-vcs` 把可独立测试、未来可能给 CLI（`insomnia-inso`）复用的 VCS 核心，从渲染/主进程代码中解耦出来。主进程侧的 `new VCS(...)` 调用直接写在 `main/cloud-sync/vcs.ts` 里。
+> `insomnia-vcs` decouples the independently-testable VCS core — which could potentially be reused by the CLI (`insomnia-inso`) — from the renderer/main-process code. The main process's `new VCS(...)` call is made directly in `main/cloud-sync/vcs.ts`.
 
-### `sync.invoke`：反射式单通道 RPC
+### `sync.invoke`: Reflective RPC Dispatched per Workspace
 
-整个 VCS 的方法**没有逐个开 IPC 通道**，而是共用一个 `sync.invoke`，方法名作为第一个参数：
+VCS instance methods **don't each get their own IPC channel** — they share a single `sync.invoke`, with `workspaceId` and the method name as the first two arguments:
 
 ```ts
 // entry.preload.ts:153
-const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
+const invokeSyncMethod = async <T>(workspaceId: string, methodName: string, ...args: unknown[]) => {
   try {
-    return (await invokeWithNormalizedError('sync.invoke', methodName, ...args)) as T;
+    return (await invokeWithNormalizedError('sync.invoke', workspaceId, methodName, ...args)) as T;
   } catch (error) {
-    if (isUserAbortResolveMergeConflictError(error)) { /* 还原错误类型 */ }
+    if (isUserAbortResolveMergeConflictError(error)) { /* restore the original error type */ }
     throw error;
   }
 };
 
 const sync: SyncBridgeAPI = {
-  push: (...args) => invokeSyncMethod('push', ...args),
-  pull: (...args) => invokeSyncMethod('pull', ...args),
+  push: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'push', ...args),
+  pull: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'pull', ...args),
   // …
 };
 ```
 
-主进程侧用反射派发（[`main/cloud-sync/vcs.ts:76-85`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L76-L85)）：
+The main process first looks up (or creates) the VCS instance for that `workspaceId`, then dispatches reflectively ([`main/cloud-sync/vcs.ts:76-110`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L76-L110)):
 
 ```ts
-export const invokeMainVCS = async (sender, methodName, ...args) => {
-  const vcs = getMainVCS();
+export const getVCSForWorkspace = (workspaceId: string): VCS => {
+  ensureStoreConfigured();
+  let vcs = vcsByWorkspaceId.get(workspaceId);
+  if (!vcs) {
+    vcs = new VCS({ workspaceId, conflictHandler: requestConflictResolution, testMode: !!PLAYWRIGHT_TEST });
+    vcsByWorkspaceId.set(workspaceId, vcs);
+  }
+  return vcs;
+};
+
+export const invokeVCSForWorkspace = async (sender, workspaceId, methodName, ...args) => {
+  const vcs = getVCSForWorkspace(workspaceId);
   const method = vcs[methodName as keyof VCS];
   if (typeof method !== 'function') throw new TypeError(`Unknown VCS method: ${methodName}`);
   return runWithSyncRenderer(sender, () => method.apply(vcs, args));
 };
 ```
 
-> 注意这是**无白名单的反射派发**——渲染进程可以调用 `VCS` 上任意名字的方法，包括 `_queryBlobs`、`_storeBranch` 这些下划线私有方法。类型层面由 `SyncBridgeMethods`（[`main/cloud-sync/ipc.ts:24-56`](../packages/insomnia/src/main/cloud-sync/ipc.ts#L24-L56)）约束，运行时并没有拦截。`ipc.ts` 里的这些类型（`Stage`、`StageEntry`、`Status`、`StatusCandidate` 等）从 `insomnia-vcs` 包导入。
+> `sync.invoke` is **reflective dispatch with no method allowlist** — the renderer can call any method by name on the `VCS` instance, including underscore-prefixed private methods like `_queryBlobs`, `_storeBranch`. It's constrained at the type level by `SyncBridgeMethods` ([`main/cloud-sync/ipc.ts:26-68`](../packages/insomnia/src/main/cloud-sync/ipc.ts#L26-L68)), but nothing intercepts it at runtime.
 
-例外的三个通道：`sync.pullRemoteBackendProject`（走独立 VCS 实例）、`sync.resolveConflict` / `sync.cancelConflict`（`ipcRenderer.send` 单向）。
+The 5 methods that never depend on a "currently active project" (`localBackendProjects`, `remoteBackendProjects`, `remoteBackendProjectsOfTeam`, `hasBackendProjectForRootDocument`, `removeBackendProjectsForRoot`) go through a separate channel, **`sync.invokeGlobal`**: no `workspaceId` needed, and no VCS instance involved at all — the main process looks the function up directly in a fixed method table (`GLOBAL_VCS_METHODS`), so this channel **is** allowlisted. At the type level this corresponds to `GlobalSyncBridgeMethods` ([`main/cloud-sync/ipc.ts:71-77`](../packages/insomnia/src/main/cloud-sync/ipc.ts#L71-L77)).
 
-`window.main.sync` 的类型声明在 [`main/ipc/main.ts:274`](../packages/insomnia/src/main/ipc/main.ts#L274)，不在 `global.d.ts` 里。
+Two further exceptions: `sync.pullRemoteBackendProject`, and `sync.resolveConflict` / `sync.cancelConflict` (one-way `ipcRenderer.send`).
+
+`window.main.sync`'s type declaration lives in [`main/ipc/main.ts:274`](../packages/insomnia/src/main/ipc/main.ts#L274), not in `global.d.ts`.
 
 ---
 
-## 核心数据模型
+## Core Data Model
 
-定义在 [`insomnia-vcs/src/types.ts`](../packages/insomnia-vcs/src/types.ts)。Git Sync 的 `MergeConflict`/`AutoResolvedConflict` 等类型也定义在这里，两套 sync 实现共享同一份合并冲突类型。术语和 Git 基本一一对应：
+Defined in [`insomnia-vcs/src/types.ts`](../packages/insomnia-vcs/src/types.ts). Git Sync's `MergeConflict`/`AutoResolvedConflict` types are also defined here — the two sync implementations share the same merge-conflict types. Terminology maps onto Git fairly directly:
 
-| Cloud Sync | Git 类比 | 说明 |
+| Cloud Sync | Git analogue | Notes |
 | --- | --- | --- |
-| `BackendProject` | repository | `{ id, name, rootDocumentId }`，`rootDocumentId` = workspace `_id` |
-| `Branch` | branch | `{ name, created, modified, snapshots: string[] }`——**快照列表是一个线性数组，不是 DAG** |
+| `BackendProject` | repository | `{ id, name, rootDocumentId }`, where `rootDocumentId` = the workspace's `_id` |
+| `Branch` | branch | `{ name, created, modified, snapshots: string[] }` — **the snapshot list is a flat array, not a DAG** |
 | `Snapshot` | commit | `{ id, parent, created, author, name, description, state[] }` |
-| `SnapshotStateEntry` | tree entry | `{ key, blob, name }`，`key` = 文档 `_id`，`blob` = 内容哈希 |
-| `Blob` | blob | 规范化后的文档 JSON |
+| `SnapshotStateEntry` | tree entry | `{ key, blob, name }`, where `key` = the document's `_id` and `blob` = the content hash |
+| `Blob` | blob | The normalized document as JSON |
 | `Stage` | index | `Record<DocumentKey, StageEntry>` |
-| `StatusCandidate` | 工作区文件 | `{ key, name, document }`，由渲染进程从 NeDB 收集 |
+| `StatusCandidate` | working-tree file | `{ key, name, document }`, collected from NeDB by the renderer |
 | `Status` | — | `{ stage, unstaged }` |
 | `Head` | HEAD | `{ branch: string }` |
 
-**与 Git 最大的结构差异**：`Branch.snapshots` 是一个**扁平有序数组**。合并的共同祖先不是靠遍历父指针求 LCA，而是 [`getRootSnapshot()`](../packages/insomnia-vcs/src/util.ts#L400-L414) 对两个数组做 O(n·m) 的**倒序双重循环**，找到第一个共同元素：
+**The biggest structural difference from Git**: `Branch.snapshots` is a **flat, ordered array**. Finding the merge base isn't done by walking parent pointers to find an LCA — instead, [`getRootSnapshot()`](../packages/insomnia-vcs/src/util.ts#L400-L414) runs an O(n·m) **reverse double loop** over the two arrays to find the first element they share:
 
 ```ts
 for (let ai = snapshotsA.length - 1; ai >= 0; ai--) {
@@ -150,17 +165,17 @@ for (let ai = snapshotsA.length - 1; ai >= 0; ai--) {
 }
 ```
 
-`Snapshot.parent` 字段存在，但**只用于生成 ID**，从不用于遍历历史。
+The `Snapshot.parent` field exists, but is **only used to generate the ID** — it's never used to walk history.
 
-> `ResolutionSource`（`'choose' | 'manual'`）这个联合类型留在 `insomnia-vcs/src/types.ts`，但它的运行时常量对象 `RESOLUTION_SOURCE = { CHOOSE, MANUAL }` 挂在 `packages/insomnia/src/sync/vcs/utils.ts`（详见[冲突解决的跨进程往返](#冲突解决的跨进程往返)），因为 Git Sync 的 `git-vcs.ts` 也要用它——纯类型放在跨包共享的 `insomnia-vcs`，和 insomnia 包内错误类型耦合的常量留在 insomnia 包里。
+> The `ResolutionSource` union type (`'choose' | 'manual'`) stays in `insomnia-vcs/src/types.ts`, but its runtime constant object, `RESOLUTION_SOURCE = { CHOOSE, MANUAL }`, lives in `packages/insomnia/src/sync/vcs/utils.ts` (see [Cross-Process Round Trip for Conflict Resolution](#cross-process-round-trip-for-conflict-resolution)) — because Git Sync's `git-vcs.ts` needs it too. The pure type lives in the cross-package-shared `insomnia-vcs`, while the constant, which is coupled to error types inside the insomnia package, stays there.
 
 ---
 
-## 本地存储层
+## Local Storage Layer
 
-### 目录布局
+### Directory Layout
 
-`FileSystemDriver.create(dataPath)` 把根目录固定为 `<userData>/version-control`（[`store/drivers/file-system-driver.ts:15-18`](../packages/insomnia-vcs/src/store/drivers/file-system-driver.ts#L15-L18)）：
+`FileSystemDriver.create(dataPath)` fixes the root directory at `<userData>/version-control` ([`store/drivers/file-system-driver.ts:15-18`](../packages/insomnia-vcs/src/store/drivers/file-system-driver.ts#L15-L18)):
 
 ```
 version-control/
@@ -170,60 +185,61 @@ version-control/
         ├── head.json                      { branch: "master" }
         ├── branches/
         │   ├── master.json                Branch
-        │   └── feat~my-branch.json        '/' → '~'（encodeBranchName）
+        │   └── feat~my-branch.json        '/' → '~' (encodeBranchName)
         ├── snapshots/
         │   └── <sha1>.json                Snapshot
         └── blobs/
-            └── ab/                        blobId 前 2 位做分片目录
-                └── cdef0123…              无扩展名 → gzip 压缩
+            └── ab/                        first 2 chars of blobId used as a shard dir
+                └── cdef0123…              no extension → gzip compressed
 ```
 
-### 三层结构
+### The Three-Layer Structure
 
 ```
-VCS ──► Store ──► BaseDriver
-        (序列化 + hook)   (FileSystemDriver / MemoryDriver)
+VCS ──► getStore() ──► Store ──► BaseDriver
+        (module-level    (serialize + hooks)   (FileSystemDriver / MemoryDriver)
+         singleton)
 ```
 
-[`Store`](../packages/insomnia-vcs/src/store/index.ts) 负责 JSON 序列化并串联 hook 链；`setItemRaw` / `getItemRaw` 是**绕过 hook 的直通口**。
+The `VCS` class itself doesn't hold a `Store`/driver — every access calls `getStore()` from [`store/current-store.ts`](../packages/insomnia-vcs/src/store/current-store.ts). That's a module-level singleton: the host process calls `configureStore(driver)` once (passing `FileSystemDriver` in production, `MemoryDriver` in tests), and every `VCS` instance afterward shares that same `Store` — since a process only ever has one `dataPath`, and `Store` itself is a stateless pass-through wrapper (see below), sharing it introduces no cross-talk. [`Store`](../packages/insomnia-vcs/src/store/index.ts) handles JSON serialization and chains the hooks; `setItemRaw` / `getItemRaw` are the **direct pass-through that bypasses the hooks**.
 
-### gzip hook 的关键规则
+### The Key Rule of the gzip Hook
 
-[`store/hooks/compress.ts`](../packages/insomnia-vcs/src/store/hooks/compress.ts) 只压缩**没有扩展名**的 key：
+[`store/hooks/compress.ts`](../packages/insomnia-vcs/src/store/hooks/compress.ts) only compresses keys that **have no extension**:
 
 ```ts
 const write: HookFn = async (extension, value) => {
-  if (extension) return value;      // .json 原样存
-  return gzip(value);               // blobs/xx/yyy 压缩
+  if (extension) return value;      // .json stored as-is
+  return gzip(value);               // blobs/xx/yyy compressed
 };
 ```
 
-所以：`meta.json` / `head.json` / `branches/*.json` / `snapshots/*.json` 是可读的 pretty JSON，**只有 blob 被 gzip**。
+So: `meta.json` / `head.json` / `branches/*.json` / `snapshots/*.json` are readable, pretty-printed JSON — **only blobs are gzipped**.
 
-这条规则和 blob 的读写路径配合得很精巧：
+This rule interacts elegantly with the blob read/write paths:
 
-| 方法 | 走 hook? | 得到什么 |
+| Method | Goes through the hook? | What you get |
 | --- | --- | --- |
-| `_getBlob` | ✅ read | gunzip + `JSON.parse` → 文档对象 |
-| `_storeBlobs` | ✅ write | 明文 → gzip 落盘 |
-| `_getBlobRaw` | ❌ `getItemRaw` | **gzip 原始字节**（直接拿去加密上传） |
-| `_storeBlobsBuffer` | ❌ `setItemRaw` | 解密后的 gzip 字节直接落盘 |
+| `_getBlob` | ✅ read | gunzip + `JSON.parse` → a document object |
+| `_storeBlobs` | ✅ write | plaintext → gzipped on disk |
+| `_getBlobRaw` | ❌ `getItemRaw` | **raw gzip bytes** (fed straight into encryption for upload) |
+| `_storeBlobsBuffer` | ❌ `setItemRaw` | decrypted gzip bytes written straight to disk |
 
-也就是说**压缩层是加密层内侧的一层**：`doc → deterministicStringify → gzip → AES-GCM → 上传`，下行完全对称。
+In other words, **the compression layer sits just inside the encryption layer**: `doc → deterministicStringify → gzip → AES-GCM → upload`, and the download path is fully symmetric.
 
-### 原子写与 Windows 兼容
+### Atomic Writes and Windows Compatibility
 
-`setItem` 先写 `<final>.<uuid>.tmp` 再 rename（[`store/drivers/file-system-driver.ts:35-52`](../packages/insomnia-vcs/src/store/drivers/file-system-driver.ts#L35-L52)）。Windows 上杀毒软件会锁目录导致 `EACCES`/`EPERM`/`EBUSY`，因此 rename 走 [`gracefulRename`](../packages/insomnia-vcs/src/store/drivers/graceful-rename.ts)——**最长重试 60 秒**，退避上限 100ms，且首次失败时会 stat 目标确认是文件才继续重试（借鉴自 VS Code）。
+`setItem` first writes `<final>.<uuid>.tmp`, then renames it ([`store/drivers/file-system-driver.ts:35-52`](../packages/insomnia-vcs/src/store/drivers/file-system-driver.ts#L35-L52)). On Windows, antivirus software can lock a directory and cause `EACCES`/`EPERM`/`EBUSY`, so the rename goes through [`gracefulRename`](../packages/insomnia-vcs/src/store/drivers/graceful-rename.ts) — **retrying for up to 60 seconds**, with backoff capped at 100ms, and on the first failure it `stat`s the target to confirm it's a file before continuing to retry (borrowed from VS Code).
 
-### `meta.json` 的写前比较
+### Comparing Before Writing `meta.json`
 
-`_storeBackendProject`（[`vcs.ts:1418-1432`](../packages/insomnia-vcs/src/vcs.ts#L1418-L1432)）会先读旧值，用 `deterministicStringify` 做深比较，内容相同就跳过写盘——避免每次激活工作区都触发一次文件写和文件监听风暴。旧文件损坏（JSON 解析失败）时会 catch 掉并正常覆盖写。
+`storeBackendProject` ([`backend-projects.ts:18-32`](../packages/insomnia-vcs/src/backend-projects.ts#L18-L32)) reads the old value first and does a deep comparison with `deterministicStringify`, skipping the disk write if the content is unchanged — this avoids a file write (and a file-watch storm) every time a workspace is activated. If the old file is corrupted (JSON parsing fails), the error is caught and it just overwrites normally. This is a top-level function independent of the `VCS` class, and doesn't depend on a "currently active project" — instance methods like `setBackendProject` call it internally.
 
 ---
 
-## 内容寻址与哈希规范化
+## Content Addressing and Hash Normalization
 
-一切变更检测都归结为一个 blob 哈希：
+Every change-detection check comes down to a single blob hash:
 
 ```ts
 // insomnia-vcs/src/util.ts:467-493
@@ -239,36 +255,36 @@ export function hashDocument(doc) {
 }
 ```
 
-返回的 `content` 同时就是**将来要存进 blob 的字节**——哈希和内容一次算出，保证两者永远一致。
+The returned `content` is simultaneously **the exact bytes that will later be stored as the blob** — the hash and the content are computed in the same step, so the two can never drift apart.
 
 ### `deterministicStringify`
 
-[`insomnia-data/common-src/deterministic-stringify.ts`](../packages/insomnia-data/common-src/deterministic-stringify.ts)，34 行递归，编译后从 `insomnia-data/common` 导出。放在 `insomnia-data` 里是为了让 `insomnia-vcs` 不需要反向依赖 `packages/insomnia` 就能拿到它：
+[`insomnia-data/common-src/deterministic-stringify.ts`](../packages/insomnia-data/common-src/deterministic-stringify.ts), 34 lines of recursion, exported from `insomnia-data/common` after compilation. It lives in `insomnia-data` so that `insomnia-vcs` can use it without depending back on `packages/insomnia`:
 
-- 对象：`Object.keys().sort()` 后按 `"k":v` 拼接——**键序无关**。
-- **值序列化为空串的键会被整个丢弃**，`undefined` 因此等价于"键不存在"。
-- 数组：保序，但同样剔除空串元素（所以 `[1, undefined, 2]` → `[1,2]`，长度会变，与 `JSON.stringify` 补 `null` 的行为不同）。
-- 其他：直接 `JSON.stringify`。没有循环引用检测。
+- Objects: `Object.keys().sort()`, then concatenated as `"k":v` pairs — **key order doesn't matter**.
+- **A key whose value serializes to an empty string is dropped entirely** — so `undefined` is equivalent to "the key doesn't exist".
+- Arrays: order is preserved, but empty-string elements are likewise dropped (so `[1, undefined, 2]` → `[1,2]`, changing the length — unlike `JSON.stringify`, which pads with `null`).
+- Everything else: plain `JSON.stringify`. There's no circular-reference detection.
 
-### `ignore-keys`：跨机器稳定性
+### `ignore-keys`: Cross-Machine Stability
 
-[`insomnia-data/src/models/utils/ignore-keys.ts`](../packages/insomnia-data/src/models/utils/ignore-keys.ts) 处理两类"不该影响哈希"的字段，以 `models.deleteKeys` / `models.resetKeys` 的形式导出：
+[`insomnia-data/src/models/utils/ignore-keys.ts`](../packages/insomnia-data/src/models/utils/ignore-keys.ts) handles two kinds of fields that "shouldn't affect the hash", exported as `models.deleteKeys` / `models.resetKeys`:
 
-| 操作 | 字段 | 原因 |
+| Operation | Field(s) | Reason |
 | --- | --- | --- |
-| `models.deleteKeys` — 删除 | `modified` | 本地时间戳，每次写库都变，否则任何文档都会被判定为"已修改" |
-| `models.resetKeys` — 归一化为 `null` | `Workspace.parentId`、`ProjectLintRuleset.parentId` | 指向**本地** Project 的 `_id`，跨机器/跨组织不同 |
+| `models.deleteKeys` — delete | `modified` | A local timestamp that changes on every write; otherwise every document would look "modified" |
+| `models.resetKeys` — normalize to `null` | `Workspace.parentId`, `ProjectLintRuleset.parentId` | Points at a **local** Project's `_id`, which differs across machines/organizations |
 
-为什么是"重置"而不是"删除"？源码注释说得很清楚：`deterministicStringify` 会丢弃 `undefined` 但保留 `null`，删掉一个曾经存在（哪怕值为 `null`）的键会改变哈希。设成固定默认值才能让所有客户端算出同一个哈希。
+Why "reset" rather than "delete"? The source comment explains it clearly: `deterministicStringify` drops `undefined` but keeps `null`, so removing a key that used to exist (even with a `null` value) would change the hash. Normalizing to a fixed default is what lets every client compute the same hash.
 
-代价是：pull 回来的 workspace `parentId` 是 `null`，必须在应用 delta 前修复——见 [`vcs.ts:716-721`](../packages/insomnia-vcs/src/vcs.ts#L716-L721) 里那段自称 "hack" 的补丁，和渲染进程的 [`reparentSyncDelta`](../packages/insomnia/src/ui/sync-utils.ts#L55-L63)。
+The cost: a workspace's `parentId` comes back as `null` after a pull, and has to be fixed before the delta is applied — see the patch in [`vcs.ts:613-618`](../packages/insomnia-vcs/src/vcs.ts#L613-L618) that calls itself a "hack", and the renderer's [`reparentSyncDelta`](../packages/insomnia/src/ui/sync-utils.ts#L74-L82).
 
-这套工具挂在 `insomnia-data/src/models/` 下，**同时被 Cloud Sync（`hashDocument`）和 Git Sync（[`ne-db-client.ts`](../packages/insomnia/src/sync/git/ne-db-client.ts) 里 `models.resetKeys(doc)`）复用**。
+These utilities live under `insomnia-data/src/models/` and are **reused by both Cloud Sync (`hashDocument`) and Git Sync** (in [`ne-db-client.ts`](../packages/insomnia/src/sync/git/ne-db-client.ts), via `models.resetKeys(doc)`).
 
-### 快照 ID
+### Snapshot ID
 
 ```ts
-// insomnia-vcs/src/vcs.ts:1753-1762
+// insomnia-vcs/src/vcs.ts:1479-1488
 function _generateSnapshotID(parentId, backendProjectId, state) {
   const hash = crypto.createHash('sha1').update(backendProjectId).update(parentId);
   for (const entry of [...state].sort((a, b) => (a.blob > b.blob ? 1 : -1))) hash.update(entry.blob);
@@ -276,113 +292,113 @@ function _generateSnapshotID(parentId, backendProjectId, state) {
 }
 ```
 
-只由 `(项目 ID, 父快照 ID, 内容集合)` 决定，**不含提交消息、时间戳、作者**。首个快照的父是 `EMPTY_HASH`（40 个 `0`）。含义是：同一父提交下产生完全相同内容的两次提交，会得到同一个 ID。
+Determined purely by `(project ID, parent snapshot ID, content set)` — **it includes no commit message, timestamp, or author**. The first snapshot's parent is `EMPTY_HASH` (40 `0`s). The implication: two commits made against the same parent that produce identical content will get the same ID.
 
 ---
 
-## 同步候选集：哪些文档会被同步
+## Sync Candidate Set: Which Documents Get Synced
 
-渲染进程的 [`getSyncItems({ workspaceId })`](../packages/insomnia/src/ui/sync-utils.ts#L65-L167) 是唯一的候选集来源。它**不用递归查库**，而是先把所有后代 folder 的 id 拍平成一个数组，再对每种类型做一次 `$in` 查询：
+The renderer's [`getSyncItems({ workspaceId })`](../packages/insomnia/src/ui/sync-utils.ts#L65-L167) is the single source of the candidate set. It **doesn't query recursively** — instead it first flattens every descendant folder's id into one array, then does one `$in` query per document type:
 
 ```ts
 const listOfParentIds = await flattenFoldersIntoList(activeWorkspace._id);
 const reqs = await database.find(models.request.type, { parentId: { $in: listOfParentIds } });
-// grpc / websocket / socket.io / requestGroup 同理
+// same for grpc / websocket / socket.io / requestGroup
 ```
 
-收集范围：Request / RequestGroup / GrpcRequest / WebSocketRequest / SocketIORequest / UnitTestSuite + UnitTest / MockServer + MockRoute / McpRequest / 基础 Environment + 子 Environment / ApiSpec / Workspace 本身，外加**项目级**的 `ProjectLintRuleset`（挂在 `workspace.parentId` 下，不是 workspace 的后代，所以要单独取）。
+Scope collected: Request / RequestGroup / GrpcRequest / WebSocketRequest / SocketIORequest / UnitTestSuite + UnitTest / MockServer + MockRoute / McpRequest / the base Environment + sub-Environments / ApiSpec / the Workspace itself, plus the **project-level** `ProjectLintRuleset` (parented under `workspace.parentId`, not a descendant of the workspace, so it has to be fetched separately).
 
-最后统一过 [`models.canSync`](../packages/insomnia-data/src/models/index.ts#L33-L45)：
+Everything then goes through [`models.canSync`](../packages/insomnia-data/src/models/index.ts#L33-L45):
 
 ```ts
 export function canSync(d: BaseModel) {
-  if (d.isPrivate) return false;          // 私有文档一律不同步
+  if (d.isPrivate) return false;          // private documents are never synced
   return getModel(d.type)?.canSync || false;
 }
 ```
 
-`canSync = true` 的 18 个模型：`workspace`、`request`、`request-group`、`grpc-request`、`web-socket-request`、`socket-io-request`、`socket-io-payload`、`websocket-payload`、`mcp-request`、`environment`、`api-spec`、`mock-server`、`mock-route`、`unit-test`、`unit-test-suite`、`proto-file`、`proto-directory`、`project-lint-ruleset`。
+The 18 models with `canSync = true`: `workspace`, `request`, `request-group`, `grpc-request`, `web-socket-request`, `socket-io-request`, `socket-io-payload`, `websocket-payload`, `mcp-request`, `environment`, `api-spec`, `mock-server`, `mock-route`, `unit-test`, `unit-test-suite`, `proto-file`, `proto-directory`, `project-lint-ruleset`.
 
-明确**不同步**的：`cookie-jar`、所有 `*-meta`、`*-certificate`、`oauth-2-token`、`git-*`、`project`、`plugin-data`、`request-version`、`response`、`cloud-credential`、`mcp-payload/response`。也就是说 **Cookie 罐、证书、令牌、各类本地 UI 状态都不上云**。
+Explicitly **not synced**: `cookie-jar`, every `*-meta`, `*-certificate`, `oauth-2-token`, `git-*`, `project`, `plugin-data`, `request-version`, `response`, `cloud-credential`, `mcp-payload/response`. In other words, **cookie jars, certificates, tokens, and every kind of local UI state never go to the cloud**.
 
-初始化路径用的是另一套候选集构建（[`initialize-backend-project.ts:31-42`](../packages/insomnia/src/sync/vcs/initialize-backend-project.ts#L31-L42)），走 `database.getWithDescendants(workspace)` + lint ruleset，同样过 `canSync`。
+The initialization path builds its candidate set a different way ([`initialize-backend-project.ts:31-42`](../packages/insomnia/src/sync/vcs/initialize-backend-project.ts#L31-L42)): `database.getWithDescendants(workspace)` + the lint ruleset, filtered through `canSync` the same way.
 
 ---
 
-## 本地工作流：status → stage → takeSnapshot
+## Local Workflow: status → stage → takeSnapshot
 
 ### `status(candidates)`
 
-[`vcs.ts:280-359`](../packages/insomnia-vcs/src/vcs.ts#L280-L359)。核心是两步：
+[`vcs.ts:177-256`](../packages/insomnia-vcs/src/vcs.ts#L177-L256). The core is two steps:
 
-1. 用 [`applyStageToState(state, stage)`](../packages/insomnia-vcs/src/util.ts#L374-L399) 把"最新快照的 state"和"当前暂存区"叠成一个**索引态**（index state）——语义等价于"如果现在提交暂存区，会得到的 state"。
-2. 用 [`getStagable(indexState, candidates)`](../packages/insomnia-vcs/src/util.ts#L316-L373) 把索引态和当前候选集求并集后逐 key 比较，得到工作区相对索引的差异，再按下表分流到 `unstaged`：
+1. [`applyStageToState(state, stage)`](../packages/insomnia-vcs/src/util.ts#L374-L399) layers "the latest snapshot's state" with "the current stage" into an **index state** — semantically equivalent to "the state you'd get if you committed the stage right now".
+2. [`getStagable(indexState, candidates)`](../packages/insomnia-vcs/src/util.ts#L316-L373) takes the union of the index state and the current candidate set, compares key by key, gets the working tree's diff relative to the index, and routes it into `unstaged` per this table:
 
-| 该 key 有没有暂存 | 分支 | `previousBlobContent` 取自 |
+| Is the key staged? | Branch | Where `previousBlobContent` comes from |
 | --- | --- | --- |
-| 未暂存 | 索引 = HEAD，`entry` 是「HEAD vs 工作区」 | HEAD 的 blob（`deleted`）或对应 blob（新增/修改） |
-| 暂存为 `deleted` | 索引里已经没有这个 key 了，`getStagable` 还能产出条目只可能是因为工作区又把它加回来了；如果 `entry` 本身也是 `deleted` 则说明状态矛盾，直接 `throw` | `null` |
-| 暂存为 `added`/`modified` | 索引持有暂存的内容，无论工作区后续是继续改还是删除，diff 基准都是"当前暂存的内容" | 暂存区里的 `blobContent` |
+| Not staged | Index = HEAD, so `entry` is "HEAD vs working tree" | HEAD's blob (for `deleted`) or the corresponding blob (for added/modified) |
+| Staged as `deleted` | The index no longer has this key at all — `getStagable` can only have produced an entry because the working tree added it back; if `entry` is itself also `deleted`, that's a contradictory state and it `throw`s | `null` |
+| Staged as `added`/`modified` | The index holds the staged content for this key. Whether the working tree goes on to modify it further or delete it outright, the diff base is the same: "what's currently staged" | The stage entry's `blobContent` |
 
-#### 与 Git status 语义的对应
+#### Correspondence with Git's `status` Semantics
 
-Git 的 `git status` 两栏基准不同：`staged` 是 index vs HEAD，`unstaged` 是工作区 vs index。Insomnia 用 `applyStageToState` 现算出索引态，再统一按"工作区 vs 索引"来比较，因此"暂存后又把内容改回原样"这种情况也能正确处理：只要工作区内容和索引不一致，就会出现在 `unstaged` 里；一旦一致（包括暂存内容本身就等于 HEAD 的情况，见下面 `stage()`），就不会再显示为待处理。
+Git's `git status` uses two different baselines: `staged` is index vs HEAD, and `unstaged` is working tree vs index. Insomnia computes the index state on the fly with `applyStageToState`, then consistently compares "working tree vs index" — so a case like "staged, then reverted back to the original content" is also handled correctly: as long as the working-tree content disagrees with the index, it shows up in `unstaged`; once they agree (including when the staged content already equals HEAD's — see `stage()` below), it stops showing as pending.
 
-相关场景的单测见 [`vcs.test.ts`](../packages/insomnia-vcs/src/__tests__/vcs.test.ts)，例如 295 行起的 `can appear both staged and unstaged`。
+Unit tests for these scenarios are in [`vcs.test.ts`](../packages/insomnia-vcs/src/__tests__/vcs.test.ts), e.g. `can appear both staged and unstaged` starting at line 295.
 
 ### `stage(entries)`
 
-[`vcs.ts:362-397`](../packages/insomnia-vcs/src/vcs.ts#L362-L397)。除了写 blob、记暂存区之外，还会做一次 **no-op 检测**：
+[`vcs.ts:259-294`](../packages/insomnia-vcs/src/vcs.ts#L259-L294). Besides writing blobs and recording the stage, it also runs a **no-op check**:
 
 ```ts
 const headBlobId = headStateMap[entry.key]?.blob;
 const isNoOpAgainstHead = 'deleted' in entry ? headBlobId === undefined : entry.blobId === headBlobId;
 if (isNoOpAgainstHead) {
-  delete stage[entry.key];   // 而不是写入 stage[entry.key] = entry
+  delete stage[entry.key];   // rather than writing stage[entry.key] = entry
   continue;
 }
 ```
 
-如果传入的暂存内容其实和 HEAD 完全一样（内容改回原样，或者"删除一个 HEAD 里本来就没有的 key"，对应"暂存了一次新增又撤销"），就直接把该 key 从暂存区里**移除**而不是记录一条空操作。这是必须做的，因为 Insomnia 的 `stage` 是一个**稀疏的、相对 HEAD 的 diff map**（不像 Git 的 index 是一份完整树），唯一能表达"无差异"的方式就是完全没有这个条目——否则它会一直显示为"已暂存"，并让 `takeSnapshot()` 提交一个内容其实没变化的快照。
+If the content being staged is actually identical to HEAD's (content reverted back to the original, or "deleting a key HEAD never had", i.e. "staged an add, then undid it"), the key is **removed** from the stage outright rather than recorded as a no-op entry. This is necessary because Insomnia's `stage` is a **sparse diff-from-HEAD map** (unlike Git's index, which is a complete tree) — the only way to express "no difference" is to have no entry at all for that key. Otherwise it would keep showing as "staged" and let `takeSnapshot()` commit a snapshot whose content hasn't actually changed.
 
-1. **`blobContent` 只在真正需要保留时才写入 blob 存储**（`added`/`modified` 且非 no-op 才写，`deleted` 不写）。
-2. 把条目记进 `this._stageByBackendProjectId[projectId]`（no-op 情况下反而是删除）。
+1. **`blobContent` is only written to blob storage when it's actually needed to persist** (written for non-no-op `added`/`modified`; never written for `deleted`).
+2. The entry is recorded into `this._stageByBackendProjectId[projectId]` (for a no-op, this instead means deleting the entry).
 
-⚠️ **暂存区是纯内存的**。`_stageByBackendProjectId`（[`vcs.ts:123`](../packages/insomnia-vcs/src/vcs.ts#L123)）是 VCS 实例上的一个普通对象，从不落盘。App 重启后暂存列表清空（blob 仍在，成为孤儿数据），需要重新 `status` + `stage`。
+⚠️ **The stage lives purely in memory**. `_stageByBackendProjectId` ([`vcs.ts:111`](../packages/insomnia-vcs/src/vcs.ts#L111)) is an ordinary object on the VCS instance and is never persisted to disk. After an app restart the staged list is empty (the blob content is still on disk, but is now orphaned), requiring a fresh `status` + `stage`.
 
 ### `takeSnapshot(name)`
 
-[`vcs.ts:662-687`](../packages/insomnia-vcs/src/vcs.ts#L662-L687)：
+[`vcs.ts:559-584`](../packages/insomnia-vcs/src/vcs.ts#L559-L584):
 
 ```
-新 state = applyStageToState(父快照 state, stage)
-         = (父快照 state 中所有未被暂存的条目) ∪ (暂存区中所有非 deleted 的条目)
+new state = applyStageToState(parent snapshot's state, stage)
+          = (every entry in the parent snapshot's state that isn't staged) ∪ (every non-deleted entry in the stage)
 ```
 
-`status()` 和 `takeSnapshot()` 共用同一份 [`applyStageToState`](../packages/insomnia-vcs/src/util.ts#L374-L399) 实现来计算索引态，不存在两处逻辑各写一遍的情况。
+`status()` and `takeSnapshot()` share the exact same [`applyStageToState`](../packages/insomnia-vcs/src/util.ts#L374-L399) implementation to compute the index state — there's no place where this logic is written twice.
 
-暂存区为空或消息为空会直接抛错。随后 `_createSnapshotFromState` 生成 ID、把 ID 追加到 `branch.snapshots`、落盘分支和快照，最后**清空暂存区**。
+An empty stage or an empty message throws immediately. `_createSnapshotFromState` then generates the ID, appends it to `branch.snapshots`, persists the branch and snapshot to disk, and finally **clears the stage**.
 
-`author` 此时留空字符串，push 时才用当前 `accountId` 回填（[`vcs.ts:1070-1073`](../packages/insomnia-vcs/src/vcs.ts#L1070-L1073)）——这是为了支持离线未登录时提交。
+`author` is left as an empty string at this point, and gets backfilled with the current `accountId` at push time ([`vcs.ts:950-956`](../packages/insomnia-vcs/src/vcs.ts#L950-L956)) — this is what lets commits be made while offline and logged out.
 
 ---
 
-## 远端工作流：push / pull / fetch
+## Remote Workflow: push / pull / fetch
 
 ### `push({ teamId, teamProjectId })`
 
-[`vcs.ts:753-791`](../packages/insomnia-vcs/src/vcs.ts#L753-L791)：
+[`vcs.ts:650-688`](../packages/insomnia-vcs/src/vcs.ts#L650-L688):
 
-1. `_getOrCreateRemoteBackendProject` — 远端不存在就创建（触发密钥生成，见[加密模型](#加密模型)）。
-2. **线性历史检查**：逐位比对远端 `branch.snapshots[i]` 和本地 `branch.snapshots[i]`，任一位不等就抛 `Remote history conflict. Please pull latest changes and try again`。等价于要求「本地历史必须是远端历史的前缀扩展」——**永远不会 force push**。
-3. 取 `snapshots.slice(lastMatchingIndex)`，为空则抛 `Already up to date`。
-4. 汇总这些快照引用的全部 blobId，调 `blobsMissing` 问服务端缺哪些。
-5. `_queryPushBlobs(missing)` — 逐个读 `_getBlobRaw`（gzip 字节）→ AES-GCM 加密 → 攒批，**按 2MB 或 200 条**触发一次 `blobsCreate`。
-6. `_queryPushSnapshots` — 每 20 条一批 `snapshotsCreate`，返回值再写回本地（服务端可能补全了 `authorAccount` 等字段）。
+1. `_getOrCreateRemoteBackendProject` — creates the remote project if it doesn't exist (triggering key generation, see [Encryption Model](#encryption-model)).
+2. **Linear history check**: compares the remote's `branch.snapshots[i]` against the local `branch.snapshots[i]` position by position, throwing `Remote history conflict. Please pull latest changes and try again` at the first mismatch. Equivalent to requiring that "local history must be a prefix extension of remote history" — **it will never force-push**.
+3. Takes `snapshots.slice(lastMatchingIndex)`; throws `Already up to date` if that's empty.
+4. Gathers every blobId referenced by these snapshots, and asks the server which ones are missing via `blobsMissing`.
+5. `_queryPushBlobs(missing)` — reads each one with `_getBlobRaw` (gzip bytes) → AES-GCM encrypts → batches them, firing a `blobsCreate` **every 2MB or 200 items, whichever comes first**.
+6. `_queryPushSnapshots` — `snapshotsCreate` in batches of 20, writing the response back locally (the server may have filled in fields like `authorAccount`).
 
 ### `pull({ candidates, teamId, teamProjectId, projectId })`
 
-[`vcs.ts:689-724`](../packages/insomnia-vcs/src/vcs.ts#L689-L724) 的实现相当巧妙——**pull 被实现成"把远端抓成一个临时本地分支，再合并进来"**：
+[`vcs.ts:586-621`](../packages/insomnia-vcs/src/vcs.ts#L586-L621) is implemented rather cleverly — **pull works by fetching the remote into a temporary local branch, then merging it in**:
 
 ```ts
 const localBranch = await this._getCurrentBranch();
@@ -393,91 +409,92 @@ const delta = await this._merge(candidates, localBranch.name, tmpBranchForRemote
 await this._removeBranch(tmpBranchForRemote);
 ```
 
-`useOtherBranchHistory = true` 是关键：合并后**本地分支直接采用远端的快照数组**，再把合并结果追加上去。这样本地历史永远是远端历史的前缀扩展，下一次 push 必定能通过第 2 步的线性检查。
+`useOtherBranchHistory = true` is the key part: after merging, **the local branch adopts the remote's snapshot array directly**, then appends the merge result on top. This keeps local history as a permanent prefix extension of remote history, so the next push is guaranteed to pass the linear check in step 2.
 
-`.hidden` 后缀还被用来做冲突弹窗的标签美化（[`vcs.ts:904-906`](../packages/insomnia-vcs/src/vcs.ts#L904-L906)）：检测到分支名含 `.hidden` 时，标签显示成 `master local` vs `master remote` 而不是 `master` vs `master.hidden`。
+The `.hidden` suffix also gets used to prettify the conflict modal's labels ([`vcs.ts:801-803`](../packages/insomnia-vcs/src/vcs.ts#L801-L803)): when a branch name is detected to contain `.hidden`, the labels show as `master local` vs `master remote` instead of `master` vs `master.hidden`.
 
-返回的 `Operation { upsert, remove }` 由渲染进程用 `database.batchModifyDocs` 应用到 NeDB。
+The returned `Operation { upsert, remove }` is applied to NeDB by the renderer via `database.batchModifyDocs`.
 
 ### `customFetch(localBranchName, remoteBranchName)`
 
-[`vcs.ts:793-839`](../packages/insomnia-vcs/src/vcs.ts#L793-L839)。只抓本地缺失的部分：
+[`vcs.ts:690-736`](../packages/insomnia-vcs/src/vcs.ts#L690-L736). It only fetches what's missing locally:
 
-1. 遍历远端分支的快照 ID，本地没有的进 `snapshotsToFetch`。
-2. `_querySnapshots`（20 条一批）拉快照。
-3. 遍历这些快照的 state，`_hasBlob` 为 false 的进 `blobsToFetch`。
-4. `_queryBlobs`（50 条一批）拉 blob → RSA 解出项目对称密钥 → AES-GCM 解密 → `_storeBlobsBuffer` 直接落盘（仍是 gzip 态）。
-5. 克隆远端分支对象，改名、刷新时间戳、落盘。
+1. Walks the remote branch's snapshot IDs, adding any not found locally to `snapshotsToFetch`.
+2. `_querySnapshots` (batches of 20) fetches the snapshots.
+3. Walks those snapshots' state entries, adding any where `_hasBlob` is false to `blobsToFetch`.
+4. `_queryBlobs` (batches of 50) fetches the blobs → unwraps the project symmetric key via RSA → AES-GCM decrypts → `_storeBlobsBuffer` writes them straight to disk (still gzipped).
+5. Clones the remote branch object, renames it, refreshes its timestamp, and persists it.
 
 ---
 
-## 合并算法
+## Merge Algorithm
 
-`_merge(candidates, trunk, other, message?, useOtherBranchHistory?)`（[`vcs.ts:841-931`](../packages/insomnia-vcs/src/vcs.ts#L841-L931)）的决策顺序：
+`_merge(candidates, trunk, other, message?, useOtherBranchHistory?)` ([`vcs.ts:738-828`](../packages/insomnia-vcs/src/vcs.ts#L738-L828)) decides in this order:
 
 ```
 preMergeCheck(trunkState, otherState, candidates)
-  ├─ conflicts 非空 → throw '请先提交或还原当前更改'
-  └─ dirty[]（安全的本地未提交改动，最终从 delta 里剔除以保留）
+  ├─ conflicts non-empty → throw 'please commit or revert current changes first'
+  └─ dirty[] (safe uncommitted local changes, filtered out of the delta at the end so they're kept)
 
-if (other 的最新快照 === 共同祖先) || (other 无快照)     → 什么都不做
-else if (共同祖先 === trunk 最新快照) || (trunk 无快照)  → fast-forward：trunk.snapshots = other.snapshots
-else                                                     → 三方合并
+if (other's latest snapshot === the common ancestor) || (other has no snapshots)     → do nothing
+else if (common ancestor === trunk's latest snapshot) || (trunk has no snapshots)    → fast-forward: trunk.snapshots = other.snapshots
+else                                                                                  → three-way merge
 ```
 
 ### `preMergeCheck`
 
-[`util.ts:416-464`](../packages/insomnia-vcs/src/util.ts#L416-L464) 把每个工作区候选分成三类：
+[`util.ts:416-464`](../packages/insomnia-vcs/src/util.ts#L416-L464) sorts every working-tree candidate into three buckets:
 
-| 情况 | 分类 |
+| Case | Bucket |
 | --- | --- |
-| trunk 和 other 都没有该 key | **dirty**（全新的本地文档，保留） |
-| 候选哈希 == trunk | 干净，忽略 |
-| 候选哈希 == other | 干净（合并后会变成同一个值），忽略 |
-| trunk == other 但候选不同 | **dirty**（安全的本地改动，保留） |
-| 其余 | **conflict** → 中止合并 |
+| Neither trunk nor other has this key | **dirty** (a brand-new local document — keep it) |
+| Candidate's hash == trunk's | Clean, ignore |
+| Candidate's hash == other's | Clean (will end up the same value after merging), ignore |
+| trunk == other but the candidate differs | **dirty** (a safe local change — keep it) |
+| Everything else | **conflict** → abort the merge |
 
-`dirty` 的文档最终会被从返回的 delta 里过滤掉（[`vcs.ts:926-929`](../packages/insomnia-vcs/src/vcs.ts#L926-L929)），这样用户未提交的本地编辑不会被合并结果覆盖。
+Documents classified as `dirty` are ultimately filtered out of the returned delta ([`vcs.ts:926-929`](../packages/insomnia-vcs/src/vcs.ts#L926-L929)), so a user's uncommitted local edits never get overwritten by the merge result.
 
 ### `threeWayMerge`
 
-[`util.ts:67-240`](../packages/insomnia-vcs/src/util.ts#L67-L240) 把 `(root, trunk, other)` 的 12 种组合**全部显式展开**（源码注释明确说"本可以简化，但我们要展开每种情况以尽可能防弹且可读"）：
+[`util.ts:67-240`](../packages/insomnia-vcs/src/util.ts#L67-L240) **explicitly expands all 12 combinations** of `(root, trunk, other)` (the source comment states plainly that this could be simplified, but every case is spelled out to stay as bulletproof and readable as possible):
 
-| # | 情况 | 结果 |
+| # | Case | Result |
 | --- | --- | --- |
-| 1 | 三者相同 | 保留 trunk |
-| 2 | 两边都删 | 删除 |
-| 3 | trunk 删、other 未改 | 删除 |
-| 4 | other 删、trunk 未改 | 删除 |
-| 5 | 两边都新增 | 哈希不同 → **冲突**（默认选 other） |
-| 6 | 仅 trunk 新增 | 保留 trunk |
-| 7 | 仅 other 新增 | 采用 other |
-| 8 | 两边都改 | 哈希不同 → **冲突**（默认选 other） |
-| 9 | 仅 trunk 改 | 保留 trunk |
-| 10 | 仅 other 改 | 采用 other |
-| 11 | trunk 删、other 改 | **冲突**（默认选 other，即"复活"） |
-| 12 | other 删、trunk 改 | **冲突**（默认选 trunk，即"保留"） |
-| — | 兜底 | `throw new Error('3-way merge hit impossible state')` |
+| 1 | All three identical | Keep trunk |
+| 2 | Both deleted | Delete |
+| 3 | trunk deleted, other unchanged | Delete |
+| 4 | other deleted, trunk unchanged | Delete |
+| 5 | Both added | Hashes differ → **conflict** (defaults to other) |
+| 6 | Only trunk added | Keep trunk |
+| 7 | Only other added | Take other |
+| 8 | Both modified | Hashes differ → **conflict** (defaults to other) |
+| 9 | Only trunk modified | Keep trunk |
+| 10 | Only other modified | Take other |
+| 11 | trunk deleted, other modified | **Conflict** (defaults to other, i.e. "resurrect it") |
+| 12 | other deleted, trunk modified | **Conflict** (defaults to trunk, i.e. "keep it") |
+| — | Fallback | `throw new Error('3-way merge hit impossible state')` |
 
-注意所有 `choose` 默认值都偏向**保留数据**而非丢弃：情况 11/12 都倾向保留被修改的那一侧。
+Note that every default `choose` value leans toward **preserving data** rather than discarding it: cases 11/12 both default to keeping the side that was modified.
 
-冲突产生后，`_merge` 会先把 `mineBlob`/`theirsBlob` 的**实际文档内容**读出来附加到冲突对象上（供 UI 做 diff），再交给 `conflictHandler`，最后用 [`updateStateWithConflictResolutions`](../packages/insomnia-vcs/src/util.ts#L495-L525) 应用用户的选择（`choose === null` 表示删除该条目）。
+Once conflicts arise, `_merge` first reads the **actual document content** for `mineBlob`/`theirsBlob` and attaches it to the conflict object (so the UI can render a diff), then hands it to `conflictHandler`, and finally applies the user's choices with [`updateStateWithConflictResolutions`](../packages/insomnia-vcs/src/util.ts#L495-L525) (`choose === null` means delete that entry).
 
 ### `checkout` / `rollback`
 
-两者都基于 [`stateDelta(base, desired)`](../packages/insomnia-vcs/src/util.ts#L284-L315)，产出 `{ add, update, remove }`，再转成 `{ upsert, remove }` 的文档数组交给渲染进程写库。`checkout`（[`vcs.ts:497-527`](../packages/insomnia-vcs/src/vcs.ts#L497-L527)）同样会先 `preMergeCheck`，有冲突则拒绝切分支（`Please commit current changes before switching branches`），并把 dirty 项从 delta 中剔除以保留本地改动。`rollback` / `rollbackToLatest` 在 [`vcs.ts:557-603`](../packages/insomnia-vcs/src/vcs.ts#L557-L603)。
+Both are built on [`stateDelta(base, desired)`](../packages/insomnia-vcs/src/util.ts#L284-L315), which produces `{ add, update, remove }`, converted into a `{ upsert, remove }` array of documents handed to the renderer to write to the database. `checkout` ([`vcs.ts:394-424`](../packages/insomnia-vcs/src/vcs.ts#L394-L424)) likewise runs `preMergeCheck` first, refusing to switch branches on conflict (`Please commit current changes before switching branches`), and strips `dirty` entries out of the delta to preserve local changes. `rollback` / `rollbackToLatest` are at [`vcs.ts:454-500`](../packages/insomnia-vcs/src/vcs.ts#L454-L500).
 
 ---
 
-## 冲突解决的跨进程往返
+## Cross-Process Round Trip for Conflict Resolution
 
-VCS 跑在主进程，冲突弹窗在渲染进程，而 `_merge` 是一个必须**同步等待用户决策**的 `await`。解法是 `AsyncLocalStorage` + 待决 Promise 表（[`main/cloud-sync/vcs.ts`](../packages/insomnia/src/main/cloud-sync/vcs.ts)）：
+The VCS runs in the main process, the conflict modal lives in the renderer, and `_merge` is an `await` that must **synchronously wait on a user decision**. The solution is `AsyncLocalStorage` plus a table of pending promises ([`main/cloud-sync/vcs.ts`](../packages/insomnia/src/main/cloud-sync/vcs.ts)):
 
 ```
-渲染进程                                主进程
-────────                                ──────
-sync.invoke('merge', …)
-   ├──────────────────────────────►  runWithSyncRenderer(sender, () => vcs.merge(…))
+Renderer process                        Main process
+─────────────────                       ────────────
+sync.invoke(workspaceId, 'merge', …)
+   ├──────────────────────────────►  getVCSForWorkspace(workspaceId) → vcs
+                                      runWithSyncRenderer(sender, () => vcs.merge(…))
    │                                   syncInvocationContext.run({ sender }, …)
    │                                        │
    │                                   _merge → handleAnyConflicts → conflictHandler
@@ -485,55 +502,56 @@ sync.invoke('merge', …)
    │                                   requestConflictResolution(conflicts, labels)
    │                                     handlerId = randomUUID()
    │                                     context.sender.send('sync.merge-conflicts', {…})
-   │ ◄─────────────────────────────       return new Promise(...)  ← merge 在此挂起
+   │ ◄─────────────────────────────       return new Promise(...)  ← merge suspends here
    │                                       pendingConflictResolutions.set(handlerId, {senderId, resolve, reject})
    │
- SyncMergeModal 弹出
+ SyncMergeModal opens
    │
    │ sync.resolveConflict({handlerId, conflicts})
-   ├──────────────────────────────►  校验 senderId 一致 → resolve(conflicts)
-   │                                   merge 恢复执行，生成合并快照
-   │ ◄─────────────────────────────   返回 Operation delta
+   ├──────────────────────────────►  checks senderId matches → resolve(conflicts)
+   │                                   merge resumes, produces the merge snapshot
+   │ ◄─────────────────────────────   returns the Operation delta
 ```
 
-要点：
+Key points:
 
-- `AsyncLocalStorage` 保证嵌套多层的 `_merge` 调用能拿到**发起这次调用的那个 `WebContents`**，不需要把 sender 一路透传。
-- `pendingConflictResolutions` 记录了 `senderId`，`resolvePendingSyncConflict` / `cancelPendingSyncConflict` 会校验回应来自同一个渲染进程（[`main/cloud-sync/vcs.ts:96-101`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L96-L101)），防止跨窗口串扰。
-- 取消路径 reject 一个 `UserAbortResolveMergeConflictError`。这个错误类和 `RESOLUTION_SOURCE` 常量都定义在 [`sync/vcs/utils.ts`](../packages/insomnia/src/sync/vcs/utils.ts)。IPC 序列化会丢失原型链，所以 preload 在 [`entry.preload.ts:157-161`](../packages/insomnia/src/entry.preload.ts#L157-L161) 按 `name` 重新构造该错误类型，branch/merge 路由再据此静默吞掉（用户主动取消不算失败）。
-- 渲染进程的监听器只注册一次（模块级 `hasRegisteredConflictListener` 布尔，[`ui/utils/insomnia-sync.ts:6-15`](../packages/insomnia/src/ui/utils/insomnia-sync.ts#L6-L15)），在 `entry.client.tsx` 启动时调用。
-- 弹窗以任意方式关闭（Esc / 点遮罩）都会走 `onOpenChange` → `onCancelUnresolved`，不会让主进程的 Promise 永久悬挂。
+- `AsyncLocalStorage` guarantees that a nested `_merge` call can get hold of **the `WebContents` that initiated this call**, without having to thread `sender` through every layer.
+- `pendingConflictResolutions` records the `senderId`; `resolvePendingSyncConflict` / `cancelPendingSyncConflict` verify the reply comes from the same renderer ([`main/cloud-sync/vcs.ts:134-164`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L134-L164)), preventing cross-window interference.
+- The cancel path rejects with a `UserAbortResolveMergeConflictError`. Both this error class and the `RESOLUTION_SOURCE` constant are defined in [`sync/vcs/utils.ts`](../packages/insomnia/src/sync/vcs/utils.ts). IPC serialization loses the prototype chain, so preload reconstructs this error type by `name` in [`entry.preload.ts:157-161`](../packages/insomnia/src/entry.preload.ts#L157-L161), and the branch/merge routes silently swallow it accordingly (a user-initiated cancel doesn't count as a failure).
+- The renderer's listener registers only once (a module-level `hasRegisteredConflictListener` boolean, [`ui/utils/insomnia-sync.ts:6-15`](../packages/insomnia/src/ui/utils/insomnia-sync.ts#L6-L15)), called at `entry.client.tsx` startup.
+- Closing the modal any way (Esc / clicking the overlay) goes through `onOpenChange` → `onCancelUnresolved`, so the main process's Promise is never left hanging.
 
-`SyncMergeModal` 是 Cloud Sync 和 Git Sync **共用**的组件，区别在 `editorType`：Cloud Sync 默认 `'diff'`（二选一），Git Sync 用 `'merge'`（手动编辑），对应 `resolutionSource` 的 `CHOOSE` / `MANUAL`。它的 `MergeConflict` 类型从 `insomnia-vcs` 导入，`RESOLUTION_SOURCE` 常量从 `~/sync/vcs/utils` 导入。
+`SyncMergeModal` is a component **shared** by Cloud Sync and Git Sync, differing by `editorType`: Cloud Sync defaults to `'diff'` (pick one side), Git Sync uses `'merge'` (manual editing), corresponding to `resolutionSource`'s `CHOOSE` / `MANUAL`. Its `MergeConflict` type is imported from `insomnia-vcs`; the `RESOLUTION_SOURCE` constant is imported from `~/sync/vcs/utils`.
 
 ---
 
-## 加密模型
+## Encryption Model
 
-Cloud Sync 是**端到端加密**的：服务端只看到密文 blob，看不到请求 URL、Header、脚本内容。
+Cloud Sync is **end-to-end encrypted**: the server only ever sees ciphertext blobs — never the request URL, headers, or script content.
 
-### 密钥层级
+### Key Hierarchy
 
 ```
-用户 RSA 密钥对 (RSA-OAEP-256)
-  ├─ publicKey  (JWK, 明文存 UserSession)
-  └─ encPrivateKey ──[AES-GCM, 用会话 symmetricKey 解]──► privateKey (JWK)
+User's RSA key pair (RSA-OAEP-256)
+  ├─ publicKey  (JWK, stored plaintext in UserSession)
+  └─ encPrivateKey ──[AES-GCM, decrypted with the session symmetricKey]──► privateKey (JWK)
                                   │
                                   ▼
-        每个 BackendProject 一把 AES-256-GCM symmetricKey
-          创建项目时客户端生成，用**每个团队成员的 RSA 公钥**各包一份
+        One AES-256-GCM symmetricKey per BackendProject
+          Generated client-side when the project is created, wrapped once per
+          **each team member's RSA public key**
           → projectCreate(teamKeys: [{accountId, encSymmetricKey, autoLinked}])
                                   │
                                   ▼
-                     blob 内容：AES-256-GCM(gzip(规范化 JSON))
+                     Blob content: AES-256-GCM(gzip(normalized JSON))
 ```
 
-### 项目密钥的生成与分发
+### Generating and Distributing the Project Key
 
-创建远端项目时（[`_queryCreateProject`, vcs.ts:1298-1368](../packages/insomnia-vcs/src/vcs.ts#L1298-L1368)）：
+When creating a remote project ([`_queryCreateProject`, vcs.ts:1174-1244](../packages/insomnia-vcs/src/vcs.ts#L1174-L1244)):
 
 ```ts
-const symmetricKey = await generateAES256KeyInNode();     // WebCrypto AES-GCM/256，导出为 JWK
+const symmetricKey = await generateAES256KeyInNode();     // WebCrypto AES-GCM/256, exported as JWK
 const symmetricKeyStr = JSON.stringify(symmetricKey);
 
 for (const { accountId, publicKey, autoLinked } of teamPublicKeys || []) {
@@ -542,9 +560,9 @@ for (const { accountId, publicKey, autoLinked } of teamPublicKeys || []) {
 }
 ```
 
-成员公钥来自 `teamMemberKeys(teamId)` 查询。`generateAES256KeyInNode`（[`vcs.ts:63-86`](../packages/insomnia-vcs/src/vcs.ts#L63-L86)）优先用 `crypto.webcrypto.subtle`，降级到 `crypto.randomBytes(32)`。
+Member public keys come from the `teamMemberKeys(teamId)` query. `generateAES256KeyInNode` ([`vcs.ts:60-83`](../packages/insomnia-vcs/src/vcs.ts#L60-L83)) prefers `crypto.webcrypto.subtle`, falling back to `crypto.randomBytes(32)`.
 
-使用时反向解包（[`_getBackendProjectSymmetricKey`, vcs.ts:1379-1390](../packages/insomnia-vcs/src/vcs.ts#L1379-L1390)）：
+It's unwrapped in the reverse direction when used ([`_getBackendProjectSymmetricKey`, vcs.ts:1251-1262](../packages/insomnia-vcs/src/vcs.ts#L1251-L1262)):
 
 ```ts
 const encSymmetricKey = await this._queryBackendProjectKey();      // projectKey(projectId)
@@ -552,11 +570,11 @@ const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
 return JSON.parse(symmetricKeyStr);
 ```
 
-> ⚠️ Playwright E2E 测试下会短路，直接用会话对称密钥（[`vcs.ts:1379-1385`](../packages/insomnia-vcs/src/vcs.ts#L1379-L1385)）。是否处于测试模式由构造函数选项 `testMode` 决定，主进程在创建 VCS 单例时传入 `testMode: !!PLAYWRIGHT_TEST`（[`main/cloud-sync/vcs.ts:56-62`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L56-L62)）——`insomnia-vcs` 包本身不依赖 `packages/insomnia` 的 `PLAYWRIGHT_TEST` 常量，测试模式完全通过构造参数从调用方注入。
+> ⚠️ Under Playwright E2E tests this short-circuits and uses the session symmetric key directly ([`vcs.ts:1254-1257`](../packages/insomnia-vcs/src/vcs.ts#L1254-L1257)). Whether test mode is active is decided by the constructor option `testMode`; the main process passes `testMode: !!PLAYWRIGHT_TEST` when creating a workspace's VCS instance ([`main/cloud-sync/vcs.ts:81-85`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L81-L85)) — the `insomnia-vcs` package itself has no dependency on `packages/insomnia`'s `PLAYWRIGHT_TEST` constant; test mode is injected entirely from the caller via the constructor argument.
 
-### 原语
+### Primitives
 
-全部在 [`insomnia-vcs/src/crypt.ts`](../packages/insomnia-vcs/src/crypt.ts)，基于 **node-forge**（纯 JS），只有密钥生成用 WebCrypto。`packages/insomnia/src/common/account/crypt.ts` 是一个纯 re-export 文件：
+All in [`insomnia-vcs/src/crypt.ts`](../packages/insomnia-vcs/src/crypt.ts), built on **node-forge** (pure JS) — only key generation uses WebCrypto. `packages/insomnia/src/common/account/crypt.ts` is a pure re-export file:
 
 ```ts
 // packages/insomnia/src/common/account/crypt.ts
@@ -566,247 +584,250 @@ export {
 } from 'insomnia-vcs';
 ```
 
-这样渲染进程里按 `~/common/account/crypt` 路径 import 这些函数的调用点（例如登录流程里生成密钥对的代码）不用改动。node-forge 只是 `insomnia-vcs` 包的依赖，`packages/insomnia` 不直接依赖它。
+This means call sites in the renderer that import these functions via `~/common/account/crypt` (e.g. the key-pair generation code in the login flow) don't need to change. node-forge is only a dependency of the `insomnia-vcs` package — `packages/insomnia` doesn't depend on it directly.
 
-| 函数 | 算法 | 说明 |
+| Function | Algorithm | Notes |
 | --- | --- | --- |
-| `encryptAESBuffer` | AES-256-GCM，12 字节随机 IV，128 位 tag | 直接加密字节，**不做 URI 编码**（区别于 `encryptAES`） |
-| `decryptAESToBuffer` | 同上 | tag 长度由密文推导：`tagLength: encryptedResult.t.length * 4` |
-| `encryptRSAWithJWK` | RSA-OAEP + SHA-256 | 强制校验 `alg === 'RSA-OAEP-256'`；先 `encodeURIComponent`，输出 hex |
-| `decryptRSAWithJWK` | 同上 | 需要完整 CRT 私钥（`n,e,d,p,q,dp,dq,qi`） |
+| `encryptAESBuffer` | AES-256-GCM, 12-byte random IV, 128-bit tag | Encrypts bytes directly, **no URI encoding** (unlike `encryptAES`) |
+| `decryptAESToBuffer` | Same | Tag length is derived from the ciphertext: `tagLength: encryptedResult.t.length * 4` |
+| `encryptRSAWithJWK` | RSA-OAEP + SHA-256 | Enforces `alg === 'RSA-OAEP-256'`; `encodeURIComponent`s first, outputs hex |
+| `decryptRSAWithJWK` | Same | Needs the full CRT private key (`n,e,d,p,q,dp,dq,qi`) |
 
-AES 密文的线上格式（`AESMessage`，全部小写 hex）：
+The AES ciphertext's on-the-wire format (`AESMessage`, all lowercase hex):
 
 ```json
-{ "iv": "…12字节…", "t": "…16字节tag…", "ad": "", "d": "…密文…" }
+{ "iv": "…12 bytes…", "t": "…16-byte tag…", "ad": "", "d": "…ciphertext…" }
 ```
 
-blob 上传时会 `JSON.stringify(encryptedResult, null, 2)` 后作为 GraphQL 的 `content` 字段。
+When a blob is uploaded, it's `JSON.stringify(encryptedResult, null, 2)`'d and sent as the GraphQL `content` field.
 
-### 完整的 blob 管线
+### The Full Blob Pipeline
 
 ```
-上行： BaseModel
+Outbound: BaseModel
        → clone + models.deleteKeys(modified) + models.resetKeys(parentId)
-       → deterministicStringify                     ← blobId = sha1(这一步的输出)
+       → deterministicStringify                     ← blobId = sha1(this step's output)
        → Buffer(utf8)                               ← _storeBlobs
-       → gzip                                       ← compress hook (无扩展名)
-       ═══ 落盘 version-control/projects/…/blobs/xx/yyy ═══
-       → AES-256-GCM(项目对称密钥)                    ← _queryPushBlobs
+       → gzip                                       ← compress hook (no extension)
+       ═══ persisted to disk at version-control/projects/…/blobs/xx/yyy ═══
+       → AES-256-GCM(project symmetric key)          ← _queryPushBlobs
        → JSON.stringify({iv,t,ad,d})
        → GraphQL blobsCreate
 
-下行： 完全对称（_queryBlobs 解密 → _storeBlobsBuffer 直接写 gzip 字节 → _getBlob 走 hook 解压 + parse）
+Inbound: fully symmetric (_queryBlobs decrypts → _storeBlobsBuffer writes the raw gzip bytes → _getBlob goes through the hook to decompress + parse)
 ```
 
-### 安全边界说明
+### Security Boundary Notes
 
-端到端加密是**相对服务端**成立的，本地磁盘并不加密：
+End-to-end encryption holds **relative to the server** — local disk is not encrypted:
 
-- `version-control/` 下的 blob 只做了 gzip，没有加密。
-- 会话对称密钥 `symmetricKey` 以**明文 JWK** 存在本地 NeDB 的 `UserSession` 文档里（[`insomnia-data/src/models/user-session.ts`](../packages/insomnia-data/src/models/user-session.ts)），`encPrivateKey` 只是相对它加密。也就是说拿到本地 NeDB 文件即可解出 RSA 私钥。此处**未使用** Electron `safeStorage`（`safeStorage` 只用于 [`main/ipc/secret-storage.ts`](../packages/insomnia/src/main/ipc/secret-storage.ts) 的其他场景）。
-- `_assertSession()` / `_getPrivateKey()`（[`vcs.ts:1393-1466`](../packages/insomnia-vcs/src/vcs.ts#L1393-L1466)）每次调用都重新读库（`services.userSession.get()`，来自 `insomnia-data`）+ 用 `crypt.decryptAES` 解密，**没有缓存**。
+- Blobs under `version-control/` are only gzipped, never encrypted.
+- The session symmetric key, `symmetricKey`, is stored as a **plaintext JWK** in the local NeDB `UserSession` document ([`insomnia-data/src/models/user-session.ts`](../packages/insomnia-data/src/models/user-session.ts)); `encPrivateKey` is only encrypted relative to it. In other words, having the local NeDB file is enough to recover the RSA private key. Electron `safeStorage` is **not used** here (`safeStorage` is only used elsewhere, in [`main/ipc/secret-storage.ts`](../packages/insomnia/src/main/ipc/secret-storage.ts)).
+- `assertSession()` / `getPrivateKey()` ([`session.ts:8-39`](../packages/insomnia-vcs/src/session.ts#L8-L39), top-level functions independent of the `VCS` class) re-read the database on every call (`services.userSession.get()`, from `insomnia-data`) and decrypt with `crypt.decryptAES` — **there's no caching**.
 
 ---
 
-## 网络层与 GraphQL 契约
+## Network Layer and GraphQL Contract
 
-### 传输
+### Transport
 
-[`runVcsGraphQL`](../packages/insomnia-api/src/vcs.ts) 是一层极薄的包装：
+[`runVcsGraphQL`](../packages/insomnia-api/src/vcs.ts) is a very thin wrapper:
 
 ```ts
 return fetch({ method: 'POST', path: '/graphql?' + name, data: { query, variables }, sessionId });
 ```
 
-操作名被拼进 query string（`/graphql?blobsCreate`）**纯粹为了可观测性**，服务端不依赖它。
+The operation name is appended to the query string (`/graphql?blobsCreate`) **purely for observability** — the server doesn't depend on it.
 
-底层是 [`insomniaFetch`](../packages/insomnia/src/common/insomnia-fetch.ts)：
+Underneath is [`insomniaFetch`](../packages/insomnia/src/common/insomnia-fetch.ts):
 
-- **Base URL**：`env.INSOMNIA_API_URL || 'https://api.insomnia.rest'`
-- **认证 Header**：`X-Session-Id: <sessionId>`，外加 `X-Insomnia-Client`、`insomnia-request-id`、`X-Origin`
-- **超时**：`AbortSignal.timeout(30_000)`
-- **重试**：**没有**。`retries` 参数被接收但完全忽略（源码有 `// It's not used at all, should be removed?` 注释）
-- 主进程用 Electron `net.fetch`，因此走系统代理和系统证书
+- **Base URL**: `env.INSOMNIA_API_URL || 'https://api.insomnia.rest'`
+- **Auth header**: `X-Session-Id: <sessionId>`, plus `X-Insomnia-Client`, `insomnia-request-id`, `X-Origin`
+- **Timeout**: `AbortSignal.timeout(30_000)`
+- **Retries**: **none**. The `retries` parameter is accepted but entirely ignored (the source has a `// It's not used at all, should be removed?` comment)
+- The main process uses Electron's `net.fetch`, so it goes through the system proxy and system certificates
 
-错误分两层：HTTP 非 2xx 抛 `ResponseFailError`；HTTP 200 但 GraphQL `errors[]` 非空由 VCS 自己处理（[`vcs.ts:966-985`](../packages/insomnia-vcs/src/vcs.ts#L966-L985)）：
+Errors are handled at two layers: a non-2xx HTTP status throws `ResponseFailError`; an HTTP 200 with a non-empty GraphQL `errors[]` is handled by the generic `runGraphQL` ([`session.ts:41-60`](../packages/insomnia-vcs/src/session.ts#L41-L60), called by every `_query*` method on the `VCS` class):
 
 ```ts
 if (errors?.length) throw new Error(`Failed to query ${name}: ${errors[0].message}`);
 if (data == null)   throw new Error(`Failed to query ${name}: no data returned`);
 ```
 
-含 `invalid access` 的错误会被 [`interceptAccessError`](../packages/insomnia/src/sync/access-error.ts) 改写成用户可读的权限提示。
+Errors containing `invalid access` get rewritten into a user-readable permission message by [`interceptAccessError`](../packages/insomnia/src/sync/access-error.ts).
 
-### GraphQL 操作全集
+### The Full Set of GraphQL Operations
 
-Query：
+Queries:
 
-| 操作 | 变量 | 返回 | 调用点（均在 `insomnia-vcs/src/vcs.ts`） |
+| Operation | Variables | Returns | Call site |
 | --- | --- | --- | --- |
-| `projects` | `teamId`, `teamProjectId` \| `allProjects` | `[{id,name,rootDocumentId,teamProjectId,teams}]` | `remoteBackendProjects` / `…OfTeam` |
-| `project` | `id` | `{id,name,rootDocumentId}` \| `null` | `_queryProject` |
+| `projects` | `teamId`, `teamProjectId` \| `allProjects` | `[{id,name,rootDocumentId,teamProjectId,teams}]` | `remoteBackendProjects` / `…OfTeam` (`backend-projects.ts`, doesn't depend on a `VCS` instance) |
+| `project` | `id` | `{id,name,rootDocumentId}` \| `null` | `_queryProject` (`vcs.ts`) |
 | `branches` | `project` | `[{name}]` | `getRemoteBranchNames` |
 | `branch` | `project`, `name` | `{created,modified,name,snapshots}` | `_queryBranch` |
-| `snapshots` | `ids`, `project` | 完整快照 + `authorAccount` | `_querySnapshots`（20/批） |
-| `blobs` | `ids`, `project` | `[{id, content}]` content 为加密 JSON | `_queryBlobs`（50/批） |
-| `blobsMissing` | `project`, `ids` | `{missing:[id]}` | push 前询问 |
-| `projectKey` | `projectId` | `{encSymmetricKey}` | 取项目对称密钥 |
-| `teamMemberKeys` | `teamId` | `{memberKeys:[{accountId,publicKey,autoLinked}]}` | 建项目时分发密钥 |
+| `snapshots` | `ids`, `project` | Full snapshots + `authorAccount` | `_querySnapshots` (batches of 20) |
+| `blobs` | `ids`, `project` | `[{id, content}]`, `content` is encrypted JSON | `_queryBlobs` (batches of 50) |
+| `blobsMissing` | `project`, `ids` | `{missing:[id]}` | Asked before pushing |
+| `projectKey` | `projectId` | `{encSymmetricKey}` | Fetching the project symmetric key |
+| `teamMemberKeys` | `teamId` | `{memberKeys:[{accountId,publicKey,autoLinked}]}` | Distributing keys when creating a project |
 
-Mutation：
+The remaining call sites are all in `insomnia-vcs/src/vcs.ts`, as `VCS` instance methods.
 
-| 操作 | 变量 | 返回 |
+Mutations:
+
+| Operation | Variables | Returns |
 | --- | --- | --- |
 | `projectCreate` | `name,id,rootDocumentId,teamId,teamProjectId,teamKeys` | `{id,name,rootDocumentId}` |
 | `projectArchive` | `id` | `Boolean` |
 | `branchRemove` | `project`, `name` | `Boolean` |
-| `snapshotsCreate` | `project`, `snapshots`, `branch` | 回显创建的快照 |
+| `snapshotsCreate` | `project`, `snapshots`, `branch` | The created snapshots, echoed back |
 | `blobsCreate` | `project`, `blobs` | `{count}` |
 
-> 服务端契约的可执行文档在 [`packages/insomnia-smoke-test/server/cloud-sync-api.ts`](../packages/insomnia-smoke-test/server/cloud-sync-api.ts)——它用 Node 原生 `crypto` 实现了同样的 AES-GCM 格式并做完整的解密 → gunzip 往返校验，可以当作 wire format 的权威参考。
+> The executable reference for the server-side contract lives in [`packages/insomnia-smoke-test/server/cloud-sync-api.ts`](../packages/insomnia-smoke-test/server/cloud-sync-api.ts) — it implements the same AES-GCM format with Node's native `crypto` and does a full decrypt → gunzip round trip, so it can be treated as the authoritative reference for the wire format.
 
-### 批量与分片策略
+### Batching and Chunking Strategy
 
-| 操作 | 分片 |
+| Operation | Chunk size |
 | --- | --- |
-| `_querySnapshots` / `_queryPushSnapshots` | 20 条/批 |
-| `_queryBlobs` | 50 条/批 |
-| `_queryPushBlobs` | **2 MB 或 200 条**，先到先触发 |
+| `_querySnapshots` / `_queryPushSnapshots` | Batches of 20 |
+| `_queryBlobs` | Batches of 50 |
+| `_queryPushBlobs` | **2 MB or 200 items**, whichever comes first |
 
-没有并发控制——所有批次串行发送。
+There's no concurrency control — every batch is sent serially.
 
 ---
 
-## 生命周期：初始化、拉取、删除
+## Lifecycle: Initialization, Pull, Deletion
 
-### 首次为一个 workspace 建立同步
+### Setting Up Sync for a Workspace the First Time
 
-[`initializeLocalBackendProjectAndMarkForSync`](../packages/insomnia/src/sync/vcs/initialize-backend-project.ts#L16-L53)：
+[`initializeLocalBackendProjectAndMarkForSync`](../packages/insomnia/src/sync/vcs/initialize-backend-project.ts#L16-L53):
 
 ```
 switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name)
-  → 本地生成 BackendProject { id: generateId('prj'), rootDocumentId: workspace._id }
-候选集 = getWithDescendants(workspace) + projectLintRuleset，过 canSync
-status → stage(全部 unstaged) → takeSnapshot('Initial Snapshot')
+  → locally generates a BackendProject { id: generateId('prj'), rootDocumentId: workspace._id }
+candidate set = getWithDescendants(workspace) + projectLintRuleset, filtered through canSync
+status → stage(everything unstaged) → takeSnapshot('Initial Snapshot')
 workspaceMeta.pushSnapshotOnInitialize = true
 ```
 
-这个文件里的 `SyncVCSLike` 接口从 `insomnia-vcs` 导入 `Stage`/`StageEntry`/`Status`/`StatusCandidate` 类型。
+The `SyncVCSLike` interface in this file imports the `Stage`/`StageEntry`/`Status`/`StatusCandidate` types from `insomnia-vcs`, and takes no `workspaceId` parameter — it describes the shape a "vcs handle already bound to some workspace" should have. The main process passes a real `VCS` instance directly (`getVCSForWorkspace(workspaceId)`); the renderer, since every method on `window.main.sync` now requires an explicit `workspaceId`, wraps it with an adapter, [`syncVCSLikeForWorkspace(workspaceId)`](../packages/insomnia/src/ui/sync-utils.ts#L57-L67), which binds the `workspaceId` before handing it to these two functions.
 
-注意此时**只建本地项目，不碰网络**。真正的远端项目要等到第一次 push（`_getOrCreateRemoteBackendProject`）才创建。
+Note that at this point **only the local project is created — the network is never touched**. The actual remote project isn't created until the first push (`_getOrCreateRemoteBackendProject`).
 
-`pushSnapshotOnInitialize` 随后在满足「project 就是 workspace 的父级 且 project 有 `remoteId` 且 VCS 已激活项目」时执行 push，并把标志位清掉。这里有一段注释解释了为什么要判 `hasBackendProject()`——历史上 App.tsx 的 React key 变更会导致该路径被走两次。
+`pushSnapshotOnInitialize` then runs the push and clears the flag, once "the project is the workspace's parent, the project has a `remoteId`, and the VCS has an active project" all hold. There's a comment here explaining why it checks `hasBackendProject()` — historically, a React key change in App.tsx could cause this code path to run twice.
 
-主进程侧的两个入口（[`initialization.ts`](../packages/insomnia/src/main/cloud-sync/initialization.ts)）：
+The two main-process entry points ([`initialization.ts`](../packages/insomnia/src/main/cloud-sync/initialization.ts)) both use `getVCSForWorkspace(workspaceId)` to get that workspace's own VCS instance:
 
-- `initializeWorkspaceBackendProject` — 未登录直接返回；**`workspaceMeta.gitRepositoryId` 有值时跳过**（Git Sync 优先）。
-- `syncNewWorkspaceIfNeeded` — 用于导入等场景。额外检查 `models.project.isRemoteProject(project)` 和组织的 [`storageRules.enableCloudSync`](../packages/insomnia/src/common/organization-storage-rules.ts)（Scratchpad 组织恒为 `false`）。失败只 `console.warn`，留待下次打开工作区重试。
+- `initializeWorkspaceBackendProject` — returns immediately if not logged in; **skips if `workspaceMeta.gitRepositoryId` is set** (Git Sync takes priority).
+- `syncNewWorkspaceIfNeeded` — used for scenarios like import. Additionally checks `models.project.isRemoteProject(project)` and the organization's [`storageRules.enableCloudSync`](../packages/insomnia/src/common/organization-storage-rules.ts) (always `false` for the Scratchpad organization). On failure it only `console.warn`s, leaving a retry for the next time the workspace is opened.
 
-### 拉取一个远端已有的 collection
+### Pulling an Existing Remote Collection
 
-[`pullRemoteBackendProjectWithSingleton`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L119-L157) → [`pullBackendProject`](../packages/insomnia/src/main/cloud-sync/pull-backend-project.ts)：
+[`pullRemoteBackendProject`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L166-L202) → [`pullBackendProject`](../packages/insomnia/src/main/cloud-sync/pull-backend-project.ts):
 
 ```
-用单例 VCS 做只读的 remoteBackendProjects 列表查询
-另建一个**独立的 VCS 实例**执行实际拉取     ← 避免污染单例的 _backendProject
-removeBackendProjectsForRoot(rootDocumentId)  ← 清理同 root 的陈旧本地项目
+remoteBackendProjects(...)  ← a top-level function, no VCS instance involved, queries the remote project list
+removeBackendProjectsForRoot(rootDocumentId)  ← a top-level function, cleans up any stale local project(s) sharing this root
+getVCSForWorkspace(rootDocumentId)  ← rootDocumentId is exactly the target workspace's id, so this gets its own VCS instance
 setBackendProject → checkout([], 'master') → getRemoteBranchNames
-  ├─ 远端没有 master → 只在本地建一个空 workspace 壳
-  └─ 有 master → pull([]) → allDocuments() 逐条写库
-       · Workspace.parentId  → 本地 project._id
-       · ProjectLintRuleset.parentId → 本地 project._id
-       · 用 bufferChanges / flushChanges 包住，避免逐条触发 UI revalidation
+  ├─ remote has no master → just create an empty workspace shell locally
+  └─ has master → pull([]) → allDocuments() written to the database one by one
+       · Workspace.parentId  → the local project's ._id
+       · ProjectLintRuleset.parentId → the local project's ._id
+       · wrapped in bufferChanges / flushChanges to avoid triggering UI revalidation per document
 ```
 
-`VCS`、`BackendProjectWithTeam` 等类型从 `insomnia-vcs` 导入。独立实例这一点在源码里有明确注释：单例的 `_backendProject` 是可变状态，并发的 `sync.invoke` 会互相干扰。
+The `VCS`, `BackendProjectWithTeam`, and other types are imported from `insomnia-vcs`. Because this gets "this workspace's own" VCS instance (rather than one shared with other workspaces), this pull can never interfere with concurrent `sync.invoke` calls targeting other workspaces.
 
-### 删除
+### Deletion
 
-[`workspace.delete.tsx`](../packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.delete.tsx) 先 `switchAndCreateBackendProjectIfNotExist` 定位项目，然后：
+[`workspace.delete.tsx`](../packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.delete.tsx) first calls `switchAndCreateBackendProjectIfNotExist`, using `workspace._id` as both the `workspaceId` and the `rootDocumentId`, to locate the project. Then:
 
-- 本地 project → `removeBackendProjectsForRoot(rootDocumentId)`（只删本地 `meta.json`）
-- 远端 project → `archiveProject()`（`projectArchive` mutation + 删本地 meta + 清空 `_backendProject`）
+- Local project → `removeBackendProjectsForRoot(rootDocumentId)` (goes through `sync.invokeGlobal`, needs no `workspaceId`, only deletes the local `meta.json`)
+- Remote project → `archiveProject(workspaceId)` (the `projectArchive` mutation + deleting the local meta + clearing that VCS instance's `_backendProject`)
 
 ---
 
-## 渲染进程集成
+## Renderer Process Integration
 
-### 路由表
+### Route Table
 
-Cloud Sync 的所有操作都是 flat-file 路由的 `clientAction`/`clientLoader`（`src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.*.tsx`）：
+Every Cloud Sync operation is a flat-file route's `clientAction`/`clientLoader` (`src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.*.tsx`); the `workspaceId` from the route params gets passed through as the first argument to `window.main.sync.<method>(workspaceId, ...)`:
 
-| 路由 | 调用的 VCS 方法 |
+| Route | VCS method(s) called |
 | --- | --- |
-| `insomnia-sync` | `localBackendProjects`, `remoteBackendProjects` → 可拉取列表 |
-| `insomnia-sync/sync-data` | loader：`getBranchNames`、`getCurrentBranchName`、`getHistory`、`getHistoryCount`、`status`、`getRemoteBranchNames`、`compareRemoteBranch`、`remoteBackendProjects`；并回写 `workspaceMeta.{hasUncommittedChanges,hasUnpushedChanges}` |
+| `insomnia-sync` | `localBackendProjects`, `remoteBackendProjects` → the list of pullable projects |
+| `insomnia-sync/sync-data` | loader: `getBranchNames`, `getCurrentBranchName`, `getHistory`, `getHistoryCount`, `status`, `getRemoteBranchNames`, `compareRemoteBranch`, `remoteBackendProjects`; and writes back `workspaceMeta.{hasUncommittedChanges,hasUnpushedChanges}` |
 | `insomnia-sync/push` | `push` |
 | `insomnia-sync/pull` | `pull` + `batchModifyDocs(reparentSyncDelta(delta))` |
-| `insomnia-sync/create-snapshot` | `takeSnapshot`，可选紧接 `push` |
+| `insomnia-sync/create-snapshot` | `takeSnapshot`, optionally immediately followed by `push` |
 | `insomnia-sync/stage` · `/unstage` | `status` → `stage` / `unstage` |
 | `insomnia-sync/rollback` · `/restore` | `rollbackToLatest` / `rollback(id)` + `batchModifyDocs` |
-| `insomnia-sync/fetch` | `checkout` → `pull([])` → 失败则 `checkout` 回原分支 |
+| `insomnia-sync/fetch` | `checkout` → `pull([])` → on failure, `checkout` back to the original branch |
 | `insomnia-sync/branch/checkout` · `/create` · `/merge` · `/delete` | `checkout` / `fork`+`checkout` / `merge` / `removeRemoteBranch`+`removeBranch` |
 | `/organization/:id/insomnia-sync/pull-remote-file` | `pullRemoteBackendProject` |
 
-**每一个产出 delta 的路由都必须在 `batchModifyDocs` 前调用 [`reparentSyncDelta`](../packages/insomnia/src/ui/sync-utils.ts#L55-L63)**，否则 `ProjectLintRuleset` 会带着 `parentId: null` 落库。
+**Every route that produces a delta must call [`reparentSyncDelta`](../packages/insomnia/src/ui/sync-utils.ts#L74-L82) before `batchModifyDocs`**, or `ProjectLintRuleset` ends up written to the database with `parentId: null`.
 
-另有两个非 `insomnia-sync/*` 的调用点：workspace 根路由的 loader（`switchAndCreateBackendProjectIfNotExist` + `pushSnapshotOnInitialize` + `getVersion`），以及 workspace 删除路由。前者直接把 `window.main.sync` 当作 `SyncVCSLike` 传进去——接口设计成结构化类型正是为此。
+There are two more call sites outside `insomnia-sync/*`: the workspace root route's loader (`switchAndCreateBackendProjectIfNotExist` + `pushSnapshotOnInitialize` + `getVersion`), and the workspace deletion route (`switchAndCreateBackendProjectIfNotExist` + `removeBackendProjectsForRoot`/`archiveProject`). The former needs to adapt `window.main.sync` into the `SyncVCSLike` shape (which takes no `workspaceId` parameter) when calling `pushSnapshotOnInitialize`, using [`syncVCSLikeForWorkspace(workspaceId)`](../packages/insomnia/src/ui/sync-utils.ts#L57-L67) (also used by `updateLocalProjectToRemote` in `ui/organization-utils.ts` when batch-initializing multiple workspaces — one bound instance per workspace). The latter calls `window.main.sync`'s `workspaceId`-taking methods directly, without going through `SyncVCSLike`.
 
-### UI 与刷新节奏
+### UI and Refresh Cadence
 
-- [`sync-bar.tsx`](../packages/insomnia/src/ui/components/sidebar/sync-bar.tsx) 是纯分发器；[`workspace-sync-dropdown.tsx`](../packages/insomnia/src/ui/components/dropdowns/workspace-sync-dropdown.tsx) 判断 `isRemoteProject(project) && !workspaceMeta.gitRepositoryId` 才渲染 Cloud Sync 的 [`sync-dropdown.tsx`](../packages/insomnia/src/ui/components/dropdowns/sync-dropdown.tsx)。
-- **轮询**：`useInterval(triggerSync, isWindowFocused ? 60_000 : null)`——窗口聚焦时每分钟刷新一次远端状态，失焦即暂停；窗口重新聚焦（`mainWindowFocusChange`）也触发一次。
-- **事件驱动**：[`insomnia-event-stream-context.tsx`](../packages/insomnia/src/ui/context/app/insomnia-event-stream-context.tsx) 收到 SSE 的 `FileChanged` / `BranchDeleted` 时立即重新提交 sync-data action，是轮询之外的第二条刷新路径。
-- **模块级缓存**：`remoteBranchesCache` / `remoteCompareCache` / `remoteBackendProjectsCache`（[`ui/sync-utils.ts:46-48`](../packages/insomnia/src/ui/sync-utils.ts#L46-L48)），由各 action 显式失效。
-- 徽标：`pullCount = compare.behind` / `pushCount = compare.ahead`，`compare` 来自 [`compareBranches`](../packages/insomnia-vcs/src/util.ts#L241-L283)（同样基于共同祖先在两个数组中的下标）。
-
----
-
-## 已知缺陷与设计债
-
-按影响面排序，均为阅读代码得出的事实，未做运行时验证：
-
-1. **暂存区不持久化。** `_stageByBackendProjectId`（[`vcs.ts:123`](../packages/insomnia-vcs/src/vcs.ts#L123)）是纯内存对象，App 重启即丢。已写入的 blob 成为无人引用的孤儿文件，且没有 GC 机制。
-
-2. **分支文件名大小写不对称。** `_storeBranch` 写路径带 `.toLowerCase()`，而 `_getBranch` / `_removeBranch` 不带（[`vcs.ts:1653` / `:1486` / `:1668`](../packages/insomnia-vcs/src/vcs.ts#L1653)）。在大小写敏感的文件系统（Linux、部分 macOS 配置）上，含大写字母的分支名写进去就读不出来。源码自己留了注释 `// toLowerCase may introduce issues under case sensitive filesystems`。
-
-3. **单例 VCS 的可变状态。** `_backendProject` 是实例字段，所有 `sync.invoke` 共享一个单例（[`main/cloud-sync/vcs.ts`](../packages/insomnia/src/main/cloud-sync/vcs.ts)）。并发操作不同工作区会互相覆盖当前项目。`pullRemoteBackendProjectWithSingleton` 专门用独立实例规避了这一点，但常规路径没有任何串行化或锁。
-
-4. **`Workspace.parentId` 归零后需要两处补丁。** 主进程 `pull` 里有一段自述为 hack 的修复（[`vcs.ts:716-721`](../packages/insomnia-vcs/src/vcs.ts#L716-L721)，`// …this is a hack to restore those parentIds until we have a chance to redesign vcs`），渲染进程还要再跑一次 `reparentSyncDelta` 处理 `ProjectLintRuleset`。任何新增的"父级不稳定"模型都得同时改这两处。
-
-5. **`decryptAESToBuffer` 的 tag 长度来自密文。** `tagLength: encryptedResult.t.length * 4`——若 blob 来源不可信，认证强度可被外部影响。实现在 [`insomnia-vcs/src/crypt.ts`](../packages/insomnia-vcs/src/crypt.ts)。
-
-6. **无重试、无退避。** 30 秒超时后整个 push/pull 失败，需要用户手动重来。大集合首次 push 要串行发很多批，中途断网就得从头再来（`blobsMissing` 会让重试跳过已上传的 blob，所以重试成本尚可接受）。
-
-7. **`getRootSnapshot` 是 O(n·m)。** 长历史分支的合并会随快照数平方增长。实现在 [`insomnia-vcs/src/util.ts:400-414`](../packages/insomnia-vcs/src/util.ts#L400-L414)。
-
-8. **`sync.invoke` 无方法白名单。** 见[进程分层](#syncinvoke反射式单通道-rpc)。
-
-9. **死代码**：[`src/sync/delta/`](../packages/insomnia/src/sync/delta/)（`diff.ts` / `patch.ts`）在整个仓库中没有任何引用。
-
-10. **`vcs.ts` 里的几处遗留 TODO**：文件顶部（[`insomnia-vcs/src/vcs.ts:1-3`](../packages/insomnia-vcs/src/vcs.ts#L1-L3)）的 `Rename things that run a fetch to fetchSomething...` / `Make sure that pull handles updating the parentId to the current project._id`；`checkout` 之前一句 `// rename preMergeCheck to instance getCandidateStatus`（[`vcs.ts:529`](../packages/insomnia-vcs/src/vcs.ts#L529)），暗示未来想把 `preMergeCheck` 从独立函数改成实例方法；`_getPrivateKey` 头上的 `// TODO: This is a temporary solution to get the private key from the session.`（[`vcs.ts:1392`](../packages/insomnia-vcs/src/vcs.ts#L1392)），暗示这段私钥解密逻辑还没有找到长期归宿。
+- [`sync-bar.tsx`](../packages/insomnia/src/ui/components/sidebar/sync-bar.tsx) is a pure dispatcher; [`workspace-sync-dropdown.tsx`](../packages/insomnia/src/ui/components/dropdowns/workspace-sync-dropdown.tsx) only renders Cloud Sync's [`sync-dropdown.tsx`](../packages/insomnia/src/ui/components/dropdowns/sync-dropdown.tsx) when `isRemoteProject(project) && !workspaceMeta.gitRepositoryId`.
+- **Polling**: `useInterval(triggerSync, isWindowFocused ? 60_000 : null)` — refreshes remote state once a minute while the window is focused, pausing when it loses focus; regaining focus (`mainWindowFocusChange`) also triggers a refresh.
+- **Event-driven**: [`insomnia-event-stream-context.tsx`](../packages/insomnia/src/ui/context/app/insomnia-event-stream-context.tsx) immediately re-submits the sync-data action on receiving an SSE `FileChanged` / `BranchDeleted` — a second refresh path alongside polling.
+- **Module-level caches**: `remoteBranchesCache` / `remoteCompareCache` / `remoteBackendProjectsCache` ([`ui/sync-utils.ts:47-49`](../packages/insomnia/src/ui/sync-utils.ts#L47-L49)), explicitly invalidated by each action.
+- Badges: `pullCount = compare.behind` / `pushCount = compare.ahead`, where `compare` comes from [`compareBranches`](../packages/insomnia-vcs/src/util.ts#L241-L283) (also based on the common ancestor's index in the two arrays).
 
 ---
 
-## 测试
+## Known Issues and Design Debt
 
-| 层 | 文件 | 覆盖 |
+Ordered roughly by impact; all of these are facts derived from reading the code, without runtime verification:
+
+1. **The stage isn't persisted.** `_stageByBackendProjectId` ([`vcs.ts:111`](../packages/insomnia-vcs/src/vcs.ts#L111)) is a plain in-memory object, lost on every app restart. Blobs that were already written become orphaned files nobody references, with no GC mechanism. It's keyed by `backendProjectId` rather than `workspaceId` — a given `workspaceId` can correspond to more than one `backendProjectId` over its lifetime (see the "clean up inactive duplicate projects" logic in [`backend-projects.ts`](../packages/insomnia-vcs/src/backend-projects.ts)), so it can't simply be re-keyed by `workspaceId`.
+
+2. **Branch filenames are case-asymmetric.** The `_storeBranch` write path applies `.toLowerCase()`, while `_getBranch` / `_removeBranch` don't ([`vcs.ts:1384` / `:1308` / `:1399`](../packages/insomnia-vcs/src/vcs.ts#L1384)). On case-sensitive filesystems (Linux, some macOS configurations), a branch name written with uppercase letters can't be read back. The source itself leaves a comment: `// toLowerCase may introduce issues under case sensitive filesystems`.
+
+3. **`Workspace.parentId` needs a fix in two places once it's reset to null.** The main process's `pull` has a patch that calls itself a hack ([`vcs.ts:613-618`](../packages/insomnia-vcs/src/vcs.ts#L613-L618), `// …this is a hack to restore those parentIds until we have a chance to redesign vcs`), and the renderer has to run `reparentSyncDelta` again to handle `ProjectLintRuleset`. Any newly added model with an "unstable parent" would need both of these updated together.
+
+4. **The VCS instance pool has no eviction policy.** `vcsByWorkspaceId` ([`main/cloud-sync/vcs.ts:45`](../packages/insomnia/src/main/cloud-sync/vcs.ts#L45)) only ever grows — it accumulates one `VCS` instance for every workspace opened during the process's lifetime, and neither deleting a workspace nor closing a window removes its entry. Each instance is quite light (it holds no Store, only a handful of fields — `_backendProject`/`_stageByBackendProjectId`/`workspaceId`), so this typically isn't an issue within a single session.
+
+5. **`decryptAESToBuffer`'s tag length comes from the ciphertext.** `tagLength: encryptedResult.t.length * 4` — if a blob's origin isn't trusted, the authentication strength can be influenced externally. Implemented in [`insomnia-vcs/src/crypt.ts`](../packages/insomnia-vcs/src/crypt.ts).
+
+6. **No retries, no backoff.** After the 30-second timeout, the entire push/pull fails and the user has to retry manually. A large collection's first push has to send many batches serially, and a dropped connection midway means starting over (though `blobsMissing` lets a retry skip blobs already uploaded, keeping the retry cost reasonable).
+
+7. **`getRootSnapshot` is O(n·m).** Merging long-history branches grows quadratically with snapshot count. Implemented at [`insomnia-vcs/src/util.ts:400-414`](../packages/insomnia-vcs/src/util.ts#L400-L414).
+
+8. **`sync.invoke` has no method allowlist.** It reflectively dispatches to any method on the `VCS` instance, with no runtime interception (`sync.invokeGlobal` is the exception — it only forwards to a fixed method table). See [Process Layering](#syncinvoke-reflective-rpc-dispatched-per-workspace).
+
+9. **Dead code**: [`src/sync/delta/`](../packages/insomnia/src/sync/delta/) (`diff.ts` / `patch.ts`) has no references anywhere in the repo.
+
+10. **A few leftover TODOs**: at the top of `vcs.ts` ([`insomnia-vcs/src/vcs.ts:1-3`](../packages/insomnia-vcs/src/vcs.ts#L1-L3)), `Rename things that run a fetch to fetchSomething...` / `Make sure that pull handles updating the parentId to the current project._id`; the line after `checkout`, `// rename preMergeCheck to instance getCandidateStatus` ([`vcs.ts:426`](../packages/insomnia-vcs/src/vcs.ts#L426)), hinting at a future move of `preMergeCheck` from a standalone function to an instance method; and in `session.ts`, above `getPrivateKey`, `// TODO: This is a temporary solution to get the private key from the session.` ([`session.ts:7`](../packages/insomnia-vcs/src/session.ts#L7)), hinting that this private-key-decryption logic hasn't found a permanent home yet.
+
+---
+
+## Testing
+
+| Layer | File | Coverage |
 | --- | --- | --- |
-| 纯算法 | [`insomnia-vcs/src/__tests__/util.test.ts`](../packages/insomnia-vcs/src/__tests__/util.test.ts)（1006 行） | `threeWayMerge` 全 12 分支、`stateDelta`、`getStagable`、`preMergeCheck`、`compareBranches`、`hash`/`hashDocument` |
-| VCS | [`insomnia-vcs/src/__tests__/vcs.test.ts`](../packages/insomnia-vcs/src/__tests__/vcs.test.ts)（1227 行） | `status`/`stage`/`takeSnapshot`（含暂存后撤销、暂存后删除等边界场景）/`fork`/`merge`/`getHistory`/分支名校验/`_storeBackendProject` 写前比较。用 `MemoryDriver`，并在文件内 mock `generateId` 以固定快照哈希 |
-| 加密原语 | [`insomnia-vcs/src/__tests__/crypt.test.ts`](../packages/insomnia-vcs/src/__tests__/crypt.test.ts) | RSA/AES 加解密往返 |
-| 存储 | [`store/__tests__/index.test.ts`](../packages/insomnia-vcs/src/store/__tests__/index.test.ts)、[`store/hooks/__tests__/compress.test.ts`](../packages/insomnia-vcs/src/store/hooks/__tests__/compress.test.ts) | CRUD、Buffer 直存、hook 链、扩展名压缩规则 |
-| 共享工具（insomnia-data） | [`common-src/deterministic-stringify.test.ts`](../packages/insomnia-data/common-src/deterministic-stringify.test.ts)、[`src/models/utils/ignore-keys.test.ts`](../packages/insomnia-data/src/models/utils/ignore-keys.test.ts) | 确定性序列化、`deleteKeys`/`resetKeys` |
-| 初始化 | [`main/__tests__/sync-initialization.test.ts`](../packages/insomnia/src/main/__tests__/sync-initialization.test.ts) | 登录态 / git 仓库 / storage rules 的分支逻辑 |
-| 冲突监听 | [`ui/utils/__tests__/insomnia-sync.test.ts`](../packages/insomnia/src/ui/utils/__tests__/insomnia-sync.test.ts) | 监听器注册幂等性 |
-| E2E | [`insomnia-smoke-test/tests/smoke/cloud-sync.test.ts`](../packages/insomnia-smoke-test/tests/smoke/cloud-sync.test.ts) | Discard/branch/commit、Push、本地+远端删除；配 [mock GraphQL 服务端](../packages/insomnia-smoke-test/server/cloud-sync-api.ts) |
+| Pure algorithms | [`insomnia-vcs/src/__tests__/util.test.ts`](../packages/insomnia-vcs/src/__tests__/util.test.ts) (1006 lines) | All 12 branches of `threeWayMerge`, `stateDelta`, `getStagable`, `preMergeCheck`, `compareBranches`, `hash`/`hashDocument` |
+| VCS | [`insomnia-vcs/src/__tests__/vcs.test.ts`](../packages/insomnia-vcs/src/__tests__/vcs.test.ts) (1139 lines) | `status`/`stage`/`takeSnapshot` (including edge cases like staging a revert, staging a deletion), `fork`/`merge`/`getHistory`/branch-name validation. Uses `configureStore(new MemoryDriver())` to set up the shared Store, and mocks `generateId` within the file to pin snapshot hashes |
+| Project directory | [`insomnia-vcs/src/__tests__/backend-projects.test.ts`](../packages/insomnia-vcs/src/__tests__/backend-projects.test.ts) | `hasBackendProjectForRootDocument`, `storeBackendProject`'s compare-before-write |
+| Crypto primitives | [`insomnia-vcs/src/__tests__/crypt.test.ts`](../packages/insomnia-vcs/src/__tests__/crypt.test.ts) | RSA/AES encrypt/decrypt round trips |
+| Storage | [`store/__tests__/index.test.ts`](../packages/insomnia-vcs/src/store/__tests__/index.test.ts), [`store/hooks/__tests__/compress.test.ts`](../packages/insomnia-vcs/src/store/hooks/__tests__/compress.test.ts) | CRUD, storing Buffers directly, the hook chain, extension-based compression rules |
+| Shared utilities (insomnia-data) | [`common-src/deterministic-stringify.test.ts`](../packages/insomnia-data/common-src/deterministic-stringify.test.ts), [`src/models/utils/ignore-keys.test.ts`](../packages/insomnia-data/src/models/utils/ignore-keys.test.ts) | Deterministic serialization, `deleteKeys`/`resetKeys` |
+| Initialization | [`main/__tests__/sync-initialization.test.ts`](../packages/insomnia/src/main/__tests__/sync-initialization.test.ts) | Branch logic for login state / git repo / storage rules; mocks `getVCSForWorkspace` |
+| Conflict listener | [`ui/utils/__tests__/insomnia-sync.test.ts`](../packages/insomnia/src/ui/utils/__tests__/insomnia-sync.test.ts) | Listener registration idempotency |
+| E2E | [`insomnia-smoke-test/tests/smoke/cloud-sync.test.ts`](../packages/insomnia-smoke-test/tests/smoke/cloud-sync.test.ts) | Discard/branch/commit, Push, local + remote deletion, two workspaces concurrently activating their own backend project without clobbering each other; paired with a [mock GraphQL server](../packages/insomnia-smoke-test/server/cloud-sync-api.ts) |
 
-跑法：
+How to run:
 
 ```bash
-npm test -w packages/insomnia          # packages/insomnia 内的单测（初始化、冲突监听等）
-npm test -w packages/insomnia-vcs      # VCS 引擎本体：vcs/util/crypt/store，上一条命令不会跑到它们
-npm test -w packages/insomnia-data     # deterministic-stringify、ignore-keys 等共享工具
+npm test -w packages/insomnia          # unit tests inside packages/insomnia (initialization, conflict listener, etc.)
+npm test -w packages/insomnia-vcs      # the VCS engine itself: vcs/util/crypt/store — the previous command doesn't reach these
+npm test -w packages/insomnia-data     # shared utilities like deterministic-stringify, ignore-keys
 npm run test:smoke:dev -- "Cloud Sync" # E2E
 ```

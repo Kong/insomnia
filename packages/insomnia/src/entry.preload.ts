@@ -150,9 +150,9 @@ const electronStorage: electronStorageBridgeAPI = {
   setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
 };
 
-const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
+const invokeSyncMethod = async <T>(workspaceId: string, methodName: string, ...args: unknown[]) => {
   try {
-    return (await invokeWithNormalizedError('sync.invoke', methodName, ...args)) as T;
+    return (await invokeWithNormalizedError('sync.invoke', workspaceId, methodName, ...args)) as T;
   } catch (error) {
     if (isUserAbortResolveMergeConflictError(error)) {
       throw new UserAbortResolveMergeConflictError(
@@ -164,39 +164,44 @@ const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
   }
 };
 
+const invokeGlobalSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
+  return (await invokeWithNormalizedError('sync.invokeGlobal', methodName, ...args)) as T;
+};
+
 const sync: SyncBridgeAPI = {
-  archiveProject: () => invokeSyncMethod('archiveProject'),
-  checkout: (...args) => invokeSyncMethod('checkout', ...args),
-  compareRemoteBranch: () => invokeSyncMethod('compareRemoteBranch'),
-  fork: (...args) => invokeSyncMethod('fork', ...args),
-  getActiveBackendProject: () => invokeSyncMethod('getActiveBackendProject'),
-  getBranchNames: () => invokeSyncMethod('getBranchNames'),
-  getCurrentBranchName: () => invokeSyncMethod('getCurrentBranchName'),
-  getHistory: (...args) => invokeSyncMethod('getHistory', ...args),
-  getHistoryCount: () => invokeSyncMethod('getHistoryCount'),
-  getRemoteBranchNames: () => invokeSyncMethod('getRemoteBranchNames'),
-  getVersion: () => invokeSyncMethod('getVersion'),
-  hasBackendProject: () => invokeSyncMethod('hasBackendProject'),
-  localBackendProjects: () => invokeSyncMethod('localBackendProjects'),
-  merge: (...args) => invokeSyncMethod('merge', ...args),
-  pull: (...args) => invokeSyncMethod('pull', ...args),
+  archiveProject: workspaceId => invokeSyncMethod(workspaceId, 'archiveProject'),
+  checkout: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'checkout', ...args),
+  compareRemoteBranch: workspaceId => invokeSyncMethod(workspaceId, 'compareRemoteBranch'),
+  fork: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'fork', ...args),
+  getActiveBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'getActiveBackendProject'),
+  getBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getBranchNames'),
+  getCurrentBranchName: workspaceId => invokeSyncMethod(workspaceId, 'getCurrentBranchName'),
+  getHistory: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'getHistory', ...args),
+  getHistoryCount: workspaceId => invokeSyncMethod(workspaceId, 'getHistoryCount'),
+  getRemoteBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getRemoteBranchNames'),
+  getVersion: workspaceId => invokeSyncMethod(workspaceId, 'getVersion'),
+  hasBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'hasBackendProject'),
+  localBackendProjects: () => invokeGlobalSyncMethod('localBackendProjects'),
+  merge: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'merge', ...args),
+  pull: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'pull', ...args),
   pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
-  push: (...args) => invokeSyncMethod('push', ...args),
-  remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
-  remoteBackendProjectsOfTeam: (...args) => invokeSyncMethod('remoteBackendProjectsOfTeam', ...args),
-  removeBackendProjectsForRoot: (...args) => invokeSyncMethod('removeBackendProjectsForRoot', ...args),
-  removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
-  removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),
-  rollback: (...args) => invokeSyncMethod('rollback', ...args),
-  rollbackToLatest: (...args) => invokeSyncMethod('rollbackToLatest', ...args),
+  push: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'push', ...args),
+  remoteBackendProjects: (...args) => invokeGlobalSyncMethod('remoteBackendProjects', ...args),
+  remoteBackendProjectsOfTeam: (...args) => invokeGlobalSyncMethod('remoteBackendProjectsOfTeam', ...args),
+  hasBackendProjectForRootDocument: (...args) => invokeGlobalSyncMethod('hasBackendProjectForRootDocument', ...args),
+  removeBackendProjectsForRoot: (...args) => invokeGlobalSyncMethod('removeBackendProjectsForRoot', ...args),
+  removeBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeBranch', ...args),
+  removeRemoteBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeRemoteBranch', ...args),
+  rollback: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollback', ...args),
+  rollbackToLatest: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollbackToLatest', ...args),
   resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
   cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
-  stage: (...args) => invokeSyncMethod('stage', ...args),
-  status: (...args) => invokeSyncMethod('status', ...args),
-  switchAndCreateBackendProjectIfNotExist: (...args) =>
-    invokeSyncMethod('switchAndCreateBackendProjectIfNotExist', ...args),
-  takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
-  unstage: (...args) => invokeSyncMethod('unstage', ...args),
+  stage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'stage', ...args),
+  status: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'status', ...args),
+  switchAndCreateBackendProjectIfNotExist: (workspaceId, ...args) =>
+    invokeSyncMethod(workspaceId, 'switchAndCreateBackendProjectIfNotExist', ...args),
+  takeSnapshot: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'takeSnapshot', ...args),
+  unstage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'unstage', ...args),
 };
 
 const git: GitServiceAPI = {
