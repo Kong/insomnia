@@ -7,7 +7,6 @@ import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 
 export const enum AsyncTask {
-  SyncOrganization,
   MigrateProjects,
   SyncProjects,
 }
@@ -142,7 +141,7 @@ export const getInitialEntry = async () => {
         pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
         state: {
           // async task need to execute when first entry
-          asyncTaskList: [AsyncTask.SyncOrganization, AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
+          asyncTaskList: [AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
         },
       };
     }
