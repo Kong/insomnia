@@ -33,7 +33,7 @@ const viteServer: PlaywrightTestConfig['webServer'] = {
   stdout: 'pipe',
   stderr: 'pipe',
   wait: {
-    stdout: /ready in/,
+    stdout: /VITE.+ready in/,
   },
   // Without this, Playwright SIGKILLs the process group on teardown, which the
   // .vite-port cleanup in vite.config.ts can't intercept, leaving a stale port file.
