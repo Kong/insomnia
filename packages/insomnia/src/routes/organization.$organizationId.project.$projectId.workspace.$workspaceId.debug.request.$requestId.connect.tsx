@@ -4,6 +4,7 @@ import type {
   CookieJar,
   McpTransportType,
   RequestAuthentication,
+  RequestBody,
   RequestHeader,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -23,6 +24,7 @@ export interface ConnectActionParams {
   url: string;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
+  body?: RequestBody;
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
   transportType?: McpTransportType;
@@ -84,17 +86,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
-    const { header: authHeader } = await window.main.getAuthHeader(renderedRequest, rendered.url);
-    window.main.curl.open({
-      requestId,
-      workspaceId,
-      url: rendered.url,
-      headers: rendered.headers,
-      authHeader,
-      authentication: rendered.authentication,
-      cookieJar: rendered.cookieJar,
-      suppressUserAgent: rendered.suppressUserAgent,
-    });
+    window.main.curl.open({ workspaceId, renderedRequest });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
       properties: { request_type: 'Event Stream' },
