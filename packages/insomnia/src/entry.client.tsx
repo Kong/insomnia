@@ -147,9 +147,19 @@ applyColorScheme(appSettings);
 
 const initialEntry = await getInitialEntry();
 
-if (typeof initialEntry === 'string' && window.location.pathname !== initialEntry) {
-  console.log('[entry.client] Initial entry:', initialEntry);
-  window.location.pathname = initialEntry;
+// `getInitialEntry` returns either a bare pathname string or an object carrying router
+// `state` (e.g. `asyncTaskList`). Normalize both shapes, then set the URL and state before
+// hydration. We use `history.replaceState` rather than assigning `window.location.pathname`
+// (a full reload that would drop the `state`): in SPA mode `HydratedRouter` hydrates against
+// the current `window.location` and reads `location.state` from `window.history.state.usr`.
+if (initialEntry) {
+  const { pathname, state } =
+    typeof initialEntry === 'string' ? { pathname: initialEntry, state: undefined } : initialEntry;
+
+  if (pathname !== window.location.pathname || state) {
+    console.log('[entry.client] Initial entry:', pathname);
+    window.history.replaceState({ ...window.history.state, usr: state }, '', pathname);
+  }
 }
 
 startTransition(() => {
