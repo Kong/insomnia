@@ -107,6 +107,7 @@ export enum AnalyticsEvent {
   requestParamsBulkEditToggled = 'request-params-bulk-edit-toggled',
   responsePreviewJSONPathEntered = 'response-preview-jsonpath-entered',
   requestBodyBeautifyClicked = 'request-body-beautify-clicked',
+  requestBodyBulkEditToggled = 'request-body-bulk-edit-toggled',
   requestHeadersDescriptionToggled = 'request-headers-description-toggled',
   requestHeadersBulkEditToggled = 'request-headers-bulk-edit-toggled',
   requestScriptsPreScriptSnippetAdded = 'request-scripts-prescript-snippet-added',
