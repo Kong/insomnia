@@ -40,10 +40,9 @@ import { useRootLoaderData } from '~/root';
 import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
 import { useRefreshProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.refresh-ruleset';
 import { useUpdateProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.update-ruleset';
-import {
-  useWorkspaceLoaderData,
-  WORKSPACE_CONTENT_WRAPPER,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -55,6 +54,7 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
+import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showToast } from '~/ui/components/toast-notification';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
@@ -166,11 +166,12 @@ export const SpecView = ({
   const { submit: refreshProjectRuleset } = useRefreshProjectRulesetActionFetcher();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
+  const newRequestFetcher = useRequestNewActionFetcher();
+  const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
   const gitVersion = useGitVCSVersion();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>('');
-  const isApiSpecExists = !!apiSpec;
 
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
   // Cloud/local projects have no RepoFileWatcher, so rulesetContent from NeDB is mirrored
@@ -219,6 +220,7 @@ export const SpecView = ({
 
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
+  const showSpecInfo = Boolean(info || servers || paths || components);
 
   const lintErrors = lintMessages.filter(message => message.type === 'error');
   const lintWarnings = lintMessages.filter(message => message.type === 'warning');
@@ -291,12 +293,12 @@ export const SpecView = ({
   }, [gitSyncRulesetPath, isConnectedGitProject, rulesetWritePath, rulesetContent]);
 
   useEffect(() => {
-    if (isApiSpecExists) {
+    if (showSpecInfo || settings.enableLegacyUnitTests) {
       specSidebarRef.current?.expand();
     } else {
       specSidebarRef.current?.collapse();
     }
-  }, [isApiSpecExists]);
+  }, [showSpecInfo, settings.enableLegacyUnitTests]);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -507,7 +509,7 @@ export const SpecView = ({
   const generateActionList: SpecActionItem[] = [
     {
       id: 'generate-request-collection',
-      name: 'Collection',
+      name: 'API Collection',
       icon: (
         <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-surprise) text-(--color-font-surprise)">
           <Icon className="w-3" icon="bars" />
@@ -516,7 +518,7 @@ export const SpecView = ({
       isDisabled: !apiSpec?.contents || lintErrors.length > 0 || generateRequestCollectionFetcher.state !== 'idle',
       tooltip:
         lintErrors.length > 0
-          ? 'You cannot generate a collection when spec errors exist. Fix the errors or change the ruleset first.'
+          ? 'You cannot generate an API collection when spec errors exist. Fix the errors or change the ruleset first.'
           : undefined,
       action: () =>
         generateRequestCollectionFetcher.submit({
@@ -558,7 +560,6 @@ export const SpecView = ({
   ];
 
   const generateDisabledKeys = generateActionList.filter(item => item.isDisabled).map(item => item.id);
-
   const historyKey = `${activeWorkspace._id}::${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
@@ -608,6 +609,32 @@ export const SpecView = ({
               fromTemplate: true,
             });
           }}
+          onCreateRequest={requestType => {
+            newRequestFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              requestType,
+              parentId: workspaceId,
+            });
+          }}
+          onCreateFolder={() =>
+            showModal(PromptModal, {
+              title: 'New Folder',
+              defaultValue: 'My Folder',
+              submitName: 'Create',
+              label: 'Name',
+              selectText: true,
+              onComplete: (name: string) =>
+                newRequestGroupFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  parentId: workspaceId,
+                  name,
+                }),
+            })
+          }
         />
       )}
     </div>
@@ -939,13 +966,13 @@ export const SpecView = ({
   return (
     <PanelGroup
       ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id={WORKSPACE_CONTENT_WRAPPER}
+      autoSaveId="spec-panel-group"
+      id="spec-panel-group"
       className="new-sidebar w-full flex-1 text-(--color-font)"
       direction="horizontal"
     >
       <Panel
-        id="sidebar"
+        id="spec-sidebar"
         ref={specSidebarRef}
         className="sidebar theme--sidebar"
         defaultSize={DEFAULT_SIDEBAR_SIZE}
@@ -1364,10 +1391,10 @@ export const SpecView = ({
         </div>
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-      <Panel id="workspace-content" className="flex flex-col">
+      <Panel id="spec-content" className="flex flex-col">
         {specPaneToolbar}
-        <PanelGroup autoSaveId="insomnia-panels" direction={direction} className="min-h-0 flex-1">
-          <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
+        <PanelGroup autoSaveId="spec-panels" direction={direction} className="min-h-0 flex-1">
+          <Panel id="spec-pane-one" minSize={10} className="pane-one theme--pane">
             <div className="flex h-full w-full flex-col">
               <PanelGroup autoSaveId="insomnia-spec-vertical" direction="vertical" className="min-h-0 flex-1">
                 <Panel id="spec-editor" defaultSize={80} minSize={20} className="relative overflow-hidden">
