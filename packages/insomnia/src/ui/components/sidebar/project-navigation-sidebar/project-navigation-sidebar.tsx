@@ -774,7 +774,7 @@ const ProjectNavigationSidebarInner = (
         const requestGroupMeta = requestGroupMetas.find(meta => meta.parentId === requestGroupId);
         return {
           requestGroupId,
-          collapsed: collapsed ?? (requestGroupMeta ? !requestGroupMeta.collapsed : false),
+          collapsed: collapsed ?? (requestGroupMeta ? !requestGroupMeta.collapsed : true),
         };
       });
 

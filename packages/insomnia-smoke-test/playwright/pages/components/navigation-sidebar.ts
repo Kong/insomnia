@@ -309,9 +309,10 @@ export class NavigationSidebar {
     return this.unsyncedWorkspaceRow(workspaceName).getByRole('button', { name: 'Fetch unsynced workspace' });
   }
 
-  async fetchUnsyncedWorkspace(name: string): Promise<void> {
+  async fetchUnsyncedWorkspace(name: string, verifyVisible?: Locator): Promise<void> {
     const unsyncedWorkspaceButton = this.unsyncedWorkspaceButton(name);
     await unsyncedWorkspaceButton.click();
+    await this.page.mouse.move(0, 0);
     await expect.soft(this.unsyncedWorkspaceRow(name)).toBeHidden({ timeout: 5000 });
     await expect.soft(this.workspaceRow(name)).toBeVisible();
     // The sidebar list is still settling right after the unsynced row disappears
@@ -327,6 +328,20 @@ export class NavigationSidebar {
           console.warn(`Clicking workspace row "${name}" did not select it after 3 attempts`);
           throw new Error(`Clicking workspace row "${name}" did not select it after 3 attempts`);
         }
+      }
+    }
+    if (!verifyVisible) {
+      return;
+    }
+    for (let attempt = 0; attempt <= 10; attempt++) {
+      try {
+        await verifyVisible.waitFor({ state: 'visible', timeout: 1000 });
+        return;
+      } catch {
+        if (attempt === 10) {
+          throw new Error(`Workspace "${name}" was selected but its content did not render after 10 attempts`);
+        }
+        await this.workspaceRow(name).click();
       }
     }
   }

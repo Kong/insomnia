@@ -19,6 +19,15 @@ function writePortFile(): Plugin {
           fs.writeFileSync(portFilePath, String(addr.port));
         }
       });
+      const cleanup = () => {
+        try { fs.unlinkSync(portFilePath); } catch {}
+        process.exit(0);
+      };
+      process.once('SIGINT', cleanup);
+      process.once('SIGTERM', cleanup);
+      process.once('exit', () => {
+        try { fs.unlinkSync(portFilePath); } catch {}
+      });
     },
   };
 }
