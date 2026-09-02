@@ -109,6 +109,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: insomnia-base
+          persist-credentials: false
 
       - name: Setup Node (base branch tree)
         if: github.event_name == 'pull_request' && always()
