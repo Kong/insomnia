@@ -21,7 +21,7 @@ export const ProjectEmptyView: FC<Props> = ({
       <span>Start fresh or bring in existing work</span>
       <div className="mt-(--padding-lg) flex w-full flex-wrap justify-center gap-(--padding-md)">
         <Button
-          aria-label="Create API collection"
+          aria-label="Create request collection"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-(--padding-xs) rounded-md border border-solid border-(--hl-sm) px-12 py-8 text-(--font-size-sm) shadow-xs transition-all duration-100 hover:bg-(--color-bg) sm:gap-(--padding-sm)"
           onPress={() => {
             window.main.trackAnalyticsEvent({

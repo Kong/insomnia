@@ -16,8 +16,8 @@ test.describe('Environment Editor', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // create a new shared environment (becomes active on creation)
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByTestId('AddSubEnvironment').click();
 
     // wait for the new row to appear before clicking it
@@ -43,8 +43,8 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('baseenv1')).toBeVisible();
 
     // duplicate ExampleA and rename the copy to Gandalf
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByRole('row', { name: 'ExampleA' }).getByLabel('Environment Actions').click();
     await page.getByText('Duplicate').click();
 
@@ -80,8 +80,8 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('subenvB1')).toBeVisible();
 
     // add new variables to Gandalf via JSON editor
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.locator('pre').filter({ hasText: '"exampleNumber": 2222,' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
@@ -94,13 +94,13 @@ test.describe('Environment Editor', () => {
 
     // wait for the Manage Environments dialog to fully close before navigating
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
-    await page.getByLabel('Manage collection environments').press('Escape');
+    await page.getByLabel('Manage API collection environments').press('Escape');
 
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
 
     // switch to table view and edit Gandalf environment
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
 
     // explicitly select Gandalf so table edits target the correct sub-environment
     await page.getByLabel('Environments', { exact: true }).getByText('Gandalf').click();
@@ -187,7 +187,7 @@ test.describe('Environment Editor', () => {
     await page.locator('body').click();
     try {
       await page
-        .getByRole('listbox', { name: 'Select a Collection Environment' })
+        .getByRole('listbox', { name: 'Select an API Collection Environment' })
         .waitFor({ state: 'hidden', timeout: 3000 });
     } catch {
       await page.keyboard.press('Escape');
@@ -231,8 +231,8 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('subenvA0')).toBeVisible();
 
     // open env editor, select ExampleA, switch to table view, disable exampleString
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
@@ -248,7 +248,7 @@ test.describe('Environment Editor', () => {
     await page.locator('body').click();
     try {
       await page
-        .getByRole('listbox', { name: 'Select a Collection Environment' })
+        .getByRole('listbox', { name: 'Select an API Collection Environment' })
         .waitFor({ state: 'hidden', timeout: 3000 });
     } catch {
       await page.keyboard.press('Escape');
