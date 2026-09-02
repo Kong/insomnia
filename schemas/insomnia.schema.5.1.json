@@ -280,6 +280,168 @@
               }
             }
           }
+        },
+        "testSuites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "created": {
+                    "type": "number"
+                  },
+                  "modified": {
+                    "type": "number"
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sortKey": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              "tests": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "created": {
+                          "type": "number"
+                        },
+                        "modified": {
+                          "type": "number"
+                        },
+                        "isPrivate": {
+                          "type": "boolean"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "sortKey": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ]
+                    },
+                    "requestId": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "spec": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "created": {
+                      "type": "number"
+                    },
+                    "modified": {
+                      "type": "number"
+                    },
+                    "isPrivate": {
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "sortKey": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              },
+              "required": [
+                "file"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "contents": {
+                  "$ref": "#/$defs/__schema1"
+                },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "created": {
+                      "type": "number"
+                    },
+                    "modified": {
+                      "type": "number"
+                    },
+                    "isPrivate": {
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "sortKey": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              }
+            }
+          ]
         }
       },
       "required": [

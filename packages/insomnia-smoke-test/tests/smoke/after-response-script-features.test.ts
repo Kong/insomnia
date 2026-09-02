@@ -82,7 +82,7 @@ test.describe('after-response script features tests', () => {
 
     // verify persisted environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
     const rows1 = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows1.join(' '));

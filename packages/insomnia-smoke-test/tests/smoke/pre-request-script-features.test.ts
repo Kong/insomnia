@@ -487,7 +487,7 @@ test.describe('pre-request features tests', () => {
 
     // verify persisted environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
     const rows = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows.join(' '));
@@ -584,7 +584,7 @@ test.describe('pre-request features tests', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('update kv pair environment');
     // switch to table view environment
     await page.getByLabel('Manage Environments').click();
-    const manageBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    const manageBtn = page.getByRole('button', { name: 'Manage API collection environments' });
     await expect.soft(manageBtn).toBeEnabled();
     await manageBtn.click();
     const tableEditBtn = page.getByLabel('Table Edit');
@@ -607,7 +607,7 @@ test.describe('pre-request features tests', () => {
     const verifyManageBtn = page.getByRole('button', { name: 'Manage Environments' });
     await expect.soft(verifyManageBtn).toBeEnabled();
     await verifyManageBtn.click();
-    const verifyCollectionBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    const verifyCollectionBtn = page.getByRole('button', { name: 'Manage API collection environments' });
     await expect.soft(verifyCollectionBtn).toBeEnabled();
     await verifyCollectionBtn.click();
     await page.getByText('__environment_type').click();
