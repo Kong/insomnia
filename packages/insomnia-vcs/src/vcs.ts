@@ -572,6 +572,10 @@ export class VCS {
       throw new Error(`Failed to find commit by id ${snapshotId}`);
     }
 
+    // Update branch.modified so getVersion() changes after a rollback, so that editors with historyKey can detect working content change.
+    const branch = await this._getCurrentBranch();
+    await this._storeBranch(branch);
+
     const currentState: SnapshotState = candidates.map(candidate => ({
       key: candidate.key,
       blob: hashDocument(candidate.document).hash,
