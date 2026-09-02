@@ -18,6 +18,7 @@ import {
   TabList,
   TabPanel,
   Tabs,
+  TextField,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -66,26 +67,30 @@ const StreamSummaryPanel: FC<{ requestId: string; streamSummary: ReturnType<type
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-(--padding-sm) p-(--padding-sm)">
-        <input
+        <TextField
           // Uncontrolled: `key` resets the field when switching requests, but typing isn't
           // clobbered by the round-trip through patchRequestMeta -> loader revalidation
           // (same reason code-editor.tsx's filter input uses defaultValue, not value).
           key={requestId}
           aria-label="Stream summary JSONPath"
-          placeholder={streamSummary.inferredPath ?? 'JSONPath, e.g. $.choices[0].delta.content'}
           defaultValue={streamSummary.resultPath ?? ''}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              streamSummary.setResultPath(e.currentTarget.value);
-            }
-          }}
-          onChange={e => {
-            if (e.currentTarget.value === '') {
+          onChange={value => {
+            if (value === '') {
               streamSummary.setResultPath('');
             }
           }}
-          className="w-full rounded-sm border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-        />
+          className="w-full"
+        >
+          <Input
+            placeholder={streamSummary.inferredPath ?? 'JSONPath, e.g. $.choices[0].delta.content'}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                streamSummary.setResultPath(e.currentTarget.value);
+              }
+            }}
+            className="w-full rounded-sm border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+          />
+        </TextField>
         {showWarning && (
           <TooltipTrigger>
             <Button
@@ -233,15 +238,14 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
 
   const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as EventType[];
   const allNotifications = useRealtimeConnectionNotifications({ responseId: response._id, protocol });
-  const showStreamSummaryTab = protocol === 'curl' || protocol === 'webSocket';
+  const showStreamSummaryTab = protocol === 'curl';
   const streamSummary = useStreamSummary({
     requestId: response.parentId,
     url: response.url,
-    // Only curl/webSocket carry stream-summary-shaped data — never feed socketIO's events
-    // in here mislabeled as one of those, even though showStreamSummaryTab already hides
-    // the UI for it.
-    events: showStreamSummaryTab ? (allEvents as (CurlEvent | WebSocketEvent)[]) : [],
-    protocol: protocol === 'curl' ? 'curl' : 'webSocket',
+    // Only curl carries stream-summary-shaped data — never feed socketIO's/webSocket's
+    // events in here mislabeled as curl, even though showStreamSummaryTab already hides
+    // the UI for those.
+    events: showStreamSummaryTab ? (allEvents as CurlEvent[]) : [],
   });
   const handleSelection = (event: EventType) => {
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
@@ -371,7 +375,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
         key={response._id}
         aria-label="Request group tabs"
         className="flex h-full w-full flex-1 flex-col"
-        defaultSelectedKey={showStreamSummaryTab && streamSummary.inferredPath != null ? 'extracted-text' : 'events'}
+        defaultSelectedKey={showStreamSummaryTab && streamSummary.inferredPath != null ? 'summary' : 'events'}
       >
         <TabList
           className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
@@ -386,7 +390,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           {showStreamSummaryTab && (
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-              id="extracted-text"
+              id="summary"
             >
               Summary
             </Tab>
@@ -530,7 +534,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           </PanelGroup>
         </TabPanel>
         {showStreamSummaryTab && (
-          <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="extracted-text">
+          <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="summary">
             <StreamSummaryPanel requestId={response.parentId} streamSummary={streamSummary} />
           </TabPanel>
         )}

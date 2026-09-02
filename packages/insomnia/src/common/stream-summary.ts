@@ -72,6 +72,16 @@ export function candidateJsonPayloadsFromSseText(text: string): string[] {
       continue;
     }
 
+    if (trimmedBlock.startsWith('[')) {
+      // Gemini's default (non-SSE, no `?alt=sse`) streaming response is a single top-level
+      // JSON array with no blank lines between elements, so it lands here as one block.
+      // Extract whichever elements have arrived complete so far, even mid-stream before the
+      // array's closing `]` shows up, so the summary can render as chunks come in rather
+      // than only once the whole response finishes.
+      candidates.push(...extractCompleteTopLevelArrayElements(trimmedBlock));
+      continue;
+    }
+
     if (isParsableJson(trimmedBlock)) {
       candidates.push(trimmedBlock);
       continue;
@@ -94,6 +104,57 @@ export function candidateJsonPayloadsFromSseText(text: string): string[] {
   return candidates;
 }
 
+// Scans a (possibly unterminated) top-level JSON array and returns the substring of each
+// element that has closed so far, tracking bracket depth and string escaping by hand rather
+// than JSON.parse-ing the whole thing (which fails until the array's closing `]` arrives).
+// An element still being streamed simply never closes, so it's correctly left out.
+function extractCompleteTopLevelArrayElements(text: string): string[] {
+  const elements: string[] = [];
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let elementStart = -1;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === '\\') {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === '[' || char === '{') {
+      if (depth === 1 && elementStart === -1) {
+        elementStart = i;
+      }
+      depth++;
+      continue;
+    }
+
+    if (char === ']' || char === '}') {
+      depth--;
+      if (depth === 1 && elementStart !== -1) {
+        elements.push(text.slice(elementStart, i + 1));
+        elementStart = -1;
+      }
+      continue;
+    }
+  }
+
+  return elements;
+}
+
 function isParsableJson(value: string): boolean {
   try {
     JSON.parse(value);
@@ -109,17 +170,14 @@ export interface StreamMessageEvent {
   data: string;
 }
 
-export function getCandidatePayloadsFromEvents(events: StreamMessageEvent[], protocol: 'curl' | 'webSocket'): string[] {
-  // Both curl's and websocket's findMany() reverse the event log for "latest event
+export function getCandidatePayloadsFromEvents(events: StreamMessageEvent[]): string[] {
+  // curl's findMany() reverse the event log for "latest event
   // first" display, so undo that exact reversal here (rather than sort by timestamp,
   // which has only millisecond resolution and can't disambiguate SSE chunks that arrive
   // within the same millisecond) to get back true chronological order.
   const incoming = events.filter(event => event.type === 'message' && event.direction === 'INCOMING').reverse();
 
-  if (protocol === 'curl') {
-    return candidateJsonPayloadsFromSseText(incoming.map(event => event.data).join(''));
-  }
-  return incoming.map(event => event.data);
+  return candidateJsonPayloadsFromSseText(incoming.map(event => event.data).join(''));
 }
 
 const PATH_TO_JSONPATH: { pathname: string; jsonPath: string }[] = [
@@ -136,6 +194,8 @@ const PATH_TO_JSONPATH: { pathname: string; jsonPath: string }[] = [
 export const inferStreamSummaryPath = (url: string): string | null => {
   try {
     const { pathname } = new URL(url);
+    // Gemini uses a ":verb" suffix (.../models/gemini-pro:streamGenerateContent) rather than
+    // a fixed REST path, so it can't go in PATH_TO_JSONPATH's exact-match table below.
     if (pathname.toLowerCase().includes(':streamgeneratecontent')) {
       return '$.candidates[0].content.parts[0].text';
     }

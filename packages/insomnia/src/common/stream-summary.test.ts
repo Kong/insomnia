@@ -42,6 +42,12 @@ describe('extractStreamValueAtPath', () => {
     const payload = JSON.stringify({ value: 'hello' });
     expect(extractStreamValueAtPath(payload, '$.missing')).toBeNull();
   });
+
+  it('returns null (does not throw) for a truncated, still-streaming JSON payload', () => {
+    const payload = '{"choices":[{"delta":{"content":"hi"';
+    expect(() => extractStreamValueAtPath(payload, '$.choices[0].delta.content')).not.toThrow();
+    expect(extractStreamValueAtPath(payload, '$.choices[0].delta.content')).toBeNull();
+  });
 });
 
 describe('computeStreamSummary', () => {
@@ -54,6 +60,26 @@ describe('computeStreamSummary', () => {
     ];
     const result = computeStreamSummary(payloads, '$.choices[0].delta.content');
     expect(result).toEqual({ fragmentCount: 3, summary: 'Hello world' });
+  });
+
+  it('renders Gemini text progressively as the array grows, mid-stream, before it closes', () => {
+    const keyPath = '$.candidates[0].content.parts[0].text';
+    // Each call simulates the accumulated wire text at a point in time as more of Gemini's
+    // still-open array arrives; the array only closes on the last call.
+    const atFirstElement = candidateJsonPayloadsFromSseText(
+      '[{"candidates":[{"content":{"parts":[{"text":"Hel"}]}}]}',
+    );
+    expect(computeStreamSummary(atFirstElement, keyPath)).toEqual({ fragmentCount: 1, summary: 'Hel' });
+
+    const withSecondElementStillOpen = candidateJsonPayloadsFromSseText(
+      '[{"candidates":[{"content":{"parts":[{"text":"Hel"}]}}]}\n,\n{"candidates":[{"content":{"parts":[{"text":"lo',
+    );
+    expect(computeStreamSummary(withSecondElementStillOpen, keyPath)).toEqual({ fragmentCount: 1, summary: 'Hel' });
+
+    const afterClose = candidateJsonPayloadsFromSseText(
+      '[{"candidates":[{"content":{"parts":[{"text":"Hel"}]}}]}\n,\n{"candidates":[{"content":{"parts":[{"text":"lo"}]}}]}\n]',
+    );
+    expect(computeStreamSummary(afterClose, keyPath)).toEqual({ fragmentCount: 2, summary: 'Hello' });
   });
 });
 
@@ -115,6 +141,32 @@ describe('candidateJsonPayloadsFromSseText', () => {
     const text = '{"a":1}';
     expect(candidateJsonPayloadsFromSseText(text)).toEqual(['{"a":1}']);
   });
+
+  it('splits a bare top-level JSON array into one candidate per element (Gemini non-SSE streaming)', () => {
+    // Gemini's default streamGenerateContent (no ?alt=sse) sends one top-level JSON array
+    // with no blank lines between elements, not per-chunk `data:` frames.
+    const text = '[{"candidates":[{"content":{"parts":[{"text":"Hel"}]}}]}\n,\n{"candidates":[{"content":{"parts":[{"text":"lo"}]}}]}\n]';
+    expect(candidateJsonPayloadsFromSseText(text)).toEqual([
+      JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Hel' }] } }] }),
+      JSON.stringify({ candidates: [{ content: { parts: [{ text: 'lo' }] } }] }),
+    ]);
+  });
+
+  it('returns only the elements that have closed so far from a still-open, unterminated array (does not throw)', () => {
+    // Same Gemini shape as above, but mid-stream: the array's closing `]` (and the second
+    // element's closing `}`) haven't arrived yet.
+    const text = '[{"candidates":[{"content":{"parts":[{"text":"Hel"}]}}]}\n,\n{"candidates":[{"content":{"parts":[{"text":"lo';
+    expect(() => candidateJsonPayloadsFromSseText(text)).not.toThrow();
+    expect(candidateJsonPayloadsFromSseText(text)).toEqual([
+      JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Hel' }] } }] }),
+    ]);
+  });
+
+  it('returns nothing (does not throw) for a single element that has not closed yet', () => {
+    const text = '[{"candidates":[{"content":{"parts":[{"text":"Hel"';
+    expect(() => candidateJsonPayloadsFromSseText(text)).not.toThrow();
+    expect(candidateJsonPayloadsFromSseText(text)).toEqual([]);
+  });
 });
 
 describe('getCandidatePayloadsFromEvents', () => {
@@ -126,7 +178,7 @@ describe('getCandidatePayloadsFromEvents', () => {
       { type: 'message', direction: 'INCOMING', data: chunkB },
       { type: 'message', direction: 'INCOMING', data: chunkA },
     ];
-    expect(getCandidatePayloadsFromEvents(newestFirst, 'curl')).toEqual([
+    expect(getCandidatePayloadsFromEvents(newestFirst)).toEqual([
       '{"choices":[{"delta":{"content":"Hel"}}]}',
       '{"choices":[{"delta":{"content":"lo"}}]}',
     ]);
@@ -138,18 +190,7 @@ describe('getCandidatePayloadsFromEvents', () => {
       { type: 'message', direction: 'INCOMING', data: ':1}\n\n' },
       { type: 'message', direction: 'INCOMING', data: 'data: {"a"' },
     ];
-    expect(getCandidatePayloadsFromEvents(newestFirst, 'curl')).toEqual(['{"a":1}']);
-  });
-
-  it('orders WebSocket messages chronologically given a newest-first input array', () => {
-    const newestFirst = [
-      { type: 'message', direction: 'INCOMING', data: '{"delta":"lo"}' },
-      { type: 'message', direction: 'INCOMING', data: '{"delta":"Hel"}' },
-    ];
-    expect(getCandidatePayloadsFromEvents(newestFirst, 'webSocket')).toEqual([
-      '{"delta":"Hel"}',
-      '{"delta":"lo"}',
-    ]);
+    expect(getCandidatePayloadsFromEvents(newestFirst)).toEqual(['{"a":1}']);
   });
 
   it('ignores outgoing and non-message events', () => {
@@ -158,6 +199,6 @@ describe('getCandidatePayloadsFromEvents', () => {
       { type: 'message', direction: 'OUTGOING', data: '{"delta":"ignored"}' },
       { type: 'open', direction: '', data: '' },
     ];
-    expect(getCandidatePayloadsFromEvents(events, 'webSocket')).toEqual(['{"delta":"kept"}']);
+    expect(getCandidatePayloadsFromEvents(events)).toEqual(['{"delta":"kept"}']);
   });
 });
