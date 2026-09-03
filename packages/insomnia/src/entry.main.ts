@@ -353,9 +353,8 @@ async function _createModelInstances() {
     const LEGACY_UNIT_TESTS_CHECK_KEY = 'LEGACY_UNIT_TESTS_CHECKED';
     const migrationStorage = getElectronStorage();
     if (!migrationStorage.getItem(LEGACY_UNIT_TESTS_CHECK_KEY) && !settings.enableLegacyUnitTests) {
-      const legacyUnitTestSuites = await services.unitTestSuite.all();
-      const containsLegacyUnitTestSuites = legacyUnitTestSuites.length > 0;
-      if (containsLegacyUnitTestSuites) {
+      const legacyUnitTestSuiteCount = await services.unitTestSuite.count();
+      if (legacyUnitTestSuiteCount > 0) {
         await services.settings.patch({ enableLegacyUnitTests: true });
       }
       migrationStorage.setItem(LEGACY_UNIT_TESTS_CHECK_KEY, 1);

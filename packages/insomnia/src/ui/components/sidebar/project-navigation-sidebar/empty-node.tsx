@@ -186,7 +186,7 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
         return 'Project is empty';
       }
       case 'emptyCollection': {
-        return 'API Collection is empty';
+        return 'No requests yet';
       }
       case 'emptyFolder': {
         return 'Folder is empty';

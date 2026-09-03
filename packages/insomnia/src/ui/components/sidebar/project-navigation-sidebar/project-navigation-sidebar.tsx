@@ -1264,6 +1264,20 @@ const ProjectNavigationSidebarInner = (
                           if (docId === onboardingEnvWorkspaceId) {
                             dismissEnvOnboarding();
                           }
+                        } else if (item.kind === 'emptyCollection') {
+                          const emptyCollectionWorkspace = item.workspace;
+                          if (emptyCollectionWorkspace) {
+                            focusWorkspace(emptyCollectionWorkspace._id, item.project._id);
+                            tabNavigate(
+                              {
+                                organization: organizationId,
+                                project: item.project,
+                                workspace: emptyCollectionWorkspace,
+                                item: emptyCollectionWorkspace,
+                              },
+                              { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                            );
+                          }
                         } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
                           // Clicking anything inside a collection (folder, request, etc.) focuses it.
                           // Guard so re-clicking within an already-focused collection doesn't replay the transition.
