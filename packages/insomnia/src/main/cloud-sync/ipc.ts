@@ -15,49 +15,68 @@ import type { Operation } from '../../common/database';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import {
   cancelPendingSyncConflict,
-  invokeMainVCS,
+  invokeGlobalVCS,
+  invokeVCSForWorkspace,
+  pullRemoteBackendProject,
   type PullRemoteBackendProjectOptions,
-  pullRemoteBackendProjectWithSingleton,
   resolvePendingSyncConflict,
 } from './vcs';
 
+// Methods scoped to a single workspace's VCS instance — every call must say which workspace.
 export interface SyncBridgeMethods {
-  archiveProject: () => Promise<void>;
-  checkout: (candidates: StatusCandidate[], branchName: string) => Promise<Operation>;
-  compareRemoteBranch: () => Promise<Compare>;
-  fork: (newBranchName: string) => Promise<void>;
-  getBranchNames: () => Promise<string[]>;
-  getCurrentBranchName: () => Promise<string>;
-  getHistory: (count?: number) => Promise<Snapshot[]>;
-  getHistoryCount: () => Promise<number>;
-  getRemoteBranchNames: () => Promise<string[]>;
-  getVersion: () => Promise<string>;
-  localBackendProjects: () => Promise<BackendProject[]>;
-  merge: (candidates: StatusCandidate[], otherBranchName: string, snapshotMessage?: string) => Promise<Operation>;
-  pull: (options: {
-    candidates: StatusCandidate[];
-    teamId: string;
-    teamProjectId: string;
-    projectId: string;
-  }) => Promise<Operation>;
-  push: (options: { teamId: string; teamProjectId: string }) => Promise<void>;
-  remoteBackendProjects: (options: { teamId: string; teamProjectId: string }) => Promise<BackendProjectWithTeam[]>;
-  remoteBackendProjectsOfTeam: (options: { teamId: string }) => Promise<BackendProjectWithTeamsAndTeamProjectId[]>;
-  removeBackendProjectsForRoot: (rootDocumentId: string) => Promise<void>;
-  removeBranch: (branchName: string) => Promise<void>;
-  removeRemoteBranch: (branchName: string) => Promise<void>;
-  rollback: (snapshotId: string, candidates: StatusCandidate[]) => Promise<Operation>;
-  rollbackToLatest: (candidates: StatusCandidate[]) => Promise<Operation>;
-  stage: (stageEntries: StageEntry[]) => Promise<Stage>;
-  status: (candidates: StatusCandidate[]) => Promise<Status>;
-  switchAndCreateBackendProjectIfNotExist: (rootDocumentId: string, name: string) => Promise<void>;
-  takeSnapshot: (name: string) => Promise<void>;
-  unstage: (stageEntries: StageEntry[]) => Promise<Stage>;
+  archiveProject: (workspaceId: string) => Promise<void>;
+  checkout: (workspaceId: string, candidates: StatusCandidate[], branchName: string) => Promise<Operation>;
+  compareRemoteBranch: (workspaceId: string) => Promise<Compare>;
+  fork: (workspaceId: string, newBranchName: string) => Promise<void>;
+  getBranchNames: (workspaceId: string) => Promise<string[]>;
+  getCurrentBranchName: (workspaceId: string) => Promise<string>;
+  getHistory: (workspaceId: string, count?: number) => Promise<Snapshot[]>;
+  getHistoryCount: (workspaceId: string) => Promise<number>;
+  getRemoteBranchNames: (workspaceId: string) => Promise<string[]>;
+  getVersion: (workspaceId: string) => Promise<string>;
+  merge: (
+    workspaceId: string,
+    candidates: StatusCandidate[],
+    otherBranchName: string,
+    snapshotMessage?: string,
+  ) => Promise<Operation>;
+  pull: (
+    workspaceId: string,
+    options: {
+      candidates: StatusCandidate[];
+      teamId: string;
+      teamProjectId: string;
+      projectId: string;
+    },
+  ) => Promise<Operation>;
+  push: (workspaceId: string, options: { teamId: string; teamProjectId: string }) => Promise<void>;
+  removeBranch: (workspaceId: string, branchName: string) => Promise<void>;
+  removeRemoteBranch: (workspaceId: string, branchName: string) => Promise<void>;
+  rollback: (workspaceId: string, snapshotId: string, candidates: StatusCandidate[]) => Promise<Operation>;
+  rollbackToLatest: (workspaceId: string, candidates: StatusCandidate[]) => Promise<Operation>;
+  stage: (workspaceId: string, stageEntries: StageEntry[]) => Promise<Stage>;
+  status: (workspaceId: string, candidates: StatusCandidate[]) => Promise<Status>;
+  switchAndCreateBackendProjectIfNotExist: (
+    workspaceId: string,
+    rootDocumentId: string,
+    name: string,
+  ) => Promise<void>;
+  takeSnapshot: (workspaceId: string, name: string) => Promise<void>;
+  unstage: (workspaceId: string, stageEntries: StageEntry[]) => Promise<Stage>;
+  getActiveBackendProject: (workspaceId: string) => Promise<BackendProject | null>;
+  hasBackendProject: (workspaceId: string) => Promise<boolean>;
 }
 
-export interface SyncBridgeAPI extends SyncBridgeMethods {
-  getActiveBackendProject: () => Promise<BackendProject | null>;
-  hasBackendProject: () => Promise<boolean>;
+// Methods that never read a VCS instance's active backend project — no workspaceId needed.
+export interface GlobalSyncBridgeMethods {
+  localBackendProjects: () => Promise<BackendProject[]>;
+  remoteBackendProjects: (options: { teamId: string; teamProjectId: string }) => Promise<BackendProjectWithTeam[]>;
+  remoteBackendProjectsOfTeam: (options: { teamId: string }) => Promise<BackendProjectWithTeamsAndTeamProjectId[]>;
+  hasBackendProjectForRootDocument: (rootDocumentId: string) => Promise<boolean>;
+  removeBackendProjectsForRoot: (rootDocumentId: string) => Promise<void>;
+}
+
+export interface SyncBridgeAPI extends SyncBridgeMethods, GlobalSyncBridgeMethods {
   pullRemoteBackendProject: (options: PullRemoteBackendProjectOptions) => Promise<{
     projectId: string;
     workspaceId: string;
@@ -67,12 +86,16 @@ export interface SyncBridgeAPI extends SyncBridgeMethods {
 }
 
 export const registerSyncHandlers = () => {
-  ipcMainHandle('sync.invoke', (event, methodName: string, ...args: unknown[]) => {
-    return invokeMainVCS(event.sender, methodName, ...args);
+  ipcMainHandle('sync.invoke', (event, workspaceId: string, methodName: string, ...args: unknown[]) => {
+    return invokeVCSForWorkspace(event.sender, workspaceId, methodName, ...args);
+  });
+
+  ipcMainHandle('sync.invokeGlobal', (_event, methodName: string, ...args: unknown[]) => {
+    return invokeGlobalVCS(methodName, ...args);
   });
 
   ipcMainHandle('sync.pullRemoteBackendProject', (event, options: PullRemoteBackendProjectOptions) => {
-    return pullRemoteBackendProjectWithSingleton(event.sender, options);
+    return pullRemoteBackendProject(event.sender, options);
   });
 
   ipcMainOn('sync.resolveConflict', (event, options: { handlerId: string; conflicts: MergeConflict[] }) => {
