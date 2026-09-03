@@ -3,6 +3,7 @@ import type { Project } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
 import { invariant } from '~/common/utils/invariant';
+import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 
 // TODO: move vcs into services so we can remove this file.
 import {
@@ -17,12 +18,12 @@ import {
 
 export async function updateLocalProjectToRemote({
   project,
-  vcs,
+  getVcsForWorkspace,
   sessionId,
   organizationId,
 }: {
   project: Project;
-  vcs: SyncVCSLike;
+  getVcsForWorkspace: (workspaceId: string) => SyncVCSLike;
   sessionId: string;
   organizationId: string;
 }) {
@@ -46,6 +47,7 @@ export async function updateLocalProjectToRemote({
       // Initialize Sync on the workspace if it's not using Git sync
       try {
         if (!workspaceMeta.gitRepositoryId) {
+          const vcs = getVcsForWorkspace(workspace._id);
           invariant(vcs, 'VCS must be initialized');
 
           await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
@@ -109,7 +111,7 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
           project,
           organizationId: personalOrganizationId,
           sessionId,
-          vcs: window.main.sync,
+          getVcsForWorkspace: syncVCSLikeForWorkspace,
         });
       }
     }
