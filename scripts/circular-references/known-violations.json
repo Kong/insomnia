@@ -188,9 +188,7 @@
   "insomnia-analytics": [],
   "insomnia-api": [],
   "insomnia-data": [],
-  "insomnia-inso": [
-    "packages/insomnia-inso/src/db/models/types.ts -> packages/insomnia-inso/src/db/types.ts"
-  ],
+  "insomnia-inso": [],
   "insomnia-scripting-environment": [
     "packages/insomnia-scripting-environment/src/objects/collection.ts -> packages/insomnia-scripting-environment/src/objects/response.ts -> packages/insomnia/src/network/network.ts -> packages/insomnia-scripting-environment/src/objects/index.ts",
     "packages/insomnia-scripting-environment/src/objects/collection.ts -> packages/insomnia-scripting-environment/src/objects/response.ts -> packages/insomnia/src/network/network.ts -> packages/insomnia/src/common/render.ts -> packages/insomnia/src/common/templating/mask-or-decrypt-vault-data.ts -> packages/insomnia/src/common/utils/vault.ts -> packages/insomnia/src/runtimes/index.ts -> packages/insomnia/src/runtimes/types.ts -> packages/insomnia-scripting-environment/src/objects/index.ts",

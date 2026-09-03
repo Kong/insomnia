@@ -45,8 +45,8 @@
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
     "test:crit:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Critical",
     "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron",
-    "check-cycle-references": "node scripts/check-cycle-references.mjs",
-    "check-cycle-references:baseline": "node scripts/check-cycle-references.mjs --update-baseline"
+    "check-cycle-references": "node scripts/circular-references/check-cycle-references.mjs",
+    "check-cycle-references:baseline": "node scripts/circular-references/check-cycle-references.mjs --update-baseline"
   },
   "devDependencies": {
     "@develohpanda/fluent-builder": "^2.1.2",

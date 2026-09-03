@@ -127,7 +127,7 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
       const obj = parseRaw(model);
 
       // Store it, only if the key value exists
-      (db[obj.type] as {}[])?.push(obj);
+      (db[obj.type as keyof typeof db] as {}[])?.push(obj);
     }
   });
 

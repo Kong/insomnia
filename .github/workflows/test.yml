@@ -106,10 +106,11 @@ jobs:
       - name: Check circular references
         id: check-cycles
         continue-on-error: true
+        shell: bash
         run: npm run check-cycle-references | tee cycle-report.txt
 
       - name: Post circular references PR comment
-        if: github.event_name == 'pull_request' && always()
+        if: github.event_name == 'pull_request' && always() && steps.check-cycles.outcome != 'skipped'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

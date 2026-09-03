@@ -8,10 +8,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const depcruiseBin = path.join(repoRoot, 'node_modules', '.bin', 'depcruise');
-const configPath = path.join(repoRoot, '.dependency-cruiser.json');
-const baselinePath = path.join(repoRoot, '.dependency-cruiser-known-violations.json');
+const configPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dependency-cruiser.json');
+const baselinePath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'known-violations.json');
 
 // Same scope as `npm run lint`/`type-check`/`test` (--workspaces --if-present): the packages
 // actually declared as npm workspaces, not every directory under packages/ (e.g.
@@ -46,7 +46,15 @@ function cruisePackage({ name, dir }) {
   // from a prior local build) at any depth, e.g. packages/insomnia/build/.
   args.push('-x', 'node_modules|(^|/)(build|dist)(/|$)', '--output-type', 'json', '.');
 
-  const stdout = execFileSync(depcruiseBin, args, { cwd: dir, encoding: 'utf8', maxBuffer: 1024 * 1024 * 100 });
+  let stdout;
+  try {
+    stdout = execFileSync(depcruiseBin, args, { cwd: dir, encoding: 'utf8', maxBuffer: 1024 * 1024 * 100 });
+  } catch (error) {
+    if (error?.status !== 1 || !error.stdout) throw error;
+    // dependency-cruiser exits with status 1 when forbidden violations are found. Parse its JSON
+    // output so the baseline comparison can decide whether those cycles are new.
+    stdout = error.stdout;
+  }
   const result = JSON.parse(stdout);
 
   // key: canonical signature -> Set of packages it touches
@@ -104,28 +112,37 @@ function main() {
   if (updateBaseline) {
     writeBaseline(current);
     const total = [...current.values()].reduce((sum, set) => sum + set.size, 0);
-    console.log(`Baseline updated: ${baselinePath} (${total} cycle attributions across ${packageNames.length} packages)`);
+    console.log(
+      `Baseline updated: ${baselinePath} (${total} cycle attributions across ${packageNames.length} packages)`,
+    );
     return;
   }
 
   const baseline = readBaseline();
   let hasNew = false;
+  let hasDrift = false;
   for (const name of packageNames) {
     const currentKeys = current.get(name);
     const baselineKeys = baseline.get(name) || new Set();
     const newKeys = [...currentKeys].filter(key => !baselineKeys.has(key));
-    console.log(`${name}: ${currentKeys.size} cycle(s)${newKeys.length ? `, ${newKeys.length} NEW` : ''}`);
+    const removedKeys = [...baselineKeys].filter(key => !currentKeys.has(key));
+    console.log(
+      `${name}: ${currentKeys.size} cycle(s)${newKeys.length ? `, ${newKeys.length} NEW` : ''}${removedKeys.length ? `, ${removedKeys.length} REMOVED` : ''}`,
+    );
     if (newKeys.length) {
       hasNew = true;
-      for (const key of newKeys) {
-        console.log(`  NEW: ${key}`);
-      }
+      for (const key of newKeys) console.log(`  NEW: ${key}`);
+    }
+    if (removedKeys.length) {
+      hasDrift = true;
+      for (const key of removedKeys) console.log(`  REMOVED FROM BASELINE: ${key}`);
     }
   }
 
-  if (hasNew) {
-    console.log('\nNew circular dependencies detected that are not in the baseline.');
-    console.log(`If intentional/unavoidable, run "npm run check-cycle-references:baseline" and commit the updated ${path.basename(baselinePath)}.`);
+  if (hasNew || hasDrift) {
+    if (hasNew) console.log('\nNew circular dependencies detected that are not in the baseline.');
+    if (hasDrift) console.log('\nBaseline contains circular dependencies no longer present in the current tree.');
+    console.log(`Run "npm run check-cycle-references:baseline" and commit the updated ${path.basename(baselinePath)}.`);
     process.exit(1);
   }
   console.log('\nNo new circular dependencies.');
