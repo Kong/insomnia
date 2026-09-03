@@ -442,6 +442,7 @@ export class Request extends Property {
             pfx: this.certificate?.pfx,
           }
         : undefined,
+      pathParameters: this.pathParameters,
     };
   }
 
