@@ -392,7 +392,7 @@ export const CodeEditor = memo(
             // baseline so restore can tell an unchanged model (reuse the cached
             // value + history) from an externally-updated one (use fresh defaultValue).
             value: readOnly ? undefined : codeMirror.current.getValue(),
-            valueSeed: readOnly ? undefined : defaultValue ?? '',
+            valueSeed: readOnly ? undefined : (defaultValue ?? ''),
             selections: codeMirror.current.listSelections(),
             cursor: codeMirror.current.getCursor(),
             history: codeMirror.current.getHistory(),
@@ -659,6 +659,13 @@ export const CodeEditor = memo(
       useMount(() => {
         initEditor();
       });
+      useEffect(() => {
+        // If the wrapper's layout is still settling when initEditor's initial
+        // setValue runs (e.g. inside react-resizable-panels not yet stable),
+        // CodeMirror can leave the rendered line stuck. Force one once layout has painted.
+        const raf = requestAnimationFrame(() => codeMirror.current?.refresh());
+        return () => cancelAnimationFrame(raf);
+      }, []);
       useUnmount(() => {
         persistState();
         cleanUpEditor();

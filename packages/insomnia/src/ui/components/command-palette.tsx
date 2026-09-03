@@ -368,7 +368,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   currentFiles.length > 0 &&
     comboboxSections.push({
       id: 'collections-and-documents',
-      name: 'Collections and documents',
+      name: 'API Collections',
       children: currentFiles.map(file => ({
         id: file.id,
         icon: (

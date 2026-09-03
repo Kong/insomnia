@@ -115,7 +115,7 @@ async function addAccessTokenGitCredential(insomnia: InsomniaApp) {
 
 async function createGitDesignDocument(insomnia: InsomniaApp, page: Page, projectName: string) {
   await insomnia.navigationSidebar.selectProjectDropdownOption({
-    actionName: 'Document',
+    actionName: 'API Collection',
     projectName,
   });
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Lint Test Spec');
@@ -215,8 +215,8 @@ test.describe('Custom Spectral Lint Rules', () => {
     await insomnia.relaunch();
 
     // Re-navigate to the same design document after relaunch. The workspace is
-    // created with the default name 'My Design Document'.
-    await insomnia.page.getByLabel('My Design Document').first().click();
+    // created with the default name 'My API Collection'.
+    await insomnia.page.getByLabel('My API Collection').first().click();
 
     await expect
       .soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' }))
@@ -243,7 +243,7 @@ test.describe('Custom Spectral Lint Rules', () => {
     await expect.soft(insomnia.page.getByText('No lint problems')).toBeVisible({ timeout: 15_000 });
 
     await insomnia.relaunch();
-    await insomnia.page.getByLabel('My Design Document').first().click();
+    await insomnia.page.getByLabel('My API Collection').first().click();
 
     await expect.soft(insomnia.page.getByText('Default OAS Ruleset')).toBeVisible({ timeout: 15_000 });
     await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeHidden();
@@ -264,7 +264,7 @@ test.describe('Custom Spectral Lint Rules', () => {
     await expect.soft(insomnia.page.getByText('Invalid Spectral Ruleset', { exact: true })).toBeVisible({
       timeout: 10_000,
     });
-    await insomnia.page.getByRole('button', { name: 'Ok' }).click();
+    await insomnia.page.getByRole('dialog', { name: 'Modal' }).getByRole('button', { name: 'Ok' }).click();
 
     // Default ruleset should still be active; no custom upload button state change.
     await expect.soft(insomnia.page.getByText('Default OAS Ruleset')).toBeVisible();
@@ -298,7 +298,7 @@ test.describe('Custom Spectral Lint Rules', () => {
 
     test('upload custom ruleset in a synced design project', async ({ page, insomnia }) => {
       await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
 
       await uploadRuleset(insomnia, page);
 
@@ -330,14 +330,14 @@ test.describe('Custom Spectral Lint Rules', () => {
 
       // Machine A: upload and push.
       await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
       await uploadRuleset(insomnia, page);
       await commitAndPush(page, 'Add custom lint ruleset');
 
       // Machine B: fresh data path (simulates a different machine), pull, and verify.
       const machineB = await insomnia.launchClone(randomDataPath());
       await machineB.page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await machineB.page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await machineB.page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
       await expect
         .soft(machineB.page.getByRole('button', { name: 'View selected ruleset content' }))
         .toBeVisible({ timeout: 15_000 });
@@ -366,7 +366,7 @@ test.describe('Custom Spectral Lint Rules', () => {
 
       // User A: upload and push.
       await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
       await uploadRuleset(insomnia, page);
       await commitAndPush(page, 'User A: add custom lint ruleset');
 
@@ -376,7 +376,7 @@ test.describe('Custom Spectral Lint Rules', () => {
       });
 
       await userB.page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await userB.page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await userB.page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
 
       await expect
         .soft(userB.page.getByRole('button', { name: 'View selected ruleset content' }))

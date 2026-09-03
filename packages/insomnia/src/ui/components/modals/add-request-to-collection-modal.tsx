@@ -100,7 +100,12 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
             <div className="form-control form-control--outlined">
               <label>
                 {strings.project.plural}:
-                <select autoFocus name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
+                <select
+                  autoFocus
+                  name="projectId"
+                  value={selectedProjectId}
+                  onChange={e => setSelectedProjectId(e.target.value)}
+                >
                   {projectOptions.map(project => (
                     <option key={project._id} value={project._id}>
                       {project.name}
@@ -146,7 +151,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
                   color: 'var(--color-danger)',
                 }}
               >
-                Collection is required
+                API Collection is required
               </p>
             )}
           </form>

@@ -16,9 +16,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   invariant(typeof contents === 'string', 'Contents is required');
 
-  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
+  // Create the spec if it doesn't exist yet, otherwise update the existing one
+  const apiSpec = await services.apiSpec.getOrCreateForParentId(workspaceId);
 
-  invariant(apiSpec, 'API Spec not found');
   await database.update({
     ...apiSpec,
     modified: Date.now(),

@@ -760,14 +760,14 @@ const ImportResourcesForm = ({
             <div className="form-row mt-2">
               <div className="form-control form-control--outlined">
                 <label>
-                  Select Collection:
+                  Select API Collection:
                   <select
-                    aria-label="Select Collection"
+                    aria-label="Select API Collection"
                     name="workspaceId"
                     value={selectedWorkspaceId}
                     onChange={e => setSelectedWorkspaceId(e.target.value)}
                   >
-                    <option value="">-- New Collection --</option>
+                    <option value="">-- New API Collection --</option>
                     {workspacesForActiveProject.map(w => (
                       <option key={w._id} value={w._id}>
                         {w.name} - {formatDistanceToNowStrict(w.lastModifiedTimestamp)}

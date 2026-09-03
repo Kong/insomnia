@@ -1,3 +1,4 @@
+import type { WorkspaceChildrenForScope } from 'insomnia-data';
 import { useMemo } from 'react';
 
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
@@ -21,16 +22,16 @@ export function useProjectNavigationSidebarData(
     [projects, isProjectTabActive],
   );
   const projectIds = useMemo(() => activeProjects.map(p => p._id), [activeProjects]);
-  // Get the list of collection workspace ids that should be cached based on the current filter and expanded projects/workspaces.
 
-  const collectionWorkspaceIds = useMemo(() => {
+  // Get the list of collection/design workspace ids that should be cached based on the current filter and expanded projects/workspaces.
+  const collectionOrDesignWorkspaceIds = useMemo(() => {
     const ids: string[] = [];
     projectIds.forEach(projectId => {
       workspaces
         .filter(w => w.parentId === projectId)
         .forEach(workspace => {
           if (
-            workspace.scope === 'collection' &&
+            (workspace.scope === 'collection' || workspace.scope === 'design') &&
             (!!projectNavigationSidebarFilter || (expandedProjectAndWorkspaceIds || []).includes(workspace._id))
           ) {
             ids.push(workspace._id);
@@ -41,7 +42,7 @@ export function useProjectNavigationSidebarData(
   }, [projectIds, workspaces, projectNavigationSidebarFilter, expandedProjectAndWorkspaceIds]);
 
   const { dataByWorkspaceId: collectionByWorkspaceIds, pendingWorkspaceIds: pendingCollectionWorkspaceIds } =
-    useMultipleWorkspacesData(collectionWorkspaceIds, 'collection');
+    useMultipleWorkspacesData(collectionOrDesignWorkspaceIds);
 
   const nonKonnectProjects = useMemo(() => projects.filter(p => !p.konnectControlPlaneId), [projects]);
   const konnectProjects = useMemo(() => projects.filter(p => p.konnectControlPlaneId != null), [projects]);
@@ -52,8 +53,11 @@ export function useProjectNavigationSidebarData(
     workspaceMetas,
     activeProjects,
     projectIds,
-    collectionWorkspaceIds,
-    collectionByWorkspaceIds,
+    collectionOrDesignWorkspaceIds,
+    collectionByWorkspaceIds: collectionByWorkspaceIds as Map<
+      string,
+      WorkspaceChildrenForScope<'collection' | 'design'>
+    >,
     pendingCollectionWorkspaceIds,
     nonKonnectProjects,
     konnectProjects,

@@ -1,5 +1,4 @@
 import type {
-  ApiSpec,
   CaCertificate,
   ClientCertificate,
   CookieJar,
@@ -54,7 +53,6 @@ export interface WorkspaceLoaderData {
   subEnvironments: Environment[];
   globalBaseEnvironments: (Environment & { workspaceName: string })[];
   globalSubEnvironments: Environment[];
-  activeApiSpec: ApiSpec | null;
   activeMockServer?: MockServer | null;
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
@@ -147,7 +145,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
-  const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const activeMockServer = await services.mockServer.getByParentId(workspaceId);
 
@@ -323,7 +320,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     baseEnvironment,
     globalSubEnvironments,
     globalBaseEnvironments: globalBaseEnvironmentsWithWorkspaceName,
-    activeApiSpec,
     activeMockServer,
     clientCertificates,
     caCertificate: await services.caCertificate.getByParentId(workspaceId),

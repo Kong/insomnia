@@ -53,7 +53,7 @@ test.describe('Focus and keyboard navigation', () => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
     await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
 

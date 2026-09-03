@@ -284,17 +284,17 @@ export const EnvironmentPicker = ({
             </ListBox>
             <div className="relative contents w-full overflow-hidden">
               <Heading className="flex h-7 shrink-0 items-center justify-between gap-2 px-3 py-1 text-sm font-bold text-(--hl)">
-                <span>Collection Environments</span>
+                <span>API Collection Environments</span>
                 <Button
                   onPress={onOpenEnvironmentSettingsModal}
-                  aria-label="Manage collection environments"
+                  aria-label="Manage API collection environments"
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <Icon icon="edit" />
                 </Button>
               </Heading>
               <ListBox
-                aria-label="Select a Collection Environment"
+                aria-label="Select an API Collection Environment"
                 selectionMode="single"
                 key={activeEnvironment._id}
                 items={collectionEnvironmentList}
