@@ -73,7 +73,7 @@ const isSameWorkspaceWithRemote = async (workspaceId: string | undefined, remote
   if (!workspaceId || !remoteWorkspaceId) {
     return false;
   }
-  const currentBackendProject = await window.main.sync.getActiveBackendProject();
+  const currentBackendProject = await window.main.sync.getActiveBackendProject(workspaceId);
   if (
     currentBackendProject &&
     currentBackendProject?.id === remoteWorkspaceId &&

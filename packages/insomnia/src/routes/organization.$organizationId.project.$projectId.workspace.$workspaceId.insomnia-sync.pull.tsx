@@ -17,7 +17,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
     invariant(project.remoteId, 'Project is not remote');
-    const delta = await window.main.sync.pull({
+    const delta = await window.main.sync.pull(workspaceId, {
       candidates: syncItems,
       teamId: project.parentId,
       teamProjectId: project.remoteId,
