@@ -18,7 +18,8 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_send: 'Send Request',
   request_showOptions: 'Send Request (Options)',
   environment_showEditor: 'Show Environment Editor',
-  environment_showSwitchMenu: 'Switch Environments',
+  environment_showSwitchMenu: 'Switch Collection Environments',
+  environment_showSwitchProjectMenu: 'Switch Project Environments',
   request_toggleHttpMethodMenu: 'Change HTTP Method',
   request_toggleHistory: 'Show Request History',
   request_focusUrl: 'Focus URL',
@@ -98,6 +99,10 @@ const defaultRegistry: HotKeyRegistry = {
   environment_showSwitchMenu: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.e.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.e.keyCode }],
+  },
+  environment_showSwitchProjectMenu: {
+    macKeys: [{ alt: true, meta: true, keyCode: keyboardKeys.e.keyCode }],
+    winLinuxKeys: [{ ctrl: true, alt: true, keyCode: keyboardKeys.e.keyCode }],
   },
   request_toggleHttpMethodMenu: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.l.keyCode }],
