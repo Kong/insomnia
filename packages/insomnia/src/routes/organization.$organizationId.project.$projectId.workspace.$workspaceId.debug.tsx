@@ -1,6 +1,6 @@
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
-import type { ChangeBufferEvent, Request, UnitTestSuite } from 'insomnia-data';
-import { database, models, services } from 'insomnia-data';
+import type { ChangeBufferEvent, Request } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -137,15 +137,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       parsedSpec = YAML.parse(apiSpec.contents) as OpenAPIV3.Document;
     }
   } catch {}
-  const unitTestSuites = await database.find<UnitTestSuite>(
-    models.unitTestSuite.type,
-    {
-      parentId: workspaceId,
-    },
-    {
-      metaSortKey: 1,
-    },
-  );
 
   return {
     apiSpec,
@@ -155,7 +146,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     rulesetContent,
     rulesetLastCompiledAt,
     rulesetImportIssue,
-    unitTestSuites,
   };
 }
 

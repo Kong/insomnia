@@ -981,14 +981,16 @@ export const SpecView = ({
         collapsible
       >
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-          <DocumentTab
-            organizationId={organizationId}
-            projectId={projectId}
-            workspaceId={workspaceId}
-            activeItemId="spec"
-            enableLegacyUnitTests={settings.enableLegacyUnitTests}
-            className="border-b border-solid border-(--hl-sm)"
-          />
+          {settings.enableLegacyUnitTests && (
+            <DocumentTab
+              organizationId={organizationId}
+              projectId={projectId}
+              workspaceId={workspaceId}
+              activeItemId="spec"
+              enableLegacyUnitTests
+              className="border-b border-solid border-(--hl-sm)"
+            />
+          )}
           <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
             {/* Info */}
             {info && (
