@@ -76,6 +76,7 @@ export const EnvironmentPicker = ({
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
+  const isScratchpadProject = models.project.isScratchpadProject(activeProject);
 
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
   const setActiveGlobalEnvironmentFetcher = useEnvironmentSetActiveGlobalActionFetcher();
@@ -143,113 +144,115 @@ export const EnvironmentPicker = ({
 
   return (
     <div className="flex items-center gap-1">
-      <DialogTrigger isOpen={isProjectPickerOpen} onOpenChange={onProjectPickerOpenChange}>
-        <Button aria-label="Select a Project Environment" className={triggerButtonClassName}>
-          <Icon
-            icon={
-              activeGlobalEnvironment
-                ? activeGlobalEnvironment.isPrivate
-                  ? 'lock'
-                  : getEnvironmentIcon(false)
-                : 'cancel'
-            }
-            style={{ color: activeGlobalEnvironment?.color || '' }}
-            className="w-4 shrink-0"
-          />
-          <Tooltip position="top" message="Project environment — shared by every collection in this project.">
-            <span className="truncate">
-              {activeGlobalEnvironment && activeGlobalBaseEnvironment
-                ? activeGlobalEnvironment.name
-                : 'No Project Environment'}
-            </span>
-          </Tooltip>
-          <Icon icon="caret-down" className="w-2.5 shrink-0 text-(--hl)" />
-        </Button>
-        <Popover className={popoverClassName} placement="bottom start" offset={8}>
-          <Dialog className="flex h-full max-h-200 w-full flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden">
-            <Heading className={headingClassName}>
-              <Tooltip
-                position="top"
-                message="Shared by every collection in this project. Hover a row to edit its file."
-              >
-                <span>Project Environments</span>
-              </Tooltip>
-              <div className="flex shrink-0 items-center gap-2">
-                <Tooltip position="top" message="Create a new project environment">
-                  <Button
-                    aria-label="Add Project Environment"
-                    onPress={() => setIsNewProjectEnvironmentModalOpen(true)}
-                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  >
-                    <Icon icon="plus" />
-                  </Button>
-                </Tooltip>
-                <InheritanceTooltip />
-              </div>
-            </Heading>
-            <ListBox
-              aria-label="Select a Project Environment"
-              selectionMode="single"
-              disallowEmptySelection
-              key={activeGlobalEnvironment?._id || 'none'}
-              items={projectEnvironmentItems}
-              selectedKeys={[activeGlobalEnvironment?._id || activeGlobalBaseEnvironment?._id || '']}
-              onSelectionChange={keys => {
-                if (keys === 'all' || !keys) {
-                  return;
-                }
-                const [environmentId] = keys.values();
-
-                setActiveGlobalEnvironmentFetcher.submit({
-                  organizationId,
-                  projectId,
-                  workspaceId,
-                  environmentId: environmentId.toString(),
-                });
-              }}
-              className={listBoxClassName}
-            >
-              {item => (
-                <ListBoxItem
-                  textValue={item.name}
-                  className={`${listBoxItemClassName} ${itemIndentClassName(item.isBase)}`}
+      {!isScratchpadProject && (
+        <DialogTrigger isOpen={isProjectPickerOpen} onOpenChange={onProjectPickerOpenChange}>
+          <Button aria-label="Select a Project Environment" className={triggerButtonClassName}>
+            <Icon
+              icon={
+                activeGlobalEnvironment
+                  ? activeGlobalEnvironment.isPrivate
+                    ? 'lock'
+                    : getEnvironmentIcon(false)
+                  : 'cancel'
+              }
+              style={{ color: activeGlobalEnvironment?.color || '' }}
+              className="w-4 shrink-0"
+            />
+            <Tooltip position="top" message="Project environment — shared by every collection in this project.">
+              <span className="truncate">
+                {activeGlobalEnvironment && activeGlobalBaseEnvironment
+                  ? activeGlobalEnvironment.name
+                  : 'No Project Environment'}
+              </span>
+            </Tooltip>
+            <Icon icon="caret-down" className="w-2.5 shrink-0 text-(--hl)" />
+          </Button>
+          <Popover className={popoverClassName} placement="bottom start" offset={8}>
+            <Dialog className="flex h-full max-h-200 w-full flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden">
+              <Heading className={headingClassName}>
+                <Tooltip
+                  position="top"
+                  message="Shared by every collection in this project. Hover a row to edit its file."
                 >
-                  {({ isSelected }) => (
-                    <Fragment>
-                      <Icon
-                        icon={item.icon}
-                        className="w-5 shrink-0 text-xs"
-                        style={{
-                          color: item.color ?? 'var(--color-font)',
-                        }}
-                      />
-                      <Text slot="label" className="min-w-0 flex-1 truncate">
-                        {item.name}
-                      </Text>
-                      {isSelected && (
-                        <Icon icon="check" className="shrink-0 justify-self-end px-2 text-(--color-success)" />
-                      )}
-                      {item.workspaceId && (
-                        <Button
-                          aria-label={`Edit ${item.name}`}
-                          onPress={() =>
-                            navigate(
-                              `/organization/${organizationId}/project/${projectId}/workspace/${item.workspaceId}/environment`,
-                            )
-                          }
-                          className="hide aspect-square h-5 shrink-0 items-center justify-center rounded-xs text-xs text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset"
-                        >
-                          <Icon icon="edit" />
-                        </Button>
-                      )}
-                    </Fragment>
-                  )}
-                </ListBoxItem>
-              )}
-            </ListBox>
-          </Dialog>
-        </Popover>
-      </DialogTrigger>
+                  <span>Project Environments</span>
+                </Tooltip>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Tooltip position="top" message="Create a new project environment">
+                    <Button
+                      aria-label="Add Project Environment"
+                      onPress={() => setIsNewProjectEnvironmentModalOpen(true)}
+                      className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                    >
+                      <Icon icon="plus" />
+                    </Button>
+                  </Tooltip>
+                  <InheritanceTooltip />
+                </div>
+              </Heading>
+              <ListBox
+                aria-label="Select a Project Environment"
+                selectionMode="single"
+                disallowEmptySelection
+                key={activeGlobalEnvironment?._id || 'none'}
+                items={projectEnvironmentItems}
+                selectedKeys={[activeGlobalEnvironment?._id || activeGlobalBaseEnvironment?._id || '']}
+                onSelectionChange={keys => {
+                  if (keys === 'all' || !keys) {
+                    return;
+                  }
+                  const [environmentId] = keys.values();
+
+                  setActiveGlobalEnvironmentFetcher.submit({
+                    organizationId,
+                    projectId,
+                    workspaceId,
+                    environmentId: environmentId.toString(),
+                  });
+                }}
+                className={listBoxClassName}
+              >
+                {item => (
+                  <ListBoxItem
+                    textValue={item.name}
+                    className={`${listBoxItemClassName} ${itemIndentClassName(item.isBase)}`}
+                  >
+                    {({ isSelected }) => (
+                      <Fragment>
+                        <Icon
+                          icon={item.icon}
+                          className="w-5 shrink-0 text-xs"
+                          style={{
+                            color: item.color ?? 'var(--color-font)',
+                          }}
+                        />
+                        <Text slot="label" className="min-w-0 flex-1 truncate">
+                          {item.name}
+                        </Text>
+                        {isSelected && (
+                          <Icon icon="check" className="shrink-0 justify-self-end px-2 text-(--color-success)" />
+                        )}
+                        {item.workspaceId && (
+                          <Button
+                            aria-label={`Edit ${item.name}`}
+                            onPress={() =>
+                              navigate(
+                                `/organization/${organizationId}/project/${projectId}/workspace/${item.workspaceId}/environment`,
+                              )
+                            }
+                            className="hide aspect-square h-5 shrink-0 items-center justify-center rounded-xs text-xs text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset"
+                          >
+                            <Icon icon="edit" />
+                          </Button>
+                        )}
+                      </Fragment>
+                    )}
+                  </ListBoxItem>
+                )}
+              </ListBox>
+            </Dialog>
+          </Popover>
+        </DialogTrigger>
+      )}
       <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button aria-label="Select a Collection Environment" className={triggerButtonClassName}>
           <Icon
@@ -340,7 +343,7 @@ export const EnvironmentPicker = ({
           </Dialog>
         </Popover>
       </DialogTrigger>
-      {isNewProjectEnvironmentModalOpen && (
+      {!isScratchpadProject && isNewProjectEnvironmentModalOpen && (
         <NewWorkspaceModal
           isOpen
           project={activeProject}
