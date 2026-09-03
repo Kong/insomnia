@@ -31,6 +31,7 @@ import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/use-timeout-when';
+import { useGitVCSVersion } from '../hooks/use-vcs-version';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { MethodSelector } from './dropdowns/method-selector';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -110,6 +111,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     }, [searchParams, setSearchParams]);
 
     const { activeWorkspace, activeEnvironment, activeGlobalEnvironment } = useWorkspaceLoaderData()!;
+    const gitVersion = useGitVCSVersion();
     const { settings } = useRootLoaderData()!;
     const { hotKeyRegistry } = settings;
     const {
@@ -316,9 +318,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           <OneLineEditor
             id="request-url-bar"
             // Remount on request switch or environment change (switch/edit) so nunjucks
-            // previews refresh. Excludes the response id / sync versions that churn on
-            // send and local edits, which used to remount and blur the editor mid-edit.
-            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}`}
+            // previews refresh. The Git version is only updated by external file
+            // sync, so it refreshes defaultValue without remounting on local edits.
+            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}::${gitVersion}`}
             // Stable across that remount, so undo history is restored from the cache.
             historyKey={historyKey}
             ref={inputRef}
