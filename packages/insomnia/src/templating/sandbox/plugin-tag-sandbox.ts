@@ -57,6 +57,10 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
   const QuickJS = await getQuickJSModule();
   const ctx = QuickJS.newContext();
   const deadline = Date.now() + timeoutMs;
+  // Bridge calls this run has initiated but not yet gotten a real response for. Tracked so a
+  // timeout can force them to a settled state before disposing — otherwise the still-pending
+  // promise/continuation is live when the context's runtime is freed, which crashes the engine.
+  const pendingBridgeCalls = new Set<ReturnType<QuickJSContext['newPromise']>>();
 
   // Single-file convenience: synthesize a one-entry module map from pluginSource when the caller
   // didn't pass a multi-file map. The in-sandbox loader always resolves the entry from the map.
@@ -78,7 +82,7 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     // sandbox global, see SANDBOX_INTERNAL_GLOBALS) and wire up a context of its own. Swapping in a
     // rejecting bridge here means any such attempt fails inside the sandbox instead of reaching the
     // real host, no matter how it's invoked.
-    installHostBridge(ctx, discover ? rejectingBridge : bridge);
+    installHostBridge(ctx, discover ? rejectingBridge : bridge, pendingBridgeCalls);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
 
@@ -106,8 +110,9 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
           : RUNNER;
     evalOrThrow(ctx, runner, '<runner>');
 
-    return await drivePromiseToString(ctx, timeoutMs);
+    return await drivePromiseToString(ctx, timeoutMs, pendingBridgeCalls);
   } finally {
+    forceSettlePendingBridgeCalls(ctx, pendingBridgeCalls);
     ctx.dispose();
   }
 };
@@ -118,7 +123,11 @@ const rejectingBridge: HostBridge = async path => {
 };
 
 /** Register `__hostBridge(path, bodyJson)` returning a VM promise resolved from async host work. */
-const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): void => {
+const installHostBridge = (
+  ctx: QuickJSContext,
+  bridge: HostBridge,
+  pending: Set<ReturnType<QuickJSContext['newPromise']>>,
+): void => {
   const fn = ctx.newFunction('__hostBridge', (pathHandle, bodyHandle) => {
     const path = ctx.getString(pathHandle);
     let body: unknown;
@@ -128,17 +137,76 @@ const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): void => {
       body = {};
     }
     const deferred = ctx.newPromise();
+    pending.add(deferred);
     Promise.resolve()
       .then(() => bridge(path, body))
       .then(
-        value => resolveWithString(ctx, deferred, encodeBridgeSuccess(value)),
-        err => resolveWithString(ctx, deferred, encodeBridgeFailure(err)),
-      );
-    // The settled VM promise schedules a job; pump it so the awaiting sandbox code resumes.
-    deferred.settled.then(() => ctx.runtime.executePendingJobs());
+        value => settleBridgeResult(ctx, deferred, () => encodeBridgeSuccess(value)),
+        err => settleBridgeResult(ctx, deferred, () => encodeBridgeFailure(err)),
+      )
+      .finally(() => pending.delete(deferred));
+    // The settled VM promise schedules a job; pump it so the awaiting sandbox code resumes. Only if
+    // the context is still around — forceSettlePendingBridgeCalls may have already settled (and the
+    // finally above's real settlement above found) this same deferred after the context was disposed.
+    deferred.settled.then(() => {
+      if (ctx.alive) {
+        ctx.runtime.executePendingJobs();
+      }
+    });
     return deferred.handle;
   });
   setGlobal(ctx, '__hostBridge', fn);
+};
+
+/**
+ * Delivers a bridge result to the VM, tolerating two things that would otherwise escape as a
+ * process-level unhandled rejection instead of a tag-visible error: the context having already been
+ * disposed (the sandbox gave up on this render before the bridge call got a real response) and a
+ * return value that isn't JSON-serializable (encode() throwing, e.g. on a circular reference).
+ */
+const settleBridgeResult = (
+  ctx: QuickJSContext,
+  deferred: ReturnType<QuickJSContext['newPromise']>,
+  encode: () => string,
+): void => {
+  if (!ctx.alive || !deferred.alive) {
+    return;
+  }
+  let json: string;
+  try {
+    json = encode();
+  } catch (err) {
+    json = encodeBridgeFailure(err);
+  }
+  resolveWithString(ctx, deferred, json);
+};
+
+/**
+ * Forces any bridge call this render initiated but never got a real response to into a settled
+ * state, then drains the resulting jobs. Without this, a bridge call still pending when the sandbox
+ * gives up (e.g. on timeout) leaves a live promise/continuation referenced inside the context's
+ * runtime — freeing that runtime (ctx.dispose(), below) then trips a fatal QuickJS engine assertion
+ * instead of cleanly discarding the render. Loops (bounded) in case settling one call's continuation
+ * synchronously starts another.
+ */
+const forceSettlePendingBridgeCalls = (
+  ctx: QuickJSContext,
+  pending: Set<ReturnType<QuickJSContext['newPromise']>>,
+): void => {
+  let guard = 0;
+  while (pending.size > 0 && guard++ < 10) {
+    const outstanding = Array.from(pending);
+    pending.clear();
+    for (const deferred of outstanding) {
+      if (deferred.alive) {
+        ctx.newError('Template tag sandbox disposed before this host bridge call settled').consume(deferred.reject);
+      }
+    }
+    let rounds = 0;
+    while (ctx.runtime.hasPendingJob() && rounds++ < 50) {
+      ctx.runtime.executePendingJobs();
+    }
+  }
 };
 
 /**
@@ -187,7 +255,11 @@ const installHostConsole = (ctx: QuickJSContext, onConsole?: (level: string, mes
  * Drive `globalThis.__task` (a VM promise) to completion, interleaving VM jobs with the host event
  * loop so pending bridge work can run, and marshal its resolved string out.
  */
-const drivePromiseToString = async (ctx: QuickJSContext, timeoutMs: number): Promise<string> => {
+const drivePromiseToString = async (
+  ctx: QuickJSContext,
+  timeoutMs: number,
+  pendingBridgeCalls: Set<ReturnType<QuickJSContext['newPromise']>>,
+): Promise<string> => {
   const taskHandle = ctx.getProp(ctx.global, '__task');
   const resultPromise = ctx.resolvePromise(taskHandle);
   taskHandle.dispose();
@@ -204,6 +276,20 @@ const drivePromiseToString = async (ctx: QuickJSContext, timeoutMs: number): Pro
       break;
     }
     if (Date.now() > deadline) {
+      // __task may still be awaiting a bridge call that never got (or won't get in time) a real
+      // response. Force it to a settled state and let that propagate before giving up — otherwise
+      // __task's own promise/continuation, and the dup'd handle resolvePromise's reaction wraps it
+      // in once it does settle, are both still live when the context is disposed, which crashes the
+      // engine (see forceSettlePendingBridgeCalls). One extra microtask turn lets resultPromise's own
+      // .then() above (which is how `settled` gets assigned) actually run.
+      forceSettlePendingBridgeCalls(ctx, pendingBridgeCalls);
+      await Promise.resolve();
+      const forced = settled as Awaited<typeof resultPromise> | undefined;
+      if (forced?.error) {
+        forced.error.dispose();
+      } else if (forced?.value) {
+        forced.value.dispose();
+      }
       throw new Error('Template tag sandbox timed out');
     }
     // Yield to the host loop so bridge promises settle and microtasks (incl. resultPromise) drain.
