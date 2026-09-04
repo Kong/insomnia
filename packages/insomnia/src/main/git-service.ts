@@ -43,11 +43,12 @@ import {
 } from '~/sync/git/providers';
 import type { FileIssue, FileIssueKind } from '~/sync/git/repo-file-watcher';
 
-import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
+import { getAppVersion, INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
+import { buildInsomniaChangeReport, type InsomniaChangeReport } from '../common/insomnia-v5-change-report';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -3359,6 +3360,24 @@ function getPreviewItemNameAndScope(previewDiffItem: { before: string; after: st
   };
 }
 
+export interface GitDiffDiagnostics {
+  appVersion: string;
+  filepath: string;
+  staged: boolean;
+  comparing: string;
+  beforeOid: string | null;
+  afterOid: string | null;
+  /**
+   * The diff editor renders HEAD/index after schema migration and property-order
+   * normalization against the working copy, which can hide reordering. True when
+   * that rewrite changed what is displayed.
+   */
+  displayNormalized: boolean;
+  /** Untouched committed blob, for support to export and share verbatim. */
+  committedYaml: string | null;
+  report: InsomniaChangeReport;
+}
+
 export type GitDiffResult =
   | {
       name: string;
@@ -3366,6 +3385,7 @@ export type GitDiffResult =
         before: string;
         after: string;
       };
+      diagnostics?: GitDiffDiagnostics;
       filepath: string;
       scope: WorkspaceScope;
       staged: boolean;
@@ -3399,11 +3419,29 @@ export const diffFileLoader = async ({
           after: fileStatus.workdir,
         };
 
+    // Analyse the untouched blobs so reordering isn't masked by the normalization
+    // applied for rendering.
+    const rawBefore = staged ? fileStatus.raw.head : fileStatus.raw.stage || fileStatus.raw.head;
+    const rawAfter = staged ? fileStatus.raw.stage : fileStatus.raw.workdir;
+
+    const diagnostics: GitDiffDiagnostics = {
+      appVersion: getAppVersion(),
+      filepath,
+      staged,
+      comparing: staged ? 'HEAD (last commit) → index (staged)' : 'index/HEAD (committed) → working copy (on disk)',
+      beforeOid: (staged ? fileStatus.oids.head : fileStatus.oids.stage || fileStatus.oids.head) ?? null,
+      afterOid: (staged ? fileStatus.oids.stage : fileStatus.oids.workdir) ?? null,
+      displayNormalized: (rawBefore ?? '') !== (diff.before ?? ''),
+      committedYaml: rawBefore ?? null,
+      report: buildInsomniaChangeReport(rawBefore, rawAfter),
+    };
+
     const { name, scope } = getPreviewItemNameAndScope(diff);
 
     return {
       name: name || filepath,
       diff,
+      diagnostics,
       filepath,
       scope,
       staged,
@@ -3463,7 +3501,10 @@ const getRepositoryDirectoryTree = async ({
 
   const gitRepository = await getGitRepository({ projectId });
 
-  const emptyTree = { repositoryTree: { id: '', name: 'Repository', type: 'root' as const, children: [] }, folderList: {} };
+  const emptyTree = {
+    repositoryTree: { id: '', name: 'Repository', type: 'root' as const, children: [] },
+    folderList: {},
+  };
 
   let fs: Awaited<ReturnType<typeof getGitFSClient>>;
   try {
