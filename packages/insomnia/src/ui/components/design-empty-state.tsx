@@ -193,7 +193,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport, onCreateRequest, onCreat
                     className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   >
                     <Icon icon="file" />
-                    <span>Use example</span>
+                    <span>Use example OpenAPI Spec</span>
                     <Icon icon="caret-down" />
                   </Button>
                   <Popover className="flex min-w-max flex-col overflow-y-hidden">
