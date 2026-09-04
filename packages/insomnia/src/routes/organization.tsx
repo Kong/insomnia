@@ -1,9 +1,9 @@
-import { type Billing, type CurrentPlan, type FeatureList, type Organization, type User } from 'insomnia-api';
+import { type CurrentPlan, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { href, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
@@ -30,44 +30,9 @@ import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-str
 import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
+import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import type { AsyncTask } from '~/ui/utils/router';
-
-import type { Route } from './+types/organization';
-
-export interface OrganizationLoaderData {
-  organizations: Organization[];
-  user?: User;
-  currentPlan?: CurrentPlan;
-}
-
-export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id, accountId } = await services.userSession.get();
-  if (id) {
-    const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
-    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as User;
-    const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
-    return {
-      organizations,
-      user,
-      currentPlan,
-    };
-  }
-  return {
-    organizations: [],
-    user: undefined,
-    currentPlan: undefined,
-  };
-}
-
-export interface OrganizationFeatureLoaderData {
-  featuresPromise: Promise<FeatureList>;
-  billingPromise: Promise<Billing>;
-}
-
-export const useOrganizationLoaderData = () => {
-  return useRouteLoaderData<typeof clientLoader>('routes/organization');
-};
 
 interface IndicatorProps {
   asyncTaskStatus: 'error' | 'idle' | 'loading' | 'submitting';
@@ -194,8 +159,10 @@ const LoginUserActions = ({
   );
 };
 
-const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { organizations, user, currentPlan } = loaderData;
+const Component = () => {
+  const organizations = useOrganizations();
+  const user = useCurrentUser();
+  const currentPlan = useCurrentPlan();
   const { settings } = useRootLoaderData()!;
 
   const workspaceData = useWorkspaceLoaderData();

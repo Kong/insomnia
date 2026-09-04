@@ -5,10 +5,10 @@ import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-
 import { useRootLoaderData } from '~/root';
 import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 export interface InputVaultKeyModalProps {
   onClose: (vaultKey?: string) => void;
@@ -23,7 +23,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
   const [resetDone, setResetDone] = useState(false);
   const resetVaultKeyFetcher = useResetVaultKeyFetcher();
   const validateVaultKeyFetcher = useValidateVaultKeyActionFetcher();
-  const { organizations } = useOrganizationLoaderData()!;
+  const organizations = useOrganizations();
   const isLoading = resetVaultKeyFetcher.state !== 'idle' || validateVaultKeyFetcher.state !== 'idle';
 
   useEffect(() => {
