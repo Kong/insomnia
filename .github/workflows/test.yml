@@ -103,229 +103,71 @@ jobs:
         if: github.event_name != 'pull_request' || steps.vendor-changed.outputs.changed == 'true'
         run: npm run sandbox:vendored:test-regression -w insomnia
 
-      - name: Checkout base branch (cycle comparison)
-        if: github.event_name == 'pull_request' && always()
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          path: insomnia-base
-          persist-credentials: false
+      - name: Check circular references
+        id: check-cycles
+        continue-on-error: true
+        shell: bash
+        run: npm run check-cycle-references | tee cycle-report.txt
 
-      - name: Setup Node (base branch tree)
-        if: github.event_name == 'pull_request' && always()
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version-file: insomnia-base/.nvmrc
-          cache: npm
-          cache-dependency-path: insomnia-base/package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@kong'
-
-      - name: Install packages (base branch tree)
-        if: github.event_name == 'pull_request' && always()
-        working-directory: insomnia-base
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-
-      - name: Check Circular References
-        if: github.event_name == 'pull_request' && always()
+      - name: Post circular references PR comment
+        if: github.event_name == 'pull_request' && always() && steps.check-cycles.outcome != 'skipped'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const path = require('path');
+            const fs = require('fs');
 
-            const workspaceRoot = process.env.GITHUB_WORKSPACE;
-            const prPackagesDir = path.join(workspaceRoot, 'packages');
-            const basePackagesDir = path.join(workspaceRoot, 'insomnia-base', 'packages');
+            const passed = '${{ steps.check-cycles.outcome }}' === 'success';
+            const report = fs.readFileSync('cycle-report.txt', 'utf8').trim();
+            const markdownContent = `# ${passed ? '✅' : '⚠️'} Circular References Report
 
-            async function analyzeCircularReferences(rootDir) {
-              const madge = require('madge');
-              const res = await madge(rootDir, {
-                fileExtensions: ['ts', 'tsx'],
-              });
-              return res.circular();
-            }
-
-            // Function to generate markdown report
-            function generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch) {
-              const timestamp = new Date().toISOString();
-              const diff = prCount - baseCount;
-              const diffPercent = baseCount > 0 ? ((diff / baseCount) * 100).toFixed(2) : '0.00';
-
-              let status = '✅ PASSED';
-              let statusEmoji = '✅';
-
-              if (diff > 0) {
-                status = '⚠️ WARNING';
-                statusEmoji = '⚠️';
-              } else if (diff === 0) {
-                status = '✅ NO CHANGE';
-                statusEmoji = '✅';
-              } else {
-                status = '✨ IMPROVED';
-                statusEmoji = '✨';
-              }
-
-              // Find new and removed circular references
-              const prCycleStrings = new Set(prCircularRefs.map(cycle => cycle.join(' -> ')));
-              const baseCycleStrings = new Set(baseCircularRefs.map(cycle => cycle.join(' -> ')));
-
-              const newCycles = Array.from(prCycleStrings).filter(cycle => !baseCycleStrings.has(cycle)).sort();
-              const removedCycles = Array.from(baseCycleStrings).filter(cycle => !prCycleStrings.has(cycle)).sort();
-
-              return `# ${statusEmoji} Circular References Report
-
-            **Generated at:** ${timestamp}
-            **Status:** ${status}
-
-            ## Summary
-            | Metric | Base (\`${baseBranch}\`) | PR | Change |
-            |--------|----------------|-----|---------|
-            | Total Circular References | ${baseCount} | ${prCount} | ${diff > 0 ? '+' : ''}${diff} (${diffPercent > 0 ? '+' : ''}${diffPercent}%) |
-
-            ${newCycles.length > 0 ? `
-            ## ⚠️ New Circular References Added (${newCycles.length})
-
-            <details open>
-            <summary>Click to expand/collapse</summary>
+            **Status:** ${passed ? 'No new circular references' : 'New circular references detected'}
 
             \`\`\`
-            ${newCycles.join('\n')}
+            ${report}
             \`\`\`
-
-            </details>
-            ` : ''}
-
-            ${removedCycles.length > 0 ? `
-            ## ✨ Circular References Removed (${removedCycles.length})
-
-            <details open>
-            <summary>Click to expand/collapse</summary>
-
-            \`\`\`
-            ${removedCycles.join('\n')}
-            \`\`\`
-
-            </details>
-            ` : ''}
-
-            <details>
-            <summary>Click to view all circular references in PR (${prCount})</summary>
-
-            \`\`\`
-            ${prCircularRefs.length > 0 ? prCircularRefs.sort().map(cycle => cycle.join(' -> ')).join('\n') : 'No circular references found'}
-            \`\`\`
-
-            </details>
-
-            <details>
-            <summary>Click to view all circular references in base branch (${baseCount})</summary>
-
-            \`\`\`
-            ${baseCircularRefs.length > 0 ? baseCircularRefs.sort().map(cycle => cycle.join(' -> ')).join('\n') : 'No circular references found'}
-            \`\`\`
-
-            </details>
-
-            ## Analysis
-
-            ${
-              diff > 0
-                ? `⚠️ **Warning:** This PR introduces ${diff} new circular ${diff === 1 ? 'reference' : 'references'}. Consider refactoring to avoid adding circular dependencies.`
-                : diff < 0
-                ? `✨ **Great Job!** This PR removes ${Math.abs(diff)} circular ${Math.abs(diff) === 1 ? 'reference' : 'references'}. Keep up the good work!`
-                : `✅ **No Change:** This PR does not introduce or remove any circular references.`
-            }
-
-            ---
-            *This report was generated automatically by comparing against the \`${baseBranch}\` branch.*
             `;
-            }
 
-            try {
-              const baseBranch = context.payload.pull_request.base.ref;
-              console.log(`Base branch (PR target): ${baseBranch}`);
-              console.log(`PR packages dir: ${prPackagesDir}`);
-              console.log(`Base packages dir: ${basePackagesDir}`);
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
 
-              console.log('Analyzing circular references in PR (merge) tree...');
-              const prCircularRefs = await analyzeCircularReferences(prPackagesDir);
-              const prCount = prCircularRefs.length;
-              console.log(`PR: Found ${prCount} circular references`);
+            const botComment = comments.find(comment =>
+              comment.user?.type === 'Bot' &&
+              comment.body?.includes('Circular References Report')
+            );
 
-              console.log(`Analyzing circular references in ${baseBranch} tree...`);
-              const baseCircularRefs = await analyzeCircularReferences(basePackagesDir);
-              const baseCount = baseCircularRefs.length;
-              console.log(`Base: Found ${baseCount} circular references`);
-
-              // Generate report
-              const diff = prCount - baseCount;
-              const markdownContent = generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch);
-
-              // Post PR comment (skip creating/updating if there's no change in circular references,
-              // but clean up a stale comment from a previous run where there was a change)
-              if (context.eventName === 'pull_request') {
-                try {
-                  const { data: comments } = await github.rest.issues.listComments({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: context.issue.number,
-                  });
-
-                  const botComment = comments.find(comment =>
-                    comment.user?.type === 'Bot' &&
-                    comment.body?.includes('# ') &&
-                    comment.body?.includes('Circular References Report')
-                  );
-
-                  if (diff === 0) {
-                    if (botComment) {
-                      await github.rest.issues.deleteComment({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        comment_id: botComment.id,
-                      });
-                      console.log('Deleted stale PR comment (no change)');
-                    } else {
-                      console.log('No change in circular references, skipping PR comment');
-                    }
-                  } else if (botComment) {
-                    await github.rest.issues.updateComment({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      comment_id: botComment.id,
-                      body: markdownContent
-                    });
-                    console.log('Updated existing PR comment');
-                  } else {
-                    await github.rest.issues.createComment({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      issue_number: context.issue.number,
-                      body: markdownContent
-                    });
-                    console.log('Created new PR comment');
-                  }
-                } catch (error) {
-                  console.error('Error posting PR comment:', error);
-                }
-              }
-
-              // Log results but don't fail the build
-              if (diff > 0) {
-                console.log(`⚠️ Warning: This PR introduces ${diff} new circular ${diff === 1 ? 'reference' : 'references'}. Base: ${baseCount}, PR: ${prCount}`);
-              } else if (diff < 0) {
-                console.log(`✨ Great! This PR removes ${Math.abs(diff)} circular ${Math.abs(diff) === 1 ? 'reference' : 'references'}!`);
+            if (passed) {
+              if (botComment) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                });
+                console.log('Deleted stale PR comment (no new circular references)');
               } else {
-                console.log(`✅ No change in circular references (${prCount})`);
+                console.log('No new circular references, skipping PR comment');
               }
-
-            } catch (error) {
-              console.error('Error analyzing circular references:', error);
-              core.setFailed('Failed to analyze circular references');
+            } else if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdownContent
+              });
+              console.log('Updated existing PR comment');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: markdownContent
+              });
+              console.log('Created new PR comment');
             }
+
+      - name: Fail if new circular references found
+        if: steps.check-cycles.outcome == 'failure'
+        run: exit 1
