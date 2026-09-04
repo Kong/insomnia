@@ -402,18 +402,21 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
   });
 
-  test('update clientCertificate if request url contains tag', async ({ page, insomnia }) => {
+  test('update clientCertificate if request url contains tag', async ({ app, page, insomnia }) => {
     const responsePane = page.getByTestId('response-pane');
     const fixturePath = getFixturePath('certificates');
+    // the pre-request script references its cert/key by a path relative to the app's cwd,
+    // so allow-list that directory rather than the file's own (non-existent) name
+    const appCwd = await app.evaluate(() => process.cwd());
 
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').fill(getFixturePath('fake.pfx'));
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText('fake.pfx')).toBeVisible();
 
-    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders').fill(appCwd);
     await page.getByTestId('dataFolders-btn').click();
-    await expect.soft(page.getByText('invalid')).toBeVisible();
+    await expect.soft(page.getByText(appCwd)).toBeVisible();
 
     await page.locator('.app').press('Escape');
 
@@ -439,14 +442,17 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
-  test('insomnia.request / update clientCertificate', async ({ page, insomnia }) => {
+  test('insomnia.request / update clientCertificate', async ({ app, page, insomnia }) => {
     const responsePane = page.getByTestId('response-pane');
     await insomnia.navigationSidebar.clickRequestOrFolder('test certificate manipulation');
 
+    // the pre-request script references its cert/key by a path relative to the app's cwd,
+    // so allow-list that directory rather than the file's own (non-existent) name
+    const appCwd = await app.evaluate(() => process.cwd());
     await page.getByTestId('settings-button').click();
-    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders').fill(appCwd);
     await page.getByTestId('dataFolders-btn').click();
-    await expect.soft(page.getByText('invalid')).toBeVisible();
+    await expect.soft(page.getByText(appCwd)).toBeVisible();
     await page.locator('.app').press('Escape');
 
     // send
