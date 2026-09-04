@@ -1,6 +1,6 @@
 import type { EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentKvPairDataType } from 'insomnia-data';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   type ButtonProps,
@@ -83,7 +83,6 @@ export const EnvironmentKVEditor = ({
   }, [JSON.stringify(data)]);
   const blankNameEditorRef = useRef<OneLineEditorHandle | null>(null);
   const [autoFocusBlankRow, setAutoFocusBlankRow] = useState(!disabled);
-  const pendingFocusEditorIdRef = useRef<string | null>(null);
   // The id for the trailing blank row is derived from the persisted pairs (rather than
   // held in state) so it only changes when the data actually changes. This keeps it in
   // sync with the async data updates - if it flipped eagerly the row the user just typed
@@ -108,20 +107,7 @@ export const EnvironmentKVEditor = ({
   // diffs) until the user starts typing in it.
   const kvPairs: EnvironmentKvPairData[] = useMemo(() => [...persistedPairs, blankPair], [persistedPairs, blankPair]);
   const codeModalRef = useRef<CodePromptModalHandle>(null);
-  // Keep editor refs so focus can be restored once when the blank row becomes a persisted row.
-  const editorRefs = useRef<Map<string, OneLineEditorHandle>>(new Map());
 
-  useLayoutEffect(() => {
-    const editorId = pendingFocusEditorIdRef.current;
-    if (!editorId) {
-      return;
-    }
-    const editor = editorRefs.current.get(editorId);
-    if (editor) {
-      pendingFocusEditorIdRef.current = null;
-      editor.focusEnd();
-    }
-  }, [persistedPairs]);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
   const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({});
   const symmetricKey = useMemo(() => (vaultKey === '' ? {} : base64decode(vaultKey, true)), [vaultKey]);
@@ -238,9 +224,6 @@ export const EnvironmentKVEditor = ({
       if (isNameOrValueChange && !newPair.name && !newPair.value) {
         return;
       }
-      if (isNameOrValueChange) {
-        pendingFocusEditorIdRef.current = `environment-kv-editor-${changedPropertyName}-${newPair.id}`;
-      }
       onChange([...persistedPairs, newPair]);
       return;
     }
@@ -355,11 +338,6 @@ export const EnvironmentKVEditor = ({
         <div className={`${cellCommonStyle} relative flex h-full w-[30%] grow pl-1`}>
           <OneLineEditor
             ref={el => {
-              if (el) {
-                editorRefs.current.set(`environment-kv-editor-name-${id}`, el);
-              } else {
-                editorRefs.current.delete(`environment-kv-editor-name-${id}`);
-              }
               if (isBlank) {
                 blankNameEditorRef.current = el;
               }
@@ -402,13 +380,6 @@ export const EnvironmentKVEditor = ({
         <div className={`${cellCommonStyle} relative w-[50%]`}>
           {type === EnvironmentKvPairDataType.STRING && (
             <OneLineEditor
-              ref={el => {
-                if (el) {
-                  editorRefs.current.set(`environment-kv-editor-value-${id}`, el);
-                } else {
-                  editorRefs.current.delete(`environment-kv-editor-value-${id}`);
-                }
-              }}
               id={`environment-kv-editor-value-${id}`}
               historyKey={`environment-kv-editor-value-${id}`}
               placeholder={'Input Value'}
