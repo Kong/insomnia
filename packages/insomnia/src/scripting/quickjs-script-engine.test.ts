@@ -175,6 +175,9 @@ describe('runScriptInQuickJs', () => {
       '__task',
       'insomnia',
       '$',
+      'chai',
+      '__testResults',
+      '__testPromises',
     ]);
     const unexpectedGlobals = (data.sandboxGlobalNames as string[]).filter(
       name => !baseline.has(name) && !ALLOWED_EXTRA_GLOBALS.has(name),
@@ -429,6 +432,132 @@ describe('runScriptInQuickJs sendRequest bridge', () => {
   });
 });
 
+describe('runScriptInQuickJs insomnia.test()/pm.test()', () => {
+  it('records pass, fail-with-message, and throw in one requestTestResults array, in order', async () => {
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        await insomnia.test('passes', () => {
+          insomnia.expect(200).to.eql(200);
+        });
+        await insomnia.test('fails with a message', () => {
+          insomnia.expect(199).to.eql(200);
+        });
+        await insomnia.test('throws', () => {
+          throw new Error('boom');
+        });
+      `,
+      context,
+    });
+
+    expect(result.requestTestResults).toHaveLength(3);
+    expect(result.requestTestResults?.[0]).toMatchObject({ testCase: 'passes', status: 'passed' });
+    expect(result.requestTestResults?.[1]).toMatchObject({
+      testCase: 'fails with a message',
+      status: 'failed',
+      errorMessage: expect.stringContaining('expected 199 to deeply equal 200'),
+    });
+    expect(result.requestTestResults?.[2]).toMatchObject({
+      testCase: 'throws',
+      status: 'failed',
+      errorMessage: expect.stringContaining('boom'),
+    });
+  });
+
+  it('$ is a Postman-compat alias, and pm-style chai chains work: type/length/include/oneOf/below/keys/property', async () => {
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        $.test('happy tests', () => {
+          $.expect(200).to.eql(200);
+          $.expect('uname').to.be.a('string');
+          $.expect('a').to.have.lengthOf(1);
+          $.expect('xxx_customer_id_yyy').to.include('customer_id');
+          $.expect(201).to.be.oneOf([201, 202]);
+          $.expect(199).to.be.below(200);
+          $.expect({ a: 1, b: 2 }).to.have.all.keys('a', 'b');
+          $.expect({ a: 1, b: 2 }).to.have.any.keys('a', 'b');
+          $.expect({ a: 1, b: 2 }).to.not.have.any.keys('c', 'd');
+          $.expect({ a: 1 }).to.have.property('a');
+          $.expect({ a: 1, b: 2 }).to.be.a('object').that.has.all.keys('a', 'b');
+        });
+      `,
+      context,
+    });
+
+    expect(result.requestTestResults).toEqual([
+      expect.objectContaining({ testCase: 'happy tests', status: 'passed' }),
+    ]);
+  });
+
+  it('waits for a test the script body did not await before considering the run done', async () => {
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        insomnia.test('not awaited', async () => {
+          // QuickJS has no timers bridged in; a few microtask hops stand in for "still pending
+          // when the script body returns" without depending on one.
+          await Promise.resolve().then(() => Promise.resolve()).then(() => Promise.resolve());
+          insomnia.expect(1).to.eql(1);
+        });
+        insomnia.environment.set('reachedEnd', true);
+      `,
+      context,
+    });
+
+    expect((result.environment.data as Record<string, unknown>).reachedEnd).toBe(true);
+    expect(result.requestTestResults).toEqual([expect.objectContaining({ testCase: 'not awaited', status: 'passed' })]);
+  });
+
+  it('records a skipped test without running its body', async () => {
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `insomnia.test.skip('not run', () => { throw new Error('should never execute'); });`,
+      context,
+    });
+
+    expect(result.requestTestResults).toEqual([
+      expect.objectContaining({ testCase: 'not run', status: 'skipped' }),
+    ]);
+  });
+
+  it('is caught by the script timeout, not a silent hang, when a test never resolves', async () => {
+    const context = baseContext();
+    context.settings = { timeout: 30 } as any;
+
+    await expect(
+      runScriptInQuickJs({
+        script: `insomnia.test('never resolves', () => new Promise(() => {}));`,
+        context,
+      }),
+    ).rejects.toThrow(/Executing script timeout: 30/);
+
+    const laterResult = await runScriptInQuickJs({
+      script: 'insomnia.environment.set("ranCleanly", true);',
+      context: baseContext(),
+    });
+    expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
+  });
+
+  it('never populates requestTestResults when the script throws before registering any test', async () => {
+    const context = baseContext();
+
+    await expect(
+      runScriptInQuickJs({
+        script: `
+          throw new Error('top-level failure');
+          insomnia.test('unreachable', () => {});
+        `,
+        context,
+      }),
+    ).rejects.toThrow('top-level failure');
+  });
+});
+
 /**
  * `vm.newPromise()` allocates three JSValues — the promise plus its `resolve`/`reject` functions —
  * and quickjs-emscripten frees the latter two only from inside `resolve()`/`reject()`. Disposing the
@@ -469,24 +598,24 @@ describe('runScriptInQuickJs sendRequest bridge teardown', () => {
     return fetchMock;
   };
 
-  it('tears down cleanly when the script never awaits its sendRequest', async () => {
+  it('delivers the callback of a sendRequest the script never awaited', async () => {
     stubSlowFetch(120);
     const context = baseContext();
 
-    // Postman-style fire-and-forget: the script returns while the request is still in flight.
+    // The Postman-style callback form returns undefined, so this script reaches the end of its body
+    // with the request still in flight. The run drains outstanding bridge calls before tearing down,
+    // so the callback still fires instead of being silently dropped.
     const result = await runScriptInQuickJs({
       script: `
-        insomnia.sendRequest('https://example.com', () => {});
+        insomnia.sendRequest('https://example.com', (error, response) => {
+          insomnia.environment.set('callbackBody', response.body);
+        });
         insomnia.environment.set('finished', true);
       `,
       context,
     });
 
-    expect((result.environment.data as Record<string, unknown>).finished).toBe(true);
-
-    // The response lands after teardown; it must be a silent no-op rather than an abort or an
-    // unhandled QuickJSUseAfterFree rejection out of the settle callback.
-    await new Promise(resolve => setTimeout(resolve, 250));
+    expect(result.environment.data).toMatchObject({ finished: true, callbackBody: 'late' });
 
     // A later run still works. Note this is NOT what detects the abort — a fresh context on the same
     // WASM module succeeds even after one, so only the assertions above are load-bearing here.
@@ -495,6 +624,26 @@ describe('runScriptInQuickJs sendRequest bridge teardown', () => {
       context: baseContext(),
     });
     expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
+  });
+
+  it('cancels and reports a sendRequest still outstanding when the drain deadline passes', async () => {
+    stubSlowFetch(5000);
+    const context = baseContext();
+    context.settings = { timeout: 150 } as any;
+
+    const result = await runScriptInQuickJs({
+      script: `
+        insomnia.sendRequest('https://example.com', (error) => {
+          console.log('sendRequest failed: ' + error);
+        });
+        insomnia.environment.set('finished', true);
+      `,
+      context,
+    });
+
+    expect((result.environment.data as Record<string, unknown>).finished).toBe(true);
+    // The script learns the request was cancelled rather than the response vanishing silently.
+    expect(result.logs.some(row => row.includes('did not finish before the script did'))).toBe(true);
   });
 
   it('tears down cleanly when the deadline fires while a sendRequest is in flight', async () => {
