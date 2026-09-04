@@ -10,12 +10,24 @@ import type {
 import { models } from 'insomnia-data';
 import { deserializeNDJSON } from 'insomnia-data/common';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import {
+  Button,
+  Input,
+  SearchField,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  TextField,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { docsMcpAuthentication } from '~/common/documentation';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
+import { useStreamSummary } from '~/ui/hooks/use-stream-summary';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { McpEvent } from '../../../main/mcp/types';
@@ -26,9 +38,11 @@ import { useRequestLoaderData } from '../../../routes/organization.$organization
 import { AnalyticsEvent } from '../../../ui/analytics';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
+import { MarkdownPreview } from '../markdown-preview';
 import { McpEventView } from '../mcp/event-view';
 import { McpNotificationTab } from '../mcp/mcp-notification-tab';
 import { Pane, PaneHeader } from '../panes/pane';
@@ -44,6 +58,94 @@ import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
+
+const StreamSummaryPanel: FC<{ requestId: string; streamSummary: ReturnType<typeof useStreamSummary> }> = ({
+  requestId,
+  streamSummary,
+}) => {
+  const showWarning = Boolean(streamSummary.resultPath) && streamSummary.summary.fragmentCount === 0;
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-(--padding-sm) p-(--padding-sm)">
+        <TextField
+          // Uncontrolled: `key` resets the field when switching requests, but typing isn't
+          // clobbered by the round-trip through patchRequestMeta -> loader revalidation
+          // (same reason code-editor.tsx's filter input uses defaultValue, not value).
+          key={requestId}
+          aria-label="Stream summary JSONPath"
+          defaultValue={streamSummary.resultPath ?? ''}
+          onChange={value => {
+            if (value === '') {
+              streamSummary.setResultPath('');
+            }
+          }}
+          className="w-full"
+        >
+          <Input
+            placeholder={streamSummary.inferredPath ?? 'JSONPath, e.g. $.choices[0].delta.content'}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                streamSummary.setResultPath(e.currentTarget.value);
+              }
+            }}
+            className="w-full rounded-sm border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+          />
+        </TextField>
+        {showWarning && (
+          <TooltipTrigger>
+            <Button
+              aria-label="JSONPath matched no messages"
+              className="flex aspect-square h-full shrink-0 items-center justify-center text-(--color-warning)"
+            >
+              <Icon icon="triangle-exclamation" />
+            </Button>
+            <Tooltip
+              offset={8}
+              className="max-w-xs rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+            >
+              This JSONPath did not match any incoming message.
+            </Tooltip>
+          </TooltipTrigger>
+        )}
+        <Dropdown
+          aria-label="Stream summary render mode dropdown"
+          triggerButton={
+            <Button className="tall shrink-0">
+              {streamSummary.renderMarkdown ? 'Markdown' : 'Plain text'}
+              <i className="fa fa-caret-down space-left" />
+            </Button>
+          }
+        >
+          <DropdownSection aria-label="Render as section" title="Render as">
+            <DropdownItem aria-label="Plain text">
+              <ItemContent
+                icon={streamSummary.renderMarkdown ? 'empty' : 'check'}
+                label="Plain text"
+                onClick={() => streamSummary.setRenderMarkdown(false)}
+              />
+            </DropdownItem>
+            <DropdownItem aria-label="Markdown">
+              <ItemContent
+                icon={streamSummary.renderMarkdown ? 'check' : 'empty'}
+                label="Markdown"
+                onClick={() => streamSummary.setRenderMarkdown(true)}
+              />
+            </DropdownItem>
+          </DropdownSection>
+        </Dropdown>
+      </div>
+      <div className="flex-1 overflow-auto p-(--padding-sm)">
+        {streamSummary.renderMarkdown ? (
+          <MarkdownPreview markdown={streamSummary.summary.summary} />
+        ) : (
+          <pre className="font-mono text-sm whitespace-pre-wrap text-(--color-font)">
+            {streamSummary.summary.summary}
+          </pre>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
   const { activeResponse, responses, requestVersions } = useRequestLoaderData()!;
@@ -136,6 +238,15 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
 
   const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as EventType[];
   const allNotifications = useRealtimeConnectionNotifications({ responseId: response._id, protocol });
+  const showStreamSummaryTab = protocol === 'curl';
+  const streamSummary = useStreamSummary({
+    requestId: response.parentId,
+    url: response.url,
+    // Only curl carries stream-summary-shaped data — never feed socketIO's/webSocket's
+    // events in here mislabeled as curl, even though showStreamSummaryTab already hides
+    // the UI for those.
+    events: showStreamSummaryTab ? (allEvents as CurlEvent[]) : [],
+  });
   const handleSelection = (event: EventType) => {
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
   };
@@ -260,7 +371,12 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
         </div>
         <ResponseHistoryDropdown activeResponse={response} requestVersions={requestVersions} responses={responses} />
       </PaneHeader>
-      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        key={response._id}
+        aria-label="Request group tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        defaultSelectedKey={showStreamSummaryTab && streamSummary.inferredPath != null ? 'summary' : 'events'}
+      >
         <TabList
           className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
@@ -271,6 +387,14 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           >
             Events
           </Tab>
+          {showStreamSummaryTab && (
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="summary"
+            >
+              Summary
+            </Tab>
+          )}
           {models.mcpResponse.isMcpResponse(response) && (
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
@@ -409,6 +533,11 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             )}
           </PanelGroup>
         </TabPanel>
+        {showStreamSummaryTab && (
+          <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="summary">
+            <StreamSummaryPanel requestId={response.parentId} streamSummary={streamSummary} />
+          </TabPanel>
+        )}
         {models.mcpResponse.isMcpResponse(response) && (
           <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="notifications">
             <McpNotificationTab allEvents={allNotifications} />
