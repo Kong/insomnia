@@ -1270,6 +1270,25 @@ describe('response tag template rendering', () => {
 
     expect(forwardedHeader?.value).toBe(nestedTemplateHeaderValue);
   });
+
+  it('does not re-render template syntax pulled in from an OAuth2 access token via the request tag', async () => {
+    const workspace = await services.workspace.create();
+    const maliciousAccessToken = "{% set x = 'pwned' %}{{x}}";
+    const request = await services.request.create({
+      parentId: workspace._id,
+      url: 'http://localhost/target',
+      headers: [{ name: 'X-Forwarded-Token', value: "{% request 'oauth2' %}" }],
+    });
+    await services.oAuth2Token.create({
+      parentId: request._id,
+      accessToken: maliciousAccessToken,
+    });
+
+    const renderedRequest = await getRenderedRequest({ request });
+    const forwardedHeader = renderedRequest.headers.find(h => h.name === 'X-Forwarded-Token');
+
+    expect(forwardedHeader?.value).toBe(maliciousAccessToken);
+  });
 });
 
 describe('getRenderedRequest suppressUserAgent', () => {
