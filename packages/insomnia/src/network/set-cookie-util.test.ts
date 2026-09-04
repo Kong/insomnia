@@ -28,4 +28,55 @@ describe('addSetCookiesToToughCookieJar', () => {
 
     expect(cookies.map(c => c.key)).toEqual(expect.arrayContaining(['a', 'b']));
   });
+
+  // A cookie value set via a response may contain Nunjucks/Liquid template syntax. Only
+  // 'manual' cookies are ever rendered as templates (see cookies-modal.tsx), so every cookie
+  // a response actually sets/updates must always come out tagged 'response' here, even if a
+  // same-named cookie was previously tagged 'manual', so a later response can't relabel a
+  // cookie it controls as 'manual' and have its value rendered.
+  describe('cookie provenance', () => {
+    it('tags a brand-new cookie as response-sourced', async () => {
+      const { cookies } = await addSetCookiesToToughCookieJar({
+        setCookieStrings: ['tracking=a={{ _.some_secret }}; Path=/'],
+        currentUrl: 'http://localhost:3000/',
+        cookieJar: { cookies: [] },
+      });
+
+      expect(cookies.find(c => c.key === 'tracking')?.source).toBe('response');
+    });
+
+    it('downgrades a same-name manually-tagged cookie to response-sourced when a response sets it', async () => {
+      const manualCookie = {
+        id: 'cookie_1', key: 'tracking', value: 'safe', domain: 'localhost', path: '/',
+        secure: false, httpOnly: false, source: 'manual' as const,
+      };
+
+      const { cookies } = await addSetCookiesToToughCookieJar({
+        setCookieStrings: ['tracking=a={{ _.some_secret }}; Path=/'],
+        currentUrl: 'http://localhost:3000/',
+        cookieJar: { cookies: [manualCookie] },
+      });
+
+      expect(cookies.find(c => c.key === 'tracking')?.source).toBe('response');
+    });
+
+    it('preserves an untouched manual cookie across an unrelated Set-Cookie response', async () => {
+      const manualCookie = {
+        id: 'cookie_1', key: 'untouched', value: '{{ _.base_url }}', domain: 'localhost', path: '/',
+        secure: false, httpOnly: false, source: 'manual' as const,
+      };
+
+      const { cookies } = await addSetCookiesToToughCookieJar({
+        setCookieStrings: ['other=1; Path=/'],
+        currentUrl: 'http://localhost:3000/',
+        cookieJar: { cookies: [manualCookie] },
+      });
+
+      const untouched = cookies.find(c => c.key === 'untouched');
+      expect(untouched?.source).toBe('manual');
+      expect(untouched?.id).toBe('cookie_1');
+      const fresh = cookies.find(c => c.key === 'other');
+      expect(fresh?.source).toBe('response');
+    });
+  });
 });

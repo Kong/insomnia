@@ -83,6 +83,12 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     const renderedCookies: Cookie[] = [];
 
     for (const cookie of activeCookieJar?.cookies || []) {
+      // Only manually-authored cookies are passed through the template renderer; a server-set
+      // cookie's value is always used as-is.
+      if (cookie.source !== 'manual') {
+        renderedCookies.push(cookie);
+        continue;
+      }
       try {
         renderedCookies.push(await handleRender(cookie));
       } catch {
@@ -128,6 +134,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
         path: '/',
         secure: false,
         httpOnly: false,
+        source: 'manual',
       },
       ...activeCookieJar.cookies,
     ];
@@ -137,6 +144,9 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
   const handleCookieUpdate = (cookie: Cookie) => {
     const newCookie = clone(cookie);
+    // A save from this modal is always a deliberate local edit, even if editing a cookie a
+    // server previously set, so it's trusted going forward like any other manual cookie.
+    newCookie.source = 'manual';
 
     // transform to Date object or fallback to null
     let dateFormat = null;
@@ -301,11 +311,17 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               className="flex min-h-[40px] justify-between gap-2 rounded-xs px-2 py-1 leading-[36px] outline-hidden odd:bg-(--hl-xs)"
             >
               <span className="flex min-w-[20%] items-center leading-relaxed break-all" data-testid="cookie-domain">
-                <RenderedText>{cookie.domain || ''}</RenderedText>
+                {/* Only manually-authored cookies are passed through the template renderer;
+                    a server-set cookie's fields are always shown as-is. */}
+                {cookie.source === 'manual' ? <RenderedText>{cookie.domain || ''}</RenderedText> : cookie.domain || ''}
               </span>
               <div className="flex w-[70%] items-center leading-relaxed">
                 <div className="line-clamp-3 w-full break-all">
-                  <RenderedText>{cookieString || ''}</RenderedText>
+                  {cookie.source === 'manual' ? (
+                    <RenderedText>{cookieString || ''}</RenderedText>
+                  ) : (
+                    cookieString || ''
+                  )}
                 </div>
               </div>
               <div className="flex min-w-[10%] items-center justify-end gap-1">
