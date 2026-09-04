@@ -36,7 +36,7 @@ import {
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import { isLoggedIn } from '~/ui/account/session';
 import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
-import { getLoginUrl } from '~/ui/auth-session-provider.client';
+import { ensureSessionKeyPair, getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
 import { Icon } from '~/ui/components/icon';
@@ -558,8 +558,16 @@ const Root = () => {
         });
       }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
+        const code = params.box?.trim();
+        if (!code) {
+          window.localStorage.setItem(
+            'logoutMessage',
+            'Login redirect was missing an authentication code. Please paste the token manually on the authorize page.',
+          );
+          return navigate(href('/auth/authorize'));
+        }
         return authorizeSubmit({
-          code: params.box,
+          code,
         });
       }
       if (urlWithoutParams === 'insomnia://app/open/organization') {
@@ -567,8 +575,11 @@ const Root = () => {
         // gracefully handle open org in app from browser
         const userSession = await services.userSession.get();
         if (!userSession.id || userSession.id === '') {
-          const url = new URL(getLoginUrl());
-          window.main.openInBrowser(url.toString());
+          await ensureSessionKeyPair();
+          const loginUrl = getLoginUrl();
+          if (loginUrl) {
+            window.main.openInBrowser(loginUrl);
+          }
           window.localStorage.setItem('specificOrgRedirectAfterAuthorize', params.organizationId);
           return navigate(href('/auth/authorize'));
         }

@@ -4,6 +4,7 @@ import { models, services } from 'insomnia-data';
 
 import { getCurrentSessionId, type SessionData, setSessionData, unsetSessionData } from '~/common/account/session';
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
 import { getRuntime } from '~/runtimes';
 
 // Re-export the isomorphic session core so renderer callers have a single
@@ -11,17 +12,38 @@ import { getRuntime } from '~/runtimes';
 // and therefore must live in the renderer context.
 export * from '~/common/account/session';
 
+function parseRequiredJson(value: string | undefined | null, fieldName: string) {
+  if (value === undefined || value === null || value === '') {
+    throw new Error(`Missing ${fieldName} from account encryption keys. Please try logging in again.`);
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    throw new Error(`Invalid ${fieldName} from account encryption keys. Please try logging in again.`);
+  }
+}
+
 /** Creates a session from a sessionId and derived symmetric key. */
 export async function absorbKey(sessionId: string, key: string) {
+  invariant(typeof key === 'string' && key, 'Missing session key from authentication code.');
+
   // Get and store some extra info (salts and keys)
   const sessionIdResolved = sessionId || (await getCurrentSessionId());
+  invariant(sessionIdResolved, 'Missing session ID from authentication code.');
+
   const [profile, keys] = await Promise.all([
     getUserProfile({ sessionId: sessionIdResolved }),
     getEncryptionKeys({ sessionId: sessionIdResolved }),
   ]);
   const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
   const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
-  const symmetricKeyStr = await getRuntime().crypto.decryptAES(key, JSON.parse(encSymmetricKey));
+  const encSymmetricKeyParsed = parseRequiredJson(encSymmetricKey, 'encrypted symmetric key');
+  const symmetricKeyStr = await getRuntime().crypto.decryptAES(key, encSymmetricKeyParsed);
+  invariant(
+    typeof symmetricKeyStr === 'string' && symmetricKeyStr,
+    'Failed to decrypt account encryption keys. Please try logging in again.',
+  );
 
   // Store the information for later
   await setSessionData(
@@ -30,9 +52,9 @@ export async function absorbKey(sessionId: string, key: string) {
     firstName,
     lastName,
     email,
-    JSON.parse(symmetricKeyStr),
-    JSON.parse(publicKey),
-    JSON.parse(encPrivateKey),
+    parseRequiredJson(symmetricKeyStr, 'symmetric key'),
+    parseRequiredJson(publicKey, 'public key'),
+    parseRequiredJson(encPrivateKey, 'encrypted private key'),
   );
 
   if (typeof window !== 'undefined' && window.main?.loginStateChange) {
