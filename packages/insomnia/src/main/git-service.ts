@@ -3326,6 +3326,31 @@ export const unstageChangesAction = async ({
   }
 };
 
+export const stagePartialContentAction = async ({
+  projectId,
+  workspaceId,
+  filepath,
+  content,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  content: string;
+}): Promise<{
+  errors?: string[];
+}> => {
+  try {
+    await getGitRepository({ workspaceId, projectId });
+    await GitVCS.stagePartialContent(filepath, content);
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error while staging changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+};
+
 function getPreviewItemNameAndScope(previewDiffItem: { before: string; after: string }) {
   let prevName = '';
   let nextName = '';
@@ -3936,6 +3961,7 @@ export interface GitServiceAPI {
   diff: typeof diff;
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
+  stagePartialContent: typeof stagePartialContentAction;
   diffFileLoader: typeof diffFileLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
@@ -4045,6 +4071,9 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) =>
     unstageChangesAction(options),
+  );
+  ipcMainHandle('git.stagePartialContent', (_, options: Parameters<typeof stagePartialContentAction>[0]) =>
+    stagePartialContentAction(options),
   );
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
