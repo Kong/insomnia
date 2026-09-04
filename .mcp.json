@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "insomnia-cdp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.75",
+        "--cdp-endpoint",
+        "http://localhost:9222"
+      ]
+    }
+  }
+}

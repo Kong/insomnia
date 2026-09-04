@@ -17,7 +17,9 @@
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "serve": "esr server/index.ts"
+    "serve": "esr server/index.ts",
+    "explore": "cross-env BUNDLE=dev esr agent-poc/explore.ts",
+    "explore:build": "cross-env BUNDLE=build esr agent-poc/explore.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.59.1",
