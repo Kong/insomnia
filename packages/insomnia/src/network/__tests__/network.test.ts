@@ -1170,6 +1170,74 @@ describe('getOrInheritHeaders', () => {
   });
 });
 
+describe('cookie template rendering (security)', () => {
+  // A malicious server can plant template syntax in a Set-Cookie value. getRenderedRequestAndContext
+  // renders the whole cookie jar before every send (it's how {{ _.var }} works in a manually-typed
+  // cookie), so a response-sourced cookie's value must never reach the renderer here, or every
+  // subsequent request to that host would re-execute the planted template and send the rendered
+  // result back to the server.
+  const templateCookieValue = "{% uuid 'v4' %}";
+
+  it('does not render a response-sourced cookie value when preparing a request to send', async () => {
+    const workspace = await services.workspace.create();
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
+      cookies: [
+        {
+          id: 'c1',
+          key: 'poc',
+          value: templateCookieValue,
+          domain: 'localhost',
+          path: '/',
+          secure: false,
+          httpOnly: false,
+          source: 'response',
+        },
+      ],
+    });
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_response_cookie',
+      parentId: workspace._id,
+      url: 'http://localhost',
+    });
+
+    const renderedRequest = await getRenderedRequest({ request });
+    const pocCookie = renderedRequest.cookieJar.cookies.find(c => c.key === 'poc');
+
+    expect(pocCookie?.value).toBe(templateCookieValue);
+  });
+
+  it('still renders a manually-authored cookie value when preparing a request to send', async () => {
+    const workspace = await services.workspace.create();
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
+      cookies: [
+        {
+          id: 'c2',
+          key: 'session',
+          value: templateCookieValue,
+          domain: 'localhost',
+          path: '/',
+          secure: false,
+          httpOnly: false,
+          source: 'manual',
+        },
+      ],
+    });
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_manual_cookie',
+      parentId: workspace._id,
+      url: 'http://localhost',
+    });
+
+    const renderedRequest = await getRenderedRequest({ request });
+    const sessionCookie = renderedRequest.cookieJar.cookies.find(c => c.key === 'session');
+
+    expect(sessionCookie?.value).not.toBe(templateCookieValue);
+    expect(sessionCookie?.value).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
 describe('getRenderedRequest suppressUserAgent', () => {
   it('suppresses default user-agent when a custom user-agent header is disabled', async () => {
     const workspace = await services.workspace.create();

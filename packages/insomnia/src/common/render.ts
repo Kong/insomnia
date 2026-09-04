@@ -584,11 +584,17 @@ export async function getRenderedRequestAndContext({
   const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
   request.headers = getOrInheritHeaders({ request, requestGroups });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
+  // Only manually-authored cookies may contain live template syntax; a server-set cookie's
+  // value is untrusted input, so it must be excluded from rendering here too — otherwise every
+  // request sent to a host would re-execute a template a malicious response planted in a
+  // cookie, regardless of the Cookie Jar UI's own render gating.
+  const manualCookies = cookieJar.cookies.filter(cookie => cookie.source === 'manual');
+  const nonManualCookies = cookieJar.cookies.filter(cookie => cookie.source !== 'manual');
   // Render all request properties
   const renderResult = await render(
     {
       _request: request,
-      _cookieJar: cookieJar,
+      _cookieJar: { ...cookieJar, cookies: manualCookies },
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
@@ -598,7 +604,10 @@ export async function getRenderedRequestAndContext({
   );
 
   const renderedRequest = renderResult._request;
-  const renderedCookieJar = renderResult._cookieJar;
+  const renderedCookieJar = {
+    ...renderResult._cookieJar,
+    cookies: [...renderResult._cookieJar.cookies, ...nonManualCookies],
+  };
   renderedRequest.description = await render(description, renderContext, null, 'keep');
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);

@@ -25,6 +25,10 @@ export interface Cookie {
   hostOnly?: boolean;
   pathIsDefault?: boolean;
   lastAccessed?: Date;
+  // 'manual' cookies (added/edited via the Cookie Jar UI, or written by a script) may contain
+  // template syntax that gets rendered; 'response' cookies came from a server's Set-Cookie
+  // header (or an import) and must never be rendered, since their value is untrusted input.
+  source?: 'manual' | 'response';
 }
 
 export interface BaseCookieJar {
