@@ -83,8 +83,8 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     const renderedCookies: Cookie[] = [];
 
     for (const cookie of activeCookieJar?.cookies || []) {
-      // Only manually-authored cookies may contain live template syntax; a server-set cookie's
-      // value is untrusted input and must never be passed through the template renderer.
+      // Only manually-authored cookies are passed through the template renderer; a server-set
+      // cookie's value is always used as-is.
       if (cookie.source !== 'manual') {
         renderedCookies.push(cookie);
         continue;
@@ -311,8 +311,8 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               className="flex min-h-[40px] justify-between gap-2 rounded-xs px-2 py-1 leading-[36px] outline-hidden odd:bg-(--hl-xs)"
             >
               <span className="flex min-w-[20%] items-center leading-relaxed break-all" data-testid="cookie-domain">
-                {/* A server-set cookie's fields are untrusted input and must never be passed through
-                    the template renderer; only manually-authored cookies may contain live templates. */}
+                {/* Only manually-authored cookies are passed through the template renderer;
+                    a server-set cookie's fields are always shown as-is. */}
                 {cookie.source === 'manual' ? <RenderedText>{cookie.domain || ''}</RenderedText> : cookie.domain || ''}
               </span>
               <div className="flex w-[70%] items-center leading-relaxed">

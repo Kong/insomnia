@@ -28,9 +28,9 @@ export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentU
 
   // tough-cookie's serialization round-trip only preserves its own known cookie fields, so
   // `id`/`source` are lost and must be reconciled by hand: any cookie this response actually
-  // set is always (re-)stamped 'response' — non-negotiably, so a server can never spoof or
-  // resurrect a 'manual' tag on a cookie it controls — everything else keeps its prior identity
-  // and provenance.
+  // set is always (re-)stamped 'response', regardless of what it was tagged before, so a
+  // cookie's origin always reflects the most recent write to it — everything else keeps its
+  // prior identity and origin.
   const previousById = new Map((cookieJar.cookies as Cookie[]).map(cookie => [cookieIdentityKey(cookie), cookie]));
   const cookies = ((await cookiesFromJar(jar)) as Cookie[]).map(cookie => {
     const key = cookieIdentityKey(cookie);

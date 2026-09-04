@@ -1170,12 +1170,11 @@ describe('getOrInheritHeaders', () => {
   });
 });
 
-describe('cookie template rendering (security)', () => {
-  // A malicious server can plant template syntax in a Set-Cookie value. getRenderedRequestAndContext
-  // renders the whole cookie jar before every send (it's how {{ _.var }} works in a manually-typed
-  // cookie), so a response-sourced cookie's value must never reach the renderer here, or every
-  // subsequent request to that host would re-execute the planted template and send the rendered
-  // result back to the server.
+describe('cookie template rendering by source', () => {
+  // getRenderedRequestAndContext renders the whole cookie jar before every send (it's how
+  // {{ _.var }} works in a manually-typed cookie), so a response-sourced cookie's value must
+  // never reach the renderer here, or a template placed in a cookie by a response would be
+  // re-executed on every later request to that host.
   const templateCookieValue = "{% uuid 'v4' %}";
 
   it('does not render a response-sourced cookie value when preparing a request to send', async () => {
@@ -1185,7 +1184,7 @@ describe('cookie template rendering (security)', () => {
       cookies: [
         {
           id: 'c1',
-          key: 'poc',
+          key: 'tracking',
           value: templateCookieValue,
           domain: 'localhost',
           path: '/',
@@ -1202,9 +1201,9 @@ describe('cookie template rendering (security)', () => {
     });
 
     const renderedRequest = await getRenderedRequest({ request });
-    const pocCookie = renderedRequest.cookieJar.cookies.find(c => c.key === 'poc');
+    const responseCookie = renderedRequest.cookieJar.cookies.find(c => c.key === 'tracking');
 
-    expect(pocCookie?.value).toBe(templateCookieValue);
+    expect(responseCookie?.value).toBe(templateCookieValue);
   });
 
   it('still renders a manually-authored cookie value when preparing a request to send', async () => {
@@ -1235,6 +1234,41 @@ describe('cookie template rendering (security)', () => {
 
     expect(sessionCookie?.value).not.toBe(templateCookieValue);
     expect(sessionCookie?.value).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
+describe('response tag template rendering', () => {
+  // A stored response's body/headers can contain template syntax. The {% response %} tag pulls
+  // that raw content into another request's field, so render() must not treat the tag's
+  // returned content as a second template pass, or a value that only reached the render
+  // context via a prior response would be evaluated as a live template.
+  const nestedTemplateHeaderValue = "{% set x = 'value' %}{{x}}";
+
+  it('does not re-render template syntax pulled in from a stored response header', async () => {
+    const workspace = await services.workspace.create();
+    const sourceRequest = await services.request.create({
+      parentId: workspace._id,
+      url: 'http://localhost/source',
+    });
+    await services.response.create({
+      parentId: sourceRequest._id,
+      statusCode: 200,
+      statusMessage: 'OK',
+      headers: [{ name: 'X-Source', value: nestedTemplateHeaderValue }],
+      contentType: 'text/plain',
+    });
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_response_tag_test',
+      parentId: workspace._id,
+      url: 'http://localhost/target',
+      headers: [{ name: 'X-Forwarded', value: `{% response 'header', '${sourceRequest._id}', 'X-Source', 'never', 60 %}` }],
+    });
+
+    const renderedRequest = await getRenderedRequest({ request });
+    const forwardedHeader = renderedRequest.headers.find(h => h.name === 'X-Forwarded');
+
+    expect(forwardedHeader?.value).toBe(nestedTemplateHeaderValue);
   });
 });
 

@@ -57,7 +57,7 @@ describe('secureReadFile', () => {
 
   it('rejects a sibling directory that merely shares the allowed directory as a string prefix', async () => {
     const { secureReadFile } = await import('../secure-read-file');
-    const siblingDir = `${userDataDir}Evil`;
+    const siblingDir = `${userDataDir}Other`;
     fs.mkdirSync(siblingDir);
     const file = path.join(siblingDir, 'notes.txt');
     fs.writeFileSync(file, 'hello');

@@ -27,7 +27,7 @@ export interface Cookie {
   lastAccessed?: Date;
   // 'manual' cookies (added/edited via the Cookie Jar UI, or written by a script) may contain
   // template syntax that gets rendered; 'response' cookies came from a server's Set-Cookie
-  // header (or an import) and must never be rendered, since their value is untrusted input.
+  // header (or an import) and are always rendered as plain literal text.
   source?: 'manual' | 'response';
 }
 
