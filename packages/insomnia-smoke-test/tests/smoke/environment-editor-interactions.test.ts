@@ -142,7 +142,9 @@ test.describe('Environment Editor', () => {
     // (inserting the blank row) - if that click blurred the value cell too, the blur-flush
     // and the insert would be two separate writes fired by one gesture with no way to wait
     // between them, and the older one landing after the newer one silently drops the value.
-    await page.keyboard.press('Tab');
+    // Click away (rather than pressing Tab) to blur - Tab's target inside a CodeMirror
+    // instance isn't guaranteed to actually move focus out of the editor.
+    await page.locator('body').click();
     await waitForSync();
 
     // add second row: exampleObject (JSON type)
@@ -240,8 +242,13 @@ test.describe('Environment Editor', () => {
     await exampleStringRow.getByRole('button', { name: 'Disable Row' }).click();
     await expect.soft(exampleStringRow).toHaveCSS('opacity', '0.4');
 
+    // wait for the disable-row edit's persistence to round-trip (Close is disabled while it's
+    // in-flight) before closing - clicking Close while it's still disabled is a no-op click
+    const closeButton = page.getByRole('button', { name: 'Close', exact: true });
+    await expect.soft(closeButton).toBeEnabled();
+
     // close the editor and wait for it to fully disappear
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    await closeButton.click();
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
     // dismiss the environment picker dropdown if it appeared
