@@ -10,6 +10,13 @@ vi.mock('~/ui/components/modals/sync-merge-modal', () => ({
   SyncMergeModal: Symbol('SyncMergeModal'),
 }));
 
+vi.mock('~/ui/ipc', () => ({
+  sync: {
+    resolveConflict: vi.fn(),
+    cancelConflict: vi.fn(),
+  },
+}));
+
 describe('insomnia-sync', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -21,10 +28,6 @@ describe('insomnia-sync', () => {
     global.window = {
       main: {
         on,
-        sync: {
-          resolveConflict: vi.fn(),
-          cancelConflict: vi.fn(),
-        },
       },
     } as unknown as Window & typeof globalThis;
 
@@ -37,8 +40,6 @@ describe('insomnia-sync', () => {
   });
 
   it('routes merge conflict modal callbacks back through the sync bridge', async () => {
-    const resolveConflict = vi.fn();
-    const cancelConflict = vi.fn();
     const on = vi.fn((_channel, listener) => {
       listener(undefined, {
         handlerId: 'req_123',
@@ -52,14 +53,11 @@ describe('insomnia-sync', () => {
     global.window = {
       main: {
         on,
-        sync: {
-          resolveConflict,
-          cancelConflict,
-        },
       },
     } as unknown as Window & typeof globalThis;
 
-    const { showModal } = await import('../../../ui/components/modals');
+    const { showModal } = await import('~/ui/components/modals');
+    const { sync } = await import('~/ui/ipc');
     const { registerSyncMergeConflictListener } = await import('../insomnia-sync');
 
     registerSyncMergeConflictListener();
@@ -75,8 +73,8 @@ describe('insomnia-sync', () => {
     modalOptions.onResolveAll([{ key: 'doc_2' }]);
     modalOptions.onCancelUnresolved();
 
-    expect(resolveConflict).toHaveBeenCalledWith({ handlerId: 'req_123', conflicts: [{ key: 'doc_2' }] });
-    expect(cancelConflict).toHaveBeenCalledWith({ handlerId: 'req_123' });
+    expect(sync.resolveConflict).toHaveBeenCalledWith({ handlerId: 'req_123', conflicts: [{ key: 'doc_2' }] });
+    expect(sync.cancelConflict).toHaveBeenCalledWith({ handlerId: 'req_123' });
   });
 
   it('exports the renderer abort error class', async () => {

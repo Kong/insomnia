@@ -177,8 +177,6 @@ export type HandleChannels =
   | 'socketIO.event.send'
   | 'syncNewWorkspaceIfNeeded'
   | 'sync.invoke'
-  | 'sync.invokeGlobal'
-  | 'sync.pullRemoteBackendProject'
   | 'templatingDb.getAuthToken'
   | 'socketIO.open'
   | 'socketIO.readyState'
@@ -263,8 +261,7 @@ export type MainOnChannels =
   | 'mcp.closeAll'
   | 'mcp.client.responseElicitationRequest'
   | 'mcp.client.responseSamplingRequest'
-  | 'sync.cancelConflict'
-  | 'sync.resolveConflict'
+  | 'sync.on'
   | 'mcp.sendMCPRequest'
   | 'ui.promptResult'
   | 'writeText';
