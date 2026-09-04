@@ -1,0 +1,122 @@
+name: KSAI
+
+permissions: {}
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request:
+    types: [review_requested, opened, synchronize, reopened, edited]
+  pull_request_review:
+    types: [submitted, dismissed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number to review
+        required: false
+      actor:
+        description: GitHub username to authorize against CODEOWNERS, matching comment authorization
+        required: false
+      issue_number:
+        description: Issue number for plan continuation; empty when work_ref names the work
+        required: false
+      work_ref:
+        description: The work to do when there is no GitHub issue, as jira/<KEY>
+        required: false
+      attempt:
+        description: Runs already spent by this continuation chain
+        required: false
+      stall:
+        description: Consecutive runs that completed no step
+        required: false
+      prev_remaining:
+        description: Unchecked boxes seen by the predecessor, with empty distinct from zero
+        required: false
+
+jobs:
+  ksai:
+    name: KSAI
+    if: >-
+      (github.event_name == 'pull_request' &&
+      github.event.action == 'review_requested' &&
+      github.event.requested_team.slug == (vars.KSAI_REVIEW_TEAM || 'ksai') &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.sender.type != 'Bot') ||
+      (github.event_name == 'workflow_dispatch' &&
+      (inputs.pr != '' || inputs.issue_number != '' || inputs.work_ref != '')) ||
+      ((github.event_name == 'issue_comment' ||
+      github.event_name == 'pull_request_review_comment') &&
+      github.event.comment.user.type != 'Bot' &&
+      (contains(github.event.comment.body, '/ksai') ||
+      (vars.KSAI_TRIGGER_PHRASE != '' &&
+      contains(github.event.comment.body, vars.KSAI_TRIGGER_PHRASE)))) ||
+      (github.event_name == 'issue_comment' &&
+      github.event.comment.user.type != 'Bot' &&
+      github.event.issue.pull_request &&
+      github.event.issue.user.type == 'Bot') ||
+      (github.event_name == 'pull_request_review' &&
+      github.event.action == 'submitted' &&
+      github.event.review.user.type != 'Bot' &&
+      github.event.pull_request.draft == true &&
+      github.event.pull_request.user.type == 'Bot' &&
+      github.event.pull_request.head.repo.full_name == github.repository)
+    uses: Kong/ksai/.github/workflows/ksai.yml@787399f2c1528478ef6917de1ef59ad37508be46 # ksai/v3.30.1
+    permissions:
+      contents: write # checked out by every command, and pushed by one that changes code
+      issues: write # every command answers with a comment, and reacts to the one that asked
+      pull-requests: write # post reviews and maintain draft pull request plans
+      id-token: write # mint the GitHub OIDC token for federation
+      checks: read # read what CI said about the head
+      statuses: read # the older API a build may report through
+      actions: write # dispatch sidebar reviews and successor plan runs
+    with:
+      trigger_phrase: ${{ vars.KSAI_TRIGGER_PHRASE }}
+      runs_on: '["kong-inc-dedicated","size-md","amd64"]'
+      federation_rule_id: fdrl_01SuXMcSBJPmwTbmPrnBkVFa
+      organization_id: 4ce7a6d3-9549-4842-bd51-1def5eba611b
+      service_account_id: svac_019MqwtwTW6SEKnEUuDUnMYE
+      workspace_id: wrkspc_01G7dX83HGYMZDwLuJNPnA5T
+      continuation_workflow: ksai.yml
+      clear_request: true
+      disabled_commands: test
+      pr: ${{ inputs.pr }}
+      actor: ${{ inputs.actor }}
+      issue_number: ${{ inputs.issue_number }}
+      work_ref: ${{ inputs.work_ref }}
+      attempt: ${{ inputs.attempt }}
+      stall: ${{ inputs.stall }}
+      prev_remaining: ${{ inputs.prev_remaining }}
+    secrets:
+      ksai_private_key: ${{ secrets.KSAI_PRIVATE_KEY }}
+
+  hold:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      ((github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened", "synchronize", "reopened", "edited"]'), github.event.action) &&
+      (github.event.action != 'edited' || github.event.changes.base.ref.from != '')) ||
+      (github.event_name == 'pull_request_review' &&
+      github.event.sender.type != 'Bot' &&
+      github.event.review.state != 'commented'))
+    runs-on: ['kong-inc-dedicated', 'size-md', 'amd64']
+    permissions:
+      contents: read # download the action below, which lives in a private repository
+      pull-requests: write # dismiss an approval from somebody who contributed to the pull request
+      statuses: write # report the check the ruleset makes required
+    timeout-minutes: 5
+    concurrency:
+      group: independent-approval-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Hold the pull request for an independent approval
+        uses: Kong/ksai/.github/actions/require-independent-approval@73909cdbfb48edae3efe82f15b5b65503dc3bc98 # require-independent-approval/v1.0.2
+        with:
+          github-token: ${{ github.token }}
+          pr-number: ${{ github.event.pull_request.number }}
+          head-sha: ${{ github.event.pull_request.head.sha }}
