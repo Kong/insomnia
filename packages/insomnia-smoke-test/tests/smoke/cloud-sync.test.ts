@@ -194,17 +194,17 @@ test.describe('Cloud Sync', () => {
 
     const result = await page.evaluate(
       async ({ a, b }) => {
-        const sync = (window as any).main.sync;
+        const invokeSync = (method: string, ...args: unknown[]) => (window as any)._mainInvoke('sync', method, ...args);
         // Fire both workspaces' activation concurrently, the way two open workspaces being
         // synced around the same time would on the main process side.
         await Promise.all([
-          sync.switchAndCreateBackendProjectIfNotExist(a.id, a.id, a.name),
-          sync.switchAndCreateBackendProjectIfNotExist(b.id, b.id, b.name),
+          invokeSync('switchAndCreateBackendProjectIfNotExist', a.id, a.id, a.name),
+          invokeSync('switchAndCreateBackendProjectIfNotExist', b.id, b.id, b.name),
         ]);
 
         const [activeA, activeB] = await Promise.all([
-          sync.getActiveBackendProject(a.id),
-          sync.getActiveBackendProject(b.id),
+          invokeSync('getActiveBackendProject', a.id),
+          invokeSync('getActiveBackendProject', b.id),
         ]);
 
         return { activeA, activeB };
@@ -219,9 +219,9 @@ test.describe('Cloud Sync', () => {
     // Clean up the local backend projects created for this test's synthetic workspace ids.
     await page.evaluate(
       async ({ a, b }) => {
-        const sync = (window as any).main.sync;
-        await sync.removeBackendProjectsForRoot(a.id);
-        await sync.removeBackendProjectsForRoot(b.id);
+        const invokeSync = (method: string, ...args: unknown[]) => (window as any)._mainInvoke('sync', method, ...args);
+        await invokeSync('removeBackendProjectsForRoot', a.id);
+        await invokeSync('removeBackendProjectsForRoot', b.id);
       },
       { a: workspaceA, b: workspaceB },
     );
