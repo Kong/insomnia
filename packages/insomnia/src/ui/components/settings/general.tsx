@@ -46,12 +46,6 @@ export const General: FC = () => {
         </div>
         <div>
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
-          <BooleanSetting
-            label="Hide Secret Values in Preview/Console"
-            setting="hideSecretValuesInPreviewAndConsole"
-            // TODO: Update help text for this setting
-            help="Placeholder"
-          />
           {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
           <BooleanSetting
@@ -63,6 +57,12 @@ export const General: FC = () => {
             label="Show legacy unit tests"
             setting="enableLegacyUnitTests"
             help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
+          />
+          <BooleanSetting
+            label="Hide Secret Values in Preview/Console"
+            setting="hideSecretValuesInPreviewAndConsole"
+            // TODO: Update help text for this setting
+            help="Placeholder"
           />
         </div>
       </div>
