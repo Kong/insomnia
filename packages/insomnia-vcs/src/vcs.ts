@@ -7,6 +7,7 @@ import clone from 'clone';
 import type { BaseModel, Operation } from 'insomnia-data';
 
 import {
+  archiveBackendProject,
   getBackendProjectById,
   getBranches,
   getOrCreateBackendProjectByRootDocument,
@@ -130,20 +131,7 @@ export class VCS {
   }
 
   async archiveProject() {
-    const backendProjectId = this._backendProjectId();
-    await runGraphQL(
-      `
-        mutation ($id: ID!) {
-          projectArchive(id: $id)
-        }
-      `,
-      {
-        id: backendProjectId,
-      },
-      'projectArchive',
-    );
-    console.log(`[sync] Archived remote project ${backendProjectId}`);
-    await getStore().removeItem(`/projects/${backendProjectId}/meta.json`);
+    await archiveBackendProject(this._backendProjectId());
     this._backendProject = null;
   }
 

@@ -6,6 +6,7 @@ import type { RemoteProject } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import type { BackendProjectWithTeam, MergeConflict } from 'insomnia-vcs';
 import {
+  archiveBackendProject,
   configureStore,
   FileSystemDriver,
   hasBackendProjectForRootDocument,
@@ -118,6 +119,7 @@ const GLOBAL_VCS_METHODS = {
   remoteBackendProjectsOfTeam,
   hasBackendProjectForRootDocument,
   removeBackendProjectsForRoot,
+  archiveBackendProject,
 };
 
 export const invokeGlobalVCS = async (methodName: string, ...args: unknown[]) => {
