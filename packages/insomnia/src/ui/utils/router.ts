@@ -107,9 +107,9 @@ export const getInitialEntry = async () => {
       }
     }
 
-    const hasSeenOnboardingV13 = Boolean(window.localStorage.getItem('hasSeenOnboardingV13'));
+    const hasSeenOnboardingV13_3 = Boolean(window.localStorage.getItem('hasSeenOnboardingV13.3'));
 
-    if (!hasSeenOnboardingV13) {
+    if (!hasSeenOnboardingV13_3) {
       return href('/onboarding/*', {
         '*': '',
       });
@@ -119,9 +119,7 @@ export const getInitialEntry = async () => {
 
     const user = await services.userSession.get();
     if (user.id) {
-      const organizations = JSON.parse(
-        localStorage.getItem(`${user.accountId}:spaces`) || '[]',
-      ) as Organization[];
+      const organizations = JSON.parse(localStorage.getItem(`${user.accountId}:spaces`) || '[]') as Organization[];
       // If no organizations are in local storage, go fetch from org index loader
       if (organizations.length === 0) {
         return href('/organization');
