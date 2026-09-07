@@ -1,8 +1,9 @@
-import { useOrganizationLoaderData } from '~/routes/organization';
+import { useCurrentPlan, useCurrentUser } from '~/ui/hooks/use-account-server-data';
 import { diffInDayCeil } from '~/ui/utils';
 
 export function useUserService() {
-  const { currentPlan, user } = useOrganizationLoaderData()!;
+  const currentPlan = useCurrentPlan();
+  const user = useCurrentUser();
   const isPro = currentPlan?.type === 'individual' || currentPlan?.type === 'team';
   const isEnterpriseOwner = currentPlan?.type === 'enterprise';
   const isEnterpriseMember = currentPlan?.type === 'enterprise-member';

@@ -33,7 +33,6 @@ import { getAllLocalFiles } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
@@ -53,6 +52,7 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
@@ -97,7 +97,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     )
     .map(f => f.formData?.get('backendProjectId'));
 
-  const organizationData = useOrganizationLoaderData();
+  const organizations = useOrganizations();
   const { presence } = useInsomniaEventStreamContext();
   const { issuesByWorkspaceId } = useGitFileIssues();
   const storageRules = useOrganizationStorageRule(organizationId);
@@ -120,7 +120,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
-  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = Boolean(organization?.is_owner);
   const collectionItems = useMemo(
     () =>
