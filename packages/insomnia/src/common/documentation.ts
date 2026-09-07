@@ -19,6 +19,7 @@ export const docsMcpAuthentication = newInsomniaDocs('/mcp-clients-in-insomnia/#
 export const docsPricingLearnMoreLink = newInsomniaDocs(
   '/storage/#what-are-the-user-and-git-sync-limits-for-the-essentials-plan',
 );
+export const docsPreRequestAndAfterResponseScripts = newInsomniaDocs('/scripts');
 
 export const docsGitAccessToken = {
   github: 'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',
