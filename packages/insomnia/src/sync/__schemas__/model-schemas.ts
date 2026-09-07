@@ -68,6 +68,7 @@ export const environmentModelSchema: Schema<Environment> = {
       value: '',
       type: EnvironmentKvPairDataType.JSON,
       enabled: true,
+      isConfidential: false,
     },
   ],
 };
