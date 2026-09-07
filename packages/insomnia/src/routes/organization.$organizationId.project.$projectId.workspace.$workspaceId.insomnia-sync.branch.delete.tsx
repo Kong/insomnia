@@ -2,6 +2,7 @@ import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
+import { sync } from '~/ui/ipc';
 import { remoteBranchesCache } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -15,9 +16,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof branch === 'string', 'Branch is required');
 
   try {
-    await window.main.sync.removeRemoteBranch(workspaceId, branch);
+    await sync.removeRemoteBranch(workspaceId, branch);
     try {
-      await window.main.sync.removeBranch(workspaceId, branch);
+      await sync.removeBranch(workspaceId, branch);
     } catch {
       // Branch doesn't exist locally, ignore
     }

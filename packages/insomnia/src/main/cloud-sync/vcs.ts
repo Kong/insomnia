@@ -8,10 +8,7 @@ import type { BackendProjectWithTeam, MergeConflict } from 'insomnia-vcs';
 import {
   configureStore,
   FileSystemDriver,
-  hasBackendProjectForRootDocument,
-  localBackendProjects,
   remoteBackendProjects,
-  remoteBackendProjectsOfTeam,
   removeBackendProjectsForRoot,
   VCS,
 } from 'insomnia-vcs';
@@ -93,43 +90,31 @@ export const runWithSyncRenderer = <T>(sender: WebContents, callback: () => Prom
   return syncInvocationContext.run({ sender }, callback);
 };
 
-export const invokeVCSForWorkspace = async (
+type MethodNames<T> = {
+  [K in keyof T]-?: T[K] extends (...args: any[]) => any ? K : never;
+}[keyof T];
+
+export async function invokeVCSForWorkspace<K extends keyof VCS>(
   sender: WebContents,
+  methodName: VCS[K] extends (...args: any[]) => any ? K : never,
   workspaceId: string,
-  methodName: string,
+  ...args: VCS[K] extends (...args: any[]) => any ? Parameters<VCS[K]> : never
+): Promise<VCS[K] extends (...args: any[]) => any ? Awaited<ReturnType<VCS[K]>> : never>;
+export async function invokeVCSForWorkspace(
+  sender: WebContents,
+  methodName: MethodNames<VCS>,
+  workspaceId: string,
   ...args: unknown[]
-) => {
+) {
   const vcs = getVCSForWorkspace(workspaceId);
-  const method = vcs[methodName as keyof VCS];
+  const method = vcs[methodName];
 
   if (typeof method !== 'function') {
-    throw new TypeError(`Unknown VCS method: ${methodName}`);
+    throw new TypeError(`Unknown VCS method: ${String(methodName)}`);
   }
 
   return runWithSyncRenderer(sender, () => (method as (...args: unknown[]) => unknown).apply(vcs, args));
-};
-
-// Methods that never read a VCS instance's active `_backendProject` — they don't need a
-// workspace-scoped instance at all, so they're dispatched straight to insomnia-vcs's exported
-// functions instead of through the reflective, workspace-keyed `invokeVCSForWorkspace`.
-const GLOBAL_VCS_METHODS = {
-  localBackendProjects,
-  remoteBackendProjects,
-  remoteBackendProjectsOfTeam,
-  hasBackendProjectForRootDocument,
-  removeBackendProjectsForRoot,
-};
-
-export const invokeGlobalVCS = async (methodName: string, ...args: unknown[]) => {
-  ensureStoreConfigured();
-  const method = GLOBAL_VCS_METHODS[methodName as keyof typeof GLOBAL_VCS_METHODS];
-
-  if (typeof method !== 'function') {
-    throw new TypeError(`Unknown global VCS method: ${methodName}`);
-  }
-
-  return (method as (...args: unknown[]) => unknown)(...args);
-};
+}
 
 export const resolvePendingSyncConflict = ({
   handlerId,

@@ -20,6 +20,7 @@ import type { BackendProject, Compare, StatusCandidate } from 'insomnia-vcs';
 import { database, type Operation } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
 import type { SyncVCSLike } from '~/sync/vcs/initialize-backend-project';
+import { sync } from '~/ui/ipc';
 
 type PushPull = 'push' | 'pull';
 type VCSAction =
@@ -49,20 +50,20 @@ export const remoteCompareCache: Record<string, Compare> = {};
 export const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
 
 /**
- * `window.main.sync` methods each take a leading `workspaceId` so the main process can route to
+ * `sync` methods each take a leading `workspaceId` so the main process can route to
  * that workspace's own VCS instance. `initializeLocalBackendProjectAndMarkForSync` /
  * `pushSnapshotOnInitialize` predate that and expect the plain `SyncVCSLike` shape (no
  * `workspaceId`) — this binds one workspace's calls into that shape.
  */
 export function syncVCSLikeForWorkspace(workspaceId: string): SyncVCSLike {
   return {
-    hasBackendProject: () => window.main.sync.hasBackendProject(workspaceId),
-    push: options => window.main.sync.push(workspaceId, options),
-    stage: entries => window.main.sync.stage(workspaceId, entries),
-    status: candidates => window.main.sync.status(workspaceId, candidates),
+    hasBackendProject: () => sync.hasBackendProject(workspaceId),
+    push: options => sync.push(workspaceId, options),
+    stage: entries => sync.stage(workspaceId, entries),
+    status: candidates => sync.status(workspaceId, candidates),
     switchAndCreateBackendProjectIfNotExist: (rootDocumentId, name) =>
-      window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, rootDocumentId, name),
-    takeSnapshot: name => window.main.sync.takeSnapshot(workspaceId, name),
+      sync.switchAndCreateBackendProjectIfNotExist(workspaceId, rootDocumentId, name),
+    takeSnapshot: name => sync.takeSnapshot(workspaceId, name),
   };
 }
 

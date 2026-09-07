@@ -14,6 +14,7 @@ import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 import { useInvalidateOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { sync } from '~/ui/ipc';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -73,7 +74,7 @@ const isSameWorkspaceWithRemote = async (workspaceId: string | undefined, remote
   if (!workspaceId || !remoteWorkspaceId) {
     return false;
   }
-  const currentBackendProject = await window.main.sync.getActiveBackendProject(workspaceId);
+  const currentBackendProject = await sync.getActiveBackendProject(workspaceId);
   if (
     currentBackendProject &&
     currentBackendProject?.id === remoteWorkspaceId &&
@@ -184,7 +185,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
               syncOrganizationsSubmit();
-            } else if (event.type === 'StorageRuleChanged' && (event.team.startsWith('org_') || event.team.startsWith('team_'))) {
+            } else if (
+              event.type === 'StorageRuleChanged' &&
+              (event.team.startsWith('org_') || event.team.startsWith('team_'))
+            ) {
               invalidateStorageRule(event.team);
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
               syncProjectsSubmit({
@@ -203,9 +207,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               }
             } else if (event.type === 'VaultKeyChanged') {
               const accountId = userSession.accountId;
-              const organizations = JSON.parse(
-                localStorage.getItem(`${accountId}:spaces`) || '[]',
-              ) as Organization[];
+              const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
               clearVaultKeySubmit({
                 organizations: organizations?.map(org => org.id) || [],
                 sessionId: event.sessionId,
