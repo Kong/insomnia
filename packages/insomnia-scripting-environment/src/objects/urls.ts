@@ -139,6 +139,12 @@ export interface UrlOptions {
   variables: { key: string; value: string }[];
 }
 
+// Regex patterns used as fallbacks when urlObject is undefined (e.g. URL contains template tags)
+// Scheme-agnostic, strip optional userinfo, and treat '/', '?', '#' as terminators (IPv6 supported).
+const URL_HOST_PATTERN = /^(?:[^:\/?#]+:\/\/)?(?:[^@\/?#]*@)?(\[[^\]]+]|[^\/?#:]+)/i; // hostname only
+const URL_PATH_PATTERN = /^(?:[^:\/?#]+:\/\/[^\/?#]*)(\/[^?#]*)/i; // path without query/hash
+const URL_REMOTE_PATTERN = /^(?:[^:\/?#]+:\/\/)?(?:[^@\/?#]*@)?([^\/?#]+)/i; // host + optional port
+
 export class Url extends PropertyBase {
   override _kind = 'Url';
 
@@ -281,12 +287,21 @@ export class Url extends PropertyBase {
     if (this.urlObject) {
       return this.urlObject.hostname;
     }
+    if (this.origin) {
+      // [^\/:] stops at ':' so the port is excluded (hostname only)
+      const match = this.origin.match(URL_HOST_PATTERN);
+      return match ? match[1] : '';
+    }
     return '';
   }
 
   getPath(_unresolved?: boolean) {
     if (this.urlObject) {
       return this.urlObject.pathname;
+    }
+    if (this.origin) {
+      const match = this.origin.match(URL_PATH_PATTERN);
+      return match ? match[1] : '';
     }
     return '';
   }
@@ -308,6 +323,11 @@ export class Url extends PropertyBase {
   getRemote(_forcePort?: boolean) {
     if (this.urlObject) {
       return this.urlObject.host;
+    }
+    if (this.origin) {
+      // [^\/]+ (no colon exclusion) so the port is included, unlike getHost()
+      const match = this.origin.match(URL_REMOTE_PATTERN);
+      return match ? match[1] : '';
     }
     return '';
   }
