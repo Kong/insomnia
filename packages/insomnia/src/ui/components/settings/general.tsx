@@ -46,6 +46,12 @@ export const General: FC = () => {
         </div>
         <div>
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
+          <BooleanSetting
+            label="Hide Secret Values in Preview/Console"
+            setting="hideSecretValuesInPreviewAndConsole"
+            // TODO: Update help text for this setting
+            help="Placeholder"
+          />
           {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
           <BooleanSetting
