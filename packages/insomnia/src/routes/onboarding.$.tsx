@@ -1,56 +1,45 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, Route, Routes, useLocation } from 'react-router';
 
+import { docsPreRequestAndAfterResponseScripts } from '~/common/documentation';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
-import { KongLogo } from '~/ui/components/kong-logo';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
-import custom_linting from '~/ui/images/onboarding/custom_linting.png';
-import first_request from '~/ui/images/onboarding/first_request.png';
-import konnect_integration from '~/ui/images/onboarding/konnect_integration.png';
-import sidebar_navigation from '~/ui/images/onboarding/sidebar_navigation.png';
+import new_api_collection from '~/ui/images/onboarding/new_api_collection.png';
+import scripts_for_unit_test from '~/ui/images/onboarding/scripts_for_unit_test.png';
 
 const features = [
   {
-    id: 'navigation_ux',
-    icon: <FontAwesomeIcon icon={['fas', 'mouse-pointer']} className="text-xl" />,
-    label: 'Updated sidebar navigation',
-    title: 'Introducing a simpler way to navigate',
-    description: 'The new sidebar experience makes it easier than ever to get to the resources you are working with.',
-    image: sidebar_navigation,
+    id: 'combine_collections_and_documents',
+    icon: <FontAwesomeIcon icon={['fas', 'bars']} className="text-xl" />,
+    label: 'Collection and documents combination',
+    title: 'New API Collection to combine documents and collections',
+    description:
+      'For simplicity, we’ve combined documents and collections into API Collections. No functionality has changed - just the UI. You can now access your OpenAPI Specs right from the main API Collection screen.',
+    image: new_api_collection,
   },
   {
-    id: 'konnect_integration',
-    icon: <KongLogo />,
-    label: 'Konnect Integration',
-    title: 'Auto-sync your gateway service routes from Konnect',
-    description:
-      'Get right into testing your gateway configuration in Insomnia with the new Konnect platform integration.',
-    image: konnect_integration,
-  },
-  {
-    id: 'first_request_ux',
-    icon: <FontAwesomeIcon icon={['fas', 'add']} className="text-xl" />,
-    label: 'New Create Request Experience',
-    title: 'Need to send a new request? No problem!',
-    description:
-      'The new project home page provides you with a quick way to configure and send a new request -- all while saving it automatically for when you need it later.',
-    image: first_request,
-  },
-  {
-    id: 'custom_linting',
-    icon: <FontAwesomeIcon icon={['fas', 'file']} className="text-xl" />,
-    label: 'Custom Spec Linting',
-    title: 'Upload custom spec linting rules',
-    description:
-      'Now you can user your own spectral linting rules to help you edit API design files in Insomnia with confidence.',
-    image: custom_linting,
+    id: 'disable_legacy_unit_tests_by_default',
+    icon: <FontAwesomeIcon icon={['fas', 'code']} className="text-xl" />,
+    label: 'Document Unit Tests Disabled By Default',
+    title: 'Legacy documents unit tests functionality is no longer available by default',
+    description: (
+      <>
+        Best practice for both new and existing users continues to be testing via{' '}
+        <a href={docsPreRequestAndAfterResponseScripts} className="underline">
+          pre request and post-response scripts
+        </a>
+        . There is a new user setting to enable/disable it. Existing Unit Test users are not affected and we continue to
+        support this functionality.
+      </>
+    ),
+    image: scripts_for_unit_test,
   },
 ] satisfies {
   id: string;
   icon: React.ReactNode;
   label: string;
   title: string;
-  description: string;
+  description: React.ReactNode;
   image: string;
 }[];
 
@@ -136,15 +125,15 @@ const Component = () => {
   return (
     <div className="relative flex h-full w-full bg-(--color-bg) text-left">
       <TrailLinesContainer>
-        <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
+        <div className="flex h-full min-h-125 w-150 flex-col items-center justify-center">
           <div className="relative flex h-auto w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-(--padding-lg) pt-12">
             <InsomniaLogo className="absolute top-0 left-1/2 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
             <div className="flex h-full flex-col gap-6 text-(--color-font)">
               <div className="flex flex-col gap-4 py-4">
-                <h1 className="text-center text-xl">🚀 Welcome to Insomnia 13!</h1>
+                <h1 className="text-center text-xl">🚀 Welcome to Insomnia 13.3!</h1>
                 <p className="text-center">
-                  A faster, more connected API workflow with unified navigation, Konnect gateway sync, and custom API
-                  governance support.
+                  API Collections now combine Documents and Collections, with OpenAPI Specs accessible directly, while
+                  legacy Unit Tests are hidden by default.
                 </p>
               </div>
               <div className="relative w-full flex-1">
