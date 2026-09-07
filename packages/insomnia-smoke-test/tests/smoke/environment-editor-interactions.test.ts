@@ -218,7 +218,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // activate ExampleA environment
-    await page.getByLabel('Select a Collection Environment').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByRole('option', { name: 'ExampleA' }).press('Enter');
     await page.getByRole('option', { name: 'ExampleA' }).press('Escape');
 
@@ -269,10 +269,10 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
     const projectListbox = page.getByRole('listbox', { name: 'Select a Project Environment' });
-    const collectionListbox = page.getByRole('listbox', { name: 'Select a Collection Environment' });
+    const collectionListbox = page.getByRole('listbox', { name: 'Select an API Collection Environment' });
 
     // opening the collection dropdown does not open the project dropdown
-    await page.getByLabel('Select a Collection Environment').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await expect.soft(collectionListbox).toBeVisible();
     await expect.soft(projectListbox).toBeHidden();
     await page.keyboard.press('Escape');
@@ -311,8 +311,8 @@ test.describe('Environment Editor', () => {
   }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
 
     // create the shared sub-environment and rename it so it can be told apart from the private one
     await page.getByTestId('AddSubEnvironment').click();

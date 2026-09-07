@@ -605,7 +605,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
-    const verifyManageBtn = page.getByLabel('Select a Collection Environment');
+    const verifyManageBtn = page.getByLabel('Select an API Collection Environment');
     await expect.soft(verifyManageBtn).toBeEnabled();
     await verifyManageBtn.click();
     const verifyCollectionBtn = page.getByRole('button', { name: 'Manage API collection environments' });
