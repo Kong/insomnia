@@ -19,7 +19,7 @@ import {
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { debounce } from '~/common/misc';
-import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import {
   useWorkspaceLoaderData,
@@ -90,10 +90,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
     }
   }, [selectedEnvironmentId, activeEnvironment._id, allEnvironment]);
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
-  // Do not allowed to switch to json environment if contains secret item
-  const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
-    d => d.type === EnvironmentKvPairDataType.SECRET,
-  );
+  const allowSwitchEnvironment = !hasProtectedKvPairs(selectedEnvironment?.kvPairData);
   // Check if there's any environment contains secret item
   const containsSecret = allEnvironment.some(
     env => env.isPrivate && env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET),
