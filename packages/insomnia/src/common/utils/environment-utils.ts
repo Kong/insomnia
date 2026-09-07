@@ -113,6 +113,9 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
   };
 }
 
+export const hasProtectedKvPairs = (kvPairData?: EnvironmentKvPairData[]) =>
+  kvPairData?.some(pair => pair.type === EnvironmentKvPairDataType.SECRET || pair.isConfidential) ?? false;
+
 // mask vault environment variable if necessary
 export const maskVaultEnvironmentData = (environment: Environment) => {
   if (environment.isPrivate) {
