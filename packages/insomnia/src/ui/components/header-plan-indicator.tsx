@@ -10,6 +10,7 @@ import { useTrialStartActionFetcher } from '~/routes/trial.start';
 import { Icon } from '~/ui/components/icon';
 import { TrialConfirmationModal } from '~/ui/components/modals/trial-confirmation-modal';
 import { Tooltip } from '~/ui/components/tooltip';
+import { useInvalidateAccountData } from '~/ui/hooks/use-account-server-data';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useUserService } from '~/ui/hooks/use-user-service';
 import { formatNumber } from '~/ui/utils';
@@ -29,6 +30,7 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
   const planName = `${planDisplayName} Plan`;
 
   const startFetcher = useTrialStartActionFetcher();
+  const invalidateAccountData = useInvalidateAccountData();
   const { load: usageLoad, state: usageState, data: usageData } = useResourceUsageFetcher();
 
   function handleStartTrial() {
@@ -66,8 +68,11 @@ export const HeaderPlanIndicator = ({ isMinimal }: Props) => {
   useEffect(() => {
     if (startFetcher.data?.success) {
       setCanTrial(false);
+      // trial.start wrote the new plan to localStorage; refresh the query so every
+      // plan consumer (this indicator included) reflects the upgraded plan.
+      invalidateAccountData();
     }
-  }, [startFetcher.data?.success]);
+  }, [startFetcher.data?.success, invalidateAccountData]);
 
   const isUnlimited = isEnterpriseLike;
 

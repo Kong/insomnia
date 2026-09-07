@@ -850,12 +850,17 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
 
       // GitVCS.init() opens the local repo without a network call, so explicitly
       // verify credentials here to surface revoked tokens as HTTP 4xx errors.
-      await validateGitCredentials({ credentialsId, uri });
+      // Local-only repositories have no remote to validate.
+      if (uri) {
+        await validateGitCredentials({ credentialsId, uri });
+      }
     }
 
     // Configure basic info
     await GitVCS.setAuthor();
-    await GitVCS.addRemote(uri);
+    if (uri) {
+      await GitVCS.addRemote(uri);
+    }
 
     // Start file watcher for project-scoped repos so external YAML edits
     // (native git CLI, VS Code, etc.) flow back into the database.
@@ -3463,7 +3468,10 @@ const getRepositoryDirectoryTree = async ({
 
   const gitRepository = await getGitRepository({ projectId });
 
-  const emptyTree = { repositoryTree: { id: '', name: 'Repository', type: 'root' as const, children: [] }, folderList: {} };
+  const emptyTree = {
+    repositoryTree: { id: '', name: 'Repository', type: 'root' as const, children: [] },
+    folderList: {},
+  };
 
   let fs: Awaited<ReturnType<typeof getGitFSClient>>;
   try {

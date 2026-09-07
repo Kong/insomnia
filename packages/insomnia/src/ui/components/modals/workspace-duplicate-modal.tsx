@@ -5,8 +5,8 @@ import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } f
 import { OverlayContainer } from 'react-aria';
 import { href, useNavigate, useParams } from 'react-router';
 
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
@@ -26,7 +26,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
     organizationId: string;
     projectId: string;
   };
-  const organizationData = useOrganizationLoaderData();
+  const organizations = useOrganizations();
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
   const [projectOptions, setProjectOptions] = useState<BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
@@ -115,7 +115,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
               <label>
                 Organization:
                 <select name="orgId" value={selectedOrgId} onChange={e => setSelectedOrgId(e.target.value)}>
-                  {organizationData?.organizations.map(({ id, name }) => (
+                  {organizations.map(({ id, name }) => (
                     <option key={id} value={id}>
                       {name}
                     </option>
