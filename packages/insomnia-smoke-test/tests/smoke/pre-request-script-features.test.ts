@@ -584,7 +584,7 @@ test.describe('pre-request features tests', () => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await insomnia.navigationSidebar.clickRequestOrFolder('update kv pair environment');
     // switch to table view environment
-    await page.getByLabel('Select an Collection Environment').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     const manageBtn = page.getByRole('button', { name: 'Manage API collection environments' });
     await expect.soft(manageBtn).toBeEnabled();
     await manageBtn.click();
