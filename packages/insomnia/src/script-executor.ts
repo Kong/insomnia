@@ -13,8 +13,10 @@ import {
   mergeSettings,
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
+import { curlRequest } from './main/network/libcurl-promise';
 import { requireInterceptor } from './scripting/require-interceptor';
 
+const executeCurlRequest = (options: unknown) => curlRequest(options as Parameters<typeof curlRequest>[0]);
 export const runScript = async ({
   script,
   context,
@@ -25,7 +27,7 @@ export const runScript = async ({
   // console.log(script);
   const scriptConsole = getNewConsole();
 
-  const executionContext = await initInsomniaObject(context, scriptConsole.log);
+  const executionContext = await initInsomniaObject(context, scriptConsole.log, executeCurlRequest);
 
   const evalInterceptor = (script: string) => {
     invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
