@@ -1,6 +1,7 @@
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
+import { setDefaultProtocol } from './protocol';
 
-import { escapeRegex } from '../common/misc';
+const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
+const escapeRegex = (value: string) => value.replace(ESCAPE_REGEX_MATCH, '\\$&');
 
 const DEFAULT_PORT = 443;
 
