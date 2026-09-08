@@ -1,5 +1,8 @@
+import { z } from 'zod/v4';
+
+import { baseModelSchema } from './base-schemas';
 import type { BaseModel } from './base-types';
-import type { RequestHeader } from './request';
+import { requestHeaderSchema } from './request';
 
 export const name = 'Mock Route';
 
@@ -11,17 +14,20 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
-interface BaseMockRoute {
-  body: string;
-  headers: RequestHeader[];
-  parentId: string;
-  statusCode: number;
-  statusText: string;
-  name: string;
-  mimeType: string; // response body type
-  method: string; // used only for sending the testing request
-}
+export const baseMockRouteSchema = z.object({
+  name: z.string().optional().default('/'),
+  body: z.string().optional().default(''),
+  headers: z.array(requestHeaderSchema).optional().default([]),
+  // used only for sending the testing request
+  method: z.string().optional().default('GET'),
+  mimeType: z.string().optional().default('application/json'),
+  statusCode: z.number().optional().default(200),
+  statusText: z.string().optional().default(''),
+  parentId: z.string(),
+});
+export type BaseMockRoute = z.infer<typeof baseMockRouteSchema>;
 
+export const schema = baseModelSchema(type, prefix).extend(baseMockRouteSchema.shape);
 export type MockRoute = BaseModel & BaseMockRoute;
 
 export function init(): BaseMockRoute {

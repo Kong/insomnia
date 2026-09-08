@@ -1,5 +1,7 @@
-import type { BaseModel } from './base-types';
+import { z } from 'zod/v4';
 
+import { baseModelSchema } from './base-schemas';
+import type { BaseModel } from './base-types';
 export const name = 'CA Certificate';
 
 export const type = 'CaCertificate';
@@ -10,17 +12,17 @@ export const canDuplicate = true;
 
 export const canSync = false;
 
-interface BaseCaCertificate {
-  parentId: string;
-  path: string | null;
-  disabled: boolean;
-  // For sync control
-  isPrivate: boolean;
-}
+export const baseCACertificateSchema = z.object({
+  parentId: z.string(),
+  path: z.string().optional().nullable().default(''),
+  disabled: z.boolean().default(false),
+});
+export type BaseCaCertificate = z.infer<typeof baseCACertificateSchema>;
 
-export type CaCertificate = BaseModel & BaseCaCertificate;
+export const schema = baseModelSchema(type, prefix).extend(baseCACertificateSchema.shape);
+export type CaCertificate = z.infer<typeof schema>;
 
-export function init(): BaseCaCertificate {
+export function init(): BaseCaCertificate & Pick<BaseModel, 'isPrivate'> {
   return {
     parentId: '',
     disabled: false,

@@ -8,6 +8,8 @@ export * as organization from './organization';
 
 export * from './utils/ignore-keys';
 
+export * as zodSchemas from './base-schemas';
+
 // Type assertion to ensure dbModels has the expected structure
 dbModels satisfies Record<
   string,
@@ -16,6 +18,11 @@ dbModels satisfies Record<
     name: string;
     prefix: string;
     optionalKeys?: string[];
+    // Native Zod prefix check -- see models/utils/model-type-from-id.ts.
+    // idSchema?: z.ZodTypeAny;
+    // The canonical, strict document schema for this model -- see
+    // models/utils/schema-mismatch.ts.
+    // schema?: z.ZodTypeAny;
     canDuplicate: boolean;
     canSync?: boolean;
     init: () => unknown;
