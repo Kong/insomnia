@@ -131,13 +131,13 @@ test('URL bar: switching environment refreshes the rendered preview', async ({ p
   const tag = page.locator(TAG_SEL).first();
 
   // ExampleA -> subenvA0
-  await page.getByRole('button', { name: 'Manage Environments' }).click();
+  await page.getByLabel('Select a Collection Environment').click();
   await page.getByRole('option', { name: 'ExampleA' }).press('Enter');
   await page.getByRole('option', { name: 'ExampleA' }).press('Escape');
   await expect.soft(tag).toHaveAttribute('title', /subenvA0/);
 
   // ExampleB -> subenvB0 (preview must refresh on switch)
-  await page.getByRole('button', { name: 'Manage Environments' }).click();
+  await page.getByLabel('Select a Collection Environment').click();
   await page.getByRole('option', { name: 'ExampleB' }).press('Enter');
   await page.getByRole('option', { name: 'ExampleB' }).press('Escape');
   await expect.soft(tag).toHaveAttribute('title', /subenvB0/);

@@ -15,9 +15,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof branch === 'string', 'Branch is required');
 
   try {
-    await window.main.sync.removeRemoteBranch(branch);
+    await window.main.sync.removeRemoteBranch(workspaceId, branch);
     try {
-      await window.main.sync.removeBranch(branch);
+      await window.main.sync.removeBranch(workspaceId, branch);
     } catch {
       // Branch doesn't exist locally, ignore
     }

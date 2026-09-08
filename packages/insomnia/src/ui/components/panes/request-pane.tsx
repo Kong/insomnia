@@ -77,9 +77,9 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   };
   const gitVersion = useGitVCSVersion();
 
-  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, activeGlobalEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
+  const uniqueKey = `${activeEnvironment?._id}::${activeEnvironment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
 
   if (!activeRequest) {
     return <PlaceholderRequestPane />;

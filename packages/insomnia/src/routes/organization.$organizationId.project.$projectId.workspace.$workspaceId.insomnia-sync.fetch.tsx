@@ -9,7 +9,7 @@ import { createFetcherSubmitHook } from '~/ui/utils/router';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.fetch';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
-  const { projectId } = params;
+  const { projectId, workspaceId } = params;
 
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
@@ -17,12 +17,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-  const currentBranch = await window.main.sync.getCurrentBranchName();
+  const currentBranch = await window.main.sync.getCurrentBranchName(workspaceId);
 
   try {
     invariant(project.remoteId, 'Project is not remote');
-    await window.main.sync.checkout([], branch);
-    const delta = await window.main.sync.pull({
+    await window.main.sync.checkout(workspaceId, [], branch);
+    const delta = await window.main.sync.pull(workspaceId, {
       candidates: [],
       teamId: project.parentId,
       teamProjectId: project.remoteId,
@@ -32,7 +32,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
   } catch (err) {
-    await window.main.sync.checkout([], currentBranch);
+    await window.main.sync.checkout(workspaceId, [], currentBranch);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while fetching remote branch.';
     return {
       error: errorMessage,

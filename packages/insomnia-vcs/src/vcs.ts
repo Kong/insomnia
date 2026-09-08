@@ -2,24 +2,21 @@
 // - [ ] Rename things that run a fetch to fetchSomething...
 // - [ ] Make sure that pull handles updating the parentId to the current project._id
 import crypto from 'node:crypto';
-import path from 'node:path';
 
 import clone from 'clone';
-import { runVcsGraphQL } from 'insomnia-api';
-import type { BaseModel, UserSession } from 'insomnia-data';
-import type { Operation } from 'insomnia-data';
-import { services } from 'insomnia-data';
-import { deterministicStringify, generateId } from 'insomnia-data/common';
+import type { BaseModel, Operation } from 'insomnia-data';
 
+import {
+  getBackendProjectById,
+  getBranches,
+  getOrCreateBackendProjectByRootDocument,
+  storeBackendProject,
+} from './backend-projects';
 import * as crypt from './crypt';
-import Store from './store';
-import type { BaseDriver } from './store/drivers/base';
-import FileSystemDriver from './store/drivers/file-system-driver';
-import compress from './store/hooks/compress';
+import { assertSession, runGraphQL } from './session';
+import { getStore } from './store/current-store';
 import type {
   BackendProject,
-  BackendProjectWithTeams,
-  BackendProjectWithTeamsAndTeamProjectId,
   Branch,
   DocumentKey,
   Head,
@@ -85,19 +82,11 @@ const generateAES256KeyInNode = async (): Promise<JsonWebKey> => {
   };
 };
 
-export type VcsOptions = {
+export interface VcsOptions {
+  workspaceId: string;
   conflictHandler?: ConflictHandler;
   testMode?: boolean;
-} & (
-  | {
-      driver?: undefined;
-      dataPath: string;
-    }
-  | {
-      driver: BaseDriver;
-      dataPath?: undefined;
-    }
-);
+}
 
 // Stage/Unstage
 // Staged items are about to be committed
@@ -114,17 +103,15 @@ export class VCS {
 
     return '';
   }
-  _store: Store;
-  _driver: BaseDriver;
+  readonly workspaceId: string;
   // stored by key `/projects/${project.id}/meta.json`
   _backendProject: BackendProject | null;
   _conflictHandler?: ConflictHandler | null;
   _testMode: boolean | undefined;
   _stageByBackendProjectId: Record<string, Stage> = {};
 
-  constructor({ driver, dataPath, conflictHandler, testMode }: VcsOptions) {
-    this._driver = driver || FileSystemDriver.create(dataPath!);
-    this._store = new Store(this._driver, [compress]);
+  constructor({ workspaceId, conflictHandler, testMode }: VcsOptions) {
+    this.workspaceId = workspaceId;
     this._testMode = testMode;
     this._conflictHandler = conflictHandler;
     // To be set later
@@ -135,29 +122,16 @@ export class VCS {
     this._backendProject = backendProject;
     console.debug(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
-    await this._storeBackendProject(backendProject);
+    await storeBackendProject(backendProject);
   }
 
   hasBackendProject() {
     return this._backendProject !== null;
   }
 
-  async hasBackendProjectForRootDocument(rootDocumentId: string) {
-    return Boolean(await this._getBackendProjectByRootDocument(rootDocumentId));
-  }
-
-  async removeBackendProjectsForRoot(rootDocumentId: string) {
-    const all = await this._allBackendProjects();
-    const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
-
-    for (const backendProject of toRemove) {
-      await this._removeProject(backendProject);
-    }
-  }
-
   async archiveProject() {
     const backendProjectId = this._backendProjectId();
-    await this._runGraphQL(
+    await runGraphQL(
       `
         mutation ($id: ID!) {
           projectArchive(id: $id)
@@ -169,7 +143,7 @@ export class VCS {
       'projectArchive',
     );
     console.log(`[sync] Archived remote project ${backendProjectId}`);
-    await this._store.removeItem(`/projects/${backendProjectId}/meta.json`);
+    await getStore().removeItem(`/projects/${backendProjectId}/meta.json`);
     this._backendProject = null;
   }
 
@@ -178,85 +152,8 @@ export class VCS {
   }
 
   async switchAndCreateBackendProjectIfNotExist(rootDocumentId: string, name: string) {
-    const project = await this._getOrCreateBackendProjectByRootDocument(rootDocumentId, name);
+    const project = await getOrCreateBackendProjectByRootDocument(rootDocumentId, name);
     await this.setBackendProject(project);
-  }
-
-  async localBackendProjects() {
-    return this._allBackendProjects();
-  }
-
-  async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-    console.log(
-      `[remoteBackendProjects] Fetching remote workspaces for teamId=${teamId} teamProjectId=${teamProjectId}`,
-    );
-    const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeams[] }>(
-      `
-        query ($teamId: ID, $teamProjectId: ID) {
-          projects(teamId: $teamId, teamProjectId: $teamProjectId) {
-            id
-            name
-            rootDocumentId
-            teams {
-              id
-              name
-            }
-          }
-        }
-      `,
-      {
-        teamId,
-        teamProjectId,
-      },
-      'projects',
-    );
-
-    console.log(`[remoteBackendProjects] Fetched ${projects.length} remote workspaces`);
-
-    return projects.map(backend => ({
-      id: backend.id,
-      name: backend.name,
-      rootDocumentId: backend.rootDocumentId,
-      // A backend project is guaranteed to exist on exactly one team
-      team: backend.teams[0],
-    }));
-  }
-
-  async remoteBackendProjectsOfTeam({ teamId }: { teamId: string }) {
-    console.log(`[remoteBackendProjectsOfTeam] Fetching remote workspaces for teamId=${teamId}`);
-
-    const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeamsAndTeamProjectId[] }>(
-      `
-        query ($teamId: ID, $allProjects: Boolean) {
-          projects(teamId: $teamId, allProjects: $allProjects) {
-            id
-            name
-            rootDocumentId
-            teamProjectId
-            teams {
-              id
-              name
-            }
-          }
-        }
-      `,
-      {
-        teamId,
-        allProjects: true,
-      },
-      'projects',
-    );
-
-    console.log(`[remoteBackendProjectsOfTeam] Fetched ${projects.length} remote workspaces`);
-
-    return projects.map(backend => ({
-      id: backend.id,
-      name: backend.name,
-      rootDocumentId: backend.rootDocumentId,
-      teamProjectId: backend.teamProjectId,
-      // A backend project is guaranteed to exist on exactly one team
-      team: backend.teams[0],
-    }));
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -632,7 +529,7 @@ export class VCS {
   }
 
   async getRemoteBranchNames(): Promise<string[]> {
-    const { branches } = await this._runGraphQL<{ branches: { name: string }[] | null }>(
+    const { branches } = await runGraphQL<{ branches: { name: string }[] | null }>(
       `
       query ($projectId: ID!) {
         branches(project: $projectId) {
@@ -649,7 +546,7 @@ export class VCS {
   }
 
   async getBranchNames(): Promise<string[]> {
-    const branches = await this._getBranches();
+    const branches = await getBranches(this._backendProjectId());
     return branches.map(b => b.name);
   }
 
@@ -731,7 +628,7 @@ export class VCS {
       remoteProject = await this._createRemoteProject({ ...localProject, teamId, teamProjectId });
     }
 
-    await this._storeBackendProject(remoteProject);
+    await storeBackendProject(remoteProject);
     return remoteProject;
   }
 
@@ -955,29 +852,8 @@ export class VCS {
     return snapshot;
   }
 
-  async _runGraphQL<T>(query: string, variables: Record<string, any>, name: string): Promise<T> {
-    const { sessionId } = await this._assertSession();
-    const { data, errors } = await runVcsGraphQL<T>({
-      query,
-      variables,
-      sessionId,
-      name,
-    });
-
-    if (errors && errors.length) {
-      console.log(`[sync] Failed to query ${name}`, errors);
-      throw new Error(`Failed to query ${name}: ${errors[0].message}`);
-    }
-
-    if (data == null) {
-      throw new Error(`Failed to query ${name}: no data returned`);
-    }
-
-    return data;
-  }
-
   async _queryBlobsMissing(ids: string[]): Promise<string[]> {
-    const { blobsMissing } = await this._runGraphQL<{ blobsMissing: { missing: string[] } }>(
+    const { blobsMissing } = await runGraphQL<{ blobsMissing: { missing: string[] } }>(
       `
           query ($projectId: ID!, $ids: [ID!]!) {
             blobsMissing(project: $projectId, ids: $ids) {
@@ -995,7 +871,7 @@ export class VCS {
   }
 
   async _queryRemoveBranch(branchName: string) {
-    await this._runGraphQL(
+    await runGraphQL(
       `
       mutation ($projectId: ID!, $branch: String!) {
         branchRemove(project: $projectId, name: $branch)
@@ -1009,7 +885,7 @@ export class VCS {
   }
 
   async _queryBranch(branchName: string): Promise<Branch | null> {
-    const { branch } = await this._runGraphQL<{ branch: Branch | null }>(
+    const { branch } = await runGraphQL<{ branch: Branch | null }>(
       `
       query ($projectId: ID!, $branch: String!) {
         branch(project: $projectId, name: $branch) {
@@ -1032,7 +908,7 @@ export class VCS {
     let allSnapshots: Snapshot[] = [];
 
     for (const ids of chunkArray(allIds, 20)) {
-      const { snapshots } = await this._runGraphQL<{ snapshots: Snapshot[] }>(
+      const { snapshots } = await runGraphQL<{ snapshots: Snapshot[] }>(
         `
         query ($ids: [ID!]!, $projectId: ID!) {
           snapshots(ids: $ids, project: $projectId) {
@@ -1068,7 +944,7 @@ export class VCS {
 
   // push snapshots to the backend's current branch
   async _queryPushSnapshots(allSnapshots: Snapshot[]) {
-    const { accountId } = await this._assertSession();
+    const { accountId } = await assertSession();
 
     for (const snapshots of chunkArray(allSnapshots, 20)) {
       // This bit of logic fills in any missing author IDs from times where
@@ -1080,7 +956,7 @@ export class VCS {
       }
 
       const branch = await this._getCurrentBranch();
-      const { snapshotsCreate } = await this._runGraphQL<{ snapshotsCreate: Snapshot[] }>(
+      const { snapshotsCreate } = await runGraphQL<{ snapshotsCreate: Snapshot[] }>(
         `
         mutation ($projectId: ID!, $snapshots: [SnapshotInput!]!, $branchName: String!) {
           snapshotsCreate(project: $projectId, snapshots: $snapshots, branch: $branchName) {
@@ -1129,7 +1005,7 @@ export class VCS {
     const result: Record<string, Buffer> = {};
 
     for (const ids of chunkArray(allIds, 50)) {
-      const { blobs } = await this._runGraphQL<{ blobs: { id: string; content: string }[] }>(
+      const { blobs } = await runGraphQL<{ blobs: { id: string; content: string }[] }>(
         `
       query ($ids: [ID!]!, $projectId: ID!) {
         blobs(ids: $ids, project: $projectId) {
@@ -1167,7 +1043,7 @@ export class VCS {
         id: i.id,
         content: i.content,
       }));
-      const { blobsCreate } = await this._runGraphQL<{ blobsCreate: { count: number } }>(
+      const { blobsCreate } = await runGraphQL<{ blobsCreate: { count: number } }>(
         `
           mutation ($projectId: ID!, $blobs: [BlobInput!]!) {
             blobsCreate(project: $projectId, blobs: $blobs) {
@@ -1221,7 +1097,7 @@ export class VCS {
   }
 
   async _queryBackendProjectKey() {
-    const { projectKey } = await this._runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
+    const { projectKey } = await runGraphQL<{ projectKey: { encSymmetricKey: string } }>(
       `
         query ($projectId: ID!) {
           projectKey(projectId: $projectId) {
@@ -1238,7 +1114,7 @@ export class VCS {
   }
 
   async _queryProject(): Promise<BackendProject | null> {
-    const { project } = await this._runGraphQL<{ project: BackendProject | null }>(
+    const { project } = await runGraphQL<{ project: BackendProject | null }>(
       `
         query ($id: ID!) {
           project(id: $id) {
@@ -1267,7 +1143,7 @@ export class VCS {
       teamId,
     });
 
-    const { teamMemberKeys } = await this._runGraphQL<{
+    const { teamMemberKeys } = await runGraphQL<{
       teamMemberKeys: {
         memberKeys: {
           accountId: string;
@@ -1328,7 +1204,7 @@ export class VCS {
     // Use the local project ID if available; fall back to the workspace ID as a stable identifier.
     const localProjectId = this._backendProject ? this._backendProject.id : workspaceId;
 
-    const { projectCreate } = await this._runGraphQL<{ projectCreate: BackendProject }>(
+    const { projectCreate } = await runGraphQL<{ projectCreate: BackendProject }>(
       `
         mutation (
           $name: String!,
@@ -1369,15 +1245,11 @@ export class VCS {
 
   async _getBackendProject(): Promise<BackendProject | null> {
     const projectId = this._backendProject ? this._backendProject.id : 'n/a';
-    return this._getBackendProjectById(projectId);
-  }
-
-  async _getBackendProjectById(projectId: string): Promise<BackendProject | null> {
-    return this._store.getItem(`/projects/${projectId}/meta.json`);
+    return getBackendProjectById(projectId);
   }
 
   async _getBackendProjectSymmetricKey() {
-    const { privateKey, symmetricKey } = await this._assertSession();
+    const { privateKey, symmetricKey } = await assertSession();
 
     if (this._testMode) {
       // use the session symmetric key in playwright tests
@@ -1387,22 +1259,6 @@ export class VCS {
     const encSymmetricKey = await this._queryBackendProjectKey();
     const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
     return JSON.parse(symmetricKeyStr);
-  }
-
-  // TODO: This is a temporary solution to get the private key from the session.
-  async _getPrivateKey(sessionData?: UserSession): Promise<JsonWebKey> {
-    if (!sessionData) {
-      throw new Error("Can't get private key: session is blank.");
-    }
-
-    const { symmetricKey, encPrivateKey } = sessionData;
-
-    if (!symmetricKey || !encPrivateKey) {
-      throw new Error("Can't get private key: session is missing keys.");
-    }
-
-    const privateKeyStr = await crypt.decryptAES(symmetricKey, encPrivateKey);
-    return JSON.parse(privateKeyStr) as JsonWebKey;
   }
 
   async _assertBackendProject() {
@@ -1415,24 +1271,8 @@ export class VCS {
     return project;
   }
 
-  async _storeBackendProject(project: BackendProject) {
-    let existingProject: BackendProject | null = null;
-    try {
-      existingProject = await this._getBackendProjectById(project.id);
-    } catch (err) {
-      console.warn('[sync] Failed to get existing backend project %s', project.id, err);
-    }
-
-    if (existingProject && deterministicStringify(existingProject) === deterministicStringify(project)) {
-      console.debug('[sync] Skipping store due to no backend changes');
-      return;
-    }
-
-    return this._store.setItem(`/projects/${project.id}/meta.json`, project);
-  }
-
   async _getHead(): Promise<Head> {
-    const head = await this._store.getItem(`/projects/${this._backendProjectId()}/head.json`);
+    const head = await getStore().getItem(`/projects/${this._backendProjectId()}/head.json`);
 
     if (head === null) {
       await this._storeHead({ branch: 'master' });
@@ -1445,24 +1285,6 @@ export class VCS {
   async _getCurrentBranch() {
     const head = await this._getHead();
     return this._getOrCreateBranch(head.branch);
-  }
-
-  async _assertSession() {
-    const sessionData = await services.userSession.get();
-    const { accountId, id, publicKey, symmetricKey } = sessionData;
-    const privateKey = await this._getPrivateKey(sessionData);
-
-    if (!id) {
-      throw new Error('Not logged in');
-    }
-
-    return {
-      accountId,
-      sessionId: id,
-      privateKey,
-      publicKey,
-      symmetricKey,
-    };
   }
 
   async _assertBranch(branchName: string) {
@@ -1484,26 +1306,7 @@ export class VCS {
   }
 
   async _getBranch(name: string): Promise<Branch | null> {
-    return this._store.getItem(`/projects/${this._backendProjectId()}/branches/${encodeBranchName(name)}.json`);
-  }
-
-  async _getBranches(backendProjectId?: string) {
-    const branches: Branch[] = [];
-
-    const pId = backendProjectId || this._backendProjectId();
-
-    for (const p of await this._store.keys(`/projects/${pId}/branches/`)) {
-      const b = await this._store.getItem(p);
-
-      if (b === null) {
-        // Should never happen
-        throw new Error(`Failed to get branch path=${p}`);
-      }
-
-      branches.push(b);
-    }
-
-    return branches;
+    return getStore().getItem(`/projects/${this._backendProjectId()}/branches/${encodeBranchName(name)}.json`);
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
@@ -1526,80 +1329,8 @@ export class VCS {
     return branch;
   }
 
-  async _getBackendProjectByRootDocument(rootDocumentId: string) {
-    if (!rootDocumentId) {
-      throw new Error('No root document ID supplied for backend project');
-    }
-
-    // First, try finding the project
-    const backendProjects = await this._allBackendProjects();
-    let matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
-
-    // If there is more than one project for root, try pruning unused ones by branch activity
-    if (matchedBackendProjects.length > 1) {
-      for (const p of matchedBackendProjects) {
-        const branches = await this._getBranches(p.id);
-
-        if (!branches.find(b => b.snapshots.length > 0)) {
-          await this._removeProject(p);
-          matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
-          console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
-        }
-      }
-    }
-
-    // If there are still too many, error out
-    if (matchedBackendProjects.length > 1) {
-      console.log('[sync] Multiple backend projects matched for root', {
-        backendProjects,
-        matchedBackendProjects,
-        rootDocumentId,
-      });
-      throw new Error('More than one backend project matched query');
-    }
-
-    return matchedBackendProjects[0] || null;
-  }
-
-  async _getOrCreateBackendProjectByRootDocument(rootDocumentId: string, name: string) {
-    let project: BackendProject | null = await this._getBackendProjectByRootDocument(rootDocumentId);
-
-    // If we still don't have a project, create one
-    if (!project) {
-      const id = generateId('prj');
-      project = {
-        id,
-        name,
-        rootDocumentId,
-      };
-      await this._storeBackendProject(project);
-      console.log(`[sync] Created backend project ${project.id}`);
-    }
-
-    return project;
-  }
-
-  async _allBackendProjects() {
-    const backendProjects: BackendProject[] = [];
-    const keys = await this._store.keys('/projects/', false);
-
-    for (const key of keys) {
-      const id = path.basename(key);
-      const p: BackendProject | null = await this._getBackendProjectById(id);
-
-      if (p === null) {
-        // Folder exists but project meta file is gone
-        continue;
-      }
-
-      backendProjects.push(p);
-    }
-
-    return backendProjects;
-  }
-
   async _assertSnapshot(id: string) {
-    const snapshot: Snapshot | null = await this._store.getItem(
+    const snapshot: Snapshot | null = await getStore().getItem(
       `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
     );
 
@@ -1615,7 +1346,7 @@ export class VCS {
   }
 
   async _getSnapshot(id: string) {
-    const snapshot: Snapshot | null = await this._store.getItem(
+    const snapshot: Snapshot | null = await getStore().getItem(
       `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
     );
 
@@ -1634,7 +1365,7 @@ export class VCS {
   }
 
   async _storeSnapshot(snapshot: Snapshot) {
-    return this._store.setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot);
+    return getStore().setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot);
   }
 
   async _storeSnapshots(snapshots: Snapshot[]) {
@@ -1642,7 +1373,7 @@ export class VCS {
 
     for (const snapshot of snapshots) {
       const p = `/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`;
-      const promise = this._store.setItem(p, snapshot);
+      const promise = getStore().setItem(p, snapshot);
       // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       promises.push(promise);
     }
@@ -1659,29 +1390,24 @@ export class VCS {
 
     branch.modified = new Date();
     // toLowerCase may introduce issues under case sensitive filesystems
-    return this._store.setItem(
+    return getStore().setItem(
       `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name).toLowerCase()}.json`,
       branch,
     );
   }
 
   async _removeBranch(branch: Branch) {
-    return this._store.removeItem(
+    return getStore().removeItem(
       `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name)}.json`,
     );
   }
 
-  async _removeProject(project: BackendProject) {
-    console.log(`[sync] Remove local project ${project.id}`);
-    return this._store.removeItem(`/projects/${project.id}/meta.json`);
-  }
-
   async _storeHead(head: Head) {
-    await this._store.setItem(`/projects/${this._backendProjectId()}/head.json`, head);
+    await getStore().setItem(`/projects/${this._backendProjectId()}/head.json`, head);
   }
 
   _getBlob(blobId: string) {
-    return this._store.getItem(
+    return getStore().getItem(
       `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
     ) as Promise<BaseModel | null>;
   }
@@ -1697,7 +1423,7 @@ export class VCS {
   }
 
   async _storeBlob(blobId: string, content: Record<string, any> | null) {
-    return this._store.setItem(
+    return getStore().setItem(
       `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
       content,
     );
@@ -1709,7 +1435,7 @@ export class VCS {
     for (const blobId of Object.keys(blobsToStore)) {
       const buff = Buffer.from(blobsToStore[blobId], 'utf8');
       promises.push(
-        this._store.setItem(
+        getStore().setItem(
           `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
           buff,
         ),
@@ -1724,7 +1450,7 @@ export class VCS {
 
     for (const blobId of Object.keys(decryptedBlobs)) {
       promises.push(
-        this._store.setItemRaw(
+        getStore().setItemRaw(
           `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
           decryptedBlobs[blobId],
         ),
@@ -1735,13 +1461,13 @@ export class VCS {
   }
 
   async _getBlobRaw(blobId: string) {
-    return this._store.getItemRaw(
+    return getStore().getItemRaw(
       `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
     );
   }
 
   async _hasBlob(blobId: string) {
-    return this._store.hasItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
+    return getStore().hasItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
   }
 
   getActiveBackendProject() {

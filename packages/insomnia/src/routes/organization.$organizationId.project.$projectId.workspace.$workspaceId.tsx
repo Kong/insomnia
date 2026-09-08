@@ -33,6 +33,7 @@ import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project'
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -281,11 +282,15 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   let vcsVersion = null;
   if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
     try {
-      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
+      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, workspaceId, activeWorkspace.name);
       if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
-        await pushSnapshotOnInitialize({ vcs: window.main.sync, workspace: activeWorkspace, project: activeProject });
+        await pushSnapshotOnInitialize({
+          vcs: syncVCSLikeForWorkspace(workspaceId),
+          workspace: activeWorkspace,
+          project: activeProject,
+        });
       }
-      vcsVersion = await window.main.sync.getVersion();
+      vcsVersion = await window.main.sync.getVersion(workspaceId);
     } catch (err) {
       console.warn('Failed to initialize VCS', err);
     }

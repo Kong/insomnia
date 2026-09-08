@@ -14,7 +14,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const keys = data.keys;
   invariant(Array.isArray(keys), 'Keys are required');
   const { syncItems } = await getSyncItems({ workspaceId });
-  const status = await window.main.sync.status(syncItems);
+  const status = await window.main.sync.status(workspaceId, syncItems);
   // Staging needs to happen since it creates blobs for the files
   const itemsToUnstage = keys
     .map(key => {
@@ -27,7 +27,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     })
     .filter(isNotNullOrUndefined);
 
-  await window.main.sync.unstage(itemsToUnstage);
+  await window.main.sync.unstage(workspaceId, itemsToUnstage);
 
   return null;
 }

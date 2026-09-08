@@ -486,7 +486,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify persisted environment
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
     const rows = await responseBody.allInnerTexts();
@@ -528,10 +528,8 @@ test.describe('pre-request features tests', () => {
     });
 
     // activate global environment
-    await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a project environment').click();
-    await page.getByRole('option', { name: 'Script Environment' }).click();
-    await page.getByRole('option', { name: 'Base Script Env' }).click();
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).click();
     await page.locator('body').click();
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -540,8 +538,9 @@ test.describe('pre-request features tests', () => {
     await page.getByText('log: globals base').click();
     await page.getByText('log: baseGlobals base').click();
     // view base environment has been updated
-    await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage project environment').click();
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).hover();
+    await page.getByLabel('Edit Script Environment').click();
     await page.getByLabel('Environment name').getByText('Base Script Env').click();
     const globalBaseEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     const globalBaseRows = await globalBaseEditor.allInnerTexts();
@@ -556,7 +555,7 @@ test.describe('pre-request features tests', () => {
     // switch back to request collection tab
     await page.getByLabel('Insomnia Tabs').getByLabel('persist global environment').first().click();
     // activate global sub environment
-    await page.getByLabel('Manage Environments').click();
+    await page.getByLabel('Select a Project Environment').click();
     await page.getByRole('option', { name: 'Sub Script Env' }).click();
     await page.locator('body').click();
     // send
@@ -566,8 +565,9 @@ test.describe('pre-request features tests', () => {
     await page.getByText('log: globals sub').click();
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
-    await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage project environment').click();
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).hover();
+    await page.getByLabel('Edit Script Environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
     const globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     const globalSubRows = await globalSubEditor.allInnerTexts();
@@ -583,7 +583,7 @@ test.describe('pre-request features tests', () => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await insomnia.navigationSidebar.clickRequestOrFolder('update kv pair environment');
     // switch to table view environment
-    await page.getByLabel('Manage Environments').click();
+    await page.getByLabel('Select a Collection Environment').click();
     const manageBtn = page.getByRole('button', { name: 'Manage collection environments' });
     await expect.soft(manageBtn).toBeEnabled();
     await manageBtn.click();
@@ -604,7 +604,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
-    const verifyManageBtn = page.getByRole('button', { name: 'Manage Environments' });
+    const verifyManageBtn = page.getByLabel('Select a Collection Environment');
     await expect.soft(verifyManageBtn).toBeEnabled();
     await verifyManageBtn.click();
     const verifyCollectionBtn = page.getByRole('button', { name: 'Manage collection environments' });

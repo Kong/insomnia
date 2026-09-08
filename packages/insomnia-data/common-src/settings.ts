@@ -40,6 +40,7 @@ export type KeyboardShortcut =
   | 'request_showOptions'
   | 'environment_showEditor'
   | 'environment_showSwitchMenu'
+  | 'environment_showSwitchProjectMenu'
   | 'request_toggleHttpMethodMenu'
   | 'request_toggleHistory'
   | 'request_focusUrl'

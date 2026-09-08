@@ -30,7 +30,7 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
 
   // Open migrated local migrated collection that should have Git Sync
   await page.getByLabel('Local Collection').click();
-  await page.getByRole('button', { name: 'Manage Environments' }).click();
+  await page.getByLabel('Select a Collection Environment').click();
   await page.getByLabel('Select a Collection').getByRole('option', { name: 'Mars' }).press('Enter');
   await page.locator('body').click();
   // The collection is moved to a local project

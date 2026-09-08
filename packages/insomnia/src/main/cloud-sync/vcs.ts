@@ -5,7 +5,16 @@ import { app, type WebContents } from 'electron';
 import type { RemoteProject } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import type { BackendProjectWithTeam, MergeConflict } from 'insomnia-vcs';
-import { VCS } from 'insomnia-vcs';
+import {
+  configureStore,
+  FileSystemDriver,
+  hasBackendProjectForRootDocument,
+  localBackendProjects,
+  remoteBackendProjects,
+  remoteBackendProjectsOfTeam,
+  removeBackendProjectsForRoot,
+  VCS,
+} from 'insomnia-vcs';
 
 import { PLAYWRIGHT_TEST } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
@@ -31,7 +40,18 @@ export interface PullRemoteBackendProjectOptions {
 const syncInvocationContext = new AsyncLocalStorage<SyncInvocationContext>();
 const pendingConflictResolutions = new Map<string, PendingConflictResolution>();
 
-let mainVCS: VCS | null = null;
+// One VCS instance per workspace, so a `_backendProject` mutation triggered by one workspace's
+// sync.invoke call can never bleed into another workspace's concurrently in-flight operation.
+const vcsByWorkspaceId = new Map<string, VCS>();
+
+let storeConfigured = false;
+const ensureStoreConfigured = () => {
+  if (!storeConfigured) {
+    const dataPath = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+    configureStore(FileSystemDriver.create(dataPath));
+    storeConfigured = true;
+  }
+};
 
 const requestConflictResolution = (conflicts: MergeConflict[], labels: { ours: string; theirs: string }) => {
   const context = syncInvocationContext.getStore();
@@ -53,28 +73,33 @@ const requestConflictResolution = (conflicts: MergeConflict[], labels: { ours: s
   });
 };
 
-function createVCS() {
-  return new VCS({
-    dataPath: process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    conflictHandler: requestConflictResolution,
-    testMode: !!PLAYWRIGHT_TEST,
-  });
-}
+export const getVCSForWorkspace = (workspaceId: string): VCS => {
+  ensureStoreConfigured();
+  let vcs = vcsByWorkspaceId.get(workspaceId);
 
-export const getMainVCS = () => {
-  if (mainVCS) {
-    return mainVCS;
+  if (!vcs) {
+    vcs = new VCS({
+      workspaceId,
+      conflictHandler: requestConflictResolution,
+      testMode: !!PLAYWRIGHT_TEST,
+    });
+    vcsByWorkspaceId.set(workspaceId, vcs);
   }
-  mainVCS = createVCS();
-  return mainVCS;
+
+  return vcs;
 };
 
 export const runWithSyncRenderer = <T>(sender: WebContents, callback: () => Promise<T> | T) => {
   return syncInvocationContext.run({ sender }, callback);
 };
 
-export const invokeMainVCS = async (sender: WebContents, methodName: string, ...args: unknown[]) => {
-  const vcs = getMainVCS();
+export const invokeVCSForWorkspace = async (
+  sender: WebContents,
+  workspaceId: string,
+  methodName: string,
+  ...args: unknown[]
+) => {
+  const vcs = getVCSForWorkspace(workspaceId);
   const method = vcs[methodName as keyof VCS];
 
   if (typeof method !== 'function') {
@@ -82,6 +107,28 @@ export const invokeMainVCS = async (sender: WebContents, methodName: string, ...
   }
 
   return runWithSyncRenderer(sender, () => (method as (...args: unknown[]) => unknown).apply(vcs, args));
+};
+
+// Methods that never read a VCS instance's active `_backendProject` — they don't need a
+// workspace-scoped instance at all, so they're dispatched straight to insomnia-vcs's exported
+// functions instead of through the reflective, workspace-keyed `invokeVCSForWorkspace`.
+const GLOBAL_VCS_METHODS = {
+  localBackendProjects,
+  remoteBackendProjects,
+  remoteBackendProjectsOfTeam,
+  hasBackendProjectForRootDocument,
+  removeBackendProjectsForRoot,
+};
+
+export const invokeGlobalVCS = async (methodName: string, ...args: unknown[]) => {
+  ensureStoreConfigured();
+  const method = GLOBAL_VCS_METHODS[methodName as keyof typeof GLOBAL_VCS_METHODS];
+
+  if (typeof method !== 'function') {
+    throw new TypeError(`Unknown global VCS method: ${methodName}`);
+  }
+
+  return (method as (...args: unknown[]) => unknown)(...args);
 };
 
 export const resolvePendingSyncConflict = ({
@@ -116,21 +163,17 @@ export const cancelPendingSyncConflict = ({ handlerId, sender }: { handlerId: st
   pendingConflictResolution.reject(new UserAbortResolveMergeConflictError());
 };
 
-export const pullRemoteBackendProjectWithSingleton = async (
+export const pullRemoteBackendProject = async (
   sender: WebContents,
   { organizationId, backendProjectId, remoteId }: PullRemoteBackendProjectOptions,
 ) => {
   return runWithSyncRenderer(sender, async () => {
-    // Use the singleton only for the remote listing (read-only network call).
-    // The actual pull uses an isolated VCS instance so the singleton's active
-    // backend project is never mutated, preventing cross-workspace interference
-    // with concurrent sync.invoke calls.
-    const vcs = getMainVCS();
-    const remoteBackendProjects = await vcs.remoteBackendProjects({
+    ensureStoreConfigured();
+    const projects = await remoteBackendProjects({
       teamId: organizationId,
       teamProjectId: remoteId,
     });
-    const backendProject = remoteBackendProjects.find(project => project.id === backendProjectId) as
+    const backendProject = projects.find(project => project.id === backendProjectId) as
       | BackendProjectWithTeam
       | undefined;
 
@@ -139,11 +182,13 @@ export const pullRemoteBackendProjectWithSingleton = async (
     const project = await services.project.getByRemoteId(remoteId);
     invariant(project?.remoteId, 'Project is not a remote project');
 
-    const pullVCS = createVCS();
-
-    await pullVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
+    // backendProject.rootDocumentId is the target workspace's id, so the pull runs on that
+    // workspace's own VCS instance directly — no need for a separate isolated instance to shield
+    // a singleton's mutable state from other concurrent sync.invoke calls.
+    await removeBackendProjectsForRoot(backendProject.rootDocumentId);
+    const vcs = getVCSForWorkspace(backendProject.rootDocumentId);
     const { workspaceId } = await pullBackendProject({
-      vcs: pullVCS,
+      vcs,
       backendProject,
       remoteProject: project as RemoteProject,
     });

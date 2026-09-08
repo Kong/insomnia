@@ -66,7 +66,7 @@ test.describe('Key-value editor blank row', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // Open the table editor for the ExampleA sub-environment.
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
@@ -95,7 +95,7 @@ test.describe('Key-value editor blank row', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select a Collection Environment').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
