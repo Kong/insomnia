@@ -18,9 +18,10 @@ test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
   const certsDialog = page.getByRole('dialog');
 
   await page.getByTestId('settings-button').click();
-  await page.getByTestId('dataFolders').fill(getFixturePath('certificates'));
+  const certificatesFixturePath = getFixturePath('certificates');
+  await page.getByTestId('dataFolders').fill(certificatesFixturePath);
   await page.getByTestId('dataFolders-btn').click();
-  await expect.soft(page.getByText('certificates')).toBeVisible({ timeout: UI_TIMEOUT });
+  await expect.soft(page.getByText(certificatesFixturePath, { exact: true })).toBeVisible({ timeout: UI_TIMEOUT });
   await page.locator('.app').press('Escape');
   // wait for settings dialog to fully close before continuing
   await page.getByTestId('settings-button').waitFor({ state: 'visible', timeout: UI_TIMEOUT });
