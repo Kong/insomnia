@@ -67,6 +67,7 @@ import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
 import { GitPullRequiredModal } from './git-pull-required-modal';
+import { EntityDiffList } from './visual-diff/entity-diff-list';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
 
@@ -1485,6 +1486,7 @@ const OriginalGitProjectStagingModal: FC<
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
   const [showConfirmDiscardAndPullModal, setShowConfirmDiscardAndPullModal] = React.useState(false);
   const [discardData, setDiscardData] = React.useState<DiscardData | null>(null);
+  const [diffViewMode, setDiffViewMode] = useState<'text' | 'visual'>('text');
 
   const gitChangesFetcher = useGitProjectChangesFetcher();
   const gitCredentialsFetcher = useGitCredentialsLoaderFetcher();
@@ -1613,6 +1615,20 @@ const OriginalGitProjectStagingModal: FC<
       diffChanges({
         path: fileToDiff.path,
         staged,
+      });
+    }
+  }
+
+  // After staging/unstaging a single entity out of the currently-previewed file,
+  // refresh both the file list (staged/unstaged buckets) and the diff itself so
+  // the entity's card disappears/updates without switching away from this view.
+  function afterEntityStage() {
+    gitChangesFetcher.load({ projectId });
+    if (fileToDiff) {
+      diffChangesFetcherLoad({
+        projectId,
+        filePath: fileToDiff.path,
+        staged: fileToDiff.staged,
       });
     }
   }
@@ -1802,6 +1818,20 @@ const OriginalGitProjectStagingModal: FC<
                             {!previewDiffItem.staged ? 'Stage this file' : 'Unstage this file'}
                           </BasicButton>
                         )}
+                        <div className="ml-auto flex items-center gap-1 rounded-xs bg-(--hl-xs) p-0.5">
+                          <Button
+                            className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'text' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            onPress={() => setDiffViewMode('text')}
+                          >
+                            Text
+                          </Button>
+                          <Button
+                            className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'visual' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            onPress={() => setDiffViewMode('visual')}
+                          >
+                            Visual [Preview]
+                          </Button>
+                        </div>
                       </Heading>
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
@@ -1811,7 +1841,7 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
-                      {previewDiffItem && (
+                      {diffViewMode === 'text' ? (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor
                             original={previewDiffItem.diff.before}
@@ -1819,6 +1849,15 @@ const OriginalGitProjectStagingModal: FC<
                             highlightSystemChange
                           />
                         </div>
+                      ) : (
+                        <EntityDiffList
+                          before={previewDiffItem.diff.before}
+                          after={previewDiffItem.diff.after}
+                          projectId={projectId}
+                          filepath={previewDiffItem.filepath}
+                          staged={previewDiffItem.staged}
+                          onEntityStaged={afterEntityStage}
+                        />
                       )}
                     </div>
                   ) : (
