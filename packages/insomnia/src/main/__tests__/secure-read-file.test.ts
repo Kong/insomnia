@@ -75,6 +75,20 @@ describe('secureReadFile', () => {
     await expect(secureReadFile(innocuousLink)).rejects.toThrow(/cannot access/);
   });
 
+  it('rejects a hard link inside the allowed directory that aliases a NeDB database file', async () => {
+    // Unlike a symlink, a hard link has no "original" for realpath() to resolve back to — it's
+    // a second directory entry pointing at the same inode/content, so the innocuous name never
+    // becomes `insomnia.<Model>.db` no matter how the path is resolved. This must be caught by
+    // comparing file identity (device + inode), not by name.
+    const { secureReadFile } = await import('../secure-read-file');
+    const dbFile = path.join(userDataDir, 'insomnia.OAuth2Token.db');
+    fs.writeFileSync(dbFile, '{"secret":"oauth2-token-value"}');
+    const innocuousHardLink = path.join(userDataDir, 'innocuous-hardlink.txt');
+    fs.linkSync(dbFile, innocuousHardLink);
+
+    await expect(secureReadFile(innocuousHardLink)).rejects.toThrow(/cannot access/);
+  });
+
   it('rejects a symlink inside the allowed directory that resolves outside every allowed root', async () => {
     const { secureReadFile } = await import('../secure-read-file');
     const outsideDir = fs.mkdtempSync(path.join(TEST_ROOT, 'outside-'));

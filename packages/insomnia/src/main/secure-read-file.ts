@@ -33,6 +33,29 @@ const isReservedDatabaseFile = (filePath: string) => /^insomnia\..+\.db.*$/i.tes
 const cannotAccessFileError = (securedPath: string) =>
   `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`;
 const resolveRealPath = async (filePath: string) => fs.promises.realpath(filePath).catch(() => filePath);
+const statOrNull = async (filePath: string) => fs.promises.stat(filePath).catch(() => null);
+const getUserdataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+// A hard link lets a file be read through a second, innocuously-named path without ever going
+// through a symlink, so `realpath()` (which only resolves symlinks) won't reveal that it's the
+// same file on disk as a reserved NeDB database file. Compare filesystem identity (device +
+// inode) against the actual reserved files present in the userData directory to catch this,
+// since two different paths can point at the same underlying file.
+const isDatabaseFileAlias = async (realPath: string) => {
+  const target = await statOrNull(realPath);
+  if (!target) {
+    return false;
+  }
+  const userdataDirectory = getUserdataDirectory();
+  const entries = await fs.promises.readdir(userdataDirectory).catch(() => []);
+  const reservedNames = entries.filter(isReservedDatabaseFile);
+  for (const name of reservedNames) {
+    const reserved = await statOrNull(path.join(userdataDirectory, name));
+    if (reserved && reserved.dev === target.dev && reserved.ino === target.ino) {
+      return true;
+    }
+  }
+  return false;
+};
 // For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
 export const secureReadFile = async (filePath: string): Promise<string> => {
   const settings = await services.settings.getOrCreate();
@@ -45,7 +68,10 @@ export const secureReadFile = async (filePath: string): Promise<string> => {
   const realPath = await resolveRealPath(securedPath);
   const realAllowList = await Promise.all(getSecuredFolderAllowList(settings.dataFolders).map(resolveRealPath));
   const { isAllowed: isRealPathAllowed } = isPathAllowed(realPath, realAllowList);
-  invariant(isRealPathAllowed && !isReservedDatabaseFile(realPath), cannotAccessFileError(securedPath));
+  invariant(
+    isRealPathAllowed && !isReservedDatabaseFile(realPath) && !(await isDatabaseFileAlias(realPath)),
+    cannotAccessFileError(securedPath),
+  );
 
   return fs.promises.readFile(realPath, { encoding: 'utf8' });
 };
