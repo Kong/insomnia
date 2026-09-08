@@ -2,6 +2,7 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { getOnboardingState, type UserOnboarding } from 'insomnia-api';
 import type { Request } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
@@ -10,7 +11,6 @@ import { SelectPopover } from '~/basic-components/select-popover';
 import { getCurrentSessionId } from '~/common/account/session';
 import { METHOD_GET } from '~/common/constants';
 import { isCurlCommand } from '~/common/utils/curl';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { MethodSelector } from '~/ui/components/dropdowns/method-selector';

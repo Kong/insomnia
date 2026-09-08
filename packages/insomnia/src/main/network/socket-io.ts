@@ -12,18 +12,17 @@ import type {
   RequestHeader,
   SocketIOResponse,
 } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
 import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
-import { filterClientCertificates } from '../../network/certificate';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
@@ -170,7 +169,7 @@ const getCertificates = async ({
     (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
-  const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
+  const filteredClientCertificates = models.clientCertificate.filterClientCertificates(clientCertificates, url, 'wss:');
   const pemCertificates: string[] = [];
   const pemCertificateKeys: string[] = [];
   const pfxCertificates: string[] = [];

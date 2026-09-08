@@ -5,10 +5,10 @@ import { parse as urlParse } from 'node:url';
 import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
-import { ProxyScopes } from 'insomnia-data/common';
+import { ProxyScopes, setDefaultProtocol } from 'insomnia-data/common';
 
 import { getApiBaseURL } from '../common/constants';
-import { parseResolvedProxy, setDefaultProtocol, shouldBypassProxyForHost } from './network/libcurl-promise';
+import { parseResolvedProxy, shouldBypassProxyForHost } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
 
 export interface RegisterProtocolOptions {

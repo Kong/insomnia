@@ -1,5 +1,5 @@
-import type { OAuth1SignatureMethod } from 'insomnia/src/common/constants';
 import type { OAuth2ResponseType, RequestAuthentication } from 'insomnia-data';
+import type { OAuth1SignatureMethod } from 'insomnia-data/common';
 
 import { Property } from './properties';
 import { Variable, VariableList } from './variables';

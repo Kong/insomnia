@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { urlMatchesCertHost } from '../url-matches-cert-host';
+import { urlMatchesCertHost } from './url-matches-cert-host';
 
 describe('urlMatchesCertHost', () => {
   describe('when the certificate host has no wildcard', () => {

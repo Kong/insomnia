@@ -2,6 +2,7 @@ import type * as Har from 'har-format';
 import { isApiError, upsertMockbin } from 'insomnia-api';
 import type { MockRoute, MockServer, Request, RequestHeader, Response } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 import { useCallback } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router';
@@ -15,7 +16,6 @@ import {
   contentTypesMap,
   getMockServiceBinURL,
   getMockServiceURL,
-  RESPONSE_CODE_REASONS,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';

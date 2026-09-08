@@ -1,3 +1,5 @@
+import { setDefaultProtocol, urlMatchesCertHost } from 'insomnia-data/common';
+
 import type { BaseModel } from './base-types';
 
 export const name = 'Client Certificate';
@@ -38,3 +40,17 @@ export function init(): BaseClientCertificate {
 }
 
 export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is ClientCertificate => model.type === type;
+
+export function filterClientCertificates(clientCertificates: ClientCertificate[], requestUrl: string, protocol?: string) {
+  const res = clientCertificates.filter(
+    certificate =>
+      !certificate.disabled && urlMatchesCertHost(setDefaultProtocol(certificate.host, protocol), requestUrl, true),
+  );
+  if (!res.length) {
+    return clientCertificates.filter(
+      certificate =>
+        !certificate.disabled && urlMatchesCertHost(setDefaultProtocol(certificate.host, protocol), requestUrl, false),
+    );
+  }
+  return res;
+}

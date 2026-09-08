@@ -19,6 +19,7 @@ import {
 import { isValid } from 'date-fns';
 import electron from 'electron';
 import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { invariant } from '~/common/utils/invariant';
@@ -669,20 +670,3 @@ export function shouldBypassProxyForHost(hostname: string | null, noProxy: strin
       return normalizedHostname === entry;
     });
 }
-
-export const setDefaultProtocol = (url: string, defaultProto?: string) => {
-  const trimmedUrl = url.trim();
-  defaultProto = defaultProto || 'http:';
-
-  // If no url, don't bother returning anything
-  if (!trimmedUrl) {
-    return '';
-  }
-
-  // Default the proto if it doesn't exist
-  if (!trimmedUrl.includes('://')) {
-    return `${defaultProto}//${trimmedUrl}`;
-  }
-
-  return trimmedUrl;
-};
