@@ -16,6 +16,7 @@ import type {
   WebSocketResponse,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
@@ -24,7 +25,6 @@ import { database } from '~/common/database';
 import type { RenderedRequest } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 
 import { version } from '../../../package.json';
@@ -33,7 +33,6 @@ import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
-import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
@@ -242,7 +241,11 @@ const openWebSocketConnection = async (
     const start = performance.now();
 
     const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
-    const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'wss:');
+    const filteredClientCertificates = models.clientCertificate.filterClientCertificates(
+      clientCertificates,
+      options.url,
+      'wss:',
+    );
     const pemCertificates: string[] = [];
     const pemCertificateKeys: KeyObject[] = [];
     const pfxCertificates: PxfObject[] = [];

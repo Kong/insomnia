@@ -8,6 +8,7 @@ import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
@@ -27,7 +28,7 @@ import {
 } from '~/templating/sandbox/marshal';
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
-import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
+import { getAppBundlePlugins } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
