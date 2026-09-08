@@ -1,5 +1,5 @@
 import { services } from 'insomnia-data';
-import { ProxyScopes } from 'insomnia-data/common';
+import { ProxyScopes, RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -9,7 +9,6 @@ import {
 } from '~/common/network/sensitive-value-collector';
 import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
 
-import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {
   defaultSendActionRuntime,
   fetchRequestData,

@@ -14,6 +14,7 @@ import type {
   ResponseTimelineEntry,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
+import { escapeRegex, setDefaultProtocol } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -22,13 +23,12 @@ import {
   withRedaction,
 } from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
 import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
 
 import { getOauthRedirectUrl, getOauthRelayUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
-import { type DefaultBrowserRedirectParam, escapeRegex } from '../../../common/misc';
+import { type DefaultBrowserRedirectParam } from '../../../common/misc';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../../network/authentication';
 import { getBasicAuthHeader } from '../../../network/basic-auth/get-header';
 import {
