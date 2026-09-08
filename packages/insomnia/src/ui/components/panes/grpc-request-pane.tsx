@@ -1,12 +1,12 @@
 import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { setDefaultProtocol, urlMatchesCertHost } from 'insomnia-data/common';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { RenderError } from '~/common/templating/render-error';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
@@ -21,7 +21,6 @@ import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import { getOrInheritHeaders } from '../../../network/network';
-import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 import {

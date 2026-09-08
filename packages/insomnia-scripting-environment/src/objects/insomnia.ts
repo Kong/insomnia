@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { filterClientCertificates } from 'insomnia/src/network/certificate';
 import type { ClientCertificate, RequestHeader, RequestTestResult, Settings } from 'insomnia-data';
+import { models } from 'insomnia-data';
 
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';
@@ -202,7 +202,10 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
   // todo: find if theres a better way to get the best cert
   // (╯°□°）╯︵ ┻━┻
   const ifUrlIncludesTag = checkIfUrlIncludesTag(rawObj.request.url);
-  const matchedCertificates = filterClientCertificates(rawObj.clientCertificates || [], rawObj.request.url);
+  const matchedCertificates = models.clientCertificate.filterClientCertificates(
+    rawObj.clientCertificates || [],
+    rawObj.request.url,
+  );
   const initEmptyCert = ifUrlIncludesTag || matchedCertificates?.length === 0;
   if (initEmptyCert) {
     getExistingConsole().warn(

@@ -1,7 +1,5 @@
 import type { IQueryStringOptions, StrictNullSearchParamsValueType } from 'insomnia-data/common';
-import { deconstructQueryStringToParams } from 'insomnia-data/common';
-
-import { setDefaultProtocol } from './protocol';
+import { deconstructQueryStringToParams, setDefaultProtocol } from 'insomnia-data/common';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
