@@ -119,13 +119,15 @@ jobs:
 
             const passed = '${{ steps.check-cycles.outcome }}' === 'success';
             const report = fs.readFileSync('cycle-report.txt', 'utf8').trim();
-            const markdownContent = `# ${passed ? '✅' : '⚠️'} Circular References Report
+            const markdownContent = `<details>
+            <summary>${passed ? '✅' : '⚠️'} Circular References Report</summary>
 
             **Status:** ${passed ? 'No new circular references' : 'New circular references detected'}
 
             \`\`\`
             ${report}
             \`\`\`
+            </details>
             `;
 
             const { data: comments } = await github.rest.issues.listComments({
