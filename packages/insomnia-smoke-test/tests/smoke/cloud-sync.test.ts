@@ -160,7 +160,7 @@ test.describe('Cloud Sync', () => {
 
     // delete workspace locally
     await page.getByLabel('My Collection R1').getByTestId('DropdownButton').click();
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     await page.getByText('Remove Local Copy').click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted locally
@@ -174,7 +174,7 @@ test.describe('Cloud Sync', () => {
 
     // delete workspace both locally and remotely
     await page.getByTestId('workspace-grid').getByLabel('My Collection R1').getByTestId('DropdownButton').click();
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted remotely
     await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('My Collection R1')).toBeHidden();
