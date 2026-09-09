@@ -141,10 +141,29 @@ export async function removeBackendProjectsForRoot(rootDocumentId: string) {
   }
 }
 
-export async function remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
-  console.log(
-    `[remoteBackendProjects] Fetching remote workspaces for teamId=${teamId} teamProjectId=${teamProjectId}`,
+// Archives a remote backend project by id, without requiring it to be pulled locally first.
+export async function archiveBackendProject(backendProjectId: string) {
+  await runGraphQL(
+    `
+      mutation ($id: ID!) {
+        projectArchive(id: $id)
+      }
+    `,
+    {
+      id: backendProjectId,
+    },
+    'projectArchive',
   );
+  console.log(`[sync] Archived remote project ${backendProjectId}`);
+  // A project that was never pulled has no local meta file to clean up.
+  const metaKey = `/projects/${backendProjectId}/meta.json`;
+  if (await getStore().hasItem(metaKey)) {
+    await getStore().removeItem(metaKey);
+  }
+}
+
+export async function remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+  console.log(`[remoteBackendProjects] Fetching remote workspaces for teamId=${teamId} teamProjectId=${teamProjectId}`);
   const { projects } = await runGraphQL<{ projects: BackendProjectWithTeams[] }>(
     `
       query ($teamId: ID, $teamProjectId: ID) {
