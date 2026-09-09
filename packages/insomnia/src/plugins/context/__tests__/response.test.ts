@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { services } from 'insomnia-data';
-import { describe, expect, it } from 'vitest';
+import { servicesNodeImpl } from 'insomnia-data/node';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import * as plugin from '../response';
 
@@ -32,6 +33,10 @@ describe('init()', () => {
 });
 
 describe('response.*', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('works for basic and full response', async () => {
     const bodyPath = path.join(tmpdir(), 'response.zip');
     fs.writeFileSync(bodyPath, Buffer.from('Hello World!'));
@@ -60,6 +65,34 @@ describe('response.*', () => {
     expect(result.response.getBytesRead()).toBe(0);
     expect(result.response.getTime()).toBe(0);
     expect((await result.response.getBody())?.length).toBe(0);
+  });
+
+  it('getBody returns a decodable Buffer even when the services bridge resolves a Uint8Array', async () => {
+    const decoded = '{"echoNum":777}';
+    const bridged = new Uint8Array(Buffer.from(decoded)) as unknown as Buffer;
+    vi.spyOn(servicesNodeImpl.helpers, 'getResponseBodyBuffer').mockResolvedValue(bridged);
+
+    const body = await plugin.init({ bodyPath: '/tmp/does-not-matter', statusCode: 200 }).response.getBody();
+
+    expect(Buffer.isBuffer(body)).toBe(true);
+    expect((body as Buffer).toString('utf8')).toBe(decoded);
+  });
+
+  it('setBody accepts bytes and strings, and rejects other values', () => {
+    const bodyPath = path.join(tmpdir(), 'set-body.response');
+    const { response } = plugin.init({ bodyPath });
+
+    response.setBody(Buffer.from('from-buffer'));
+    expect(fs.readFileSync(bodyPath, 'utf8')).toBe('from-buffer');
+
+    response.setBody(new Uint8Array(Buffer.from('from-uint8')));
+    expect(fs.readFileSync(bodyPath, 'utf8')).toBe('from-uint8');
+
+    response.setBody('from-string');
+    expect(fs.readFileSync(bodyPath, 'utf8')).toBe('from-string');
+
+    expect(() => response.setBody(Promise.resolve() as unknown as string)).toThrow(TypeError);
+    expect(() => response.setBody({} as unknown as string)).toThrow(/Buffer, Uint8Array, or string/);
   });
 
   it('works for getting headers', () => {
