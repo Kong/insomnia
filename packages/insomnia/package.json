@@ -220,7 +220,7 @@
   },
   "optionalDependencies": {
     "@kong/insomnia-plugin-ai": "^1.0.11",
-    "@kong/insomnia-plugin-external-vault": "0.1.5-dev.20260806050036"
+    "@kong/insomnia-plugin-external-vault": "0.1.5-dev.20260910023314"
   },
   "dev": {
     "dev-server-port": 3334
