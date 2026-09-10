@@ -52,6 +52,7 @@ export function init(): BaseSettings {
     fontVariantLigatures: false,
     forceVerticalLayout,
     hasKonnectPat: false,
+    hideSecretValuesInPreviewAndConsole: true,
     konnectOrganizationId: null,
     hotKeyRegistry: newDefaultRegistry(),
     httpProxy: '',
