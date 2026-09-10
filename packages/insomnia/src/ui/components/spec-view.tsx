@@ -1428,7 +1428,7 @@ export const SpecView = ({
               {apiSpec?.contents && !isLintPaneOpen ? lintToolbar : null}
             </div>
           </Panel>
-          {isSpecPaneOpen && (
+          {isSpecPaneOpen && !!parsedSpec && (
             <>
               <PanelResizeHandle
                 className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
