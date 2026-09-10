@@ -119,4 +119,13 @@ describe('secureReadFile', () => {
 
     await expect(secureReadFile(dbFile)).rejects.toThrow(/cannot access/);
   });
+
+  it('allows an ordinary file when the filesystem root is allowlisted', async () => {
+    await services.settings.patch({ dataFolders: [path.parse(userDataDir).root] });
+    const { secureReadFile } = await import('../secure-read-file');
+    const file = path.join(userDataDir, 'notes.txt');
+    fs.writeFileSync(file, 'hello');
+
+    await expect(secureReadFile(file)).resolves.toBe('hello');
+  });
 });

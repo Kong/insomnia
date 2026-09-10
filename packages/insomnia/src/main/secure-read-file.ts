@@ -14,7 +14,9 @@ export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   const securedPath = securePath(filePath);
   const isAllowed = allowList.some(f => {
     const resolvedRoot = path.resolve(f);
-    return resolvedRoot !== '' && (securedPath === resolvedRoot || securedPath.startsWith(resolvedRoot + path.sep));
+    // Avoid a doubled separator (e.g. '//') when resolvedRoot is already a filesystem root.
+    const rootPrefix = resolvedRoot.endsWith(path.sep) ? resolvedRoot : resolvedRoot + path.sep;
+    return resolvedRoot !== '' && (securedPath === resolvedRoot || securedPath.startsWith(rootPrefix));
   });
   return { isAllowed, securedPath };
 };
