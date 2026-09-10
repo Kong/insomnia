@@ -1,4 +1,5 @@
 import { getOrgUserPermissions, type Permission } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Heading, Link, Radio, RadioGroup } from 'react-aria-components';
 
@@ -23,6 +24,9 @@ export const HeaderInviteButton = ({
 
   // TODO: should manage this in the scope of organization context
   useEffect(() => {
+    if (models.organization.isLocalOrganizationId(organizationId)) {
+      return;
+    }
     (async () => {
       getOrgUserPermissions({
         organizationId,

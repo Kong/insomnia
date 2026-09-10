@@ -5,7 +5,6 @@ import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useMultipleWorkspacesData } from '~/ui/hooks/use-workspace-data';
 
 interface UseProjectNavigationSidebarDataOptions {
-  isProjectTabActive: boolean;
   projectNavigationSidebarFilter?: string;
   expandedProjectAndWorkspaceIds?: string[];
 }
@@ -14,14 +13,9 @@ export function useProjectNavigationSidebarData(
   organizationId: string,
   options: UseProjectNavigationSidebarDataOptions,
 ) {
-  const { isProjectTabActive, projectNavigationSidebarFilter, expandedProjectAndWorkspaceIds } = options;
+  const { projectNavigationSidebarFilter, expandedProjectAndWorkspaceIds } = options;
   const { projects, workspaces, workspaceMetas } = useOrganizationData(organizationId);
-  // Show konnect or none-konnect projects based on selected tab
-  const activeProjects = useMemo(
-    () => projects.filter(isProjectTabActive ? p => !p.konnectControlPlaneId : p => p.konnectControlPlaneId != null),
-    [projects, isProjectTabActive],
-  );
-  const projectIds = useMemo(() => activeProjects.map(p => p._id), [activeProjects]);
+  const projectIds = useMemo(() => projects.map(p => p._id), [projects]);
 
   // Get the list of collection/design workspace ids that should be cached based on the current filter and expanded projects/workspaces.
   const collectionOrDesignWorkspaceIds = useMemo(() => {
@@ -44,14 +38,10 @@ export function useProjectNavigationSidebarData(
   const { dataByWorkspaceId: collectionByWorkspaceIds, pendingWorkspaceIds: pendingCollectionWorkspaceIds } =
     useMultipleWorkspacesData(collectionOrDesignWorkspaceIds);
 
-  const nonKonnectProjects = useMemo(() => projects.filter(p => !p.konnectControlPlaneId), [projects]);
-  const konnectProjects = useMemo(() => projects.filter(p => p.konnectControlPlaneId != null), [projects]);
-
   return {
     organizationProjects: projects,
     organizationWorkspaces: workspaces,
     workspaceMetas,
-    activeProjects,
     projectIds,
     collectionOrDesignWorkspaceIds,
     collectionByWorkspaceIds: collectionByWorkspaceIds as Map<
@@ -59,7 +49,5 @@ export function useProjectNavigationSidebarData(
       WorkspaceChildrenForScope<'collection' | 'design'>
     >,
     pendingCollectionWorkspaceIds,
-    nonKonnectProjects,
-    konnectProjects,
   };
 }

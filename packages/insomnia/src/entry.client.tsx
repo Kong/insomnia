@@ -9,6 +9,7 @@ import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { setTemplatingDbAuthToken } from '~/common/templating/liquid-extension-worker';
+import { migrateKonnectProjectsIfUnambiguous } from '~/konnect/migrate-konnect-organization';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
@@ -144,6 +145,17 @@ if (appSettings.clearOAuth2SessionOnRestart) {
 }
 
 applyColorScheme(appSettings);
+
+// Runs before the router hydrates so every loader can assume Konnect projects already live under
+// the Konnect organization. The ambiguous case is left for the user to resolve in the UI.
+try {
+  const { accountId } = await services.userSession.get();
+  if (accountId) {
+    await migrateKonnectProjectsIfUnambiguous(accountId);
+  }
+} catch (e) {
+  console.log('[konnect] Failed to migrate Konnect projects', e);
+}
 
 const initialEntry = await getInitialEntry();
 

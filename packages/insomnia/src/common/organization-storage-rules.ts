@@ -18,7 +18,7 @@ export async function fetchAndCacheOrganizationStorageRule(
 ): Promise<StorageRules> {
   invariant(organizationId, 'Organization ID is required');
 
-  if (models.organization.isScratchpadOrganizationId(organizationId)) {
+  if (models.organization.isLocalOrganizationId(organizationId)) {
     return {
       enableCloudSync: false,
       enableLocalVault: true,
