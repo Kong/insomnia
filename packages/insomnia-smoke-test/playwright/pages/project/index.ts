@@ -103,9 +103,9 @@ export class ProjectPage extends BasePage {
   }
 
   async createCollection(name = 'My Collection'): Promise<void> {
-    await this.selectCreateInProjectType('Collection');
+    await this.selectCreateInProjectType('API Collection');
     await this.page.getByRole('dialog').waitFor({ state: 'visible' });
-    const nameInput = this.page.getByRole('dialog').getByPlaceholder('Enter a name for your Request Collection');
+    const nameInput = this.page.getByRole('dialog').getByPlaceholder('Enter a name for your API Collection');
     await nameInput.waitFor({ state: 'visible' });
     await nameInput.fill(name);
     await this.page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
@@ -175,7 +175,10 @@ export class ProjectPage extends BasePage {
     // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
     const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
     if (await discardConfirmDialog.isVisible().catch(() => false)) {
-      await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click({ timeout: 5000 }).catch(() => {});
+      await discardConfirmDialog
+        .getByRole('button', { name: 'Yes' })
+        .click({ timeout: 5000 })
+        .catch(() => {});
     }
 
     await dialog.waitFor({ state: 'hidden' });
@@ -271,7 +274,10 @@ export class ProjectPage extends BasePage {
       // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
       const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
       if (await discardConfirmDialog.isVisible().catch(() => false)) {
-        await discardConfirmDialog.getByRole('button', { name: 'Yes' }).click({ timeout: 5000 }).catch(() => {});
+        await discardConfirmDialog
+          .getByRole('button', { name: 'Yes' })
+          .click({ timeout: 5000 })
+          .catch(() => {});
       }
     }
     // The modal's backdrop still intercepts clicks for a moment after closing

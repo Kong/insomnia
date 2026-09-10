@@ -62,7 +62,8 @@ export const scopeToActivity = (scope: WorkspaceScope) => {
       return 'debug';
     }
     case WorkspaceScopeKeys.design: {
-      return 'spec';
+      // Legacy spec workspace route has been merged into the debug route, so we return debug here as well.
+      return 'debug';
     }
     case WorkspaceScopeKeys.mockServer: {
       return 'mock-server';

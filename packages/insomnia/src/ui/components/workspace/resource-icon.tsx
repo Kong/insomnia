@@ -21,7 +21,7 @@ export function ResourceIcon({ resource }: { resource: any }) {
   if (isWorkspace) {
     icon =
       ({
-        'design': 'file',
+        'design': 'bars',
         'collection': 'bars',
         'mock-server': 'server',
         'environment': 'code',
