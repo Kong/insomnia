@@ -1,5 +1,5 @@
 import { checkSeats } from 'insomnia-api';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -11,6 +11,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { id: sessionId } = await services.userSession.get();
 
   const { organizationId } = params;
+
+  if (models.organization.isLocalOrganizationId(organizationId)) {
+    return { isAllowed: false };
+  }
 
   try {
     // Check whether the user can add a new collaborator

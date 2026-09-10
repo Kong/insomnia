@@ -35,6 +35,11 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const { organizationId, projectId } = params;
 
+  invariant(
+    storageType === 'local' || !models.organization.isLocalOrganizationId(organizationId),
+    'Projects in this organization can only be stored locally',
+  );
+
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 

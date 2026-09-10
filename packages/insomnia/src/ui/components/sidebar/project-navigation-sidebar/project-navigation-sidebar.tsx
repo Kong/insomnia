@@ -4,10 +4,8 @@ import type { CollectionWorkspaceChildren, RequestGroup, Workspace } from 'insom
 import { models, services } from 'insomnia-data';
 import { fuzzyMatchAll } from 'insomnia-data/common';
 import {
-  type Dispatch,
   type ForwardedRef,
   forwardRef,
-  type SetStateAction,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -15,7 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Button, GridList, GridListItem, type Selection, Tabs, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { Button, GridList, GridListItem, type Selection, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { href, useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -40,11 +38,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
-import {
-  NewProjectButton,
-  SidebarSearchField,
-  SideBarTabList,
-} from '~/ui/components/sidebar/project-navigation-sidebar/components';
+import { NewProjectButton, SidebarSearchField } from '~/ui/components/sidebar/project-navigation-sidebar/components';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
@@ -52,12 +46,13 @@ import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigati
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
 import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
+import { registerKonnectSyncTrigger } from '~/ui/hooks/konnect-sync-trigger';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
+import { getKonnectSyncEnabled } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
@@ -72,17 +67,12 @@ import { WorkspaceNode } from './workspace-node';
 interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
   activeNodeId?: string;
-  activeTab: ProjectNavigationSidebarTabId;
-  konnectSyncEnabled: boolean;
   onCreateProject: () => void;
-  setActiveTab: Dispatch<SetStateAction<ProjectNavigationSidebarTabId | undefined>>;
 }
 
 export interface ProjectNavigationSidebarHandle {
   expandProject: (projectId: string) => void;
 }
-
-export type ProjectNavigationSidebarTabId = 'projects' | 'konnect';
 
 function LastSyncedLabel({ lastSyncedAt }: { lastSyncedAt: number | null }) {
   return lastSyncedAt ? `Last synced: ${getRelativeTimeString(lastSyncedAt, Date.now())}` : 'Not yet synced';
@@ -112,7 +102,7 @@ const workspaceManualSortMethod = (a: Workspace, b: Workspace, localOrder: strin
 };
 
 const ProjectNavigationSidebarInner = (
-  { storageRules, konnectSyncEnabled, onCreateProject, activeTab, setActiveTab }: ProjectNavigationSidebarProps,
+  { storageRules, onCreateProject }: ProjectNavigationSidebarProps,
   ref: ForwardedRef<ProjectNavigationSidebarHandle>,
 ) => {
   const navigate = useNavigate();
@@ -128,7 +118,7 @@ const ProjectNavigationSidebarInner = (
     requestId?: string;
     requestGroupId?: string;
   };
-  const { settings } = useRootLoaderData()!;
+  const { settings, userSession } = useRootLoaderData()!;
 
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();
@@ -152,16 +142,13 @@ const ProjectNavigationSidebarInner = (
     `${organizationId}:project-navigation-sidebar-filter`,
     '',
   );
-  const [konnectFilter, setKonnectFilter] = reactUse.useLocalStorage(
-    `${organizationId}:project-navigation-konnect-filter`,
-    '',
-  );
   const [expandedProjectAndWorkspaceIds, setExpandedProjectAndWorkspaceIds] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:nav-expanded-projects-and-workspaces`,
     [],
   );
   const deleteProjectFetcher = useProjectDeleteActionFetcher();
-  const isProjectTabActive = activeTab === 'projects';
+  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
+  const konnectSyncEnabled = getKonnectSyncEnabled(userSession.accountId);
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();
   const [lastSyncedAt, setLastSyncedAt] = reactUse.useLocalStorage<number | null>(
     `${organizationId}:konnect-last-synced-at`,
@@ -172,19 +159,14 @@ const ProjectNavigationSidebarInner = (
     organizationProjects,
     organizationWorkspaces,
     workspaceMetas,
-    activeProjects,
     collectionByWorkspaceIds,
     pendingCollectionWorkspaceIds,
-    nonKonnectProjects,
-    konnectProjects,
   } = useProjectNavigationSidebarData(organizationId, {
-    isProjectTabActive,
     projectNavigationSidebarFilter,
     expandedProjectAndWorkspaceIds,
   });
 
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
-  const [konnectFilterInputValue, setKonnectFilterInputValue] = useState(konnectFilter || '');
 
   useEffect(() => {
     // Keep input state aligned with storage only when organization context switches.
@@ -202,17 +184,11 @@ const ProjectNavigationSidebarInner = (
       }
     };
     setFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-sidebar-filter`));
-    setKonnectFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-konnect-filter`));
   }, [organizationId]);
 
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
-  reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
-  const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
-
-  const syncKonnectProjectsAndNotifyRef = useRef<(konnectOrganizationId?: string | null) => Promise<void>>(
-    async () => {},
-  );
+  const activeFilter = (projectNavigationSidebarFilter || '').trim();
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
@@ -259,14 +235,14 @@ const ProjectNavigationSidebarInner = (
       }
     }
   };
-  syncKonnectProjectsAndNotifyRef.current = syncKonnectProjectsAndNotify;
+  registerKonnectSyncTrigger(syncKonnectProjectsAndNotify);
 
   const handleSync = async () => {
     if (!konnectSyncEnabled) {
       return;
     }
 
-    const isResync = konnectProjects.length > 0;
+    const isResync = organizationProjects.length > 0;
     if (isResync) {
       showModal(AskModal, {
         title: 'Sync updates from Konnect',
@@ -317,7 +293,7 @@ const ProjectNavigationSidebarInner = (
   };
 
   useEffect(() => {
-    if (projectNavigationSidebarFilter || konnectFilter) {
+    if (projectNavigationSidebarFilter) {
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.projectListFiltered,
         properties: {
@@ -325,7 +301,7 @@ const ProjectNavigationSidebarInner = (
         },
       });
     }
-  }, [projectNavigationSidebarFilter, konnectFilter, activeProjectId]);
+  }, [projectNavigationSidebarFilter, activeProjectId]);
 
   const flatItems = useMemo<FlatItem[]>(() => {
     const buildWorkspaceAndCollectionData = (): FlatItem[] => {
@@ -335,7 +311,7 @@ const ProjectNavigationSidebarInner = (
 
       const collectionChildrenAndMetaByWorkspaceIds = collectionByWorkspaceIds;
 
-      for (const project of activeProjects) {
+      for (const project of organizationProjects) {
         const projectId = project._id;
         const isProjectCollapsed = !(expandedProjectAndWorkspaceIds ?? []).includes(projectId);
         items.push({
@@ -570,12 +546,12 @@ const ProjectNavigationSidebarInner = (
     return buildWorkspaceAndCollectionData();
   }, [
     activeFilter,
-    activeProjects,
     collectionByWorkspaceIds,
     collectionSortOrders,
     expandedProjectAndWorkspaceIds,
     localWorkspaceOrders,
     organizationId,
+    organizationProjects,
     organizationWorkspaces,
     pendingCollectionWorkspaceIds,
     projectWorkspaceSortOrder,
@@ -851,7 +827,6 @@ const ProjectNavigationSidebarInner = (
     expandedProjectAndWorkspaceIds,
   });
   const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
-    setActiveTab,
     toggleRequestGroups,
     expandProjectOrWorkspaces,
     visibleFlatItems,
@@ -880,7 +855,7 @@ const ProjectNavigationSidebarInner = (
 
   useKeyboardShortcuts(() => parentRef.current!, {
     sidebar_showCreateDropdown: event => {
-      if (!isProjectTabActive) {
+      if (isKonnectOrganization) {
         return;
       }
 
@@ -934,7 +909,7 @@ const ProjectNavigationSidebarInner = (
   });
 
   const { hasKonnectPat } = settings;
-  const showKonnectSyncIntro = konnectSyncEnabled && !isProjectTabActive && !hasKonnectPat;
+  const showKonnectSyncIntro = isKonnectOrganization && !hasKonnectPat;
   const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [showSyncDetails, setShowSyncDetails] = useState(false);
@@ -968,17 +943,6 @@ const ProjectNavigationSidebarInner = (
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      {/* In focused mode the whole sidebar belongs to the collection, so the project/konnect tabs are hidden too. */}
-      {!focusedWorkspaceId && (
-        <Tabs selectedKey={activeTab} onSelectionChange={key => setActiveTab(key as ProjectNavigationSidebarTabId)}>
-          <SideBarTabList
-            konnectSyncEnabled={konnectSyncEnabled}
-            isScratchPad={isScratchPad}
-            nonKonnectProjectLength={nonKonnectProjects.length}
-            konnectProjectsLength={konnectProjects.length}
-          />
-        </Tabs>
-      )}
       {showKonnectSyncIntro ? (
         <KonnectSyncIntro onConfigure={() => setShowKonnectConfigModal(true)} />
       ) : (
@@ -1075,15 +1039,11 @@ const ProjectNavigationSidebarInner = (
           ) : (
             <div className="flex justify-between gap-1 p-(--padding-sm)">
               <SidebarSearchField
-                value={isProjectTabActive ? filterInputValue : konnectFilterInputValue}
+                value={filterInputValue}
                 isDisabled={organizationProjects.length === 0}
-                onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilterInputValue}
+                onChange={setFilterInputValue}
               />
-              {isProjectTabActive ? (
-                !isScratchPad && (
-                  <NewProjectButton onPress={onCreateProject} isDisabled={organizationProjects.length === 0} />
-                )
-              ) : (
+              {isKonnectOrganization ? (
                 <div className="flex items-center gap-1">
                   {syncing ? (
                     <Button
@@ -1099,7 +1059,8 @@ const ProjectNavigationSidebarInner = (
                       <Button
                         aria-label="Sync Konnect"
                         onPress={handleSync}
-                        className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                        isDisabled={!konnectSyncEnabled}
+                        className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Icon icon="refresh" />
                         Sync
@@ -1108,7 +1069,11 @@ const ProjectNavigationSidebarInner = (
                         placement="bottom"
                         className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
                       >
-                        <LastSyncedLabel lastSyncedAt={lastSyncedAt ?? null} />
+                        {konnectSyncEnabled ? (
+                          <LastSyncedLabel lastSyncedAt={lastSyncedAt ?? null} />
+                        ) : (
+                          'Your account does not have access to Konnect control planes.'
+                        )}
                       </Tooltip>
                     </TooltipTrigger>
                   )}
@@ -1120,11 +1085,15 @@ const ProjectNavigationSidebarInner = (
                     <Icon icon="gear" />
                   </Button>
                 </div>
+              ) : (
+                !isScratchPad && (
+                  <NewProjectButton onPress={onCreateProject} isDisabled={organizationProjects.length === 0} />
+                )
               )}
             </div>
           )}
 
-          {!isProjectTabActive && syncing && (
+          {isKonnectOrganization && syncing && (
             <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>
           )}
 
@@ -1401,7 +1370,7 @@ const ProjectNavigationSidebarInner = (
             />
           )}
 
-          {!isProjectTabActive && lastSyncResult && (
+          {isKonnectOrganization && lastSyncResult && (
             <div
               className={`m-2 flex items-start justify-between gap-2 rounded-sm p-3 text-xs ${
                 !lastSyncResult.success
@@ -1532,7 +1501,6 @@ const ProjectNavigationSidebarInner = (
       {showKonnectConfigModal && (
         <KonnectSettingsModal
           onClose={() => setShowKonnectConfigModal(false)}
-          syncKonnectProjectsAndNotifyRef={syncKonnectProjectsAndNotifyRef}
           onDisconnect={() => setLastSyncedAt(null)}
         />
       )}
@@ -1553,19 +1521,35 @@ export const ProjectNavigationSidebar = forwardRef<ProjectNavigationSidebarHandl
 
 export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
   const { organizationId } = useParams() as { organizationId: string };
+  const { settings } = useRootLoaderData()!;
   const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
-  const { features } = useOrganizationPermissions();
+  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
+  const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
+
+  if (isKonnectOrganization) {
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
+        {!settings.hasKonnectPat ? (
+          <KonnectSyncIntro onConfigure={() => setShowKonnectConfigModal(true)} />
+        ) : (
+          <div className="flex justify-between gap-1 p-(--padding-sm)">
+            <SidebarSearchField value="" isDisabled onChange={() => {}} />
+            <Button
+              aria-label="Konnect settings"
+              onPress={() => setShowKonnectConfigModal(true)}
+              className="flex aspect-square h-full items-center justify-center rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+            >
+              <Icon icon="gear" />
+            </Button>
+          </div>
+        )}
+        {showKonnectConfigModal && <KonnectSettingsModal onClose={() => setShowKonnectConfigModal(false)} />}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <Tabs>
-        <SideBarTabList
-          konnectSyncEnabled={features.konnectSync.enabled}
-          isScratchPad={isScratchPad}
-          nonKonnectProjectLength={0}
-          konnectProjectsLength={0}
-        />
-      </Tabs>
       <div className="flex justify-between gap-1 p-(--padding-sm)">
         <SidebarSearchField value="" isDisabled onChange={() => {}} />
         {!isScratchPad && <NewProjectButton onPress={onCreateProject} />}

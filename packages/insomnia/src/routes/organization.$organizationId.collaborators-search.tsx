@@ -1,5 +1,5 @@
 import { searchCollaborators } from 'insomnia-api';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { createFetcherLoadHook } from '~/ui/utils/router';
@@ -10,6 +10,10 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const { id: sessionId } = await services.userSession.get();
 
   const { organizationId } = params;
+
+  if (models.organization.isLocalOrganizationId(organizationId)) {
+    return [];
+  }
 
   try {
     const requestUrl = new URL(request.url);
