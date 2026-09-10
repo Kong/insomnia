@@ -3,7 +3,7 @@ import { EnvironmentType } from 'insomnia-data';
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 
-import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -33,6 +33,7 @@ export const RequestGroupPane: FC = () => {
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const patchGroup = useRequestGroupPatcher();
   const { toggleEnvironmentType } = useToggleEnvironmentType();
+  const allowSwitchEnvironment = !hasProtectedKvPairs(activeRequestGroup?.kvPairData);
 
   const saveChanges = () => {
     if (environmentEditorRef.current?.isValid()) {
@@ -217,6 +218,7 @@ export const RequestGroupPane: FC = () => {
                   }
                 }}
                 isSelected={activeRequestGroup?.environmentType !== EnvironmentType.KVPAIR}
+                isDisabled={!allowSwitchEnvironment}
                 className="ml-2 flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs py-1 pl-2 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
               >
                 {({ isSelected }) => (
