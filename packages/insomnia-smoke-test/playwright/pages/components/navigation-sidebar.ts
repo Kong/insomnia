@@ -110,28 +110,44 @@ export class NavigationSidebar {
     }
   }
 
-  async expectWorkspaceActive(workspaceName: string): Promise<void> {
+  async expectWorkspaceActive(
+    workspaceName: string,
+    { allowReloadFallback = false }: { allowReloadFallback?: boolean } = {},
+  ): Promise<void> {
     await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
     // In focus mode there's no grid row to check aria-selected on for this workspace — being
     // shown as the focused header already proves it's the active one. Poll for either outcome
     // rather than deciding up front: right after navigating in, there's a brief window where
     // neither is true yet (focus mode hasn't finished swapping the row for the header), and a
     // one-shot check can catch that transient state and commit to the wrong branch.
-    await expect
-      .poll(
-        async () => {
-          if (await this.isWorkspaceFocused(workspaceName)) {
-            return true;
-          }
-          const gridItem = this.workspaceGridListItem(workspaceName);
-          if ((await gridItem.count()) === 0) {
-            return false;
-          }
-          return (await gridItem.getAttribute('aria-selected')) === 'true';
-        },
-        { timeout: 25_000 },
-      )
-      .toBe(true);
+    const isActive = async () => {
+      if (await this.isWorkspaceFocused(workspaceName)) {
+        return true;
+      }
+      const gridItem = this.workspaceGridListItem(workspaceName);
+      if ((await gridItem.count()) === 0) {
+        return false;
+      }
+      return (await gridItem.getAttribute('aria-selected')) === 'true';
+    };
+
+    if (!allowReloadFallback) {
+      await expect.poll(isActive, { timeout: 25_000 }).toBe(true);
+      return;
+    }
+
+    // Rare app-side race right after creating a workspace: the sidebar's cache-invalidation
+    // event for the new workspace can be dropped, leaving flatItems (and so both outcomes
+    // above) stuck stale indefinitely — a longer timeout wouldn't help since nothing ever
+    // arrives to unstick it. A reload rebuilds the sidebar cache from scratch instead of
+    // waiting on that possibly-dropped event, so nudge once before giving up.
+    try {
+      await expect.poll(isActive, { timeout: 10_000 }).toBe(true);
+      return;
+    } catch {
+      await this.page.reload({ waitUntil: 'networkidle' });
+    }
+    await expect.poll(isActive, { timeout: 15_000 }).toBe(true);
   }
 
   async selectWorkspace(workspaceName: string): Promise<void> {
