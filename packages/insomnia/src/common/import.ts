@@ -611,7 +611,7 @@ export const importResourcesToNewWorkspace = async ({
   if (apiSpecResource || isApiSpecImport(resourceCacheItem.importer)) {
     newWorkspace = await services.workspace.create({
       name: workspaceToImport?.name,
-      scope: 'design',
+      scope: workspaceToImport?.scope ?? 'collection',
       parentId: projectId,
     });
 
@@ -626,7 +626,7 @@ export const importResourcesToNewWorkspace = async ({
     });
   } else {
     newWorkspace = await services.workspace.create({
-      name: workspaceToImport?.name || 'Imported Collection',
+      name: workspaceToImport?.name || 'Imported API Collection',
       scope: workspaceToImport?.scope || 'collection',
       parentId: projectId,
     });

@@ -486,8 +486,9 @@ test.describe('pre-request features tests', () => {
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify persisted environment
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+
     const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
     const rows = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows.join(' '));
@@ -583,8 +584,8 @@ test.describe('pre-request features tests', () => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await insomnia.navigationSidebar.clickRequestOrFolder('update kv pair environment');
     // switch to table view environment
-    await page.getByLabel('Select a Collection Environment').click();
-    const manageBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    await page.getByLabel('Select an API Collection Environment').click();
+    const manageBtn = page.getByRole('button', { name: 'Manage API collection environments' });
     await expect.soft(manageBtn).toBeEnabled();
     await manageBtn.click();
     const tableEditBtn = page.getByLabel('Table Edit');
@@ -604,10 +605,10 @@ test.describe('pre-request features tests', () => {
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
-    const verifyManageBtn = page.getByLabel('Select a Collection Environment');
+    const verifyManageBtn = page.getByLabel('Select an API Collection Environment');
     await expect.soft(verifyManageBtn).toBeEnabled();
     await verifyManageBtn.click();
-    const verifyCollectionBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    const verifyCollectionBtn = page.getByRole('button', { name: 'Manage API collection environments' });
     await expect.soft(verifyCollectionBtn).toBeEnabled();
     await verifyCollectionBtn.click();
     await page.getByText('__environment_type').click();

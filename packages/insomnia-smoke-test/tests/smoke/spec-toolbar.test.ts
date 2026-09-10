@@ -61,6 +61,6 @@ test.describe('Spec editor toolbar', () => {
     await collectionItem.hover();
     await expect
       .soft(page.getByRole('tooltip'))
-      .toHaveText('You cannot generate a collection when spec errors exist. Fix the errors or change the ruleset first.');
+      .toHaveText('You cannot generate an API collection when spec errors exist. Fix the errors or change the ruleset first.');
   });
 });

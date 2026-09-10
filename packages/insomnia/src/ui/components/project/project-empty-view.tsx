@@ -44,7 +44,7 @@ export const ProjectEmptyView: FC<Props> = ({
           }}
         >
           <Icon icon="file" className="text-(--font-size-xl)" />
-          Create document
+          Enter API Spec
         </Button>
         <Button
           aria-label="Import"
