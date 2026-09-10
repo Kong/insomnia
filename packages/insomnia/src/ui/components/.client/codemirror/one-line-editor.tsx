@@ -359,6 +359,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           if (!cm) {
             return;
           }
+          // codeMirror.current is nulled asynchronously — by the useUnmount cleanup
+          // effect on unmount, and by reinitialize()'s cleanUpEditor() — so React
+          // schedules asynchronously and does not guarantee runs before the next rAF tick — so a
+          // stale loop can still see a non-null cm whose wrapper was already removed from the DOM.
+          // Bail here rather than steal focus into a zombie editor that's mid-teardown.
+          if (!document.body.contains(cm.getWrapperElement())) {
+            return;
+          }
           if (!cm.hasFocus()) {
             const active = document.activeElement as HTMLElement | null;
             // The row React Aria bounces focus to is a non-interactive container (role="row"/"option");

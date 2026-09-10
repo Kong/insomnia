@@ -23,6 +23,10 @@ export const EditableInput = ({
   // This state is used to keep track of the value while submitting when parent component value is not updated
   const [pendingValue, setPendingValue] = useState<string | null>(null);
   const editableRef = useRef<HTMLDivElement>(null);
+  // Removing the focused Input from the DOM (on Enter/Escape) fires a native blur
+  // synchronously, which would otherwise run onSubmit a second time (or commit after an
+  // Escape cancel) and race with the next double-click's FocusScope mount.
+  const settledRef = useRef(false);
 
   useEffect(() => {
     // set pending value to null if parent value is changed
@@ -32,6 +36,12 @@ export const EditableInput = ({
   useEffect(() => {
     setIsEditable(editable);
   }, [editable]);
+
+  useEffect(() => {
+    if (isEditable) {
+      settledRef.current = false;
+    }
+  }, [isEditable]);
 
   useEffect(() => {
     if (!isEditable) {
@@ -76,7 +86,14 @@ export const EditableInput = ({
         <span className="truncate">{pendingValue ?? value}</span>
       </div>
       {isEditable && (
-        <FocusScope contain restoreFocus autoFocus>
+        // No `restoreFocus`: on commit the input unmounts while the Enter keypress is
+        // still in flight, and restoring focus here races the RAC collection correction,
+        // landing DOM focus on a draggable row (e.g. the KV editor's trailing row) before
+        // the keyup fires. RAC then reads that keyup as a keyboard drag release and
+        // starts a drag session that aria-hides the whole page (frozen UI until Escape).
+        // Letting focus settle on the body keeps the collection unfocused, so the drag
+        // can never be armed.
+        <FocusScope contain autoFocus>
           <Input
             ref={el => el?.select()}
             className={`truncate ${className || 'px-2'}`}
@@ -84,9 +101,13 @@ export const EditableInput = ({
             aria-label={ariaLabel}
             defaultValue={value}
             onKeyDown={e => {
-              const value = e.currentTarget.value;
               if (e.key === 'Enter') {
                 e.stopPropagation();
+                if (settledRef.current) {
+                  return;
+                }
+                settledRef.current = true;
+                const value = e.currentTarget.value;
                 setPendingValue(value);
                 onSubmit(value);
                 setIsEditable(false);
@@ -95,11 +116,16 @@ export const EditableInput = ({
 
               if (e.key === 'Escape') {
                 e.stopPropagation();
+                settledRef.current = true;
                 setIsEditable(false);
                 onEditableChange?.(false);
               }
             }}
             onBlur={e => {
+              if (settledRef.current) {
+                return;
+              }
+              settledRef.current = true;
               const value = e.currentTarget.value;
               setPendingValue(value);
               onSubmit(value);
