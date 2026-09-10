@@ -23,7 +23,7 @@
  **/
 
 export { RequestAuth } from './auth';
-export { Certificate } from './certificates';
+export { type CertificateOptions, Certificate } from './certificates';
 export { Cookie, CookieList } from './cookies';
 export { Header, HeaderList } from './headers';
 export { Property, PropertyBase, PropertyList } from './properties';
