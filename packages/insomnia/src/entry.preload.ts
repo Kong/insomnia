@@ -190,6 +190,7 @@ const sync: SyncBridgeAPI = {
   remoteBackendProjectsOfTeam: (...args) => invokeGlobalSyncMethod('remoteBackendProjectsOfTeam', ...args),
   hasBackendProjectForRootDocument: (...args) => invokeGlobalSyncMethod('hasBackendProjectForRootDocument', ...args),
   removeBackendProjectsForRoot: (...args) => invokeGlobalSyncMethod('removeBackendProjectsForRoot', ...args),
+  archiveBackendProject: (...args) => invokeGlobalSyncMethod('archiveBackendProject', ...args),
   removeBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeBranch', ...args),
   removeRemoteBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeRemoteBranch', ...args),
   rollback: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollback', ...args),

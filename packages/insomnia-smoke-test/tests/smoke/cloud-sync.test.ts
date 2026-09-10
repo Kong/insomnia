@@ -160,7 +160,7 @@ test.describe('Cloud Sync', () => {
 
     // delete workspace locally
     await page.getByLabel('My Collection R1').getByTestId('DropdownButton').click();
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     await page.getByText('Remove Local Copy').click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted locally
@@ -174,11 +174,31 @@ test.describe('Cloud Sync', () => {
 
     // delete workspace both locally and remotely
     await page.getByTestId('workspace-grid').getByLabel('My Collection R1').getByTestId('DropdownButton').click();
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted remotely
     await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('My Collection R1')).toBeHidden();
     await expect.soft(insomnia.navigationSidebar.workspaceRow('My Collection R1')).toBeHidden();
+  });
+
+  test('Delete an unsynced remote file from the project dashboard', async ({ page, insomnia }) => {
+    // "Design Project" is only ever remote in this suite, so it is never pulled locally first.
+    const unsyncedCard = page.getByTestId('workspace-grid').getByLabel('Design Project');
+    await expect.soft(unsyncedCard).toBeVisible();
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('Design Project')).toBeVisible();
+
+    await unsyncedCard.hover();
+    await unsyncedCard.getByLabel('Delete unsynced file').click();
+
+    await expect.soft(page.getByRole('heading', { name: 'Delete file' })).toBeVisible();
+    await page.getByRole('button', { name: 'Delete unsynced file permanently' }).click();
+
+    await expect.soft(unsyncedCard).toBeHidden();
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('Design Project')).toBeHidden();
+    await expect.soft(insomnia.navigationSidebar.workspaceRow('Design Project')).toBeHidden();
+
+    // The other remote files must be untouched.
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('My Collection R1')).toBeVisible();
   });
 
   // Regression test for the main-process VCS singleton mutable-state bug: a single `_backendProject`
