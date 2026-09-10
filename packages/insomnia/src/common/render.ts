@@ -296,8 +296,11 @@ export async function render<T>(
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
         //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
+        // Gated on the ORIGINAL input lacking custom-tag syntax so that tags returning
+        // raw external content (response bodies, OAuth tokens, file contents) never have
+        // their output re-interpreted as a second template pass against the live context.
         // @ts-expect-error -- TSCONVERSION
-        if (input.includes('{%')) {
+        if (!hasNunjucksCustomTagSymbols && input.includes('{%')) {
           // @ts-expect-error -- TSCONVERSION
           input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
         }
@@ -584,11 +587,16 @@ export async function getRenderedRequestAndContext({
   const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
   request.headers = getOrInheritHeaders({ request, requestGroups });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
+  // Only manually-authored cookies may contain live template syntax. Server-set cookie values
+  // are excluded from rendering here too, not just in the Cookie Jar UI, so that a template
+  // placed in a cookie by a response is never re-evaluated on a later request.
+  const manualCookies = cookieJar.cookies.filter(cookie => cookie.source === 'manual');
+  const nonManualCookies = cookieJar.cookies.filter(cookie => cookie.source !== 'manual');
   // Render all request properties
   const renderResult = await render(
     {
       _request: request,
-      _cookieJar: cookieJar,
+      _cookieJar: { ...cookieJar, cookies: manualCookies },
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
@@ -598,7 +606,10 @@ export async function getRenderedRequestAndContext({
   );
 
   const renderedRequest = renderResult._request;
-  const renderedCookieJar = renderResult._cookieJar;
+  const renderedCookieJar = {
+    ...renderResult._cookieJar,
+    cookies: [...renderResult._cookieJar.cookies, ...nonManualCookies],
+  };
   renderedRequest.description = await render(description, renderContext, null, 'keep');
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
