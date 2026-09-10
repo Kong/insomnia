@@ -1,4 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import classNames from 'classnames';
 import {
   exportGlobalEnvironmentToFile,
   exportMcpClientToFile,
@@ -59,6 +60,7 @@ interface Props {
   sortOrder?: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
   isOpen: boolean;
+  forceShowTrigger?: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
 
@@ -88,6 +90,7 @@ export const SidebarWorkspaceDropdown = ({
   onSortOrderChange,
   isOpen,
   onOpenChange,
+  forceShowTrigger = false,
 }: Props) => {
   const projectId = project._id;
   const workspaceId = workspace._id;
@@ -109,8 +112,8 @@ export const SidebarWorkspaceDropdown = ({
 
   const workspaceName = workspace.name;
   const projectName = project.name || getProductName();
-  const isCollection = models.workspace.isCollection(workspace);
-  const isDesign = models.workspace.isDesign(workspace);
+  // Legacy design workspace is treated as collection for now.
+  const isCollectionLike = models.workspace.isCollection(workspace) || models.workspace.isDesign(workspace);
   const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const createRequest = (requestType: CreateRequestType) => {
@@ -220,7 +223,7 @@ export const SidebarWorkspaceDropdown = ({
     items: [
       {
         id: 'RunCollection',
-        name: 'Run Collection',
+        name: 'Run API Collection',
         icon: 'circle-play',
         action: () => openInNewTab(true),
       },
@@ -228,8 +231,8 @@ export const SidebarWorkspaceDropdown = ({
   };
 
   const createSections: ActionSection[] = [
-    ...(isCollection ? [createSection, importSection] : []),
-    ...(isCollection || isDesign ? [runSection] : []),
+    ...(isCollectionLike ? [createSection, importSection] : []),
+    ...(isCollectionLike ? [runSection] : []),
   ];
 
   const actionSection: ActionSection = {
@@ -379,7 +382,14 @@ export const SidebarWorkspaceDropdown = ({
       <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           aria-label="SideBar Workspace Actions"
-          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
+          className={classNames(
+            'flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:visible data-pressed:opacity-100',
+            {
+              'visible opacity-100': forceShowTrigger,
+              'invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100':
+                !forceShowTrigger,
+            },
+          )}
         >
           <Icon icon="ellipsis" />
         </Button>

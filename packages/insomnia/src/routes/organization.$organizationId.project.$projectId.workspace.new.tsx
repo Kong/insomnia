@@ -94,11 +94,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const flushId = await database.bufferChanges();
 
-    const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+    const workspaceName = name || (scope === 'collection' ? 'My API Collection' : 'my-spec.yaml');
 
     const workspace = await services.workspace.create({
       name: workspaceName,
-      scope,
+      // There will be no design scope workspaces in the future, so we are mapping design to collection with apiSpec for now
+      scope: scope === 'design' ? 'collection' : scope,
       parentId: projectId,
     });
 

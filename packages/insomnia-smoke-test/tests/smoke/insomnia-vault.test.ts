@@ -155,7 +155,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByLabel('Select a Project Environment').click();
     await page.getByRole('option', { name: 'New Environment' }).click();
     await page.keyboard.press('Escape');
-    await page.getByLabel('Select a Collection Environment').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('Base Environment1').click();
     await page.locator('body').click();
 
@@ -180,7 +180,7 @@ test.describe('Check vault used in environment', () => {
     await page.keyboard.press('Escape');
 
     // activate legacy array vault environment
-    await page.getByLabel('Select a Collection Environment').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('legacy vault value array').click();
     await page.locator('body').click();
     // activate request
@@ -200,7 +200,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('vault_array_b').click();
 
     // activate legacy object vault environment
-    await page.getByLabel('Select a Collection Environment').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('legacy vault value object').click();
     await page.locator('body').click();
     // activate request
@@ -218,7 +218,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('world').click();
 
     // activate invalid vault environment
-    await page.getByLabel('Select a Collection Environment').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('base with vault').click();
     await page.locator('body').click();
     // activate request

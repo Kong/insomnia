@@ -22,7 +22,11 @@ import vkBeautify from 'vkbeautify';
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
-import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import {
+  containsExternalVaultTag,
+  extractNunjucksTagFromCoords,
+  replaceVaultTagIdIfNeeded,
+} from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
@@ -392,7 +396,7 @@ export const CodeEditor = memo(
             // baseline so restore can tell an unchanged model (reuse the cached
             // value + history) from an externally-updated one (use fresh defaultValue).
             value: readOnly ? undefined : codeMirror.current.getValue(),
-            valueSeed: readOnly ? undefined : defaultValue ?? '',
+            valueSeed: readOnly ? undefined : (defaultValue ?? ''),
             selections: codeMirror.current.listSelections(),
             cursor: codeMirror.current.getCursor(),
             history: codeMirror.current.getHistory(),
@@ -489,10 +493,17 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste && change.origin === 'paste' && change.update) {
-            const translatedText = onPaste(change.text.join('\n')).split('\n');
-
-            change.update(change.from, change.to, translatedText);
+          if (change.origin === 'paste' && change.update) {
+            let translatedText = change.text.join('\n');
+            if (onPaste) {
+              translatedText = onPaste(translatedText);
+            }
+            if (containsExternalVaultTag(translatedText)) {
+              translatedText = replaceVaultTagIdIfNeeded(translatedText);
+            }
+            if (translatedText !== change.text.join('\n')) {
+              change.update(change.from, change.to, translatedText.split('\n'));
+            }
           }
         });
 
@@ -659,6 +670,13 @@ export const CodeEditor = memo(
       useMount(() => {
         initEditor();
       });
+      useEffect(() => {
+        // If the wrapper's layout is still settling when initEditor's initial
+        // setValue runs (e.g. inside react-resizable-panels not yet stable),
+        // CodeMirror can leave the rendered line stuck. Force one once layout has painted.
+        const raf = requestAnimationFrame(() => codeMirror.current?.refresh());
+        return () => cancelAnimationFrame(raf);
+      }, []);
       useUnmount(() => {
         persistState();
         cleanUpEditor();

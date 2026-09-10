@@ -60,7 +60,7 @@ export const ScratchPadTutorialPanel = () => {
               </Button>
             </div>
             <p className="mb-4 text-sm text-(--color-font-secondary)">
-              Create multiple collections, design APIs, MCP clients, manage projects, and collaborate with your team.
+              Create multiple API collections, MCP clients, manage projects, and collaborate with your team.
             </p>
             <Button
               onPress={handleSignUp}
