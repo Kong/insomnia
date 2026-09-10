@@ -474,17 +474,22 @@ const ScanResourcesForm = ({
   const [selectedTab, setSelectedTab] = useState(from?.type || 'uri');
   const [message, setMessage] = useState('');
 
+  const fromType = from?.type;
+  const fromDefaultValue = from?.defaultValue;
   useEffect(() => {
+    // Only validate a pre-populated cURL; validating an empty value would show
+    // a spurious "Invalid cURL request" on a freshly opened, empty cURL tab.
+    if (fromType !== 'curl' || !fromDefaultValue) {
+      return;
+    }
     let isMounted = true;
-    const fn = async () => {
-      const { message: msg } = await validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
+    validateCurl(fromDefaultValue).then(({ message: msg }) => {
       isMounted && setMessage(msg);
-    };
-    fn();
+    });
     return () => {
       isMounted = false;
     };
-  }, [from]);
+  }, [fromType, fromDefaultValue]);
   const isValidCurl = (selectedTab === 'curl' && message && message.startsWith('Detected')) || selectedTab !== 'curl';
   return (
     <Fragment>
