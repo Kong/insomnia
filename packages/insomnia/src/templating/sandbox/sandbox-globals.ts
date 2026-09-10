@@ -259,9 +259,20 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '        this.username = ci === -1 ? creds : creds.slice(0, ci);',
   '        this.password = ci === -1 ? "" : creds.slice(ci + 1);',
   '      } else { this.username = ""; this.password = ""; }',
-  '      var colon = authority.indexOf(":");',
-  '      if (colon === -1) { this.hostname = authority.toLowerCase(); this.port = ""; }',
-  '      else { this.hostname = authority.slice(0, colon).toLowerCase(); this.port = authority.slice(colon + 1); }',
+  // IPv6 literal (bracketed): the bracketed form is kept verbatim (lowercased) as hostname, matching
+  // WHATWG (new URL("http://[::1]:8080/").hostname === "[::1]") — a bare authority.indexOf(":") here
+  // would otherwise split on the first colon INSIDE the brackets, corrupting both fields.
+  '      if (authority.charAt(0) === "[") {',
+  '        var closeBracket = authority.indexOf("]");',
+  '        if (closeBracket === -1) { throw new TypeError("Invalid URL: " + url); }',
+  '        this.hostname = authority.slice(0, closeBracket + 1).toLowerCase();',
+  '        var afterBracket = authority.slice(closeBracket + 1);',
+  '        this.port = afterBracket.charAt(0) === ":" ? afterBracket.slice(1) : "";',
+  '      } else {',
+  '        var colon = authority.indexOf(":");',
+  '        if (colon === -1) { this.hostname = authority.toLowerCase(); this.port = ""; }',
+  '        else { this.hostname = authority.slice(0, colon).toLowerCase(); this.port = authority.slice(colon + 1); }',
+  '      }',
   '      if (this.port !== "" && __defaultPorts[this.protocol] === this.port) { this.port = ""; }',
   '      this.host = this.port === "" ? this.hostname : this.hostname + ":" + this.port;',
   '      this.pathname = m[4] || (authority ? "/" : "");',
