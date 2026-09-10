@@ -2,6 +2,8 @@
 import type { AnyMessage, MethodInfo, PartialMessage, ServiceType } from '@bufbuild/protobuf';
 import type { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
+import { Metadata } from '@grpc/grpc-js';
+import { CompressionFilter } from '@grpc/grpc-js/build/src/compression-filter';
 import * as grpcReflection from 'grpc-reflection-js';
 import { services } from 'insomnia-data';
 import protobuf from 'protobufjs';
@@ -15,6 +17,28 @@ vi.mock('../../../network/grpc/write-proto-file.node');
 vi.mock('@grpc/proto-loader', async importOriginal => {
   const actual = await importOriginal();
   return { ...actual, load: vi.fn().mockResolvedValue({}) };
+});
+
+// Regression test for https://github.com/Kong/insomnia/issues/8659
+// A gRPC response with an empty repeated field serializes to a zero-length
+// message. Some servers still set the compressed flag on that frame, and
+// grpc-js used to feed the empty payload to zlib, which throws "unexpected end
+// of file" and surfaced as an error/hang in the UI. The patched readMessage
+// short-circuits zero-length payloads. (see patches/@grpc+grpc-js+1.14.4.patch)
+describe('grpc empty compressed message handling', () => {
+  it('treats a zero-length gzip-flagged frame as an empty message instead of throwing', async () => {
+    const filter = new CompressionFilter({}, {});
+    const metadata = new Metadata();
+    metadata.set('grpc-encoding', 'gzip');
+    filter.receiveMetadata(metadata);
+
+    // 5-byte gRPC frame: compressed flag = 1, message length = 0, no payload.
+    const frame = Buffer.alloc(5);
+    frame.writeUInt8(1, 0);
+    frame.writeUInt32BE(0, 1);
+
+    await expect(filter.receiveMessage(Promise.resolve(frame))).resolves.toEqual(Buffer.alloc(0));
+  });
 });
 
 describe('writeProtoFileById', () => {
