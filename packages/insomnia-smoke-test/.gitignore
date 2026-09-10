@@ -12,6 +12,12 @@ fixtures/inso-nedb/insomnia.Stats.db
 # ignore the settings db file because inso shouldn't use it
 fixtures/inso-nedb/insomnia.Settings.db
 
+# ignore agent-poc exploration artifacts (ARIA snapshots + screenshots)
+agent-poc/artifacts/
+
+# ignore agent-poc closed-loop substrate logs (start-cdp.sh)
+agent-poc/.cdp-logs/
+
 # ignore some db files for security reasons
 fixtures/inso-nedb/insomnia.ClientCertificate.db
 fixtures/inso-nedb/insomnia.CookieJar.db
