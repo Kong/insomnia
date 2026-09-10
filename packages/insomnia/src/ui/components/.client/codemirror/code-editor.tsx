@@ -22,7 +22,11 @@ import vkBeautify from 'vkbeautify';
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
-import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import {
+  containsExternalVaultTag,
+  extractNunjucksTagFromCoords,
+  replaceVaultTagIdIfNeeded,
+} from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
@@ -489,10 +493,17 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste && change.origin === 'paste' && change.update) {
-            const translatedText = onPaste(change.text.join('\n')).split('\n');
-
-            change.update(change.from, change.to, translatedText);
+          if (change.origin === 'paste' && change.update) {
+            let translatedText = change.text.join('\n');
+            if (onPaste) {
+              translatedText = onPaste(translatedText);
+            }
+            if (containsExternalVaultTag(translatedText)) {
+              translatedText = replaceVaultTagIdIfNeeded(translatedText);
+            }
+            if (translatedText !== change.text.join('\n')) {
+              change.update(change.from, change.to, translatedText.split('\n'));
+            }
           }
         });
 
