@@ -176,7 +176,7 @@ export type HandleChannels =
   | 'socketIO.event.findMany'
   | 'socketIO.event.send'
   | 'syncNewWorkspaceIfNeeded'
-  | 'sync.invoke'
+  | 'main.invoke'
   | 'templatingDb.getAuthToken'
   | 'socketIO.open'
   | 'socketIO.readyState'
@@ -261,7 +261,7 @@ export type MainOnChannels =
   | 'mcp.closeAll'
   | 'mcp.client.responseElicitationRequest'
   | 'mcp.client.responseSamplingRequest'
-  | 'sync.on'
+  | 'main.on'
   | 'mcp.sendMCPRequest'
   | 'ui.promptResult'
   | 'writeText';

@@ -494,7 +494,7 @@ const env: Window['env'] = {
 
 const invokeSyncMethod = async (methodName: string, ...args: unknown[]) => {
   try {
-    return await invokeWithNormalizedError('sync.invoke', methodName, ...args);
+    return await invokeWithNormalizedError('main.invoke', 'sync', methodName, ...args);
   } catch (error) {
     if (isUserAbortResolveMergeConflictError(error)) {
       throw new UserAbortResolveMergeConflictError(
@@ -531,11 +531,11 @@ if (process.contextIsolated) {
 
       // TODO: try to remove send?
       if (['resolveConflict', 'cancelConflict'].includes(methodName)) {
-        return ipcRenderer.send(`${domain}:on`, methodName, ...args);
+        return ipcRenderer.send('main.on', domain, methodName, ...args);
       }
     }
 
-    return invokeWithNormalizedError(`${domain}.invoke`, methodName, ...args);
+    return invokeWithNormalizedError('main.invoke', domain, methodName, ...args);
   });
 
   contextBridge.exposeInMainWorld('env', env);
