@@ -140,14 +140,22 @@ export class NavigationSidebar {
     // event for the new workspace can be dropped, leaving flatItems (and so both outcomes
     // above) stuck stale indefinitely — a longer timeout wouldn't help since nothing ever
     // arrives to unstick it. A reload rebuilds the sidebar cache from scratch instead of
-    // waiting on that possibly-dropped event, so nudge once before giving up.
-    try {
-      await expect.poll(isActive, { timeout: 10_000 }).toBe(true);
-      return;
-    } catch {
-      await this.page.reload({ waitUntil: 'networkidle' });
+    // waiting on that possibly-dropped event. One reload isn't always enough — on a loaded CI
+    // runner the reload itself can eat most of the follow-up poll's budget just booting the
+    // app back up — so retry the reload once more before finally giving up.
+    const maxReloadAttempts = 2;
+    for (let attempt = 0; attempt <= maxReloadAttempts; attempt++) {
+      const isLastAttempt = attempt === maxReloadAttempts;
+      try {
+        await expect.poll(isActive, { timeout: isLastAttempt ? 15_000 : 10_000 }).toBe(true);
+        return;
+      } catch (error) {
+        if (isLastAttempt) {
+          throw error;
+        }
+        await this.page.reload({ waitUntil: 'networkidle' });
+      }
     }
-    await expect.poll(isActive, { timeout: 15_000 }).toBe(true);
   }
 
   async selectWorkspace(workspaceName: string): Promise<void> {
