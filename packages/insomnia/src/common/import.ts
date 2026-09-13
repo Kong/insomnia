@@ -201,7 +201,14 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
 
       try {
         let insomnia5Import: ExportedModel[] = [];
-        if (contentStr.startsWith('type: ')) {
+        // v5 files can be exported as YAML (starts with `type: `) or JSON (a `{` object
+        // carrying the same `*.insomnia(.rest)?/5.0` type discriminator). Detect both so a
+        // JSON export can be re-imported. tryImportV5Data validates with zod and never throws.
+        const trimmedContent = contentStr.trimStart();
+        const isInsomniaV5 =
+          trimmedContent.startsWith('type: ') ||
+          (trimmedContent.startsWith('{') && /"type"\s*:\s*"[^"]*insomnia[^"]*\/5\.0"/.test(trimmedContent));
+        if (isInsomniaV5) {
           const { data, error } = tryImportV5Data(contentStr);
           insomnia5Import = data as ExportedModel[];
           v5Error = error;
