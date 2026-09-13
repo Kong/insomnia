@@ -11,7 +11,7 @@ const features = [
   {
     id: 'combine_collections_and_documents',
     icon: <FontAwesomeIcon icon={['fas', 'bars']} className="text-xl" />,
-    label: 'Collection and documents combination',
+    label: 'New API Collection to combine Documents and Collections',
     title: 'New API Collection to combine documents and collections',
     description:
       'For simplicity, we’ve combined documents and collections into API Collections. No functionality has changed - just the UI. You can now access your OpenAPI Specs right from the main API Collection screen.',
