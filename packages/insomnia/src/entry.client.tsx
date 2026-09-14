@@ -19,7 +19,13 @@ import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { getInitialEntry } from '~/ui/utils/router';
 
 import { configureV3ClientDefaults } from './common/configure-v3-client';
-import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
+import {
+  getInsomniaSession,
+  getInsomniaVaultKey,
+  getInsomniaVaultSalt,
+  getSkipOnboarding,
+  HAS_SEEN_ONBOARDING_KEY,
+} from './common/constants';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
@@ -72,7 +78,7 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV13.3', skipOnboarding.toString());
+    window.localStorage.setItem(HAS_SEEN_ONBOARDING_KEY, skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
