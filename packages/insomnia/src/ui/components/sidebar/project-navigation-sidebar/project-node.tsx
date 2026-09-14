@@ -3,9 +3,9 @@ import { models } from 'insomnia-data';
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
 import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { AvatarGroup } from '../../avatar';
 import { Icon } from '../../icon';
