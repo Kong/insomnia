@@ -11,7 +11,6 @@ import { SelectPopover } from '~/basic-components/select-popover';
 import { getCurrentSessionId } from '~/common/account/session';
 import { METHOD_GET } from '~/common/constants';
 import { isCurlCommand } from '~/common/utils/curl';
-import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { MethodSelector } from '~/ui/components/dropdowns/method-selector';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -19,6 +18,7 @@ import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import {
   FIRST_REQUEST_EXPERIMENT_NAME,

@@ -15,7 +15,6 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { useRootLoaderData } from '~/root';
 import {
   useWorkspaceLoaderData,
   WORKSPACE_CONTENT_WRAPPER,
@@ -32,6 +31,7 @@ import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';

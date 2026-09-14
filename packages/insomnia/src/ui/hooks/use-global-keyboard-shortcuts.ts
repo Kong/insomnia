@@ -1,4 +1,4 @@
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { reload } from '~/ui/templating/renderer-safe';
 

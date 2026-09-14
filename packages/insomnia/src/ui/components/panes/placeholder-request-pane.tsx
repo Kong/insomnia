@@ -1,8 +1,8 @@
 import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';

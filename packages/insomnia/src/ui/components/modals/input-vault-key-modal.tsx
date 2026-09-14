@@ -2,13 +2,13 @@ import { services } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
 import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export interface InputVaultKeyModalProps {
   onClose: (vaultKey?: string) => void;

@@ -13,10 +13,10 @@ import {
   extractQueryStringFromUrl,
   joinUrlAndQueryString,
 } from '~/common/utils/url/querystring';
-import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 

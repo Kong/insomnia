@@ -7,9 +7,9 @@ import {
   readOrganizationDataFromLocalStorage,
   writeOrganizationDataToLocalStorage,
 } from '~/common/organization';
-import { useRootLoaderData } from '~/root';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import { useServerQuery } from '~/ui/hooks/use-query';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 // Account-scoped server data (organizations / user / current plan).
 const accountServerDataKey = (accountId: string) => ['account-server-data', accountId] as const;

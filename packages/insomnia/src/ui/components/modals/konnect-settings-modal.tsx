@@ -4,8 +4,8 @@ import { Button, Dialog, Form, Heading, Modal, ModalOverlay } from 'react-aria-c
 
 import { database } from '~/common/database';
 import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
-import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
