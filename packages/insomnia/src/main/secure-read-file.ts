@@ -12,7 +12,12 @@ import { SECURITY_SETTINGS_PATH_LABEL } from '../common/misc';
 export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   const allowList = getSecuredFolderAllowList(userAllowList);
   const securedPath = securePath(filePath);
-  const isAllowed = allowList.some(f => path.resolve(f) !== '' && securedPath.startsWith(path.resolve(f)));
+  const isAllowed = allowList.some(f => {
+    const resolvedRoot = path.resolve(f);
+    // Avoid a doubled separator (e.g. '//') when resolvedRoot is already a filesystem root.
+    const rootPrefix = resolvedRoot.endsWith(path.sep) ? resolvedRoot : resolvedRoot + path.sep;
+    return resolvedRoot !== '' && (securedPath === resolvedRoot || securedPath.startsWith(rootPrefix));
+  });
   return { isAllowed, securedPath };
 };
 const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
@@ -23,17 +28,54 @@ const getSecuredFolderAllowList = (userAllowList: string[]) => {
   // the user can also specifiy other folders
   return [os.tmpdir(), userdataDirectory, ...userAllowList];
 };
+// NeDB stores every model as `insomnia.<Model>.db` directly inside the userData directory
+// (see database-nedb.ts), so the templating/plugin/script file-read surface must never be
+// allowed to reach those files even though that directory is otherwise an allowed root.
+const isReservedDatabaseFile = (filePath: string) => /^insomnia\..+\.db.*$/i.test(path.basename(filePath));
+const cannotAccessFileError = (securedPath: string) =>
+  `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`;
+const resolveRealPath = async (filePath: string) => fs.promises.realpath(filePath).catch(() => filePath);
+const statOrNull = async (filePath: string) => fs.promises.stat(filePath).catch(() => null);
+const getUserdataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+// A hard link lets a file be read through a second, innocuously-named path without ever going
+// through a symlink, so `realpath()` (which only resolves symlinks) won't reveal that it's the
+// same file on disk as a reserved NeDB database file. Compare filesystem identity (device +
+// inode) against the actual reserved files present in the userData directory to catch this,
+// since two different paths can point at the same underlying file.
+const isDatabaseFileAlias = async (realPath: string) => {
+  const target = await statOrNull(realPath);
+  if (!target) {
+    return false;
+  }
+  const userdataDirectory = getUserdataDirectory();
+  const entries = await fs.promises.readdir(userdataDirectory).catch(() => []);
+  const reservedNames = entries.filter(isReservedDatabaseFile);
+  for (const name of reservedNames) {
+    const reserved = await statOrNull(path.join(userdataDirectory, name));
+    if (reserved && reserved.dev === target.dev && reserved.ino === target.ino) {
+      return true;
+    }
+  }
+  return false;
+};
 // For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
 export const secureReadFile = async (filePath: string): Promise<string> => {
   const settings = await services.settings.getOrCreate();
   const { isAllowed, securedPath } = isPathAllowed(filePath, settings.dataFolders);
+  invariant(isAllowed && !isReservedDatabaseFile(securedPath), cannotAccessFileError(securedPath));
 
+  // Re-check against the resolved real path (of both the target file and the allowed roots,
+  // since e.g. macOS symlinks /var to /private/var) so a symlink can't be used to point an
+  // allowed directory at a reserved database file or a location outside the allowlist.
+  const realPath = await resolveRealPath(securedPath);
+  const realAllowList = await Promise.all(getSecuredFolderAllowList(settings.dataFolders).map(resolveRealPath));
+  const { isAllowed: isRealPathAllowed } = isPathAllowed(realPath, realAllowList);
   invariant(
-    isAllowed,
-    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`,
+    isRealPathAllowed && !isReservedDatabaseFile(realPath) && !(await isDatabaseFileAlias(realPath)),
+    cannotAccessFileError(securedPath),
   );
 
-  return fs.promises.readFile(securedPath, { encoding: 'utf8' });
+  return fs.promises.readFile(realPath, { encoding: 'utf8' });
 };
 // For reading files selected by the user via a file dialog
 export const insecureReadFile = async (filePath: string): Promise<string> => {
