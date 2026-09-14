@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { useProjectLoaderData } from '~/ui/hooks/use-project-loader-data';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';

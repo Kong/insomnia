@@ -8,8 +8,8 @@ import * as reactUse from 'react-use';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
-import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { useMockRouteLoaderData } from '~/ui/hooks/use-mock-route';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { jsonPrettify } from '~/ui/utils/prettify/json';
 

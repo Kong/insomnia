@@ -3,7 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
-import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
+import type { GrpcRequestState } from '../../utils/grpc';
 import { GrpcStatusTag } from '../tags/grpc-status-tag';
 import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {

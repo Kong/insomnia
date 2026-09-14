@@ -4,11 +4,9 @@ import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import {
-  isInMockContentTypeList,
-  useMockRoutePatcher,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { isInMockContentTypeList } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
+import { useMockRoutePatcher } from '~/ui/hooks/use-mock-route';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
