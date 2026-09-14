@@ -42,6 +42,7 @@ vi.mock('electron', () => ({
 
 vi.mock('../window-utils', () => ({
   getMainWindow: vi.fn(() => fakeMainWindow),
+  registerPluginWindowControls: vi.fn(),
 }));
 
 vi.mock('../prompt-bridge', () => ({
