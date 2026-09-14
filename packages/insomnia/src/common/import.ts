@@ -1,5 +1,4 @@
 import type {
-  AllTypes,
   ApiSpec,
   BaseModel,
   CookieJar,
@@ -28,6 +27,7 @@ import { getRuntime } from '../runtimes';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
+import { type AllExportTypes,MODELS_BY_EXPORT_TYPE } from './export-types';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 import { pathWithParamsAsPathParameters } from './path-with-params';
@@ -39,25 +39,6 @@ const { isRequestGroup } = models.requestGroup;
 export const IMPORT_SOURCE_TYPES = ['file', 'uri', 'curl', 'clipboard', 'mcp'] as const;
 export type ImportSourceType = (typeof IMPORT_SOURCE_TYPES)[number];
 
-export type AllExportTypes =
-  | 'request'
-  | 'mcp_request'
-  | 'grpc_request'
-  | 'websocket_request'
-  | 'websocket_payload'
-  | 'socketio_request'
-  | 'socketio_payload'
-  | 'mock'
-  | 'mock_route'
-  | 'request_group'
-  | 'unit_test_suite'
-  | 'unit_test'
-  | 'workspace'
-  | 'cookie_jar'
-  | 'environment'
-  | 'api_spec'
-  | 'proto_file'
-  | 'proto_directory';
 export interface ExportedModel extends BaseModel {
   _type: AllExportTypes;
 }
@@ -163,28 +144,6 @@ let resourceCacheList: ResourceCacheType[] = [];
 export function clearResourceCache() {
   resourceCacheList = [];
 }
-
-// All models that can be exported should be listed here
-export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
-  request: 'Request',
-  mcp_request: 'McpRequest',
-  websocket_payload: 'WebSocketPayload',
-  websocket_request: 'WebSocketRequest',
-  socketio_payload: 'SocketIOPayload',
-  socketio_request: 'SocketIORequest',
-  mock: 'MockServer',
-  mock_route: 'MockRoute',
-  grpc_request: 'GrpcRequest',
-  request_group: 'RequestGroup',
-  unit_test_suite: 'UnitTestSuite',
-  unit_test: 'UnitTest',
-  workspace: 'Workspace',
-  cookie_jar: 'CookieJar',
-  environment: 'Environment',
-  api_spec: 'ApiSpec',
-  proto_file: 'ProtoFile',
-  proto_directory: 'ProtoDirectory',
-};
 
 export { mcpUrlToInsomniaV5Yaml } from './insomnia-v5';
 
