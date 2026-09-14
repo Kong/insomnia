@@ -45,13 +45,13 @@ import { CustomProvider } from './custom';
 import { GitHubProvider } from './github';
 import { GitLabProvider } from './gitlab';
 import { NativeProvider } from './native';
-import { GitRemoteProviderRegistry } from './registry';
+import { gitRemoteProviderRegistry } from './registry';
 
 /**
- * Singleton instance of the provider registry
- * Use this instance throughout the application
+ * Re-export the singleton for consumers; defined in ./registry to avoid a
+ * circular dependency with provider implementations that import git utils.
  */
-export const gitRemoteProviderRegistry = new GitRemoteProviderRegistry();
+export { gitRemoteProviderRegistry };
 
 /**
  * Initialize built-in Git remote providers
