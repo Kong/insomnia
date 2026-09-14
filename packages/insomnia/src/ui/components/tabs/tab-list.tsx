@@ -20,27 +20,18 @@ import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
+import { TAB_CONTEXT_MENU_COMMAND, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
 import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
-import { type BaseTab, InsomniaTab } from './tab';
+import { InsomniaTab } from './tab';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
-export interface OrganizationTabs {
-  tabList: BaseTab[];
-  activeTabId?: string;
-}
-
-export const enum TAB_CONTEXT_MENU_COMMAND {
-  CLOSE_ALL = 'Close All',
-  CLOSE_OTHERS = 'Close Other Tabs',
-}
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
