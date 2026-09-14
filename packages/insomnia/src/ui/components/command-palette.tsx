@@ -24,7 +24,6 @@ import {
 import { useNavigate, useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { useRootLoaderData } from '~/root';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useRemoteFilesLoaderFetcher } from '~/routes/remote-files';
@@ -38,6 +37,7 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useCommandSearch } from '~/ui/hooks/use-command-search';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 const { isRequest } = models.request;

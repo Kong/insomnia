@@ -1,6 +1,5 @@
 import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
-import type { Settings, UserSession } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
@@ -19,7 +18,6 @@ import {
   useNavigate,
   useParams,
   useRevalidator,
-  useRouteLoaderData,
 } from 'react-router';
 import { useLatest } from 'react-use';
 
@@ -175,15 +173,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
       </div>
     </div>
   );
-};
-
-export interface RootLoaderData {
-  settings: Settings;
-  userSession: UserSession;
-}
-
-export const useRootLoaderData = () => {
-  return useRouteLoaderData<typeof clientLoader>('root');
 };
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {

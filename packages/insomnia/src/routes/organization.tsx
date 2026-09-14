@@ -8,7 +8,6 @@ import * as reactUse from 'react-use';
 
 import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organization';
 import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
-import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
@@ -36,6 +35,7 @@ import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { refreshKonnectAccess } from '~/ui/organization-utils';
 import type { AsyncTask } from '~/ui/utils/router';
 

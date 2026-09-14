@@ -7,10 +7,10 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { RenderError } from '~/common/templating/render-error';
-import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { getGrpcConnectionErrorDetails } from '~/ui/utils/grpc';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';

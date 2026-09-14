@@ -1,6 +1,6 @@
 import React, { type FC, memo, useState } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { docsBase } from '../../../common/documentation';
 import { Link } from '../base/link';
