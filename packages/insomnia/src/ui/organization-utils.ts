@@ -12,7 +12,6 @@ import { services } from 'insomnia-data';
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { invariant } from '~/common/utils/invariant';
-import { useRootLoaderData } from '~/root';
 import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 
 // TODO: move vcs into services so we can remove this file.
@@ -109,9 +108,7 @@ export function useKonnectSyncEnabled(): boolean {
 }
 
 /** The account's local-only Konnect organization, or null when it should not be shown. */
-export function useKonnectOrganization(): Organization | null {
-  const { userSession } = useRootLoaderData()!;
-  const accountId = userSession.accountId;
+export function useKonnectOrganization(accountId: string): Organization | null {
   const isOrganizationVisible = useSyncExternalStore(
     subscribeToKonnectAccess,
     () => konnectAccess.isOrganizationVisible,

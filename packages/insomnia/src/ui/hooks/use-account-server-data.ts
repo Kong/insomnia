@@ -62,8 +62,9 @@ function useAccountServerData<TData>(select: (data: OrganizationData) => TData):
 
 /** The current account's organizations, with the local-only Konnect organization prepended when visible. */
 export function useOrganizations(): Organization[] {
+  const { userSession } = useRootLoaderData()!;
   const organizations = useAccountServerData(selectOrganizations) ?? [];
-  const konnectOrganization = useKonnectOrganization();
+  const konnectOrganization = useKonnectOrganization(userSession.accountId);
   return konnectOrganization ? [konnectOrganization, ...organizations] : organizations;
 }
 
