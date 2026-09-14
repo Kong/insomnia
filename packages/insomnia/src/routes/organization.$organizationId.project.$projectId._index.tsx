@@ -79,7 +79,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { localFiles } = loaderData;
   const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
-  const { activeSidebarTab } = useProjectRouteContext();
+  const { isKonnectOrganization } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -333,7 +333,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       <Fragment>
         <OrganizationTabList showActiveStatus={false} />
         <div className="px-4 pt-4">
-          {activeSidebarTab === 'projects' && (
+          {!isKonnectOrganization && (
             <FirstRequestCreation
               collectionItems={collectionItems}
               selectedCollectionId={selectedCollectionId}

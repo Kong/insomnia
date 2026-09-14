@@ -5,7 +5,11 @@ import { href, redirect } from 'react-router';
 import { syncOrganizations } from '~/common/organization';
 import { invariant } from '~/common/utils/invariant';
 import * as session from '~/ui/account/session';
-import { findMigrationTargetSpaceId, migrateProjectsUnderOrganization } from '~/ui/organization-utils';
+import {
+  findMigrationTargetSpaceId,
+  migrateProjectsUnderOrganization,
+  refreshKonnectAccess,
+} from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization._index';
 
@@ -13,6 +17,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { id: sessionId, accountId } = await services.userSession.get();
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);
+    // Signing in does not reload the renderer, so the startup resolution in `entry.client.tsx` ran
+    // against the previous (logged-out) session.
+    await refreshKonnectAccess(sessionId, accountId);
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
     invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');

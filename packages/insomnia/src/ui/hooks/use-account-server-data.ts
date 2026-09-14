@@ -10,6 +10,7 @@ import {
 import { useRootLoaderData } from '~/root';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import { useServerQuery } from '~/ui/hooks/use-query';
+import { useKonnectOrganization } from '~/ui/organization-utils';
 
 // Account-scoped server data (organizations / user / current plan).
 const accountServerDataKey = (accountId: string) => ['account-server-data', accountId] as const;
@@ -59,9 +60,11 @@ function useAccountServerData<TData>(select: (data: OrganizationData) => TData):
   return data;
 }
 
-/** The current account's organizations. Always an array. */
+/** The current account's organizations, with the local-only Konnect organization prepended when visible. */
 export function useOrganizations(): Organization[] {
-  return useAccountServerData(selectOrganizations) ?? [];
+  const organizations = useAccountServerData(selectOrganizations) ?? [];
+  const konnectOrganization = useKonnectOrganization();
+  return konnectOrganization ? [konnectOrganization, ...organizations] : organizations;
 }
 
 /** The signed-in user, or undefined when logged out / not yet loaded. */

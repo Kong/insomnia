@@ -150,10 +150,14 @@ export async function syncTeamProjects({
 }
 
 export async function syncProjects(organizationId: string) {
+  // Local-only organizations have no team projects to fetch, so bail out before the request.
+  if (models.organization.isLocalOrganizationId(organizationId)) {
+    return;
+  }
   const user = await userSessionService.get();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
-  if (Array.isArray(teamProjects) && user.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
+  if (Array.isArray(teamProjects) && user.id) {
     await syncTeamProjects({ teamProjects, organizationId });
   }
 }

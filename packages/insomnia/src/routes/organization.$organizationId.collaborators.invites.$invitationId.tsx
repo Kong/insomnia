@@ -1,5 +1,5 @@
 import { updateInvitationRole } from 'insomnia-api';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
@@ -9,6 +9,11 @@ import type { Route } from './+types/organization.$organizationId.collaborators.
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, invitationId } = params;
+
+  invariant(
+    !models.organization.isLocalOrganizationId(organizationId),
+    'Invitations are not available for this organization',
+  );
 
   const formData = await request.formData();
 

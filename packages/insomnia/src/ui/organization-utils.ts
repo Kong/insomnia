@@ -1,8 +1,18 @@
-import { createTeamProject, isApiError, type Organization } from 'insomnia-api';
+import {
+  createTeamProject,
+  getUserEntitlements,
+  isApiError,
+  KONNECT_CONTROL_PLANES_FEATURE,
+  KONNECT_CONTROL_PLANES_FEATURE_KEY,
+  type Organization,
+} from 'insomnia-api';
 import type { Project } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { invariant } from '~/common/utils/invariant';
+import { useRootLoaderData } from '~/root';
 import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 
 // TODO: move vcs into services so we can remove this file.
@@ -15,6 +25,103 @@ import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
+
+interface KonnectAccess {
+  /** The account holds the Konnect control-planes entitlement, so syncing is allowed. */
+  hasEntitlement: boolean;
+  /** The Konnect organization should appear in the organization list. */
+  isOrganizationVisible: boolean;
+}
+
+const konnectEntitlementStorageKey = (accountId: string) => `${accountId}:konnectSyncEnabled`;
+
+let konnectAccess: KonnectAccess = { hasEntitlement: false, isOrganizationVisible: false };
+let konnectAccessResolvedFor: string | null = null;
+const konnectAccessListeners = new Set<() => void>();
+
+const subscribeToKonnectAccess = (listener: () => void) => {
+  konnectAccessListeners.add(listener);
+  return () => {
+    konnectAccessListeners.delete(listener);
+  };
+};
+
+function setKonnectAccess(next: KonnectAccess) {
+  if (
+    next.hasEntitlement === konnectAccess.hasEntitlement &&
+    next.isOrganizationVisible === konnectAccess.isOrganizationVisible
+  ) {
+    return;
+  }
+  konnectAccess = next;
+  konnectAccessListeners.forEach(listener => listener());
+}
+
+/**
+ * Resolves Konnect access for the account. Awaited before hydration and again after signing in so
+ * that render-time readers can stay synchronous; the two mutations that can flip it mid-session
+ * (disconnecting the PAT, resolving the migration conflict) pass `force`.
+ *
+ * Visibility is the entitlement OR local Konnect data from a previous version, which stays
+ * reachable with syncing disabled. Callers must run the startup migration first, otherwise the
+ * project lookup still sees the pre-migration parents.
+ */
+export async function refreshKonnectAccess(
+  sessionId: string,
+  accountId: string,
+  { force = false }: { force?: boolean } = {},
+) {
+  if (!force && konnectAccessResolvedFor === accountId) {
+    return;
+  }
+  konnectAccessResolvedFor = accountId;
+
+  if (!sessionId || !accountId) {
+    setKonnectAccess({ hasEntitlement: false, isOrganizationVisible: false });
+    return;
+  }
+
+  let hasEntitlement = localStorage.getItem(konnectEntitlementStorageKey(accountId)) === 'true';
+  try {
+    const { entitlements } = await getUserEntitlements({
+      sessionId,
+      feature: KONNECT_CONTROL_PLANES_FEATURE,
+    });
+    hasEntitlement = (entitlements ?? []).some(
+      entitlement => entitlement.featureKey === KONNECT_CONTROL_PLANES_FEATURE_KEY && entitlement.hasAccess,
+    );
+    localStorage.setItem(konnectEntitlementStorageKey(accountId), String(hasEntitlement));
+  } catch {
+    // Offline: keep the last known answer rather than hiding an organization the user owns.
+  }
+
+  const localKonnectProjectCount = await services.project.count({
+    konnectControlPlaneId: { $exists: true, $ne: null },
+    parentId: models.organization.getKonnectOrganizationId(accountId),
+  });
+
+  setKonnectAccess({ hasEntitlement, isOrganizationVisible: hasEntitlement || localKonnectProjectCount > 0 });
+}
+
+/** Whether the account may sync from Konnect. */
+export function useKonnectSyncEnabled(): boolean {
+  return useSyncExternalStore(subscribeToKonnectAccess, () => konnectAccess.hasEntitlement);
+}
+
+/** The account's local-only Konnect organization, or null when it should not be shown. */
+export function useKonnectOrganization(): Organization | null {
+  const { userSession } = useRootLoaderData()!;
+  const accountId = userSession.accountId;
+  const isOrganizationVisible = useSyncExternalStore(
+    subscribeToKonnectAccess,
+    () => konnectAccess.isOrganizationVisible,
+  );
+
+  return useMemo(
+    () => (isOrganizationVisible && accountId ? models.organization.buildKonnectOrganization(accountId) : null),
+    [isOrganizationVisible, accountId],
+  );
+}
 
 export async function updateLocalProjectToRemote({
   project,
