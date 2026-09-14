@@ -22,6 +22,7 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { CollectionTab } from '~/ui/components/collection-tab';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpPane } from '~/ui/components/mcp/mcp-pane';
@@ -524,18 +525,29 @@ const Debug = () => {
                         />
                       )}
                       {Boolean(!requestId && !requestGroupId) && (
-                        <SpecView
-                          organizationId={organizationId}
-                          projectId={projectId}
-                          workspaceId={workspaceId}
-                          gitSyncRulesetPath={gitSyncRulesetPath}
-                          isConnectedGitProject={isConnectedGitProject}
-                          rulesetContent={rulesetContent}
-                          rulesetLastCompiledAt={rulesetLastCompiledAt}
-                          rulesetImportIssue={rulesetImportIssue}
-                          parsedSpec={parsedSpec}
-                          apiSpec={apiSpec}
-                        />
+                        <div className="flex h-full w-full flex-col">
+                          <CollectionTab
+                            organizationId={organizationId}
+                            projectId={projectId}
+                            workspaceId={workspaceId}
+                            activeItemId="spec"
+                            enableLegacyUnitTests={settings.enableLegacyUnitTests}
+                          />
+                          <div className="min-h-0 flex-1">
+                            <SpecView
+                              organizationId={organizationId}
+                              projectId={projectId}
+                              workspaceId={workspaceId}
+                              gitSyncRulesetPath={gitSyncRulesetPath}
+                              isConnectedGitProject={isConnectedGitProject}
+                              rulesetContent={rulesetContent}
+                              rulesetLastCompiledAt={rulesetLastCompiledAt}
+                              rulesetImportIssue={rulesetImportIssue}
+                              parsedSpec={parsedSpec}
+                              apiSpec={apiSpec}
+                            />
+                          </div>
+                        </div>
                       )}
                       {isRequestSettingsModalOpen && activeRequest && (
                         <RequestSettingsModal
