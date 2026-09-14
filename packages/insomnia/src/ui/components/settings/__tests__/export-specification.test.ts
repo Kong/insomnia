@@ -5,7 +5,7 @@ import { exportSpecificationToFile } from 'insomnia/src/ui/components/settings/i
 import { services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('~/root', () => ({
+vi.mock('~/ui/hooks/use-root-loader-data', () => ({
   useRootLoaderData: () => ({}),
 }));
 
