@@ -2,7 +2,7 @@ import type { CookieJar, Request, RequestAuthentication, RequestBody, RequestGro
 import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
-import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../../network/inheritance';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from './try-interpolate';
 
 const { applyPathParametersToUrl } = models.request;

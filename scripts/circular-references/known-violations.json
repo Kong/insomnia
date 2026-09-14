@@ -1,8 +1,5 @@
 {
-  "insomnia": [
-    "packages/insomnia/src/common/import.ts -> packages/insomnia/src/common/insomnia-v5.ts",
-    "packages/insomnia/src/common/render.ts -> packages/insomnia/src/network/network.ts"
-  ],
+  "insomnia": [],
   "insomnia-analytics": [],
   "insomnia-api": [],
   "insomnia-data": [],
