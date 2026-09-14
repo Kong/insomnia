@@ -825,6 +825,7 @@ const ProjectNavigationSidebarInner = (
     virtualizer,
     onWorkspaceReorder: handleLocalWorkspaceReorder,
     expandedProjectAndWorkspaceIds,
+    depthOffset: treeDepthOffset,
   });
   const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
     toggleRequestGroups,
