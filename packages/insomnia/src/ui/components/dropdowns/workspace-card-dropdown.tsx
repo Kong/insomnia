@@ -2,7 +2,7 @@ import {
   exportGlobalEnvironmentToFile,
   exportMcpClientToFile,
   exportMockServerToFile,
-} from 'insomnia/src/ui/components/settings/import-export';
+} from 'insomnia/src/ui/components/settings/export';
 import type { ApiSpec, MockServer, Project, Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { type FC, Fragment, useCallback, useState } from 'react';

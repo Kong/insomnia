@@ -25,7 +25,7 @@ import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-l
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
-import { exportProjectToFile } from '~/ui/components/settings/import-export';
+import { exportProjectToFile } from '~/ui/components/settings/export';
 
 import { Icon } from '../icon';
 import { ProjectModal } from '../modals/project-modal';

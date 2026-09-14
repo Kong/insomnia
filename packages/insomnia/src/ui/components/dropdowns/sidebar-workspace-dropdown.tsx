@@ -5,7 +5,7 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
   exportSpecificationToFile,
-} from 'insomnia/src/ui/components/settings/import-export';
+} from 'insomnia/src/ui/components/settings/export';
 import type { MockServer, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';

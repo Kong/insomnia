@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
-import { exportSpecificationToFile } from 'insomnia/src/ui/components/settings/import-export';
+import { exportSpecificationToFile } from 'insomnia/src/ui/components/settings/export';
 import { services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

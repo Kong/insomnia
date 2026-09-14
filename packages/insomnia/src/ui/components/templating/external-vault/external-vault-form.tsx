@@ -1,14 +1,14 @@
-import type { CloudProviderCredential, CloudProviderName } from 'insomnia-data';
+import type { BaseModel, CloudProviderCredential, CloudProviderName, PluginData } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import type { NunjucksParsedTag } from '~/common/templating/types';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 
 import { debounce } from '../../../../common/misc';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';
-import type { ArgConfigFormProps } from '../tag-editor-arg-sub-form';
 import { AWSSecretManagerForm } from './aws-secret-manager-form';
 import { AzureKeyVaultForm } from './azure-key-vault-form';
 import { GCPSecretManagerForm } from './gcp-secret-manager-form';
@@ -23,7 +23,16 @@ import type {
 
 const cloudCredentialType = models.cloudCredential.type;
 
-export const ExternalVaultForm = (props: ArgConfigFormProps) => {
+export interface ExternalVaultFormProps {
+  configValue: string;
+  activeTagData: NunjucksParsedTag;
+  onChange: (newConfigValue: string) => void;
+  vaultPluginData: PluginData[];
+  docs: Record<string, BaseModel[]>;
+  onConvertLegacyTag: (legacyCredentialId: string) => void;
+}
+
+export const ExternalVaultForm = (props: ExternalVaultFormProps) => {
   const { onChange, configValue, activeTagData, vaultPluginData, docs, onConvertLegacyTag } = props;
   const [showModal, setShowModal] = useState(false);
   const provider = activeTagData.args[0].value as CloudProviderName;
