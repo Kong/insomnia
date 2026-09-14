@@ -1,11 +1,10 @@
 import type * as Har from 'har-format';
 import { isApiError, upsertMockbin } from 'insomnia-api';
-import type { MockRoute, MockServer, Request, RequestHeader, Response } from 'insomnia-data';
+import type { Request, RequestHeader, Response } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
-import { useCallback } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
 import {
   CONTENT_TYPE_JSON,
@@ -21,7 +20,6 @@ import { database as db } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
-import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
@@ -33,15 +31,10 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
+import { type MockRouteLoaderData, useMockRouteLoaderData, useMockRoutePatcher } from '~/ui/hooks/use-mock-route';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-
-export interface MockRouteLoaderData {
-  mockServer: MockServer;
-  mockRoute: MockRoute;
-  activeResponse?: Response;
-}
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, mockRouteId } = params;
@@ -73,7 +66,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     mockServer,
     mockRoute,
     activeResponse,
-  };
+  } satisfies MockRouteLoaderData;
 }
 
 const mockContentTypes = [
@@ -117,33 +110,6 @@ export const mockRouteToHar = async ({
     redirectURL: '',
   };
 };
-
-export const useMockRoutePatcher = () => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  };
-  const { submit } = useMockRouteUpdateActionFetcher();
-  return useCallback(
-    (id: string, patch: Partial<MockRoute>) => {
-      return submit({
-        mockRouteId: id,
-        organizationId,
-        projectId,
-        workspaceId,
-        patch,
-      });
-    },
-    [organizationId, projectId, submit, workspaceId],
-  );
-};
-
-export function useMockRouteLoaderData() {
-  return useRouteLoaderData<typeof clientLoader>(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId',
-  );
-}
 
 export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
