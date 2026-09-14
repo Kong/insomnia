@@ -1,4 +1,4 @@
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { useProjectLoaderData } from '~/ui/hooks/use-project-loader-data';
 
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
