@@ -8,8 +8,7 @@ import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tag
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import type { BaseTab, TabType } from '../components/tabs/tab';
-import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
+import { type BaseTab, type TabType, useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import {
   buildResourceUrl,
   type InsomniaNavigationRouteInfo,

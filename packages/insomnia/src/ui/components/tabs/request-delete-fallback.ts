@@ -1,6 +1,6 @@
 import { models } from 'insomnia-data';
 
-import type { BaseTab } from './tab';
+import type { BaseTab } from '../../context/app/insomnia-tab-context';
 
 // A doc type is considered "request-like" for tab-close fallback purposes if
 // it's one of the request flavors that can live directly under a workspace
