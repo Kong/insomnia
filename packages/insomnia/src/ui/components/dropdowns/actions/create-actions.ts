@@ -13,14 +13,12 @@ export interface ActionItem {
 
 export const createWorkspaceActionItems = ({
   createCollection,
-  createDocument,
   createMcpClient,
   createMockServer,
   createEnvironment,
   canCreateMockServer,
 }: {
   createCollection: () => void;
-  createDocument: () => void;
   createMcpClient: () => void;
   createMockServer: () => void;
   createEnvironment: () => void;
@@ -29,17 +27,10 @@ export const createWorkspaceActionItems = ({
   return [
     {
       id: 'new-collection',
-      name: 'Collection',
+      name: 'API Collection',
       scope: 'collection',
       icon: 'bars',
       action: createCollection,
-    },
-    {
-      id: 'new-document',
-      name: 'Document',
-      scope: 'design',
-      icon: 'file',
-      action: createDocument,
     },
     {
       id: 'new-mcp-client',

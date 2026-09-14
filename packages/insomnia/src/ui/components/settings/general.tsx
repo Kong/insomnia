@@ -53,6 +53,7 @@ export const General: FC = () => {
             setting="sidebarFocusForCollections"
             help="If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible."
           />
+          <BooleanSetting label="Enable legacy unit tests" setting="enableLegacyUnitTests" />
         </div>
       </div>
 

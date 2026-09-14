@@ -580,6 +580,8 @@ export const CollectionSchema = z.object({
   cookieJar: CookieJarSchema.optional(),
   environments: EnvironmentSchema.optional(),
   certificates: z.array(CACertificateSchema).optional(),
+  testSuites: z.array(TestSuiteSchema).optional(),
+  spec: SpecSchema.optional(),
 });
 
 export const ApiSpecSchema = z.object({

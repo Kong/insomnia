@@ -7,10 +7,10 @@ export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
 
 export const scopeToLabelMap: Record<
   ProjectScopeKeys,
-  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
+  'API Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client'
 > = {
-  'design': 'Document',
-  'collection': 'Collection',
+  'design': 'API Collection',
+  'collection': 'API Collection',
   'mock-server': 'Mock Server',
   'unsynced': 'Unsynced',
   'environment': 'Environment',
@@ -18,7 +18,7 @@ export const scopeToLabelMap: Record<
 };
 
 export const scopeToIconMap: Record<ProjectScopeKeys, IconProp> = {
-  'design': 'file',
+  'design': 'bars',
   'collection': 'bars',
   'mock-server': 'server',
   'unsynced': 'cloud-download',
@@ -27,7 +27,7 @@ export const scopeToIconMap: Record<ProjectScopeKeys, IconProp> = {
 };
 
 export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
-  'design': 'bg-(--color-info)',
+  'design': 'bg-(--color-surprise)',
   'collection': 'bg-(--color-surprise)',
   'mock-server': 'bg-(--color-warning)',
   'unsynced': 'bg-(--hl-md)',
@@ -36,7 +36,7 @@ export const scopeToBgColorMap: Record<ProjectScopeKeys, string> = {
 };
 
 export const scopeToTextColorMap: Record<ProjectScopeKeys, string> = {
-  'design': 'text-(--color-font-info)',
+  'design': 'text-(--color-font-surprise)',
   'collection': 'text-(--color-font-surprise)',
   'mock-server': 'text-(--color-font-warning)',
   'unsynced': 'text-(--color-font)',

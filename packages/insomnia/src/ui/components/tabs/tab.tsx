@@ -4,6 +4,7 @@ import { models } from 'insomnia-data';
 import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import type { WorkspaceFileIssue } from '~/main/git-service';
 import { scrollElementIntoView } from '~/ui/utils';
 
@@ -56,24 +57,24 @@ const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
 
 const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
   collection: {
-    icon: 'bars',
-    bgColor: 'bg-(--color-surprise)',
-    textColor: 'text-(--color-font-surprise)',
+    icon: scopeToIconMap.collection,
+    bgColor: scopeToBgColorMap.collection,
+    textColor: scopeToTextColorMap.collection,
   },
   environment: {
-    icon: 'code',
-    bgColor: 'bg-(--color-font)',
-    textColor: 'text-(--color-bg)',
+    icon: scopeToIconMap.environment,
+    bgColor: scopeToBgColorMap.environment,
+    textColor: scopeToTextColorMap.environment,
   },
   mockServer: {
-    icon: 'server',
-    bgColor: 'bg-(--color-warning)',
-    textColor: 'text-(--color-font-warning)',
+    icon: scopeToIconMap['mock-server'],
+    bgColor: scopeToBgColorMap['mock-server'],
+    textColor: scopeToTextColorMap['mock-server'],
   },
   document: {
-    icon: 'file',
-    bgColor: 'bg-(--color-info)',
-    textColor: 'text-(--color-font-info)',
+    icon: scopeToIconMap.design,
+    bgColor: scopeToBgColorMap.design,
+    textColor: scopeToTextColorMap.design,
   },
 };
 

@@ -85,8 +85,8 @@ test.describe('after-response script features tests', () => {
     await expect.soft(statusTag1).toContainText('200 OK');
 
     // verify persisted environment
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
     const rows1 = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows1.join(' '));

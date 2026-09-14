@@ -9,7 +9,9 @@ import { test } from '../../playwright/test';
 // empty). Typing commits it as a real pair and a fresh blank row takes its place.
 
 test.describe('Key-value editor blank row', () => {
-  test('request headers: blank row is always shown, is not persisted while empty, and commits on typing', async ({ page }) => {
+  test('request headers: blank row is always shown, is not persisted while empty, and commits on typing', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
     await page.getByRole('tab', { name: 'Headers' }).click();
 
@@ -66,8 +68,8 @@ test.describe('Key-value editor blank row', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // Open the table editor for the ExampleA sub-environment.
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
 
@@ -86,7 +88,10 @@ test.describe('Key-value editor blank row', () => {
     await expect.soft(kvTable).toContainText('blankRowKey');
   });
 
-  test('environment table editor: deleting a committed row does not leave stale text on the blank row', async ({ page, app }) => {
+  test('environment table editor: deleting a committed row does not leave stale text on the blank row', async ({
+    page,
+    app,
+  }) => {
     const text = await loadFixture('environments.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.getByLabel('Import').click();
@@ -95,8 +100,8 @@ test.describe('Key-value editor blank row', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
 

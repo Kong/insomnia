@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { UnitTestSuite } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { Suspense, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -256,6 +256,21 @@ const Component = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  useEffect(() => {
+    if (!settings.enableLegacyUnitTests) {
+      // If legacy unit tests are disabled, redirect to the spec route for the workspace
+      tabNavigate(
+        {
+          organization: organizationId,
+          project: activeProject,
+          workspace: activeWorkspace,
+          item: activeWorkspace,
+        },
+        { shouldNavigate: true },
+      );
+    }
+  }, [activeProject, activeWorkspace, organizationId, settings.enableLegacyUnitTests, tabNavigate]);
+
   return (
     <div className="flex h-full flex-col">
       <OrganizationTabList />
@@ -278,7 +293,13 @@ const Component = () => {
           <ErrorBoundary showAlert>
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
               <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
-                <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
+                <DocumentTab
+                  organizationId={organizationId}
+                  projectId={projectId}
+                  workspaceId={workspaceId}
+                  activeItemId="test"
+                  enableLegacyUnitTests={settings.enableLegacyUnitTests}
+                />
               </div>
               <div className="p-(--padding-sm)">
                 <Button

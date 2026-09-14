@@ -56,11 +56,7 @@ export interface SyncBridgeMethods {
   rollbackToLatest: (workspaceId: string, candidates: StatusCandidate[]) => Promise<Operation>;
   stage: (workspaceId: string, stageEntries: StageEntry[]) => Promise<Stage>;
   status: (workspaceId: string, candidates: StatusCandidate[]) => Promise<Status>;
-  switchAndCreateBackendProjectIfNotExist: (
-    workspaceId: string,
-    rootDocumentId: string,
-    name: string,
-  ) => Promise<void>;
+  switchAndCreateBackendProjectIfNotExist: (workspaceId: string, rootDocumentId: string, name: string) => Promise<void>;
   takeSnapshot: (workspaceId: string, name: string) => Promise<void>;
   unstage: (workspaceId: string, stageEntries: StageEntry[]) => Promise<Stage>;
   getActiveBackendProject: (workspaceId: string) => Promise<BackendProject | null>;
@@ -74,6 +70,7 @@ export interface GlobalSyncBridgeMethods {
   remoteBackendProjectsOfTeam: (options: { teamId: string }) => Promise<BackendProjectWithTeamsAndTeamProjectId[]>;
   hasBackendProjectForRootDocument: (rootDocumentId: string) => Promise<boolean>;
   removeBackendProjectsForRoot: (rootDocumentId: string) => Promise<void>;
+  archiveBackendProject: (backendProjectId: string) => Promise<void>;
 }
 
 export interface SyncBridgeAPI extends SyncBridgeMethods, GlobalSyncBridgeMethods {

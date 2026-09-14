@@ -95,8 +95,6 @@ export const ProjectDropdown: FC<Props> = ({
 
   const createNewCollection = () =>
     setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar-dropdown' });
-  const createNewDocument = () =>
-    setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar-dropdown' });
   const canCreateMockServer = project?._id;
   const createNewMockServer = () =>
     canCreateMockServer &&
@@ -189,7 +187,6 @@ export const ProjectDropdown: FC<Props> = ({
 
   const createInProjectActionList: ProjectActionItem[] = createWorkspaceActionItems({
     createCollection: createNewCollection,
-    createDocument: createNewDocument,
     createMcpClient: createNewMcpClient,
     createMockServer: createNewMockServer,
     createEnvironment: createNewGlobalEnvironment,
