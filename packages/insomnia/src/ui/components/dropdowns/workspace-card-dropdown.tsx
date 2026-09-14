@@ -2,6 +2,7 @@ import {
   exportGlobalEnvironmentToFile,
   exportMcpClientToFile,
   exportMockServerToFile,
+  exportRequestsToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import type { ApiSpec, MockServer, Project, Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -246,7 +247,11 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         />
       )}
       {isExportModalOpen && (
-        <ExportRequestsModal workspaceIdToExport={workspace._id} onClose={() => setIsExportModalOpen(false)} />
+        <ExportRequestsModal
+          workspaceIdToExport={workspace._id}
+          onClose={() => setIsExportModalOpen(false)}
+          onExport={exportRequestsToFile}
+        />
       )}
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
