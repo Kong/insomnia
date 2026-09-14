@@ -1,11 +1,7 @@
 {
   "insomnia": [
     "packages/insomnia/src/common/import.ts -> packages/insomnia/src/common/insomnia-v5.ts",
-    "packages/insomnia/src/common/render.ts -> packages/insomnia/src/network/network.ts",
-    "packages/insomnia/src/ui/components/modals/export-requests-modal.tsx -> packages/insomnia/src/ui/components/settings/import-export.tsx",
-    "packages/insomnia/src/ui/components/modals/input-vault-key-modal.tsx -> packages/insomnia/src/ui/components/settings/vault-key-panel.tsx",
-    "packages/insomnia/src/ui/components/templating/external-vault/external-vault-form.tsx -> packages/insomnia/src/ui/components/templating/tag-editor-arg-sub-form.tsx",
-    "packages/insomnia/src/ui/components/viewers/response-multipart-viewer.tsx -> packages/insomnia/src/ui/components/viewers/response-viewer.tsx"
+    "packages/insomnia/src/common/render.ts -> packages/insomnia/src/network/network.ts"
   ],
   "insomnia-analytics": [],
   "insomnia-api": [],
