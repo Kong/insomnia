@@ -44,8 +44,6 @@ import path from 'node:path';
 import type { BaseModel, Workspace, WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
-import type { WorkspaceFileIssue } from '~/main/git-service';
-
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
@@ -66,6 +64,19 @@ export interface FileIssue {
   /** What went wrong. */
   kind: FileIssueKind;
   /** Human-readable detail (e.g. parser error message). */
+  message: string;
+}
+
+/**
+ * A file issue scoped to its workspace and git repository, as reported over IPC to the
+ * renderer. Lives here (not in `main/git-service`) to avoid a circular dependency:
+ * git-service loads this module for the watcher registry.
+ */
+export interface WorkspaceFileIssue {
+  workspaceId: string;
+  gitRepositoryId: string;
+  relPath: string;
+  kind: FileIssueKind;
   message: string;
 }
 

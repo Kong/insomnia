@@ -64,6 +64,21 @@ export async function init() {
 // discovery has to reach the sandbox from either. In main we call the sandbox directly — the
 // `insomnia-templating-worker-database://` protocol is a renderer<->main channel and main's own
 // `fetch` can't resolve it. In a renderer (the plugin window) we go over that protocol.
+type UserPluginExportDiscovery = (body: {
+  directory: string;
+  name: string;
+  permissions?: { modules?: string[]; capabilities?: string[] };
+}) => Promise<PluginExportManifest>;
+
+// The main process registers the sandbox-backed discovery here at module load; importing
+// `main/templating-worker-database` directly would be a circular dependency (that module loads
+// this one for getPlugins/getTemplateTags).
+let discoverUserPluginExportsInMain: UserPluginExportDiscovery | null = null;
+
+export function registerUserPluginExportDiscovery(discover: UserPluginExportDiscovery): void {
+  discoverUserPluginExportsInMain = discover;
+}
+
 async function discoverUserPluginExports(
   directory: string,
   name: string,
@@ -73,8 +88,10 @@ async function discoverUserPluginExports(
   if (__IS_RENDERER__) {
     return (await fetchFromTemplateWorkerDatabase('plugin.discoverUserPluginExports', body)) as PluginExportManifest;
   }
-  const { discoverUserPluginExportsForLoader } = await import('~/main/templating-worker-database');
-  return discoverUserPluginExportsForLoader(body);
+  if (!discoverUserPluginExportsInMain) {
+    throw new Error('User plugin export discovery is not registered; main/templating-worker-database did not load in the main process');
+  }
+  return discoverUserPluginExportsInMain(body);
 }
 
 function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginExportManifest): Plugin['module'] {
