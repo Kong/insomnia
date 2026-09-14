@@ -1,10 +1,12 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
+import { generateId } from '~/common/misc';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
 import { base64ToUtf8, utf8ToBase64 } from '~/common/utils/utf8-bytes';
 
 import { tokenizeArgs } from './tokenize-args';
 export { tokenizeArgs };
+
 import objectPath from './third_party/object-path';
 
 /**
@@ -163,3 +165,16 @@ export function extractNunjucksTagFromCoords(
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');
+
+// Unique id prefix for external vault tags
+export const externalVaultTagPrefix = 'externalVaultTag';
+export const generateExternalVaultTagId = () => generateId(externalVaultTagPrefix);
+const tagRegex = /{%[\s\S]+?%}/g;
+export const vaultTagIdRegex = new RegExp(`${externalVaultTagPrefix}_[a-z0-9]{32}`, 'g');
+export const containsExternalVaultTag = (input: string) => {
+  const hasTemplateTagSymbols = input.match(tagRegex);
+  return hasTemplateTagSymbols && input.includes(externalVaultTagPrefix);
+};
+// Replace the unique id in vault tag with a new unique id to avoid duplicates when pasting
+export const replaceVaultTagIdIfNeeded = (input: string) =>
+  input.replace(tagRegex, tag => tag.replace(vaultTagIdRegex, () => generateExternalVaultTagId()));

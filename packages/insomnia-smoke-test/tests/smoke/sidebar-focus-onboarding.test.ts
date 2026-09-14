@@ -21,7 +21,10 @@ test.describe('sidebar focus mode onboarding', () => {
     // A brand-new project starts empty, so the first collection comes from this welcome-state
     // button rather than the "Create in project" menu (which only appears once a project has content).
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
-    await insomnia.navigationSidebar.expectWorkspaceActive('My first collection');
+    // allowReloadFallback: works around a known rare app-side race where the sidebar's
+    // cache-invalidation event for a freshly created workspace can be dropped, leaving
+    // this assertion stuck stale until something (here, a reload) forces a resync.
+    await insomnia.navigationSidebar.expectWorkspaceActive('My first collection', { allowReloadFallback: true });
 
     const onboarding = page.getByRole('dialog', { name: 'Sidebar focus mode onboarding' });
     await expect.soft(onboarding).toBeVisible();

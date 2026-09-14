@@ -444,13 +444,13 @@ export async function getRenderContext({
   }
 
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment (Collection)');
+  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment (API Collection)');
 
   if (subEnvironment && subEnvironment._id !== rootEnvironment?._id) {
     getKeySource(
       subEnvironment.data || {},
       inKey,
-      `${subEnvironment.name || 'Environment'} (Collection Sub-Environment)`,
+      `${subEnvironment.name || 'Environment'} (API Collection Sub-Environment)`,
     );
   }
 

@@ -99,10 +99,6 @@ export const SidebarShortcutActionsDropdown = ({
           setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
           onOpenChange(false);
         },
-        createDocument: () => {
-          setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-          onOpenChange(false);
-        },
         createMcpClient: () => {
           setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
           onOpenChange(false);

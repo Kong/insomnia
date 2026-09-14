@@ -14,18 +14,10 @@ export const scratchPadTutorialList: {
   icon: IconName | [IconPrefix, IconName];
 }[] = [
   {
-    id: 'document',
-    title: `Documents`,
-    name: 'documents',
-    desc: 'Design or test an API by adding a document.',
-    learnMoreLink: 'https://developer.konghq.com/insomnia/documents/',
-    icon: 'file',
-  },
-  {
     id: 'collection',
-    title: `Collections`,
+    title: `API Collections`,
     name: 'collections',
-    desc: 'Use collections to tests APIs and run automated tests.',
+    desc: 'Use API collections to design, test APIs and run automated tests.',
     learnMoreLink: 'https://developer.konghq.com/insomnia/collections/',
     icon: 'bars',
   },

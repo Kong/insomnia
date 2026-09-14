@@ -51,6 +51,7 @@ import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { UnsyncedFileDeleteButton } from '~/ui/components/unsynced-file-delete-button';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
@@ -236,7 +237,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     [setNewWorkspaceModalState],
   );
   const createNewDocument = useCallback(
-    (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source }),
+    // Create collection instead of design document for now.
+    (source: string) => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source }),
     [setNewWorkspaceModalState],
   );
   const createNewMockServer = useCallback(
@@ -280,17 +282,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     () => [
       {
         id: 'new-collection',
-        name: 'Collection',
+        name: 'API Collection',
         icon: 'bars',
         action: () => createNewCollection('navbar'),
         scope: 'collection',
-      },
-      {
-        id: 'new-document',
-        name: 'Document',
-        icon: 'file',
-        action: () => createNewDocument('navbar'),
-        scope: 'design',
       },
       {
         id: 'new-mcp-client',
@@ -318,14 +313,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         scope: 'environment',
       },
     ],
-    [
-      canCreateMockServer,
-      createNewCollection,
-      createNewDocument,
-      createNewGlobalEnvironment,
-      createNewMcpClient,
-      createNewMockServer,
-    ],
+    [canCreateMockServer, createNewCollection, createNewGlobalEnvironment, createNewMcpClient, createNewMockServer],
   );
 
   const isRemoteProjectInconsistent =
@@ -610,7 +598,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       onPress={e => {
                         item.action(isPrimaryClickModifier(e));
                       }}
-                      className={`flex aspect-square w-full flex-1 flex-col overflow-hidden rounded-md p-(--padding-md) ring-1 ring-(--hl-md) outline-hidden transition-all select-none hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
+                      className={`group flex aspect-square w-full flex-1 flex-col overflow-hidden rounded-md p-(--padding-md) ring-1 ring-(--hl-md) outline-hidden transition-all select-none hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
                     >
                       <div className="flex h-5 gap-2">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
@@ -633,6 +621,13 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                             gitFilePath={item.gitFilePath || undefined}
                             apiSpec={item.apiSpec}
                             project={activeProject}
+                          />
+                        )}
+                        {item.scope === 'unsynced' && item.remoteId && (
+                          <UnsyncedFileDeleteButton
+                            organizationId={organizationId}
+                            backendProjectId={item.remoteId}
+                            name={item.name}
                           />
                         )}
                       </div>

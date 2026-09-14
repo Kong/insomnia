@@ -14,7 +14,7 @@ import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
 import { mainDatabase } from '~/main/database.main';
-import { initElectronStorage } from '~/main/electron-storage';
+import { getElectronStorage, initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
@@ -123,7 +123,9 @@ app.on('ready', async () => {
   disableSpellcheckerDownload();
 
   // Default-deny web-API permissions; only allow-listed ones are granted (see permission-policy.ts).
-  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => callback(isPermissionAllowed(permission)));
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) =>
+    callback(isPermissionAllowed(permission)),
+  );
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(permission));
 
   if (isDevelopment()) {
@@ -344,7 +346,23 @@ const _launchApp = async () => {
  */
 async function _createModelInstances() {
   await services.stats.get();
-  await services.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
+
+  // One-time step to ensure that users who have legacy unit tests will see the test tabs by default.
+  try {
+    const LEGACY_UNIT_TESTS_CHECK_KEY = 'LEGACY_UNIT_TESTS_CHECKED';
+    const migrationStorage = getElectronStorage();
+    if (!migrationStorage.getItem(LEGACY_UNIT_TESTS_CHECK_KEY) && !settings.enableLegacyUnitTests) {
+      const legacyUnitTestSuiteCount = await services.unitTestSuite.count();
+      if (legacyUnitTestSuiteCount > 0) {
+        await services.settings.patch({ enableLegacyUnitTests: true });
+      }
+      migrationStorage.setItem(LEGACY_UNIT_TESTS_CHECK_KEY, 1);
+    }
+  } catch (error) {
+    console.error('[main] Failed to run legacy unit test suites check', error);
+  }
+
   try {
     const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);

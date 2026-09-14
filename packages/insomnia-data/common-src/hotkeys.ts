@@ -8,7 +8,7 @@ import { strings } from './strings';
  * @IMPORTANT Not using dot, because NeDB prohibits field names to contain dots.
  */
 export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
-  workspace_showSettings: `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
+  workspace_showSettings: `Show ${strings.collection.singular} Settings`,
   request_showSettings: 'Show Request Settings',
   preferences_showKeyboardShortcuts: 'Show Keyboard Shortcuts',
   preferences_showGeneral: 'Show App Preferences',

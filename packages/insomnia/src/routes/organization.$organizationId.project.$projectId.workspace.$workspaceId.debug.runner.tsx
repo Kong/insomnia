@@ -681,7 +681,7 @@ export const Runner: FC = () => {
                     onSelectionChange={keys => {
                       updateRunnerState(organizationId, runnerId, { selectedKeys: keys });
                     }}
-                    aria-label="Request Collection"
+                    aria-label="Request API Collection"
                     dragAndDropHooks={requestsDnD}
                     className="h-full w-full overflow-auto text-base leading-8"
                     disabledKeys={disabledKeys}

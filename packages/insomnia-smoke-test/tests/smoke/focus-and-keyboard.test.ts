@@ -52,8 +52,8 @@ test.describe('Focus and keyboard navigation', () => {
   test('the KV environment editor focuses the blank row Name', async ({ page }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
-    await page.getByLabel('Select a Collection Environment').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByTestId('AddSubEnvironment').click();
 
     // New environments default to KV mode, so selecting the new (empty) environment renders the KV
