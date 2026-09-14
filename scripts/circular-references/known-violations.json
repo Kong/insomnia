@@ -22,12 +22,6 @@
     "packages/insomnia/src/sync/git/providers/gitlab.ts -> packages/insomnia/src/sync/git/utils.ts -> packages/insomnia/src/sync/git/providers/index.ts",
     "packages/insomnia/src/ui/components/modals/export-requests-modal.tsx -> packages/insomnia/src/ui/components/settings/import-export.tsx",
     "packages/insomnia/src/ui/components/modals/input-vault-key-modal.tsx -> packages/insomnia/src/ui/components/settings/vault-key-panel.tsx",
-    "packages/insomnia/src/ui/components/tabs/request-delete-fallback.ts -> packages/insomnia/src/ui/components/tabs/tab.tsx -> packages/insomnia/src/ui/components/tabs/tab-list.tsx",
-    "packages/insomnia/src/ui/components/tabs/tab-list.tsx -> packages/insomnia/src/ui/components/tabs/tab.tsx",
-    "packages/insomnia/src/ui/components/tabs/tab-list.tsx -> packages/insomnia/src/ui/context/app/insomnia-tab-context.tsx",
-    "packages/insomnia/src/ui/components/tabs/tab-list.tsx -> packages/insomnia/src/ui/hooks/use-insomnia-tab.ts -> packages/insomnia/src/ui/components/tabs/tab.tsx",
-    "packages/insomnia/src/ui/components/tabs/tab-list.tsx -> packages/insomnia/src/ui/hooks/use-insomnia-tab.ts -> packages/insomnia/src/ui/context/app/insomnia-tab-context.tsx",
-    "packages/insomnia/src/ui/components/tabs/tab.tsx -> packages/insomnia/src/ui/context/app/insomnia-tab-context.tsx",
     "packages/insomnia/src/ui/components/templating/external-vault/external-vault-form.tsx -> packages/insomnia/src/ui/components/templating/tag-editor-arg-sub-form.tsx",
     "packages/insomnia/src/ui/components/viewers/response-multipart-viewer.tsx -> packages/insomnia/src/ui/components/viewers/response-viewer.tsx"
   ],
