@@ -2,8 +2,8 @@ import type { BaseRunnerTestResult, RunnerResultPerRequest } from 'insomnia-data
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
 import { Hotkey } from '~/ui/components/hotkey';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { RequestResultCard } from './request-result-card';
 import { hasMatchingTestResults, type TargetTestType } from './request-test-result-pane';

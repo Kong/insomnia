@@ -14,8 +14,8 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { useRootLoaderData } from '~/root';
 import { useInsomniaSyncRestoreActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.restore';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';

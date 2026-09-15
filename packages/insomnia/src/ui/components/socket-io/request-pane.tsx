@@ -9,10 +9,10 @@ import * as reactUse from 'react-use';
 
 import { extractQueryStringFromUrl } from '~/common/utils/url/querystring';
 import { getAuthObjectOrNull } from '~/network/authentication';
-import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import {
   type SocketIORequestLoaderData,

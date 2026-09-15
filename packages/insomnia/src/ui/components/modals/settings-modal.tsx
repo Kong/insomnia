@@ -4,11 +4,11 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
-import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { getAppVersion, getProductName } from '../../../common/constants';

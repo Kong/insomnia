@@ -4,7 +4,6 @@ import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { CDN_INVALIDATION_TTL } from '~/common/constants';
-import { useRootLoaderData } from '~/root';
 import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -14,6 +13,7 @@ import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 import { useInvalidateAccountData } from '~/ui/hooks/use-account-server-data';
 import { useInvalidateOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];

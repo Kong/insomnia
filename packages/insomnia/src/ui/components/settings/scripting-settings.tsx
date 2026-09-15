@@ -1,6 +1,6 @@
 import { Switch } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import {
   type ASTRule,
