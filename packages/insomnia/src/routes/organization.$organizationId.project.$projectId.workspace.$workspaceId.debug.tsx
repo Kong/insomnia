@@ -139,6 +139,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     }
   } catch {}
 
+  const hasLegacyUnitTests = (await services.unitTestSuite.count({ parentId: workspaceId })) > 0;
+
   return {
     apiSpec,
     gitSyncRulesetPath,
@@ -147,6 +149,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     rulesetContent,
     rulesetLastCompiledAt,
     rulesetImportIssue,
+    hasLegacyUnitTests,
   };
 }
 
@@ -176,6 +179,7 @@ const Debug = () => {
     rulesetImportIssue,
     parsedSpec,
     apiSpec,
+    hasLegacyUnitTests,
   } = useLoaderData<typeof clientLoader>();
 
   const requestData = useRequestLoaderData();
@@ -532,6 +536,7 @@ const Debug = () => {
                             workspaceId={workspaceId}
                             activeItemId="spec"
                             enableLegacyUnitTests={settings.enableLegacyUnitTests}
+                            hasLegacyUnitTests={hasLegacyUnitTests}
                           />
                           <div className="min-h-0 flex-1">
                             <SpecView

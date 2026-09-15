@@ -256,9 +256,11 @@ const Component = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  const hasLegacyUnitTests = unitTestSuites.length > 0;
+
   useEffect(() => {
-    if (!settings.enableLegacyUnitTests) {
-      // If legacy unit tests are disabled, redirect to the spec route for the workspace
+    if (!settings.enableLegacyUnitTests && !hasLegacyUnitTests) {
+      // If legacy unit tests are disabled and the collection has none, redirect to the spec route for the workspace
       tabNavigate(
         {
           organization: organizationId,
@@ -269,7 +271,7 @@ const Component = () => {
         { shouldNavigate: true },
       );
     }
-  }, [activeProject, activeWorkspace, organizationId, settings.enableLegacyUnitTests, tabNavigate]);
+  }, [activeProject, activeWorkspace, hasLegacyUnitTests, organizationId, settings.enableLegacyUnitTests, tabNavigate]);
 
   return (
     <div className="flex h-full flex-col">
@@ -281,6 +283,7 @@ const Component = () => {
         workspaceId={workspaceId}
         activeItemId="test"
         enableLegacyUnitTests={settings.enableLegacyUnitTests}
+        hasLegacyUnitTests={hasLegacyUnitTests}
       />
       <PanelGroup
         ref={sidebarPanelRef}
