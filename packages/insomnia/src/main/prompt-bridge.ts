@@ -4,7 +4,7 @@ import { ipcMain } from 'electron';
 
 import type { AppPromptOptions } from '~/common/templating/types';
 
-import { getMainWindow } from './window-utils';
+import { getMainWindow } from './window-registry';
 
 export interface PromptRequestOptions extends AppPromptOptions {
   title: string;
