@@ -390,6 +390,12 @@ added: the explicit call sites are what keep the two readers that must see **onl
       Settings → Data (`workspacesForActiveProject`, `activeProject`, `projects` all empty, so
       project export produces nothing and the import buttons disappear).
       The scratchpad guard exists there only because scratchpad has a single project and workspace.
+    - **Post-merge audit finding (2026-09-15) — the storage-rule reasoning above went stale.** All
+      five call sites (including `project.$projectId.tsx`, which this step originally said "only
+      reads the shared `storage-rule:${organizationId}` key and never loads") had by then been
+      migrated onto a TanStack Query hook, `useOrganizationStorageRule`
+      (`packages/insomnia/src/ui/hooks/use-organization-storage-rule.ts`), introduced by develop's
+      account-data refactor — see the Implementation Notes entry for the fix.
 
 #### 2C — UI gating
 
@@ -634,6 +640,9 @@ added: the explicit call sites are what keep the two readers that must see **onl
    and is account-scoped, so it fires in every organization.
    Also confirm the local-only storage rules actually reach the UI (step 17): no Cloud Sync / Git
    Sync options in the project settings form, and no Git sync dropdown.
+   Also confirm no `sync.remoteBackendProjectsOfTeam` IPC call fires for the Konnect organization id
+   (drives the sidebar/project-view "unsynced remote files" indicator — see the
+   `use-remote-files.ts` finding in the Implementation Notes).
 6. Inside Control Planes: reload the page, enter via deep link, delete the last project → no blank
    screen and no redirect to login. Specifically confirm nothing bounces the user back to
    `/organization`.
@@ -781,6 +790,36 @@ Changes the plan did not anticipate:
   `{ $exists: true, $ne: null }` predicate the plan relies on was not expressible before.
 - `packages/insomnia/src/konnect/sync.ts` — its own Konnect-project lookup was switched to the same
   predicate, which made the redundant `.filter(p => p.konnectControlPlaneId != null)` unnecessary.
+- `packages/insomnia/src/ui/hooks/use-organization-storage-rule.ts` — a TanStack Query hook that
+  post-dates this plan's original audit (introduced by develop's account-data refactor) and became
+  the shared implementation behind all five storage-rule call sites listed at step 17. It called the
+  raw `getOrganizationStorageRule` API function directly in its `queryFn`, and its `enabled` gate
+  checked `isScratchpadOrganizationId` instead of `isLocalOrganizationId` — so it fired a real
+  `GET /v1/organizations/:id/storage-rule` request for Control Planes on every mount (caught via
+  DevTools Network, not by any test). **Fixed by delegating `queryFn` to
+  `fetchAndCacheOrganizationStorageRule` instead of gating with `enabled`** — gating naively would
+  have fallen back to `DEFAULT_STORAGE_RULES`'s permissive `enableCloudSync`/`enableGitSync: true`
+  while loading/disabled, the exact regression step 17 already warned against for this file.
+  Verified empirically (Playwright, watching `page.on('request')`) that no `org_konnect_*`-scoped
+  request fires after navigating into Control Planes.
+- `packages/insomnia/src/ui/hooks/use-remote-files.ts`'s `useRemoteBackendProjects` — another
+  develop-introduced hook, found during the same audit, with **no organization guard at all**
+  (`enabled: !!organizationId`). It backs the "unsynced remote files" indicator
+  (`useRemoteFilesByProjectId` in the full sidebar, `useUnsyncedFilesForProject` in
+  `project.$projectId._index.tsx`) via an Electron IPC call
+  (`window.main.sync.remoteBackendProjectsOfTeam`) — meaningless for Konnect projects, which never
+  carry a `remoteId`. Fixed by adding `!isLocalOrganizationId(organizationId)` to its `enabled` gate;
+  unlike the storage-rule case, the empty-array fallback here is already the correct answer, so a
+  plain `enabled` gate (no delegation needed) is sufficient.
+- The rest of the original audit held up under a full re-check prompted by the above two findings:
+  every other `isScratchpadOrganizationId` use in `packages/insomnia/src/ui` is either a UI-only
+  quirk step 2E already scopes to scratchpad on purpose, or (`request-settings-modal.tsx`,
+  `import-export.tsx`) a pure-NeDB fetcher with no network component regardless of guard. Every
+  `insomnia-api` function that takes `organizationId` was re-traced to its call site(s) and found
+  guarded (collaborators/invite surface, check-seats, member roles, `syncProjects`,
+  `use-organization-features.tsx`, the event-stream collaborators/EventSource/VaultKeyChanged
+  branches, `use-command-search.ts`, `untracked-projects.tsx`,
+  `git-credentials.$id.related-projects.tsx`, `router.ts`'s `getInitialEntry`). No other gaps found.
 
 Known gaps left open (details at the relevant steps): the conflict modal has no dismiss affordance
 (step 33), and disconnecting the PAT does not navigate away from the now-dead route (step 29).
