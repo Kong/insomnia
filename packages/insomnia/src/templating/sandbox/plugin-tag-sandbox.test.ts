@@ -615,6 +615,44 @@ describe('ambient globals — sandbox stdlib (M2)', () => {
       const actual = await runGlobal("return new URL('https://h/p?a=1&a=2&b=3').searchParams.getAll('a').join(',');");
       expect(actual).toBe('1,2');
     });
+
+    it('parses a bracketed IPv6 host, keeping brackets in hostname/host per WHATWG', async () => {
+      const u = 'http://[::1]:8080/path';
+      const actual = await runGlobal(
+        "var u = new URL(arguments[1]); return [u.hostname, u.port, u.host, u.href].join('|');",
+        [u],
+      );
+      const expected = new URL(u);
+      expect(actual).toBe([expected.hostname, expected.port, expected.host, expected.href].join('|'));
+      expect(actual).toBe('[::1]|8080|[::1]:8080|http://[::1]:8080/path');
+    });
+
+    it('drops the default port for a bracketed IPv6 host like WHATWG', async () => {
+      const actual = await runGlobal("var u = new URL('https://[::1]:443/x'); return u.host + '|' + u.port;");
+      expect(actual).toBe('[::1]|');
+    });
+
+    it('lowercases hex in an IPv6 host like WHATWG', async () => {
+      const actual = await runGlobal("return new URL('http://[2001:DB8::1]/x').hostname;");
+      expect(actual).toBe(new URL('http://[2001:DB8::1]/x').hostname);
+      expect(actual).toBe('[2001:db8::1]');
+    });
+
+    it('parses auth alongside a bracketed IPv6 host', async () => {
+      const u = 'http://user:pass@[::1]:8080/path';
+      const actual = await runGlobal(
+        "var u = new URL(arguments[1]); return [u.username, u.password, u.hostname, u.host, u.href].join('|');",
+        [u],
+      );
+      const expected = new URL(u);
+      expect(actual).toBe(
+        [expected.username, expected.password, expected.hostname, expected.host, expected.href].join('|'),
+      );
+    });
+
+    it('throws on an unclosed IPv6 bracket', async () => {
+      await expect(runGlobal("return new URL('http://[::1/x').href;")).rejects.toThrow();
+    });
   });
 
   describe('sandbox identity marker', () => {
