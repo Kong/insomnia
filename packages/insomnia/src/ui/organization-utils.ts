@@ -64,16 +64,23 @@ function setKonnectAccess(next: KonnectAccess) {
  * Visibility is the entitlement OR local Konnect data from a previous version, which stays
  * reachable with syncing disabled. Callers must run the startup migration first, otherwise the
  * project lookup still sees the pre-migration parents.
+ *
+ * Deduped by `sessionId`, not `accountId`: signing in does not reload the renderer, so this
+ * module-level guard otherwise survives a logout, and a fresh login into the *same* account keeps
+ * the same accountId — which would silently skip the re-resolution. A new login always mints a new
+ * session token even for the same account, so keying on `sessionId` still dedupes the normal case
+ * (the startup call and the post-login loader's call share one session on a cold start) while
+ * still re-resolving after a genuine logout/login cycle.
  */
 export async function refreshKonnectAccess(
   sessionId: string,
   accountId: string,
   { force = false }: { force?: boolean } = {},
 ) {
-  if (!force && konnectAccessResolvedFor === accountId) {
+  if (!force && konnectAccessResolvedFor === sessionId) {
     return;
   }
-  konnectAccessResolvedFor = accountId;
+  konnectAccessResolvedFor = sessionId;
 
   if (!sessionId || !accountId) {
     setKonnectAccess({ hasEntitlement: false, isOrganizationVisible: false });

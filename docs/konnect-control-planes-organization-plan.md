@@ -820,6 +820,15 @@ Changes the plan did not anticipate:
   `use-organization-features.tsx`, the event-stream collaborators/EventSource/VaultKeyChanged
   branches, `use-command-search.ts`, `untracked-projects.tsx`,
   `git-credentials.$id.related-projects.tsx`, `router.ts`'s `getInitialEntry`). No other gaps found.
+- `konnectAccessResolvedFor` (step 3's dedup guard) was keyed by `accountId`, not `sessionId`. Since
+  signing in never reloads the renderer, this module-level value survives a logout — and a fresh
+  login into the *same* account reuses the same `accountId`, so `refreshKonnectAccess` silently
+  no-oped and never re-hit `/v1/user/entitlements` after a logout/login cycle (confirmed via
+  DevTools Network: no request fired). Restarting the app or logging into a *different* account
+  still worked, since both produce a value `konnectAccessResolvedFor` hadn't seen. **Fixed by keying
+  the guard on `sessionId` instead** — a new login always mints a new session token even for the
+  same account, so this still dedupes the normal cold-start case (the startup call and the
+  post-login loader's call share one session) while correctly re-resolving after logout/login.
 
 Known gaps left open (details at the relevant steps): the conflict modal has no dismiss affordance
 (step 33), and disconnecting the PAT does not navigate away from the now-dead route (step 29).
