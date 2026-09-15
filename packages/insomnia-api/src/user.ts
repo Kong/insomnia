@@ -1,5 +1,8 @@
 import type { CurrentUserActionCreate, User, UserEncryptionKeys, UserOnboarding } from '@getinsomnia/insomnia-v3-fetch';
-import { CurrentUserActionCreateActionTypeEnum, UserOnboardingFirstRequestTreatmentEnum } from '@getinsomnia/insomnia-v3-fetch';
+import {
+  CurrentUserActionCreateActionTypeEnum,
+  UserOnboardingFirstRequestTreatmentEnum,
+} from '@getinsomnia/insomnia-v3-fetch';
 
 import { fetch } from './fetch';
 
@@ -98,6 +101,29 @@ export const getUserFiles = async ({ sessionId }: { sessionId: string }) => {
   return fetch<RemoteFile[]>({
     method: 'GET',
     path: '/v1/user/files',
+    sessionId,
+  });
+};
+
+// GET /v1/user/entitlements
+export interface Entitlement {
+  /** `${featureName}_${entitlementKey}`, e.g. `konnectControlPlanes_default`. */
+  featureKey: string;
+  type: 'metered';
+  hasAccess: boolean;
+  /** `null` means unlimited. */
+  allowance: number | null;
+}
+
+export const KONNECT_CONTROL_PLANES_FEATURE = 'konnectControlPlanes';
+export const KONNECT_CONTROL_PLANES_FEATURE_KEY = `${KONNECT_CONTROL_PLANES_FEATURE}_default`;
+
+/** An account without the feature gets `{ entitlements: [] }` rather than an entry with `hasAccess: false`. */
+export const getUserEntitlements = async ({ sessionId, feature }: { sessionId: string; feature?: string }) => {
+  const query = feature ? `?feature=${encodeURIComponent(feature)}` : '';
+  return fetch<{ entitlements: Entitlement[] }>({
+    method: 'GET',
+    path: `/v1/user/entitlements${query}`,
     sessionId,
   });
 };
