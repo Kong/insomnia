@@ -28,6 +28,10 @@ jobs:
     permissions:
       contents: read
       packages: read
+    env:
+      # TEMPORARY: opt-in code signing for a single PR only. Remove this env and the
+      # steps marked "signed build" before merging. Any other branch/event evaluates to false.
+      SIGN_BUILD: ${{ github.event_name == 'pull_request' && github.event.number == 10470 }}
     strategy:
       fail-fast: false
       matrix:
@@ -78,11 +82,98 @@ jobs:
         if: ${{ matrix.os != 'windows-latest' }}
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+        env:
+          # Empty on every branch except the signed-build PR, which makes electron-builder skip signing.
+          APPLE_ID: ${{ (matrix.os == 'macos-latest-large' && env.SIGN_BUILD == 'true') && secrets.DESIGNER_APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ (matrix.os == 'macos-latest-large' && env.SIGN_BUILD == 'true') && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ (matrix.os == 'macos-latest-large' && env.SIGN_BUILD == 'true') && 'FX44YY62GV' || '' }}
+          CSC_LINK: ${{ (matrix.os == 'macos-latest-large' && env.SIGN_BUILD == 'true') && secrets.DESIGNER_MAC_CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ (matrix.os == 'macos-latest-large' && env.SIGN_BUILD == 'true') && secrets.DESIGNER_MAC_CSC_KEY_PASSWORD || '' }}
 
       - name: Build and verify secure wrapper (Windows)
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD != 'true' }}
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
+
+      # ---8<--- TEMPORARY signed Windows build for PR #10470 only. Remove before merging. ---8<---
+      - name: Setup DigiCert client cert (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        shell: bash
+        env:
+          DIGICERT_CLIENT_CERT_B64: ${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}
+        run: |
+          printf '%s' "$DIGICERT_CLIENT_CERT_B64" | base64 --decode > /d/Certificate_pkcs12.p12
+          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+
+      - name: Setup Software Trust Manager (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
+        with:
+          simple-signing-mode: true
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+
+      - name: Package unpacked app (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+
+      - name: Compile secure wrapper (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        shell: bash
+        run: ./build-secure-wrapper.sh CI
+
+      - name: Move .dll and .exe files to /tosign (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        shell: pwsh
+        run: |
+          New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+
+      - name: Code-sign unpacked binaries (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
+        with:
+          simple-signing-mode: true
+          input: packages/insomnia/dist/win-unpacked/tosign
+          keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+
+      - name: Move .dll and .exe files back to win-unpacked (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
+
+      - name: Package dist app (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+
+      # build-secure-wrapper.sh CI leaves the C++ wrapper as Insomnia.exe, which Playwright cannot launch.
+      - name: Restore original Insomnia.exe for smoke tests (Windows, signed build)
+        if: ${{ matrix.os == 'windows-latest' && env.SIGN_BUILD == 'true' }}
+        shell: pwsh
+        run: Move-Item -Force "packages/insomnia/dist/win-unpacked/insomnia.dll" "packages/insomnia/dist/win-unpacked/Insomnia.exe"
+      # ---8<--- end TEMPORARY signed Windows build ---8<---
 
       # See https://github.com/electron/electron/issues/42510#issuecomment-2171583086
       - if: ${{ runner.os == 'Linux' }}
