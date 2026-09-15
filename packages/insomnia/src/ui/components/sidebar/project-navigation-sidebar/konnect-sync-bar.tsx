@@ -201,7 +201,11 @@ export function useKonnectSyncBar({
     setShowKonnectConfigModal,
     onDisconnect: () => {
       setLastSyncedAt(null);
-      // Removing the last Konnect projects can hide the organization itself.
+      // Removing the last Konnect projects can hide the organization itself. Navigating away from
+      // the now-invisible organization is handled declaratively by
+      // `organization.$organizationId._index.tsx`'s loader, which every "no reachable project"
+      // fallback already redirects through — not here, so it also covers deleting the last Konnect
+      // project one at a time rather than only the bulk Disconnect path.
       refreshKonnectAccess(userSession.id, userSession.accountId, { force: true });
     },
   };

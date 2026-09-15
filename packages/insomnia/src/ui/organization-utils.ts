@@ -57,6 +57,21 @@ function setKonnectAccess(next: KonnectAccess) {
 }
 
 /**
+ * Combines `hasEntitlement` with a freshly-queried local Konnect project count into
+ * `isOrganizationVisible`, and writes both into the shared access store. Shared by
+ * `refreshKonnectAccess` (after a real entitlement fetch) and `getKonnectOrganizationEscapeRoute`
+ * (reusing the last-resolved entitlement, since only the local count can have changed).
+ */
+async function reconcileKonnectAccess(hasEntitlement: boolean, konnectOrganizationId: string): Promise<KonnectAccess> {
+  const localKonnectProjectCount = await services.project.count({
+    konnectControlPlaneId: { $exists: true, $ne: null },
+    parentId: konnectOrganizationId,
+  });
+  setKonnectAccess({ hasEntitlement, isOrganizationVisible: hasEntitlement || localKonnectProjectCount > 0 });
+  return konnectAccess;
+}
+
+/**
  * Resolves Konnect access for the account. Awaited before hydration and again after signing in so
  * that render-time readers can stay synchronous; the two mutations that can flip it mid-session
  * (disconnecting the PAT, resolving the migration conflict) pass `force`.
@@ -101,17 +116,42 @@ export async function refreshKonnectAccess(
     // Offline: keep the last known answer rather than hiding an organization the user owns.
   }
 
-  const localKonnectProjectCount = await services.project.count({
-    konnectControlPlaneId: { $exists: true, $ne: null },
-    parentId: models.organization.getKonnectOrganizationId(accountId),
-  });
-
-  setKonnectAccess({ hasEntitlement, isOrganizationVisible: hasEntitlement || localKonnectProjectCount > 0 });
+  await reconcileKonnectAccess(hasEntitlement, models.organization.getKonnectOrganizationId(accountId));
 }
 
 /** Whether the account may sync from Konnect. */
 export function useKonnectSyncEnabled(): boolean {
   return useSyncExternalStore(subscribeToKonnectAccess, () => konnectAccess.hasEntitlement);
+}
+
+/**
+ * Re-checks a Konnect organization's visibility using a fresh local project count — no network
+ * call, since entitlement is read from the last-resolved value (kept current by the explicit
+ * `force` points: login, disconnect, migration) and the local count is the only half that can
+ * change from a plain NeDB delete — and updates the shared access store to match, so
+ * `useOrganizations()` subscribers (the org dropdown) see the change immediately regardless of
+ * what the caller navigates to next.
+ *
+ * Returns the URL to redirect to when the organization just became invisible (its last Konnect
+ * project was just removed, one at a time or via Disconnect, with no entitlement to fall back on),
+ * or `null` when the caller should proceed into the organization normally. Every code path that can
+ * remove the last Konnect project calls this before deciding where to land, so the check — and the
+ * store update — live in one place instead of being duplicated per delete path.
+ */
+export async function getKonnectOrganizationEscapeRoute(organizationId: string): Promise<string | null> {
+  if (!models.organization.isKonnectOrganizationId(organizationId)) {
+    return null;
+  }
+
+  const { accountId } = await services.userSession.get();
+  const { isOrganizationVisible } = await reconcileKonnectAccess(konnectAccess.hasEntitlement, organizationId);
+  if (isOrganizationVisible) {
+    return null;
+  }
+
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
+  invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
+  return `/organization/${organizations[0].id}`;
 }
 
 /** The account's local-only Konnect organization, or null when it should not be shown. */
