@@ -22,11 +22,11 @@ vi.mock('insomnia-data', () => ({
     settings: { get: vi.fn().mockResolvedValue({}) },
   },
 }));
+vi.mock('~/common/templating/user-plugin-export-discovery', () => ({ registerUserPluginExportDiscovery: vi.fn() }));
 vi.mock('~/plugins', () => ({
   getPluginCommonContext: vi.fn(),
   getTemplateTags: vi.fn().mockResolvedValue([]),
   getPlugins: vi.fn().mockResolvedValue([]),
-  registerUserPluginExportDiscovery: vi.fn(),
 }));
 vi.mock('~/common/cookies', () => ({ jarFromCookies: vi.fn() }));
 vi.mock('../common/database', () => ({ database: {} }));
