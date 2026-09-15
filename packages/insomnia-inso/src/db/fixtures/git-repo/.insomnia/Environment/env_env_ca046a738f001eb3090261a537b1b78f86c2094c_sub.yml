@@ -3,7 +3,7 @@ color: null
 created: 1592252904087
 data:
   base_path: ""
-  host: 200.insomnia.rest
+  host: insomnia.rest
   scheme: https
 dataPropertyOrder: null
 isPrivate: false
