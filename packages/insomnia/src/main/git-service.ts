@@ -41,7 +41,7 @@ import {
   type ProviderEmail,
   type ProviderRepository,
 } from '~/sync/git/providers';
-import type { FileIssue, FileIssueKind } from '~/sync/git/repo-file-watcher';
+import type { FileIssue, WorkspaceFileIssue } from '~/sync/git/repo-file-watcher';
 
 import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
@@ -172,14 +172,6 @@ export function getErrorMessage(error: unknown): string {
 }
 export function vcsEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
-}
-
-export interface WorkspaceFileIssue {
-  workspaceId: string;
-  gitRepositoryId: string;
-  relPath: string;
-  kind: FileIssueKind;
-  message: string;
 }
 
 interface GetProjectGitFileIssuesOptions {
