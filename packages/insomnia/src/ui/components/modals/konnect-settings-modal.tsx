@@ -14,9 +14,14 @@ import { Icon } from '../icon';
 export const KonnectSettingsModal = ({
   onClose,
   onDisconnect,
+  konnectSyncEnabled = true,
 }: {
   onClose: () => void;
   onDisconnect?: () => void;
+  /** Whether the account holds the Konnect control-planes entitlement. Disables "Connect & Sync"
+   * when false, mirroring the sidebar's Sync button — connecting a PAT here would validate and
+   * store it but syncing still could not run. */
+  konnectSyncEnabled?: boolean;
 }) => {
   const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
@@ -215,13 +220,18 @@ export const KonnectSettingsModal = ({
                         {validationError ?? 'Invalid PAT. Check your input and try again.'}
                       </p>
                     )}
+                    {!konnectSyncEnabled && (
+                      <p className="text-sm text-(--color-warning)">
+                        Your account does not have access to Konnect control planes.
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Button
                       type="submit"
                       className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs) disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                      isDisabled={!pat.trim() || status === 'validating' || isPatUnchanged}
+                      isDisabled={!pat.trim() || status === 'validating' || isPatUnchanged || !konnectSyncEnabled}
                     >
                       {status === 'validating' ? <Icon icon="spinner" className="animate-spin" /> : 'Connect & Sync'}
                     </Button>

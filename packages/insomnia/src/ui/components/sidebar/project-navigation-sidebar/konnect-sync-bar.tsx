@@ -284,6 +284,7 @@ export function KonnectSyncResultPanel({
   showKonnectConfigModal,
   setShowKonnectConfigModal,
   onDisconnect,
+  konnectSyncEnabled,
 }: KonnectSyncBarState) {
   return (
     <>
@@ -414,7 +415,11 @@ export function KonnectSyncResultPanel({
       )}
 
       {showKonnectConfigModal && (
-        <KonnectSettingsModal onClose={() => setShowKonnectConfigModal(false)} onDisconnect={onDisconnect} />
+        <KonnectSettingsModal
+          onClose={() => setShowKonnectConfigModal(false)}
+          onDisconnect={onDisconnect}
+          konnectSyncEnabled={konnectSyncEnabled}
+        />
       )}
     </>
   );
