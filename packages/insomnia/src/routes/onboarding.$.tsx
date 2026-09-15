@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, Route, Routes, useLocation } from 'react-router';
 
+import { HAS_SEEN_ONBOARDING_KEY, ONBOARDING_VERSION } from '~/common/constants';
 import { docsPreRequestAndAfterResponseScripts } from '~/common/documentation';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
@@ -130,7 +131,7 @@ const Component = () => {
             <InsomniaLogo className="absolute top-0 left-1/2 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
             <div className="flex h-full flex-col gap-6 text-(--color-font)">
               <div className="flex flex-col gap-4 py-4">
-                <h1 className="text-center text-xl">🚀 Welcome to Insomnia 13.3!</h1>
+                <h1 className="text-center text-xl">🚀 Welcome to Insomnia {ONBOARDING_VERSION}!</h1>
                 <p className="text-center">
                   API Collections now combine Documents and Collections, with OpenAPI Specs accessible directly, while
                   legacy Unit Tests are hidden by default.
@@ -151,7 +152,7 @@ const Component = () => {
                 <Link
                   className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
-                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV13', 'true')}
+                  onClick={() => window.localStorage.setItem(HAS_SEEN_ONBOARDING_KEY, 'true')}
                 >
                   Continue
                 </Link>

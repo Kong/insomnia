@@ -19,7 +19,7 @@ test.describe('Design interactions', () => {
     await page.locator('input[name="enableLegacyUnitTests"]').click();
     await insomnia.preferencesPage.closePreferences();
     // Switch to Test tab
-    await page.click('a:has-text("Test")');
+    await page.getByTestId('api-collection-tab-tests').click();
 
     // Run tests and check results
     await page.getByLabel('Run all tests').click();

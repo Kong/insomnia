@@ -4,6 +4,7 @@ import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
+import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 
 export const enum AsyncTask {
@@ -107,9 +108,9 @@ export const getInitialEntry = async () => {
       }
     }
 
-    const hasSeenOnboardingV13_3 = Boolean(window.localStorage.getItem('hasSeenOnboardingV13.3'));
+    const hasSeenOnboarding = Boolean(window.localStorage.getItem(HAS_SEEN_ONBOARDING_KEY));
 
-    if (!hasSeenOnboardingV13_3) {
+    if (!hasSeenOnboarding) {
       return href('/onboarding/*', {
         '*': '',
       });
