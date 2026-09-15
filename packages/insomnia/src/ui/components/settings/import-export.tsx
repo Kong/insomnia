@@ -929,6 +929,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
         <ExportRequestsModal
           workspaceIdToExport={workspaceData.activeWorkspace._id}
           onClose={() => setIsExportModalOpen(false)}
+          onExport={exportRequestsToFile}
         />
       )}
     </Fragment>
