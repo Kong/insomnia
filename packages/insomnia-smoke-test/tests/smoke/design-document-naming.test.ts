@@ -18,7 +18,7 @@ test.describe('design document operations', () => {
     await insomnia.statusbar.openPreferences();
     await page.locator('input[name="enableLegacyUnitTests"]').click();
     await insomnia.preferencesPage.closePreferences();
-    await page.getByTestId('workspace-test').click();
+    await page.getByTestId('api-collection-tab-tests').click();
     await page.getByText('New test suite').click();
     await page.getByLabel('Test Suites').getByLabel('Unit Test Actions').click();
     await page.getByRole('menuitemradio', { name: 'Delete suite' }).click();

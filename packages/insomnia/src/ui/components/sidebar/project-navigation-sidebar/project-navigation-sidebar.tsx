@@ -29,7 +29,6 @@ import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
-import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { SidebarShortcutActionsDropdown } from '~/ui/components/dropdowns/sidebar-shortcut-actions-dropdown';
@@ -139,9 +138,6 @@ const ProjectNavigationSidebarInner = (
   const [focusedWorkspaceId, setFocusedWorkspaceId] = useState<string | null>(null);
   const [focusTransition, setFocusTransition] = useState<'none' | 'in' | 'out'>('none');
   const [isFocusedWorkspaceMenuOpen, setIsFocusedWorkspaceMenuOpen] = useState(false);
-  const [isRenamingFocusedWorkspace, setIsRenamingFocusedWorkspace] = useState(false);
-  const [renamingWorkspaceValue, setRenamingWorkspaceValue] = useState('');
-  const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
   // Customized workspace sort orders by projectId
   const [localWorkspaceOrders, setLocalWorkspaceOrders] = reactUse.useLocalStorage<Record<string, string[]>>(
@@ -691,8 +687,6 @@ const ProjectNavigationSidebarInner = (
   const clearFocusState = useCallback(() => {
     setFocusTransition('out');
     setFocusedWorkspaceId(null);
-    setIsRenamingFocusedWorkspace(false);
-    setRenamingWorkspaceValue('');
     setIsFocusedWorkspaceMenuOpen(false);
   }, []);
 
@@ -1014,44 +1008,24 @@ const ProjectNavigationSidebarInner = (
                 >
                   <Icon icon={scopeToIconMap[focusedWorkspaceScope]} className="h-3 w-3" />
                 </div>
-                {isRenamingFocusedWorkspace ? (
-                  <input
-                    autoFocus
-                    type="text"
-                    value={renamingWorkspaceValue}
-                    onChange={e => setRenamingWorkspaceValue(e.target.value)}
-                    onFocus={e => e.currentTarget.select()}
-                    onBlur={() => {
-                      const trimmed = renamingWorkspaceValue.trim();
-                      if (focusedWorkspaceItem && trimmed && trimmed !== focusedWorkspaceItem.doc.name) {
-                        updateWorkspaceFetcher.submit({
-                          organizationId,
-                          projectId: focusedWorkspaceItem.project._id,
-                          patch: { name: trimmed, workspaceId: focusedWorkspaceItem.doc._id },
-                        });
-                      }
-                      setIsRenamingFocusedWorkspace(false);
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      } else if (e.key === 'Escape') {
-                        setIsRenamingFocusedWorkspace(false);
-                      }
-                    }}
-                    className="min-w-0 flex-1 truncate rounded-xs bg-(--hl-sm) p-1 font-semibold text-(--color-font) focus:ring-1 focus:ring-(--color-surprise) focus:outline-none"
-                  />
-                ) : (
-                  <span
-                    onClick={() => {
-                      setRenamingWorkspaceValue(focusedWorkspaceItem?.doc.name || '');
-                      setIsRenamingFocusedWorkspace(true);
-                    }}
-                    className="flex-1 truncate rounded-xs p-1 font-semibold text-(--color-font) transition-colors hover:cursor-text hover:bg-(--hl-xs)"
-                  >
-                    {focusedWorkspaceItem?.doc.name || 'API Collection'}
-                  </span>
-                )}
+                <span
+                  onClick={e => {
+                    if (focusedWorkspaceItem) {
+                      tabNavigate(
+                        {
+                          organization: organizationId,
+                          project: focusedWorkspaceItem.project,
+                          workspace: focusedWorkspaceItem.doc,
+                          item: focusedWorkspaceItem.doc,
+                        },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                      );
+                    }
+                  }}
+                  className="flex-1 truncate rounded-xs p-1 font-semibold text-(--color-font) transition-colors hover:cursor-pointer hover:bg-(--hl-xs)"
+                >
+                  {focusedWorkspaceItem?.doc.name || 'API Collection'}
+                </span>
                 <div className="ml-auto shrink-0">
                   {focusedWorkspaceItem && (
                     <SidebarWorkspaceDropdown

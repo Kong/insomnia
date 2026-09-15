@@ -13,7 +13,7 @@ import { showModal } from './modals';
 import { PromptModal } from './modals/prompt-modal';
 
 interface Props {
-  onImport: (contents: string) => void;
+  onImport: (contents: string, generateRequestCollection?: boolean) => void;
   onCreateRequest: (requestType: CreateRequestType) => void;
   onCreateFolder: () => void;
 }
@@ -64,7 +64,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport, onCreateRequest, onCreat
         }
 
         const contents = String(await window.main.insecureReadFile({ path: filePath }));
-        onImport(contents);
+        onImport(contents, true);
       },
     },
     {
@@ -83,7 +83,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport, onCreateRequest, onCreat
               return;
             }
             const contents = await response.text();
-            onImport(contents);
+            onImport(contents, true);
           },
         });
       },
@@ -104,7 +104,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport, onCreateRequest, onCreat
   return (
     <div className="pointer-events-none absolute top-0 left-0 flex h-full w-full items-center select-none">
       <div className="flex h-full w-full flex-1 flex-col items-center gap-2 divide-y divide-solid divide-(--hl-md) overflow-hidden overflow-y-auto p-(--padding-md) text-(--hl-lg)">
-        <Heading className="flex flex-1 flex-col items-center gap-2 p-(--padding-sm) font-bold">
+        <Heading className="flex flex-1 flex-col items-center gap-2 border-0 p-(--padding-sm) font-bold">
           <Icon icon="drafting-compass" className="w-20 flex-1" />
           <span>Enter your OpenAPI specification here, or start creating requests</span>
         </Heading>

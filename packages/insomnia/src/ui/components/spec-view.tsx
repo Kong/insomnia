@@ -49,7 +49,6 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { Badge } from '~/ui/components/base/badge';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
-import { DocumentTab } from '~/ui/components/document-tab';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -293,12 +292,12 @@ export const SpecView = ({
   }, [gitSyncRulesetPath, isConnectedGitProject, rulesetWritePath, rulesetContent]);
 
   useEffect(() => {
-    if (showSpecInfo || settings.enableLegacyUnitTests) {
+    if (showSpecInfo) {
       specSidebarRef.current?.expand();
     } else {
       specSidebarRef.current?.collapse();
     }
-  }, [showSpecInfo, settings.enableLegacyUnitTests]);
+  }, [showSpecInfo]);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -509,7 +508,7 @@ export const SpecView = ({
   const generateActionList: SpecActionItem[] = [
     {
       id: 'generate-request-collection',
-      name: 'API Collection',
+      name: 'Requests',
       icon: (
         <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-surprise) text-(--color-font-surprise)">
           <Icon className="w-3" icon="bars" />
@@ -519,7 +518,7 @@ export const SpecView = ({
       tooltip:
         lintErrors.length > 0
           ? 'You cannot generate an API collection when spec errors exist. Fix the errors or change the ruleset first.'
-          : undefined,
+          : 'Auto populate this API collection with a request for each endpoint in the spec',
       action: () =>
         generateRequestCollectionFetcher.submit({
           organizationId,
@@ -600,13 +599,14 @@ export const SpecView = ({
       />
       {apiSpec?.contents ? null : (
         <DesignEmptyState
-          onImport={value => {
+          onImport={(value, generateRequestCollection = false) => {
             updateApiSpec({
               organizationId,
               projectId,
               workspaceId,
               contents: value,
               fromTemplate: true,
+              generateRequestCollection,
             });
           }}
           onCreateRequest={requestType => {
@@ -981,16 +981,6 @@ export const SpecView = ({
         collapsible
       >
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-          {settings.enableLegacyUnitTests && (
-            <DocumentTab
-              organizationId={organizationId}
-              projectId={projectId}
-              workspaceId={workspaceId}
-              activeItemId="spec"
-              enableLegacyUnitTests
-              className="border-b border-solid border-(--hl-sm)"
-            />
-          )}
           <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
             {/* Info */}
             {info && (
