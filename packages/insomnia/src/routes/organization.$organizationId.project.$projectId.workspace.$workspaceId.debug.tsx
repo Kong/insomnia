@@ -1,4 +1,3 @@
-import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import type { ChangeBufferEvent, Request } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
@@ -9,7 +8,6 @@ import YAML from 'yaml';
 
 import { getProductName } from '~/common/constants';
 import { generateId } from '~/common/misc';
-import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import {
   useWorkspaceLoaderData,
   WORKSPACE_CONTENT_WRAPPER,
@@ -48,28 +46,16 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { type CreateRequestType, useRequestMetaPatcher } from '~/ui/hooks/use-request';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
-import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/ui/utils/grpc';
+import {
+  getGrpcConnectionErrorDetails,
+  type GrpcRequestState,
+  isGrpcConnectionError,
+} from '~/ui/utils/grpc';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 
 const { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequest, isRequestId } = models.request;
 const { isRequestGroupId } = models.requestGroup;
-
-export interface GrpcMessage {
-  id: string;
-  text: string;
-  created: number;
-}
-
-export interface GrpcRequestState {
-  requestId: string;
-  running: boolean;
-  requestMessages: GrpcMessage[];
-  responseMessages: GrpcMessage[];
-  status?: StatusObject;
-  error?: ServiceError;
-  methods: GrpcMethodInfo[];
-}
 
 const INITIAL_GRPC_REQUEST_STATE = {
   running: false,
