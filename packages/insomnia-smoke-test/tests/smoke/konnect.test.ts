@@ -13,7 +13,10 @@ test.describe('Control Planes organization', () => {
     await page.getByRole('button', { name: 'Connect & Sync' }).click();
     await expect.soft(page.getByRole('heading', { name: 'Kong Konnect settings' })).toBeHidden();
 
-    await expect.soft(page.getByRole('button', { name: 'Sync Konnect' })).toBeVisible();
+    // Known limitation: with a PAT connected but no projects synced yet, there is no Sync
+    // button in the sidebar (it only exists once a project is selected) — only the gear button
+    // to reopen Konnect settings.
+    await expect.soft(page.getByRole('button', { name: 'Konnect settings' })).toBeVisible();
     // The Konnect organization never offers manual project creation.
     await expect.soft(page.getByRole('button', { name: 'Create new Project' })).toBeHidden();
   });

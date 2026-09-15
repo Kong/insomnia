@@ -27,6 +27,7 @@ import { showModal } from '~/ui/components/modals';
 import { KonnectOrgMigrationModal } from '~/ui/components/modals/konnect-org-migration-modal';
 import { SettingsModal, showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { PresentUsers } from '~/ui/components/present-users';
+import { KonnectMovedOnboarding } from '~/ui/components/project/konnect-moved-onboarding';
 import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context';
 import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-stream-context';
@@ -243,6 +244,20 @@ const Component = () => {
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
   const isScratchPad = organizationId === models.organization.SCRATCHPAD_ORGANIZATION_ID;
   const isLocalOrganization = models.organization.isLocalOrganizationId(organizationId);
+  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
+
+  // One-time nudge pointing users who already sync Konnect to the organization dropdown, where
+  // their control planes now live under "Control Planes" instead of the removed sidebar tab.
+  const [orgSelectNode, setOrgSelectNode] = useState<HTMLDivElement | null>(null);
+  const [hasSeenKonnectMovedNotice, setHasSeenKonnectMovedNotice] = reactUse.useLocalStorage(
+    'hasSeenKonnectMovedNotice',
+    false,
+  );
+  const showKonnectMovedNotice =
+    !isScratchPad && !isKonnectOrganization && settings.hasKonnectPat && !hasSeenKonnectMovedNotice;
+  const dismissKonnectMovedNotice = useCallback(() => {
+    setHasSeenKonnectMovedNotice(true);
+  }, [setHasSeenKonnectMovedNotice]);
 
   useCloseConnection({
     organizationId,
@@ -282,16 +297,18 @@ const Component = () => {
                       <InsomniaLogo />
                     </div>
                     {!isScratchPad && (
-                      <OrganizationSelect
-                        organizationId={organizationId}
-                        organizations={organizations || []}
-                        onSelect={id => {
-                          window.main.trackAnalyticsEvent({ event: AnalyticsEvent.organizationSwitched });
-                          navigate(`/organization/${id}`);
-                        }}
-                        currentPlan={currentPlan}
-                        isScratchpadWorkspace={!!isScratchpadWorkspace}
-                      />
+                      <div ref={setOrgSelectNode}>
+                        <OrganizationSelect
+                          organizationId={organizationId}
+                          organizations={organizations || []}
+                          onSelect={id => {
+                            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.organizationSwitched });
+                            navigate(`/organization/${id}`);
+                          }}
+                          currentPlan={currentPlan}
+                          isScratchpadWorkspace={!!isScratchpadWorkspace}
+                        />
+                      </div>
                     )}
 
                     {!user ? <GitHubStarsButton /> : null}
@@ -431,6 +448,9 @@ const Component = () => {
                 </div>
               </div>
             </div>
+            {showKonnectMovedNotice && orgSelectNode && (
+              <KonnectMovedOnboarding triggerElement={orgSelectNode} onDismiss={dismissKonnectMovedNotice} />
+            )}
             {konnectMigrationGroups.length > 0 && userSession.accountId && (
               <KonnectOrgMigrationModal
                 accountId={userSession.accountId}
