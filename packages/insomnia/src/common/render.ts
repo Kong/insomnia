@@ -12,6 +12,7 @@ import type {
   Workspace,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
@@ -25,7 +26,6 @@ import type {
   RenderedRequest,
 } from '~/common/templating/types';
 import * as templatingUtils from '~/common/templating/utils';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
 import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../network/network';
 import { getRuntime } from '../runtimes';
