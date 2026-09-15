@@ -25,33 +25,19 @@ import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
+import {
+  createPluginWindow,
+  destroyOrCreatePluginWindow,
+  togglePluginWindowVisibility,
+} from './plugin-window';
 import { isTrustedAppOrigin } from './trusted-origin';
+import { browserWindows } from './window-registry';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-
-// The plugin window lives in `plugin-window`, which depends on `getMainWindow` below — importing
-// it from here would be a circular dependency. Instead, `plugin-window` registers its controls
-// at module load and this module calls through the registration.
-interface PluginWindowControls {
-  toggleVisibility: () => void;
-  destroyOrCreate: () => void;
-  createAfterMainLoad: () => void;
-}
-
-let pluginWindowControls: PluginWindowControls | null = null;
-
-export function registerPluginWindowControls(controls: PluginWindowControls): void {
-  pluginWindowControls = controls;
-}
-
-export function getMainWindow(): ElectronBrowserWindow | null {
-  return browserWindows.get('Insomnia') ?? null;
-}
 
 let hiddenWindowIsBusy = false;
 interface Bounds {
@@ -674,15 +660,13 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: 'Show/hide plugin browser window ',
         click: () => {
-          invariant(pluginWindowControls, 'pluginWindow is not defined');
-          pluginWindowControls.toggleVisibility();
+          togglePluginWindowVisibility();
         },
       },
       {
         label: 'Stop/start plugin browser window ',
         click: () => {
-          invariant(pluginWindowControls, 'pluginWindow is not defined');
-          pluginWindowControls.destroyOrCreate();
+          destroyOrCreatePluginWindow();
         },
       },
       {
@@ -868,8 +852,7 @@ export function createWindowsAndReturnMain() {
   // it on did-finish-load still parses the 12 MB bundle well before any user
   // plugin call would occur.
   mainWindow.webContents.once('did-finish-load', () => {
-    invariant(pluginWindowControls, 'pluginWindow controls are not registered');
-    pluginWindowControls.createAfterMainLoad();
+    createPluginWindow();
   });
   return mainWindow;
 }

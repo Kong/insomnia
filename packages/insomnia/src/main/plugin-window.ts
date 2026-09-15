@@ -6,7 +6,7 @@ import { app, BrowserWindow, ipcMain, type IpcMainEvent, type IpcMainInvokeEvent
 import { invariant } from '~/common/utils/invariant';
 
 import { requestPromptFromRenderer } from './prompt-bridge';
-import { getMainWindow, registerPluginWindowControls } from './window-utils';
+import { getMainWindow } from './window-registry';
 
 let pluginWindow: BrowserWindow | null = null;
 let windowReady = false;
@@ -17,19 +17,6 @@ const pendingRequests = new Map<
 
 let cachedHasRequestHooks: boolean | null = null;
 let cachedHasResponseHooks: boolean | null = null;
-
-// Registered at module load so `window-utils` (its dev menu and main-window load hook) can drive
-// the plugin window without importing this module, which would be a circular dependency.
-registerPluginWindowControls({
-  toggleVisibility: () => {
-    invariant(pluginWindow, 'pluginWindow is not defined');
-    pluginWindow.isVisible() ? pluginWindow.hide() : pluginWindow.show();
-  },
-  destroyOrCreate: () => {
-    pluginWindow ? destroyPluginWindow() : createPluginWindow();
-  },
-  createAfterMainLoad: () => createPluginWindow(),
-});
 
 // Bridge observability counters.  Kept in-memory and exposed via the
 // `plugins.getBridgeMetrics` IPC handler so devs / smoke tests / support
@@ -299,6 +286,17 @@ export function destroyPluginWindow() {
   pluginWindow?.destroy();
   pluginWindow = null;
   windowReady = false;
+}
+
+// Exposed so `window-utils` (dev menu, main-window load hook) can drive the plugin window without
+// holding a registration registry: `plugin-window` is the single owner of these operations.
+export function togglePluginWindowVisibility() {
+  invariant(pluginWindow, 'pluginWindow is not defined');
+  pluginWindow.isVisible() ? pluginWindow.hide() : pluginWindow.show();
+}
+
+export function destroyOrCreatePluginWindow() {
+  pluginWindow ? destroyPluginWindow() : createPluginWindow();
 }
 
 export function reloadPluginsInWindow() {

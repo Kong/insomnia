@@ -25,14 +25,16 @@ import { services } from 'insomnia-data';
 import { afterEach, describe, expect, it } from 'vitest';
 
 // plugins/index.ts no longer dynamically imports `~/main/templating-worker-database`; the main
-// process now hands it the sandbox-backed discovery via `registerUserPluginExportDiscovery`. Mock
-// that module would never register anything, so register a stub discovery through the real
-// registration hook instead — standing in for the real function's eventual
+// process now hands it the sandbox-backed discovery via the shared `registerUserPluginExportDiscovery`
+// registry. Mock that module would never register anything, so register a stub discovery through the
+// real registration hook instead — standing in for the real function's eventual
 // `await import('../templating/sandbox/plugin-tag-sandbox')` → `getQuickJSModule()` call chain,
 // without needing to also mock `buildSandboxBridge`/`readPluginModuleMap`/`electron.app.getVersion()`
 // for no added evidentiary value — the property under test is what `getQuickJSModule()` itself
 // resolves to, not the rest of real discovery's plumbing.
-import { _testOnlySetPlugins, getPlugins, registerUserPluginExportDiscovery } from '../index';
+import { registerUserPluginExportDiscovery } from '~/common/templating/user-plugin-export-discovery';
+
+import { _testOnlySetPlugins, getPlugins } from '../index';
 
 registerUserPluginExportDiscovery(async () => {
   // Deliberately dynamic: this test's premise is that the process's first-ever
