@@ -27,7 +27,7 @@ import type {
 } from '~/common/templating/types';
 import * as templatingUtils from '~/common/templating/utils';
 
-import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../network/inheritance';
 import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
