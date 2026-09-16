@@ -1,8 +1,6 @@
-import { models } from 'insomnia-data';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
-import type { RenderPurpose, VariableSourceMeta } from '~/common/templating/types';
+import type { VariableSourceMeta } from '~/common/templating/types';
 
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
@@ -14,24 +12,19 @@ interface Props {
 }
 
 export const VariableEditor: FC<Props> = ({ onChange, defaultValue, variableSource, onOpenSource }) => {
-  const [purpose, setPurpose] = useState<RenderPurpose | ''>('');
-  const useNunjuckOptions = useMemo(() => {
-    const renderContext = purpose === '' ? {} : { purpose };
-    return { renderContext };
-  }, [purpose]);
-  const { handleRender, handleGetRenderContext } = useNunjucks(useNunjuckOptions);
+  // Always use 'preview' purpose; masking is controlled by the policy layer.
+  // forceReveal lets the user bypass hideSecretValuesInPreviewAndConsole for this
+  // session only — it is orthogonal to purpose and does not affect send/script paths.
+  const [isRevealed, setIsRevealed] = useState(false);
+  const nunjucksOptions = useMemo(
+    () => ({ renderContext: { purpose: 'preview' as const, forceReveal: isRevealed } }),
+    [isRevealed],
+  );
+  const { handleRender, handleGetRenderContext } = useNunjucks(nunjucksOptions);
   const [selected, setSelected] = useState(defaultValue);
   const [options, setOptions] = useState<{ name: string; value: any }[]>([]);
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
-  const isVaultVariable =
-    selected &&
-    selected
-      .replace('{{', '')
-      .replace('}}', '')
-      .trim()
-      .startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${models.environment.vaultEnvironmentRuntimePath}`) &&
-    preview === models.environment.vaultEnvironmentMaskValue;
 
   useEffect(() => {
     let isMounted = true;
@@ -88,26 +81,21 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, variableSour
         </div>
       )}
       <div className="form-control form-control--outlined">
-        {isVaultVariable && (
-          <button
-            type="button"
-            style={{
-              zIndex: 10,
-              position: 'relative',
-            }}
-            className="txt-sm pull-right icon inline-block"
-            onClick={() => setPurpose(prevPurpose => (prevPurpose === '' ? 'preview' : ''))}
-          >
-            {purpose === '' ? <i className="fa-regular fa-eye" /> : <i className="fa-regular fa-eye-slash" />}
-          </button>
-        )}
+        <button
+          type="button"
+          style={{ zIndex: 10, position: 'relative' }}
+          className="txt-sm pull-right icon inline-block"
+          onClick={() => setIsRevealed(prev => !prev)}
+        >
+          {isRevealed ? <i className="fa-regular fa-eye-slash" /> : <i className="fa-regular fa-eye" />}
+        </button>
         <label>
           Live Preview
           <textarea className={`${error ? 'danger' : ''}`} value={preview || error} readOnly />
         </label>
         {variableSource && (
           <div className="mt-1 flex items-center gap-2 text-xs" data-testid="variable-source-row">
-            <span className="text-[0.7rem] uppercase tracking-wide opacity-60">Source</span>
+            <span className="text-[0.7rem] tracking-wide uppercase opacity-60">Source</span>
             <span className="min-w-0 flex-1 truncate italic" title={variableSource.label}>
               {variableSource.label}
             </span>
