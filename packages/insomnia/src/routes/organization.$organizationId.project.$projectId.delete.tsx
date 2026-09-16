@@ -6,6 +6,7 @@ import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
+import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.delete';
@@ -67,6 +68,14 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
             projectId: targetProject._id,
           }),
         );
+      }
+
+      // That was the last Konnect project — check whether the organization just became invisible
+      // (no entitlement to fall back on) before falling through to the generic redirect below,
+      // which would otherwise land back inside it via `getInitialRouteForOrganization`.
+      const escapeRoute = await getKonnectOrganizationEscapeRoute(organizationId);
+      if (escapeRoute) {
+        return redirect(escapeRoute);
       }
     }
 

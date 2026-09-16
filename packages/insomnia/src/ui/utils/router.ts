@@ -131,7 +131,12 @@ export const getInitialEntry = async () => {
       // Check if the user has a last visited organization
       try {
         const lastVisitedOrganizationId = localStorage.getItem('lastVisitedOrganizationId');
-        if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
+        // The Konnect organization is local-only, so it is never in the cached organization list.
+        const isKnownOrganization =
+          lastVisitedOrganizationId ===
+            (user.accountId && models.organization.getKonnectOrganizationId(user.accountId)) ||
+          organizations.some(o => o.id === lastVisitedOrganizationId);
+        if (lastVisitedOrganizationId && isKnownOrganization) {
           organizationId = lastVisitedOrganizationId;
         }
       } catch {}
