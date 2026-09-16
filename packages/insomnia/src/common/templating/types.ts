@@ -15,6 +15,7 @@ import type {
   Response,
   ResponseHeader,
   Services,
+  Settings,
   SocketIORequest,
   UserUploadEnvironment,
   WebSocketRequest,
@@ -63,7 +64,8 @@ export interface SerializedCookie {
   hostOnly?: boolean;
 }
 
-export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
+// TODO: check if we still need no-render, since we do not have any entry points that require it
+export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render' | 'codegen';
 export type PluginToMainAPIPaths =
   | 'readFile'
   | 'nodeOS'
@@ -139,6 +141,9 @@ export interface BaseRenderContextOptions {
   purpose?: RenderPurpose;
   extraInfo?: { requestChain: string[] };
   ignoreUndefinedEnvVariable?: boolean;
+  // When true the user has explicitly clicked reveal in the VariableEditor;
+  // this bypasses hideSecretValuesInPreviewAndConsole for the current render only.
+  forceReveal?: boolean;
 }
 export type RenderContextAncestor =
   | Request
@@ -282,6 +287,7 @@ export interface BaseRenderContext {
     keyContextMeta?: Record<string, VariableSourceMeta>;
   };
   getPurpose: () => RenderPurpose | undefined;
+  getSettings: () => Pick<Settings, 'dataFolders' | 'hideSecretValuesInPreviewAndConsole'> & { forceReveal?: boolean };
   getExtraInfo: () => { requestChain: string[] } | undefined;
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
