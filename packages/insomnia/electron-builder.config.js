@@ -53,7 +53,7 @@ const config = {
         arch: 'universal',
       },
     ],
-    mergeASARs: false,
+    mergeASARs: true,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
       NSLocalNetworkUsageDescription:
