@@ -48,8 +48,10 @@ interface Props {
   setIsOpen: (isOpen: boolean) => void;
 }
 
+const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const } };
+
 export const CookiesModal = ({ setIsOpen }: Props) => {
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucks(PREVIEW_NUNJUCKS_OPTIONS);
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;

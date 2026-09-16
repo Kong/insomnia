@@ -5,6 +5,7 @@ import { Tag } from 'liquidjs';
 import type { Plugin } from '~/common/plugins/types';
 
 import packageJson from '../../../package.json';
+import { CONFIDENTIAL_MASK_VALUE, shouldMaskExternalVaultTag } from './confidential-value-policy';
 import { resolveArg } from './resolve-arg';
 import { tokenizeArgs } from './tokenize-args';
 import type {
@@ -181,6 +182,13 @@ export function createLiquidTagWorker(
           },
         },
       };
+
+      // Short-circuit external vault before any provider fetch when the policy says mask.
+      const renderSettings = renderContext.getSettings?.();
+      if (shouldMaskExternalVaultTag(plugin.name, ext.name, renderPurpose, renderSettings)) {
+        emitter.write(CONFIDENTIAL_MASK_VALUE);
+        return;
+      }
 
       const result = await Promise.resolve(ext.run(helperContext, ...args));
       emitter.write(result == null ? '' : String(result));
