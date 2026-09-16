@@ -32,7 +32,7 @@ import type {
   MockRouteData,
   ModelConfig,
 } from '~/common/plugins/types';
-import type { RenderedRequest } from '~/common/templating/types';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
@@ -319,11 +319,13 @@ export interface RendererToMainBridgeAPI {
     requestId: string;
     environmentId?: string;
     addContentLength?: boolean;
+    purpose?: RenderPurpose;
   }) => Promise<any>;
   exportHarRequest: (options: {
     requestId: string;
     environmentOrWorkspaceId: string;
     addContentLength?: boolean;
+    purpose?: RenderPurpose;
   }) => Promise<any>;
   exportHarCurrentRequest: (options: { requestId: string; responseId: string }) => Promise<any>;
   exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) => Promise<string>;
@@ -566,19 +568,19 @@ export function registerMainHandlers() {
 
   ipcMainHandle(
     'exportHarWithRequest',
-    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean }) => {
+    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean; purpose?: RenderPurpose }) => {
       const request = await services.request.getById(options.requestId);
       if (!request) {
         throw new Error(`Request ${options.requestId} not found`);
       }
-      return exportHarWithRequest(request, options.environmentId, options.addContentLength);
+      return exportHarWithRequest(request, options.environmentId, options.addContentLength, options.purpose);
     },
   );
 
   ipcMainHandle(
     'exportHarRequest',
-    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) => {
-      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength);
+    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean; purpose?: RenderPurpose }) => {
+      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength, options.purpose);
     },
   );
 
