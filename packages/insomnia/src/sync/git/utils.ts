@@ -5,7 +5,7 @@ import { models, services } from 'insomnia-data';
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
 import { invariant } from '~/common/utils/invariant';
-import { gitRemoteProviderRegistry } from '~/sync/git/providers';
+import { gitRemoteProviderRegistry } from '~/sync/git/providers/registry';
 
 // Re-exported for backwards compatibility. The pure URL helpers live in a
 // provider/electron-free module so they can be imported from the renderer.
