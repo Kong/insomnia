@@ -10,7 +10,7 @@ import type {
   RunTemplateTagActionArgs,
 } from '~/common/plugins/bridge-types';
 import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
-import type { RenderedRequest } from '~/common/templating/types';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
@@ -425,9 +425,9 @@ const main: Window['main'] = {
   generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
     invokeWithNormalizedError('generateCodeSnippet', options),
   getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
-  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean }) =>
+  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean; purpose?: RenderPurpose }) =>
     invokeWithNormalizedError('exportHarWithRequest', options),
-  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) =>
+  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean; purpose?: RenderPurpose }) =>
     invokeWithNormalizedError('exportHarRequest', options),
   exportHarCurrentRequest: (options: { requestId: string; responseId: string }) =>
     invokeWithNormalizedError('exportHarCurrentRequest', options),
