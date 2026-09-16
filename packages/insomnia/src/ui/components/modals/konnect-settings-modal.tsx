@@ -6,7 +6,7 @@ import { database } from '~/common/database';
 import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { runKonnectSync } from '~/ui/hooks/konnect-sync-trigger';
+import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
@@ -81,7 +81,7 @@ export const KonnectSettingsModal = ({
     await window.main.secretStorage.setSecret('konnectPat', trimmed);
     setConnectedPat(trimmed);
     patchSettings({ hasKonnectPat: true, konnectOrganizationId: orgId ?? null });
-    runKonnectSync(orgId ?? null);
+    uiEventBus.emit(KONNECT_SYNC_TRIGGER, orgId ?? null);
     onClose();
   };
 

@@ -1,5 +1,5 @@
 import { models, services } from 'insomnia-data';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useNavigate } from 'react-router';
 import * as reactUse from 'react-use';
@@ -10,7 +10,7 @@ import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
-import { registerKonnectSyncTrigger } from '~/ui/hooks/konnect-sync-trigger';
+import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { refreshKonnectAccess, useKonnectSyncEnabled } from '~/ui/organization-utils';
@@ -54,7 +54,8 @@ interface UseKonnectSyncBarOptions {
 /**
  * Owns all Konnect sync state (button/progress/last-result/settings modal) so it can be rendered
  * both from the full sidebar (a project is selected) and the empty-state sidebar (zero projects) —
- * the two are mutually exclusive routes, so a single registered sync trigger is never contested.
+ * the two are mutually exclusive routes, so only one KONNECT_SYNC_TRIGGER subscriber is ever mounted
+ * at a time.
  */
 export function useKonnectSyncBar({
   organizationId,
@@ -85,7 +86,7 @@ export function useKonnectSyncBar({
     return map;
   }, [lastSyncResult]);
 
-  const syncKonnectProjectsAndNotify = async (konnectOrganizationId?: string | null) => {
+  const syncKonnectProjectsAndNotify = useCallback(async (konnectOrganizationId?: string | null) => {
     setLastSyncResult(null);
     const isFirstSync = lastSyncedAt == null;
     const result = await startSync(
@@ -96,9 +97,6 @@ export function useKonnectSyncBar({
     setShowSyncDetails(false);
     setCopiedReason(null);
     if (result?.success) {
-      // Only ever runs from a sync trigger/button press (never during render); the linter can't
-      // see that through the returned closures.
-      // eslint-disable-next-line react-hooks/purity
       setLastSyncedAt(Date.now());
       // Navigate to and expand the first Konnect project after a successful sync
       const allProjects = await services.project.listByOrganizationIds(organizationId);
@@ -126,8 +124,19 @@ export function useKonnectSyncBar({
         });
       }
     }
-  };
-  registerKonnectSyncTrigger(syncKonnectProjectsAndNotify);
+  }, [
+    lastSyncedAt,
+    startSync,
+    organizationId,
+    settings.konnectOrganizationId,
+    navigate,
+    onFirstSyncEnvWorkspace,
+    setExpandedProjectAndWorkspaceIds,
+    setLastSyncedAt,
+  ]);
+  useEffect(() => {
+    return uiEventBus.on(KONNECT_SYNC_TRIGGER, syncKonnectProjectsAndNotify);
+  }, [syncKonnectProjectsAndNotify]);
 
   const handleSync = async () => {
     if (!konnectSyncEnabled) {
