@@ -61,10 +61,12 @@ async function getQueryParamsFromAuth(
 
 const MAX_URL_LENGTH = 10 * 1024;
 
+const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const } };
+
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
   const [tooLong, setTooLong] = useState(false);
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucks(PREVIEW_NUNJUCKS_OPTIONS);
 
   useEffect(() => {
     const fn = async () => {
