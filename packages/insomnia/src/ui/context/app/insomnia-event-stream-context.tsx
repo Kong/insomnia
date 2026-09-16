@@ -5,7 +5,6 @@ import * as reactUse from 'react-use';
 
 import { CDN_INVALIDATION_TTL } from '~/common/constants';
 import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
@@ -13,6 +12,7 @@ import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 import { useInvalidateAccountData } from '~/ui/hooks/use-account-server-data';
 import { useInvalidateOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useProjectLoaderData } from '~/ui/hooks/use-project-loader-data';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const InsomniaEventStreamContext = createContext<{

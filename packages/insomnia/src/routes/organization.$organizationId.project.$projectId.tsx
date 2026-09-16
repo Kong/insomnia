@@ -3,7 +3,7 @@ import { models, services } from 'insomnia-data';
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
+import { href, Outlet, redirect, useOutletContext, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { Icon } from '~/basic-components/icon';
@@ -22,6 +22,7 @@ import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import type { ProjectLoaderData } from '~/ui/hooks/use-project-loader-data';
 import { useServerQuery } from '~/ui/hooks/use-query';
 import { useRemoteBackendProjectsInvalidation } from '~/ui/hooks/use-remote-files';
 
@@ -88,11 +89,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return {
     activeProject: project,
     activeProjectGitRepository,
-  };
-}
-
-export function useProjectLoaderData() {
-  return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
+  } satisfies ProjectLoaderData;
 }
 
 export interface ProjectRouteContextValue {
