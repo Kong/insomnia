@@ -10,7 +10,6 @@ import YAML from 'yaml';
 import { getProductName } from '~/common/constants';
 import { generateId } from '~/common/misc';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
-import { useRootLoaderData } from '~/root';
 import {
   useWorkspaceLoaderData,
   WORKSPACE_CONTENT_WRAPPER,
@@ -48,6 +47,7 @@ import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-reque
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { type CreateRequestType, useRequestMetaPatcher } from '~/ui/hooks/use-request';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/ui/utils/grpc';
 

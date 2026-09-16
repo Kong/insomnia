@@ -27,7 +27,6 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import { getUnsyncedRemoteWorkspaces } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
-import { useRootLoaderData } from '~/root';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
@@ -56,6 +55,7 @@ import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 

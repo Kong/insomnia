@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/root';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { getMockServiceBinURL } from '../../../common/constants';
 import { useTimeoutWhen } from '../../hooks/use-timeout-when';

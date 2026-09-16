@@ -6,7 +6,6 @@ import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
-import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
@@ -18,6 +17,7 @@ import {
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { clearPendingFocusUrlBar, shouldFocusUrlBar } from '~/ui/components/request-url-bar-focus';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 

@@ -1,6 +1,6 @@
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const MASK_CHARACTER = '•';
 /** randomly get anywhere between 4 and 11 mask characters on each invocation */

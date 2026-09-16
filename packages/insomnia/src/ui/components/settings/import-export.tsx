@@ -18,7 +18,6 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
-import { useRootLoaderData } from '~/root';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
 import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
@@ -29,6 +28,7 @@ import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';

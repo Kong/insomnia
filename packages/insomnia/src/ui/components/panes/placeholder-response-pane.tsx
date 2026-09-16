@@ -2,7 +2,7 @@ import type { KeyboardShortcut } from 'insomnia-data/common';
 import { keyboardShortcutDescriptions } from 'insomnia-data/common';
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
