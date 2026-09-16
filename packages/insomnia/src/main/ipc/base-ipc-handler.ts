@@ -31,9 +31,4 @@ export function registerAllIpcHandlers(handlers: BaseIpcHandler[]) {
   ipcMainHandle('main.invoke', (event, channel: string, methodName: string, ...args: unknown[]) => {
     return dispatch(channel, methodName, event, ...args);
   });
-
-  // TODO: remove this?
-  ipcMainOn('main.on', (event, channel: string, methodName: string, ...args: unknown[]) => {
-    return dispatch(channel, methodName, event, ...args);
-  });
 }

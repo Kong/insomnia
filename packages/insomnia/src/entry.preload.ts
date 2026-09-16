@@ -524,15 +524,8 @@ if (process.contextIsolated) {
   );
 
   contextBridge.exposeInMainWorld('_mainInvoke', (domain: string, methodName: string, ...args: unknown[]) => {
-    if (domain === 'sync') {
-      if (methodName !== 'pullRemoteBackendProject') {
-        return invokeSyncMethod(methodName, ...args);
-      }
-
-      // TODO: try to remove send?
-      if (['resolveConflict', 'cancelConflict'].includes(methodName)) {
-        return ipcRenderer.send('main.on', domain, methodName, ...args);
-      }
+    if (domain === 'sync' && methodName !== 'pullRemoteBackendProject') {
+      return invokeSyncMethod(methodName, ...args);
     }
 
     return invokeWithNormalizedError('main.invoke', domain, methodName, ...args);
