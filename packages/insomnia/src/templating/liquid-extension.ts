@@ -10,6 +10,7 @@ import { Tag } from 'liquidjs';
 
 import { jarFromCookies } from '~/common/cookies';
 import type { Plugin } from '~/common/plugins/types';
+import { CONFIDENTIAL_MASK_VALUE, shouldMaskExternalVaultTag } from '~/common/templating/confidential-value-policy';
 import { resolveArg } from '~/common/templating/resolve-arg';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from '~/common/templating/types';
 import { decodeEncoding, tokenizeArgs } from '~/common/templating/utils';
@@ -103,6 +104,13 @@ export function createLiquidTag(
           },
         },
       };
+
+      // Short-circuit external vault before any provider fetch when the policy says mask.
+      const renderSettings = renderContext.getSettings?.();
+      if (shouldMaskExternalVaultTag(plugin.name, ext.name, renderPurpose, renderSettings)) {
+        emitter.write(CONFIDENTIAL_MASK_VALUE);
+        return;
+      }
 
       const result = await Promise.resolve(ext.run(helperContext, ...args));
       emitter.write(result == null ? '' : String(result));
