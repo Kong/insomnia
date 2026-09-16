@@ -1,6 +1,7 @@
 import clone from 'clone';
 import type {
   Environment,
+  EnvironmentKvPairData,
   GrpcRequest,
   GrpcRequestBody,
   McpRequest,
@@ -11,9 +12,10 @@ import type {
   WebSocketRequest,
   Workspace,
 } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
+import { type ConfidentialValueKind, getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
 import { RenderError } from '~/common/templating/render-error';
@@ -35,6 +37,44 @@ import { database as db } from './database';
 const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
+interface EnvironmentRenderLayer {
+  data: Record<string, any>;
+  kvPairData?: EnvironmentKvPairData[];
+  source: 'global' | 'collection' | 'folder' | 'iteration' | 'transient';
+}
+
+// Builds a name → ConfidentialValueKind lookup for one environment layer.
+// SECRET rows are intentionally excluded: they are handled separately by
+// maskOrDecryptVaultDataIfNecessary and must not be double-processed here.
+// Disabled rows are excluded to match getDataFromKVPair semantics — they
+// do not appear in `data` either.
+// If the same name appears more than once, the last enabled non-SECRET row
+// wins (consistent with getDataFromKVPair last-wins behaviour).
+function getConfidentialityByKey(kvPairData?: EnvironmentKvPairData[]) {
+  const confidentialityByKey = new Map<string, ConfidentialValueKind | undefined>();
+
+  for (const pair of kvPairData || []) {
+    if (pair.enabled === false || pair.type === EnvironmentKvPairDataType.SECRET) {
+      continue;
+    }
+    confidentialityByKey.set(pair.name, pair.isConfidential ? 'normal' : undefined);
+  }
+
+  return confidentialityByKey;
+}
+
+function maskConfidentialValue(value: any): any {
+  if (Array.isArray(value)) {
+    return value.map(maskConfidentialValue);
+  }
+
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, maskConfidentialValue(child)]));
+  }
+
+  return models.environment.vaultEnvironmentMaskValue;
+}
+
 export async function buildRenderContext({
   ancestors,
   rootEnvironment,
@@ -54,7 +94,7 @@ export async function buildRenderContext({
   transientVariables?: Environment;
   baseContext: BaseRenderContext;
 }): Promise<BaseRenderContext> {
-  const envObjects: Record<string, any>[] = [];
+  const environmentLayers: EnvironmentRenderLayer[] = [];
 
   if (rootGlobalEnvironment) {
     const ordered = orderedJSON.order(
@@ -62,7 +102,7 @@ export async function buildRenderContext({
       rootGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    environmentLayers.push({ data: ordered, kvPairData: rootGlobalEnvironment.kvPairData, source: 'global' });
   }
 
   if (subGlobalEnvironment) {
@@ -71,7 +111,7 @@ export async function buildRenderContext({
       subGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    environmentLayers.push({ data: ordered, kvPairData: subGlobalEnvironment.kvPairData, source: 'global' });
   }
 
   // Get root environment keys in correct order
@@ -83,7 +123,7 @@ export async function buildRenderContext({
       rootEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    environmentLayers.push({ data: ordered, kvPairData: rootEnvironment.kvPairData, source: 'collection' });
   }
 
   if (subEnvironment) {
@@ -92,16 +132,16 @@ export async function buildRenderContext({
       subEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    environmentLayers.push({ data: ordered, kvPairData: subEnvironment.kvPairData, source: 'collection' });
   }
 
   for (const doc of (ancestors || []).reverse()) {
     const ancestor: any = doc;
-    const { environment, environmentPropertyOrder } = ancestor;
+    const { environment, environmentPropertyOrder, kvPairData } = ancestor;
 
     if (typeof environment === 'object' && environment !== null) {
       const ordered = orderedJSON.order(environment, environmentPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
-      envObjects.push(ordered);
+      environmentLayers.push({ data: ordered, kvPairData, source: 'folder' });
     }
   }
 
@@ -112,7 +152,7 @@ export async function buildRenderContext({
       userUploadEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    environmentLayers.push({ data: ordered, source: 'iteration' });
   }
 
   // script local variables (insomnia.variable.set) has highest priority
@@ -122,7 +162,7 @@ export async function buildRenderContext({
       transientVariables.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    environmentLayers.push({ data: ordered, source: 'transient' });
   }
 
   // At this point, environments is a list of environments ordered
@@ -174,14 +214,52 @@ export async function buildRenderContext({
   }
   let finalRenderContext = { ...renderContext };
 
-  for (const envObject of envObjects) {
-    // For every environment render the Objects
-    finalRenderContext = await renderSubContext(envObject, finalRenderContext);
+  // Cross-layer confidentiality accumulator. Updated on every key as layers are
+  // merged in priority order (low → high). When a higher-priority layer defines
+  // the same key, its confidentiality verdict overwrites the previous one — including
+  // setting it to undefined when the higher-priority layer has no kvPairData entry
+  // for that key (e.g. iteration/transient layers), which intentionally clears the
+  // confidential flag so a public override is not masked.
+  const confidentialityByKey = new Map<string, ConfidentialValueKind | undefined>();
+  const hideSecretValues = renderContext?.getSettings?.().hideSecretValuesInPreviewAndConsole;
+  const forceReveal = renderContext?.getSettings?.().forceReveal;
+  // Hoisted above both loops: purpose/hideSecretValues/forceReveal are invariant for the
+  // entire buildRenderContext call. undefined purpose hits the fail-closed 'mask' branch,
+  // so file-export paths (explicit HAR, etc.) always mask confidential values — consistent
+  // with SECRET behaviour and independent of the hideSecretValuesInPreviewAndConsole setting.
+  const purpose = renderContext?.getPurpose?.();
+  const confidentialPolicy = getConfidentialValuePolicy({ purpose, hideSecretValues, forceReveal });
+
+  for (const environmentLayer of environmentLayers) {
+    // Per-layer lookup built from kvPairData metadata (not from data values).
+    const layerConfidentialityByKey = getConfidentialityByKey(environmentLayer.kvPairData);
+    // Build a masked copy of this layer's data before merging into the context.
+    // Masking must happen here — after this point the values enter renderSubContext
+    // where they may be rendered into other variables, and we must never let a
+    // masked value be subsequently over-written with the real one from a cache or
+    // re-render of the same context.
+    const renderableData: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(environmentLayer.data)) {
+      // Overwrite the accumulated confidentiality with this layer's verdict.
+      // layerConfidentialityByKey.get(key) returns undefined for keys that have
+      // no kvPairData (e.g. raw-JSON layers, iteration data), which is the
+      // correct "public" signal and clears any confidentiality from lower layers.
+      confidentialityByKey.set(key, layerConfidentialityByKey.get(key));
+      const confidentiality = confidentialityByKey.get(key);
+      renderableData[key] = confidentiality && confidentialPolicy === 'mask'
+        ? maskConfidentialValue(value)
+        : value;
+    }
+
+    finalRenderContext = await renderSubContext(renderableData, finalRenderContext);
   }
 
   const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
     finalRenderContext[models.environment.vaultEnvironmentPath],
-    renderContext?.getPurpose(),
+    purpose,
+    hideSecretValues,
+    forceReveal,
   );
   if (vaultEnvironmentData) {
     // avoid add undefined data to render context
@@ -368,6 +446,7 @@ export async function getRenderContext({
   ancestors: _ancestors,
   purpose,
   extraInfo,
+  forceReveal,
 }: RenderContextOptions): Promise<BaseRenderContext> {
   const ancestors = _ancestors || (await getRenderContextAncestors(request));
 
@@ -492,7 +571,11 @@ export async function getRenderContext({
     getGlobalEnvironmentId: () => subGlobalEnvironment?._id || rootGlobalEnvironment?._id,
     // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
     getProjectId: () => project?._id,
-    getSettings: () => ({ dataFolders: settings.dataFolders }),
+    getSettings: () => ({
+      dataFolders: settings.dataFolders,
+      hideSecretValuesInPreviewAndConsole: settings.hideSecretValuesInPreviewAndConsole,
+      forceReveal: forceReveal,
+    }),
   };
 
   // Generate the context we need to render

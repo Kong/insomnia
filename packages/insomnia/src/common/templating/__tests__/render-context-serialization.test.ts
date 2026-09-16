@@ -15,7 +15,7 @@ const makeContext = () => ({
   getKeysContext: () => ({ keyContext: {} }),
   getProjectId: () => 'proj_1',
   getPurpose: () => 'send',
-  getSettings: () => ({ dataFolders: [] }),
+  getSettings: () => ({ dataFolders: [], hideSecretValuesInPreviewAndConsole: true }),
 });
 
 describe('serializeRenderContext', () => {
@@ -41,7 +41,7 @@ describe('serializeRenderContext', () => {
       keysContext: { keyContext: {} },
       projectId: 'proj_1',
       purpose: 'send',
-      settings: { dataFolders: [] },
+      settings: { dataFolders: [], hideSecretValuesInPreviewAndConsole: true },
     });
   });
 });
@@ -54,8 +54,44 @@ describe('deserializeRenderContext', () => {
     expect(context.getMeta()).toEqual({ requestId: 'req_1', workspaceId: 'wrk_1' });
     expect(context.getProjectId()).toBe('proj_1');
     expect(context.getEnvironmentId()).toBe('env_1');
-    expect(context.getSettings()).toEqual({ dataFolders: [] });
+    expect(context.getSettings()).toEqual({ dataFolders: [], hideSecretValuesInPreviewAndConsole: true });
     // environment data survives the round-trip
     expect(context.foo).toBe('bar');
+  });
+
+  it('preserves codegen purpose across the worker boundary', () => {
+    const ctx = { ...makeContext(), getPurpose: () => 'codegen' as const };
+    const roundTripped = structuredClone(serializeRenderContext(ctx));
+    const context = deserializeRenderContext(roundTripped);
+
+    expect(context.getPurpose()).toBe('codegen');
+  });
+
+  it('preserves forceReveal in settings across the worker boundary', () => {
+    const ctx = {
+      ...makeContext(),
+      getSettings: () => ({ dataFolders: [], hideSecretValuesInPreviewAndConsole: true, forceReveal: true }),
+    };
+    const roundTripped = structuredClone(serializeRenderContext(ctx));
+    const context = deserializeRenderContext(roundTripped);
+
+    expect(context.getSettings()).toEqual({
+      dataFolders: [],
+      hideSecretValuesInPreviewAndConsole: true,
+      forceReveal: true,
+    });
+  });
+
+  it('codegen purpose and setting OFF both survive — codegen policy is fixed regardless of setting', () => {
+    const ctx = {
+      ...makeContext(),
+      getPurpose: () => 'codegen' as const,
+      getSettings: () => ({ dataFolders: [], hideSecretValuesInPreviewAndConsole: false }),
+    };
+    const roundTripped = structuredClone(serializeRenderContext(ctx));
+    const context = deserializeRenderContext(roundTripped);
+
+    expect(context.getPurpose()).toBe('codegen');
+    expect(context.getSettings().hideSecretValuesInPreviewAndConsole).toBe(false);
   });
 });

@@ -1,40 +1,42 @@
 import { models, services } from 'insomnia-data';
 
+import { getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
 import type { RenderPurpose } from '~/common/templating/types';
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 
-export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
-  /**
-   * Decrypt secrets when renderPurpose is one of the following:
-   * - preview: render the template in variable editor to do the live preview
-   * - send: render the template when sending requests
-   * - script: render the template in pre-request or after-response script
-   */
-  const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
-  if (typeof vaultEnvironmentData === 'object') {
+export async function maskOrDecryptVaultDataIfNecessary(
+  vaultEnvironmentData: any,
+  renderPurpose?: RenderPurpose,
+  hideSecretValues?: boolean,
+  forceReveal?: boolean,
+) {
+  const shouldDecrypt =
+    getConfidentialValuePolicy({ purpose: renderPurpose, hideSecretValues, forceReveal }) === 'reveal';
+
+  if (typeof vaultEnvironmentData === 'object' && vaultEnvironmentData !== null) {
     if (shouldDecrypt) {
       const { vaultKey, vaultSalt } = await services.userSession.get();
       const isVaultEnabled = !!vaultSalt;
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
-        // decrypt all secret values under vaultEnvironmentPath property in context
+        const decrypted: Record<string, any> = {};
         for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
-          const encryptedValue = vaultEnvironmentData[vaultContextKey];
-          vaultEnvironmentData[vaultContextKey] = await getRuntime().crypto.decryptSecretValue(
-            encryptedValue,
+          decrypted[vaultContextKey] = await getRuntime().crypto.decryptSecretValue(
+            vaultEnvironmentData[vaultContextKey],
             symmetricKey,
           );
         }
+        return decrypted;
       } else if (isVaultEnabled && !vaultKey) {
-        // remove all values under vaultEnvironmentPath if no vault key found
-        vaultEnvironmentData = {};
+        return {};
       }
     } else {
-      // mask all secret values under vaultEnvironmentPath property in context
-      Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
-        vaultEnvironmentData[vaultContextKey] = models.environment.vaultEnvironmentMaskValue;
-      });
+      const masked: Record<string, any> = {};
+      for (const key of Object.keys(vaultEnvironmentData)) {
+        masked[key] = models.environment.vaultEnvironmentMaskValue;
+      }
+      return masked;
     }
   }
   return vaultEnvironmentData;
