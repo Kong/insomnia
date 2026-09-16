@@ -1,4 +1,3 @@
-import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
@@ -192,9 +191,11 @@ export const Tree: FC<{
 export const ExportRequestsModal = ({
   workspaceIdToExport,
   onClose,
+  onExport,
 }: {
   workspaceIdToExport: string;
   onClose: () => void;
+  onExport: (workspaceId: string, requestIds: string[]) => void;
 }) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const workspaceFetcher = useWorkspaceLoaderFetcher();
@@ -366,7 +367,7 @@ export const ExportRequestsModal = ({
                         },
                       });
                     }
-                    state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
+                    state?.treeRoot && onExport(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}
                   isDisabled={isExportDisabled}

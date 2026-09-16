@@ -8,7 +8,7 @@ import { HelpTooltip } from '~/ui/components/help-tooltip';
 import { debounce } from '../../../../common/misc';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';
-import type { ArgConfigFormProps } from '../tag-editor-arg-sub-form';
+import type { ArgConfigFormProps } from '../arg-config-form-props';
 import { AWSSecretManagerForm } from './aws-secret-manager-form';
 import { AzureKeyVaultForm } from './azure-key-vault-form';
 import { GCPSecretManagerForm } from './gcp-secret-manager-form';
