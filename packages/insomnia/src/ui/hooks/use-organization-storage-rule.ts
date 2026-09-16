@@ -24,7 +24,7 @@ export function useOrganizationStorageRule(organizationIdParam?: string): Storag
 
   const { data } = useServerQuery({
     queryKey: organizationStorageRuleKey(organizationId),
-    queryFn: () => fetchAndCacheOrganizationStorageRule(organizationId),
+    queryFn: () => fetchAndCacheOrganizationStorageRule(organizationId, true),
     enabled: !!organizationId,
   });
 
