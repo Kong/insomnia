@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import type { WorkspaceFileIssue } from '~/main/git-service';
+import type { WorkspaceFileIssue } from '~/sync/git/repo-file-watcher';
 import { scrollElementIntoView } from '~/ui/utils';
 
 import { type BaseTab, TAB_CONTEXT_MENU_COMMAND, type TabType, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';

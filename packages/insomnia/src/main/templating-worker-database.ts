@@ -20,6 +20,7 @@ import type {
   PluginTemplateTagContext,
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
+import { registerUserPluginExportDiscovery } from '~/common/templating/user-plugin-export-discovery';
 import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
 import {
   HOOK_REQUEST_FIELDS,
@@ -471,6 +472,12 @@ export const discoverUserPluginExportsForLoader = async (body: {
     grantedCapabilities: resolveTemplateTagCapabilities(permissions?.capabilities),
   });
 };
+
+// Register the sandbox-backed user-plugin discovery with the plugin loader (plugins/index.ts) via
+// the shared discovery registry, which exists because plugins/index.ts can't import this
+// main-only module without creating a circular dependency. Loading this module in main always
+// precedes plugin discovery, since getPlugins/getTemplateTags live here.
+registerUserPluginExportDiscovery(discoverUserPluginExportsForLoader);
 
 const pickHookRequestFields = (req: Record<string, any>): Record<string, any> => {
   const out: Record<string, any> = {};
