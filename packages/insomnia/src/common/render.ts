@@ -15,6 +15,7 @@ import type {
 import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
+import { collectLeafStrings } from '~/common/network/sensitive-value-collector';
 import { type ConfidentialValueKind, getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
@@ -277,19 +278,19 @@ export async function buildRenderContext({
       // correct "public" signal and clears any confidentiality from lower layers.
       confidentialityByKey.set(key, layerConfidentialityByKey.get(key));
       const confidentiality = confidentialityByKey.get(key);
-      renderableData[key] = confidentiality && confidentialPolicy === 'mask'
-        ? maskConfidentialValue(value)
-        : value;
+      renderableData[key] = confidentiality && confidentialPolicy === 'mask' ? maskConfidentialValue(value) : value;
     }
 
     finalRenderContext = await renderSubContext(renderableData, finalRenderContext);
   }
 
+  const collector = baseContext.getSensitiveValueCollector?.() ?? null;
   const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
     finalRenderContext[models.environment.vaultEnvironmentPath],
     purpose,
     hideSecretValues,
     forceReveal,
+    collector,
   );
   if (vaultEnvironmentData) {
     // avoid add undefined data to render context
@@ -339,6 +340,15 @@ export async function buildRenderContext({
       }
 
       finalRenderContext[key] = renderResult;
+    }
+  }
+
+  // Register fully-rendered normal confidential values for timeline redaction (purpose='send' only).
+  if (collector) {
+    for (const key of keys) {
+      if (confidentialityByKey.get(key) === 'normal') {
+        collectLeafStrings(finalRenderContext[key], collector);
+      }
     }
   }
 
@@ -398,8 +408,9 @@ export async function render<T>(
       }
 
       try {
+        const sensitiveValueCollector = context.getSensitiveValueCollector?.();
         // @ts-expect-error -- TSCONVERSION
-        input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
+        input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable, sensitiveValueCollector });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -410,7 +421,7 @@ export async function render<T>(
         // @ts-expect-error -- TSCONVERSION
         if (!hasNunjucksCustomTagSymbols && input.includes('{%')) {
           // @ts-expect-error -- TSCONVERSION
-          input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
+          input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable, sensitiveValueCollector });
         }
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);
@@ -477,6 +488,7 @@ export async function getRenderContext({
   purpose,
   extraInfo,
   forceReveal,
+  sensitiveValueCollector,
 }: RenderContextOptions): Promise<BaseRenderContext> {
   const ancestors = _ancestors || (await getRenderContextAncestors(request));
 
@@ -606,6 +618,7 @@ export async function getRenderContext({
       hideSecretValuesInPreviewAndConsole: settings.hideSecretValuesInPreviewAndConsole,
       forceReveal: forceReveal,
     }),
+    ...(sensitiveValueCollector != null ? { getSensitiveValueCollector: () => sensitiveValueCollector } : {}),
   };
 
   // Generate the context we need to render
@@ -661,6 +674,7 @@ export async function getRenderedRequestAndContext({
   extraInfo,
   purpose,
   ignoreUndefinedEnvVariable,
+  sensitiveValueCollector,
 }: BaseRenderContextOptions & { request: Request }): Promise<{
   request: RenderedRequest;
   context: Record<string, any>;
@@ -681,6 +695,7 @@ export async function getRenderedRequestAndContext({
     baseEnvironment,
     userUploadEnvironment,
     transientVariables,
+    sensitiveValueCollector,
   });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
