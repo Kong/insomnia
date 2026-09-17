@@ -439,14 +439,17 @@ export async function savePatchesMadeByScript(patches: {
   const hasGlobalEnvironmentAndIsNotBase =
     mutatedContext.globals && mutatedContext.globals?._id !== activeGlobalBaseEnvironment?._id;
   const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
-    const { environmentType } = originEnvironment;
+    const { environmentType, kvPairData: originalKvPairData } = originEnvironment;
     const { data, dataPropertyOrder } = mutatedContextEnvironment;
     await services.environment.update(originEnvironment, {
       data,
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null).map(pair => {
+          const original = originalKvPairData?.find(p => p.name === pair.name);
+          return original?.isConfidential ? { ...pair, isConfidential: true } : pair;
+        }),
       }),
     });
   };
