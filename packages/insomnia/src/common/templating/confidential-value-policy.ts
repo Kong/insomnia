@@ -16,6 +16,10 @@ export const CONFIDENTIAL_MASK_VALUE = '••••••';
 // at the adapter boundary before any provider fetch occurs.
 const BUNDLED_EXTERNAL_VAULT_TAG = 'vault';
 
+export function isExternalVaultTag(pluginName: string, tagName: string | undefined): boolean {
+  return pluginName === EXTERNAL_VAULT_PLUGIN_NAME && tagName === BUNDLED_EXTERNAL_VAULT_TAG;
+}
+
 export function getConfidentialValuePolicy({
   purpose,
   hideSecretValues,
