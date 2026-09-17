@@ -11,7 +11,7 @@ const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
 
 const makeBaseContext = (
-  purpose: 'preview' | 'send' | 'no-render' | 'codegen' | 'script',
+  purpose: 'preview' | 'send' | 'no-render' | 'script',
   hideSecretValuesInPreviewAndConsole = true,
   forceReveal?: boolean,
 ) =>
@@ -255,34 +255,6 @@ describe('render tests', () => {
       expect(context.token).toBe('visible');
     });
 
-    it('codegen purpose masks confidential values regardless of hideSecretValues setting', async () => {
-      const rootEnvironment = envBuilder
-        .data({ token: 'top-secret' })
-        .kvPairData([
-          {
-            id: 'envPair_token',
-            name: 'token',
-            value: 'top-secret',
-            type: EnvironmentKvPairDataType.STRING,
-            enabled: true,
-            isConfidential: true,
-          },
-        ])
-        .build();
-
-      const contextSettingOn = await renderUtils.buildRenderContext({
-        rootEnvironment,
-        baseContext: makeBaseContext('codegen', true),
-      });
-      const contextSettingOff = await renderUtils.buildRenderContext({
-        rootEnvironment,
-        baseContext: makeBaseContext('codegen', false),
-      });
-
-      expect(contextSettingOn.token).toBe(models.environment.vaultEnvironmentMaskValue);
-      expect(contextSettingOff.token).toBe(models.environment.vaultEnvironmentMaskValue);
-    });
-
     it('script purpose reveals confidential values', async () => {
       const rootEnvironment = envBuilder
         .data({ token: 'top-secret' })
@@ -327,29 +299,6 @@ describe('render tests', () => {
       });
 
       expect(context.token).toBe('top-secret');
-    });
-
-    it('forceReveal does not affect codegen — confidential values remain masked', async () => {
-      const rootEnvironment = envBuilder
-        .data({ token: 'top-secret' })
-        .kvPairData([
-          {
-            id: 'envPair_token',
-            name: 'token',
-            value: 'top-secret',
-            type: EnvironmentKvPairDataType.STRING,
-            enabled: true,
-            isConfidential: true,
-          },
-        ])
-        .build();
-
-      const context = await renderUtils.buildRenderContext({
-        rootEnvironment,
-        baseContext: makeBaseContext('codegen', true, true),
-      });
-
-      expect(context.token).toBe(models.environment.vaultEnvironmentMaskValue);
     });
 
     it('does not mutate vault data object when preview masking runs', async () => {

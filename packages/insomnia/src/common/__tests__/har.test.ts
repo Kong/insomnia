@@ -442,8 +442,8 @@ describe('export', () => {
     });
   });
 
-  describe('codegen vs explicit export separation', () => {
-    it('exportHarWithRequest with purpose=codegen masks confidential env values in rendered context', async () => {
+  describe('Generate Code vs explicit export separation', () => {
+    it('exportHarWithRequest with purpose=preview masks confidential env values when setting is ON (default)', async () => {
       const workspace = await services.workspace.create();
       const baseEnv = await services.environment.getOrCreateForParentId(workspace._id);
       await services.environment.update(baseEnv, {
@@ -470,8 +470,7 @@ describe('export', () => {
         method: 'GET',
         url: 'https://api.example.com/',
       };
-      // codegen render context must contain masked value — verify via getRenderedRequestAndContext directly
-      const { context } = await getRenderedRequestAndContext({ request, environment: baseEnv._id, purpose: 'codegen' });
+      const { context } = await getRenderedRequestAndContext({ request, environment: baseEnv._id, purpose: 'preview' });
       expect((context as any).token).toBe(models.environment.vaultEnvironmentMaskValue);
     });
 
