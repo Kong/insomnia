@@ -6,6 +6,9 @@ import { type ContextEnvelope, encodeBridgeFailure, encodeBridgeSuccess } from '
 import { buildModuleRegistrySource } from './module-registry';
 import { SANDBOX_GLOBALS_SOURCE } from './sandbox-globals';
 
+/** A VM promise the host controls, as handed back by `ctx.newPromise()`. */
+type VmDeferredPromise = ReturnType<QuickJSContext['newPromise']>;
+
 /**
  * Synchronous crypto operations backed by the host's real crypto (node:crypto in main). Exposed as
  * sync QuickJS host functions so the in-sandbox `require('crypto')` shim works without the
@@ -68,6 +71,8 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     ? { ...envelope, entryModuleKey: envelope.entryModuleKey ?? 'index.js' }
     : { ...envelope, moduleFiles: { 'index.js': pluginSource as string }, entryModuleKey: 'index.js' };
 
+  // Assigned once the bridge is installed; frees any bridge call still in flight at teardown.
+  let disposePendingBridgeCalls: () => void = () => {};
   try {
     // Polled during synchronous execution so a tight sync loop in plugin code can't bypass the timeout.
     ctx.runtime.setInterruptHandler(() => Date.now() > deadline);
@@ -78,7 +83,7 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     // sandbox global, see SANDBOX_INTERNAL_GLOBALS) and wire up a context of its own. Swapping in a
     // rejecting bridge here means any such attempt fails inside the sandbox instead of reaching the
     // real host, no matter how it's invoked.
-    installHostBridge(ctx, discover ? rejectingBridge : bridge);
+    disposePendingBridgeCalls = installHostBridge(ctx, discover ? rejectingBridge : bridge);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
 
@@ -108,6 +113,10 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
 
     return await drivePromiseToString(ctx, timeoutMs);
   } finally {
+    // Must run before ctx.dispose(): a bridge call still in flight (or one belonging to a sibling
+    // await that never got to settle) still owns live VM handles, and freeing the runtime under them
+    // aborts the WASM module outright rather than raising a catchable error.
+    disposePendingBridgeCalls();
     ctx.dispose();
   }
 };
@@ -117,8 +126,18 @@ const rejectingBridge: HostBridge = async path => {
   throw new Error(`Host bridge is unavailable during discovery (attempted call to "${path}")`);
 };
 
-/** Register `__hostBridge(path, bodyJson)` returning a VM promise resolved from async host work. */
-const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): void => {
+/**
+ * Register `__hostBridge(path, bodyJson)` returning a VM promise resolved from async host work.
+ *
+ * Returns a teardown function that must run before the context is disposed. Every `newPromise()`
+ * owns three JSValues — the promise plus its `resolve`/`reject` function handles — and only
+ * `resolve()`/`reject()` frees the two resolvers. A bridge call that hasn't settled when the run ends
+ * (the deadline fired mid-`network.sendRequest`, or `__task` rejected while a sibling await was still
+ * outstanding) therefore leaves live handles, and `JS_FreeRuntime` aborts the WASM module on
+ * `Assertion failed: list_empty(&rt->gc_obj_list)`.
+ */
+const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): (() => void) => {
+  const pending = new Set<VmDeferredPromise>();
   const fn = ctx.newFunction('__hostBridge', (pathHandle, bodyHandle) => {
     const path = ctx.getString(pathHandle);
     let body: unknown;
@@ -128,17 +147,43 @@ const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): void => {
       body = {};
     }
     const deferred = ctx.newPromise();
+    pending.add(deferred);
+    const settle = (json: string) => {
+      // Dropped from `pending` either way: once settled the resolvers are freed, and if the context is
+      // already gone there is nothing left to free.
+      pending.delete(deferred);
+      resolveWithString(ctx, deferred, json);
+    };
     Promise.resolve()
       .then(() => bridge(path, body))
       .then(
-        value => resolveWithString(ctx, deferred, encodeBridgeSuccess(value)),
-        err => resolveWithString(ctx, deferred, encodeBridgeFailure(err)),
+        value => settle(encodeBridgeSuccess(value)),
+        err => settle(encodeBridgeFailure(err)),
       );
-    // The settled VM promise schedules a job; pump it so the awaiting sandbox code resumes.
-    deferred.settled.then(() => ctx.runtime.executePendingJobs());
+    // The settled VM promise schedules a job; pump it so the awaiting sandbox code resumes. Guarded
+    // because this microtask can land after teardown, when there is no runtime left to pump.
+    deferred.settled.then(() => {
+      if (ctx.alive) {
+        ctx.runtime.executePendingJobs();
+      }
+    });
     return deferred.handle;
   });
   setGlobal(ctx, '__hostBridge', fn);
+  return () => {
+    // Freed silently rather than settled. Settling here would resume the sandbox mid-teardown, and the
+    // resulting rejection would settle `__task` — at which point `ctx.resolvePromise`'s reject callback
+    // dup()s the error into a host promise nobody is listening to, leaking that handle and aborting in
+    // exactly the same way, one step removed. `dispose()` frees the promise and both resolvers, and is
+    // idempotent, so the abandoned VM promise simply stays pending for the microsecond before the
+    // runtime goes away.
+    for (const deferred of pending) {
+      if (deferred.alive) {
+        deferred.dispose();
+      }
+    }
+    pending.clear();
+  };
 };
 
 /**
@@ -204,6 +249,8 @@ const drivePromiseToString = async (ctx: QuickJSContext, timeoutMs: number): Pro
       break;
     }
     if (Date.now() > deadline) {
+      // Bridge calls still in flight are freed by the teardown in runTagInSandbox's finally, not here:
+      // settling them would resume the sandbox while we're unwinding.
       throw new Error('Template tag sandbox timed out');
     }
     // Yield to the host loop so bridge promises settle and microtasks (incl. resultPromise) drain.
@@ -220,11 +267,13 @@ const drivePromiseToString = async (ctx: QuickJSContext, timeoutMs: number): Pro
   return result;
 };
 
-const resolveWithString = (
-  ctx: QuickJSContext,
-  deferred: ReturnType<QuickJSContext['newPromise']>,
-  json: string,
-): void => {
+const resolveWithString = (ctx: QuickJSContext, deferred: VmDeferredPromise, json: string): void => {
+  // A bridge call can answer after the run already ended (timed out, or unwound on an error). By then
+  // the context and the deferred's resolvers are freed, so the late arrival is a no-op instead of a
+  // QuickJSUseAfterFree surfacing as an unhandled rejection.
+  if (!ctx.alive || !deferred.alive) {
+    return;
+  }
   const handle = ctx.newString(json);
   deferred.resolve(handle);
   handle.dispose();
