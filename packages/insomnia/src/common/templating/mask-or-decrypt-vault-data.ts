@@ -1,7 +1,7 @@
 import { models, services } from 'insomnia-data';
 
 import { getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
-import type { RenderPurpose } from '~/common/templating/types';
+import type { RenderPurpose, SensitiveValueCollector } from '~/common/templating/types';
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 
@@ -10,6 +10,7 @@ export async function maskOrDecryptVaultDataIfNecessary(
   renderPurpose?: RenderPurpose,
   hideSecretValues?: boolean,
   forceReveal?: boolean,
+  sensitiveValueCollector?: SensitiveValueCollector | null,
 ) {
   const shouldDecrypt =
     getConfidentialValuePolicy({ purpose: renderPurpose, hideSecretValues, forceReveal }) === 'reveal';
@@ -26,6 +27,9 @@ export async function maskOrDecryptVaultDataIfNecessary(
             vaultEnvironmentData[vaultContextKey],
             symmetricKey,
           );
+          if (sensitiveValueCollector && typeof decrypted[vaultContextKey] === 'string') {
+            sensitiveValueCollector.register(decrypted[vaultContextKey]);
+          }
         }
         return decrypted;
       } else if (isVaultEnabled && !vaultKey) {

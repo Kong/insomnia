@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
 import { getContentDispositionHeader } from '~/common/misc';
+import { createSensitiveValueCollector } from '~/common/network/sensitive-value-collector';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
@@ -130,6 +131,7 @@ export const sendActionImplementation = async (options: {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   const requestMeta = await services.requestMeta.getOrCreateByParentId(requestId);
+  const collector = createSensitiveValueCollector(requestData.settings.hideSecretValuesInPreviewAndConsole ?? true);
   const transientVariables = nullableTransientVariables || {
     ...models.environment.init(),
     _id: uuidv4(),
@@ -207,12 +209,17 @@ export const sendActionImplementation = async (options: {
     userUploadEnvironment: mutatedContext.userUploadEnvironment,
     transientVariables: mutatedContext.transientVariables,
     ignoreUndefinedEnvVariable,
+    sensitiveValueCollector: collector,
   });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
   window.main.completeExecutionStep({ requestId });
 
   // TODO: remove this temporary hack to support GraphQL variables in the request body properly
   parseGraphQLReqeustBody(renderedRequest);
+
+  const redactingRuntime: SendActionRuntime = collector
+    ? { appendTimeline: (path, logs) => runtime.appendTimeline(path, logs.map(line => collector.redact(line))) }
+    : runtime;
 
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(
@@ -222,7 +229,7 @@ export const sendActionImplementation = async (options: {
     mutatedContext.settings,
     requestData.timelinePath,
     requestData.responseId,
-    runtime,
+    redactingRuntime,
   );
   window.main.completeExecutionStep({ requestId });
 
