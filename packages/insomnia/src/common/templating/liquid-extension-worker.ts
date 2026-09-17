@@ -5,7 +5,7 @@ import { Tag } from 'liquidjs';
 import type { Plugin } from '~/common/plugins/types';
 
 import packageJson from '../../../package.json';
-import { CONFIDENTIAL_MASK_VALUE, shouldMaskExternalVaultTag } from './confidential-value-policy';
+import { CONFIDENTIAL_MASK_VALUE, isExternalVaultTag, shouldMaskExternalVaultTag } from './confidential-value-policy';
 import { resolveArg } from './resolve-arg';
 import { tokenizeArgs } from './tokenize-args';
 import type {
@@ -191,7 +191,18 @@ export function createLiquidTagWorker(
       }
 
       const result = await Promise.resolve(ext.run(helperContext, ...args));
-      emitter.write(result == null ? '' : String(result));
+      const resultStr = result == null ? '' : String(result);
+      // Register external vault tag results for timeline redaction when purpose='send'.
+      // The collector cannot cross the structured-clone Worker boundary, so we postMessage
+      // the value back to the renderer which holds the real collector.
+      // renderContext._renderId is embedded by renderInWorker to correlate the message.
+      if (isExternalVaultTag(plugin.name, ext.name) && resultStr.length > 0) {
+        const renderId = (renderContext as any)._renderId;
+        if (renderId) {
+          (globalThis as any).postMessage({ type: 'sensitiveValue', id: renderId, value: resultStr });
+        }
+      }
+      emitter.write(resultStr);
     }
   }
 
