@@ -10,7 +10,6 @@ const purposes: (RenderPurpose | undefined)[] = [
   'preview',
   'script',
   'no-render',
-  'codegen',
 ];
 const settings = [true, false, undefined];
 
@@ -26,10 +25,6 @@ function expectedPolicy(
     return hideSecretValues === false ? 'reveal' : 'mask';
   }
 
-  if (purpose === 'codegen') {
-    return 'mask';
-  }
-
   return 'mask';
 }
 
@@ -43,14 +38,8 @@ describe('getConfidentialValuePolicy', () => {
     },
   );
 
-  it('keeps codegen policy fixed regardless of hideSecretValues', () => {
-    const policies = settings.map(hideSecretValues => getConfidentialValuePolicy({ purpose: 'codegen', hideSecretValues }));
-    expect(new Set(policies)).toHaveLength(1);
-  });
-
-  it('forceReveal only applies to preview — codegen and fallback remain mask', () => {
+  it('forceReveal only applies to preview — fallback surfaces ignore it', () => {
     expect(getConfidentialValuePolicy({ purpose: 'preview', forceReveal: true })).toBe('reveal');
-    expect(getConfidentialValuePolicy({ purpose: 'codegen', forceReveal: true })).toBe('mask');
     expect(getConfidentialValuePolicy({ purpose: undefined, forceReveal: true })).toBe('mask');
     expect(getConfidentialValuePolicy({ purpose: 'general', forceReveal: true })).toBe('mask');
   });
@@ -69,7 +58,6 @@ describe('shouldMaskExternalVaultTag', () => {
   });
 
   it('returns false for non-preview purposes — plugin run() handles its own placeholder', () => {
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'codegen', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
     expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'send', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
     expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'script', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
     expect(shouldMaskExternalVaultTag(PLUGIN, TAG, undefined, { hideSecretValuesInPreviewAndConsole: true })).toBe(false);

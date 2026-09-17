@@ -59,14 +59,6 @@ describe('deserializeRenderContext', () => {
     expect(context.foo).toBe('bar');
   });
 
-  it('preserves codegen purpose across the worker boundary', () => {
-    const ctx = { ...makeContext(), getPurpose: () => 'codegen' as const };
-    const roundTripped = structuredClone(serializeRenderContext(ctx));
-    const context = deserializeRenderContext(roundTripped);
-
-    expect(context.getPurpose()).toBe('codegen');
-  });
-
   it('preserves forceReveal in settings across the worker boundary', () => {
     const ctx = {
       ...makeContext(),
@@ -82,16 +74,4 @@ describe('deserializeRenderContext', () => {
     });
   });
 
-  it('codegen purpose and setting OFF both survive — codegen policy is fixed regardless of setting', () => {
-    const ctx = {
-      ...makeContext(),
-      getPurpose: () => 'codegen' as const,
-      getSettings: () => ({ dataFolders: [], hideSecretValuesInPreviewAndConsole: false }),
-    };
-    const roundTripped = structuredClone(serializeRenderContext(ctx));
-    const context = deserializeRenderContext(roundTripped);
-
-    expect(context.getPurpose()).toBe('codegen');
-    expect(context.getSettings().hideSecretValuesInPreviewAndConsole).toBe(false);
-  });
 });
