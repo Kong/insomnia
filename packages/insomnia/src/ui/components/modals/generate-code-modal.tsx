@@ -92,7 +92,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         requestId: request._id,
         environmentId: props.environmentId,
         addContentLength,
-        purpose: 'codegen',
+        purpose: 'preview',
       });
       if (har) {
         const cmd = await window.main.generateCodeSnippet({

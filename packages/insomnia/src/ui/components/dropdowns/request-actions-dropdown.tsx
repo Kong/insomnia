@@ -161,7 +161,7 @@ export const RequestActionsDropdown = ({
       const har = await window.main.exportHarRequest({
         requestId: request._id,
         environmentOrWorkspaceId: workspaceId,
-        purpose: 'codegen',
+        purpose: 'preview',
       });
       if (!har) {
         return;
