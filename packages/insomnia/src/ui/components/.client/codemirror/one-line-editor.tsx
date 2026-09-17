@@ -204,9 +204,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       };
       codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
       codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
-        const isMultilineInsert = change.text && change.text.length > 1;
+        const isMultiLineInsert = change.text && change.text.length > 1;
         const isSingleLinePaste = change.origin === 'paste' && change.update && change.text.length === 1;
-        if (isMultilineInsert || isSingleLinePaste) {
+        if (isMultiLineInsert || isSingleLinePaste) {
           const pastedText = change.text.join('\n');
           const hasContent = pastedText.trim();
           // Cancel the change if it's a curl command or has no content
