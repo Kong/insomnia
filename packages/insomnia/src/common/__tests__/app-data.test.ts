@@ -58,6 +58,22 @@ describe('updateAppDataOnDbChanges', () => {
     expect(queryClient.getQueryState(organizationDataKeys.byOrganizationId(organizationId))?.isInvalidated).toBe(true);
   });
 
+  it('invalidates both the origin and destination organization when a project moves parents', () => {
+    const organizationAId = 'org_a';
+    const organizationBId = 'org_b';
+    const project = { _id: 'proj_1', parentId: organizationAId } as OrganizationData['projects'][0];
+    const orgDataA: OrganizationData = { projects: [project], workspaces: [], workspaceMetas: [] };
+    const orgDataB: OrganizationData = { projects: [], workspaces: [], workspaceMetas: [] };
+    queryClient.setQueryData(organizationDataKeys.byOrganizationId(organizationAId), orgDataA);
+    queryClient.setQueryData(organizationDataKeys.byOrganizationId(organizationBId), orgDataB);
+
+    const moved = fakeDoc('Project', { _id: 'proj_1', parentId: organizationBId });
+    updateAppDataOnDbChanges(queryClient, [change('update', moved)]);
+
+    expect(queryClient.getQueryState(organizationDataKeys.byOrganizationId(organizationAId))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(organizationDataKeys.byOrganizationId(organizationBId))?.isInvalidated).toBe(true);
+  });
+
   it('invalidates the organization matched via project when a workspace changes', () => {
     const organizationId = 'org_1';
     const projectId = 'proj_1';
