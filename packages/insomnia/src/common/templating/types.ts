@@ -65,7 +65,7 @@ export interface SerializedCookie {
 }
 
 // TODO: check if we still need no-render, since we do not have any entry points that require it
-export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render' | 'codegen';
+export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export type PluginToMainAPIPaths =
   | 'readFile'
   | 'nodeOS'
