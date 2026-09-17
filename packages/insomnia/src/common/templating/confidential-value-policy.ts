@@ -35,12 +35,8 @@ export function getConfidentialValuePolicy({
     return forceReveal || hideSecretValues === false ? 'reveal' : 'mask';
   }
 
-  if (purpose === 'codegen') {
-    return 'mask';
-  }
-
   // Fail-closed: any surface that does not explicitly declare its purpose is masked.
-  // All known display surfaces (preview, codegen, send, script) are explicit above.
+  // All known display surfaces (preview, send, script) are explicit above.
   return 'mask';
 }
 
@@ -48,8 +44,9 @@ export function getConfidentialValuePolicy({
  * Returns true when the external vault tag's run() should be skipped and CONFIDENTIAL_MASK_VALUE
  * returned instead, avoiding any provider fetch.
  *
- * Only intercepts the 'preview' purpose: for 'codegen', 'general', and undefined the plugin's
- * own run() is responsible for returning its placeholder without hitting the network.
+ * Only intercepts the 'preview' purpose. Generate Code and Copy as cURL callers use
+ * purpose:'preview' so they are covered here. For 'general', undefined, and other purposes
+ * the plugin's own run() handles its behavior.
  */
 export function shouldMaskExternalVaultTag(
   pluginName: string,
