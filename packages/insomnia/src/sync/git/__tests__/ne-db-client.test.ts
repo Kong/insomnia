@@ -359,6 +359,33 @@ invalid: [unclosed array
 
       await expect(neDbClient.writeFile(filePath, malformedYaml)).rejects.toThrow();
     });
+
+    it('should not write a Settings document, since Settings.canSync is false', async () => {
+      // Only types where models.canSync() is true may be written from a Git
+      // checkout, so a folder named after a non-syncable type (e.g. Settings)
+      // is ignored even though its path and id/type fields are well-formed.
+      expect(models.settings.canSync).toBe(false);
+
+      const neDbClient = new NeDBClient('wrk_test', 'proj_test');
+      const updateSpy = vi.spyOn(db, 'update');
+
+      const settingsData = {
+        _id: 'set_new',
+        type: models.settings.type,
+        validateSSL: false,
+        proxyEnabled: true,
+        httpProxy: 'http://example.com:8080',
+        httpsProxy: 'http://example.com:8080',
+      };
+
+      const filePath = path.join(GIT_INSOMNIA_DIR, models.settings.type, 'set_new.yml');
+
+      await neDbClient.writeFile(filePath, YAML.stringify(settingsData));
+
+      expect(updateSpy).not.toHaveBeenCalled();
+
+      updateSpy.mockRestore();
+    });
   });
 
   describe('readdir()', () => {

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { models } from 'insomnia-data';
 import YAML from 'yaml';
 
 import type { Database, DbAdapter } from '../types';
@@ -38,7 +39,10 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
     (db[type] as {}[]).push(obj);
   };
 
-  const types = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);
+  // Only ever read folders for types explicitly marked as syncable. A folder
+  // named after a non-syncable/global-singleton type (e.g. Settings) is skipped.
+  const requestedTypes = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);
+  const types = requestedTypes.filter(t => models.getModel(t)?.canSync);
   await Promise.all(
     types.map(async t => {
       // Get all files in type dir
