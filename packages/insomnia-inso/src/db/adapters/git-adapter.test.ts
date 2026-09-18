@@ -1,6 +1,9 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import YAML from 'yaml';
 
 import gitAdapter from './git-adapter';
 
@@ -35,5 +38,54 @@ describe('gitAdapter()', () => {
     const workingDir = path.join(fixturesPath, 'nedb');
     const db = await gitAdapter(workingDir);
     expect(db).toBe(null);
+  });
+
+  describe('type restriction', () => {
+    let workingDir: string;
+
+    afterEach(() => {
+      if (workingDir) {
+        fs.rmSync(workingDir, { recursive: true, force: true });
+      }
+    });
+
+    it('does not read a Settings folder, since Settings.canSync is false', async () => {
+      // gitAdapter() only reads folders for types where models.canSync() is
+      // true, so a 'Settings' folder is never opened even when it sits
+      // alongside a normal Workspace folder with well-formed content.
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+
+      fs.mkdirSync(path.join(insomniaDir, 'Workspace'), { recursive: true });
+      fs.writeFileSync(
+        path.join(insomniaDir, 'Workspace', 'wrk_new.yml'),
+        YAML.stringify({
+          _id: 'wrk_new',
+          type: 'Workspace',
+          name: 'New workspace',
+          parentId: null,
+          scope: 'collection',
+        }),
+      );
+
+      fs.mkdirSync(path.join(insomniaDir, 'Settings'), { recursive: true });
+      const settingsData = {
+        _id: 'set_new',
+        type: 'Settings',
+        validateSSL: false,
+        proxyEnabled: true,
+        httpProxy: 'http://example.com:8080',
+        httpsProxy: 'http://example.com:8080',
+      };
+      fs.writeFileSync(
+        path.join(insomniaDir, 'Settings', 'set_new.yml'),
+        YAML.stringify(settingsData),
+      );
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.Settings).toHaveLength(0);
+      expect(db?.Workspace).toHaveLength(1);
+    });
   });
 });
