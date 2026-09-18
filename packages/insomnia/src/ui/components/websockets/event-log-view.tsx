@@ -187,7 +187,10 @@ export const EventLogView: FC<Props> = ({
     count: events.length,
     estimateSize: React.useCallback(() => 30, []),
     overscan: 30,
-    getItemKey: index => events[index]._id,
+    // Every real-time event carries an id, but a row without one would make the table's collection
+    // throw ("Could not determine key for item") and take the whole pane down with it, so fall back
+    // to the row index rather than rendering nothing at all.
+    getItemKey: index => events[index]?._id ?? index,
   });
 
   useEffect(() => {

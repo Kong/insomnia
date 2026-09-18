@@ -5,7 +5,7 @@ import type { Readable } from 'node:stream';
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
 import type { Response } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
@@ -254,6 +254,8 @@ const openCurlConnection = async (
           elapsedTime: performance.now() - start,
           timelinePath,
           bodyPath: responseBodyPath,
+          // The body written by the streaming connection is an NDJSON event log, not a plain body.
+          isEventStream: true,
           settingSendCookies: req.settingSendCookies,
           settingStoreCookies: req.settingStoreCookies,
           bodyCompression: null,
@@ -345,6 +347,8 @@ const createErrorResponse = async (
     timelinePath,
     statusMessage: 'Error',
     error: message,
+    // The failed connection still belongs to the event stream, so the request keeps its stream pane.
+    isEventStream: true,
   };
   const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
   services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
@@ -399,7 +403,9 @@ const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl
 
 const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
   const response = await services.response.getById(options.responseId);
-  if (!response || !response.bodyPath) {
+  // Only Event Stream responses store an NDJSON event log in `bodyPath`; a plain HTTP response keeps
+  // its raw body there, so parsing it as events would fail (or yield keyless junk "events").
+  if (!response || !models.response.isEventStreamResponse(response) || !response.bodyPath) {
     return [];
   }
   const body = await insecureReadFile(response.bodyPath);
