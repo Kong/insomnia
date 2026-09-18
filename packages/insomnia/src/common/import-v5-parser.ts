@@ -95,6 +95,13 @@ const CookieSchema = z.object({
   hostOnly: z.boolean().optional(),
   pathIsDefault: z.boolean().optional(),
   lastAccessed: z.coerce.date().optional(),
+  // A malformed/foreign value (wrong type, unrecognized string, or absent -- true of every
+  // non-Insomnia import format) falls through to undefined rather than failing the parse, so
+  // it's grandfathered to 'manual' by the CookieJar init-model migration same as before.
+  source: z.preprocess(
+    val => (val === 'manual' || val === 'response' ? val : undefined),
+    z.enum(['manual', 'response']).optional(),
+  ),
 });
 
 export const CookieJarSchema = z.object({
