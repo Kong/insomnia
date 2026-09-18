@@ -21,8 +21,9 @@ export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   return { isAllowed, securedPath };
 };
 const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
-// Only responses/ and version-control/ subdirectories are allowed; other userData stores
-// (cookies, caches, etc.) shouldn't be readable from templates, plugins, or scripts.
+// Only responses/ and version-control/ subdirectories are in scope for this file-read surface;
+// the rest of userData (cookies, caches, etc.) is Electron/Chromium's own runtime state, not
+// something templates, plugins, or scripts have a reason to read.
 const USERDATA_ALLOWED_SUBDIRS = ['responses', 'version-control'];
 const getSecuredFolderAllowList = (userAllowList: string[]) => {
   const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');

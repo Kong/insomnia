@@ -60,8 +60,8 @@ describe('secureReadFile', () => {
   });
 
   it('rejects an ordinary file directly inside the userData directory', async () => {
-    // Only responses/ and version-control/ subdirectories are allowed roots; userData
-    // stores Chromium's sensitive runtime state (cookies, caches, etc.) which must not be accessible.
+    // Only responses/ and version-control/ subdirectories are allowed roots; the rest of
+    // userData (cookies, caches, etc.) is out of scope for this file-read surface.
     const { secureReadFile } = await import('../secure-read-file');
     const file = path.join(userDataDir, 'notes.txt');
     fs.writeFileSync(file, 'hello');
