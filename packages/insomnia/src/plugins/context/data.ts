@@ -22,6 +22,24 @@ const getWorkspaces = (activeProjectId?: string) => {
   return services.workspace.list();
 };
 
+/**
+ * Plugins receive the YAML directly and have no way to tell the user that entities were
+ * skipped, so an incomplete export fails loudly instead of silently dropping data.
+ */
+const exportWorkspaceYaml = async (workspaceId: string) => {
+  const { yaml, errors } = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: false });
+
+  if (errors.length > 0) {
+    throw new Error(
+      `Could not export workspace ${workspaceId}: ${errors.length} ${errors.length === 1 ? 'entity' : 'entities'} failed schema validation (${errors
+        .map(error => `${error.name} (${error.entityType})`)
+        .join(', ')})`,
+    );
+  }
+
+  return yaml;
+};
+
 // Only in the case of running unit tests from Inso can activeProjectId be undefined. This is because the concept of a project doesn't exist in git/insomnia sync or an export file
 export const init = (activeProjectId?: string) => ({
   data: {
@@ -63,10 +81,7 @@ export const init = (activeProjectId?: string) => ({
     export: {
       insomnia: async ({ workspace }: { workspace: Workspace }) => {
         if (workspace) {
-          const insomniaExport = await getInsomniaV5DataExport({
-            workspaceId: workspace._id,
-            includePrivateEnvironments: false,
-          });
+          const insomniaExport = await exportWorkspaceYaml(workspace._id);
 
           return [insomniaExport];
         }
@@ -76,10 +91,7 @@ export const init = (activeProjectId?: string) => ({
         const allInsomniaExports = [];
 
         for (const workspace of workspaces) {
-          const insomniaExport = await getInsomniaV5DataExport({
-            workspaceId: workspace._id,
-            includePrivateEnvironments: false,
-          });
+          const insomniaExport = await exportWorkspaceYaml(workspace._id);
           allInsomniaExports.push(insomniaExport);
         }
 

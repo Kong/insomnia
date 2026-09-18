@@ -185,7 +185,7 @@ collection: []
         data: { api_url: 'https://api.example.com' },
       });
 
-      const result = await getInsomniaV5DataExport({
+      const { yaml: result } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
       });
@@ -217,7 +217,7 @@ collection: []
         data: {},
       });
 
-      const result = await getInsomniaV5DataExport({
+      const { yaml: result } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
       });
@@ -258,7 +258,7 @@ collection: []
         method: 'GET',
       });
 
-      const result = await getInsomniaV5DataExport({
+      const { yaml: result } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
         requestIds: [req1._id],
@@ -290,7 +290,7 @@ collection: []
         contentType: 'json',
       });
 
-      const result = await getInsomniaV5DataExport({
+      const { yaml: result } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
       });
@@ -315,7 +315,7 @@ collection: []
         url: 'http://localhost:3000',
       });
 
-      const result = await getInsomniaV5DataExport({
+      const { yaml: result } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
       });
@@ -348,7 +348,7 @@ collection: []
         transportType: 'streamable-http',
       });
 
-      let result = await getInsomniaV5DataExport({
+      let { yaml: result } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
       });
@@ -382,10 +382,10 @@ collection: []
         ],
       });
 
-      result = await getInsomniaV5DataExport({
+      ({ yaml: result } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
-      });
+      }));
 
       parsed = YAML.parse(result);
       expect(parsed.type).toBe('mcpClient.insomnia/5.0');
@@ -395,12 +395,166 @@ collection: []
       expect(parsed.mcpRequest.roots).toHaveLength(1);
     });
 
-    it('returns empty string for unknown workspace', async () => {
+    it('returns no yaml and the reason for an unknown workspace', async () => {
       const result = await getInsomniaV5DataExport({
         workspaceId: 'missing',
         includePrivateEnvironments: false,
       });
+
+      expect(result.yaml).toBe('');
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].issues[0].message).toContain('Workspace not found');
+    });
+
+    it('keeps the requests that export and reports the ones that do not', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_partial_test',
+        name: 'Partial Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_partial',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.request.create({
+        _id: 'req_partial_ok',
+        name: 'Healthy Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/ok',
+        method: 'GET',
+      });
+
+      const brokenRequest = await services.request.create({
+        _id: 'req_partial_broken',
+        name: 'Broken Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/broken',
+        method: 'GET',
+      });
+
+      // Legacy rows can hold a null authentication even though the v5 schema only allows
+      // "absent" for requests — the value below is what the database can actually contain.
+      await services.request.update(brokenRequest, { authentication: null as unknown as Request['authentication'] });
+
+      const { yaml: result, errors } = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.collection[0].name).toBe('Healthy Request');
+
+      // The remainder still has to be a valid import, not just a valid-looking string.
+      expect(tryImportV5Data(result).error).toBeUndefined();
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchObject({
+        entityId: 'req_partial_broken',
+        entityType: 'Request',
+        name: 'Broken Request',
+      });
+      expect(errors[0].path).toMatch(/^collection\[\d\]$/);
+    });
+
+    it('drops a folder subtree only for the entries that fail, keeping the folder', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_nested_test',
+        name: 'Nested Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_nested',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const folder = await services.requestGroup.create({
+        _id: 'fld_nested',
+        name: 'Folder',
+        parentId: workspace._id,
+      });
+
+      await services.request.create({
+        _id: 'req_nested_ok',
+        name: 'Healthy Child',
+        parentId: folder._id,
+        url: 'https://api.example.com/child',
+        method: 'GET',
+      });
+
+      const brokenChild = await services.request.create({
+        _id: 'req_nested_broken',
+        name: 'Broken Child',
+        parentId: folder._id,
+        url: 'https://api.example.com/child-broken',
+        method: 'GET',
+      });
+
+      await services.request.update(brokenChild, { authentication: null as unknown as Request['authentication'] });
+
+      const { yaml: result, errors } = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.collection[0].name).toBe('Folder');
+      expect(parsed.collection[0].children).toHaveLength(1);
+      expect(parsed.collection[0].children[0].name).toBe('Healthy Child');
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchObject({
+        entityId: 'req_nested_broken',
+        name: 'Broken Child',
+      });
+      expect(errors[0].path).toMatch(/^collection\[\d\]\.children\[\d\]$/);
+    });
+
+    it('returns no yaml when every request fails', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_all_broken_test',
+        name: 'Broken Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_all_broken',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const brokenRequest = await services.request.create({
+        _id: 'req_all_broken',
+        name: 'Broken Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/broken',
+        method: 'GET',
+      });
+
+      await services.request.update(brokenRequest, { authentication: null as unknown as Request['authentication'] });
+
+      const { yaml: result, errors } = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      // Exporting a collection without its requests would look like a successful export
+      // while wiping the requests on the next import, so nothing is written at all.
       expect(result).toBe('');
+      expect(errors).toHaveLength(1);
+      expect(errors[0].entityId).toBe('req_all_broken');
     });
   });
 
