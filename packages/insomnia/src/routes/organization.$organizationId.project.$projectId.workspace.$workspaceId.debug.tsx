@@ -183,7 +183,7 @@ const Debug = () => {
   } = useLoaderData<typeof clientLoader>();
 
   const requestData = useRequestLoaderData();
-  const { activeRequest } = requestData || {};
+  const { activeRequest, activeResponse } = requestData || {};
 
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
@@ -428,9 +428,12 @@ const Debug = () => {
   const isRealtimeRequest =
     activeRequest &&
     (models.webSocketRequest.isWebSocketRequest(activeRequest) ||
-      isEventStreamRequest(activeRequest) ||
       isGraphqlSubscriptionRequest(activeRequest) ||
-      models.socketIORequest.isSocketIORequest(activeRequest));
+      models.socketIORequest.isSocketIORequest(activeRequest) ||
+      // An Event Stream request is only sent over a streaming connection when `Accept:
+      // text/event-stream` is set at send time, so its active response can be a plain HTTP one, whose
+      // raw body must not be rendered as an event log (Kong/insomnia#10492).
+      (isEventStreamRequest(activeRequest) && (!activeResponse || models.response.isEventStreamResponse(activeResponse))));
 
   const createRequest = ({
     requestType,

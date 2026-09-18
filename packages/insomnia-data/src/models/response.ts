@@ -40,6 +40,10 @@ export interface BaseResponse {
   // Actual timelines are stored on the filesystem
   bodyCompression: Compression;
   error: string;
+  // Event Stream (SSE) responses are streamed by the curl connection, which stores the NDJSON event
+  // log in `bodyPath`. A plain HTTP response keeps its raw body there, so this flag is what tells the
+  // two apart - never assume `bodyPath` holds an event log.
+  isEventStream?: boolean;
   requestVersionId: string | null;
   // Things from the request
   settingStoreCookies: boolean | null;
@@ -57,6 +61,14 @@ export interface ResponseTimelineEntry {
 
 export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => model.type === type;
 
+/**
+ * Whether this response came from an Event Stream (SSE) connection, i.e. its `bodyPath` is an NDJSON
+ * event log rather than a plain response body. Responses created before this flag existed (or by the
+ * ordinary HTTP send path) are not event streams.
+ */
+export const isEventStreamResponse = (model: Pick<BaseModel, 'type'> & { isEventStream?: boolean }): boolean =>
+  isResponse(model) && model.isEventStream === true;
+
 export function init(): BaseResponse {
   return {
     statusCode: 0,
@@ -73,6 +85,7 @@ export function init(): BaseResponse {
     timelinePath: '',
     // Actual bodies are stored on the filesystem
     bodyPath: '',
+    isEventStream: false,
     // For legacy bodies
     bodyCompression: '__NEEDS_MIGRATION__',
     error: '',

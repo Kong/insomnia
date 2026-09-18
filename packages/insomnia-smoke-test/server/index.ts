@@ -54,6 +54,19 @@ app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });
 
+// Server-sent events: writes a couple of events and closes, so a test can assert the event-stream
+// response pane without holding a connection open for the rest of the run.
+app.get('/sse', (_req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+  res.write('data: hello-from-sse-1\n\n');
+  res.write('data: hello-from-sse-2\n\n');
+  res.end();
+});
+
 app.get('/large-json', (_req, res) => {
   const items = Array.from({ length: 100_000 }, (_, i) => ({
     id: i,

@@ -1,4 +1,8 @@
 // @ts-nocheck
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import { Curl } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import { services } from 'insomnia-data';
@@ -10,11 +14,14 @@ import { registerCurlHandlers } from './curl';
 // register the real handlers once and pull the handler function out of the mocked
 // `electron.ipcMain.handle` calls instead of exporting an internal for tests only.
 let openCurlConnection: (event: unknown, options: unknown) => Promise<void>;
+let findCurlEvents: (event: unknown, options: { responseId: string }) => Promise<unknown[]>;
 
 beforeAll(() => {
   registerCurlHandlers();
   const call = electron.ipcMain.handle.mock.calls.find(([channel]) => channel === 'curl.open');
   openCurlConnection = call[1];
+  const findManyCall = electron.ipcMain.handle.mock.calls.find(([channel]) => channel === 'curl.event.findMany');
+  findCurlEvents = findManyCall[1];
 });
 
 const baseRenderedRequest = (overrides: Record<string, unknown> = {}) => ({
@@ -108,5 +115,57 @@ describe('openCurlConnection', () => {
     await openCurlConnection({}, { workspaceId, renderedRequest });
 
     expect(setOptCallsFor(setOptSpy, Curl.option.HTTPHEADER)).toHaveLength(1);
+  });
+
+  it('marks the response of a failed connection as an event stream', async () => {
+    // The failed connection still belongs to the event stream, so the request keeps its stream pane
+    // instead of falling back to the plain response pane.
+    const requestId = `req_curl_failure_${Math.random().toString(36).slice(2)}`;
+    vi.spyOn(Curl.prototype, 'setOpt');
+    vi.spyOn(Curl.prototype, 'perform').mockImplementation(() => {
+      throw new Error('connection failed');
+    });
+
+    await openCurlConnection({}, { workspaceId, renderedRequest: baseRenderedRequest({ _id: requestId }) });
+
+    await vi.waitFor(async () => {
+      const responses = await services.response.findByParentId(requestId);
+      expect(responses).toHaveLength(1);
+      expect(responses[0]).toMatchObject({ statusMessage: 'Error', isEventStream: true });
+    });
+  });
+});
+
+describe('curl.event.findMany', () => {
+  // The streaming connection writes its event log to the response's `bodyPath`, exactly where the
+  // plain HTTP send path stores a raw body, so `isEventStream` is what tells them apart.
+  const createResponseWithBody = async (body: string, isEventStream: boolean) => {
+    const bodyPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-curl-events-')), 'body.response');
+    fs.writeFileSync(bodyPath, body);
+    const response = await services.response.create({ parentId: 'req_find_many_test', bodyPath, isEventStream }, 20);
+    return response._id;
+  };
+
+  it('returns the events written by the streaming connection', async () => {
+    const event = {
+      _id: 'evt_1',
+      requestId: 'req_find_many_test',
+      type: 'message',
+      timestamp: 1,
+      data: 'hello',
+      direction: 'INCOMING',
+    };
+    const responseId = await createResponseWithBody(`${JSON.stringify(event)}\n`, true);
+
+    await expect(findCurlEvents({}, { responseId })).resolves.toEqual([event]);
+  });
+
+  it('never reads a plain HTTP response body as events', async () => {
+    // Regression: flipping the request to `Accept: text/event-stream` while an HTTP response is
+    // active used to hand that JSON body to the event log table, which then threw
+    // "Could not determine key for item" and blanked the whole response pane.
+    const responseId = await createResponseWithBody(JSON.stringify({ id: '1' }), false);
+
+    await expect(findCurlEvents({}, { responseId })).resolves.toEqual([]);
   });
 });
