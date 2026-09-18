@@ -373,6 +373,7 @@ export const tryToExecutePreRequestScript = async (
     activeGlobalEnvironment,
     activeGlobalBaseEnvironment,
     originalRequestGroups,
+    originalCookieJar: cookieJar,
   });
 
   const preTestResults: RequestTestResult[] = (mutatedContext.requestTestResults || []).map(result => ({
@@ -407,6 +408,7 @@ export async function savePatchesMadeByScript(patches: {
   activeGlobalEnvironment: Environment | undefined;
   activeGlobalBaseEnvironment: Environment | undefined;
   originalRequestGroups: RequestGroup[];
+  originalCookieJar: CookieJar;
   responseCookies?: Cookie[];
 }) {
   const {
@@ -416,6 +418,7 @@ export async function savePatchesMadeByScript(patches: {
     activeGlobalEnvironment,
     activeGlobalBaseEnvironment,
     originalRequestGroups,
+    originalCookieJar,
     responseCookies,
   } = patches;
   if (!mutatedContext) {
@@ -425,12 +428,18 @@ export async function savePatchesMadeByScript(patches: {
   // persist updated cookieJar if needed
   if (mutatedContext.cookieJar) {
     // merge cookies from response to the cookiejar, or cookies from response will not be persisted.
-    // responseCookies already carry their own 'manual'/'response' tag; anything in
-    // mutatedContext.cookieJar.cookies without one was created/edited directly by the script,
-    // which is trusted like a manual edit.
-    const cookies = [...(responseCookies || []), ...mutatedContext.cookieJar.cookies].map(cookie =>
-      cookie.source ? cookie : { ...cookie, source: 'manual' as const },
-    );
+    // responseCookies already carry their own 'manual'/'response' tag. Cookies coming back out
+    // of the script sandbox should too (the bridge round-trips 'source'), but if one somehow
+    // arrives untagged, fail closed: only a cookie the script genuinely created (no matching id
+    // in the jar as it stood before the script ran) is trusted as 'manual'; anything that
+    // existed before but lost its tag is treated as 'response' rather than assumed trustworthy.
+    const originalCookieIds = new Set(originalCookieJar.cookies.map(cookie => cookie.id));
+    const cookies = [...(responseCookies || []), ...mutatedContext.cookieJar.cookies].map(cookie => {
+      if (cookie.source) {
+        return cookie;
+      }
+      return { ...cookie, source: originalCookieIds.has(cookie.id) ? ('response' as const) : ('manual' as const) };
+    });
     await services.cookieJar.update(mutatedContext.cookieJar, { cookies });
   }
   // when base environment is activated, `mutatedContext.environment` points to it
@@ -745,6 +754,7 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       activeGlobalEnvironment: context.globals,
       activeGlobalBaseEnvironment: context.baseGlobals,
       originalRequestGroups: originalRequestGroups,
+      originalCookieJar: context.cookieJar,
       responseCookies: resp.cookies,
     });
   } else {
@@ -755,6 +765,7 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       activeGlobalEnvironment: context.globals,
       activeGlobalBaseEnvironment: context.baseGlobals,
       originalRequestGroups: originalRequestGroups,
+      originalCookieJar: context.cookieJar,
     });
   }
 
