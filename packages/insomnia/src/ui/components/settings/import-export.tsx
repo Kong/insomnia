@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
-import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
+import { getInsomniaV5DataExport, type InsomniaV5ExportResult } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
@@ -29,6 +29,8 @@ import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { usePlanData } from '~/ui/hooks/use-plan';
+
+import { type ExportOutcome, showExportSkippedEntitiesToast } from './export-skipped-entities-toast';
 
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
@@ -129,6 +131,18 @@ async function writeExportedFileToFileSystem(filename: string, data: string) {
   });
 }
 
+/** The export-all flow reports per workspace, so the closing modal must not claim blanket success. */
+const showExportAllDataCompleteModal = (outcomes: ExportOutcome[]) => {
+  const hasSkippedData = outcomes.some(outcome => outcome.result.errors.length > 0);
+
+  showModal(AlertModal, {
+    title: hasSkippedData ? 'Export Finished With Skipped Data' : 'Export Complete',
+    message: hasSkippedData
+      ? 'Some data could not be exported. Check the notification for the affected entities.'
+      : 'All your data have been successfully exported',
+  });
+};
+
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
   if (!workspacesForActiveProject.length) {
     showModal(AlertModal, {
@@ -195,15 +209,26 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
               `insomnia-export.${projectName}.${Date.now()}`,
             );
 
+            const outcomes: ExportOutcome[] = [];
+
             for (const workspace of workspacesForActiveProject) {
               const workspaceName = workspace.name.replace(/ /g, '-');
               const fileName = window.path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
-              const stringifiedExport = await getInsomniaV5DataExport({
+              const result = await getInsomniaV5DataExport({
                 workspaceId: workspace._id,
                 includePrivateEnvironments: shouldExportPrivateEnvironments,
               });
-              await writeExportedFileToFileSystem(fileName, stringifiedExport);
+
+              // Each workspace stands on its own: one that cannot be exported must not cost
+              // the others their file, and a failed export must not leave an empty file behind.
+              if (result.yaml) {
+                await writeExportedFileToFileSystem(fileName, result.yaml);
+              }
+
+              outcomes.push({ workspaceName: workspace.name, result });
             }
+
+            showExportSkippedEntitiesToast(outcomes);
             break;
           }
 
@@ -234,15 +259,20 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
   }
 
   try {
-    const stringifiedExport = await getInsomniaV5DataExport({
+    const result = await getInsomniaV5DataExport({
       workspaceId: workspace._id,
       includePrivateEnvironments: false,
     });
-    await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'mock-server' },
-    });
+
+    if (result.yaml) {
+      await writeExportedFileToFileSystem(fileName, result.yaml);
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.dataExport,
+        properties: { type: 'yaml', scope: 'mock-server' },
+      });
+    }
+
+    showExportSkippedEntitiesToast([{ result }]);
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -274,15 +304,20 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
   }
 
   try {
-    const stringifiedExport = await getInsomniaV5DataExport({
+    const result = await getInsomniaV5DataExport({
       workspaceId: workspace._id,
       includePrivateEnvironments: shouldExportPrivateEnvironments,
     });
-    await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'environment' },
-    });
+
+    if (result.yaml) {
+      await writeExportedFileToFileSystem(fileName, result.yaml);
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.dataExport,
+        properties: { type: 'yaml', scope: 'environment' },
+      });
+    }
+
+    showExportSkippedEntitiesToast([{ result }]);
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -321,6 +356,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
       }
 
       let stringifiedExport = '';
+      let exportResult: InsomniaV5ExportResult | null = null;
 
       try {
         switch (selectedFormat) {
@@ -333,11 +369,12 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           }
 
           case VALUE_YAML: {
-            stringifiedExport = await getInsomniaV5DataExport({
+            exportResult = await getInsomniaV5DataExport({
               workspaceId,
               includePrivateEnvironments: shouldExportPrivateEnvironments,
               requestIds,
             });
+            stringifiedExport = exportResult.yaml;
             break;
           }
 
@@ -345,8 +382,15 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
           }
         }
-        await writeExportedFileToFileSystem(fileName, stringifiedExport);
-        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.dataExport, properties: { type: selectedFormat } });
+
+        if (stringifiedExport) {
+          await writeExportedFileToFileSystem(fileName, stringifiedExport);
+          window.main.trackAnalyticsEvent({ event: AnalyticsEvent.dataExport, properties: { type: selectedFormat } });
+        }
+
+        if (exportResult) {
+          showExportSkippedEntitiesToast([{ result: exportResult }]);
+        }
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -369,15 +413,20 @@ export const exportMcpClientToFile = async (workspace: Workspace) => {
   }
 
   try {
-    const stringifiedExport = await getInsomniaV5DataExport({
+    const result = await getInsomniaV5DataExport({
       workspaceId: workspace._id,
       includePrivateEnvironments: false,
     });
-    await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'mcp' },
-    });
+
+    if (result.yaml) {
+      await writeExportedFileToFileSystem(fileName, result.yaml);
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.dataExport,
+        properties: { type: 'yaml', scope: 'mcp' },
+      });
+    }
+
+    showExportSkippedEntitiesToast([{ result }]);
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -396,19 +445,24 @@ export async function exportWorkspaceData({
   workspace: Workspace;
   dirPath: string;
   includePrivateEnvironments: boolean;
-}) {
-  const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments });
+}): Promise<ExportOutcome> {
+  const result = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments });
 
   try {
-    const workspaceName = workspace.name.replace(/ /g, '-');
-    const filePath = window.path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
-    await writeExportedFileToFileSystem(filePath, insomniaExport);
+    // A failed export writes nothing; an empty file would look like a successful export.
+    if (result.yaml) {
+      const workspaceName = workspace.name.replace(/ /g, '-');
+      const filePath = window.path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
+      await writeExportedFileToFileSystem(filePath, result.yaml);
+    }
   } catch (error) {
     console.error(error);
   }
+
+  return { workspaceName: workspace.name, result };
 }
 
-export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
+export async function exportAllData({ dirPath }: { dirPath: string }): Promise<ExportOutcome[]> {
   const workspaces = await services.workspace.list();
 
   const baseEnvironments = await services.environment.list({
@@ -426,13 +480,21 @@ export async function exportAllData({ dirPath }: { dirPath: string }): Promise<v
 
   const insomniaExportFolder = window.path.join(dirPath, `insomnia-export.${Date.now()}`);
 
+  const outcomes: ExportOutcome[] = [];
+
   for (const workspace of workspaces) {
-    await exportWorkspaceData({
-      workspace,
-      dirPath: insomniaExportFolder,
-      includePrivateEnvironments,
-    });
+    outcomes.push(
+      await exportWorkspaceData({
+        workspace,
+        dirPath: insomniaExportFolder,
+        includePrivateEnvironments,
+      }),
+    );
   }
+
+  showExportSkippedEntitiesToast(outcomes);
+
+  return outcomes;
 }
 
 const UntrackedProject = ({
@@ -717,11 +779,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
 
           const [dirPath] = filePaths;
 
+          const outcomes: ExportOutcome[] = [];
+
           try {
-            dirPath &&
-              (await exportAllData({
-                dirPath,
-              }));
+            if (dirPath) {
+              outcomes.push(...(await exportAllData({ dirPath })));
+            }
           } catch (e) {
             showModal(AlertModal, {
               title: 'Export Failed',
@@ -730,10 +793,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             console.error(e);
           }
 
-          showModal(AlertModal, {
-            title: 'Export Complete',
-            message: 'All your data have been successfully exported',
-          });
+          showExportAllDataCompleteModal(outcomes);
           window.main.trackAnalyticsEvent({
             event: AnalyticsEvent.exportAllCollections,
           });
@@ -786,11 +846,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
 
                 const [dirPath] = filePaths;
 
+                const outcomes: ExportOutcome[] = [];
+
                 try {
-                  dirPath &&
-                    (await exportAllData({
-                      dirPath,
-                    }));
+                  if (dirPath) {
+                    outcomes.push(...(await exportAllData({ dirPath })));
+                  }
                 } catch (e) {
                   showModal(AlertModal, {
                     title: 'Export Failed',
@@ -799,10 +860,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   console.error(e);
                 }
 
-                showModal(AlertModal, {
-                  title: 'Export Complete',
-                  message: 'All your data have been successfully exported',
-                });
+                showExportAllDataCompleteModal(outcomes);
                 window.main.trackAnalyticsEvent({
                   event: AnalyticsEvent.exportAllCollections,
                 });
