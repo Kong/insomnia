@@ -4,8 +4,8 @@ import * as crypto from 'node:crypto';
 import { database, models, services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
-import { getRenderedRequestAndContext } from '../../common/render';
 import { CookieObject, mergeCookieJar } from '../../../../insomnia-scripting-environment/src/objects';
+import { getRenderedRequestAndContext } from '../../common/render';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
