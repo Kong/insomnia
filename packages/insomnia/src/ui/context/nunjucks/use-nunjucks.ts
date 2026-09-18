@@ -12,7 +12,7 @@ import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId
 let getRenderContextPromiseCache: any = {};
 
 export interface UseNunjucksOptions {
-  renderContext?: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo'>;
+  renderContext?: Pick<Partial<RenderContextOptions>, 'purpose' | 'extraInfo' | 'forceReveal'>;
   requestId?: string;
 }
 export const initializeNunjucksRenderPromiseCache = () => {

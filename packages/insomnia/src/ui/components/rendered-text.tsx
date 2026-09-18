@@ -4,6 +4,8 @@ import type { HandleRender } from '~/common/templating/types';
 
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 
+const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const } };
+
 interface Props {
   children: string;
   render: HandleRender;
@@ -71,7 +73,7 @@ class RenderedTextInternal extends PureComponent<Props, State> {
 }
 
 export const RenderedText: FC<Omit<Props, 'render'>> = props => {
-  const { handleRender } = useNunjucks({ requestId: props.requestId });
+  const { handleRender } = useNunjucks({ ...PREVIEW_NUNJUCKS_OPTIONS, requestId: props.requestId });
 
   return <RenderedTextInternal {...props} render={handleRender} />;
 };

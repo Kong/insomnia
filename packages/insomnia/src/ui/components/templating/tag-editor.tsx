@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import clone from 'clone';
 import type { BaseModel, CloudProviderCredential, PluginData, Request, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
@@ -86,7 +86,12 @@ export const TagEditor: FC<Props> = props => {
     variables: [],
     vaultPluginData: [],
   });
-  const { handleRender, handleGetRenderContext } = useNunjucks({ renderContext: { purpose: 'preview' } });
+  const [isRevealed, setIsRevealed] = useState(false);
+  const nunjucksOptions = useMemo(
+    () => ({ renderContext: { purpose: 'preview' as const, forceReveal: isRevealed } }),
+    [isRevealed],
+  );
+  const { handleRender, handleGetRenderContext } = useNunjucks(nunjucksOptions);
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
@@ -139,6 +144,14 @@ export const TagEditor: FC<Props> = props => {
   useEffect(() => {
     refreshModels();
   }, [refreshModels]);
+
+  useEffect(() => {
+    const { tagDefinitions, activeTagDefinition, activeTagData } = state;
+    if (activeTagData) {
+      update(tagDefinitions, activeTagDefinition, activeTagData, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRevealed]);
 
   async function updateArg(
     argValue: string | number | boolean,
@@ -703,6 +716,14 @@ export const TagEditor: FC<Props> = props => {
               })}
             />
           </button>
+          <Button
+            aria-label={isRevealed ? 'Hide value' : 'Reveal value'}
+            style={{ zIndex: 10, position: 'relative' }}
+            className="txt-sm pull-right icon inline-block mr-1"
+            onPress={() => setIsRevealed(prev => !prev)}
+          >
+            <Icon icon={isRevealed ? 'eye-slash' : 'eye'} />
+          </Button>
           <label>
             Live Preview
             {previewElement}
