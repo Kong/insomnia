@@ -93,6 +93,10 @@ export const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), waitFor);
   };
+  // Lets a caller drop an already-scheduled call - e.g. a blur handler that flushes the
+  // latest value immediately shouldn't leave the pending debounced call to fire again
+  // afterwards with a now-stale closure over whatever triggered it.
+  debounced.cancel = () => clearTimeout(timeout);
 
   return debounced;
 };
