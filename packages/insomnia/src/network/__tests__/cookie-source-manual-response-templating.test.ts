@@ -1,5 +1,7 @@
 // @ts-nocheck
-import { models, services } from 'insomnia-data';
+import * as crypto from 'node:crypto';
+
+import { database, models, services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
 import { getRenderedRequestAndContext } from '../../common/render';
@@ -141,6 +143,86 @@ describe('cookie templating by source (manual vs response) across a script run',
     const renderedCookie = renderedRequest.cookieJar.cookies.find(c => c.key === 'session');
 
     // still rendered as a live template, exactly like the pre-fix behavior for manual cookies
+    expect(renderedCookie?.value).not.toBe(templateValue);
+    expect(renderedCookie?.value).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
+// Cookies persisted before the `source` field existed have no such field on disk at all --
+// not 'response', not 'manual', just absent. cookie-jar.ts's init-model migration (run on every
+// DB read, before a doc reaches render.ts or the scripting bridge) grandfathers these in as
+// 'manual' so a user's pre-existing templated cookie keeps working after upgrading. This checks
+// that grandfathering actually happens, and that it survives a script run (rather than the
+// scripting bridge's round-trip somehow re-losing the tag and hitting the fail-closed fallback
+// added to network.ts, which would silently break templating for upgrading users).
+describe('legacy cookie jar predating the source field', () => {
+  const insertLegacyCookieJar = async (workspaceId: string, cookies: Record<string, unknown>[]) => {
+    const parentId = workspaceId;
+    const _id = `jar_${crypto.createHash('sha1').update(parentId).digest('hex')}`;
+    await database.insert({
+      _id,
+      type: 'CookieJar',
+      parentId,
+      name: 'Default Jar',
+      cookies,
+      created: Date.now(),
+      modified: Date.now(),
+    });
+  };
+
+  it('migrates an undefined source to manual on read, before any script runs', async () => {
+    const workspace = await services.workspace.create();
+    await insertLegacyCookieJar(workspace._id, [
+      {
+        id: 'legacy1',
+        key: 'session',
+        value: "{% uuid 'v4' %}",
+        domain: 'localhost',
+        path: '/',
+        secure: false,
+        httpOnly: false,
+        // no `source` field at all -- this is what pre-#10475 data looks like on disk
+      },
+    ]);
+
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    const cookie = cookieJar.cookies.find(c => c.key === 'session');
+    expect(cookie?.source).toBe('manual');
+  });
+
+  it('keeps templating a migrated legacy cookie across a script run', async () => {
+    const templateValue = "{% uuid 'v4' %}";
+    const workspace = await services.workspace.create();
+    await insertLegacyCookieJar(workspace._id, [
+      {
+        id: 'legacy2',
+        key: 'session',
+        value: templateValue,
+        domain: 'localhost',
+        path: '/',
+        secure: false,
+        httpOnly: false,
+      },
+    ]);
+
+    // The read migration must run before the cookie ever reaches the scripting bridge.
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    expect(cookieJar.cookies.find(c => c.key === 'session')?.source).toBe('manual');
+
+    const bridged = new CookieObject(cookieJar).jar().toInsomniaCookieJar();
+    const roundTripped = mergeCookieJar(cookieJar, bridged);
+    expect(roundTripped.cookies.find(c => c.key === 'session')?.source).toBe('manual');
+
+    await services.cookieJar.update(cookieJar, { cookies: roundTripped.cookies });
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_legacy_after_script',
+      parentId: workspace._id,
+      url: 'http://localhost',
+    });
+    const renderedRequest = await getRenderedRequest({ request });
+    const renderedCookie = renderedRequest.cookieJar.cookies.find(c => c.key === 'session');
+
     expect(renderedCookie?.value).not.toBe(templateValue);
     expect(renderedCookie?.value).toMatch(/^[0-9a-f-]{36}$/);
   });
