@@ -34,7 +34,7 @@ import type {
   Workspace,
   WorkspaceScope,
 } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
@@ -1165,7 +1165,7 @@ export async function getInsomniaV5DataExport({
           id: envVar.id,
           name: envVar.name,
           value: envVar.value,
-          type: 'str',
+          type: EnvironmentKvPairDataType.STRING,
           enabled: !!envVar.enabled,
         })),
         roots: resource.roots.map(root => ({
