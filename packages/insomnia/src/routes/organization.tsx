@@ -176,6 +176,10 @@ const Component = () => {
   const currentPlan = useCurrentPlan();
   const { settings, userSession } = useRootLoaderData()!;
   const [konnectMigrationGroups, setKonnectMigrationGroups] = useState<KonnectMigrationGroup[]>([]);
+  // `konnectMigrationGroups` starts empty before `detectKonnectOrgMigration` below has resolved too,
+  // so its length alone can't distinguish "not checked yet" from "checked, no conflict" — needed to
+  // keep the moved-notice popover (below) from racing the migration modal it must wait for.
+  const [hasCheckedMigrationConflict, setHasCheckedMigrationConflict] = useState(false);
 
   const workspaceData = useWorkspaceLoaderData();
 
@@ -236,6 +240,7 @@ const Component = () => {
     // The unambiguous case already migrated during startup; only a genuine conflict reaches the UI.
     detectKonnectOrgMigration({ accountId }).then(plan => {
       setKonnectMigrationGroups(plan.status === 'conflict' ? plan.groups : []);
+      setHasCheckedMigrationConflict(true);
     });
   }, [userSession.accountId]);
 
@@ -248,13 +253,20 @@ const Component = () => {
 
   // One-time nudge pointing users who already sync Konnect to the organization dropdown, where
   // their control planes now live under "Control Planes" instead of the removed sidebar tab.
+  // Must wait for the migration-conflict check so it never races or overlaps the migration modal
+  // (z-50 vs. the modal's z-10 backdrop — it would render on top of an unresolved choice otherwise).
   const [orgSelectNode, setOrgSelectNode] = useState<HTMLDivElement | null>(null);
   const [hasSeenKonnectMovedNotice, setHasSeenKonnectMovedNotice] = reactUse.useLocalStorage(
     'hasSeenKonnectMovedNotice',
     false,
   );
   const showKonnectMovedNotice =
-    !isScratchPad && !isKonnectOrganization && settings.hasKonnectPat && !hasSeenKonnectMovedNotice;
+    !isScratchPad &&
+    !isKonnectOrganization &&
+    settings.hasKonnectPat &&
+    !hasSeenKonnectMovedNotice &&
+    hasCheckedMigrationConflict &&
+    konnectMigrationGroups.length === 0;
   const dismissKonnectMovedNotice = useCallback(() => {
     setHasSeenKonnectMovedNotice(true);
   }, [setHasSeenKonnectMovedNotice]);
