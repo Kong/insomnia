@@ -10,6 +10,11 @@ export interface InsomniaCookieExtensions {
   creationIndex?: number;
   lastAccessed?: Date;
   pathIsDefault?: boolean;
+  // 'manual'/'response' provenance from the Insomnia CookieJar model. Must round-trip through
+  // the script sandbox unchanged: a response-sourced cookie that loses this tag here gets
+  // relabeled 'manual' (trusted) by savePatchesMadeByScript, re-enabling template rendering of
+  // a value a server planted via Set-Cookie.
+  source?: 'manual' | 'response';
 }
 
 export interface CookieOptions extends InsomniaCookieExtensions {
@@ -60,6 +65,7 @@ export class Cookie extends Property {
       creationIndex: cookieDef.creationIndex,
       lastAccessed: cookieDef.lastAccessed,
       pathIsDefault: cookieDef.pathIsDefault,
+      source: cookieDef.source,
     };
   }
 
@@ -173,6 +179,7 @@ export class Cookie extends Property {
       creationIndex: this.insoExtensions.creationIndex,
       lastAccessed: this.insoExtensions.lastAccessed,
       pathIsDefault: this.insoExtensions.pathIsDefault,
+      source: this.insoExtensions.source,
     };
   };
 }
@@ -235,6 +242,7 @@ export class CookieObject extends CookieList {
             creationIndex: cookie.creationIndex,
             lastAccessed: cookie.lastAccessed,
             pathIsDefault: cookie.pathIsDefault,
+            source: cookie.source,
           });
         })
       : [];
@@ -351,6 +359,7 @@ export class CookieJar {
           hostOnly: cookieObj.hostOnly || undefined,
           pathIsDefault: cookieObj.pathIsDefault,
           lastAccessed: cookieObj.lastAccessed,
+          source: cookieObj.source,
         });
       });
     });
