@@ -1,4 +1,3 @@
-import type { CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
 import type { Settings } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { Cookie } from 'tough-cookie';
@@ -10,19 +9,24 @@ import type { CookieOptions } from './cookies';
 import { Request, type RequestOptions } from './request';
 import { Response } from './response';
 
+export interface CurlRequestOutput {
+  patch: { elapsedTime: number; bodyCompression?: 'zip' | null; error?: string };
+  headerResults: { code: number; reason: string; headers: { name: string; value: string }[] }[];
+  responseBodyPath?: string;
+}
+
+export type CurlRequestExecutor = (options: unknown) => Promise<CurlRequestOutput>;
+
 export async function sendRequest(
   request: string | Request | RequestOptions,
   cb: (error?: string, response?: Response) => void,
   settings: Settings,
+  curlRequest: CurlRequestExecutor,
 ): Promise<Response | void> {
   return new Promise(async (resolve, reject) => {
     try {
       const requestOptions = requestToCurlOptions(request, settings);
-      const nodejsCurlRequest = __IS_RENDERER__
-        ? window.bridge.curlRequest
-        : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
-
-      const output = (await nodejsCurlRequest(requestOptions)) as CurlRequestOutput;
+      const output = await curlRequest(requestOptions);
       const transformedOutput = await curlOutputToResponse(output, request);
 
       if (cb) {
