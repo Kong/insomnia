@@ -1,6 +1,6 @@
 import type { RequestTestResult } from 'insomnia-data';
+import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 
-import { RESPONSE_CODE_REASONS } from './constants';
 import { describeByteSize } from './misc';
 
 export type RunnerItemStatus = 'pending' | 'running' | 'completed' | 'failed' | 'canceled' | 'skipped';
