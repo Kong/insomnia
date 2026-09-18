@@ -1,6 +1,6 @@
 import { serializeRenderContext } from '~/common/templating/render-context-serialization';
 import { extractUndefinedVariableKey, RenderError } from '~/common/templating/render-error';
-import type { RenderInputType } from '~/common/templating/types';
+import type { RenderInputType, SensitiveValueCollector } from '~/common/templating/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
@@ -32,37 +32,45 @@ export async function reloadTemplatingWorker(): Promise<void> {
   worker.postMessage(JSON.stringify({ type: 'reload', authToken }));
 }
 
-export async function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
+export async function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable, sensitiveValueCollector }: RenderInputType): Promise<string> {
   const newContext = serializeRenderContext(context);
   const authToken = await getTemplatingDbAuthToken();
 
   // Id to avoid race conditions
   const id = window.crypto.randomUUID();
+  // Embed render ID in the context so the worker can include it in sensitiveValue messages.
+  newContext._renderId = id;
   const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable, authToken });
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {
     const messageHandler = (event: MessageEvent) => {
-      if (event.data.id === id) {
-        worker.removeEventListener('message', messageHandler);
-        const workerError = event.data.err;
-        if (workerError) {
-          const error = new RenderError(workerError.message);
-          if (error instanceof RenderError) {
-            error.path = workerError.path || '';
-            error.location = workerError.location;
-          }
-          error.type = 'render';
-          const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
-          if (undefinedEnvironmentVariables.length > 0) {
-            error.extraInfo = {
-              subType: 'environmentVariable',
-              undefinedEnvironmentVariables,
-            };
-          }
-          return reject(error);
-        }
-        return resolve(event.data.result);
+      if (event.data.id !== id) {
+        return;
       }
+      // Vault tag running during a send render — register the value into the collector.
+      if (event.data.type === 'sensitiveValue') {
+        (sensitiveValueCollector as SensitiveValueCollector | null | undefined)?.register(event.data.value);
+        return;
+      }
+      worker.removeEventListener('message', messageHandler);
+      const workerError = event.data.err;
+      if (workerError) {
+        const error = new RenderError(workerError.message);
+        if (error instanceof RenderError) {
+          error.path = workerError.path || '';
+          error.location = workerError.location;
+        }
+        error.type = 'render';
+        const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
+        if (undefinedEnvironmentVariables.length > 0) {
+          error.extraInfo = {
+            subType: 'environmentVariable',
+            undefinedEnvironmentVariables,
+          };
+        }
+        return reject(error);
+      }
+      return resolve(event.data.result);
     };
     worker.addEventListener('message', messageHandler);
   });
