@@ -1,4 +1,6 @@
-import type { BaseModel } from './base-types';
+import { z } from 'zod/v4';
+
+import { type BaseModel, createModelSchema } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'gRPC Request';
@@ -7,39 +9,42 @@ export const prefix = 'greq';
 export const canDuplicate = true;
 export const canSync = true;
 
-export interface GrpcRequestBody {
-  text?: string;
-}
+export const GrpcRequestBodySchema = z.object({
+  text: z.string().optional(),
+});
+export type GrpcRequestBody = z.infer<typeof GrpcRequestBodySchema>;
 
-export interface GrpcRequestHeader {
-  name: string;
-  value: string;
-  description?: string;
-  disabled?: boolean;
-}
+export const GrpcRequestHeaderSchema = z.object({
+  name: z.string().optional().default(''),
+  value: z.string().optional().default(''),
+  description: z.string().optional(),
+  disabled: z.boolean().optional(),
+});
+export type GrpcRequestHeader = z.infer<typeof GrpcRequestHeaderSchema>;
 
-interface BaseGrpcRequest {
-  name: string;
-  url: string;
-  description: string;
-  protoFileId?: string;
-  protoMethodName?: string;
-  body: GrpcRequestBody;
-  metadata: GrpcRequestHeader[];
-  metaSortKey: number;
-  isPrivate: boolean;
-  reflectionApi: {
-    enabled: boolean;
-    url: string;
-    apiKey: string;
-    module: string;
-  };
-  disableUserAgentHeader?: boolean;
-  konnectRouteKey?: string | null;
-  konnectManagedHeaderNames?: string[] | null;
-}
+export const baseGrpcRequestSchema = z.object({
+  url: z.string().optional().default(''),
+  name: z.string().optional().default(''),
+  description: z.string(),
+  protoFileId: z.string().optional(),
+  protoMethodName: z.string().optional(),
+  body: GrpcRequestBodySchema,
+  metadata: z.array(GrpcRequestHeaderSchema),
+  metaSortKey: z.number(),
+  reflectionApi: z.object({
+    enabled: z.boolean().optional().default(false),
+    url: z.string().optional().default(''),
+    apiKey: z.string().optional().default(''),
+    module: z.string().optional().default(''),
+  }),
+  disableUserAgentHeader: z.boolean().optional(),
+  konnectRouteKey: z.string().nullable().optional(),
+  konnectManagedHeaderNames: z.array(z.string()).nullable().optional(),
+});
+export type BaseGrpcRequest = z.infer<typeof baseGrpcRequestSchema>;
 
-export type GrpcRequest = BaseModel & BaseGrpcRequest;
+export const schema = createModelSchema(type, prefix).extend(baseGrpcRequestSchema.shape);
+export type GrpcRequest = z.infer<typeof schema>;
 
 export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequest => model.type === type;
 
@@ -60,7 +65,7 @@ export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, s
   };
 }
 
-export function init(): BaseGrpcRequest {
+export function init(): BaseGrpcRequest & Pick<BaseModel, 'isPrivate'> {
   return {
     url: '',
     name: 'New gRPC Request',

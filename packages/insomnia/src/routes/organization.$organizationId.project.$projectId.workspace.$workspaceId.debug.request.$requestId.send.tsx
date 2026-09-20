@@ -391,7 +391,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               collection_id: workspaceId,
               request_key_id: requestId,
               preferredHttpVersion: settings.preferredHttpVersion,
-              // @ts-expect-error -- who cares
               authenticationType: activeRequest.authentication?.type,
               mimeType: activeRequest.body.mimeType,
               protocol: activeRequest.type,
