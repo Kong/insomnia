@@ -378,7 +378,7 @@ export const baseRequestSchema = z.object({
   preRequestScript: z.string().optional(),
   afterResponseScript: z.string().optional(),
   metaSortKey: z.number(),
-  pathParameters: RequestPathParametersSchema.optional().nullable(),
+  pathParameters: RequestPathParametersSchema.optional(),
   disableUserAgentHeader: z.boolean().optional(),
   konnectRouteKey: z.string().nullable().optional(),
   konnectManagedHeaderNames: z.array(z.string()).nullable().optional(),

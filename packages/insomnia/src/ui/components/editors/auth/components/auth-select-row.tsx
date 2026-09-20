@@ -44,7 +44,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
       if (updatedValue === 'true' || updatedValue === 'false') {
         updatedValue = JSON.parse(updatedValue);
       }
-      patcher(_id, { authentication: { ...authentication, [property]: updatedValue } });
+      patcher(_id, { authentication: { ...authentication, [property]: updatedValue } as typeof authentication });
     },
     [patcher, _id, authentication, property],
   );

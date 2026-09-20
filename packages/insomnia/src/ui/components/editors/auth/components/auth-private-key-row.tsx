@@ -47,7 +47,8 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
 
   const privateKey = authentication[property];
   const onChange = useCallback(
-    (value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
+    (value: string) =>
+      patcher(_id, { authentication: { ...authentication, [property]: value } as typeof authentication }),
     [_id, authentication, patcher, property],
   );
 
