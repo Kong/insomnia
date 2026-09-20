@@ -26,7 +26,7 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
     await insomnia.navigationSidebar.openWorkspaceActionsDropdown('Pre-request Scripts');
-    await page.getByRole('menuitemradio', { name: 'Export' }).click();
+    await page.getByRole('menuitemradio', { name: 'Export', exact: true }).click();
     await page.getByRole('button', { name: 'Export' }).click();
     await page.getByText('Which format would you like to export as?').click();
     await page.locator('.app').press('Escape');

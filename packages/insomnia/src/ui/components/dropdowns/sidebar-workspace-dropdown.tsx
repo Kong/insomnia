@@ -4,6 +4,7 @@ import {
   exportGlobalEnvironmentToFile,
   exportMcpClientToFile,
   exportMockServerToFile,
+  exportSpecificationToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import type { MockServer, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -312,6 +313,16 @@ export const SidebarWorkspaceDropdown = ({
           return setIsExportModalOpen(true);
         },
       },
+      ...(isCollectionLike
+        ? [
+            {
+              id: 'ExportOpenApiSpec',
+              name: 'Export OpenAPI Spec',
+              icon: 'file-code' as IconName,
+              action: () => exportSpecificationToFile(workspace),
+            },
+          ]
+        : []),
       {
         id: 'Settings',
         name: 'Settings',
