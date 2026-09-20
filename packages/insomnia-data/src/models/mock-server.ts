@@ -1,7 +1,6 @@
 import { z } from 'zod/v4';
 
-import { createModelSchema } from './base-schemas';
-import type { BaseModel } from './base-types';
+import { type BaseModel, createModelSchema } from './base-types';
 
 export const name = 'Mock Server';
 

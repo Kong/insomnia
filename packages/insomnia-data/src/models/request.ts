@@ -24,7 +24,7 @@ import {
 } from 'insomnia-data/common';
 import { z } from 'zod/v4';
 
-import type { BaseModel } from './base-types';
+import { type BaseModel, createModelSchema } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'Request';
@@ -255,31 +255,37 @@ export const requestHeaderSchema = z.object({
 export const HeadersSchema = z.array(requestHeaderSchema);
 export type RequestHeader = z.infer<typeof requestHeaderSchema>;
 
-export interface RequestParameter {
-  name: string;
-  value: string;
-  description?: string;
-  disabled?: boolean;
-  id?: string;
-  type?: string;
-  multiline?: boolean;
-}
+export const RequestParameterSchema = z.object({
+  name: z.string(),
+  value: z.string(),
+  description: z.string().optional(),
+  disabled: z.boolean().optional(),
+  id: z.string().optional(),
+  type: z.string().optional(),
+  multiline: z.boolean().optional(),
+});
+export const RequestParametersSchema = z.array(RequestParameterSchema);
+export type RequestParameter = z.infer<typeof RequestParameterSchema>;
 
-export interface RequestBodyParameter {
-  name: string;
-  value?: string;
-  description?: string;
-  disabled?: boolean;
-  multiline?: boolean | string;
-  id?: string;
-  fileName?: string;
-  type?: string;
-}
+export const requestBodyParameterSchema = z.object({
+  name: z.string().default(''),
+  value: z.string().optional(),
+  description: z.string().optional(),
+  disabled: z.boolean().optional(),
+  multiline: z.union([z.boolean(), z.string()]).optional(),
+  id: z.string().optional(),
+  fileName: z.string().optional(),
+  type: z.string().optional(),
+});
+export type RequestBodyParameter = z.infer<typeof requestBodyParameterSchema>;
 
-export interface RequestPathParameter {
-  name: string;
-  value: string;
-}
+export const requestPathParameterSchema = z.object({
+  name: z.string(),
+  value: z.string(),
+});
+export const RequestPathParametersSchema = z.array(requestPathParameterSchema);
+export type RequestPathParameter = z.infer<typeof requestPathParameterSchema>;
+export type RequestPathParameters = z.infer<typeof RequestPathParametersSchema>;
 
 export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
@@ -343,40 +349,48 @@ export const getCombinedPathParametersFromUrl = (
   return [...savedPathParameters, ...unsavedUrlPathParameters];
 };
 
-export interface RequestBody {
-  mimeType?: string | null;
-  text?: string;
-  fileName?: string;
-  params?: RequestBodyParameter[];
-}
+export const requestBodySchema = z.object({
+  mimeType: z.string().nullable().optional(),
+  text: z.string().optional(),
+  fileName: z.string().optional(),
+  params: z.array(requestBodyParameterSchema).optional(),
+});
+export type RequestBody = z.infer<typeof requestBodySchema>;
 
-export interface BaseRequest {
-  url: string;
-  name: string;
-  description: string;
-  method: string;
-  body: RequestBody;
-  preRequestScript?: string;
-  afterResponseScript?: string;
-  parameters: RequestParameter[];
-  pathParameters?: RequestPathParameter[];
-  headers: RequestHeader[];
-  authentication: RequestAuthentication | {};
-  metaSortKey: number;
-  isPrivate: boolean;
+export const baseRequestSettingsSchema = z.object({
   // Settings
-  settingStoreCookies: boolean;
-  settingSendCookies: boolean;
-  settingDisableRenderRequestBody: boolean;
-  settingEncodeUrl: boolean;
-  settingRebuildPath: boolean;
-  settingFollowRedirects: 'global' | 'on' | 'off';
-  disableUserAgentHeader?: boolean;
-  konnectRouteKey?: string | null;
-  konnectManagedHeaderNames?: string[] | null;
-}
+  settingStoreCookies: z.boolean().optional().default(true),
+  settingSendCookies: z.boolean().optional().default(true),
+  settingDisableRenderRequestBody: z.boolean().optional().default(false),
+  settingEncodeUrl: z.boolean().optional().default(true),
+  settingRebuildPath: z.boolean().optional().default(true),
+  settingFollowRedirects: z.enum(['global', 'on', 'off']).optional().default('global'),
+});
+export const baseRequestSchema = z.object({
+  url: z.string().optional().default(''),
+  name: z.string().optional().default(''),
+  description: z.string().optional().default(''),
+  method: z.string(),
+  body: requestBodySchema.optional().default({}),
+  parameters: RequestParametersSchema.optional().default([]),
+  headers: HeadersSchema.optional().default([]),
+  authentication: AuthenticationSchema.optional().default({}),
+  preRequestScript: z.string().optional(),
+  afterResponseScript: z.string().optional(),
+  metaSortKey: z.number(),
+  pathParameters: RequestPathParametersSchema.optional().nullable(),
+  disableUserAgentHeader: z.boolean().optional(),
+  konnectRouteKey: z.string().nullable().optional(),
+  konnectManagedHeaderNames: z.array(z.string()).nullable().optional(),
+});
+export const baseRequestSchemaWithSettings = z.object({
+  ...baseRequestSchema.shape,
+  ...baseRequestSettingsSchema.shape,
+});
+export type BaseRequest = z.infer<typeof baseRequestSchemaWithSettings>;
 
-export type Request = BaseModel & BaseRequest;
+export const schema = createModelSchema(type, prefix).extend(baseRequestSchemaWithSettings.shape);
+export type Request = z.infer<typeof schema>;
 
 export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => model.type === type;
 
@@ -413,7 +427,7 @@ export const optionalKeys: (keyof BaseRequest)[] = [
   'disableUserAgentHeader',
 ];
 
-export function init(): BaseRequest {
+export function init(): BaseRequest & Pick<BaseModel, 'isPrivate'> {
   return {
     url: '',
     name: 'New Request',

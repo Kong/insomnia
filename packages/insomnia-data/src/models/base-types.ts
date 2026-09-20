@@ -63,3 +63,11 @@ export const baseModelSchema = z.object({
 });
 
 export type BaseModel = z.infer<typeof baseModelSchema>;
+
+export function createModelSchema<TType extends AllTypes, TPrefix extends string>(type: TType, _prefix: TPrefix) {
+  return baseModelSchema.extend({
+    type: allTypesSchema.extract([type]),
+    isPrivate: baseModelSchema.shape.isPrivate.optional().default(false),
+    name: baseModelSchema.shape.name.optional().default(''),
+  });
+}
