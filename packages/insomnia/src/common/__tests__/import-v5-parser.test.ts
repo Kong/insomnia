@@ -9,9 +9,6 @@ import {
   GRPCRequestSchema,
   HeadersSchema,
   InsomniaFileSchema,
-  JsonSchema,
-  KeyLiteralSchema,
-  LiteralSchema,
   McpClientSchema,
   McpRequestSchema,
   MetaGroupSchema,
@@ -24,6 +21,7 @@ import {
   SocketIORequestSchema,
   WebsocketRequestSchema,
 } from '../import-v5-parser';
+import { JsonSchema, KeyLiteralSchema, LiteralSchema } from '../zod/base-schemas';
 
 // -----------------------------
 // Polyfills & Utilities
