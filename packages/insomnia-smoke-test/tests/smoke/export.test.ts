@@ -289,11 +289,13 @@ test.describe('Export', () => {
     await insomnia.projectPage.createProject(projectName, 'local');
     await insomnia.projectPage.importFixture(fixtureFile);
     await insomnia.workspacePage.goBackToProject();
+    const filesGrid = page.getByLabel('Files');
+    await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
 
     // A null authentication is a shape old versions and plugins write, and the v5 schema
     // rejects it for requests. Written straight to the database because no UI flow can
     // produce it.
-    await breakRequestAuthentication(page, 'req_02f58f24a4304f1f8c0e8ecafae3b50b');
+    await breakRequestAuthentication(page, 'Request A');
 
     const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-partial-export.yaml');
@@ -319,9 +321,11 @@ test.describe('Export', () => {
     await insomnia.projectPage.createProject(projectName, 'local');
     await insomnia.projectPage.importFixture(fixtureFile);
     await insomnia.workspacePage.goBackToProject();
+    const filesGrid = page.getByLabel('Files');
+    await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
 
-    await breakRequestAuthentication(page, 'req_02f58f24a4304f1f8c0e8ecafae3b50b');
-    await breakRequestAuthentication(page, 'req_296c72b5e0414469a69a79263b6adee8');
+    await breakRequestAuthentication(page, 'Request A');
+    await breakRequestAuthentication(page, 'Request B');
 
     const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-empty-export.yaml');
@@ -338,21 +342,22 @@ test.describe('Export', () => {
   });
 });
 
-/** Gives a request an authentication the v5 schema rejects, straight through the data bridge. */
-async function breakRequestAuthentication(page: Page, requestId: string) {
-  await page.evaluate(async id => {
-    // The renderer reaches the database through the flat services bridge.
-    const invoke = window._dataServicesInvoke;
-    if (!invoke) {
-      throw new Error('Data services bridge is not available');
-    }
-
-    const request = await invoke('request', 'getById', id);
+/**
+ * Gives the named request an authentication the v5 schema rejects, straight through the data
+ * bridge. Importing a file reassigns resource ids, so the request is looked up by name.
+ */
+async function breakRequestAuthentication(page: Page, requestName: string) {
+  await page.evaluate(async name => {
+    const requests = (await window.database.invoke('find', 'Request', {}, { created: 1 }, 0)) as {
+      _id: string;
+      name: string;
+    }[];
+    const request = requests.find(candidate => candidate.name === name);
     if (!request) {
-      throw new Error(`Request not found: ${id}`);
+      throw new Error(`Request not found: ${name}`);
     }
 
-    await invoke('request', 'update', request, { authentication: null });
-  }, requestId);
+    await window.database.invoke('docUpdate', request, { authentication: null });
+  }, requestName);
 }
 
