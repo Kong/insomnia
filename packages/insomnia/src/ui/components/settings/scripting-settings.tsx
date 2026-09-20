@@ -2,6 +2,7 @@ import { Switch } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
 
+import { QUICKJS_SANDBOX_ENABLED } from '../../../scripting/run-script-quickjs';
 import {
   type ASTRule,
   blockedPropertyRules,
@@ -12,9 +13,6 @@ import {
 import { useSettingsPatcher } from '../../hooks/use-request';
 
 const DISABLED_TOOLTIP = 'Enable the script sandbox to configure individual rules';
-
-// TODO: re-enable the QuickJS sandbox setting once it's ready to ship.
-const SHOW_QUICKJS_SANDBOX_SETTING = false;
 
 const RuleToggle = ({
   name,
@@ -323,7 +321,7 @@ export const ScriptingSettings = () => {
         </div>
       </div>
 
-      {SHOW_QUICKJS_SANDBOX_SETTING && (
+      {QUICKJS_SANDBOX_ENABLED && (
         <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">

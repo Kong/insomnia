@@ -19,7 +19,7 @@ import { test } from '../../playwright/test';
 // script that calls an API this minimal engine doesn't bridge, turning an otherwise-successful send
 // into a displayed "Error" status. Asserting via the Console tab (console.log output) instead of an
 // echoed response body sidesteps template-rendering entirely.
-// TODO: re-enable once the QuickJS sandbox setting is un-hidden in scripting-settings.tsx.
+// TODO(INS-3890): re-enable once the QuickJS sandbox setting is un-hidden in scripting-settings.tsx.
 test.describe.skip('QuickJS script sandbox', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
