@@ -317,11 +317,7 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               </span>
               <div className="flex w-[70%] items-center leading-relaxed">
                 <div className="line-clamp-3 w-full break-all">
-                  {cookie.source === 'manual' ? (
-                    <RenderedText>{cookieString || ''}</RenderedText>
-                  ) : (
-                    cookieString || ''
-                  )}
+                  {cookie.source === 'manual' ? <RenderedText>{cookieString || ''}</RenderedText> : cookieString || ''}
                 </div>
               </div>
               <div className="flex min-w-[10%] items-center justify-end gap-1">
@@ -536,7 +532,14 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               type="datetime-local"
                               defaultValue={localDateTime}
                               style={{ colorScheme: isLightTheme ? 'light' : 'dark' }}
-                              onChange={event => setEditCookie({ ...editCookie, expires: event.target.value })}
+                              onChange={event => {
+                                const value = event.target.value;
+                                const parsedValue = value ? new Date(value) : undefined;
+                                setEditCookie({
+                                  ...editCookie,
+                                  expires: parsedValue && isValid(parsedValue) ? parsedValue : null,
+                                });
+                              }}
                             />
                           </label>
                         </div>
