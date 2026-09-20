@@ -924,6 +924,7 @@ export async function getInsomniaV5DataExport({
                   send: resource.settingSendCookies,
                   store: resource.settingStoreCookies,
                 },
+                useProxy: resource.settingUseProxy,
               },
               authentication: resource.authentication,
               headers: mapHeaders(resource.headers),
