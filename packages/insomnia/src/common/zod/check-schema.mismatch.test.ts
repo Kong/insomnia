@@ -56,7 +56,34 @@ describe('Check Strict Schema Match', () => {
       baseRequestDoc({ authentication: { type: 'someFutureAuthType2026', apiKey: 'super-secret-value' } }),
     );
     expect(result.mismatch).toBe(true);
-    expect(result.errors.some(error => error.message.includes('authentication.type'))).toBe(true);
+    // No branch of AuthenticationSchema knows this auth type, so the whole block is reported as unrecognized
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].path).toBe('authentication');
+    expect(result.errors[0].keys).toEqual(['type', 'apiKey']);
+  });
+
+  it('flags only the unknown key of a known authentication type, not the whole auth block', () => {
+    const result = checkStrictSchemaMatch(
+      requestSchema,
+      baseRequestDoc({
+        authentication: {
+          type: 'oauth2',
+          disabled: false,
+          grantType: 'mcp_auth_flow',
+          extraPropertyInAuth: 'foo',
+          clientId: '',
+          scope: '',
+          tokenPrefix: 'bearer',
+        },
+      }),
+    );
+    expect(result.mismatch).toBe(true);
+    // AuthenticationSchema is `z.union([z.discriminatedUnion('type', [...]), z.object({})])`: the empty fallback object
+    // reports every field of the block as unknown, so only the oauth2 branch's issues may be kept.
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].code).toBe('unrecognized_keys');
+    expect(result.errors[0].path).toBe('authentication');
+    expect(result.errors[0].keys).toEqual(['extraPropertyInAuth']);
   });
 
   it('flags an unknown property on the `body` sub-object', () => {
