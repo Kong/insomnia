@@ -62,7 +62,9 @@ async function asyncWorker(arg: Task): Promise<any> {
   );
   // Proof of concept: opt-in path that runs the script in a QuickJS-WASM sandbox instead of the
   // hidden Electron BrowserWindow. Defaults to off (see settings.useQuickJsScriptSandbox).
-  const runScript = arg.context.settings.useQuickJsScriptSandbox
+  // TODO: temporarily force-disabled (setting UI hidden too) while QuickJS sandbox support is paused.
+  const useQuickJsSandbox = false && arg.context.settings.useQuickJsScriptSandbox;
+  const runScript = useQuickJsSandbox
     ? runScriptInQuickJs({ script: arg.script, context: arg.context })
     : window.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context });
   const executionPromise = Promise.race([runScript, timeoutPromise]);
