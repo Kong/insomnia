@@ -125,5 +125,18 @@ describe('gitAdapter()', () => {
       expect(db?.[type as keyof typeof db]).toHaveLength(0);
       expect(db?.Workspace).toHaveLength(1);
     });
+
+    it.each(nonSyncableTypes)('ignores a document whose own type is %s even when filed under a syncable folder', async otherType => {
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+      const typeDir = path.join(insomniaDir, 'Workspace');
+      fs.mkdirSync(typeDir, { recursive: true });
+      const doc = { _id: 'wrk_mismatched', type: otherType, name: 'Mismatched doc', parentId: null };
+      fs.writeFileSync(path.join(typeDir, `${doc._id}.yml`), YAML.stringify(doc));
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.Workspace).toHaveLength(0);
+    });
   });
 });

@@ -36,6 +36,13 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
       return;
     }
     const obj = YAML.parse(contents);
+
+    // Document's own type must match the folder it was read from.
+    if (obj?.type !== type) {
+      console.error(`Ignoring "${fileName}": document type "${obj?.type}" does not match folder type "${type}"`);
+      return;
+    }
+
     (db[type] as {}[]).push(obj);
   };
 
