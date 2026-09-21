@@ -2,7 +2,7 @@ import path from 'node:path';
 import { Readable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
-import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
+import { Curl, CurlAuth, CurlFeature, CurlProtocol, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
 import { ProxyScopes } from 'insomnia-data/common';
@@ -102,6 +102,9 @@ export async function registerInsomniaProtocols() {
 
           curl.setOpt(Curl.option.TIMEOUT_MS, 0);
           curl.setOpt(Curl.option.FOLLOWLOCATION, true);
+          // The event stream targets a fixed first-party URL, but a redirect
+          // target is still server-controlled. Keep any follow within HTTP(S).
+          curl.setOpt(Curl.option.REDIR_PROTOCOLS, CurlProtocol.HTTP | CurlProtocol.HTTPS);
           curl.enable(CurlFeature.StreamResponse);
           curl.setOpt(Curl.option.HTTPHEADER, [
             ...Array.from(originalRequest.headers.entries()).map(([key, value]) => `${key}: ${value}`),
