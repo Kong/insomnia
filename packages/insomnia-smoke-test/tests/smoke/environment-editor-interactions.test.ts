@@ -330,4 +330,58 @@ test.describe('Environment Editor', () => {
     await privateRow.waitFor({ state: 'visible' });
     await expect.soft(privateRow.locator('.fa-lock')).toBeVisible();
   });
+
+  test('clearing the JSON editor reports a JSON error instead of keeping stale table values', async ({ page, app }) => {
+    const text = await loadFixture('environments.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+    // wait for import dialog to close before proceeding
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+
+    // open the JSON environment in the environment editor
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+    const environmentDialog = page.getByRole('dialog', { name: 'Manage Environments' });
+    await environmentDialog.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
+
+    // delete all JSON content
+    const jsonEditor = environmentDialog.getByTestId('CodeEditor').getByRole('textbox');
+    await jsonEditor.focus();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.press('Delete');
+
+    /* Empty content must be reported like any other parse error, not silently dropped. */
+    await expect.soft(environmentDialog.getByText('Unexpected end of JSON input')).toBeVisible();
+
+    /* The existing JSON error dialog blocks the switch, so the table can never show values that no
+    longer match the editor content. */
+    await page.getByRole('button', { name: 'Table Edit' }).click();
+    await expect
+      .soft(page.getByText('Please modify and fix the JSON string error before switch to Table view'))
+      .toBeVisible();
+    await expect.soft(page.getByRole('listbox', { name: 'Environment Key Value Pair' })).toBeHidden();
+    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+
+    /* Reopening remounts the editor and restores the unsaved empty content from its cache: the error
+    must survive, otherwise the document is empty but still switchable. */
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
+    // the picker popover can still be open; this click dismisses it, then reopen the editor
+    await page.locator('body').click();
+    await page.getByRole('button', { name: 'Select an API Collection Environment' }).click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+    await page.getByRole('dialog', { name: 'Manage Environments' }).waitFor({ state: 'visible' });
+    await environmentDialog.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
+
+    await expect.soft(environmentDialog.getByText('Unexpected end of JSON input')).toBeVisible();
+    await page.getByRole('button', { name: 'Table Edit' }).click();
+    await expect
+      .soft(page.getByText('Please modify and fix the JSON string error before switch to Table view'))
+      .toBeVisible();
+    await expect.soft(page.getByRole('listbox', { name: 'Environment Key Value Pair' })).toBeHidden();
+  });
 });
