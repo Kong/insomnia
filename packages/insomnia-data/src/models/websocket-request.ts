@@ -1,5 +1,7 @@
-import type { BaseModel } from './base-types';
-import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
+import { z } from 'zod/v4';
+
+import { type BaseModel, createModelSchema } from './base-types';
+import { AuthenticationSchema, HeadersSchema, RequestParametersSchema, RequestPathParametersSchema } from './request';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'WebSocket Request';
@@ -12,26 +14,35 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
-export interface BaseWebSocketRequest {
-  name: string;
-  description: string;
-  url: string;
-  metaSortKey: number;
-  headers: RequestHeader[];
-  authentication: RequestAuthentication | {};
-  parameters: RequestParameter[];
-  pathParameters?: RequestPathParameter[];
-  settingEncodeUrl: boolean;
-  settingStoreCookies: boolean;
-  settingSendCookies: boolean;
-  settingFollowRedirects: 'global' | 'on' | 'off';
-  settingUseProxy?: boolean;
-  disableUserAgentHeader?: boolean;
-  konnectRouteKey?: string | null;
-  konnectManagedHeaderNames?: string[] | null;
-}
+export const baseWebSocketRequestSettingsSchema = z.object({
+  // Settings
+  settingStoreCookies: z.boolean().optional().default(true),
+  settingSendCookies: z.boolean().optional().default(true),
+  settingEncodeUrl: z.boolean().optional().default(true),
+  settingFollowRedirects: z.enum(['global', 'on', 'off']).optional().default('global'),
+  settingUseProxy: z.boolean().optional(),
+});
+export const baseWebSocketRequestSchema = z.object({
+  url: z.string().optional().default(''),
+  name: z.string().optional().default(''),
+  description: z.string().optional().default(''),
+  metaSortKey: z.number(),
+  headers: HeadersSchema,
+  authentication: AuthenticationSchema.optional().default({}),
+  parameters: RequestParametersSchema.optional().default([]),
+  pathParameters: RequestPathParametersSchema.optional(),
+  disableUserAgentHeader: z.boolean().optional(),
+  konnectRouteKey: z.string().nullable().optional(),
+  konnectManagedHeaderNames: z.array(z.string()).nullable().optional(),
+});
+export const baseWebSocketRequestWithSettingsSchema = z.object({
+  ...baseWebSocketRequestSchema.shape,
+  ...baseWebSocketRequestSettingsSchema.shape,
+});
+export type BaseWebSocketRequest = z.infer<typeof baseWebSocketRequestWithSettingsSchema>;
 
-export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
+export const schema = createModelSchema(type, prefix).extend(baseWebSocketRequestWithSettingsSchema.shape);
+export type WebSocketRequest = z.infer<typeof schema>;
 
 export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is WebSocketRequest => model.type === type;
 
