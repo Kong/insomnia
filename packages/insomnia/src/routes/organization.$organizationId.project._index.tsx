@@ -1,18 +1,13 @@
 import type { GitRepository, Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { useState } from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useParams } from 'react-router';
 
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { getProjectsWithGitRepositories } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { logout } from '~/ui/account/session';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
-import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
-import { EmptyProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 
 export interface ProjectIndexLoaderData {
@@ -85,7 +80,12 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   };
 }
 
-// Default page when there are no projects in the organization.
+/**
+ * Default pane when no project is selected — typically an organization with no projects at all.
+ * The sidebar and surrounding panels come from the parent
+ * `organization.$organizationId.project` layout, which stays mounted when the first project
+ * appears and this route hands over to `project.$projectId`.
+ */
 const Component = () => {
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -93,42 +93,9 @@ const Component = () => {
 
   const storageRules = useOrganizationStorageRule(organizationId);
 
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
-
   return (
     <ErrorBoundary>
-      <>
-        <PanelGroup
-          autoSaveId="insomnia-sidebar"
-          id="wrapper"
-          className="new-sidebar h-full w-full text-(--color-font)"
-          direction="horizontal"
-        >
-          <Panel
-            id="sidebar"
-            className="sidebar theme--sidebar"
-            defaultSize={DEFAULT_SIDEBAR_SIZE}
-            maxSize={40}
-            minSize={10}
-            collapsible
-          >
-            <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <EmptyProjectNavigationSidebar onCreateProject={() => setIsNewProjectModalOpen(true)} />
-            </div>
-          </Panel>
-          <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-          <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
-            <NoProjectView storageRules={storageRules} />
-          </Panel>
-        </PanelGroup>
-        {isNewProjectModalOpen && (
-          <ProjectModal
-            isOpen={isNewProjectModalOpen}
-            onOpenChange={setIsNewProjectModalOpen}
-            storageRules={storageRules}
-          />
-        )}
-      </>
+      <NoProjectView storageRules={storageRules} />
     </ErrorBoundary>
   );
 };
