@@ -78,21 +78,24 @@ export function flattenCollectionChildren(
   return collection;
 }
 
+// Docs are read straight off disk, where a field can hold a non-string value (e.g. a
+// `description` object from a Postman collection). Only strings are searchable text.
+const toSearchableText = (value: unknown): string => (typeof value === 'string' ? value : '');
+
 export function filterCollection(collection: Child[], filter: string): Child[] {
   if (!filter) return collection;
-  const filtered = collection.map(node => ({
-    ...node,
-    hidden: !fuzzyMatchAll(
-      filter,
-      [
-        node.doc.name,
-        (node.doc as { description?: string }).description ?? '',
-        ...(!models.requestGroup.isRequestGroup(node.doc) ? [(node.doc as { url?: string }).url ?? ''] : []),
-      ],
-      { splitSpace: false, loose: true },
-    )?.indexes,
-    collapsed: false,
-  }));
+  const filtered = collection.map(node => {
+    const searchableFields = [
+      toSearchableText(node.doc.name),
+      toSearchableText(node.doc.description),
+      ...(!models.requestGroup.isRequestGroup(node.doc) ? [toSearchableText(node.doc.url)] : []),
+    ];
+    return {
+      ...node,
+      hidden: !fuzzyMatchAll(filter, searchableFields, { splitSpace: false, loose: true })?.indexes,
+      collapsed: false,
+    };
+  });
   const nodeById = new Map(filtered.map(item => [item.doc._id, item]));
 
   filtered.forEach(node => {
