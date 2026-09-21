@@ -87,5 +87,43 @@ describe('gitAdapter()', () => {
       expect(db?.Settings).toHaveLength(0);
       expect(db?.Workspace).toHaveLength(1);
     });
+
+    // gitAdapter() only ever reads folders named after one of the Database
+    // keys (see packages/insomnia-inso/src/db/types.ts), so this is the full
+    // set of syncable types reachable through the inso CLI import path today.
+    const syncableTypes = ['ApiSpec', 'Environment', 'Request', 'RequestGroup', 'Workspace', 'UnitTestSuite', 'UnitTest'] as const;
+    // Non-syncable Database keys: these folders exist in legacy .insomnia
+    // directories but must never be merged in, since canSync is false.
+    const nonSyncableTypes = ['WorkspaceMeta', 'ClientCertificate', 'CaCertificate', 'CookieJar', 'CloudCredential', 'Settings'] as const;
+
+    const writeMinimalDoc = (insomniaDir: string, type: string) => {
+      const typeDir = path.join(insomniaDir, type);
+      fs.mkdirSync(typeDir, { recursive: true });
+      const doc = { _id: `${type.toLowerCase()}_new`, type, name: `New ${type}`, parentId: null };
+      fs.writeFileSync(path.join(typeDir, `${doc._id}.yml`), YAML.stringify(doc));
+    };
+
+    it.each(syncableTypes)('reads a %s folder, since canSync is true', async type => {
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+      writeMinimalDoc(insomniaDir, type);
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.[type as keyof typeof db]).toHaveLength(1);
+    });
+
+    it.each(nonSyncableTypes)('does not read a %s folder, since canSync is false', async type => {
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+      writeMinimalDoc(insomniaDir, type);
+      // Include a syncable folder alongside it so we confirm the whole read didn't just fail
+      writeMinimalDoc(insomniaDir, 'Workspace');
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.[type as keyof typeof db]).toHaveLength(0);
+      expect(db?.Workspace).toHaveLength(1);
+    });
   });
 });

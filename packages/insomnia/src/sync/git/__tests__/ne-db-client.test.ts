@@ -388,6 +388,89 @@ invalid: [unclosed array
     });
   });
 
+  describe('canSync type restrictions (regression)', () => {
+    // This is the full set of model types where canSync is true today. If a
+    // new model flips canSync to true (or an existing one flips it), this
+    // list should be updated deliberately rather than silently drifting.
+    const syncableTypes = models
+      .all()
+      .filter(m => m.canSync)
+      .map(m => m.type)
+      .sort();
+
+    const nonSyncableTypes = models
+      .all()
+      .filter(m => !m.canSync)
+      .map(m => m.type)
+      .sort();
+
+    it('documents the exact set of types allowed to write via Git sync', () => {
+      expect(syncableTypes).toEqual(
+        [
+          'ApiSpec',
+          'Environment',
+          'GrpcRequest',
+          'MockRoute',
+          'MockServer',
+          'McpRequest',
+          'ProjectLintRuleset',
+          'ProtoDirectory',
+          'ProtoFile',
+          'Request',
+          'RequestGroup',
+          'SocketIOPayload',
+          'SocketIORequest',
+          'UnitTest',
+          'UnitTestSuite',
+          'WebSocketPayload',
+          'WebSocketRequest',
+          'Workspace',
+        ].sort(),
+      );
+    });
+
+    it.each(syncableTypes)('writes a %s document, since canSync is true', async type => {
+      const neDbClient = new NeDBClient('wrk_test', 'proj_test');
+      const updateSpy = vi.spyOn(db, 'update');
+
+      const doc = {
+        _id: `${type}_new`,
+        type,
+        name: `New ${type}`,
+        parentId: 'wrk_test',
+      };
+
+      const filePath = path.join(GIT_INSOMNIA_DIR, type, `${doc._id}.yml`);
+
+      await neDbClient.writeFile(filePath, YAML.stringify(doc));
+
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({ _id: doc._id, type }));
+
+      updateSpy.mockRestore();
+    });
+
+    it.each(nonSyncableTypes)('ignores a %s document, since canSync is false', async type => {
+      const neDbClient = new NeDBClient('wrk_test', 'proj_test');
+      const updateSpy = vi.spyOn(db, 'update');
+
+      const doc = {
+        _id: `${type}_new`,
+        type,
+        name: `New ${type}`,
+        parentId: 'wrk_test',
+      };
+
+      const filePath = path.join(GIT_INSOMNIA_DIR, type, `${doc._id}.yml`);
+
+      await neDbClient.writeFile(filePath, YAML.stringify(doc));
+
+      expect(updateSpy).not.toHaveBeenCalled();
+
+      updateSpy.mockRestore();
+    });
+  });
+
   describe('readdir()', () => {
     it('should list root directory correctly', async () => {
       const neDbClient = new NeDBClient('wrk_test', 'proj_test');
