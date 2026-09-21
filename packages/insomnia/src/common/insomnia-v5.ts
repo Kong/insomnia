@@ -448,7 +448,8 @@ function getMockRoutes(file: InsomniaFile): WithExportType<MockRoute>[] {
 }
 
 function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
-  if (file.type === 'spec.insomnia.rest/5.0') {
+  // Now both legacy spec and new api collection files could contain legacy unit tests
+  if (file.type === 'spec.insomnia.rest/5.0' || file.type === 'collection.insomnia.rest/5.0') {
     const resources: (UnitTestSuite | UnitTest)[] = [];
 
     file.testSuites?.forEach((testSuite, index) => {
