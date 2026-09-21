@@ -16,22 +16,25 @@ import { models } from 'insomnia-data';
 import { z } from 'zod/v4';
 
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
+import { JsonSchema } from '~/common/zod/base-schemas';
 
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
 
-const { environment, mockServer, mockRoute, mcpRequest } = models;
-
-// Basic literal types that can appear in JSON data
-export const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-export const KeyLiteralSchema = z.union([z.string(), z.number()]);
-
-type Literal = z.infer<typeof LiteralSchema>;
-type Json = Literal | { [key: string]: Json } | Json[];
-
-// Recursive JSON schema that can handle nested objects and arrays
-export const JsonSchema: z.ZodType<Json> = z.lazy(() =>
-  z.union([LiteralSchema, z.array(JsonSchema), z.record(KeyLiteralSchema, JsonSchema)]),
-);
+const {
+  environment,
+  mockServer,
+  mockRoute,
+  unitTest,
+  unitTestSuite,
+  caCertificate,
+  cookieJar,
+  requestGroup,
+  request,
+  grpcRequest,
+  webSocketRequest,
+  socketIORequest,
+  mcpRequest,
+} = models;
 
 export const MetaSchema = z.object({
   id: z.string(),
@@ -62,47 +65,12 @@ export const HeadersSchema = z.array(
 
 export type Meta = z.infer<typeof MetaSchema>;
 
-const CACertificateSchema = z.object({
-  path: z.string().optional().default(''),
-  disabled: z.boolean().default(false),
+const CACertificateSchema = caCertificate.baseCACertificateSchema.omit({ parentId: true }).extend({
   meta: MetaSchema.optional(),
 });
 
-const CookieSchema = z.object({
-  id: z
-    .string()
-    .optional()
-    .default(() => crypto.randomUUID()),
-  key: z.string().optional().default(''),
-  value: z.string().optional().default(''),
-  expires: z.preprocess(val => {
-    // Handle 'Infinity' string
-    if (val === 'Infinity') return null;
-
-    // If it's already a Date, check if it's valid
-    if (val instanceof Date) {
-      return Number.isNaN(val.getTime()) ? null : val;
-    }
-
-    // Let other values pass through to z.coerce.date()
-    return val;
-  }, z.coerce.date().nullable().default(null)),
-  domain: z.string().optional().default(''),
-  path: z.string().optional().default('/'),
-  secure: z.boolean().optional().default(false),
-  httpOnly: z.boolean().optional().default(false),
-  extensions: z.array(JsonSchema).optional(),
-  creation: z.coerce.date().optional(),
-  creationIndex: z.number().optional(),
-  hostOnly: z.boolean().optional(),
-  pathIsDefault: z.boolean().optional(),
-  lastAccessed: z.coerce.date().optional(),
-});
-
-export const CookieJarSchema = z.object({
-  name: z.string().optional().default(''),
+export const CookieJarSchema = cookieJar.baseCookieJarSchema.extend({
   meta: MetaSchema.optional(),
-  cookies: z.array(CookieSchema).optional(),
 });
 
 const baseEnvironmentSchema = environment.baseEnvironmentSchema.omit({ metaSortKey: true }).extend({
@@ -112,34 +80,15 @@ export const EnvironmentSchema = baseEnvironmentSchema.extend({
   subEnvironments: z.array(baseEnvironmentSchema).optional(),
 });
 
-export const GRPCRequestSchema = z.object({
-  url: z.string().optional().default(''),
-  name: z.string().optional().default(''),
-  meta: MetaSchema.optional(),
-  body: z
-    .object({
-      text: z.string().optional(),
-    })
-    .optional(),
-  metadata: z
-    .array(
-      z.object({
-        name: z.string().optional().default(''),
-        value: z.string().optional().default(''),
-        description: z.string().optional(),
-        disabled: z.boolean().optional(),
-      }),
-    )
-    .optional(),
-  protoFileId: z.string().optional().nullable(),
-  protoMethodName: z.string().optional(),
-  reflectionApi: z.object({
-    enabled: z.boolean().optional().default(false),
-    url: z.string().optional().default(''),
-    apiKey: z.string().optional().default(''),
-    module: z.string().optional().default(''),
-  }),
-});
+export const GRPCRequestSchema = grpcRequest.baseGrpcRequestSchema
+  .omit({ description: true, metaSortKey: true })
+  .extend({
+    meta: MetaSchema.extend({
+      id: z.string().startsWith('greq'),
+    }).optional(),
+    body: grpcRequest.baseGrpcRequestSchema.shape.body.optional(),
+    metadata: grpcRequest.baseGrpcRequestSchema.shape.metadata.optional(),
+  });
 
 export const MockRouteSchema = mockRoute.baseMockRouteSchema.omit({ parentId: true }).extend({
   meta: MetaSchema.optional(),
@@ -148,311 +97,114 @@ const baseMockServerSchema = mockServer.baseMockServerSchema.omit({ parentId: tr
   meta: MetaSchema.optional(),
 });
 
-const BasicAuthenticationSchema = z.object({
-  type: z.literal('basic'),
-  useISO88591: z.boolean().optional(),
-  username: z.string().optional(),
-  password: z.string().optional(),
-  disabled: z.boolean().optional(),
-});
+export const RequestSettingsSchema = request.baseRequestSettingsSchema.transform(data => ({
+  renderRequestBody: !data.settingDisableRenderRequestBody,
+  encodeUrl: data.settingEncodeUrl,
+  followRedirects: data.settingFollowRedirects,
+  cookies: {
+    send: data.settingSendCookies,
+    store: data.settingStoreCookies,
+  },
+  rebuildPath: data.settingRebuildPath,
+}));
 
-const ApiKeyAuthenticationSchema = z.object({
-  type: z.literal('apikey'),
-  key: z.string().optional(),
-  value: z.string().optional(),
-  disabled: z.boolean().optional(),
-  addTo: z.string().optional(),
-});
+export const WebSocketRequestSettingsSchema = webSocketRequest.baseWebSocketRequestSettingsSchema.transform(data => ({
+  encodeUrl: data.settingEncodeUrl,
+  cookies: {
+    send: data.settingSendCookies,
+    store: data.settingStoreCookies,
+  },
+  followRedirects: data.settingFollowRedirects,
+  // TODO add this settings support
+  useProxy: data.settingUseProxy,
+}));
 
-const OAuth2AuthenticationSchema = z.object({
-  type: z.literal('oauth2'),
-  disabled: z.boolean().optional(),
-  grantType: z.enum([
-    'authorization_code',
-    'client_credentials',
-    'implicit',
-    'password',
-    'refresh_token',
-    'mcp_auth_flow',
-  ]),
-  accessTokenUrl: z.string().optional(),
-  authorizationUrl: z.string().optional(),
-  clientId: z.string().optional(),
-  clientSecret: z.string().optional(),
-  audience: z.string().optional(),
-  scope: z.string().optional(),
-  resource: z.string().optional(),
-  username: z.string().optional(),
-  password: z.string().optional(),
-  redirectUrl: z.string().optional(),
-  useDefaultBrowser: z.boolean().optional(),
-  credentialsInBody: z.boolean().optional(),
-  state: z.string().optional(),
-  code: z.string().optional(),
-  accessToken: z.string().optional(),
-  refreshToken: z.string().optional(),
-  tokenPrefix: z.string().optional(),
-  usePkce: z.boolean().optional(),
-  pkceMethod: z.string().optional(),
-  responseType: z.enum(['code', 'token', 'none', 'id_token', 'id_token token']).optional(),
-  origin: z.string().optional(),
-});
+export const SocketIORequestSettingsSchema = socketIORequest.baseSocketIORequestSettingsSchema.transform(data => ({
+  encodeUrl: data.settingEncodeUrl,
+  cookies: {
+    send: data.settingSendCookies,
+    store: data.settingStoreCookies,
+  },
+  path: data.settingPath,
+}));
 
-const HawkAuthenticationSchema = z.object({
-  type: z.literal('hawk'),
-  id: z.string().optional(),
-  key: z.string().optional(),
-  ext: z.string().optional(),
-  validatePayload: z.boolean().optional(),
-  algorithm: z.enum(['sha1', 'sha256']),
-  disabled: z.boolean().optional(),
-});
+export const RequestGroupSchema = requestGroup.baseRequestGroupSchema
+  .omit({ description: true, metaSortKey: true, preRequestScript: true, afterResponseScript: true })
+  .extend({
+    meta: MetaGroupSchema.extend({
+      id: z.string().startsWith('fld'),
+    }).optional(),
+    children: z.array(z.any()).optional(),
+    scripts: z
+      .object({
+        preRequest: requestGroup.baseRequestGroupSchema.shape.preRequestScript,
+        afterResponse: requestGroup.baseRequestGroupSchema.shape.afterResponseScript,
+      })
+      .optional(),
+  });
 
-const OAuth1AuthenticationSchema = z.object({
-  type: z.literal('oauth1'),
-  disabled: z.boolean().optional(),
-  signatureMethod: z.enum(['HMAC-SHA1', 'RSA-SHA1', 'HMAC-SHA256', 'PLAINTEXT']).optional(),
-  consumerKey: z.string().optional(),
-  tokenKey: z.string().optional(),
-  tokenSecret: z.string().optional(),
-  privateKey: z.string().optional(),
-  version: z.string().optional(),
-  nonce: z.string().optional(),
-  timestamp: z.string().optional(),
-  callback: z.string().optional(),
-  realm: z.string().optional(),
-  verifier: z.string().optional(),
-  includeBodyHash: z.boolean().optional(),
-});
+export const RequestSchema = request.baseRequestSchema
+  .omit({ description: true, metaSortKey: true, preRequestScript: true, afterResponseScript: true })
+  .extend({
+    meta: MetaSchema.extend({
+      id: z.string().startsWith('req'),
+    }).optional(),
+    scripts: z
+      .object({
+        preRequest: request.schema.shape.preRequestScript,
+        afterResponse: request.schema.shape.afterResponseScript,
+      })
+      .optional(),
+    settings: RequestSettingsSchema.optional().default({
+      renderRequestBody: true,
+      encodeUrl: true,
+      followRedirects: 'global',
+      rebuildPath: true,
+      cookies: {
+        send: true,
+        store: true,
+      },
+    }),
+  });
 
-const DigestAuthenticationSchema = z.object({
-  type: z.literal('digest'),
-  disabled: z.boolean().optional(),
-  username: z.string().optional(),
-  password: z.string().optional(),
-});
+export const WebsocketRequestSchema = webSocketRequest.baseWebSocketRequestSchema
+  .omit({
+    description: true,
+    metaSortKey: true,
+  })
+  .extend({
+    meta: MetaSchema.extend({
+      id: z.string().startsWith('ws-req'),
+    }).optional(),
+    settings: WebSocketRequestSettingsSchema.optional().default({
+      encodeUrl: true,
+      followRedirects: 'global',
+      cookies: {
+        send: true,
+        store: true,
+      },
+      useProxy: false,
+    }),
+  });
 
-const NTLMAuthenticationSchema = z.object({
-  type: z.literal('ntlm'),
-  disabled: z.boolean().optional(),
-  username: z.string().optional(),
-  password: z.string().optional(),
-});
-
-const BearerAuthenticationSchema = z.object({
-  type: z.literal('bearer'),
-  disabled: z.boolean().optional(),
-  token: z.string().optional(),
-  prefix: z.string().optional(),
-});
-
-const AWS_IAM_AuthenticationSchema = z.object({
-  type: z.literal('iam'),
-  disabled: z.boolean().optional(),
-  accessKeyId: z.string().optional(),
-  secretAccessKey: z.string().optional(),
-  sessionToken: z.string().optional(),
-  region: z.string().optional(),
-  service: z.string().optional(),
-});
-
-const NetrcAuthenticationSchema = z.object({
-  type: z.literal('netrc'),
-  disabled: z.boolean().optional(),
-});
-
-const ASAPAuthenticationSchema = z.object({
-  type: z.literal('asap'),
-  disabled: z.boolean().optional(),
-  issuer: z.string().optional(),
-  subject: z.string().optional(),
-  audience: z.string().optional(),
-  addintionalClaims: z.string().optional(),
-  privateKey: z.string().optional(),
-  keyId: z.string().optional(),
-});
-
-const NoneAuthenticationSchema = z.object({
-  type: z.literal('none'),
-  disabled: z.boolean().optional(),
-});
-
-const SingleTokenAuthenticationSchema = z.object({
-  type: z.literal('singleToken'),
-  disabled: z.boolean().optional(),
-  token: z.string().optional(),
-});
-
-const AuthenticationSchema = z.union([
-  z.discriminatedUnion('type', [
-    BasicAuthenticationSchema,
-    ApiKeyAuthenticationSchema,
-    OAuth2AuthenticationSchema,
-    HawkAuthenticationSchema,
-    OAuth1AuthenticationSchema,
-    DigestAuthenticationSchema,
-    NTLMAuthenticationSchema,
-    BearerAuthenticationSchema,
-    AWS_IAM_AuthenticationSchema,
-    NetrcAuthenticationSchema,
-    ASAPAuthenticationSchema,
-    NoneAuthenticationSchema,
-    SingleTokenAuthenticationSchema,
-  ]),
-  z.object({}),
-]);
-
-export const ScriptsSchema = z.object({
-  preRequest: z.string().optional(),
-  afterResponse: z.string().optional(),
-});
-
-export const RequestSettingsSchema = z.object({
-  renderRequestBody: z.boolean().default(true),
-  encodeUrl: z.boolean().default(true),
-  followRedirects: z.enum(['global', 'on', 'off']).default('global'),
-  cookies: z.object({
-    send: z.boolean().default(false),
-    store: z.boolean().default(false),
-  }),
-  rebuildPath: z.boolean().default(true),
-});
-
-export const WebSocketRequestSettingsSchema = z.object({
-  encodeUrl: z.boolean().optional().default(true),
-  cookies: z.object({
-    store: z.boolean().optional().default(true),
-    send: z.boolean().optional().default(true),
-  }),
-  followRedirects: z.enum(['global', 'on', 'off']).optional().default('global'),
-});
-
-export const SocketIORequestSettingsSchema = z.object({
-  encodeUrl: z.boolean().optional().default(true),
-  cookies: z.object({
-    store: z.boolean().optional().default(true),
-    send: z.boolean().optional().default(true),
-  }),
-  path: z.string().optional(),
-});
-
-export const RequestPathParametersSchema = z.array(
-  z.object({
-    name: z.string().optional().default(''),
-    value: z.string().optional().default(''),
-  }),
-);
-
-const RequestParametersSchema = z.array(
-  z.object({
-    name: z.string().optional().default(''),
-    value: z.string().optional().default(''),
-    description: z.string().optional(),
-    disabled: z.boolean().optional(),
-    type: z.string().optional(),
-    multiline: z.boolean().optional(),
-  }),
-);
-
-export const RequestGroupSchema = z.object({
-  name: z.string().optional().default(''),
-  meta: MetaGroupSchema.optional(),
-  children: z.array(z.any()).optional(),
-  scripts: ScriptsSchema.optional(),
-  authentication: AuthenticationSchema.optional().nullable(),
-  environment: JsonSchema.optional(),
-  environmentPropertyOrder: JsonSchema.optional(),
-  headers: HeadersSchema.optional(),
-});
-
-export const RequestSchema = z.object({
-  url: z.string().optional().default(''),
-  name: z.string().optional().default(''),
-  meta: MetaSchema.optional(),
-  method: z.string(),
-  body: z
-    .object({
-      mimeType: z.string().optional().nullable(),
-      text: z.string().optional(),
-      fileName: z.string().optional(),
-      params: z
-        .array(
-          z.object({
-            name: z.string().default(''),
-            value: z.string().optional(),
-            description: z.string().optional(),
-            disabled: z.boolean().optional(),
-            multiline: z.union([z.boolean(), z.string()]).optional(),
-            fileName: z.string().optional(),
-            type: z.string().optional(),
-          }),
-        )
-        .optional(),
-    })
-    .optional(),
-  parameters: RequestParametersSchema.optional(),
-  headers: HeadersSchema.optional(),
-  authentication: AuthenticationSchema.optional(),
-  scripts: ScriptsSchema.optional(),
-  settings: RequestSettingsSchema.optional().default({
-    renderRequestBody: true,
-    encodeUrl: true,
-    followRedirects: 'global',
-    rebuildPath: true,
-    cookies: {
-      send: true,
-      store: true,
-    },
-  }),
-  pathParameters: RequestPathParametersSchema.optional().nullable(),
-});
-
-export const WebsocketRequestSchema = z.object({
-  url: z.string().optional().default(''),
-  name: z.string().optional().default(''),
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('ws-req'),
-  }).optional(),
-  settings: WebSocketRequestSettingsSchema.optional().default({
-    encodeUrl: true,
-    followRedirects: 'global',
-    cookies: {
-      send: true,
-      store: true,
-    },
-  }),
-  authentication: AuthenticationSchema.optional(),
-  headers: HeadersSchema.optional(),
-  parameters: RequestParametersSchema.optional(),
-  pathParameters: RequestPathParametersSchema.optional().nullable(),
-});
-
-export const SocketIOEventListenerSchema = z.object({
-  id: z.string(),
-  eventName: z.string().optional().default(''),
-  desc: z.string().optional().default(''),
-  isOpen: z.boolean().optional().default(false),
-});
-
-export const SocketIORequestSchema = z.object({
-  url: z.string().optional().default(''),
-  name: z.string().optional().default(''),
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('socketio-req'),
-  }).optional(),
-  settings: SocketIORequestSettingsSchema.optional().default({
-    encodeUrl: true,
-    cookies: {
-      send: true,
-      store: true,
-    },
-  }),
-  authentication: AuthenticationSchema.optional(),
-  headers: HeadersSchema.optional(),
-  parameters: RequestParametersSchema.optional(),
-  pathParameters: RequestParametersSchema.optional(),
-  eventListeners: SocketIOEventListenerSchema.array().optional(),
-});
+export const SocketIORequestSchema = socketIORequest.baseSocketIORequestSchema
+  .omit({
+    description: true,
+    metaSortKey: true,
+  })
+  .extend({
+    meta: MetaSchema.extend({
+      id: z.string().startsWith('socketio-req'),
+    }).optional(),
+    settings: SocketIORequestSettingsSchema.optional().default({
+      encodeUrl: true,
+      cookies: {
+        send: true,
+        store: true,
+      },
+      path: undefined,
+    }),
+  });
 
 export const McpRequestSchema = mcpRequest.baseMcpRequestSchema.omit({ description: true }).extend({
   name: z.string().optional().default(''),
@@ -503,15 +255,11 @@ export const RequestCollectionSchema = z
   ])
   .array();
 
-const TestSchema = z.object({
-  name: z.string().optional().default(''),
+const TestSchema = unitTest.BaseUnitTestSchema.omit({ metaSortKey: true }).extend({
   meta: MetaSchema.optional(),
-  requestId: z.string().nullable().optional().default(null),
-  code: z.string().optional().default(''),
 });
 
-const TestSuiteSchema = z.object({
-  name: z.string().optional().default(''),
+const TestSuiteSchema = unitTestSuite.baseUnitTestSuiteSchema.omit({ metaSortKey: true }).extend({
   meta: MetaSchema.optional(),
   tests: z.array(TestSchema).optional(),
 });
