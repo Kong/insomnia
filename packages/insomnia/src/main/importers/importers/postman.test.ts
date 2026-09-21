@@ -565,4 +565,48 @@ describe('postman', () => {
       expect(baseEnvironment?.data).toEqual(variables);
     });
   });
+
+  describe('descriptions', () => {
+    it('unwraps the object form and keeps raw text as-is', () => {
+      const schema = postmanSchema();
+      schema.info.description = { content: 'Collection docs', type: 'text/markdown' };
+      const postman = new ImportPostman(schema);
+
+      const folder = { name: 'Users', description: { content: 'Folder docs', type: 'text/markdown' }, item: [] };
+
+      expect(postman.importCollection()[0].description).toBe('Collection docs');
+      expect(postman.importFolderItem(folder, 'n/a').description).toBe('Folder docs');
+      expect(postman.importRequestItem({ request: { description: folder.description } }, 'n/a').description).toBe(
+        'Folder docs',
+      );
+
+      expect(postman.importFolderItem({ ...folder, description: 'User folder' }, 'n/a').description).toBe(
+        'User folder',
+      );
+      expect(postman.importRequestItem({ request: { description: 'Lists users' } }, 'n/a').description).toBe(
+        'Lists users',
+      );
+    });
+
+    it('unwraps the object form for header descriptions', () => {
+      const postman = new ImportPostman(postmanSchema());
+      const header = {
+        key: 'Accept',
+        value: 'application/json',
+        description: { content: 'Accept docs', type: 'text/markdown' },
+      };
+
+      expect(postman.importRequestItem({ request: { header: [header] } }, 'n/a').headers).toEqual([
+        { name: 'Accept', value: 'application/json', description: 'Accept docs' },
+      ]);
+    });
+
+    it('falls back to empty text for a description without text', () => {
+      const postman = new ImportPostman(postmanSchema());
+      const folder = { name: 'Users', description: { type: 'text/markdown' }, item: [] };
+
+      expect(postman.importFolderItem(folder, 'n/a').description).toBe('');
+      expect(postman.importRequestItem({ request: { description: null } }, 'n/a').description).toBe('');
+    });
+  });
 });
