@@ -15,15 +15,16 @@ export class NavigationSidebar {
   }
 
   // ===========================================================================
-  // Tab controls
+  // Organization switching
   // ===========================================================================
 
-  async clickProjectsTab(): Promise<void> {
-    await this.root.getByTestId('sidebar-tab-projects').click();
+  async selectOrganization(name: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Organizations' }).click();
+    await this.page.getByRole('option', { name }).click();
   }
 
-  async clickKonnectTab(): Promise<void> {
-    await this.root.getByTestId('sidebar-tab-konnect').click();
+  async openControlPlanesOrganization(): Promise<void> {
+    await this.selectOrganization('Control Planes');
   }
 
   // ===========================================================================
@@ -94,10 +95,15 @@ export class NavigationSidebar {
     return this.navigationTree.getByRole('row', { name: workspaceName });
   }
 
-  // When collection focus mode narrows the sidebar to one collection, that collection's tree
-  // row is replaced by the back-arrow header (same `workspace-node-*` testid, no ARIA "row").
-  async isWorkspaceFocused(workspaceName: string): Promise<boolean> {
-    return (await this.workspaceRow(workspaceName).getByLabel('Back to all projects').count()) > 0;
+  // Focus mode swaps the collection's tree row for a header at the top of the sidebar carrying the
+  // back arrow and the collection's name — that header is the only title the sidebar shows for the
+  // active collection. Waiting for it also absorbs the window right after navigating in, where the
+  // tree is still rendered and the swap hasn't happened yet. Both assertions re-query on every
+  // retry, so the swap unmounting the tree row can't wedge them, as a single locator query would
+  // (it keeps waiting for its selector to match again, which never happens once focus mode is in).
+  async expectWorkspaceActive(workspaceName: string): Promise<void> {
+    await expect(this.root.getByLabel('Back to all projects')).toBeVisible();
+    await expect(this.root.getByTestId(`workspace-node-${workspaceName}`)).toContainText(workspaceName);
   }
 
   // Exits collection focus mode if currently focused; no-op otherwise. Needed before
@@ -107,54 +113,6 @@ export class NavigationSidebar {
     const backButton = this.root.getByLabel('Back to all projects');
     if (await backButton.isVisible().catch(() => false)) {
       await backButton.click();
-    }
-  }
-
-  async expectWorkspaceActive(
-    workspaceName: string,
-    { allowReloadFallback = false }: { allowReloadFallback?: boolean } = {},
-  ): Promise<void> {
-    await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
-    // In focus mode there's no grid row to check aria-selected on for this workspace — being
-    // shown as the focused header already proves it's the active one. Poll for either outcome
-    // rather than deciding up front: right after navigating in, there's a brief window where
-    // neither is true yet (focus mode hasn't finished swapping the row for the header), and a
-    // one-shot check can catch that transient state and commit to the wrong branch.
-    const isActive = async () => {
-      if (await this.isWorkspaceFocused(workspaceName)) {
-        return true;
-      }
-      const gridItem = this.workspaceGridListItem(workspaceName);
-      if ((await gridItem.count()) === 0) {
-        return false;
-      }
-      return (await gridItem.getAttribute('aria-selected')) === 'true';
-    };
-
-    if (!allowReloadFallback) {
-      await expect.poll(isActive, { timeout: 25_000 }).toBe(true);
-      return;
-    }
-
-    // Rare app-side race right after creating a workspace: the sidebar's cache-invalidation
-    // event for the new workspace can be dropped, leaving flatItems (and so both outcomes
-    // above) stuck stale indefinitely — a longer timeout wouldn't help since nothing ever
-    // arrives to unstick it. A reload rebuilds the sidebar cache from scratch instead of
-    // waiting on that possibly-dropped event. One reload isn't always enough — on a loaded CI
-    // runner the reload itself can eat most of the follow-up poll's budget just booting the
-    // app back up — so retry the reload once more before finally giving up.
-    const maxReloadAttempts = 2;
-    for (let attempt = 0; attempt <= maxReloadAttempts; attempt++) {
-      const isLastAttempt = attempt === maxReloadAttempts;
-      try {
-        await expect.poll(isActive, { timeout: isLastAttempt ? 15_000 : 10_000 }).toBe(true);
-        return;
-      } catch (error) {
-        if (isLastAttempt) {
-          throw error;
-        }
-        await this.page.reload({ waitUntil: 'networkidle' });
-      }
     }
   }
 

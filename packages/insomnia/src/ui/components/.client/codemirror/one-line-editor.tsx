@@ -204,14 +204,17 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       };
       codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
       codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
-        const isPaste = change.origin === 'paste' && change.update;
-        if (isPaste) {
+        const isMultiLineInsert = change.text && change.text.length > 1;
+        const isSingleLinePaste = change.origin === 'paste' && change.update && change.text.length === 1;
+        if (isMultiLineInsert || isSingleLinePaste) {
           const pastedText = change.text.join('\n');
           const hasContent = pastedText.trim();
+          // Cancel the change if it's a curl command or has no content
           if (isCurlCommand(pastedText) || !hasContent) {
             change.cancel();
             return;
           }
+          // Replace vault tags id if needed
           let editorPasteText = change.text.join('').replace(/\n/g, ' ');
           if (containsExternalVaultTag(editorPasteText)) {
             editorPasteText = replaceVaultTagIdIfNeeded(editorPasteText);
@@ -493,13 +496,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
-        if (onChange) {
+        if (onChange && !readOnly) {
           onChange(doc.getValue() || '');
         }
       };
       codeMirror.current?.on('blur', flushOnBlur);
       return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [editorVersion, onChange]);
+    }, [editorVersion, onChange, readOnly]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(

@@ -6,6 +6,7 @@ import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
 import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
+import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
 export const enum AsyncTask {
   MigrateProjects,
@@ -131,13 +132,28 @@ export const getInitialEntry = async () => {
       // Check if the user has a last visited organization
       try {
         const lastVisitedOrganizationId = localStorage.getItem('lastVisitedOrganizationId');
-        if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
+        // The Konnect organization is local-only, so it is never in the cached organization list.
+        const isKnownOrganization =
+          lastVisitedOrganizationId ===
+            (user.accountId && models.organization.getKonnectOrganizationId(user.accountId)) ||
+          organizations.some(o => o.id === lastVisitedOrganizationId);
+        if (lastVisitedOrganizationId && isKnownOrganization) {
           organizationId = lastVisitedOrganizationId;
         }
       } catch {}
 
+      // The Konnect organization may have gone invisible since the previous session (entitlement
+      // revoked server-side, or its last local project removed elsewhere) — `refreshKonnectAccess()`
+      // already re-resolved that immediately before this call, in `entry.client.tsx`. Re-check before
+      // restoring a route into it, otherwise the app lands on a URL for an organization that no
+      // longer appears in the dropdown (this path resolves straight to a leaf route such as
+      // `.../project`, which never runs the org-index loader's own escape-route check).
+      const escapeRoute = models.organization.isKonnectOrganizationId(organizationId)
+        ? await getKonnectOrganizationEscapeRoute(organizationId)
+        : null;
+
       return {
-        pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
+        pathname: escapeRoute ?? (await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true })),
         state: {
           // async task need to execute when first entry
           asyncTaskList: [AsyncTask.MigrateProjects, AsyncTask.SyncProjects],

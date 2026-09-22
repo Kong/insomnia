@@ -37,6 +37,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
     onDone: () => {},
     editorId: '',
   });
+  const [isRendering, setIsRendering] = useState(false);
 
   useImperativeHandle(
     ref,
@@ -75,6 +76,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       workspace={workspace}
       editorId={state.editorId}
       close={() => modalRef.current?.hide()}
+      onRenderingChange={isRendering => setIsRendering(isRendering)}
     />
   ) : (
     <VariableEditor onChange={handleTemplateChange} defaultValue={template} />
@@ -104,8 +106,9 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
         </form>
       </ModalBody>
       <ModalFooter>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
+        <button className="btn" disabled={isRendering} onClick={() => modalRef.current?.hide()}>
           Done
+          {isRendering && <i className="fa fa-spinner fa-spin ml-1.5" />}
         </button>
       </ModalFooter>
     </Modal>

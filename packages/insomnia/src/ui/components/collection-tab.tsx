@@ -10,6 +10,7 @@ interface Props {
   workspaceId: string;
   activeItemId: DocumentTabId;
   enableLegacyUnitTests: boolean;
+  hasLegacyUnitTests: boolean;
   className?: string;
 }
 
@@ -19,14 +20,18 @@ export const CollectionTab = ({
   workspaceId,
   activeItemId,
   enableLegacyUnitTests,
+  hasLegacyUnitTests,
   className,
 }: Props) => {
   const navigate = useNavigate();
   const base = `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}`;
 
+  // The setting forces the tab to show. Otherwise, only show it if the collection already has legacy tests.
+  const showTestsTab = enableLegacyUnitTests || hasLegacyUnitTests;
+
   const items: { id: DocumentTabId; name: string; to: string }[] = [
     { id: 'spec', name: 'Spec', to: `${base}/debug` },
-    ...(enableLegacyUnitTests ? [{ id: 'test' as const, name: 'Tests', to: `${base}/test` }] : []),
+    ...(showTestsTab ? [{ id: 'test' as const, name: 'Tests', to: `${base}/test` }] : []),
   ];
 
   return (
