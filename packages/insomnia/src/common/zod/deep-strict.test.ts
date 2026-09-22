@@ -1,3 +1,4 @@
+import type { faBedPulse } from '@fortawesome/free-solid-svg-icons';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod/v4';
 
@@ -78,6 +79,107 @@ describe('deepStrict', () => {
     const schema = deepStrict(z.array(z.object({ value: z.string() })).optional());
     expect(schema.safeParse([{ value: 'a' }]).success).toBe(true);
     expect(schema.safeParse([{ value: 'a', extra: 'x' }]).success).toBe(false);
+  });
+
+  it('recurses into the value schema of a record', () => {
+    const schema = deepStrict(z.record(z.string(), z.object({ value: z.string() })));
+    expect(schema.safeParse({ k: { value: 'a' } }).success).toBe(true);
+    expect(schema.safeParse({ k: { value: 'a', extra: 'x' } }).success).toBe(false);
+  });
+
+  it('recurses into tuple items and the rest element', () => {
+    const schema = deepStrict(z.tuple([z.object({ value: z.string() })], z.object({ tag: z.string() })));
+    expect(schema.safeParse([{ value: 'a' }, { tag: 'x' }]).success).toBe(true);
+    expect(schema.safeParse([{ value: 'a', extra: 'x' }]).success).toBe(false);
+    expect(schema.safeParse([{ value: 'a' }, { tag: 'x', extra: 'x' }]).success).toBe(false);
+  });
+
+  it('recurses into both sides of an intersection', () => {
+    // Note: zod's strict-object validation is applied independently to each side of an
+    // intersection, so intersecting two *disjoint-key* strict objects can never succeed
+    // (each side rejects the other side's keys as unrecognized) -- that's an inherent zod
+    // limitation, not something deepStrict introduces. Use matching shapes on both sides so
+    // the test isolates deepStrict's own recursion behavior instead of that limitation.
+    const schema = deepStrict(
+      z.intersection(
+        z.object({ value: z.object({ nested: z.string() }) }),
+        z.object({ value: z.object({ nested: z.string() }) }),
+      ),
+    );
+    expect(schema.safeParse({ value: { nested: 'x' } }).success).toBe(true);
+    expect(schema.safeParse({ value: { nested: 'x', extra: 'z' } }).success).toBe(false);
+  });
+
+  it('recurses into a lazy (self-referential) schema without infinite looping', () => {
+    interface Tree {
+      value: string;
+      children?: Tree[];
+    }
+    const TreeSchema: z.ZodType<Tree> = z.lazy(() =>
+      z.object({
+        value: z.string(),
+        children: z.array(TreeSchema).optional(),
+      }),
+    );
+    const schema = deepStrict(TreeSchema);
+    expect(schema.safeParse({ value: 'a', children: [{ value: 'b' }] }).success).toBe(true);
+    expect(TreeSchema.safeParse({ value: 'a', children: [{ value: 'b', extra: 'x' }] }).success).toBe(true);
+    expect(schema.safeParse({ value: 'a', children: [{ value: 'b', extra: 'x' }] }).success).toBe(false);
+    expect(schema.safeParse({ value: 'a', extra: 'x' }).success).toBe(false);
+  });
+
+  it('preserves a refinement attached to the original object schema', () => {
+    const schema = deepStrict(
+      z.object({ a: z.number(), b: z.number() }).refine(d => d.a < d.b, 'a must be less than b'),
+    );
+    expect(schema.safeParse({ a: 1, b: 2 }).success).toBe(true);
+    expect(schema.safeParse({ a: 5, b: 1 }).success).toBe(false);
+    // the refinement doesn't loosen strictness -- unknown keys are still rejected
+    expect(schema.safeParse({ a: 1, b: 2, extra: 'x' }).success).toBe(false);
+  });
+
+  it('preserves an explicit catchall schema instead of forcing every unknown key closed', () => {
+    const schema = deepStrict(z.object({ value: z.string() }).catchall(z.number()));
+    expect(schema.safeParse({ value: 'a', extra: 1 }).success).toBe(true);
+    expect(schema.safeParse({ value: 'a', extra: 'not-a-number' }).success).toBe(false);
+  });
+
+  it('recurses into a nested object inside a catchall schema', () => {
+    const schema = deepStrict(z.object({ value: z.string() }).catchall(z.object({ nested: z.string() })));
+    expect(schema.safeParse({ value: 'a', extra: { nested: 'x' } }).success).toBe(true);
+    expect(schema.safeParse({ value: 'a', extra: { nested: 'x', bad: 'y' } }).success).toBe(false);
+  });
+
+  it('leaves omit() alone since it already compiles down to a plain strict-able object', () => {
+    const schema = deepStrict(z.object({ a: z.string(), b: z.object({ nested: z.string() }) }).omit({ a: true }));
+    expect(schema.safeParse({ b: { nested: 'x' } }).success).toBe(true);
+    expect(schema.safeParse({ b: { nested: 'x' }, a: 'y' } as any).success).toBe(false);
+    expect(schema.safeParse({ b: { nested: 'x', extra: 'y' } }).success).toBe(false);
+  });
+
+  it('recurses into the input side of a transform pipe (rejects unknown keys before the transform runs)', () => {
+    const schema = deepStrict(
+      z
+        .object({ a: z.string(), nested: z.object({ value: z.string() }) })
+        .transform(d => ({ ...d, computed: d.a.length })),
+    );
+    expect(schema.safeParse({ a: 'x', nested: { value: 'y', extra: 'z' } }).success).toBe(false);
+    expect(schema.safeParse({ a: 'x', nested: { value: 'y' }, extraTop: 'z' } as any).success).toBe(false);
+    const result = schema.safeParse({ a: 'x', nested: { value: 'y' } });
+    expect(result.success).toBe(true);
+    // the transform itself still runs on the strictified input
+    expect(result.success && result.data.computed).toBe(1);
+  });
+
+  it('recurses into both sides of a raw z.pipe()', () => {
+    const schema = deepStrict(
+      z.pipe(
+        z.object({ nested: z.object({ value: z.string() }) }),
+        z.object({ nested: z.object({ value: z.string() }) }),
+      ),
+    );
+    expect(schema.safeParse({ nested: { value: 'x' } }).success).toBe(true);
+    expect(schema.safeParse({ nested: { value: 'x', extra: 'y' } }).success).toBe(false);
   });
 });
 
@@ -171,5 +273,27 @@ describe('deepStrict on a request-like composite schema', () => {
     // silently stripping them -- both branches fail, surfacing as one `invalid_union` issue.
     const authIssue = result.error.issues.find(issue => issue.path[0] === 'authentication');
     expect(authIssue?.code).toBe('invalid_union');
+  });
+
+  it('omit and extend should preserve strictness', () => {
+    const newSchema = RequestLikeSchema.omit({
+      metaSortKey: true,
+    }).extend({
+      newField: z
+        .object({
+          foo: z.string(),
+          bar: z.string(),
+        })
+        .optional(),
+    });
+    const doc = baseDoc({
+      newField: { foo: 'x', bar: 'y', extra: 'extra' },
+    });
+    expect(newSchema.safeParse(doc).success).toBe(true);
+    const strictSchema = deepStrict(newSchema);
+    const strictResult = strictSchema.safeParse(doc);
+    expect(strictResult.success).toBe(false);
+    expect(strictResult.error?.issues.find(issue => issue.path[0] === 'newField')?.code).toBe('unrecognized_keys');
+    expect(strictResult.error?.issues.length).toBe(2);
   });
 });
