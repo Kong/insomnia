@@ -3,6 +3,7 @@ import { parse, stringify } from 'yaml';
 import type { InsomniaFile } from '~/common/import-v5-parser';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import { cleanHeadersAndParameters } from '~/common/insomnia-schema-migrations/v5.1';
+import { addCollectionItemTypeFields } from '~/common/insomnia-schema-migrations/v5.2';
 
 interface Migration<T> {
   version: string;
@@ -44,6 +45,10 @@ const migrations: Migration<any>[] = [
   {
     version: '5.1',
     up: cleanHeadersAndParameters,
+  },
+  {
+    version: '5.2',
+    up: addCollectionItemTypeFields,
   },
   // ...add more migrations as needed
 ];
