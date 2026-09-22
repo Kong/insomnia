@@ -1,3 +1,4 @@
+import { models } from 'insomnia-data';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { z } from 'zod/v4';
 
@@ -72,6 +73,7 @@ const makeHttpRequest = (overrides: Record<string, unknown> = {}) => ({
   url: 'https://example.com',
   name: 'Get Users',
   method: 'GET',
+  type: models.request.type,
   headers: [makeHeader()],
   parameters: [{ name: 'q', value: 'john' }],
   pathParameters: [{ name: 'userId', value: '123' }],
@@ -84,6 +86,7 @@ const makeHttpRequest = (overrides: Record<string, unknown> = {}) => ({
 const makeGrpcRequest = (overrides: Record<string, unknown> = {}) => ({
   url: 'grpc://service.example',
   name: 'UserService.List',
+  type: models.grpcRequest.type,
   body: { text: '{"page":1}' },
   metadata: [{ name: 'authorization', value: 'Bearer token' }],
   protoFileId: 'proto-1',
@@ -95,6 +98,7 @@ const makeGrpcRequest = (overrides: Record<string, unknown> = {}) => ({
 const makeWsRequest = (overrides: Record<string, unknown> = {}) => ({
   url: 'wss://ws.example',
   name: 'LiveFeed',
+  type: models.webSocketRequest.type,
   meta: { id: 'ws-req-abc' },
   headers: [makeHeader()],
   parameters: [{ name: 'token', value: 'x' }],
@@ -105,6 +109,7 @@ const makeWsRequest = (overrides: Record<string, unknown> = {}) => ({
 const makeSocketIORequest = (overrides: Record<string, unknown> = {}) => ({
   url: 'https://socket.example',
   name: 'Rooms',
+  type: models.socketIORequest.type,
   meta: { id: 'socketio-req-abc' },
   headers: [makeHeader()],
   parameters: [{ name: 'ns', value: '/rooms' }],
@@ -115,8 +120,9 @@ const makeSocketIORequest = (overrides: Record<string, unknown> = {}) => ({
 
 const makeGroup = (overrides: Record<string, unknown> = {}) => ({
   name: 'Root Group',
+  type: models.requestGroup.type,
   meta: {
-    id: 'group-1',
+    id: 'fld-group-1',
   },
   headers: [makeHeader()],
   ...overrides,
