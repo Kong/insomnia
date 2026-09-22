@@ -70,6 +70,7 @@ import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
+import { writeFileWithinDir } from './safe-fs-write';
 
 // Initialize Git Remote Providers on module load
 initializeGitRemoteProviders();
@@ -1569,7 +1570,7 @@ export const cloneGitRepoAction = async ({
       const existingRuleset = await services.projectLintRuleset.getByParentId(project._id);
       if (existingRuleset) {
         const rulesetPath = path.join(cloneBaseDir, '.spectral.yaml');
-        await fs.promises.writeFile(rulesetPath, existingRuleset.rulesetContent, 'utf8');
+        await writeFileWithinDir(cloneBaseDir, rulesetPath, existingRuleset.rulesetContent);
       }
 
       await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);

@@ -50,6 +50,7 @@ import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
+import { writeFileWithinDir } from '../../main/safe-fs-write';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -309,7 +310,7 @@ class RepoFileWatcher {
           if (!yamlContent?.trim()) return;
 
           await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-          await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+          await writeFileWithinDir(this.repoDir, absPath, yamlContent);
 
           const hash = contentHash(yamlContent);
           const normalised = path.normalize(absPath);
@@ -550,7 +551,7 @@ class RepoFileWatcher {
         }
 
         await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-        await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+        await writeFileWithinDir(this.repoDir, absPath, yamlContent);
 
         if (isRename) {
           await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
@@ -604,7 +605,7 @@ class RepoFileWatcher {
         return;
       }
 
-      await fs.promises.writeFile(absPath, ruleset.rulesetContent, 'utf8');
+      await writeFileWithinDir(this.repoDir, absPath, ruleset.rulesetContent);
       this.lastWrittenHash.set(absPath, hash);
       const stat = await fs.promises.stat(absPath);
       this.lastSyncMtime.set(absPath, stat.mtimeMs);
@@ -1142,7 +1143,7 @@ class RepoFileWatcher {
       }
 
       await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-      await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+      await writeFileWithinDir(this.repoDir, absPath, yamlContent);
 
       const normalised = path.normalize(absPath);
       this.lastWrittenHash.set(normalised, contentHash(yamlContent));
