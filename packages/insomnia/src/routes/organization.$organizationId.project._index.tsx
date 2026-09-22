@@ -1,4 +1,3 @@
-import type { GitRepository, Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useParams } from 'react-router';
@@ -9,11 +8,6 @@ import { logout } from '~/ui/account/session';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
-
-export interface ProjectIndexLoaderData {
-  projectsCount: number;
-  projects: (Project & { gitRepository?: GitRepository })[];
-}
 
 const shouldAutoCreateInitialProject = async ({ accountId }: { accountId: string | null | undefined }) => {
   if (!accountId) {
@@ -74,10 +68,9 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     }
   }
 
-  return {
-    projects,
-    projectsCount: organizationProjects.length,
-  };
+  // Reaching here means the organization has no projects and none was auto-created, so there is
+  // nothing to hand the component — it renders the same empty view either way.
+  return null;
 }
 
 /**
