@@ -28,32 +28,37 @@ function inferCollectionItemType(item: RequestCollectionChild): RequestTypes {
   if (item) {
     const itemMeta = 'meta' in item ? item.meta : null;
     const itemId = itemMeta?.id || '';
-    // Detect groups: items that are NOT requests, gRPC, or WebSocket
-    const isGroup = !('method' in item) && !('reflectionApi' in item) && !('url' in item);
 
-    if (
-      'protoFileId' in item ||
-      'metadata' in item ||
-      'reflectionApi' in item ||
-      itemId.startsWith(models.grpcRequest.prefix)
-    ) {
+    // check itemId first
+    if (itemId.startsWith(models.grpcRequest.prefix)) {
       return 'GrpcRequest';
     }
-
-    if (isGroup || 'children' in item || itemId.startsWith(models.requestGroup.prefix)) {
+    if (itemId.startsWith(models.requestGroup.prefix)) {
       return 'RequestGroup';
     }
-
-    if (('method' in item && item.method) || itemId.startsWith(models.request.prefix)) {
+    if (itemId.startsWith(models.socketIORequest.prefix)) {
+      return 'SocketIORequest';
+    }
+    if (itemId.startsWith(models.webSocketRequest.prefix)) {
+      return 'WebSocketRequest';
+    }
+    if (itemId.startsWith(models.request.prefix)) {
       return 'Request';
     }
 
-    if ('eventListeners' in item || itemId.startsWith(models.socketIORequest.prefix)) {
+    // no item id, check other distinguishing fields
+    if ('protoFileId' in item || 'metadata' in item || 'reflectionApi' in item) {
+      return 'GrpcRequest';
+    } else if ('method' in item && item.method) {
+      return 'Request';
+    } else if ('eventListeners' in item) {
       return 'SocketIORequest';
+    } else if ('children' in item) {
+      return 'RequestGroup';
     }
-
-    if (itemId.startsWith(models.webSocketRequest.prefix)) {
-      return 'WebSocketRequest';
+    if ('settings' in item && item.settings) {
+      // Use settings to distinguish between WebSocketRequest and SocketIORequest based on the presence of 'followRedirects'
+      return 'followRedirects' in item.settings ? 'WebSocketRequest' : 'SocketIORequest';
     }
   }
   return 'Request';

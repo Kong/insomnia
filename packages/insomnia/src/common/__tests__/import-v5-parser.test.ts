@@ -422,10 +422,9 @@ describe('RequestCollectionSchema (recursive union)', () => {
     expect(parsed).toHaveLength(5);
   });
 
-  it('rejects leaf nodes with forbidden props (e.g., children on Request)', () => {
+  it('rejects when invalid type exists', () => {
     const bad = structuredClone(makeHttpRequest());
-    // @ts-expect-error - children is not allowed on Request
-    bad.children = [];
+    bad.type = 'InvalidType';
     expect(() => RequestCollectionSchema.parse([bad])).toThrow();
   });
 });
