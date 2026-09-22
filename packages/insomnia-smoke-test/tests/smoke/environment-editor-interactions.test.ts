@@ -16,16 +16,15 @@ test.describe('Environment Editor', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // create a new shared environment (becomes active on creation)
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
-    await page.getByTestId('CreateEnvironmentDropdown').click();
-    await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+    await page.getByTestId('AddSubEnvironment').click();
 
     // wait for the new row to appear before clicking it
     await page.getByRole('row', { name: 'New Environment' }).waitFor({ state: 'visible' });
     await page.getByRole('row', { name: 'New Environment' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
-    
+
     // wait for the Manage Environments dialog to close before interacting with the picker
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
@@ -36,7 +35,7 @@ test.describe('Environment Editor', () => {
     // send request: verify variables fall back to base env (new env is empty)
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
-    
+
     // wait for a response before switching to console
     await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
@@ -44,8 +43,8 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('baseenv1')).toBeVisible();
 
     // duplicate ExampleA and rename the copy to Gandalf
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByRole('row', { name: 'ExampleA' }).getByLabel('Environment Actions').click();
     await page.getByText('Duplicate').click();
 
@@ -81,8 +80,8 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('subenvB1')).toBeVisible();
 
     // add new variables to Gandalf via JSON editor
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.locator('pre').filter({ hasText: '"exampleNumber": 2222,' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
@@ -92,16 +91,16 @@ test.describe('Environment Editor', () => {
 
     // blur the editor before closing so the debounce flush is triggered by the button's mousedown
     await dialog.getByRole('button', { name: 'Close' }).click();
-    
+
     // wait for the Manage Environments dialog to fully close before navigating
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
-    await page.getByLabel('Manage collection environments').press('Escape');
+    await page.getByLabel('Manage API collection environments').press('Escape');
 
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
 
     // switch to table view and edit Gandalf environment
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
 
     // explicitly select Gandalf so table edits target the correct sub-environment
     await page.getByLabel('Environments', { exact: true }).getByText('Gandalf').click();
@@ -167,14 +166,14 @@ test.describe('Environment Editor', () => {
     await page.getByRole('menuitemradio', { name: 'JSON' }).click();
     await waitForSync();
     await secondRow.getByRole('button', { name: 'Edit JSON' }).click();
-    
+
     // wait for the JSON modal before typing
     await page.getByRole('dialog').getByTestId('CodeEditor').waitFor({ state: 'visible' });
     const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
     await bodyEditor.focus();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
-    
+
     // submit and wait for the JSON modal to fully close before proceeding
     await page.getByRole('button', { name: 'Modal Submit' }).click();
     await page.getByRole('dialog', { name: 'Modal' }).waitFor({ state: 'hidden' });
@@ -187,7 +186,9 @@ test.describe('Environment Editor', () => {
     // dismiss the environment picker dropdown if it appeared
     await page.locator('body').click();
     try {
-      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+      await page
+        .getByRole('listbox', { name: 'Select an API Collection Environment' })
+        .waitFor({ state: 'hidden', timeout: 3000 });
     } catch {
       await page.keyboard.press('Escape');
     }
@@ -217,7 +218,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // activate ExampleA environment
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByRole('option', { name: 'ExampleA' }).press('Enter');
     await page.getByRole('option', { name: 'ExampleA' }).press('Escape');
 
@@ -230,8 +231,8 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByText('subenvA0')).toBeVisible();
 
     // open env editor, select ExampleA, switch to table view, disable exampleString
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
@@ -246,7 +247,9 @@ test.describe('Environment Editor', () => {
     // dismiss the environment picker dropdown if it appeared
     await page.locator('body').click();
     try {
-      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+      await page
+        .getByRole('listbox', { name: 'Select an API Collection Environment' })
+        .waitFor({ state: 'hidden', timeout: 3000 });
     } catch {
       await page.keyboard.press('Escape');
     }
@@ -260,5 +263,125 @@ test.describe('Environment Editor', () => {
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('baseenv0')).toBeVisible();
     await expect.soft(page.getByText('subenvA0')).toBeHidden();
+  });
+
+  test('project and collection environment dropdowns open and close independently', async ({ page }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    const projectListbox = page.getByRole('listbox', { name: 'Select a Project Environment' });
+    const collectionListbox = page.getByRole('listbox', { name: 'Select an API Collection Environment' });
+
+    // opening the collection dropdown does not open the project dropdown
+    await page.getByLabel('Select an API Collection Environment').click();
+    await expect.soft(collectionListbox).toBeVisible();
+    await expect.soft(projectListbox).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect.soft(collectionListbox).toBeHidden();
+
+    // opening the project dropdown does not open the collection dropdown
+    await page.getByLabel('Select a Project Environment').click();
+    await expect.soft(projectListbox).toBeVisible();
+    await expect.soft(collectionListbox).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect.soft(projectListbox).toBeHidden();
+  });
+
+  test('Add Project Environment creates a project environment without activating it', async ({ page, insomnia }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    // the "+" button in the project dropdown header opens the create-workspace modal
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByLabel('Add Project Environment').click();
+    await page.getByPlaceholder('Enter a name for your Environment').fill('My New Project Env');
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
+    await insomnia.pressEscape();
+
+    // creating navigates into the new environment's own page; go back to the collection
+    await insomnia.navigationSidebar.selectWorkspace('My first collection');
+
+    // the new environment shows up in the project dropdown's list, but is not auto-selected
+    await expect.soft(page.getByLabel('Select a Project Environment')).toContainText('No Project Environment');
+    await page.getByLabel('Select a Project Environment').click();
+    await expect.soft(page.getByRole('option', { name: 'My New Project Env' })).toBeVisible();
+  });
+
+  test('Add Sub Environment and Add Private Sub Environment create environments with the correct privacy', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+
+    // create the shared sub-environment and rename it so it can be told apart from the private one
+    await page.getByTestId('AddSubEnvironment').click();
+    const sharedRow = page.getByRole('row', { name: 'New Environment' });
+    await sharedRow.waitFor({ state: 'visible' });
+    await sharedRow.locator('[data-editable=true]').dblclick();
+    await sharedRow.locator('input').fill('Shared Sub Env');
+    await sharedRow.locator('input').press('Enter');
+    await page.getByRole('row', { name: 'Shared Sub Env' }).waitFor({ state: 'visible' });
+    await expect.soft(page.getByRole('row', { name: 'Shared Sub Env' }).locator('.fa-lock')).toHaveCount(0);
+
+    // create the private sub-environment
+    await page.getByTestId('AddPrivateSubEnvironment').click();
+    const privateRow = page.getByRole('row', { name: 'New Environment' });
+    await privateRow.waitFor({ state: 'visible' });
+    await expect.soft(privateRow.locator('.fa-lock')).toBeVisible();
+  });
+
+  test('clearing the JSON editor reports a JSON error instead of keeping stale table values', async ({ page, app }) => {
+    const text = await loadFixture('environments.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+    // wait for import dialog to close before proceeding
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+
+    // open the JSON environment in the environment editor
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+    const environmentDialog = page.getByRole('dialog', { name: 'Manage Environments' });
+    await environmentDialog.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
+
+    // delete all JSON content
+    const jsonEditor = environmentDialog.getByTestId('CodeEditor').getByRole('textbox');
+    await jsonEditor.focus();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.press('Delete');
+
+    /* Empty content must be reported like any other parse error, not silently dropped. */
+    await expect.soft(environmentDialog.getByText('Unexpected end of JSON input')).toBeVisible();
+
+    /* The existing JSON error dialog blocks the switch, so the table can never show values that no
+    longer match the editor content. */
+    await page.getByRole('button', { name: 'Table Edit' }).click();
+    await expect
+      .soft(page.getByText('Please modify and fix the JSON string error before switch to Table view'))
+      .toBeVisible();
+    await expect.soft(page.getByRole('listbox', { name: 'Environment Key Value Pair' })).toBeHidden();
+    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+
+    /* Reopening remounts the editor and restores the unsaved empty content from its cache: the error
+    must survive, otherwise the document is empty but still switchable. */
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
+    // the picker popover can still be open; this click dismisses it, then reopen the editor
+    await page.locator('body').click();
+    await page.getByRole('button', { name: 'Select an API Collection Environment' }).click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+    await page.getByRole('dialog', { name: 'Manage Environments' }).waitFor({ state: 'visible' });
+    await environmentDialog.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
+
+    await expect.soft(environmentDialog.getByText('Unexpected end of JSON input')).toBeVisible();
+    await page.getByRole('button', { name: 'Table Edit' }).click();
+    await expect
+      .soft(page.getByText('Please modify and fix the JSON string error before switch to Table view'))
+      .toBeVisible();
+    await expect.soft(page.getByRole('listbox', { name: 'Environment Key Value Pair' })).toBeHidden();
   });
 });

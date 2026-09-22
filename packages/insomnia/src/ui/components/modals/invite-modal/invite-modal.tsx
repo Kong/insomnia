@@ -30,7 +30,6 @@ import { useParams, useSearchParams } from 'react-router';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import { invariant } from '~/common/utils/invariant';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
 import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
 import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
@@ -42,6 +41,7 @@ import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { showModal } from '~/ui/components/modals/index';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 import { InviteForm } from './invite-form';
 import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
@@ -597,8 +597,8 @@ export const InviteModalContainer: FC<{
 }> = ({ isOpen, setIsOpen }) => {
   const [loadingOrgInfo, setLoadingOrgInfo] = useState(true);
   const { organizationId } = useParams();
-  const organizationData = useOrganizationLoaderData();
-  const currentOrg = organizationData?.organizations.find(o => o.id === organizationId);
+  const organizations = useOrganizations();
+  const currentOrg = organizations.find(o => o.id === organizationId);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
   const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);

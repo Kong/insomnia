@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import {
   isInMockContentTypeList,
   useMockRoutePatcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -23,8 +23,8 @@ export const MockResponseExtractor = () => {
 
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const isLocalProject = !activeProject?.remoteId;
-  const { currentPlan } = useOrganizationLoaderData()!;
-  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const currentPlan = useCurrentPlan();
+  const isEnterprise = currentPlan?.type?.includes('enterprise');
 
   // In a local project, users are not allowed to create a cloud mock server, only enterprise users can create a self-hosted mock server.
   // In a local project, users without enterprise plan can't create cloud mock server route from a request response

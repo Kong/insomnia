@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { UnitTestSuite } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { Suspense, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -26,7 +26,7 @@ import { useRunAllTestsActionFetcher } from '~/routes/organization.$organization
 import { TestRunStatus } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test-result.$testResultId';
 import { useTestSuiteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.update';
 import { useTestSuiteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
-import { DocumentTab } from '~/ui/components/document-tab';
+import { CollectionTab } from '~/ui/components/collection-tab';
 import { EditableInput } from '~/ui/components/editable-input';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
@@ -256,10 +256,35 @@ const Component = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  const hasLegacyUnitTests = unitTestSuites.length > 0;
+
+  useEffect(() => {
+    if (!settings.enableLegacyUnitTests && !hasLegacyUnitTests) {
+      // If legacy unit tests are disabled and the collection has none, redirect to the spec route for the workspace
+      tabNavigate(
+        {
+          organization: organizationId,
+          project: activeProject,
+          workspace: activeWorkspace,
+          item: activeWorkspace,
+        },
+        { shouldNavigate: true },
+      );
+    }
+  }, [activeProject, activeWorkspace, hasLegacyUnitTests, organizationId, settings.enableLegacyUnitTests, tabNavigate]);
+
   return (
     <div className="flex h-full flex-col">
       <OrganizationTabList />
       <WorkspacePaneHeader hasSettings />
+      <CollectionTab
+        organizationId={organizationId}
+        projectId={projectId}
+        workspaceId={workspaceId}
+        activeItemId="test"
+        enableLegacyUnitTests={settings.enableLegacyUnitTests}
+        hasLegacyUnitTests={hasLegacyUnitTests}
+      />
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
@@ -277,9 +302,6 @@ const Component = () => {
         >
           <ErrorBoundary showAlert>
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
-                <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
-              </div>
               <div className="p-(--padding-sm)">
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"

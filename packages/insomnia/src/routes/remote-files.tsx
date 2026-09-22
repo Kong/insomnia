@@ -49,7 +49,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     const files = remoteFiles.map(file => {
       const parentProject = projects.find(project => project.remoteId === file.teamProjectId);
       return {
-        id: file.id,
+        // Use a composite ID to ensure uniqueness. Otherwise, some dirty remote files might collide with each other or with local db.
+        id: `${file.teamProjectId}:${file.id}`,
+        workspaceId: file.id,
         url: href('/organization/:organizationId', {
           organizationId: file.organizationId,
         }),

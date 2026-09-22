@@ -18,11 +18,11 @@ import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { debounce } from '~/common/misc';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
@@ -122,8 +122,8 @@ export const InviteForm = ({
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { userSession } = useRootLoaderData()!;
-  const organizationData = useOrganizationLoaderData();
-  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  const organizations = useOrganizations();
+  const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = Boolean(organization?.is_owner);
   const sessionId = userSession.id;
 

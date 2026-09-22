@@ -7,9 +7,9 @@ import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import type { ProjectType } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 interface Props {
   isGitSyncEnabled: boolean;
@@ -20,9 +20,9 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
   const isLightTheme = useIsLightTheme();
   const showStorageRestrictionMessage =
     !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
-  const organizationData = useOrganizationLoaderData();
+  const organizations = useOrganizations();
   const { organizationId } = useParams() as { organizationId: string };
-  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  const organization = organizations.find(o => o.id === organizationId);
   // TODO: extract to a hook later
   const isUserOwner = Boolean(organization?.is_owner);
   return (

@@ -29,7 +29,7 @@ export const WorkspaceNode = ({
   const { doc, collapsed, project, organizationId, hasUncommittedChanges, hasUnpushedChanges } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-  const isCollection = workspaceScope === 'collection';
+  const isCollection = workspaceScope === 'collection' || workspaceScope === 'design';
 
   return (
     <div

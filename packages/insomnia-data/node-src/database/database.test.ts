@@ -441,11 +441,13 @@ describe('_repairDatabase()', async () => {
             id: '1',
             key: 'foo',
             value: '1',
+            source: 'manual',
           },
           {
             id: 'j1_1',
             key: 'j1',
             value: '1',
+            source: 'manual',
           },
         ],
       },
@@ -457,11 +459,13 @@ describe('_repairDatabase()', async () => {
             id: '1',
             key: 'foo',
             value: '2',
+            source: 'manual',
           },
           {
             id: 'j2_1',
             key: 'j2',
             value: '2',
+            source: 'manual',
           },
         ],
       },
@@ -488,16 +492,19 @@ describe('_repairDatabase()', async () => {
             id: '1',
             key: 'foo',
             value: '1',
+            source: 'manual',
           },
           {
             id: 'j1_1',
             key: 'j1',
             value: '1',
+            source: 'manual',
           },
           {
             id: 'j2_1',
             key: 'j2',
             value: '2',
+            source: 'manual',
           },
         ],
       },
@@ -529,7 +536,7 @@ describe('_repairDatabase()', async () => {
     });
     // Make sure we have everything
     expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
-    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
+    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('New API Collection');
     expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
     await repairDatabase();

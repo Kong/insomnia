@@ -1,10 +1,10 @@
 // Simplified and extracted from insomnia/src/models/*
-import type { Database } from '../types';
+import type { AllTypes } from 'insomnia-data';
 
 export interface BaseModel {
   _id: string;
   name: string;
-  type: keyof Database;
+  type: AllTypes;
   parentId: string;
 }
 

@@ -29,8 +29,7 @@ test.describe('Global Environments', () => {
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('heading', { name: '2 environment variables are' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a project environment').click();
+    await page.getByLabel('Select a Project Environment').click();
     await page.getByRole('option', { name: 'global-environment' }).click();
     await page.getByText('New Environment').click();
     await page.locator('body').click();
@@ -49,8 +48,7 @@ test.describe('Global Environments', () => {
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByTestId('CreateEnvironmentDropdown').click();
-    await page.getByText('Private environment').click();
+    await page.getByTestId('AddPrivateSubEnvironment').click();
     await page.getByLabel('New Environment').click();
     await page.getByLabel('New Environment').getByLabel('Project Actions').click();
     await page.getByText('Duplicate').click();

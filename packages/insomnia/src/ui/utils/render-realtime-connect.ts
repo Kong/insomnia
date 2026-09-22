@@ -37,6 +37,12 @@ export async function renderRealtimeConnectPayload({
   const authentication = getOrInheritAuthentication({ request, requestGroups });
   const body = 'body' in request ? request.body : undefined;
 
+  // Only manually-authored cookies may contain live template syntax. Server-set cookie values
+  // are excluded from rendering here too, mirroring getRenderedRequestAndContext in render.ts,
+  // so that a template placed in a cookie by a response is never re-evaluated when connecting.
+  const manualCookies = workspaceCookieJar.cookies.filter(cookie => cookie.source === 'manual');
+  const nonManualCookies = workspaceCookieJar.cookies.filter(cookie => cookie.source !== 'manual');
+
   const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
     request,
     environmentId,
@@ -47,7 +53,7 @@ export async function renderRealtimeConnectPayload({
       body,
       parameters: request.parameters.filter(p => !p.disabled),
       pathParameters: request.pathParameters,
-      workspaceCookieJar,
+      workspaceCookieJar: { ...workspaceCookieJar, cookies: manualCookies },
     },
   });
 
@@ -65,7 +71,10 @@ export async function renderRealtimeConnectPayload({
     authentication: rendered.authentication,
     body: rendered.body,
     parameters: rendered.parameters,
-    workspaceCookieJar: rendered.workspaceCookieJar,
+    workspaceCookieJar: {
+      ...rendered.workspaceCookieJar,
+      cookies: [...rendered.workspaceCookieJar.cookies, ...nonManualCookies],
+    },
     suppressUserAgent,
   };
 }

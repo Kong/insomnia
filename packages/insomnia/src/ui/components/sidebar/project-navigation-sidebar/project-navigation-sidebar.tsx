@@ -4,10 +4,8 @@ import type { CollectionWorkspaceChildren, RequestGroup, Workspace } from 'insom
 import { models, services } from 'insomnia-data';
 import { fuzzyMatchAll } from 'insomnia-data/common';
 import {
-  type Dispatch,
   type ForwardedRef,
   forwardRef,
-  type SetStateAction,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -15,7 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Button, GridList, GridListItem, type Selection, Tabs, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { GridList, GridListItem, type Selection, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { href, useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -26,25 +24,16 @@ import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { getUnsyncedRemoteWorkspaces } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
-import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
-import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { SidebarShortcutActionsDropdown } from '~/ui/components/dropdowns/sidebar-shortcut-actions-dropdown';
 import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-workspace-dropdown';
 import { useKeyboardShortcuts } from '~/ui/components/keydown-binder';
-import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
-import { AskModal } from '~/ui/components/modals/ask-modal';
-import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
-import {
-  NewProjectButton,
-  SidebarSearchField,
-  SideBarTabList,
-} from '~/ui/components/sidebar/project-navigation-sidebar/components';
+import { NewProjectButton, SidebarSearchField } from '~/ui/components/sidebar/project-navigation-sidebar/components';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
@@ -53,14 +42,17 @@ import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigatio
 import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
 import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
-import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
+import {
+  KonnectSyncActionsRow,
+  KonnectSyncProgressLine,
+  KonnectSyncResultPanel,
+  useKonnectSyncBar,
+} from './konnect-sync-bar';
 import { getSidebarGridListItemId } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
@@ -72,37 +64,11 @@ import { WorkspaceNode } from './workspace-node';
 interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
   activeNodeId?: string;
-  activeTab: ProjectNavigationSidebarTabId;
-  konnectSyncEnabled: boolean;
   onCreateProject: () => void;
-  setActiveTab: Dispatch<SetStateAction<ProjectNavigationSidebarTabId | undefined>>;
 }
 
 export interface ProjectNavigationSidebarHandle {
   expandProject: (projectId: string) => void;
-}
-
-export type ProjectNavigationSidebarTabId = 'projects' | 'konnect';
-
-function LastSyncedLabel({ lastSyncedAt }: { lastSyncedAt: number | null }) {
-  return lastSyncedAt ? `Last synced: ${getRelativeTimeString(lastSyncedAt, Date.now())}` : 'Not yet synced';
-}
-
-function getRelativeTimeString(timestamp: number, now: number = Date.now()): string {
-  const seconds = Math.floor((now - timestamp) / 1000);
-  if (seconds < 60) {
-    return `${seconds}s ago`;
-  }
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) {
-    return `${minutes}m ${seconds % 60}s ago`;
-  }
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours}h ${minutes % 60}m ago`;
-  }
-  const days = Math.floor(hours / 24);
-  return `${days}d ${hours % 24}h ago`;
 }
 
 const workspaceManualSortMethod = (a: Workspace, b: Workspace, localOrder: string[]) => {
@@ -112,7 +78,7 @@ const workspaceManualSortMethod = (a: Workspace, b: Workspace, localOrder: strin
 };
 
 const ProjectNavigationSidebarInner = (
-  { storageRules, konnectSyncEnabled, onCreateProject, activeTab, setActiveTab }: ProjectNavigationSidebarProps,
+  { storageRules, onCreateProject }: ProjectNavigationSidebarProps,
   ref: ForwardedRef<ProjectNavigationSidebarHandle>,
 ) => {
   const navigate = useNavigate();
@@ -139,9 +105,6 @@ const ProjectNavigationSidebarInner = (
   const [focusedWorkspaceId, setFocusedWorkspaceId] = useState<string | null>(null);
   const [focusTransition, setFocusTransition] = useState<'none' | 'in' | 'out'>('none');
   const [isFocusedWorkspaceMenuOpen, setIsFocusedWorkspaceMenuOpen] = useState(false);
-  const [isRenamingFocusedWorkspace, setIsRenamingFocusedWorkspace] = useState(false);
-  const [renamingWorkspaceValue, setRenamingWorkspaceValue] = useState('');
-  const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
   // Customized workspace sort orders by projectId
   const [localWorkspaceOrders, setLocalWorkspaceOrders] = reactUse.useLocalStorage<Record<string, string[]>>(
@@ -152,39 +115,25 @@ const ProjectNavigationSidebarInner = (
     `${organizationId}:project-navigation-sidebar-filter`,
     '',
   );
-  const [konnectFilter, setKonnectFilter] = reactUse.useLocalStorage(
-    `${organizationId}:project-navigation-konnect-filter`,
-    '',
-  );
   const [expandedProjectAndWorkspaceIds, setExpandedProjectAndWorkspaceIds] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:nav-expanded-projects-and-workspaces`,
     [],
   );
   const deleteProjectFetcher = useProjectDeleteActionFetcher();
-  const isProjectTabActive = activeTab === 'projects';
-  const { syncing, progress, startSync, cancelSync } = useKonnectSync();
-  const [lastSyncedAt, setLastSyncedAt] = reactUse.useLocalStorage<number | null>(
-    `${organizationId}:konnect-last-synced-at`,
-    null,
-  );
+  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
 
   const {
     organizationProjects,
     organizationWorkspaces,
     workspaceMetas,
-    activeProjects,
     collectionByWorkspaceIds,
     pendingCollectionWorkspaceIds,
-    nonKonnectProjects,
-    konnectProjects,
   } = useProjectNavigationSidebarData(organizationId, {
-    isProjectTabActive,
     projectNavigationSidebarFilter,
     expandedProjectAndWorkspaceIds,
   });
 
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
-  const [konnectFilterInputValue, setKonnectFilterInputValue] = useState(konnectFilter || '');
 
   useEffect(() => {
     // Keep input state aligned with storage only when organization context switches.
@@ -202,17 +151,11 @@ const ProjectNavigationSidebarInner = (
       }
     };
     setFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-sidebar-filter`));
-    setKonnectFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-konnect-filter`));
   }, [organizationId]);
 
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
-  reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
-  const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
-
-  const syncKonnectProjectsAndNotifyRef = useRef<(konnectOrganizationId?: string | null) => Promise<void>>(
-    async () => {},
-  );
+  const activeFilter = (projectNavigationSidebarFilter || '').trim();
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
@@ -220,104 +163,8 @@ const ProjectNavigationSidebarInner = (
   // (deduped with the project view). Refresh is handled inside the hook via CLOUD_SYNC_FILE_CHANGE.
   const unsyncedFilesByProjectId = useRemoteFilesByProjectId(organizationId, organizationProjects);
 
-  const syncKonnectProjectsAndNotify = async (konnectOrganizationId?: string | null) => {
-    setLastSyncResult(null);
-    const isFirstSync = lastSyncedAt == null;
-    const result = await startSync(
-      organizationId,
-      konnectOrganizationId !== undefined ? konnectOrganizationId : settings.konnectOrganizationId,
-    );
-    setLastSyncResult(result ?? null);
-    setShowSyncDetails(false);
-    setCopiedReason(null);
-    if (result?.success) {
-      setLastSyncedAt(Date.now());
-      // Navigate to and expand the first Konnect project after a successful sync
-      const allProjects = await services.project.listByOrganizationIds(organizationId);
-      const sortedKonnectProjects = models.project.sortProjects(
-        allProjects.filter(p => p.konnectControlPlaneId != null),
-      );
-      const firstKonnectProject = sortedKonnectProjects[0];
-      if (firstKonnectProject) {
-        const workspaces = await services.workspace.listByParentId(firstKonnectProject._id);
-        const envWorkspace = workspaces.find(w => w.scope === 'environment');
-        if (envWorkspace) {
-          // Show environment onboarding after first successful sync
-          if (isFirstSync) {
-            setOnboardingEnvWorkspaceId(envWorkspace._id);
-          }
-          navigate(
-            `/organization/${organizationId}/project/${firstKonnectProject._id}/workspace/${envWorkspace._id}/environment`,
-          );
-        } else {
-          navigate(`/organization/${organizationId}/project/${firstKonnectProject._id}`);
-        }
-        setExpandedProjectAndWorkspaceIds(prev => {
-          const ids = prev || [];
-          return ids.includes(firstKonnectProject._id) ? ids : [...ids, firstKonnectProject._id];
-        });
-      }
-    }
-  };
-  syncKonnectProjectsAndNotifyRef.current = syncKonnectProjectsAndNotify;
-
-  const handleSync = async () => {
-    if (!konnectSyncEnabled) {
-      return;
-    }
-
-    const isResync = konnectProjects.length > 0;
-    if (isResync) {
-      showModal(AskModal, {
-        title: 'Sync updates from Konnect',
-        message: (
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <KongLogo width={20} height={20} />
-                <span className="text-sm font-medium">Konnect</span>
-              </div>
-              <span className="text-(--hl)">→</span>
-              <div className="flex items-center gap-1">
-                <img src={insomniaLogo} alt="Insomnia" className="h-5 w-5" />
-                <span className="text-sm font-medium">Insomnia</span>
-              </div>
-            </div>
-            <p className="text-sm text-(--hl)">
-              Sync the latest changes from your Konnect organization into Insomnia. This will:
-            </p>
-            <ul className="flex flex-col gap-1 text-sm">
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
-                Keep your local custom changes (never pushed to Konnect)
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
-                Update existing resources to match Konnect
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
-                Remove collections or environments tied to control planes, services, or routes deleted in Konnect
-              </li>
-            </ul>
-          </div>
-        ),
-        yesText: 'Sync Now',
-        noText: 'Cancel',
-        color: 'surprise',
-        onDone: async (confirmed: boolean) => {
-          if (confirmed) {
-            await syncKonnectProjectsAndNotify();
-          }
-        },
-      });
-    } else {
-      await syncKonnectProjectsAndNotify();
-    }
-  };
-
   useEffect(() => {
-    if (projectNavigationSidebarFilter || konnectFilter) {
+    if (projectNavigationSidebarFilter) {
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.projectListFiltered,
         properties: {
@@ -325,7 +172,7 @@ const ProjectNavigationSidebarInner = (
         },
       });
     }
-  }, [projectNavigationSidebarFilter, konnectFilter, activeProjectId]);
+  }, [projectNavigationSidebarFilter, activeProjectId]);
 
   const flatItems = useMemo<FlatItem[]>(() => {
     const buildWorkspaceAndCollectionData = (): FlatItem[] => {
@@ -335,7 +182,7 @@ const ProjectNavigationSidebarInner = (
 
       const collectionChildrenAndMetaByWorkspaceIds = collectionByWorkspaceIds;
 
-      for (const project of activeProjects) {
+      for (const project of organizationProjects) {
         const projectId = project._id;
         const isProjectCollapsed = !(expandedProjectAndWorkspaceIds ?? []).includes(projectId);
         items.push({
@@ -397,7 +244,7 @@ const ProjectNavigationSidebarInner = (
             });
           } else {
             const { scope, _id: workspaceId } = workspace as Workspace;
-            const isCollection = scope === 'collection';
+            const isCollection = scope === 'collection' || scope === 'design';
             // Only collection workspace has nested children
             const isWorkspaceCollapsed = !(
               isCollection && (expandedProjectAndWorkspaceIds ?? []).includes(workspaceId)
@@ -570,12 +417,12 @@ const ProjectNavigationSidebarInner = (
     return buildWorkspaceAndCollectionData();
   }, [
     activeFilter,
-    activeProjects,
     collectionByWorkspaceIds,
     collectionSortOrders,
     expandedProjectAndWorkspaceIds,
     localWorkspaceOrders,
     organizationId,
+    organizationProjects,
     organizationWorkspaces,
     pendingCollectionWorkspaceIds,
     projectWorkspaceSortOrder,
@@ -691,8 +538,6 @@ const ProjectNavigationSidebarInner = (
   const clearFocusState = useCallback(() => {
     setFocusTransition('out');
     setFocusedWorkspaceId(null);
-    setIsRenamingFocusedWorkspace(false);
-    setRenamingWorkspaceValue('');
     setIsFocusedWorkspaceMenuOpen(false);
   }, []);
 
@@ -737,7 +582,7 @@ const ProjectNavigationSidebarInner = (
       return;
     }
     prevActiveWorkspaceIdRef.current = activeWorkspaceId;
-    if (workspaceItem.doc.scope === 'collection') {
+    if (workspaceItem.doc.scope === 'collection' || workspaceItem.doc.scope === 'design') {
       focusWorkspace(activeWorkspaceId, workspaceItem.project._id);
     } else {
       // Design docs, mock servers, environments etc. show the full tree.
@@ -832,6 +677,7 @@ const ProjectNavigationSidebarInner = (
         : undefined,
     [flatItems, focusedWorkspaceId],
   );
+  const focusedWorkspaceScope = focusedWorkspaceItem?.doc.scope ?? 'collection';
   // In focus mode the project + workspace rows are hidden, so strip those two
   // ancestor indent levels and let the tree indent from its first level.
   const treeDepthOffset = focusedWorkspaceId ? 2 : 0;
@@ -848,9 +694,9 @@ const ProjectNavigationSidebarInner = (
     virtualizer,
     onWorkspaceReorder: handleLocalWorkspaceReorder,
     expandedProjectAndWorkspaceIds,
+    depthOffset: treeDepthOffset,
   });
   const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
-    setActiveTab,
     toggleRequestGroups,
     expandProjectOrWorkspaces,
     visibleFlatItems,
@@ -879,7 +725,7 @@ const ProjectNavigationSidebarInner = (
 
   useKeyboardShortcuts(() => parentRef.current!, {
     sidebar_showCreateDropdown: event => {
-      if (!isProjectTabActive) {
+      if (isKonnectOrganization) {
         return;
       }
 
@@ -933,17 +779,20 @@ const ProjectNavigationSidebarInner = (
   });
 
   const { hasKonnectPat } = settings;
-  const showKonnectSyncIntro = konnectSyncEnabled && !isProjectTabActive && !hasKonnectPat;
-  const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
-  const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
-  const [showSyncDetails, setShowSyncDetails] = useState(false);
-  const [copiedReason, setCopiedReason] = useState<string | null>(null);
+  const showKonnectSyncIntro = isKonnectOrganization && !hasKonnectPat;
   const [onboardingEnvWorkspaceId, setOnboardingEnvWorkspaceId] = useState<string | null>(null);
   const [envOnboardingNode, setEnvOnboardingNode] = useState<HTMLDivElement | null>(null);
 
   const dismissEnvOnboarding = useCallback(() => {
     setOnboardingEnvWorkspaceId(null);
   }, []);
+
+  const konnectSyncBar = useKonnectSyncBar({
+    organizationId,
+    hasProjects: organizationProjects.length > 0,
+    onFirstSyncEnvWorkspace: setOnboardingEnvWorkspaceId,
+    setExpandedProjectAndWorkspaceIds,
+  });
 
   // One-time nudge explaining collection focus mode, anchored to the "back to
   // all projects" arrow (only rendered while a collection is actually focused).
@@ -955,31 +804,10 @@ const ProjectNavigationSidebarInner = (
     patchSettings({ hasSeenSidebarFocusOnboarding: true });
   }, [patchSettings]);
 
-  const skippedRoutesByReason = useMemo(() => {
-    const map = new Map<string, string[]>();
-    for (const { routeName, reason, serviceName } of lastSyncResult?.skippedRoutes ?? []) {
-      const list = map.get(reason) ?? [];
-      list.push(`${routeName} — ${serviceName}`);
-      map.set(reason, list);
-    }
-    return map;
-  }, [lastSyncResult]);
-
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      {/* In focused mode the whole sidebar belongs to the collection, so the project/konnect tabs are hidden too. */}
-      {!focusedWorkspaceId && (
-        <Tabs selectedKey={activeTab} onSelectionChange={key => setActiveTab(key as ProjectNavigationSidebarTabId)}>
-          <SideBarTabList
-            konnectSyncEnabled={konnectSyncEnabled}
-            isScratchPad={isScratchPad}
-            nonKonnectProjectLength={nonKonnectProjects.length}
-            konnectProjectsLength={konnectProjects.length}
-          />
-        </Tabs>
-      )}
       {showKonnectSyncIntro ? (
-        <KonnectSyncIntro onConfigure={() => setShowKonnectConfigModal(true)} />
+        <KonnectSyncIntro onConfigure={() => konnectSyncBar.setShowKonnectConfigModal(true)} />
       ) : (
         <>
           {focusedWorkspaceId ? (
@@ -1008,48 +836,28 @@ const ProjectNavigationSidebarInner = (
                   </Tooltip>
                 </TooltipTrigger>
                 <div
-                  className={`${scopeToBgColorMap.collection} ${scopeToTextColorMap.collection} flex h-5 w-5 shrink-0 items-center justify-center rounded-sm`}
+                  className={`${scopeToBgColorMap[focusedWorkspaceScope]} ${scopeToTextColorMap[focusedWorkspaceScope]} flex h-5 w-5 shrink-0 items-center justify-center rounded-sm`}
                 >
-                  <Icon icon={scopeToIconMap.collection} className="h-3 w-3" />
+                  <Icon icon={scopeToIconMap[focusedWorkspaceScope]} className="h-3 w-3" />
                 </div>
-                {isRenamingFocusedWorkspace ? (
-                  <input
-                    autoFocus
-                    type="text"
-                    value={renamingWorkspaceValue}
-                    onChange={e => setRenamingWorkspaceValue(e.target.value)}
-                    onFocus={e => e.currentTarget.select()}
-                    onBlur={() => {
-                      const trimmed = renamingWorkspaceValue.trim();
-                      if (focusedWorkspaceItem && trimmed && trimmed !== focusedWorkspaceItem.doc.name) {
-                        updateWorkspaceFetcher.submit({
-                          organizationId,
-                          projectId: focusedWorkspaceItem.project._id,
-                          patch: { name: trimmed, workspaceId: focusedWorkspaceItem.doc._id },
-                        });
-                      }
-                      setIsRenamingFocusedWorkspace(false);
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      } else if (e.key === 'Escape') {
-                        setIsRenamingFocusedWorkspace(false);
-                      }
-                    }}
-                    className="min-w-0 flex-1 truncate rounded-xs bg-(--hl-sm) p-1 font-semibold text-(--color-font) focus:ring-1 focus:ring-(--color-surprise) focus:outline-none"
-                  />
-                ) : (
-                  <span
-                    onClick={() => {
-                      setRenamingWorkspaceValue(focusedWorkspaceItem?.doc.name || '');
-                      setIsRenamingFocusedWorkspace(true);
-                    }}
-                    className="flex-1 truncate rounded-xs p-1 font-semibold text-(--color-font) transition-colors hover:cursor-text hover:bg-(--hl-xs)"
-                  >
-                    {focusedWorkspaceItem?.doc.name || 'Collection'}
-                  </span>
-                )}
+                <span
+                  onClick={e => {
+                    if (focusedWorkspaceItem) {
+                      tabNavigate(
+                        {
+                          organization: organizationId,
+                          project: focusedWorkspaceItem.project,
+                          workspace: focusedWorkspaceItem.doc,
+                          item: focusedWorkspaceItem.doc,
+                        },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                      );
+                    }
+                  }}
+                  className="flex-1 truncate rounded-xs p-1 font-semibold text-(--color-font) transition-colors hover:cursor-pointer hover:bg-(--hl-xs)"
+                >
+                  {focusedWorkspaceItem?.doc.name || 'API Collection'}
+                </span>
                 <div className="ml-auto shrink-0">
                   {focusedWorkspaceItem && (
                     <SidebarWorkspaceDropdown
@@ -1060,6 +868,7 @@ const ProjectNavigationSidebarInner = (
                       onSortOrderChange={(newOrder: SortOrder) => {
                         setCollectionSortOrders(prev => ({ ...prev, [focusedWorkspaceId]: newOrder }));
                       }}
+                      forceShowTrigger
                       isOpen={isFocusedWorkspaceMenuOpen}
                       onOpenChange={setIsFocusedWorkspaceMenuOpen}
                     />
@@ -1073,58 +882,21 @@ const ProjectNavigationSidebarInner = (
           ) : (
             <div className="flex justify-between gap-1 p-(--padding-sm)">
               <SidebarSearchField
-                value={isProjectTabActive ? filterInputValue : konnectFilterInputValue}
+                value={filterInputValue}
                 isDisabled={organizationProjects.length === 0}
-                onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilterInputValue}
+                onChange={setFilterInputValue}
               />
-              {isProjectTabActive ? (
+              {isKonnectOrganization ? (
+                <KonnectSyncActionsRow {...konnectSyncBar} />
+              ) : (
                 !isScratchPad && (
                   <NewProjectButton onPress={onCreateProject} isDisabled={organizationProjects.length === 0} />
                 )
-              ) : (
-                <div className="flex items-center gap-1">
-                  {syncing ? (
-                    <Button
-                      aria-label="Cancel sync"
-                      onPress={cancelSync}
-                      className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
-                    >
-                      Cancel
-                      <Icon icon="stop-circle" />
-                    </Button>
-                  ) : (
-                    <TooltipTrigger delay={300}>
-                      <Button
-                        aria-label="Sync Konnect"
-                        onPress={handleSync}
-                        className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
-                      >
-                        <Icon icon="refresh" />
-                        Sync
-                      </Button>
-                      <Tooltip
-                        placement="bottom"
-                        className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
-                      >
-                        <LastSyncedLabel lastSyncedAt={lastSyncedAt ?? null} />
-                      </Tooltip>
-                    </TooltipTrigger>
-                  )}
-                  <Button
-                    aria-label="Konnect settings"
-                    onPress={() => setShowKonnectConfigModal(true)}
-                    className="flex aspect-square h-full items-center justify-center rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
-                  >
-                    <Icon icon="gear" />
-                  </Button>
-                </div>
               )}
             </div>
           )}
 
-          {!isProjectTabActive && syncing && (
-            <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>
-          )}
+          {isKonnectOrganization && <KonnectSyncProgressLine {...konnectSyncBar} />}
 
           <div
             ref={parentRef}
@@ -1262,6 +1034,20 @@ const ProjectNavigationSidebarInner = (
                           if (docId === onboardingEnvWorkspaceId) {
                             dismissEnvOnboarding();
                           }
+                        } else if (item.kind === 'emptyCollection') {
+                          const emptyCollectionWorkspace = item.workspace;
+                          if (emptyCollectionWorkspace) {
+                            focusWorkspace(emptyCollectionWorkspace._id, item.project._id);
+                            tabNavigate(
+                              {
+                                organization: organizationId,
+                                project: item.project,
+                                workspace: emptyCollectionWorkspace,
+                                item: emptyCollectionWorkspace,
+                              },
+                              { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                            );
+                          }
                         } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
                           // Clicking anything inside a collection (folder, request, etc.) focuses it.
                           // Guard so re-clicking within an already-focused collection doesn't replay the transition.
@@ -1385,140 +1171,8 @@ const ProjectNavigationSidebarInner = (
             />
           )}
 
-          {!isProjectTabActive && lastSyncResult && (
-            <div
-              className={`m-2 flex items-start justify-between gap-2 rounded-sm p-3 text-xs ${
-                !lastSyncResult.success
-                  ? 'bg-[rgba(58,18,8,1)]'
-                  : lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0
-                    ? 'bg-[rgba(250,173,20,0.15)]'
-                    : 'bg-[rgba(82,196,26,0.15)]'
-              }`}
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <Icon
-                  icon={
-                    lastSyncResult.success &&
-                    lastSyncResult.skippedRoutes.length === 0 &&
-                    lastSyncResult.skippedRegions.length === 0
-                      ? 'circle-check'
-                      : 'exclamation-triangle'
-                  }
-                  className={
-                    lastSyncResult.success &&
-                    lastSyncResult.skippedRoutes.length === 0 &&
-                    lastSyncResult.skippedRegions.length === 0
-                      ? 'mt-1.5'
-                      : 'mt-1'
-                  }
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold text-(--color-font)">
-                    {lastSyncResult.success
-                      ? lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0
-                        ? 'Sync complete, with warnings'
-                        : 'Sync complete'
-                      : 'Sync failed'}
-                  </p>
-                  <p className="mt-0.5 text-(--hl)">
-                    {!lastSyncResult.success
-                      ? lastSyncResult.error
-                      : lastSyncResult.routes.created === 0 &&
-                          lastSyncResult.routes.updated === 0 &&
-                          lastSyncResult.routes.deleted === 0 &&
-                          lastSyncResult.routes.skipped === 0 &&
-                          lastSyncResult.skippedRegions.length === 0
-                        ? 'Already up-to-date with Konnect.'
-                        : [
-                            lastSyncResult.routes.created > 0 && `${lastSyncResult.routes.created} request(s) added`,
-                            lastSyncResult.routes.updated > 0 && `${lastSyncResult.routes.updated} request(s) updated`,
-                            lastSyncResult.routes.deleted > 0 && `${lastSyncResult.routes.deleted} request(s) deleted`,
-                            lastSyncResult.routes.skipped > 0 && `${lastSyncResult.routes.skipped} route(s) skipped`,
-                            lastSyncResult.skippedRegions.length > 0 &&
-                              `${lastSyncResult.skippedRegions.length} region(s) skipped`,
-                          ]
-                            .filter(Boolean)
-                            .join(', ') + '.'}
-                  </p>
-                  {lastSyncResult.success &&
-                    (lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0) && (
-                      <>
-                        <button
-                          className="mt-1 flex items-center gap-1 text-(--hl) hover:text-(--color-font)"
-                          onClick={() => setShowSyncDetails(prev => !prev)}
-                        >
-                          <Icon icon={showSyncDetails ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
-                          {showSyncDetails ? 'Hide details' : 'Show details'}
-                        </button>
-                        {showSyncDetails && (
-                          <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
-                            {lastSyncResult.skippedRegions.length > 0 && (
-                              <div>
-                                <p className="text-(--hl)">Failed to fetch control planes for the following regions:</p>
-                                <ul className="mt-1 space-y-0.5 pl-3">
-                                  {lastSyncResult.skippedRegions.map(r => (
-                                    <li key={r} className="list-disc text-(--color-font)">
-                                      {r}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {[...skippedRoutesByReason.entries()].map(([reason, routes]) => {
-                              const MAX_SHOW = 5;
-                              const visible = routes.slice(0, MAX_SHOW);
-                              const extra = routes.length - MAX_SHOW;
-                              return (
-                                <div key={reason}>
-                                  <p className="text-(--hl)">{reason} for the following routes:</p>
-                                  <ul className="mt-1 space-y-0.5 pl-3">
-                                    {visible.map(r => (
-                                      <li key={r} className="list-disc text-(--color-font)">
-                                        {r}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  {extra > 0 && (
-                                    <div className="mt-1 flex items-center gap-2 pl-3 text-(--hl)">
-                                      <span>+ {extra} more</span>
-                                      <button
-                                        className="underline hover:text-(--color-font)"
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(routes.join('\n'));
-                                          setCopiedReason(reason);
-                                          setTimeout(() => setCopiedReason(null), 2000);
-                                        }}
-                                      >
-                                        {copiedReason === reason ? 'Copied' : 'Copy full list'}
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </>
-                    )}
-                </div>
-              </div>
-              <button
-                className="-mt-2 shrink-0 text-xl text-(--hl) hover:text-(--color-font)"
-                onClick={() => setLastSyncResult(null)}
-              >
-                <Icon icon="close" />
-              </button>
-            </div>
-          )}
+          {isKonnectOrganization && <KonnectSyncResultPanel {...konnectSyncBar} />}
         </>
-      )}
-
-      {showKonnectConfigModal && (
-        <KonnectSettingsModal
-          onClose={() => setShowKonnectConfigModal(false)}
-          syncKonnectProjectsAndNotifyRef={syncKonnectProjectsAndNotifyRef}
-          onDisconnect={() => setLastSyncedAt(null)}
-        />
       )}
 
       {onboardingEnvWorkspaceId && envOnboardingNode && (
@@ -1537,19 +1191,30 @@ export const ProjectNavigationSidebar = forwardRef<ProjectNavigationSidebarHandl
 
 export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
   const { organizationId } = useParams() as { organizationId: string };
+  const { settings } = useRootLoaderData()!;
   const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
-  const { features } = useOrganizationPermissions();
+  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
+  const konnectSyncBar = useKonnectSyncBar({ organizationId, hasProjects: false });
+
+  if (isKonnectOrganization) {
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
+        {!settings.hasKonnectPat ? (
+          <KonnectSyncIntro onConfigure={() => konnectSyncBar.setShowKonnectConfigModal(true)} />
+        ) : (
+          <div className="flex justify-between gap-1 p-(--padding-sm)">
+            <SidebarSearchField value="" isDisabled onChange={() => {}} />
+            <KonnectSyncActionsRow {...konnectSyncBar} />
+          </div>
+        )}
+        <KonnectSyncProgressLine {...konnectSyncBar} />
+        <KonnectSyncResultPanel {...konnectSyncBar} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <Tabs>
-        <SideBarTabList
-          konnectSyncEnabled={features.konnectSync.enabled}
-          isScratchPad={isScratchPad}
-          nonKonnectProjectLength={0}
-          konnectProjectsLength={0}
-        />
-      </Tabs>
       <div className="flex justify-between gap-1 p-(--padding-sm)">
         <SidebarSearchField value="" isDisabled onChange={() => {}} />
         {!isScratchPad && <NewProjectButton onPress={onCreateProject} />}

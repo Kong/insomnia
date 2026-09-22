@@ -16,7 +16,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(project.remoteId, 'Project is not remote');
 
   try {
-    await window.main.sync.push({
+    await window.main.sync.push(workspaceId, {
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });

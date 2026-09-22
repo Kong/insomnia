@@ -1,6 +1,9 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import YAML from 'yaml';
 
 import gitAdapter from './git-adapter';
 
@@ -35,5 +38,105 @@ describe('gitAdapter()', () => {
     const workingDir = path.join(fixturesPath, 'nedb');
     const db = await gitAdapter(workingDir);
     expect(db).toBe(null);
+  });
+
+  describe('type restriction', () => {
+    let workingDir: string;
+
+    afterEach(() => {
+      if (workingDir) {
+        fs.rmSync(workingDir, { recursive: true, force: true });
+      }
+    });
+
+    it('does not read a Settings folder, since Settings.canSync is false', async () => {
+      // gitAdapter() only reads folders for types where models.canSync() is
+      // true, so a 'Settings' folder is never opened even when it sits
+      // alongside a normal Workspace folder with well-formed content.
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+
+      fs.mkdirSync(path.join(insomniaDir, 'Workspace'), { recursive: true });
+      fs.writeFileSync(
+        path.join(insomniaDir, 'Workspace', 'wrk_new.yml'),
+        YAML.stringify({
+          _id: 'wrk_new',
+          type: 'Workspace',
+          name: 'New workspace',
+          parentId: null,
+          scope: 'collection',
+        }),
+      );
+
+      fs.mkdirSync(path.join(insomniaDir, 'Settings'), { recursive: true });
+      const settingsData = {
+        _id: 'set_new',
+        type: 'Settings',
+        validateSSL: false,
+        proxyEnabled: true,
+        httpProxy: 'http://example.com:8080',
+        httpsProxy: 'http://example.com:8080',
+      };
+      fs.writeFileSync(
+        path.join(insomniaDir, 'Settings', 'set_new.yml'),
+        YAML.stringify(settingsData),
+      );
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.Settings).toHaveLength(0);
+      expect(db?.Workspace).toHaveLength(1);
+    });
+
+    // gitAdapter() only ever reads folders named after one of the Database
+    // keys (see packages/insomnia-inso/src/db/types.ts), so this is the full
+    // set of syncable types reachable through the inso CLI import path today.
+    const syncableTypes = ['ApiSpec', 'Environment', 'Request', 'RequestGroup', 'Workspace', 'UnitTestSuite', 'UnitTest'] as const;
+    // Non-syncable Database keys: these folders exist in legacy .insomnia
+    // directories but must never be merged in, since canSync is false.
+    const nonSyncableTypes = ['WorkspaceMeta', 'ClientCertificate', 'CaCertificate', 'CookieJar', 'CloudCredential', 'Settings'] as const;
+
+    const writeMinimalDoc = (insomniaDir: string, type: string) => {
+      const typeDir = path.join(insomniaDir, type);
+      fs.mkdirSync(typeDir, { recursive: true });
+      const doc = { _id: `${type.toLowerCase()}_new`, type, name: `New ${type}`, parentId: null };
+      fs.writeFileSync(path.join(typeDir, `${doc._id}.yml`), YAML.stringify(doc));
+    };
+
+    it.each(syncableTypes)('reads a %s folder, since canSync is true', async type => {
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+      writeMinimalDoc(insomniaDir, type);
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.[type as keyof typeof db]).toHaveLength(1);
+    });
+
+    it.each(nonSyncableTypes)('does not read a %s folder, since canSync is false', async type => {
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+      writeMinimalDoc(insomniaDir, type);
+      // Include a syncable folder alongside it so we confirm the whole read didn't just fail
+      writeMinimalDoc(insomniaDir, 'Workspace');
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.[type as keyof typeof db]).toHaveLength(0);
+      expect(db?.Workspace).toHaveLength(1);
+    });
+
+    it.each(nonSyncableTypes)('ignores a document whose own type is %s even when filed under a syncable folder', async otherType => {
+      workingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-adapter-'));
+      const insomniaDir = path.join(workingDir, '.insomnia');
+      const typeDir = path.join(insomniaDir, 'Workspace');
+      fs.mkdirSync(typeDir, { recursive: true });
+      const doc = { _id: 'wrk_mismatched', type: otherType, name: 'Mismatched doc', parentId: null };
+      fs.writeFileSync(path.join(typeDir, `${doc._id}.yml`), YAML.stringify(doc));
+
+      const db = await gitAdapter(workingDir);
+
+      expect(db?.Workspace).toHaveLength(0);
+    });
   });
 });

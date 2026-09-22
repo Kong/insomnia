@@ -20,7 +20,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { syncItems } = await getSyncItems({ workspaceId });
 
   try {
-    const delta = (await window.main.sync.checkout(syncItems, branch)) as Operation;
+    const delta = (await window.main.sync.checkout(workspaceId, syncItems, branch)) as Operation;
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
     delete remoteCompareCache[workspaceId];

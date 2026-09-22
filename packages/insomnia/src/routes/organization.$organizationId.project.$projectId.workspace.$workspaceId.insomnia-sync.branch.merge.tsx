@@ -18,7 +18,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { syncItems } = await getSyncItems({ workspaceId });
   let delta;
   try {
-    delta = await window.main.sync.merge(syncItems, branch);
+    delta = await window.main.sync.merge(workspaceId, syncItems, branch);
   } catch (err) {
     if (err instanceof UserAbortResolveMergeConflictError) {
       return null;
