@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
+
 import { collectLeafStrings, createSensitiveValueCollector, redactConfidentialText } from './sensitive-value-collector';
 
 describe('redactConfidentialText', () => {
@@ -22,6 +24,10 @@ describe('redactConfidentialText', () => {
 
   it('returns unchanged text when no values match', () => {
     expect(redactConfidentialText('hello world', ['nomatch'])).toBe('hello world');
+  });
+
+  it('fully masks a value even when a shorter value it contains is registered first', () => {
+    expect(redactConfidentialText('abc-secret-xyz', ['abc', 'abc-secret-xyz'])).toBe(CONFIDENTIAL_MASK_VALUE);
   });
 });
 

@@ -40,8 +40,12 @@ export function collectLeafStrings(value: any, collector: SensitiveValueCollecto
 }
 
 export function redactConfidentialText(text: string, values: readonly string[]): string {
+  // Longest-first so a short value (e.g. "abc") can't consume part of a longer
+  // value that contains it (e.g. "abc-secret-xyz") before the longer one is matched.
+  const sortedValues = [...values].sort((a, b) => b.length - a.length);
+
   let result = text;
-  for (const val of values) {
+  for (const val of sortedValues) {
     if (val.length === 0) {
       continue;
     }
@@ -57,19 +61,19 @@ export function createSensitiveValueCollector(hideSecretValues: boolean): Sensit
     return null;
   }
 
-  const values: string[] = [];
+  const values = new Set<string>();
 
   return {
     register(value: string): void {
-      if (value.length > 0 && !values.includes(value)) {
-        values.push(value);
+      if (value.length > 0) {
+        values.add(value);
       }
     },
     redact(text: string): string {
-      return redactConfidentialText(text, values);
+      return redactConfidentialText(text, [...values]);
     },
     get isEmpty() {
-      return values.length === 0;
+      return values.size === 0;
     },
   };
 }
