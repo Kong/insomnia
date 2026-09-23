@@ -143,6 +143,14 @@ export class NeDBClient {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
     }
 
+    // Only types explicitly marked as syncable may be written from a Git checkout.
+    // A folder named after a non-syncable/global-singleton type (e.g. Settings)
+    // is ignored, even though its path and id/type fields are well-formed.
+    if (!models.canSync(doc)) {
+      console.log(`[git] Ignoring non-syncable document type ${doc.type} at ${filePath}`);
+      return;
+    }
+
     // Special handling for workspaces: ensure they stay in the correct project
     if (models.workspace.isWorkspace(doc)) {
       console.log('[git] setting workspace parent to be that of the active project', {
