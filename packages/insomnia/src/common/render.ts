@@ -75,7 +75,7 @@ function maskConfidentialValue(value: any): any {
   return models.environment.vaultEnvironmentMaskValue;
 }
 
-export async function buildRenderContext({
+export function buildEnvironmentRenderLayers({
   ancestors,
   rootEnvironment,
   subEnvironment,
@@ -83,7 +83,6 @@ export async function buildRenderContext({
   subGlobalEnvironment,
   userUploadEnvironment,
   transientVariables,
-  baseContext,
 }: {
   ancestors?: RenderContextAncestor[];
   rootEnvironment?: Environment;
@@ -92,8 +91,7 @@ export async function buildRenderContext({
   subGlobalEnvironment?: Environment | null;
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
-  baseContext: BaseRenderContext;
-}): Promise<BaseRenderContext> {
+}): EnvironmentRenderLayer[] {
   const environmentLayers: EnvironmentRenderLayer[] = [];
 
   if (rootGlobalEnvironment) {
@@ -164,6 +162,38 @@ export async function buildRenderContext({
     );
     environmentLayers.push({ data: ordered, source: 'transient' });
   }
+
+  return environmentLayers;
+}
+
+export async function buildRenderContext({
+  ancestors,
+  rootEnvironment,
+  subEnvironment,
+  rootGlobalEnvironment,
+  subGlobalEnvironment,
+  userUploadEnvironment,
+  transientVariables,
+  baseContext,
+}: {
+  ancestors?: RenderContextAncestor[];
+  rootEnvironment?: Environment;
+  subEnvironment?: Environment;
+  rootGlobalEnvironment?: Environment | null;
+  subGlobalEnvironment?: Environment | null;
+  userUploadEnvironment?: UserUploadEnvironment;
+  transientVariables?: Environment;
+  baseContext: BaseRenderContext;
+}): Promise<BaseRenderContext> {
+  const environmentLayers = buildEnvironmentRenderLayers({
+    ancestors,
+    rootEnvironment,
+    subEnvironment,
+    rootGlobalEnvironment,
+    subGlobalEnvironment,
+    userUploadEnvironment,
+    transientVariables,
+  });
 
   // At this point, environments is a list of environments ordered
   // from top-most parent to bottom-most child, and they keys in each environment
