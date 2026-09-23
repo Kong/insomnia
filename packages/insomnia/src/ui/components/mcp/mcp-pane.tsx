@@ -18,7 +18,11 @@ import { useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import {
+  combineListErrors,
+  findFirstMatchEventData,
+  findLatestListResult,
   getDefaultServerCapabilities,
+  type McpListValidationError,
   type McpServerData,
   METHOD_INITIALIZE,
   METHOD_LIST_PROMPTS,
@@ -26,7 +30,6 @@ import {
   METHOD_LIST_RESOURCES,
   METHOD_LIST_TOOLS,
 } from '~/common/mcp-utils';
-import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
 import { useRootLoaderData } from '~/root';
 import {
   useWorkspaceLoaderData,
@@ -60,6 +63,29 @@ const emptyServerData: McpServerData = {
   primitives: { tools: [], resources: [], resourceTemplates: [], prompts: [] },
 };
 
+const emptyPrimitiveErrors: Partial<Record<McpServerPrimitiveTypes, McpListValidationError>> = {};
+
+// Base row height (matches --line-height-xs at the default font size).
+const ITEM_ROW_HEIGHT = 32;
+// A whole-response failure has no per-entry breakdown, just a one-line title, so it needs far less
+// room than a partial failure's scrollable list of dropped entries.
+const ERROR_PANEL_HEIGHT_TITLE_ONLY = 80;
+const ERROR_PANEL_HEIGHT_WITH_ENTRIES = 120;
+
+const getErrorPanelHeight = (error: McpListValidationError | undefined): number =>
+  error?.entries && error.entries.length > 0 ? ERROR_PANEL_HEIGHT_WITH_ENTRIES : ERROR_PANEL_HEIGHT_TITLE_ONLY;
+
+// The embedded error panel is only shown while its root item is expanded
+const shouldShowRootError = (
+  item: PrimitiveTypeItem | PrimitiveSubItem,
+  collapsedPrimitives: McpServerPrimitiveTypes[],
+): boolean => {
+  if (item.itemLevel !== 0 || !('error' in item) || !item.error) {
+    return false;
+  }
+  return Boolean(item.isEmpty) || !collapsedPrimitives.includes(item.type);
+};
+
 export const McpPane = () => {
   const { workspaceId } = useParams() as {
     workspaceId: string;
@@ -70,6 +96,8 @@ export const McpPane = () => {
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
   const [mcpServerData, setMcpServerData] = useState<McpServerData>(emptyServerData);
+  const [primitiveErrors, setPrimitiveErrors] =
+    useState<Partial<Record<McpServerPrimitiveTypes, McpListValidationError>>>(emptyPrimitiveErrors);
   const [collapsedPrimitives, setCollapsedPrimitives] = useState<McpServerPrimitiveTypes[]>([]);
   const [selectedPrimitiveItem, setSelectedPrimitiveItem] = useState<PrimitiveSubItem | null>(null);
   const [primitiveNextCursor, setPrimitiveNextCursor] = useState<Partial<Record<McpServerPrimitiveTypes, string>>>({});
@@ -105,25 +133,30 @@ export const McpPane = () => {
         filter ? Boolean(fuzzyMatchAll(filter, [prompt.name, prompt.description || ''])?.indexes) : true,
       );
       // Add primitive type item
-      if (tools.length > 0) {
+      if (tools.length > 0 || primitiveErrors.tools) {
         collection.push({
           type: 'tools',
           name: 'Tools',
           collapsed: collapsedPrimitives.includes('tools'),
           itemLevel: 0,
           hide: false,
+          error: primitiveErrors.tools,
+          isEmpty: tools.length === 0,
           ...(primitiveNextCursor.tools && { nextCursor: primitiveNextCursor.tools }),
         });
         const hide = collapsedPrimitives.includes('tools');
         collection.push(...(tools.map(t => ({ ...t, type: 'tools', itemLevel: 1, hide })) as ToolItem[]));
       }
-      if (resources.length > 0 || resourceTemplates.length > 0) {
+      const resourcesError = combineListErrors(primitiveErrors.resources, primitiveErrors.resourceTemplates);
+      if (resources.length > 0 || resourceTemplates.length > 0 || resourcesError) {
         collection.push({
           type: 'resources',
           name: 'Resources',
           collapsed: collapsedPrimitives.includes('resources'),
           itemLevel: 0,
           hide: false,
+          error: resourcesError,
+          isEmpty: resources.length === 0 && resourceTemplates.length === 0,
           ...(primitiveNextCursor.resources && { nextCursor: primitiveNextCursor.resources }),
         });
         const hide = collapsedPrimitives.includes('resources');
@@ -137,13 +170,15 @@ export const McpPane = () => {
           })) as ResourceTemplateItem[]),
         );
       }
-      if (prompts.length > 0) {
+      if (prompts.length > 0 || primitiveErrors.prompts) {
         collection.push({
           type: 'prompts',
           name: 'Prompts',
           collapsed: collapsedPrimitives.includes('prompts'),
           itemLevel: 0,
           hide: false,
+          error: primitiveErrors.prompts,
+          isEmpty: prompts.length === 0,
           ...(primitiveNextCursor.prompts && { nextCursor: primitiveNextCursor.prompts }),
         });
         const hide = collapsedPrimitives.includes('prompts');
@@ -155,6 +190,10 @@ export const McpPane = () => {
     collapsedPrimitives,
     filter,
     mcpServerData,
+    primitiveErrors.prompts,
+    primitiveErrors.resources,
+    primitiveErrors.resourceTemplates,
+    primitiveErrors.tools,
     primitiveNextCursor.prompts,
     primitiveNextCursor.resources,
     primitiveNextCursor.tools,
@@ -245,7 +284,17 @@ export const McpPane = () => {
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
     getScrollElement: () => parentRef.current,
     count: visibleCollection.length,
-    estimateSize: useCallback(() => 32, []),
+    estimateSize: useCallback(
+      (index: number) => {
+        const item = visibleCollection[index];
+        if (shouldShowRootError(item, collapsedPrimitives)) {
+          const itemError = 'error' in item ? item.error : undefined;
+          return ITEM_ROW_HEIGHT + getErrorPanelHeight(itemError);
+        }
+        return ITEM_ROW_HEIGHT;
+      },
+      [visibleCollection, collapsedPrimitives],
+    ),
     overscan: 20,
     getItemKey: index => {
       const item = visibleCollection[index];
@@ -275,38 +324,29 @@ export const McpPane = () => {
 
   useEffect(() => {
     const updateServerData = async () => {
-      const findFirstMatchEventData = (mcpEvents: McpEvent[], method: string) => {
-        const firstMatchEvent = mcpEvents.find(
-          event => 'method' in event && event.method === method && event.direction === 'INCOMING',
-        ) as McpMessageEvent;
-        if (firstMatchEvent) {
-          return 'result' in firstMatchEvent.data ? firstMatchEvent.data.result : undefined;
-        }
-        return;
-      };
       const activeResponseId = activeResponse?._id;
       if (activeResponseId) {
         const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
-        const allMessageEvents = allEvents.filter(
-          event => 'method' in event && event.direction === 'INCOMING',
-        ) as McpMessageEvent[];
         const serverCapabilities =
           findFirstMatchEventData(allEvents, METHOD_INITIALIZE)?.capabilities || getDefaultServerCapabilities();
-        const latestToolListEvent = findFirstMatchEventData(allMessageEvents, METHOD_LIST_TOOLS);
-        const latestResourceListEvent = findFirstMatchEventData(allMessageEvents, METHOD_LIST_RESOURCES);
-        const latestResourceTemplateListEvent = findFirstMatchEventData(
-          allMessageEvents,
-          METHOD_LIST_RESOURCE_TEMPLATES,
-        );
-        const latestPromptListEvent = findFirstMatchEventData(allMessageEvents, METHOD_LIST_PROMPTS);
-        const tools = latestToolListEvent?.tools || [];
-        const resources = latestResourceListEvent?.resources || [];
-        const resourceTemplates = latestResourceTemplateListEvent?.resourceTemplates || [];
-        const prompts = latestPromptListEvent?.prompts || [];
+        const toolsResult = findLatestListResult(allEvents, METHOD_LIST_TOOLS);
+        const resourcesResult = findLatestListResult(allEvents, METHOD_LIST_RESOURCES);
+        const resourceTemplatesResult = findLatestListResult(allEvents, METHOD_LIST_RESOURCE_TEMPLATES);
+        const promptsResult = findLatestListResult(allEvents, METHOD_LIST_PROMPTS);
+        const tools = toolsResult?.data?.tools || [];
+        const resources = resourcesResult?.data?.resources || [];
+        const resourceTemplates = resourceTemplatesResult?.data?.resourceTemplates || [];
+        const prompts = promptsResult?.data?.prompts || [];
+        setPrimitiveErrors({
+          tools: toolsResult?.error,
+          resources: resourcesResult?.error,
+          resourceTemplates: resourceTemplatesResult?.error,
+          prompts: promptsResult?.error,
+        });
         // Get nextCursor for each primitive type
-        const toolsNextCursor = latestToolListEvent?.nextCursor as string | undefined;
-        const resourcesNextCursor = latestResourceListEvent?.nextCursor as string | undefined;
-        const promptsNextCursor = latestPromptListEvent?.nextCursor as string | undefined;
+        const toolsNextCursor = toolsResult?.data?.nextCursor as string | undefined;
+        const resourcesNextCursor = resourcesResult?.data?.nextCursor as string | undefined;
+        const promptsNextCursor = promptsResult?.data?.nextCursor as string | undefined;
         const primitiveNextCursor = {
           ...(toolsNextCursor && { tools: toolsNextCursor }),
           ...(resourcesNextCursor && { resources: resourcesNextCursor }),
@@ -333,6 +373,7 @@ export const McpPane = () => {
     } else {
       // Clear MCP server data when no active response
       setMcpServerData(emptyServerData);
+      setPrimitiveErrors(emptyPrimitiveErrors);
     }
   }, [activeResponse?._id, readyState]);
 
@@ -522,6 +563,9 @@ const CollectionGridListItem = (props: {
   const itemLevel = item.itemLevel;
   const isRootTypeItem = itemLevel === 0;
   const isResourceTypeItem = item.type === 'resources' && itemLevel === 1;
+  const isEmpty = isRootTypeItem && 'isEmpty' in item && Boolean(item.isEmpty);
+  const error = isRootTypeItem && 'error' in item ? item.error : undefined;
+  const showError = shouldShowRootError(item, collapsedPrimitives);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
 
@@ -539,58 +583,79 @@ const CollectionGridListItem = (props: {
       style={style}
       ref={triggerRef}
     >
-      <div
-        onContextMenu={e => {
-          e.preventDefault();
-          setIsContextMenuOpen(true);
-        }}
-        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden pr-2 pl-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) data-[selected=true]:text-(--color-font)"
-        style={{
-          paddingLeft: `${itemLevel}em`,
-        }}
-      >
-        <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none">
+      <div className="flex h-full w-full flex-col overflow-hidden">
+        <div
+          onContextMenu={e => {
+            e.preventDefault();
+            setIsContextMenuOpen(true);
+          }}
+          className="relative flex h-(--line-height-xs) w-full shrink-0 items-center gap-2 overflow-hidden pr-2 pl-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) data-[selected=true]:text-(--color-font)"
+          style={{
+            paddingLeft: `${itemLevel}em`,
+          }}
+        >
+          <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none">
+            {isRootTypeItem && !isEmpty && (
+              <Icon
+                className="w-4 shrink-0"
+                icon={collapsedPrimitives.includes(item.type) ? 'caret-right' : 'caret-down'}
+              />
+            )}
+            {item.type === 'tools' && item.itemLevel === 1 && (
+              <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-success-rgb),0.5)] text-[0.65rem] text-(--color-font-success)">
+                Tool
+              </span>
+            )}
+            {(item.type === 'resources' || item.type === 'resourceTemplates') && item.itemLevel === 1 && (
+              <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem] text-(--color-font-surprise)">
+                Res
+              </span>
+            )}
+            {item.type === 'prompts' && item.itemLevel === 1 && (
+              <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
+                Prompt
+              </span>
+            )}
+            {label}
+          </div>
           {isRootTypeItem && (
-            <Icon
-              className="w-4 shrink-0"
-              icon={collapsedPrimitives.includes(item.type) ? 'caret-right' : 'caret-down'}
+            <McpActionsDropdown
+              item={item}
+              isOpen={isContextMenuOpen}
+              onOpenChange={setIsContextMenuOpen}
+              triggerRef={triggerRef}
+              {...restProps}
             />
           )}
-          {item.type === 'tools' && item.itemLevel === 1 && (
-            <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-success-rgb),0.5)] text-[0.65rem] text-(--color-font-success)">
-              Tool
-            </span>
+          {isResourceTypeItem && allowSubscribeResources && (
+            <Button
+              data-testid={`Dropdown-${item.type}`}
+              aria-label="Mcp Actions"
+              className="h-6 items-center justify-center rounded-xs pr-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all"
+              onPress={() => handleSubscribe(item as ResourceItem)}
+            >
+              {subscribeResources.includes(item.name) ? 'Unsubscribe' : 'Subscribe'}
+            </Button>
           )}
-          {(item.type === 'resources' || item.type === 'resourceTemplates') && item.itemLevel === 1 && (
-            <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem] text-(--color-font-surprise)">
-              Res
-            </span>
-          )}
-          {item.type === 'prompts' && item.itemLevel === 1 && (
-            <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
-              Prompt
-            </span>
-          )}
-          {label}
         </div>
-        {isRootTypeItem && (
-          <McpActionsDropdown
-            item={item}
-            isOpen={isContextMenuOpen}
-            onOpenChange={setIsContextMenuOpen}
-            triggerRef={triggerRef}
-            {...restProps}
-          />
-        )}
-        {isResourceTypeItem && allowSubscribeResources && (
-          <Button
-            data-testid={`Dropdown-${item.type}`}
-            aria-label="Mcp Actions"
-            className="h-6 items-center justify-center rounded-xs pr-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all"
-            onPress={() => handleSubscribe(item as ResourceItem)}
+        {showError && error && (
+          <div
+            className="notice error no-pad mt-(--padding-sm) min-h-0 flex-1 overflow-hidden text-left text-(length:--font-size-sm)"
+            style={{ maxHeight: getErrorPanelHeight(error), margin: '1em' }}
           >
-            {subscribeResources.includes(item.name) ? 'Unsubscribe' : 'Subscribe'}
-          </Button>
+            <div className="h-full overflow-y-auto py-1 pr-(--padding-md) pl-4 select-none">
+              <p className="no-margin font-medium wrap-break-word">{error.title}</p>
+              {error.entries && error.entries.length > 0 && (
+                <ul className="mt-1 flex flex-col gap-0.5 pl-4">
+                  {error.entries.map(entry => (
+                    <li key={`${entry.label}::${entry.reason}`} className="list-disc wrap-break-word">
+                      <span className="text-sm font-medium">{entry.label}</span>: {entry.reason}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </GridListItem>
