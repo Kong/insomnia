@@ -104,7 +104,7 @@ jobs:
       github.event.requested_team.slug == (vars.KSAI_REVIEW_TEAM || 'ksai') &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.sender.type != 'Bot')
-    uses: Kong/ksai/.github/workflows/ksai-request.yml@5a8338dc67a355b42820f4c2d3ada91bdf765cdd  # ksai/v3.102.3
+    uses: Kong/ksai/.github/workflows/ksai-request.yml@main  # ksai/v3.102.3
     permissions:
       actions: write  # dispatch this workflow onto the default branch
       contents: read  # download the actions this call runs, which live in a private repository
