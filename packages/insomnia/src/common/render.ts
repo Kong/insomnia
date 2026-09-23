@@ -219,7 +219,7 @@ export function buildEnvironmentRenderLayers({
     });
   }
 
-  for (const doc of (ancestors || []).reverse()) {
+  for (const doc of [...(ancestors || [])].reverse()) {
     const ancestor: any = doc;
     const { environment, environmentPropertyOrder, kvPairData } = ancestor;
 
