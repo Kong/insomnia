@@ -213,34 +213,48 @@ export async function getPluginInfo(lookupName: string, allowScopedPackageNames 
 
   console.log('[plugins] Fetching module info from npm');
 
-  const registryUrl = await getRegistryUrl();
-  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl]);
-
-  let yarnOutput;
+  // Run yarn in a directory we control: inheriting the Electron process
+  // working directory lets yarn read an unrelated package.json there, and a
+  // missing license field turns into a fatal "No license field" warning.
+  const infoDir = await mkdtemp(path.resolve(tmpdir(), `insomnia-plugin-info-${Date.now()}`));
   try {
-    yarnOutput = JSON.parse(stdout);
-  } catch (err) {
-    throw new Error(`Invalid JSON received from yarn: ${(err as Error).message}`);
-  }
+    await writeFile(
+      path.resolve(infoDir, 'package.json'),
+      JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
+      'utf8',
+    );
 
-  const data = yarnOutput.data;
-  if (!data || typeof data !== 'object') {
-    throw new Error(`Unexpected yarn output structure`);
-  }
+    const registryUrl = await getRegistryUrl();
+    const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl], infoDir);
 
-  if (!data.insomnia) {
-    throw new Error(`Package "${lookupName}" is not an Insomnia plugin (missing "insomnia" attribute)`);
-  }
+    let yarnOutput;
+    try {
+      yarnOutput = JSON.parse(stdout);
+    } catch (err) {
+      throw new Error(`Invalid JSON received from yarn: ${(err as Error).message}`);
+    }
 
-  return {
-    insomnia: data.insomnia,
-    name: data.name,
-    version: data.version,
-    dist: {
-      shasum: data.dist.shasum,
-      tarball: data.dist.tarball,
-    },
-  };
+    const data = yarnOutput.data;
+    if (!data || typeof data !== 'object') {
+      throw new Error(`Unexpected yarn output structure`);
+    }
+
+    if (!data.insomnia) {
+      throw new Error(`Package "${lookupName}" is not an Insomnia plugin (missing "insomnia" attribute)`);
+    }
+
+    return {
+      insomnia: data.insomnia,
+      name: data.name,
+      version: data.version,
+      dist: {
+        shasum: data.dist.shasum,
+        tarball: data.dist.tarball,
+      },
+    };
+  } finally {
+    await rm(infoDir, { recursive: true, force: true });
+  }
 }
 
 /**
