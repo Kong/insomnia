@@ -117,7 +117,7 @@ function maskConfidentialValue(value: any): any {
   return models.environment.vaultEnvironmentMaskValue;
 }
 
-export async function buildRenderContext({
+export function buildEnvironmentRenderLayers({
   ancestors,
   rootEnvironment,
   subEnvironment,
@@ -125,7 +125,7 @@ export async function buildRenderContext({
   subGlobalEnvironment,
   userUploadEnvironment,
   transientVariables,
-  baseContext,
+  workspaceId,
 }: {
   ancestors?: RenderContextAncestor[];
   rootEnvironment?: Environment;
@@ -134,13 +134,9 @@ export async function buildRenderContext({
   subGlobalEnvironment?: Environment | null;
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
-  baseContext: Omit<BaseRenderContext, 'getKeysContext'>;
-}): Promise<BaseRenderContext> {
-  // Per-key source attribution, recorded while the environments merge below so it
-  // follows the same merge order and winners as the values.
-  const keySource: Record<string, string> = {};
-  const keySourceMeta: Record<string, VariableSourceMeta> = {};
-  const workspaceId = baseContext.getMeta().workspaceId;
+  // Collection and folder layers attribute their source to this workspace.
+  workspaceId?: string;
+}): EnvironmentRenderLayer[] {
   const environmentLayers: EnvironmentRenderLayer[] = [];
 
   if (rootGlobalEnvironment) {
@@ -274,6 +270,43 @@ export async function buildRenderContext({
       meta: { label: formatSourceLabel('Script Variables', transientVariables.name) },
     });
   }
+
+  return environmentLayers;
+}
+
+export async function buildRenderContext({
+  ancestors,
+  rootEnvironment,
+  subEnvironment,
+  rootGlobalEnvironment,
+  subGlobalEnvironment,
+  userUploadEnvironment,
+  transientVariables,
+  baseContext,
+}: {
+  ancestors?: RenderContextAncestor[];
+  rootEnvironment?: Environment;
+  subEnvironment?: Environment;
+  rootGlobalEnvironment?: Environment | null;
+  subGlobalEnvironment?: Environment | null;
+  userUploadEnvironment?: UserUploadEnvironment;
+  transientVariables?: Environment;
+  baseContext: Omit<BaseRenderContext, 'getKeysContext'>;
+}): Promise<BaseRenderContext> {
+  // Per-key source attribution, recorded while the environments merge below so it
+  // follows the same merge order and winners as the values.
+  const keySource: Record<string, string> = {};
+  const keySourceMeta: Record<string, VariableSourceMeta> = {};
+  const environmentLayers = buildEnvironmentRenderLayers({
+    ancestors,
+    rootEnvironment,
+    subEnvironment,
+    rootGlobalEnvironment,
+    subGlobalEnvironment,
+    userUploadEnvironment,
+    transientVariables,
+    workspaceId: baseContext.getMeta().workspaceId,
+  });
 
   // At this point, environments is a list of environments ordered
   // from top-most parent to bottom-most child, and they keys in each environment
