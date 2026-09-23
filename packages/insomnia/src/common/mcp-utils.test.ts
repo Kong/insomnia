@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import type { McpEvent } from '~/main/mcp/types';
 
 import {
-  combineListErrors,
   findFirstMatchEventData,
   findLatestListResult,
   METHOD_INITIALIZE,
