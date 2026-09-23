@@ -1,9 +1,11 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import path from "node:path";
+
 import { expect } from "@playwright/test";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { FlowManager } from "./flow-manager";
-import { PageManager } from "../pages/page-manager";
+import type { PageManager } from "../pages/page-manager";
+import type { FlowManager } from "./flow-manager";
 
 export abstract class BaseFlow {
   constructor(

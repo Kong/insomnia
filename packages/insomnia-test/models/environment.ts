@@ -1,10 +1,12 @@
 import type {
   Environment as AppEnvironment,
   EnvironmentKvPairData,
-} from "../../insomnia-data/src/models/environment";
-import { type as ENVIRONMENT_TYPE } from "../../insomnia-data/src/models/environment";
+} from "insomnia-data";
+import { EnvironmentKvPairDataType, models } from "insomnia-data";
 
-export { EnvironmentKvPairDataType } from "../../insomnia-data/src/models/environment";
+const ENVIRONMENT_TYPE = models.environment.type;
+
+export { EnvironmentKvPairDataType };
 export type { EnvironmentKvPairData };
 export { ENVIRONMENT_TYPE };
 

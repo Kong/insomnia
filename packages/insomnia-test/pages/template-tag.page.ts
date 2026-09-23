@@ -1,7 +1,9 @@
-import { expect, Locator } from "@playwright/test";
-import { BasePage } from "./base.page";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { DigestEncoding, HashAlgorithm } from "../models/template-tag";
+import type { DigestEncoding, HashAlgorithm } from "../models/template-tag";
+import { BasePage } from "./base.page";
 
 export class TemplateTagPage extends BasePage {
   private readonly MODAL = '[role="dialog"]';
@@ -141,6 +143,7 @@ export class TemplateTagPage extends BasePage {
       if (requireNonEmpty) {
         expect(current).not.toBe("");
       }
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- needs the raw string to compare against `previous` across polls, not just assert against a fixed expected value
       expect(current).not.toBe("rendering...");
       const stable = current === previous;
       previous = current;

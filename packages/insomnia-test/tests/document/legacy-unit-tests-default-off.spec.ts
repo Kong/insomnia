@@ -21,14 +21,14 @@ test("Verify the legacy unit test setting defaults off and hides the Tests tab f
 
   const collectionNode = await workspacePage.resolveNode(collection);
   await workspacePage.clickNode(collectionNode);
-  const testsTabVisibleBeforeEnabling = await user.page
+  const testsTabVisibleBeforeEnabling = user.page
     .getByRole("tab", { name: "Tests" })
-    .isVisible();
+    ;
 
   await preferencesPage.open();
   const enabledByDefault = await preferencesPage.isShowLegacyUnitTestsEnabled();
   await preferencesPage.close();
 
   expect(enabledByDefault).toBe(false);
-  expect(testsTabVisibleBeforeEnabling).toBe(false);
+  await expect(testsTabVisibleBeforeEnabling).toBeHidden();
 });

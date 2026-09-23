@@ -1,18 +1,20 @@
 import { expect } from "@playwright/test";
-import { Locator, Page } from "playwright-core";
-import { ContextMenuItem } from "../enums/context-menu-items";
+import type { Locator, Page } from "playwright-core";
+
+import type { ContextMenuItem } from "../enums/context-menu-items";
 import { HttpMethod } from "../enums/http-method";
 import { LintSeverity } from "../enums/lint-severity";
 import { ProjectType } from "../enums/project-types";
 import { RulesetType } from "../enums/ruleset-type";
-import { SpecFormat } from "../enums/spec-format";
+import type { SpecFormat } from "../enums/spec-format";
 import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import type {
+  LintEntry,
+  PathItem} from "../models/collection";
 import {
   Info,
   License,
-  LintEntry,
-  PathItem,
   Specification,
 } from "../models/collection";
 import { BasePage } from "./base.page";
@@ -89,19 +91,19 @@ export class Tree {
 
       const scraped = await rows.evaluateAll((els) =>
         els.map((el) => {
-          const key = el.getAttribute("data-key") ?? "";
+          const key = el.dataset.key ?? "";
           const name = el.getAttribute("aria-label") ?? "";
 
           const inner = el.querySelector<HTMLElement>(
             '[data-testid^="project-node-"],[data-testid^="workspace-node-"],[data-testid^="request-node-"],[data-testid^="empty-node-"]',
           );
           const indent = inner
-            ? parseFloat(getComputedStyle(inner).paddingLeft) || 0
+            ? Number.parseFloat(getComputedStyle(inner).paddingLeft) || 0
             : 0;
 
           const matrix = getComputedStyle(el).transform;
           const match = matrix.match(/matrix\(([^)]+)\)/);
-          const order = match ? parseFloat(match[1].split(",")[5]) || 0 : 0;
+          const order = match ? Number.parseFloat(match[1].split(",")[5]) || 0 : 0;
 
           return { key, name, indent, order };
         }),
@@ -176,7 +178,7 @@ export class Tree {
     const alreadyClicked = new Set<string>();
     for (let clicks = 0; clicks < 50; clicks++) {
       const keys = await collapsedWorkspaceRows.evaluateAll((rows) =>
-        rows.map((row) => row.getAttribute("data-key") ?? ""),
+        rows.map((row) => row.dataset.key ?? ""),
       );
       const key = keys.find((k) => k && !alreadyClicked.has(k));
       if (!key) return;
@@ -280,7 +282,7 @@ export class WorkspacePage extends BasePage {
     await this.page
       .getByRole("menuitem", { name: "Add request to current collection" })
       .click();
-    await expect(rows).toHaveCount(before + 1, { timeout: 10000 });
+    await expect(rows).toHaveCount(before + 1, { timeout: 10_000 });
   }
 
   /**
@@ -728,6 +730,7 @@ export class WorkspacePage extends BasePage {
     let previous: string | null = null;
     await expect(async () => {
       const current = await row.getAttribute("aria-selected");
+      // eslint-disable-next-line playwright/prefer-web-first-assertions -- needs the raw string to compare across polls for stability, not just assert against a fixed expected value
       expect(current).toBe("true");
       const stable = current === previous;
       previous = current;
@@ -882,7 +885,7 @@ export class WorkspacePage extends BasePage {
     return this.poll(async () => {
       const tree = await this.getTree();
       const root = tree.flatten().find((n) => n._id === parent._id);
-      if (!root) return undefined;
+      if (!root) return;
 
       const matches = (node: TreeNode) =>
         (item.id ? node._id === item.id : node.name === item.name) &&
@@ -1670,7 +1673,7 @@ export class WorkspacePage extends BasePage {
       .evaluateAll((els) =>
         Object.fromEntries(
           els.map((el) => {
-            const key = el.getAttribute("data-key")!.replace("info.", "");
+            const key = el.dataset.key!.replace("info.", "");
             const text = el.textContent ?? "";
             return [key, text.slice(text.indexOf(":") + 1).trim()];
           }),
@@ -1683,7 +1686,7 @@ export class WorkspacePage extends BasePage {
       .locator('[role="row"][data-key^="paths."]')
       .evaluateAll((rows) =>
         rows.map((row) => ({
-          path: row.getAttribute("data-key")!.replace(/^paths\./, ""),
+          path: row.dataset.key!.replace(/^paths\./, ""),
           methods: Array.from(
             row.querySelectorAll('button[class*="http-method-"]'),
           ).map((button) => button.textContent?.trim() ?? ""),
@@ -1933,15 +1936,11 @@ export class WorkspacePage extends BasePage {
   async togglePreview(): Promise<boolean> {
     const wasOpen = await this.isPreviewOpen();
     await this.page.locator(this.PREVIEW_TOGGLE).click();
-    if (wasOpen) {
-      await expect(this.page.locator(this.PANE_TWO)).toBeHidden({
+    await (wasOpen ? expect(this.page.locator(this.PANE_TWO)).toBeHidden({
         timeout: DEFAULT_TIMEOUT,
-      });
-    } else {
-      await expect(this.page.locator(this.PANE_TWO)).toBeVisible({
+      }) : expect(this.page.locator(this.PANE_TWO)).toBeVisible({
         timeout: DEFAULT_TIMEOUT,
-      });
-    }
+      }));
     return !wasOpen;
   }
 

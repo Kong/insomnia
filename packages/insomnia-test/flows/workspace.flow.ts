@@ -1,25 +1,26 @@
 import { expect } from "@playwright/test";
+
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { ProjectType } from "../enums/project-types";
 import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { Collection, TestSuite, UnitTest } from "../models/collection";
 import { Environment, isEnvironmentItem } from "../models/environment";
-import { EventStreamRequest } from "../models/event-stream-request";
-import { GitRepoConnection } from "../models/git-repo-connection";
-import { GraphQLRequest } from "../models/graphql-request";
-import { GrpcRequest } from "../models/grpc-request";
-import { HttpRequest } from "../models/http-request";
+import type { EventStreamRequest } from "../models/event-stream-request";
+import type { GitRepoConnection } from "../models/git-repo-connection";
+import type { GraphQLRequest } from "../models/graphql-request";
+import type { GrpcRequest } from "../models/grpc-request";
+import type { HttpRequest } from "../models/http-request";
 import { McpClient } from "../models/mcp-client";
 import { Project } from "../models/project";
-import { RunnerOptions, RunnerRunResult } from "../models/runner";
+import type { RunnerOptions, RunnerRunResult } from "../models/runner";
 import { Settings } from "../models/settings";
-import { SocketIORequest } from "../models/socket-io-request";
-import { WebSocketRequest } from "../models/websocket-request";
-import { PageManager } from "../pages/page-manager";
-import { TreeNode, UnitTestResultRow } from "../pages/workspace.page";
+import type { SocketIORequest } from "../models/socket-io-request";
+import type { WebSocketRequest } from "../models/websocket-request";
+import type { PageManager } from "../pages/page-manager";
+import type { TreeNode, UnitTestResultRow } from "../pages/workspace.page";
 import { BaseFlow } from "./base.flow";
-import { FlowManager } from "./flow-manager";
+import type { FlowManager } from "./flow-manager";
 
 export type WorkspaceItem =
   | (Project & { kind: "project" })
@@ -102,6 +103,7 @@ export class WorkspaceFlow extends BaseFlow {
   async create(
     item: Project,
     credentialName: string,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures -- kept separate from the plain `create(item: Project)` overload above: distinct JSDoc for the git-clone call shape
     repo?: Partial<GitRepoConnection>,
   ): Promise<Project>;
   /**
@@ -124,11 +126,7 @@ export class WorkspaceFlow extends BaseFlow {
   ): Promise<Project | Collection | McpClient | Environment> {
     if (itemOrCredentialName === undefined) {
       const p = parentOrItem;
-      if (p.folderPath !== undefined) {
-        await this.openFolder(p);
-      } else {
-        await this.createProject(p);
-      }
+      await (p.folderPath !== undefined ? this.openFolder(p) : this.createProject(p));
       return this.assertCreated(await this.getProject(p.name), p.name);
     }
     if (typeof itemOrCredentialName === "string") {

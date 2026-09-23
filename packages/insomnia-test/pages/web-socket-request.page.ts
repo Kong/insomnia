@@ -1,10 +1,11 @@
 import { expect } from "@playwright/test";
-import { RequestPage } from "./request.page";
-import {
+
+import { ContentType } from "../enums/content-type";
+import type {
   WebSocketRequest,
   WebSocketRequestBody,
 } from "../models/websocket-request";
-import { ContentType } from "../enums/content-type";
+import { RequestPage } from "./request.page";
 
 export class WebSocketRequestPage extends RequestPage {
   protected readonly urlBarId = "websocket-url-bar";
@@ -44,7 +45,7 @@ export class WebSocketRequestPage extends RequestPage {
   async sendMessage(
     body: WebSocketRequestBody,
     callback: () => Promise<void> | void = () => {},
-    timeout: number = 5000,
+    timeout = 5000,
   ): Promise<void> {
     await this.setBody(body);
     await this.send();

@@ -1,4 +1,5 @@
-import path from "path";
+import path from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
 // By default, misc/fixtures.ts launches the app straight out of the

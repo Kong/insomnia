@@ -1,8 +1,9 @@
 import { expect } from "@playwright/test";
-import { RequestPage } from "./request.page";
-import { GrpcRequestHeader } from "../models/grpc-request";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+
 import { throwOnDialog } from "../misc/decorators";
+import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import type { GrpcRequestHeader } from "../models/grpc-request";
+import { RequestPage } from "./request.page";
 
 const MESSAGE_TAB_KEY = "method-type";
 

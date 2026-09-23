@@ -1,16 +1,18 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import path from "node:path";
+
 import { expect } from "@playwright/test";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import type { Collection } from "../models/collection";
+import type { Cookie } from "../models/cookie";
+import type { EventStreamRequest } from "../models/event-stream-request";
+import type { GraphQLRequest } from "../models/graphql-request";
+import type { GrpcRequest } from "../models/grpc-request";
+import type { HttpRequest } from "../models/http-request";
+import type { SocketIORequest } from "../models/socket-io-request";
+import type { WebSocketRequest } from "../models/websocket-request";
 import { BaseFlow } from "./base.flow";
-import { Cookie } from "../models/cookie";
-import { Collection } from "../models/collection";
-import { HttpRequest } from "../models/http-request";
-import { EventStreamRequest } from "../models/event-stream-request";
-import { GraphQLRequest } from "../models/graphql-request";
-import { SocketIORequest } from "../models/socket-io-request";
-import { WebSocketRequest } from "../models/websocket-request";
-import { GrpcRequest } from "../models/grpc-request";
 
 export type CookieTarget =
   | Collection

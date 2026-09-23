@@ -39,7 +39,7 @@ test("Verify a freshly created request focuses the URL bar and Tab/arrow-key ord
   await user.page.keyboard.press("Tab");
   const paramsTab = user.page.getByRole("tab", { name: "Params" });
   const paramsTabFocusedAfterThirdTab = await httpRequestPage.isFocused(paramsTab);
-  const paramsTabFocusVisible = await paramsTab.getAttribute("data-focus-visible");
+  const paramsTabFocusVisible = paramsTab;
   await user.page.keyboard.press("ArrowRight");
   const bodyTab = user.page.getByRole("tab", { name: "Body" });
   const bodyTabFocusedAfterArrowRight = await httpRequestPage.isFocused(bodyTab);
@@ -47,6 +47,6 @@ test("Verify a freshly created request focuses the URL bar and Tab/arrow-key ord
   expect(urlBarFocusedAfterCreate).toBe(true);
   expect(sendFocusedAfterFirstTab).toBe(true);
   expect(paramsTabFocusedAfterThirdTab).toBe(true);
-  expect(paramsTabFocusVisible).toBe("true");
+  await expect(paramsTabFocusVisible).toHaveAttribute("data-focus-visible", "true");
   expect(bodyTabFocusedAfterArrowRight).toBe(true);
 });

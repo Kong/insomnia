@@ -1,13 +1,14 @@
 import { expect } from "@playwright/test";
-import { BasePage } from "./base.page";
-import {
+
+import { SendButtonState } from "../enums/send-button-state";
+import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import type {
   Response,
   ResponseHeader,
   ResponseTestResult,
   StreamEvent,
 } from "../models/response";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { SendButtonState } from "../enums/send-button-state";
+import { BasePage } from "./base.page";
 
 export type ResponseTab =
   | "preview"
@@ -18,7 +19,7 @@ export type ResponseTab =
   | "timeline"
   | "events";
 
-const DURATION_UNIT_MS: Record<string, number> = { ms: 1, s: 1000, m: 60000 };
+const DURATION_UNIT_MS: Record<string, number> = { ms: 1, s: 1000, m: 60_000 };
 const BYTE_UNIT_FACTOR: Record<string, number> = {
   B: 1,
   KB: 1024,
@@ -29,14 +30,14 @@ const BYTE_UNIT_FACTOR: Record<string, number> = {
 function parseDurationMs(raw: string): number | undefined {
   const match = raw.match(/^([\d.]+)\s*(ms|s|m)$/i);
   if (!match) return undefined;
-  return parseFloat(match[1]) * DURATION_UNIT_MS[match[2].toLowerCase()];
+  return Number.parseFloat(match[1]) * DURATION_UNIT_MS[match[2].toLowerCase()];
 }
 
 function parseByteSize(raw: string): number | undefined {
   const match = raw.match(/^([\d.]+)\s*(B|KB|MB|GB)$/i);
   if (!match) return undefined;
   return Math.round(
-    parseFloat(match[1]) * BYTE_UNIT_FACTOR[match[2].toUpperCase()],
+    Number.parseFloat(match[1]) * BYTE_UNIT_FACTOR[match[2].toUpperCase()],
   );
 }
 
@@ -175,7 +176,7 @@ export class ResponsePage extends BasePage {
    * @returns The parsed (or raw) message content, or undefined when the
    * tab doesn't exist
    */
-  async getGrpcMessage(index: number = 0): Promise<unknown> {
+  async getGrpcMessage(index = 0): Promise<unknown> {
     const tab = this.page
       .locator(`${this.PANE} [role="tab"]`)
       .filter({ hasText: new RegExp(`^Response ${index + 1}$`) });

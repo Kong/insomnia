@@ -1,14 +1,15 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { Collection } from "../models/collection";
-import { Folder } from "../models/folder";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
+import type { Response } from "../models/response";
+import type {
+  WebSocketRequestBody} from "../models/websocket-request";
 import {
-  WebSocketRequest,
-  WebSocketRequestBody,
+  WebSocketRequest
 } from "../models/websocket-request";
-import { Response } from "../models/response";
-import { WebSocketRequestPage } from "../pages/web-socket-request.page";
+import type { WebSocketRequestPage } from "../pages/web-socket-request.page";
+import { BaseFlow } from "./base.flow";
 
 export class WebSocketRequestFlow extends BaseFlow {
   /**
@@ -53,7 +54,7 @@ export class WebSocketRequestFlow extends BaseFlow {
   async disconnect(
     request: WebSocketRequest,
     callback: () => Promise<void> | void = () => {},
-    timeout: number = 5000,
+    timeout = 5000,
   ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
@@ -132,7 +133,7 @@ export class WebSocketRequestFlow extends BaseFlow {
     request: WebSocketRequest,
     body: WebSocketRequestBody,
     callback: () => Promise<void> | void = () => {},
-    timeout: number = 5000,
+    timeout = 5000,
   ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;

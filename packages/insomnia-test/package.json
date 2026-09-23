@@ -25,7 +25,7 @@
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/reflection": "^1.0.4",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "1.59.1",
     "@types/node": "^26.0.1",
     "@types/prettier": "^2.7.3",
     "electron": "^43.2.0",

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 "use strict";
 
-const http = require("http");
-const https = require("https");
-const fs = require("fs");
-const path = require("path");
+const http = require("node:http");
+const https = require("node:https");
+const fs = require("node:fs");
+const path = require("node:path");
 const { graphql, buildSchema } = require("graphql");
 
 const PETSTORE_SWAGGER = fs.readFileSync(
@@ -238,9 +238,9 @@ async function handleRequest(req, res) {
   if (req.method === "POST" && url.pathname === "/calculator.asmx") {
     const raw = await readBody(req);
     const intA =
-      parseInt((raw.match(/<[\w:]*intA>(-?\d+)</) || [])[1], 10) || 0;
+      Number.parseInt((raw.match(/<[\w:]*intA>(-?\d+)</) || [])[1], 10) || 0;
     const intB =
-      parseInt((raw.match(/<[\w:]*intB>(-?\d+)</) || [])[1], 10) || 0;
+      Number.parseInt((raw.match(/<[\w:]*intB>(-?\d+)</) || [])[1], 10) || 0;
     res.writeHead(200, {
       "Content-Type": "text/xml; charset=utf-8",
       "Access-Control-Allow-Origin": "*",

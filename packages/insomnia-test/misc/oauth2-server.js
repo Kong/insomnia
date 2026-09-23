@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+const crypto = require("node:crypto");
 const express = require("express");
 
 const PORT = process.env.OAUTH2_PORT || 4080;
@@ -54,7 +54,7 @@ function fakeIdToken(sub, aud) {
     Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })),
   );
   const payload = base64url(
-    Buffer.from(JSON.stringify({ sub, aud, iat: 0, exp: 9999999999 })),
+    Buffer.from(JSON.stringify({ sub, aud, iat: 0, exp: 9_999_999_999 })),
   );
   return `${header}.${payload}.`;
 }

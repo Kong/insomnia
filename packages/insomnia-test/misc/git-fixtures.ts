@@ -1,6 +1,7 @@
-import * as crypto from "crypto";
-import { test as base, GIT_SERVER as GIT_SERVER_URL } from "./fixtures";
-import { GitCredential } from "../models/git-credential";
+import * as crypto from "node:crypto";
+
+import type { GitCredential } from "../models/git-credential";
+import { GIT_SERVER as GIT_SERVER_URL,test as base } from "./fixtures";
 
 // The most recently created repo (set by the `gitRepo` fixture), used as
 // the default for getServerBranches()/getServerCommits() so specs don't
@@ -92,10 +93,10 @@ export const GIT_CREDENTIAL: GitCredential = {
   password: "testpass",
 };
 
-type GitFixtures = {
+interface GitFixtures {
   /** The name of a repo freshly created (and seeded) on misc/git-server.js — always local, never a full URL. */
   gitRepo: string;
-};
+}
 
 export const test = base.extend<GitFixtures>({
   gitRepo: async ({}, use) => {

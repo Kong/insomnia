@@ -1,7 +1,7 @@
-import { ExportFormat } from "../enums/export-format";
 import { ContextMenuItem } from "../enums/context-menu-items";
-import { Project } from "../models/project";
+import type { ExportFormat } from "../enums/export-format";
 import { Collection } from "../models/collection";
+import type { Project } from "../models/project";
 import { BaseFlow } from "./base.flow";
 
 export class ExportFlow extends BaseFlow {
@@ -27,6 +27,7 @@ export class ExportFlow extends BaseFlow {
    * @param path - Absolute directory path the exported files should be written into
    */
   async export(
+    // eslint-disable-next-line @typescript-eslint/unified-signatures -- kept separate from the Collection overload above: distinct JSDoc per export scope
     item: Project,
     format: ExportFormat,
     path: string,

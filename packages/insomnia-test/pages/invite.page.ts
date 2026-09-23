@@ -1,5 +1,7 @@
-import { expect, Locator } from "@playwright/test";
-import { CollaboratorRole } from "../enums/collaborator-role";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
+
+import type { CollaboratorRole } from "../enums/collaborator-role";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { BasePage } from "./base.page";
 

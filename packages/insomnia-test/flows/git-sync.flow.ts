@@ -1,5 +1,5 @@
-import { BaseFlow } from "./base.flow";
 import { Commit } from "../models/commit";
+import { BaseFlow } from "./base.flow";
 
 export class GitSyncFlow extends BaseFlow {
   /**

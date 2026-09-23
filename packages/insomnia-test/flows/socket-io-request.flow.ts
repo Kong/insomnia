@@ -1,11 +1,11 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { Collection } from "../models/collection";
-import { Folder } from "../models/folder";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
+import type { Response } from "../models/response";
 import { SocketIORequest } from "../models/socket-io-request";
-import { Response } from "../models/response";
-import { SocketIORequestPage } from "../pages/socket-io-request.page";
+import type { SocketIORequestPage } from "../pages/socket-io-request.page";
+import { BaseFlow } from "./base.flow";
 
 export class SocketIORequestFlow extends BaseFlow {
   /**
@@ -65,7 +65,7 @@ export class SocketIORequestFlow extends BaseFlow {
   async disconnect(
     request: SocketIORequest,
     callback: () => Promise<void> | void = () => {},
-    timeout: number = 5000,
+    timeout = 5000,
   ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;

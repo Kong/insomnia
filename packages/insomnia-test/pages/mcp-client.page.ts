@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
-import { RequestPage } from "./request.page";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { RequestPage } from "./request.page";
 
 export class McpClientPage extends RequestPage {
   private readonly CALL_TOOL_BUTTON = `${this.TABPANEL} button:has-text("Call Tool")`;

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 "use strict";
 
-const { createServer } = require("http");
-const { createServer: createHttpsServer } = require("https");
-const fs = require("fs");
-const path = require("path");
+const { createServer } = require("node:http");
+const { createServer: createHttpsServer } = require("node:https");
+const fs = require("node:fs");
+const path = require("node:path");
 const { WebSocketServer } = require("ws");
 
 const PORT = process.env.WS_PORT || 4040;

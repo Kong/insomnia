@@ -7,8 +7,9 @@ import type {
   RequestBodyParameter,
   RequestHeader,
   RequestParameter,
-} from "../../insomnia-data/src/models/request";
-import { HttpMethod } from "../enums/http-method";
+} from "insomnia-data";
+
+import type { HttpMethod } from "../enums/http-method";
 
 export type HttpRequestBody = Pick<
   AppRequestBody,

@@ -1,5 +1,7 @@
-import type { SocketIORequest as AppSocketIORequest } from "../../insomnia-data/src/models/socket-io-request";
-import type { RequestHeader } from "../../insomnia-data/src/models/request";
+import type {
+  RequestHeader,
+  SocketIORequest as AppSocketIORequest,
+} from "insomnia-data";
 
 export interface SocketIOMessage {
   eventName: string;

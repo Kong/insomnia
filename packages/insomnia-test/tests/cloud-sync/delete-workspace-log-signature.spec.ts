@@ -1,5 +1,5 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
+import path from "node:path";
 
 import { DeleteMode } from "../../enums/delete-mode";
 import { expect, resetCloudSyncState, test } from "../../misc/fixtures";

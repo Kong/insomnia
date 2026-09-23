@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
-
 import {
   AWSCredentialType,
   HashiCorpCredentialType,
   HashiCorpVaultAuthMethod,
-} from "../../../insomnia-data/src/models/cloud-credential";
+} from "insomnia-data";
+
 import { ContentType } from "../../enums/content-type";
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";

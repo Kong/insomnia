@@ -1,4 +1,4 @@
-import { CollaboratorRole } from "../enums/collaborator-role";
+import type { CollaboratorRole } from "../enums/collaborator-role";
 import { BaseFlow } from "./base.flow";
 
 /**
@@ -8,11 +8,11 @@ import { BaseFlow } from "./base.flow";
  * `existed: true`), or a role change for a collaborator who's already a
  * member (identified by carrying a `role`).
  */
-export type Collaborator = {
+export interface Collaborator {
   email: string;
   role?: CollaboratorRole;
   existed?: boolean;
-};
+}
 
 export class OrganizationFlow extends BaseFlow {
   /**

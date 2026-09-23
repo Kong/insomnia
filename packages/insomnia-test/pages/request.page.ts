@@ -1,10 +1,12 @@
-import { expect, Locator } from "@playwright/test";
-import { HttpMethod } from "../enums/http-method";
-import { ScriptTab } from "../enums/script-tab";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type {
   RequestHeader,
   RequestParameter,
-} from "../../insomnia-data/src/models/request";
+} from "insomnia-data";
+
+import type { HttpMethod } from "../enums/http-method";
+import { ScriptTab } from "../enums/script-tab";
 import { throwOnDialog } from "../misc/decorators";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { AuthTabPage } from "./auth-tab.page";
@@ -87,7 +89,7 @@ export abstract class RequestPage extends AuthTabPage {
    */
   async disconnect(
     callback: () => Promise<void> | void = () => {},
-    timeout: number = 5000,
+    timeout = 5000,
   ): Promise<void> {
     await expect(async () => {
       await callback();
@@ -303,7 +305,7 @@ export abstract class RequestPage extends AuthTabPage {
         .locator(`[role="option"][data-key="${contentType}"]`)
         .dispatchEvent("click");
       await expect(select).toHaveValue(contentType, { timeout: 1000 });
-    }).toPass({ timeout: 10000 });
+    }).toPass({ timeout: 10_000 });
   }
 
   /**

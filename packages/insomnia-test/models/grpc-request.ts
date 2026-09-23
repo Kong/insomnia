@@ -1,7 +1,7 @@
 import type {
   GrpcRequest as AppGrpcRequest,
   GrpcRequestHeader,
-} from "../../insomnia-data/src/models/grpc-request";
+} from "insomnia-data";
 
 export interface GrpcRequestInit extends Pick<AppGrpcRequest, "name" | "url"> {
   method?: string;

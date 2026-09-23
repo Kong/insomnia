@@ -1,5 +1,5 @@
 import { DeleteMode } from "../enums/delete-mode";
-import { Project } from "../models/project";
+import type { Project } from "../models/project";
 import { BaseFlow } from "./base.flow";
 
 export class CloudSyncFlow extends BaseFlow {
@@ -94,11 +94,7 @@ export class CloudSyncFlow extends BaseFlow {
   async delete(name: string, mode: DeleteMode): Promise<void> {
     const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.openDeleteWorkspaceDialog(name);
-    if (mode === DeleteMode.Local) {
-      await cloudSyncPage.deleteWorkspaceLocalOnly();
-    } else {
-      await cloudSyncPage.deleteWorkspacePermanently();
-    }
+    await (mode === DeleteMode.Local ? cloudSyncPage.deleteWorkspaceLocalOnly() : cloudSyncPage.deleteWorkspacePermanently());
   }
 
   /**

@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
+
+import type { ExportFormat } from "../enums/export-format";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { ExportFormat } from "../enums/export-format";
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {

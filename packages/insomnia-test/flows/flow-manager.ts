@@ -1,38 +1,39 @@
 import type { ElectronApplication } from "@playwright/test";
-import { PageManager } from "../pages/page-manager";
+
+import { instrumentWithSteps } from "../misc/step-instrumentation";
+import type { PageManager } from "../pages/page-manager";
 import { AppFlow } from "./app.flow";
-import { WorkspaceFlow } from "./workspace.flow";
-import { HttpRequestFlow } from "./http-request.flow";
-import { EventStreamRequestFlow } from "./event-stream-request.flow";
-import { ExportFlow } from "./export.flow";
-import { FolderFlow } from "./folder.flow";
-import { GraphQLRequestFlow } from "./graphql-request.flow";
-import { WebSocketRequestFlow } from "./web-socket-request.flow";
-import { GrpcRequestFlow } from "./grpc-request.flow";
-import { SocketIORequestFlow } from "./socket-io-request.flow";
-import { ImportFlow } from "./import.flow";
-import { McpClientFlow } from "./mcp-client.flow";
-import { EnvironmentFlow } from "./environment.flow";
-import { OrganizationFlow } from "./organization.flow";
 import { CertificatesFlow } from "./certificates.flow";
 import { CloudSyncFlow } from "./cloud-sync.flow";
 import { CookieFlow } from "./cookie.flow";
+import { EnvironmentFlow } from "./environment.flow";
+import { EventStreamRequestFlow } from "./event-stream-request.flow";
+import { ExportFlow } from "./export.flow";
+import { FolderFlow } from "./folder.flow";
 import { GitSyncFlow } from "./git-sync.flow";
+import { GraphQLRequestFlow } from "./graphql-request.flow";
+import { GrpcRequestFlow } from "./grpc-request.flow";
+import { HttpRequestFlow } from "./http-request.flow";
+import { ImportFlow } from "./import.flow";
+import { McpClientFlow } from "./mcp-client.flow";
+import { OrganizationFlow } from "./organization.flow";
 import { PreferencesFlow } from "./preferences.flow";
+import { SocketIORequestFlow } from "./socket-io-request.flow";
 import { TemplateTagFlow } from "./template-tag.flow";
-import { instrumentWithSteps } from "../misc/step-instrumentation";
+import { WebSocketRequestFlow } from "./web-socket-request.flow";
+import { WorkspaceFlow } from "./workspace.flow";
 
 /**
  * The `insomnia` fixture's original launch parameters — kept around so
  * `AppFlow.restart()` can relaunch against the same `dataPath` later
  * without re-deriving them.
  */
-export type AppLaunchConfig = {
+export interface AppLaunchConfig {
   dataPath: string;
   skipOnboarding: boolean;
   vaultKey: string;
   vaultSalt: string;
-};
+}
 
 export class FlowManager {
   private _appFlow?: AppFlow;

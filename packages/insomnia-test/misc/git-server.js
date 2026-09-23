@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 "use strict";
 
-const http = require("http");
-const path = require("path");
-const os = require("os");
-const fs = require("fs");
-const zlib = require("zlib");
-const { spawn, execFileSync } = require("child_process");
+const http = require("node:http");
+const path = require("node:path");
+const os = require("node:os");
+const fs = require("node:fs");
+const zlib = require("node:zlib");
+const { spawn, execFileSync } = require("node:child_process");
 const backend = require("git-http-backend");
 
 const PORT = 4070;
@@ -144,7 +144,7 @@ function listCommits(name, branch) {
     .split("\n")
     .filter(Boolean)
     .map((line) => {
-      const [id, message, authorName, authorEmail] = line.split("\x1f");
+      const [id, message, authorName, authorEmail] = line.split("\u001F");
       return { id, message, authorName, authorEmail };
     });
 }

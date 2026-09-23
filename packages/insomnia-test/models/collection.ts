@@ -1,7 +1,8 @@
-import type { Workspace } from "../../insomnia-data/src/models/workspace";
-import { HttpMethod } from "../enums/http-method";
-import { LintSeverity } from "../enums/lint-severity";
-import { RulesetType } from "../enums/ruleset-type";
+import type { Workspace } from "insomnia-data";
+
+import type { HttpMethod } from "../enums/http-method";
+import type { LintSeverity } from "../enums/lint-severity";
+import type { RulesetType } from "../enums/ruleset-type";
 
 export class License {
   constructor(

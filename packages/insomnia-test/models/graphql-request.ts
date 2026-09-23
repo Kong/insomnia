@@ -2,9 +2,10 @@ import type {
   Request as AppRequest,
   RequestHeader,
   RequestParameter,
-} from "../../insomnia-data/src/models/request";
-import { HttpMethod } from "../enums/http-method";
-import { HttpRequestBody } from "./http-request";
+} from "insomnia-data";
+
+import type { HttpMethod } from "../enums/http-method";
+import type { HttpRequestBody } from "./http-request";
 
 /**
  * A field's return type, following the GraphQL introspection standard's

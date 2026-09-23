@@ -1,4 +1,5 @@
-import { Page } from "playwright-core";
+import type { Page } from "playwright-core";
+
 import { DEFAULT_TIMEOUT, launchInsomniaElectron } from "../misc/fixtures";
 import { BaseFlow } from "./base.flow";
 

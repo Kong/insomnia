@@ -1,5 +1,5 @@
+import type { TemplateTag, TemplateTagName } from "../models/template-tag";
 import { BaseFlow } from "./base.flow";
-import { TemplateTag, TemplateTagName } from "../models/template-tag";
 
 export class TemplateTagFlow extends BaseFlow {
   /**

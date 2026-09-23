@@ -1,10 +1,13 @@
-import { expect, Locator } from "@playwright/test";
-import { BasePage } from "./base.page";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import type {
+  EnvironmentKvPairData} from "../models/environment";
 import {
-  EnvironmentKvPairData,
   EnvironmentKvPairDataType,
 } from "../models/environment";
+import { BasePage } from "./base.page";
 
 const TYPE_LABELS: Record<EnvironmentKvPairDataType, string> = {
   [EnvironmentKvPairDataType.JSON]: "JSON",
@@ -51,7 +54,7 @@ export class EnvironmentPage extends BasePage {
    */
   async createSubEnvironment(
     name: string,
-    isPrivate: boolean = false,
+    isPrivate = false,
   ): Promise<void> {
     const rows = this.page.locator(`${this.SIDEBAR} [role="row"]`);
     const countBefore = await rows.count();
@@ -178,7 +181,7 @@ export class EnvironmentPage extends BasePage {
    */
   async linkProjectEnvironment(
     containerName: string,
-    environmentName: string = "Base Environment",
+    environmentName = "Base Environment",
   ): Promise<void> {
     const optionName =
       environmentName === "Base Environment" ? containerName : environmentName;

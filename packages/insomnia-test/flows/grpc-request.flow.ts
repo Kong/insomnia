@@ -1,10 +1,10 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { Collection } from "../models/collection";
-import { Folder } from "../models/folder";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
 import { GrpcRequest } from "../models/grpc-request";
-import { GrpcRequestPage } from "../pages/grpc-request.page";
+import type { GrpcRequestPage } from "../pages/grpc-request.page";
+import { BaseFlow } from "./base.flow";
 
 export interface GrpcResponse {
   status?: { code: string; message: string };

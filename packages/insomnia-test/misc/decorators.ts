@@ -11,7 +11,7 @@ export function throwOnDialog<
   This extends object,
   Args extends unknown[],
   Return,
->(timeout: number = 1000) {
+>(timeout = 1000) {
   return function (
     target: (this: This, ...args: Args) => Promise<Return>,
     _context: ClassMethodDecoratorContext<

@@ -1,11 +1,11 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { Collection } from "../models/collection";
-import { Folder } from "../models/folder";
+import type { Collection } from "../models/collection";
 import { EventStreamRequest } from "../models/event-stream-request";
-import { Response } from "../models/response";
-import { EventStreamRequestPage } from "../pages/event-stream-request.page";
+import type { Folder } from "../models/folder";
+import type { Response } from "../models/response";
+import type { EventStreamRequestPage } from "../pages/event-stream-request.page";
+import { BaseFlow } from "./base.flow";
 
 export class EventStreamRequestFlow extends BaseFlow {
   /**

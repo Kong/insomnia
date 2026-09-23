@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const { ReflectionService } = require("@grpc/reflection");

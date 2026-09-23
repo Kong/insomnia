@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 "use strict";
 
-const https = require("https");
-const fs = require("fs");
-const path = require("path");
+const https = require("node:https");
+const fs = require("node:fs");
+const path = require("node:path");
 const express = require("express");
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const {
@@ -109,7 +109,7 @@ app.post("/mcp", async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({
         jsonrpc: "2.0",
-        error: { code: -32603, message: "Internal server error" },
+        error: { code: -32_603, message: "Internal server error" },
         id: null,
       });
     }
@@ -120,7 +120,7 @@ app.get("/mcp", (_req, res) => {
   res.writeHead(405).end(
     JSON.stringify({
       jsonrpc: "2.0",
-      error: { code: -32000, message: "Method not allowed." },
+      error: { code: -32_000, message: "Method not allowed." },
       id: null,
     }),
   );

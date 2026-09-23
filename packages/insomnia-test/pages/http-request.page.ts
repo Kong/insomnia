@@ -1,12 +1,13 @@
 import { expect } from "@playwright/test";
-import { RequestPage } from "./request.page";
-import {
+
+import { ContentType } from "../enums/content-type";
+import type { HttpMethod } from "../enums/http-method";
+import type {
   HttpRequest,
   HttpRequestBody,
   RequestBodyParameter,
 } from "../models/http-request";
-import { ContentType } from "../enums/content-type";
-import { HttpMethod } from "../enums/http-method";
+import { RequestPage } from "./request.page";
 
 export class HttpRequestPage extends RequestPage {
   protected readonly urlBarId = "request-url-bar";
@@ -154,8 +155,7 @@ export class HttpRequestPage extends RequestPage {
     const addBtn = panel.locator('button:has-text("Add")');
     const rows = panel.locator('[role="listbox"] [role="option"]');
 
-    for (let i = 0; i < params.length; i++) {
-      const param = params[i];
+    for (const [i, param] of params.entries()) {
       const countBefore = await rows.count();
 
       if (i > 0 || countBefore === 0) {
@@ -163,7 +163,7 @@ export class HttpRequestPage extends RequestPage {
           const before = await rows.count();
           await addBtn.click();
           await expect(rows).toHaveCount(before + 1, { timeout: 1000 });
-        }).toPass({ timeout: 10000 });
+        }).toPass({ timeout: 10_000 });
       }
       const row = rows.last();
       await this.setCodeMirrorValue(

@@ -1,12 +1,13 @@
 import { expect } from "@playwright/test";
-import { RequestPage } from "./request.page";
-import {
+
+import { ContentType } from "../enums/content-type";
+import type { HttpMethod } from "../enums/http-method";
+import type {
   GraphQLRequest,
   GraphQLRequestBody,
   GraphQLSchema,
 } from "../models/graphql-request";
-import { ContentType } from "../enums/content-type";
-import { HttpMethod } from "../enums/http-method";
+import { RequestPage } from "./request.page";
 
 export class GraphQLRequestPage extends RequestPage {
   protected readonly urlBarId = "request-url-bar";
@@ -117,7 +118,7 @@ export class GraphQLRequestPage extends RequestPage {
       name: /error fetching schema/i,
     });
     await expect(errorButton)
-      .toBeHidden({ timeout: 15000 })
+      .toBeHidden({ timeout: 15_000 })
       .catch(() => {});
     if (await errorButton.isVisible().catch(() => false)) return undefined;
 

@@ -1,10 +1,10 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { Collection } from "../models/collection";
+import type { Collection } from "../models/collection";
 import { Folder } from "../models/folder";
-import { OAuth2Tokens } from "../pages/auth-tab.page";
-import { FolderPage } from "../pages/folder.page";
+import type { OAuth2Tokens } from "../pages/auth-tab.page";
+import type { FolderPage } from "../pages/folder.page";
+import { BaseFlow } from "./base.flow";
 
 export class FolderFlow extends BaseFlow {
   /**

@@ -1,7 +1,7 @@
 import type {
   Response as AppResponse,
   ResponseHeader,
-} from "../../insomnia-data/src/models/response";
+} from "insomnia-data";
 
 export interface StreamEvent {
   data: string;

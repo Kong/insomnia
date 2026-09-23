@@ -1,9 +1,11 @@
 import { expect } from "@playwright/test";
-import { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
+
+import type { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { GitCredential } from "../models/git-credential";
-import { AiUrlBackendSettings, Settings } from "../models/settings";
-import { LlmUrlBackendFormFields } from "../pages/preferences.page";
+import type { GitCredential } from "../models/git-credential";
+import type { AiUrlBackendSettings} from "../models/settings";
+import { Settings } from "../models/settings";
+import type { LlmUrlBackendFormFields } from "../pages/preferences.page";
 import { BaseFlow } from "./base.flow";
 
 export class PreferencesFlow extends BaseFlow {

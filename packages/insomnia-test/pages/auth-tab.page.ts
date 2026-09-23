@@ -1,12 +1,14 @@
-import { expect, Locator } from "@playwright/test";
-import { AuthType } from "../enums/auth-type";
-import type { OAuth1SignatureMethod } from "../../insomnia-data/common-src/constants";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type {
   AuthTypeOAuth1,
   AuthTypeOAuth2,
-} from "../../insomnia-data/src/models/request";
-import { BasePage } from "./base.page";
+} from "insomnia-data";
+import type { OAuth1SignatureMethod } from "insomnia-data/common";
+
+import { AuthType } from "../enums/auth-type";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { BasePage } from "./base.page";
 
 type OAuth1TextField = keyof Omit<
   AuthTypeOAuth1,

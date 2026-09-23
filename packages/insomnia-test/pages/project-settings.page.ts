@@ -1,7 +1,9 @@
-import { expect, Locator } from "@playwright/test";
-import { BasePage } from "./base.page";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
+
+import type { ProjectType } from "../enums/project-types";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { ProjectType } from "../enums/project-types";
+import { BasePage } from "./base.page";
 
 export class ProjectSettingsPage extends BasePage {
   private readonly dialog = this.page.getByRole("dialog", {

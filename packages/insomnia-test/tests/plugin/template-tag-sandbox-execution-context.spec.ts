@@ -1,5 +1,5 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
+import path from "node:path";
 
 import { faker } from "@faker-js/faker";
 

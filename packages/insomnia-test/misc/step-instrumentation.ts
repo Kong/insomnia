@@ -52,11 +52,11 @@ function humanize(name: string): string {
 const BARE_VERB_PATTERN = /^[a-z]+$/;
 const CLASS_SUFFIX_PATTERN = /(Flow|Page)$/;
 
-type IdentifiedObjectArg = {
+interface IdentifiedObjectArg {
   pos: number;
   identifier: string;
   typeLabel?: string;
-};
+}
 
 function describeArgs(className: string, key: string, args: unknown[]): string {
   let stringArg: string | undefined;
@@ -111,18 +111,18 @@ function describeArgs(className: string, key: string, args: unknown[]): string {
   return (subject ? ` ${subject}` : "") + detail;
 }
 
-type QueueItem = {
+interface QueueItem {
   childTitle: string;
   fn: () => unknown;
   resolve: (v: unknown) => void;
   reject: (e: unknown) => void;
-};
+}
 
-type PageGroup = {
+interface PageGroup {
   instance: object;
   run: (childTitle: string, fn: () => unknown) => Promise<unknown>;
   close: () => Promise<void>;
-};
+}
 
 let isProcessingGroupItem = false;
 

@@ -1,9 +1,9 @@
-import type { Settings as AppSettings } from "../../insomnia-data/common-src/settings";
 import type {
   AWSFileCredential,
   GCPCredential,
   VaultAppRoleCredential,
-} from "../../insomnia-data/src/models/cloud-credential";
+} from "insomnia-data";
+import type { Settings as AppSettings } from "insomnia-data/common";
 
 // Each provider's real `credentials` field (`CloudProviderCredential` in
 // insomnia-data) is itself a union of every auth mode that provider
@@ -13,11 +13,11 @@ import type {
 // (e.g. AWS temporary credentials) no create method reads. `azure` is
 // left out entirely: its credential only ever comes from a real OAuth
 // redirect, so there's no create method for it either.
-type SupportedCloudCredentials = {
+interface SupportedCloudCredentials {
   aws: AWSFileCredential;
   gcp: GCPCredential;
   hashicorp: VaultAppRoleCredential;
-};
+}
 
 /**
  * A cloud (vault) service credential to create via Preferences ->

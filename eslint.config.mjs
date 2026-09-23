@@ -105,6 +105,17 @@ export default defineConfig([
       'playwright/no-wait-for-timeout': 'error',
     },
   },
+  // insomnia-test also writes Playwright specs/fixtures, so it needs the
+  // same base recommended config (notably `no-empty-pattern: 'off'`, which
+  // the un-scoped rule above would otherwise flag on every fixture that
+  // doesn't depend on other fixtures) — but not smoke-test's extra
+  // opinionated overrides above, which weren't authored with this package's
+  // conventions in mind.
+  {
+    ...playwright.configs['flat/recommended'],
+    files: ['packages/insomnia-test/**/*.ts'],
+    plugins: { playwright: playwright },
+  },
   // React hooks section
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
@@ -314,6 +325,20 @@ export default defineConfig([
     files: ['**/__tests__/**/*.{ts,tsx}', '**/*.test.{ts,tsx}'],
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
+    },
+  },
+  // insomnia-test's standalone CommonJS mock servers/fixtures, run directly
+  // with `node` (see packages/insomnia-test/package.json scripts) rather than
+  // bundled, so they use `require`/`module.exports` and Node globals directly.
+  {
+    files: ['packages/insomnia-test/misc/*.js', 'packages/insomnia-test/tests/**/*-main.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      'unicorn/prefer-module': 'off',
     },
   },
 ]);

@@ -1,18 +1,18 @@
-import { BaseFlow } from "./base.flow";
-import { Collection } from "../models/collection";
+import type { Collection } from "../models/collection";
 import {
-  ENVIRONMENT_TYPE,
   Environment,
+  ENVIRONMENT_TYPE,
   isEnvironmentItem,
 } from "../models/environment";
-import { McpClient } from "../models/mcp-client";
-import { Project } from "../models/project";
-import { GrpcRequest } from "../models/grpc-request";
-import { GraphQLRequest } from "../models/graphql-request";
-import { HttpRequest } from "../models/http-request";
-import { EventStreamRequest } from "../models/event-stream-request";
-import { SocketIORequest } from "../models/socket-io-request";
-import { WebSocketRequest } from "../models/websocket-request";
+import type { EventStreamRequest } from "../models/event-stream-request";
+import type { GraphQLRequest } from "../models/graphql-request";
+import type { GrpcRequest } from "../models/grpc-request";
+import type { HttpRequest } from "../models/http-request";
+import type { McpClient } from "../models/mcp-client";
+import type { Project } from "../models/project";
+import type { SocketIORequest } from "../models/socket-io-request";
+import type { WebSocketRequest } from "../models/websocket-request";
+import { BaseFlow } from "./base.flow";
 
 const BASE_ENVIRONMENT_NAME = "Base Environment";
 

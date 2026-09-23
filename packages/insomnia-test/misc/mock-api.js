@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 "use strict";
 
-const http = require("http");
-const crypto = require("crypto");
-const zlib = require("zlib");
+const http = require("node:http");
+const crypto = require("node:crypto");
+const zlib = require("node:zlib");
 const { parse } = require("graphql");
 
 const ACCOUNT_ID = "acct_64a477e6b59d43a5a607f84b4f73e3ce";
@@ -507,21 +507,20 @@ function handleCloudSyncGraphQL(req, res) {
         at: Date.now(),
       });
 
-      if (state.delayMs > 0) {
-        if (
+      if (state.delayMs > 0 && (
           state.delayProjectId === null ||
           requestProjectId === state.delayProjectId
-        ) {
+        )) {
           await new Promise((resolve) => setTimeout(resolve, state.delayMs));
         }
-      }
 
       if (operationType === "query") {
         switch (operationName) {
-          case "branches":
+          case "branches": {
             return sendJson(res, 200, {
               data: { branches: CLOUD_SYNC_DEFAULT_BRANCHES },
             });
+          }
           case "branch": {
             const snapshots = getCloudSyncSnapshotsForProject(
               variables.projectId,
@@ -538,7 +537,7 @@ function handleCloudSyncGraphQL(req, res) {
               },
             });
           }
-          case "snapshots":
+          case "snapshots": {
             return sendJson(res, 200, {
               data: {
                 snapshots: getCloudSyncSnapshotsForProject(
@@ -547,6 +546,7 @@ function handleCloudSyncGraphQL(req, res) {
                 ),
               },
             });
+          }
           case "blobs": {
             const blobs = [];
             for (const id of variables.ids ?? []) {
@@ -560,7 +560,7 @@ function handleCloudSyncGraphQL(req, res) {
             }
             return sendJson(res, 200, { data: { blobs } });
           }
-          case "blobsMissing":
+          case "blobsMissing": {
             return sendJson(res, 200, {
               data: {
                 blobsMissing: {
@@ -570,7 +570,8 @@ function handleCloudSyncGraphQL(req, res) {
                 },
               },
             });
-          case "projectKey":
+          }
+          case "projectKey": {
             return sendJson(res, 200, {
               data: {
                 projectKey: {
@@ -578,6 +579,7 @@ function handleCloudSyncGraphQL(req, res) {
                 },
               },
             });
+          }
           case "project": {
             const project = [...cloudSyncProjects, ...state.newProjects].find(
               (p) => p.id === variables.id,
@@ -593,7 +595,7 @@ function handleCloudSyncGraphQL(req, res) {
               },
             });
           }
-          case "projects":
+          case "projects": {
             return sendJson(res, 200, {
               data: {
                 projects: [...cloudSyncProjects, ...state.newProjects].filter(
@@ -601,7 +603,8 @@ function handleCloudSyncGraphQL(req, res) {
                 ),
               },
             });
-          case "teamMemberKeys":
+          }
+          case "teamMemberKeys": {
             return sendJson(res, 200, {
               data: {
                 teamMemberKeys: {
@@ -622,16 +625,18 @@ function handleCloudSyncGraphQL(req, res) {
                 },
               },
             });
-          default:
+          }
+          default: {
             return sendJson(res, 200, {
               data: null,
               errors: [{ message: `Unhandled query: ${operationName}` }],
             });
+          }
         }
       }
 
       switch (operationName) {
-        case "projectArchive":
+        case "projectArchive": {
           if (state.archiveShouldFail) {
             return sendJson(res, 200, {
               data: null,
@@ -642,6 +647,7 @@ function handleCloudSyncGraphQL(req, res) {
             state.deletedProjectIds.push(variables.id);
           }
           return sendJson(res, 200, { data: { projectArchive: true } });
+        }
         case "projectCreate": {
           const project = {
             id: variables.id,
@@ -661,8 +667,9 @@ function handleCloudSyncGraphQL(req, res) {
             },
           });
         }
-        case "branchRemove":
+        case "branchRemove": {
           return sendJson(res, 200, { data: { branchRemove: true } });
+        }
         case "snapshotsCreate": {
           const snapshots = variables.snapshots ?? [];
           state.newSnapshots[variables.projectId] = [
@@ -686,11 +693,12 @@ function handleCloudSyncGraphQL(req, res) {
             data: { blobsCreate: { count: (variables.blobs ?? []).length } },
           });
         }
-        default:
+        default: {
           return sendJson(res, 200, {
             data: null,
             errors: [{ message: `Unhandled mutation: ${operationName}` }],
           });
+        }
       }
     })
     .catch((err) => {

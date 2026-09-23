@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
-import { BasePage } from "./base.page";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { BasePage } from "./base.page";
 
 export class CommandPalettePage extends BasePage {
   private readonly DIALOG = '[aria-label="Command palette dialog"]';

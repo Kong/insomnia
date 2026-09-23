@@ -1,7 +1,9 @@
-import { expect, Locator } from "@playwright/test";
-import { BasePage } from "./base.page";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { Cookie } from "../models/cookie";
+import type { Cookie } from "../models/cookie";
+import { BasePage } from "./base.page";
 
 const FIELD_SAVE_DELAY = 500;
 

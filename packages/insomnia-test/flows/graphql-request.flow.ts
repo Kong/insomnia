@@ -1,11 +1,11 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { Collection } from "../models/collection";
-import { Folder } from "../models/folder";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
 import { GraphQLRequest } from "../models/graphql-request";
-import { Response } from "../models/response";
-import { GraphQLRequestPage } from "../pages/graphql-request.page";
+import type { Response } from "../models/response";
+import type { GraphQLRequestPage } from "../pages/graphql-request.page";
+import { BaseFlow } from "./base.flow";
 
 export class GraphQLRequestFlow extends BaseFlow {
   /**

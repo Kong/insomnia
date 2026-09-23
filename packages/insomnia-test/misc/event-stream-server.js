@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 "use strict";
 
-const http = require("http");
-const https = require("https");
-const fs = require("fs");
-const path = require("path");
+const http = require("node:http");
+const https = require("node:https");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-key.pem")),
@@ -28,7 +28,7 @@ async function handleRequest(req, res) {
     req.method === "GET" && url.pathname.match(/^\/sse-events\/(\d+)$/);
   if (sseEventsMatch) {
     await delayResponse(req);
-    const count = parseInt(sseEventsMatch[1], 10);
+    const count = Number.parseInt(sseEventsMatch[1], 10);
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",

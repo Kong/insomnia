@@ -1,9 +1,10 @@
-import type { WebSocketRequest as AppWebSocketRequest } from "../../insomnia-data/src/models/websocket-request";
 import type {
   RequestHeader,
   RequestParameter,
-} from "../../insomnia-data/src/models/request";
-import { ContentType } from "../enums/content-type";
+  WebSocketRequest as AppWebSocketRequest,
+} from "insomnia-data";
+
+import type { ContentType } from "../enums/content-type";
 
 export interface WebSocketRequestBody {
   contentType: ContentType;

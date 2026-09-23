@@ -1,5 +1,6 @@
-import { Page } from "playwright-core";
-import { expect, Locator, type ElectronApplication } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { type ElectronApplication,expect } from "@playwright/test";
+import type { Page } from "playwright-core";
 
 export abstract class BasePage {
   constructor(
@@ -92,7 +93,7 @@ export abstract class BasePage {
           text,
         );
         expect(await this.readCodeMirror(cmLocator)).toBe(text);
-      }).toPass({ timeout: 10000 });
+      }).toPass({ timeout: 10_000 });
       if (await this.valueHolds(cmLocator, text, 200)) return;
     }
   }

@@ -2,9 +2,10 @@ import type {
   Request as AppRequest,
   RequestHeader,
   RequestParameter,
-} from "../../insomnia-data/src/models/request";
+} from "insomnia-data";
+
 import { HttpMethod } from "../enums/http-method";
-import { HttpRequestBody } from "./http-request";
+import type { HttpRequestBody } from "./http-request";
 
 export interface EventStreamRequestInit extends Pick<
   AppRequest,

@@ -1,5 +1,6 @@
-import type { Project as AppProject } from "../../insomnia-data/src/models/project";
-import { ProjectType } from "../enums/project-types";
+import type { Project as AppProject } from "insomnia-data";
+
+import type { ProjectType } from "../enums/project-types";
 
 export class Project implements Pick<AppProject, "name"> {
   id?: string;

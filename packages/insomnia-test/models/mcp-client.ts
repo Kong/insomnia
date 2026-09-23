@@ -3,6 +3,6 @@ export class McpClient {
 
   constructor(
     readonly name: string,
-    readonly url: string = "",
+    readonly url = "",
   ) {}
 }

@@ -1,8 +1,9 @@
 import { expect } from "@playwright/test";
-import { BaseFlow } from "./base.flow";
+
 import { McpClient } from "../models/mcp-client";
-import { Project } from "../models/project";
-import { Response } from "../models/response";
+import type { Project } from "../models/project";
+import type { Response } from "../models/response";
+import { BaseFlow } from "./base.flow";
 
 export class McpClientFlow extends BaseFlow {
   /**
@@ -22,7 +23,7 @@ export class McpClientFlow extends BaseFlow {
     tool: string,
     args: Record<string, string>,
     callback: () => Promise<void> | void = () => {},
-    timeout: number = 5000,
+    timeout = 5000,
   ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;

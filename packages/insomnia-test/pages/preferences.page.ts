@@ -1,8 +1,9 @@
 import { expect } from "@playwright/test";
-import { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
+
+import type { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { GitCredential } from "../models/git-credential";
-import { CloudCredential } from "../models/settings";
+import type { GitCredential } from "../models/git-credential";
+import type { CloudCredential } from "../models/settings";
 import { BasePage } from "./base.page";
 
 type AwsCloudCredential = Extract<CloudCredential, { provider: "aws" }>;
@@ -481,7 +482,7 @@ export class PreferencesPage extends BasePage {
   async getPluginNames(): Promise<string[]> {
     const rows = this.dialog.locator('[data-testid^="insomnia-plugin-"]');
     const testIds = await rows.evaluateAll((els) =>
-      els.map((el) => el.getAttribute("data-testid")),
+      els.map((el) => el.dataset.testid),
     );
     return testIds.filter((id): id is string => id !== null);
   }
@@ -724,11 +725,7 @@ export class PreferencesPage extends BasePage {
     const modelSelect = this.page.getByLabel("Model");
     if (await modelSelect.isVisible()) return;
     const changeButton = this.page.getByRole("button", { name: "Change" });
-    if (await changeButton.isVisible()) {
-      await changeButton.click();
-    } else {
-      await this.page.getByRole("button", { name: "Load Models" }).click();
-    }
+    await ((await changeButton.isVisible()) ? changeButton.click() : this.page.getByRole("button", { name: "Load Models" }).click());
     await expect(modelSelect).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 

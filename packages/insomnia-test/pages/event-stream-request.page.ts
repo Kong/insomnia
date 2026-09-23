@@ -1,12 +1,13 @@
 import { expect } from "@playwright/test";
-import { RequestPage } from "./request.page";
-import {
-  EventStreamRequest,
-  EventStreamMethod,
-  EventStreamRequestBody,
-} from "../models/event-stream-request";
+
 import { ContentType } from "../enums/content-type";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import type {
+  EventStreamMethod,
+  EventStreamRequest,
+  EventStreamRequestBody,
+} from "../models/event-stream-request";
+import { RequestPage } from "./request.page";
 
 export class EventStreamRequestPage extends RequestPage {
   protected readonly urlBarId = "request-url-bar";

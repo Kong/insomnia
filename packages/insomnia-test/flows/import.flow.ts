@@ -1,9 +1,9 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { ImportSource } from "../enums/import-sources";
-import { CurlCommand } from "../models/curl-command";
-import { Collection } from "../models/collection";
-import { Project } from "../models/project";
+import type { Collection } from "../models/collection";
+import type { CurlCommand } from "../models/curl-command";
+import type { Project } from "../models/project";
+import { BaseFlow } from "./base.flow";
 
 export class ImportFlow extends BaseFlow {
   /**

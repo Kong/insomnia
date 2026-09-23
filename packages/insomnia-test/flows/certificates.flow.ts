@@ -1,12 +1,12 @@
+import type { ClientCertificate } from "../models/certificate";
+import type { Collection } from "../models/collection";
+import type { EventStreamRequest } from "../models/event-stream-request";
+import type { GraphQLRequest } from "../models/graphql-request";
+import type { GrpcRequest } from "../models/grpc-request";
+import type { HttpRequest } from "../models/http-request";
+import type { SocketIORequest } from "../models/socket-io-request";
+import type { WebSocketRequest } from "../models/websocket-request";
 import { BaseFlow } from "./base.flow";
-import { ClientCertificate } from "../models/certificate";
-import { Collection } from "../models/collection";
-import { HttpRequest } from "../models/http-request";
-import { EventStreamRequest } from "../models/event-stream-request";
-import { GraphQLRequest } from "../models/graphql-request";
-import { SocketIORequest } from "../models/socket-io-request";
-import { WebSocketRequest } from "../models/websocket-request";
-import { GrpcRequest } from "../models/grpc-request";
 
 export type CertificateTarget =
   | Collection

@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { BasePage } from "./base.page";
 

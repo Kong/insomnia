@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+
 import { SyncStatus } from "../enums/sync-status";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { BasePage } from "./base.page";
@@ -568,15 +569,21 @@ export class CloudSyncPage extends BasePage {
    */
   async dismissFileDeleteDialog(method: DialogDismissMethod): Promise<void> {
     switch (method) {
-      case DialogDismissMethod.XButton:
+      case DialogDismissMethod.XButton: {
         await this.deleteFileDialog.locator('[data-icon="x"]').click();
         break;
-      case DialogDismissMethod.Escape:
+      }
+      case DialogDismissMethod.Escape: {
         await this.page.keyboard.press("Escape");
         break;
-      case DialogDismissMethod.ClickOutside:
+      }
+      case DialogDismissMethod.ClickOutside: {
         await this.page.mouse.click(5, 5);
         break;
+      }
+      default: {
+        throw new Error(`Unhandled DialogDismissMethod: ${method}`);
+      }
     }
     await expect(this.deleteFileDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,

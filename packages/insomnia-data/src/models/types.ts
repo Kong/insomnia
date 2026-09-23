@@ -9,6 +9,7 @@ export type {
   CloudProviderName,
   AWSFileCredential,
   AWSTemporaryCredential,
+  GCPCredential,
   HCPCredential,
   HCPVaultDedicatedAppRoleCredential,
   HCPVaultDedicatedTokenCredential,

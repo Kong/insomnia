@@ -1,7 +1,8 @@
 import { expect } from "@playwright/test";
-import { BasePage } from "./base.page";
-import { ImportSource } from "../enums/import-sources";
+
+import type { ImportSource } from "../enums/import-sources";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { BasePage } from "./base.page";
 
 export class ImportPage extends BasePage {
   // Renamed from "Select Collection" — INS-3528.

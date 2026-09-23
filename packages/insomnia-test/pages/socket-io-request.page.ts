@@ -1,5 +1,5 @@
+import type { RequestHeader,SocketIOMessage } from "../models/socket-io-request";
 import { RequestPage } from "./request.page";
-import { SocketIOMessage, RequestHeader } from "../models/socket-io-request";
 
 export class SocketIORequestPage extends RequestPage {
   protected readonly urlBarId = "websocket-url-bar";

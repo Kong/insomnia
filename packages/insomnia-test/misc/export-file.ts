@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 
 const POLL_INTERVAL_MS = 200;
 const STABLE_CHECKS_REQUIRED = 3;
@@ -14,7 +14,7 @@ const STABLE_CHECKS_REQUIRED = 3;
  */
 export async function waitForExportedFile(
   filePath: string,
-  timeout: number = 20000,
+  timeout = 20_000,
 ): Promise<string> {
   const deadline = Date.now() + timeout;
   let lastSize = -1;
@@ -26,7 +26,7 @@ export async function waitForExportedFile(
       if (size > 0 && size === lastSize) {
         stableChecks++;
         if (stableChecks >= STABLE_CHECKS_REQUIRED) {
-          return fs.readFileSync(filePath, "utf-8");
+          return fs.readFileSync(filePath, "utf8");
         }
       } else {
         stableChecks = 0;

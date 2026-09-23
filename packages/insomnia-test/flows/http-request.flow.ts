@@ -1,12 +1,13 @@
-import { BaseFlow } from "./base.flow";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { Collection } from "../models/collection";
-import { Folder } from "../models/folder";
-import { HttpRequest, RequestAuthentication } from "../models/http-request";
-import { Response } from "../models/response";
-import { OAuth2Tokens } from "../pages/auth-tab.page";
-import { HttpRequestPage } from "../pages/http-request.page";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
+import type { RequestAuthentication } from "../models/http-request";
+import { HttpRequest } from "../models/http-request";
+import type { Response } from "../models/response";
+import type { OAuth2Tokens } from "../pages/auth-tab.page";
+import type { HttpRequestPage } from "../pages/http-request.page";
+import { BaseFlow } from "./base.flow";
 
 export class HttpRequestFlow extends BaseFlow {
   /**

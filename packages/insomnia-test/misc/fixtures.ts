@@ -1,19 +1,22 @@
-import * as crypto from "crypto";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
-import { spawn } from "child_process";
-import {
-  test as base,
-  _electron as electron,
+import { spawn } from "node:child_process";
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import path from "node:path";
+
+import type {
   ElectronApplication,
-  Page,
+  Page} from "@playwright/test";
+import {
+  _electron as electron,
+  test as base,
 } from "@playwright/test";
-import { PageManager } from "../pages/page-manager";
+
 import { FlowManager } from "../flows/flow-manager";
+import { PageManager } from "../pages/page-manager";
 import { closeOpenStepGroup } from "./step-instrumentation";
 
-export const DEFAULT_TIMEOUT = 60000;
+export const DEFAULT_TIMEOUT = 60_000;
 
 /**
  * By default, the `insomnia` fixture below launches the app straight out of
@@ -381,13 +384,13 @@ export async function launchInsomniaElectron(options: {
   });
 }
 
-export type UserSession = {
+export interface UserSession {
   page: Page;
   pageManager: PageManager;
   flowManager: FlowManager;
-};
+}
 
-type Fixtures = {
+interface Fixtures {
   dataPath: string;
   skipOnboarding: boolean;
   vaultKey: string;
@@ -399,7 +402,7 @@ type Fixtures = {
   // thread it through — see git-fixtures.ts, which overrides only this.
   gitCloneUrl: string | undefined;
   user: UserSession;
-};
+}
 
 // The app sends this as the `x-session-id` header on every request to
 // mock-api.js, so it's also the key mock-api.js uses to keep per-instance
@@ -609,6 +612,7 @@ export const test = base.extend<Fixtures>({
   },
 
   gitCloneUrl: async ({}, use) => {
+    // eslint-disable-next-line unicorn/no-useless-undefined -- `use()` requires its argument; this fixture's value is `string | undefined`
     await use(undefined);
   },
 
