@@ -42,3 +42,11 @@ final.cpp
 insomnia.ico
 final.rc
 .tmp*
+
+packages/insomnia-test/test-results/
+packages/insomnia-test/playwright-report/
+packages/insomnia-test/blob-report/
+packages/insomnia-test/playwright/.cache/
+packages/insomnia-test/playwright/.auth/
+packages/insomnia-test/all-blob-reports/
+packages/insomnia-test/.claude/settings.json
