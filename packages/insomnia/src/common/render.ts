@@ -133,7 +133,7 @@ export function buildEnvironmentRenderLayers({
     environmentLayers.push({ data: ordered, kvPairData: subEnvironment.kvPairData, source: 'collection' });
   }
 
-  for (const doc of (ancestors || []).reverse()) {
+  for (const doc of [...(ancestors || [])].reverse()) {
     const ancestor: any = doc;
     const { environment, environmentPropertyOrder, kvPairData } = ancestor;
 

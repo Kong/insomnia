@@ -372,6 +372,25 @@ describe('render tests', () => {
       });
     });
 
+    it('does not mutate the ancestors array passed by the caller', async () => {
+      const ancestors = [
+        reqGroupBuilder.environment({ foo: 'parent', ancestor: true }).build(),
+        reqGroupBuilder.environment({ foo: 'grandparent', ancestor: true }).build(),
+      ];
+      const originalOrder = [...ancestors];
+
+      // Calling buildRenderContext twice with the same array (e.g. a prefill
+      // pass followed by the real render pass) must yield the same result
+      // both times. A previous bug reversed `ancestors` in place, so the
+      // second call would see an already-reversed array and flip precedence.
+      const firstContext = await renderUtils.buildRenderContext({ ancestors });
+      const secondContext = await renderUtils.buildRenderContext({ ancestors });
+
+      expect(ancestors).toEqual(originalOrder);
+      expect(firstContext.foo).toBe('parent');
+      expect(secondContext.foo).toBe('parent');
+    });
+
     it('rendered recursive should not infinite loop', async () => {
       const ancestors = [reqGroupBuilder.environment({ recursive: '{{ recursive }}/hello' }).build()];
 
