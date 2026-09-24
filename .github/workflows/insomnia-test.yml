@@ -10,6 +10,9 @@ concurrency:
   group: insomnia-test-nonblocking-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   # ---------------------------------------------------------------------------
   # Build the Insomnia binary once and cache it by commit SHA. All shards

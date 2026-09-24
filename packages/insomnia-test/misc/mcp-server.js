@@ -85,8 +85,13 @@ app.get("/", (_req, res) => {
   res.status(200).send("mcp-server ok");
 });
 
+const MAX_REPLY_DELAY_MS = 60_000;
+
 async function delayResponse(req) {
-  const delayMs = Number(req.headers["x-reply-delay-ms"]) || 0;
+  const delayMs = Math.min(
+    Number(req.headers["x-reply-delay-ms"]) || 0,
+    MAX_REPLY_DELAY_MS,
+  );
   if (delayMs <= 0) return;
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
