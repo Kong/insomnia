@@ -34,7 +34,7 @@ import type {
   Workspace,
   WorkspaceScope,
 } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { EnvironmentType, models, services } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
@@ -327,6 +327,8 @@ function getEnvironments(file: InsomniaFile): Environment[] {
       data: (file.environments.data as Record<string, any>) || {},
       dataPropertyOrder: (file.environments.dataPropertyOrder as Record<string, any>) || undefined,
       name: file.environments.name || 'Base Environment',
+      environmentType: file.environments.environmentType || EnvironmentType.JSON,
+      kvPairData: file.environments.kvPairData || undefined,
     };
 
     const subEnvironments: WithExportType<Environment>[] =
