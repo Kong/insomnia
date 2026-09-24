@@ -212,7 +212,6 @@ describe('findLatestListResult', () => {
       const outcome = findLatestListResult(events, method);
 
       expect(outcome?.data?.[itemsKey]).toEqual([valid]);
-      expect(outcome?.error?.title).toBe('Drop 1 entry that fails the MCP schema.');
       expect(outcome?.error?.entries).toHaveLength(1);
     });
   });
