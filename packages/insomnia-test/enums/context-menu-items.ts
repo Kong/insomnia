@@ -4,7 +4,7 @@ export enum ContextMenuItem {
   Collection = "API Collection",
   HttpRequest = "HTTP Request",
   Folder = "New Folder",
-  EventStreamRequest = "Event Stream Request",
+  EventStreamRequest = "Event Stream Request (SSE)",
   GraphQLRequest = "GraphQL Request",
   WebSocketRequest = "WebSocket Request",
   GrpcRequest = "gRPC Request",

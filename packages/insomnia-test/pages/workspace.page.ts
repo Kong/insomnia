@@ -1117,8 +1117,13 @@ export class WorkspacePage extends BasePage {
     // A React Aria tooltip left open elsewhere in the tree (e.g. an
     // unsynced workspace node's "Click to fetch this file" hint) can
     // render above this row and intercept the click; Escape closes it
-    // immediately instead of waiting out its hover close delay.
-    await this.page.keyboard.press("Escape");
+    // immediately instead of waiting out its hover close delay. Only do
+    // this when a tooltip is actually open — an unconditional Escape can
+    // instead dismiss an unrelated open dialog/panel (e.g. the
+    // Environment Editor) and disrupt the tree this row lives in.
+    if (await this.page.getByRole("tooltip").isVisible()) {
+      await this.page.keyboard.press("Escape");
+    }
     await row.click({ button: "right" });
   }
 
