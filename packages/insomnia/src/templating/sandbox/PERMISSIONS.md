@@ -23,7 +23,14 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `punycode` (and more via M2).
+    - `punycode` is an RFC 3492 transcription verified byte-for-byte against real Node's `punycode`
+      module across tens of thousands of fuzzed inputs, including malformed/adversarial ones. One
+      residual, engine-level gap: for a decoded value outside the valid Unicode range, both this
+      module and real Node throw a `RangeError` mentioning "code point", but the exact wording
+      differs (QuickJS's native `String.fromCodePoint` says "invalid code point"; V8's says "Invalid
+      code point N") — the error *type* and outcome (input rejected) always match, only that
+      diagnostic string's casing/detail can differ.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
