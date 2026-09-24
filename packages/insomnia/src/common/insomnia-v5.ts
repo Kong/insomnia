@@ -327,8 +327,6 @@ function getEnvironments(file: InsomniaFile): Environment[] {
       data: (file.environments.data as Record<string, any>) || {},
       dataPropertyOrder: (file.environments.dataPropertyOrder as Record<string, any>) || undefined,
       name: file.environments.name || 'Base Environment',
-      environmentType: file.environments.environmentType || EnvironmentType.JSON,
-      kvPairData: file.environments.kvPairData || undefined,
     };
 
     const subEnvironments: WithExportType<Environment>[] =
@@ -345,8 +343,6 @@ function getEnvironments(file: InsomniaFile): Environment[] {
         dataPropertyOrder: (environment.dataPropertyOrder as Record<string, any>) || undefined,
         name: environment.name || `Environment ${index}`,
         parentId: baseEnvironment._id,
-        environmentType: environment.environmentType || EnvironmentType.JSON,
-        kvPairData: environment.kvPairData || undefined,
       })) || [];
 
     return [baseEnvironment, ...subEnvironments];
