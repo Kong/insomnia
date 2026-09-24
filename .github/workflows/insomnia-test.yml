@@ -30,6 +30,7 @@ jobs:
     continue-on-error: true
     permissions:
       contents: read
+      packages: read
     steps:
       - name: Checkout repo
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -94,6 +95,7 @@ jobs:
     continue-on-error: true
     permissions:
       contents: read
+      packages: read
     strategy:
       fail-fast: false
       matrix:
