@@ -19,13 +19,13 @@ const testWithLegacyDatabase = test.extend({
 });
 
 testWithLegacyDatabase(
-  "Verify the legacy unit test setting defaults on and lists the existing suite for a profile that already has one",
+  "Verify the legacy unit test setting defaults off and lists the existing suite for a profile that already has one",
   async ({ user }) => {
     const { workspaceFlow } = user.flowManager;
     const { preferencesPage } = user.pageManager;
 
     await preferencesPage.open();
-    const enabledByDefault =
+    const disableByDefault =
       await preferencesPage.isShowLegacyUnitTestsEnabled();
     await preferencesPage.close();
 
@@ -34,7 +34,7 @@ testWithLegacyDatabase(
     );
     const suiteNames = await workspaceFlow.getTestSuiteNames(designDocument!);
 
-    expect(enabledByDefault).toBe(true);
+    expect(disableByDefault).toBe(false);
     expect(suiteNames).toContain("Existing Suite");
   },
 );

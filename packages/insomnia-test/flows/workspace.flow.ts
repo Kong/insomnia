@@ -1191,8 +1191,6 @@ export class WorkspaceFlow extends BaseFlow {
   private async openTests(
     item: string | { name: string; id?: string },
   ): Promise<{ _id: string } | undefined> {
-    await this.ensureLegacyUnitTestsEnabled();
-
     const identity = typeof item === "string" ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
 
