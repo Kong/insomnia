@@ -23,7 +23,36 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `url` (and more via M2).
+    - `url` implements the legacy `parse`/`format` pair (verified against `node:url` across
+      protocol-relative/opaque/non-slash-protocol forms, auth/port/query/hash splitting, the
+      `%20`/`%22`/`%27`/`%3C`/`%3E`/`%60`/`%5E`/`%7C`/`%7B`/`%7D` unsafe-character escaping table,
+      `parseQueryString`/`slashesDenoteHost`, and IPv6 bracketed hosts) plus a thin re-export of the
+      ambient `URL`/`URLSearchParams` globals (`sandbox-globals.ts`, M2) so `require('url').URL`
+      resolves the way real Node's own `require('url').URL === global.URL` does. That identity is
+      intentional, not a leak: `URL`/`URLSearchParams` are already ungated ambient globals with or
+      without the `url` grant — see the reviewed exception in `sandbox-surface.test.ts`'s alias-leak
+      check.
+      A backslash is treated as fully interchangeable with a forward slash, matching real Node's
+      `url.parse` exactly (a normalization pass applied before any other parsing), so a plugin
+      ported from the legacy sandbox behaves identically here — this was deliberately _not_ left as
+      a divergence, since real Node's own deprecation notice on `url.parse` cites exactly this
+      behavior as having "security implications," but this function has zero host-capability
+      surface either way and nothing in Insomnia's own host bridge trusts its output for a trust
+      decision, so matching it exactly costs nothing and avoids a silent behavioral break for ported
+      plugins that rely on it (intentionally or not). One remaining, genuinely necessary divergence:
+      `hostname` for a bracketed IPv6 literal is stored **without** brackets (e.g. `"::1"`), matching
+      `node:url.parse`'s own convention — a different, equally-real convention from the ambient
+      `URL` global's WHATWG-style bracket-inclusive `.hostname`, since the two are independent
+      implementations for two different APIs. `url.inspect`/`resolve`/`domainToASCII`/
+      `domainToUnicode`/`pathToFileURL`/`fileURLToPath`/`Url` (the legacy class) are not implemented
+      at all.
+      `parse()` strips leading/trailing C0-control-or-space bytes before parsing (matching the WHATWG
+      URL Standard's own input-trimming step, which `node:url`'s legacy parser also implements) so a
+      leading control byte can't hide a scheme from protocol detection; a control byte elsewhere in
+      the string is left in place, then percent-escaped by the table above even in positions where
+      real Node leaves it raw — a deliberately more conservative, safe-direction difference, not a
+      parity gap.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
