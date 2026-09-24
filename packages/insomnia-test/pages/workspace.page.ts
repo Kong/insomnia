@@ -1114,6 +1114,11 @@ export class WorkspacePage extends BasePage {
       .getByTestId("project-navigation-tree-container")
       .locator(`div[role="row"][data-key="${node._id}"]`);
     await row.scrollIntoViewIfNeeded();
+    // A React Aria tooltip left open elsewhere in the tree (e.g. an
+    // unsynced workspace node's "Click to fetch this file" hint) can
+    // render above this row and intercept the click; Escape closes it
+    // immediately instead of waiting out its hover close delay.
+    await this.page.keyboard.press("Escape");
     await row.click({ button: "right" });
   }
 

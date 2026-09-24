@@ -131,6 +131,13 @@ export class CookiePage extends BasePage {
    * Edits an already-listed cookie via the edit dialog's "Raw" tab,
    * replacing its entire cookie-string in one field instead of the
    * structured per-attribute fields the "Friendly" tab exposes.
+   *
+   * The Raw field's `onChange` parses the string via an async IPC call
+   * before it lands in the dialog's state; clicking "Done" before that
+   * resolves submits the pre-edit cookie unchanged (same species of lost
+   * write as `waitForPersisted` above works around for the Friendly tab).
+   * So this retries the whole fill-and-submit until the list actually
+   * shows the parsed result, instead of trusting a fixed delay to beat it.
    * @param existingKey - The current `key` of the cookie row to edit
    * @param rawCookieString - The full raw cookie string to set, e.g. "foo=bar; Domain=example.com; Path=/"
    */
@@ -138,26 +145,33 @@ export class CookiePage extends BasePage {
     existingKey: string,
     rawCookieString: string,
   ): Promise<void> {
-    await this.rows()
-      .filter({ hasText: existingKey })
-      .getByRole("button", { name: "Edit" })
-      .click();
-    await this.editDialog.waitFor({
-      state: "visible",
-      timeout: DEFAULT_TIMEOUT,
-    });
+    const expectedCookie = parseCookieLine(rawCookieString);
 
-    await this.editDialog.getByRole("tab", { name: "Raw" }).click();
-    await this.editDialog
-      .getByLabel("Raw Cookie String")
-      .fill(rawCookieString);
-    await this.page.waitForTimeout(FIELD_SAVE_DELAY);
+    await expect(async () => {
+      await this.rows()
+        .filter({ hasText: existingKey })
+        .getByRole("button", { name: "Edit" })
+        .click();
+      await this.editDialog.waitFor({
+        state: "visible",
+        timeout: DEFAULT_TIMEOUT,
+      });
 
-    await this.editDialog.getByRole("button", { name: "Done" }).click();
-    await this.editDialog.waitFor({
-      state: "hidden",
-      timeout: DEFAULT_TIMEOUT,
-    });
+      await this.editDialog.getByRole("tab", { name: "Raw" }).click();
+      await this.editDialog
+        .getByLabel("Raw Cookie String")
+        .fill(rawCookieString);
+      await this.page.waitForTimeout(FIELD_SAVE_DELAY);
+
+      await this.editDialog.getByRole("button", { name: "Done" }).click();
+      await this.editDialog.waitFor({
+        state: "hidden",
+        timeout: DEFAULT_TIMEOUT,
+      });
+
+      const cookies = await this.getCookies();
+      expect(cookies).toContainEqual(expect.objectContaining(expectedCookie));
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   private async editCookie(cookie: Cookie): Promise<void> {
