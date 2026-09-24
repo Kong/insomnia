@@ -2,9 +2,12 @@ name: Insomnia Test
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - develop
   pull_request:
-    branches: [main, master]
+    types:
+      - opened
+      - synchronize
 
 concurrency:
   group: insomnia-test-nonblocking-${{ github.ref }}
