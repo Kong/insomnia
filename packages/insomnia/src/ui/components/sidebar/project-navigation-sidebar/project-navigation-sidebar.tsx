@@ -158,6 +158,9 @@ const ProjectNavigationSidebarInner = (
   const activeFilter = (projectNavigationSidebarFilter || '').trim();
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
+  // The active project can't answer this while no project is selected, so gate the create-project
+  // affordance on the organization instead — the Scratch Pad organization never accepts new ones.
+  const isScratchPadOrganization = models.organization.isScratchpadOrganizationId(organizationId);
 
   // Unsynced remote files grouped by projectId, sourced from a shared server-data query
   // (deduped with the project view). Refresh is handled inside the hook via CLOUD_SYNC_FILE_CHANGE.
@@ -889,9 +892,7 @@ const ProjectNavigationSidebarInner = (
               {isKonnectOrganization ? (
                 <KonnectSyncActionsRow {...konnectSyncBar} />
               ) : (
-                !isScratchPad && (
-                  <NewProjectButton onPress={onCreateProject} isDisabled={organizationProjects.length === 0} />
-                )
+                !isScratchPadOrganization && <NewProjectButton onPress={onCreateProject} />
               )}
             </div>
           )}
@@ -1171,9 +1172,14 @@ const ProjectNavigationSidebarInner = (
             />
           )}
 
-          {isKonnectOrganization && <KonnectSyncResultPanel {...konnectSyncBar} />}
         </>
       )}
+
+      {/* Outside the branch above on purpose: this hosts the Konnect settings modal, and the
+          intro branch's "Configure" button is what opens it. Nesting it in the else branch made
+          that button set state nothing rendered, which is unrecoverable for an organization that
+          has Konnect projects but no PAT. */}
+      {isKonnectOrganization && <KonnectSyncResultPanel {...konnectSyncBar} />}
 
       {onboardingEnvWorkspaceId && envOnboardingNode && (
         <KonnectEnvOnboarding triggerElement={envOnboardingNode} onDismiss={dismissEnvOnboarding} />
@@ -1188,37 +1194,3 @@ const ProjectNavigationSidebarInner = (
 export const ProjectNavigationSidebar = forwardRef<ProjectNavigationSidebarHandle, ProjectNavigationSidebarProps>(
   ProjectNavigationSidebarInner,
 );
-
-export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
-  const { organizationId } = useParams() as { organizationId: string };
-  const { settings } = useRootLoaderData()!;
-  const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
-  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
-  const konnectSyncBar = useKonnectSyncBar({ organizationId, hasProjects: false });
-
-  if (isKonnectOrganization) {
-    return (
-      <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-        {!settings.hasKonnectPat ? (
-          <KonnectSyncIntro onConfigure={() => konnectSyncBar.setShowKonnectConfigModal(true)} />
-        ) : (
-          <div className="flex justify-between gap-1 p-(--padding-sm)">
-            <SidebarSearchField value="" isDisabled onChange={() => {}} />
-            <KonnectSyncActionsRow {...konnectSyncBar} />
-          </div>
-        )}
-        <KonnectSyncProgressLine {...konnectSyncBar} />
-        <KonnectSyncResultPanel {...konnectSyncBar} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <div className="flex justify-between gap-1 p-(--padding-sm)">
-        <SidebarSearchField value="" isDisabled onChange={() => {}} />
-        {!isScratchPad && <NewProjectButton onPress={onCreateProject} />}
-      </div>
-    </div>
-  );
-};
