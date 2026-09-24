@@ -154,6 +154,7 @@ export class ProjectSettingsPage extends BasePage {
         name: /^(Clone Project|Clone and Migrate|Create Blank Project|Create)$/,
       })
       .click();
+    await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

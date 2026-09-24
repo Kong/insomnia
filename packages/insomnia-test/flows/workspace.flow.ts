@@ -397,7 +397,11 @@ export class WorkspaceFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(item);
     await workspace.rightClick(node);
-    await workspace.clickContextMenu(ContextMenuItem.Duplicate);
+    await workspace.clickContextMenu(
+      node.type === TreeNodeType.Workspace
+        ? ContextMenuItem.DuplicateWorkspace
+        : ContextMenuItem.Duplicate,
+    );
 
     if (node.type === TreeNodeType.Request) {
       await workspace.setItemName(newName);

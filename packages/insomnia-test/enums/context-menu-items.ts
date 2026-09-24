@@ -22,6 +22,10 @@ export enum ContextMenuItem {
   Delete = "Delete",
   Rename = "Rename",
   Duplicate = "Duplicate",
+  // The sidebar's workspace-level dropdown (Collection/Environment/MCP
+  // Client rows) labels this action "Duplicate / Move"; requests and
+  // folders use the plain "Duplicate" above.
+  DuplicateWorkspace = "Duplicate / Move",
   Pin = "Pin",
   OpenInNewTab = "Open in New Tab",
   Export = "Export",
