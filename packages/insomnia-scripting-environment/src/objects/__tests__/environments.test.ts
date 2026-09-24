@@ -7,7 +7,7 @@ import { Folder, ParentFolders } from '../folders';
 import { Url } from '../urls';
 
 describe('test Variables object', () => {
-  it('test basic operations', async () => {
+  it('test basic operations', () => {
     const variables = new Variables({
       baseGlobalVars: new Environment('baseGlobals', { value: 'baseValue' }),
       globalVars: new Environment('globals', { value: 'xyz' }),
@@ -18,17 +18,17 @@ describe('test Variables object', () => {
       localVars: new Environment('local', {}),
     });
 
-    const uuidAndXyz = await variables.replaceIn('{{    $randomUUID }}{{value  }}');
+    const uuidAndXyz = variables.replaceIn('{{    $randomUUID }}{{value  }}');
     expect(validate(uuidAndXyz.replace('xyz', ''))).toBeTruthy();
 
-    const uuidAndBrackets1 = await variables.replaceIn('{{    $randomUUID }}}}');
+    const uuidAndBrackets1 = variables.replaceIn('{{    $randomUUID }}}}');
     expect(validate(uuidAndBrackets1.replace('}}', ''))).toBeTruthy();
 
-    const uuidAndBrackets2 = await variables.replaceIn('}}{{    $randomUUID }}');
+    const uuidAndBrackets2 = variables.replaceIn('}}{{    $randomUUID }}');
     expect(validate(uuidAndBrackets2.replace('}}', ''))).toBeTruthy();
   });
 
-  it('test environment overriding', async () => {
+  it('test environment overriding', () => {
     const baseGlobalVariables = new Variables({
       baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
       globalVars: new Environment('globals', {}),
@@ -94,10 +94,10 @@ describe('test Variables object', () => {
     expect(variablesWithFolderLevelData.get('value')).toEqual('folderLevel2-value');
     expect(variablesWithLocalData.get('value')).toEqual('local-value');
 
-    expect(await variablesWithFolderLevelData.replaceIn('{{ value}}')).toEqual('folderLevel2-value');
+    expect(variablesWithFolderLevelData.replaceIn('{{ value}}')).toEqual('folderLevel2-value');
 
     const urlObj = new Url('http://x/{{ value }}');
-    expect(await variablesWithFolderLevelData.replaceIn(urlObj)).toEqual('http://x/folderLevel2-value');
+    expect(variablesWithFolderLevelData.replaceIn(urlObj)).toEqual('http://x/folderLevel2-value');
   });
 
   it('variables operations', () => {
