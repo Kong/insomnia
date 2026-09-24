@@ -16,4 +16,4 @@
  *    - The app can distinguish between different schema versions and handle them appropriately.
  *    - Developers and users are aware of the current schema expectations.
  */
-export const INSOMNIA_SCHEMA_VERSION = '5.1';
+export const INSOMNIA_SCHEMA_VERSION = '5.2';
