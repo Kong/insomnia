@@ -444,9 +444,9 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
-   * Right-clicks the tree node matching `request` and toggles its pinned
-   * state via the context menu's "Pin" action.
-   * @param request - The request to pin or unpin
+   * Right-clicks the tree node matching `request` and pins it via the
+   * context menu's "Pin" action.
+   * @param request - The request to pin
    */
   async pin(
     request:
@@ -457,14 +457,43 @@ export class WorkspaceFlow extends BaseFlow {
       | SocketIORequest
       | WebSocketRequest,
   ): Promise<void> {
+    await this.togglePin(request, ContextMenuItem.Pin);
+  }
+
+  /**
+   * Right-clicks the tree node matching `request` and unpins it via the
+   * context menu's "Unpin" action.
+   * @param request - The request to unpin
+   */
+  async unpin(
+    request:
+      | HttpRequest
+      | GraphQLRequest
+      | GrpcRequest
+      | EventStreamRequest
+      | SocketIORequest
+      | WebSocketRequest,
+  ): Promise<void> {
+    await this.togglePin(request, ContextMenuItem.Unpin);
+  }
+
+  private async togglePin(
+    request:
+      | HttpRequest
+      | GraphQLRequest
+      | GrpcRequest
+      | EventStreamRequest
+      | SocketIORequest
+      | WebSocketRequest,
+    action: ContextMenuItem.Pin | ContextMenuItem.Unpin,
+  ): Promise<void> {
     const { workspacePage } = this.pageManager;
+    const pinned = await workspacePage.isPinned(request.name);
+    if (pinned === (action === ContextMenuItem.Pin)) return;
     const node = await workspacePage.findItemNode(request);
     if (!node) throw new Error(`Failed to find "${request.name}" to pin`);
-    const pinned = await workspacePage.isPinned(request.name);
     await workspacePage.rightClick(node);
-    await workspacePage.clickContextMenu(
-      pinned ? ContextMenuItem.Unpin : ContextMenuItem.Pin,
-    );
+    await workspacePage.clickContextMenu(action);
   }
 
   /**

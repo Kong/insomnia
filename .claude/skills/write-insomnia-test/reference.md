@@ -157,7 +157,10 @@ clickItemContextMenu(nodeName: string, contextMenu: string, parent?: TreeNode): 
 
 // WorkspaceFlow
 pin(request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest): Promise<void>
-  // right-clicks the node -> ContextMenuItem.Pin — toggles: call it twice to pin then unpin
+unpin(request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest): Promise<void>
+  // separate methods (no more toggling one `pin()` call twice) — each is a no-op if the request is
+  // already in the target pinned/unpinned state (checked via isPinned() before right-clicking), otherwise
+  // right-clicks the node -> ContextMenuItem.Pin/Unpin
 ```
 
 **Confirmed live**: multi-select via Ctrl/Cmd-click is not implemented in the app at all — the sidebar's `GridList` is hardcoded `selectionMode="single"` — so don't write a test expecting it; that's an app limitation, not a framework gap. Real examples: `tests/workspace/sidebar-filter-and-pin.spec.ts` (filter + pin/unpin), `tests/workspace/sidebar-settings-and-inline-rename.spec.ts` (inline rename + the per-node-type Settings dialogs below — Request/Collection/Folder, each asserting both `isModalOpen()` and that the dialog's Name field auto-focuses via `isFocused()`), `tests/plugin/context-menu-action-registration/collection-context-menu-action.spec.ts` + `request-context-menu-action.spec.ts` (`clickItemContextMenu()` triggering a plugin-registered `requestActions` entry on a Collection/Request node — both `test.fail()`-documented against INS-3511, per §9a).

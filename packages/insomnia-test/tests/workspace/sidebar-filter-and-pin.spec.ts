@@ -45,7 +45,7 @@ test("Verify sidebar filtering hides non-matching requests and pinning toggles f
     })
     .toBe(true);
 
-  await workspaceFlow.pin(requestA);
+  await workspaceFlow.unpin(requestA);
   await expect
     .poll(async () => workspacePage.isPinned(requestA.name), {
       timeout: 10_000,
