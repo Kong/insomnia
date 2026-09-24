@@ -28,18 +28,20 @@ jobs:
     timeout-minutes: 120
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
 
       - name: Cache Insomnia binary
         id: binary-cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: packages/insomnia/dist/linux-unpacked
           key: insomnia-linux-unpacked-${{ github.sha }}
@@ -88,23 +90,25 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         # To scale up, add indices here and bump shardTotal to match.
-        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        shardTotal: [10]
+        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        shardTotal: [16]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "24"
 
       - name: Restore Insomnia binary
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: packages/insomnia/dist/linux-unpacked
           key: insomnia-linux-unpacked-${{ github.sha }}
@@ -130,7 +134,7 @@ jobs:
         run: xvfb-run --auto-servernum npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.shardIndex }}
