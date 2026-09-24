@@ -39,7 +39,7 @@ describe('secureReadFile', () => {
     fs.rmSync(TEST_ROOT, { recursive: true, force: true });
   });
 
-  it('rejects a NeDB database file inside the allowed userData directory', async () => {
+  it('rejects a NeDB database file inside the userData directory', async () => {
     const { secureReadFile } = await import('../secure-read-file');
     const dbFile = path.join(userDataDir, 'insomnia.Environment.db');
     fs.writeFileSync(dbFile, '{"secret":"vault-value"}');
@@ -47,12 +47,66 @@ describe('secureReadFile', () => {
     await expect(secureReadFile(dbFile)).rejects.toThrow(/cannot access/);
   });
 
-  it('allows an ordinary file inside the allowed userData directory', async () => {
+  it('rejects a NeDB-named file placed inside the allowed responses subdirectory', async () => {
+    // isReservedDatabaseFile matches by basename alone, so it still guards the allowed
+    // responses/version-control subdirectories even though real NeDB files never live there.
+    const { secureReadFile } = await import('../secure-read-file');
+    const responsesDir = path.join(userDataDir, 'responses');
+    fs.mkdirSync(responsesDir, { recursive: true });
+    const dbFile = path.join(responsesDir, 'insomnia.Environment.db');
+    fs.writeFileSync(dbFile, '{"secret":"vault-value"}');
+
+    await expect(secureReadFile(dbFile)).rejects.toThrow(/cannot access/);
+  });
+
+  it('rejects an ordinary file directly inside the userData directory', async () => {
+    // Only responses/ and version-control/ subdirectories are allowed roots; the rest of
+    // userData (cookies, caches, etc.) is out of scope for this file-read surface.
     const { secureReadFile } = await import('../secure-read-file');
     const file = path.join(userDataDir, 'notes.txt');
     fs.writeFileSync(file, 'hello');
 
-    await expect(secureReadFile(file)).resolves.toBe('hello');
+    await expect(secureReadFile(file)).rejects.toThrow(/cannot access/);
+  });
+
+  it('allows an ordinary file inside the userData responses directory', async () => {
+    const { secureReadFile } = await import('../secure-read-file');
+    const responsesDir = path.join(userDataDir, 'responses');
+    fs.mkdirSync(responsesDir, { recursive: true });
+    const file = path.join(responsesDir, 'abc123.response');
+    fs.writeFileSync(file, 'response-body');
+
+    await expect(secureReadFile(file)).resolves.toBe('response-body');
+  });
+
+  it('allows an ordinary file inside the userData version-control directory', async () => {
+    const { secureReadFile } = await import('../secure-read-file');
+    const vcsDir = path.join(userDataDir, 'version-control', 'projects', 'prj_1');
+    fs.mkdirSync(vcsDir, { recursive: true });
+    const file = path.join(vcsDir, 'head.json');
+    fs.writeFileSync(file, '{"branch":"main"}');
+
+    await expect(secureReadFile(file)).resolves.toBe('{"branch":"main"}');
+  });
+
+  it('rejects a Chromium cookie store file directly inside the userData directory', async () => {
+    const { secureReadFile } = await import('../secure-read-file');
+    const cookiesFile = path.join(userDataDir, 'Cookies');
+    fs.writeFileSync(cookiesFile, 'sqlite-cookie-data');
+
+    await expect(secureReadFile(cookiesFile)).rejects.toThrow(/cannot access/);
+  });
+
+  it('rejects a sibling directory that merely shares a userData subdirectory name as a string prefix', async () => {
+    const { secureReadFile } = await import('../secure-read-file');
+    const responsesDir = path.join(userDataDir, 'responses');
+    fs.mkdirSync(responsesDir, { recursive: true });
+    const siblingDir = `${responsesDir}Other`;
+    fs.mkdirSync(siblingDir);
+    const file = path.join(siblingDir, 'notes.txt');
+    fs.writeFileSync(file, 'hello');
+
+    await expect(secureReadFile(file)).rejects.toThrow(/cannot access/);
   });
 
   it('rejects a sibling directory that merely shares the allowed directory as a string prefix', async () => {

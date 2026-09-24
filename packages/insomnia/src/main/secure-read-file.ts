@@ -21,12 +21,19 @@ export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   return { isAllowed, securedPath };
 };
 const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
+// Only responses/ and version-control/ subdirectories are in scope for this file-read surface;
+// the rest of userData (cookies, caches, etc.) is Electron/Chromium's own runtime state, not
+// something templates, plugins, or scripts have a reason to read.
+const USERDATA_ALLOWED_SUBDIRS = ['responses', 'version-control'];
 const getSecuredFolderAllowList = (userAllowList: string[]) => {
   const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
   // we use tmpdir for buildMultipart
-  // we put the db in userData
   // the user can also specifiy other folders
-  return [os.tmpdir(), userdataDirectory, ...userAllowList];
+  return [
+    os.tmpdir(),
+    ...USERDATA_ALLOWED_SUBDIRS.map(subdir => path.join(userdataDirectory, subdir)),
+    ...userAllowList,
+  ];
 };
 // NeDB stores every model as `insomnia.<Model>.db` directly inside the userData directory
 // (see database-nedb.ts), so the templating/plugin/script file-read surface must never be
