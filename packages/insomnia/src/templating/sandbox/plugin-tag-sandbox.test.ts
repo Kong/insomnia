@@ -485,6 +485,40 @@ describe('manifest-declared module grants (C3)', () => {
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
+
+  const stringDecoderTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var SD = require('string_decoder').StringDecoder; var d = new SD('utf8'); return d.write(new Uint8Array([104, 105])); } }];";
+
+  it('a plugin granted "string_decoder" can use StringDecoder', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: stringDecoderTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['string_decoder'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('hi');
+  });
+
+  it('a plugin declaring the node:string_decoder alias can use StringDecoder', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: stringDecoderTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:string_decoder'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('hi');
+  });
+
+  it('a plugin without the grant is denied "string_decoder" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: stringDecoderTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'string_decoder' not permitted by manifest");
+  });
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
