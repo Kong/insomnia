@@ -62,7 +62,7 @@ export type SettingsInit = Partial<
     AppSettings,
     | "validateSSL"
     | "dataFolders"
-    | "templateTagSandboxEnabled"
+    | "pluginSandboxEnabled"
     | "filterResponsesByEnv"
     | "timeout"
     | "proxyEnabled"
@@ -95,7 +95,7 @@ export type SettingsInit = Partial<
 export class Settings implements SettingsInit {
   validateSSL?: boolean;
   dataFolders?: string[];
-  templateTagSandboxEnabled?: boolean;
+  pluginSandboxEnabled?: boolean;
   filterResponsesByEnv?: boolean;
   timeout?: number;
   proxyEnabled?: boolean;
@@ -110,7 +110,7 @@ export class Settings implements SettingsInit {
   constructor(init: SettingsInit = {}) {
     this.validateSSL = init.validateSSL;
     this.dataFolders = init.dataFolders;
-    this.templateTagSandboxEnabled = init.templateTagSandboxEnabled;
+    this.pluginSandboxEnabled = init.pluginSandboxEnabled;
     this.filterResponsesByEnv = init.filterResponsesByEnv;
     this.timeout = init.timeout;
     this.proxyEnabled = init.proxyEnabled;

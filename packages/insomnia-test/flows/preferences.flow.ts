@@ -38,10 +38,10 @@ export class PreferencesFlow extends BaseFlow {
         await preferencesPage.addDataFolder(path);
       }
     }
-    if (settings.templateTagSandboxEnabled !== undefined) {
+    if (settings.pluginSandboxEnabled !== undefined) {
       await preferencesPage.openScriptingTab();
       await preferencesPage.setTemplateTagSandbox(
-        settings.templateTagSandboxEnabled,
+        settings.pluginSandboxEnabled,
       );
     }
     if (settings.filterResponsesByEnv !== undefined) {

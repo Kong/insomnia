@@ -64,6 +64,36 @@ export class WorkspaceFlow extends BaseFlow {
    */
   async create(item: Project): Promise<Project>;
   /**
+   * Creates a Collection under `parent`. If it carries a `spec`, authors
+   * it into the spec editor right after creation and returns the fuller
+   * `getCollectionSpec()` read instead of the plain `getCollection()` one.
+   * @param parent - The Project to create `item` under
+   * @param item - The Collection to create
+   * @param fileName - An explicit on-disk file name (without extension),
+   * decoupled from `item.name` — only meaningful for Git Sync projects,
+   * where each collection is backed by its own file
+   * @returns The created Collection, with `id` populated
+   */
+  async create(
+    parent: Project,
+    item: Collection,
+    fileName?: string,
+  ): Promise<Collection>;
+  /**
+   * Creates an McpClient under `parent`.
+   * @param parent - The Project to create `item` under
+   * @param item - The McpClient to create
+   * @returns The created McpClient, with `id` populated
+   */
+  async create(parent: Project, item: McpClient): Promise<McpClient>;
+  /**
+   * Creates an Environment under `parent`.
+   * @param parent - The Project to create `item` under
+   * @param item - The Environment to create
+   * @returns The created Environment, with `id` populated
+   */
+  async create(parent: Project, item: Environment): Promise<Environment>;
+  /**
    * Creates `item` (a Collection, McpClient, or Environment) under
    * `parent`. If `item` is a Collection carrying a `spec`, authors it into
    * the spec editor right after creation and returns the fuller
@@ -76,20 +106,6 @@ export class WorkspaceFlow extends BaseFlow {
     parent: Project,
     item: Collection | McpClient | Environment,
   ): Promise<Collection | McpClient | Environment>;
-  /**
-   * Creates a Collection under `parent` with an explicit on-disk file
-   * name, decoupled from its display name. Only meaningful for Git Sync
-   * projects, where each collection is backed by its own file.
-   * @param parent - The Git Sync Project to create the collection under
-   * @param item - The Collection to create
-   * @param fileName - The collection's on-disk file name (without extension)
-   * @returns The created Collection, with `id` populated
-   */
-  async create(
-    parent: Project,
-    item: Collection,
-    fileName: string,
-  ): Promise<Collection>;
   /**
    * Creates a new Git Sync Project by cloning a remote repo, explicitly
    * selecting `credentialName` (a credential already configured in

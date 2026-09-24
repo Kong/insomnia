@@ -577,7 +577,7 @@ export class PreferencesPage extends BasePage {
   }
 
   /**
-   * A custom-styled switch (Scripting tab, Settings.templateTagSandboxEnabled)
+   * A custom-styled switch (Scripting tab, Settings.pluginSandboxEnabled)
    * whose native input ignores direct clicks — the wrapping label is the
    * actual clickable target. Confirmed live: reading the input's checked
    * state immediately after the click can still report the pre-click

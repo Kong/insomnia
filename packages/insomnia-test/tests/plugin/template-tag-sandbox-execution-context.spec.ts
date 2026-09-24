@@ -63,10 +63,10 @@ test("Verify a plugin template tag runs in the QuickJS sandbox when enabled and 
     headers: [{ name: "X-Sandbox-Ctx", value: `{% ${tagName} %}` }],
   });
 
-  await preferencesFlow.set({ templateTagSandboxEnabled: false });
+  await preferencesFlow.set({ pluginSandboxEnabled: false });
   const responseWithSandboxDisabled = await httpRequestFlow.send(request!);
 
-  await preferencesFlow.set({ templateTagSandboxEnabled: true });
+  await preferencesFlow.set({ pluginSandboxEnabled: true });
   const responseWithSandboxEnabled = await httpRequestFlow.send(request!);
 
   expect(
