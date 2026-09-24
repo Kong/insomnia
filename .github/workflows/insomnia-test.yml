@@ -25,7 +25,7 @@ jobs:
   # and downstream jobs still run instead of being skipped.
   # ---------------------------------------------------------------------------
   build:
-    timeout-minutes: 120
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
