@@ -23,7 +23,23 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `assert` (and more via M2).
+    - `assert`'s deep-equality (`deepEqual`/`deepStrictEqual`/`notDeepEqual`/`notDeepStrictEqual`) throws an
+      explicit error for `Map`/`Set`/`WeakMap`/`WeakSet`/`ArrayBuffer`/typed-array operands and for
+      Symbol-keyed own properties, rather than risk a silently-wrong comparison. That detection checks both
+      the `Object.prototype.toString` tag and `instanceof`, since the tag alone is spoofable by a `Proxy`
+      whose `get` trap reports a different `Symbol.toStringTag` for a real `Map`/`Set`/`WeakMap`/`WeakSet`/
+      `ArrayBuffer` (`instanceof` is unaffected by a toStringTag-only spoof). **Known residual gap:** a
+      `Proxy` that _also_ fakes its prototype chain via a `getPrototypeOf` trap still bypasses this check —
+      real Node's own `deepStrictEqual` has the identical limitation against that same craft, so this isn't
+      a sandbox-specific regression, and closing it fully isn't possible without an unbounded arms race
+      against `Proxy`'s ability to lie about an extensible target's shape. `throws()`/`doesNotThrow()`
+      match by `RegExp` (tests `.message`), an `Error`-derived constructor (`instanceof` check), a plain
+      validator function (called with the thrown value), or a plain object (own-enumerable-property subset
+      match) — legacy Node's string-as-matcher form isn't implemented. Thrown `AssertionError`s carry the
+      same `name`/`message`/`actual`/`expected`/`operator` shape as real Node's and satisfy both
+      `instanceof Error` and `instanceof AssertionError`; exact message wording isn't guaranteed to match
+      Node's own formatting.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
