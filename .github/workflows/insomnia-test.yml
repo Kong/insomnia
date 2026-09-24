@@ -111,8 +111,9 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Install test dependencies
-        working-directory: packages/insomnia-test
-        run: npm ci
+        run: |
+          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
+          npm ci
 
       - name: Install Electron system dependencies
         working-directory: packages/insomnia-test
