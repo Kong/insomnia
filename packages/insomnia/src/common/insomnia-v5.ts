@@ -345,6 +345,8 @@ function getEnvironments(file: InsomniaFile): Environment[] {
         dataPropertyOrder: (environment.dataPropertyOrder as Record<string, any>) || undefined,
         name: environment.name || `Environment ${index}`,
         parentId: baseEnvironment._id,
+        environmentType: environment.environmentType || EnvironmentType.JSON,
+        kvPairData: environment.kvPairData || undefined,
       })) || [];
 
     return [baseEnvironment, ...subEnvironments];
