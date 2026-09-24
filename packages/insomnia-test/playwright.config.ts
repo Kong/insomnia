@@ -30,7 +30,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: [
-    ["list", { printSteps: true }],
+    ["list"],
     ["html", { open: "never" }],
   ],
   outputDir: "./test-results",
