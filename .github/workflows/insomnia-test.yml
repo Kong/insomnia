@@ -92,8 +92,8 @@ jobs:
       fail-fast: false
       matrix:
         # To scale up, add indices here and bump shardTotal to match.
-        shardIndex: [1, 2, 3, 4, 5]
-        shardTotal: [5]
+        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shardTotal: [10]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
