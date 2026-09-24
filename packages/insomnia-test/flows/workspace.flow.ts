@@ -460,8 +460,11 @@ export class WorkspaceFlow extends BaseFlow {
     const { workspacePage } = this.pageManager;
     const node = await workspacePage.findItemNode(request);
     if (!node) throw new Error(`Failed to find "${request.name}" to pin`);
+    const pinned = await workspacePage.isPinned(request.name);
     await workspacePage.rightClick(node);
-    await workspacePage.clickContextMenu(ContextMenuItem.Pin);
+    await workspacePage.clickContextMenu(
+      pinned ? ContextMenuItem.Unpin : ContextMenuItem.Pin,
+    );
   }
 
   /**

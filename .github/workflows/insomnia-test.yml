@@ -62,6 +62,8 @@ jobs:
       - name: Install dependencies
         if: steps.binary-cache.outputs.cache-hit != 'true'
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Insomnia
         if: steps.binary-cache.outputs.cache-hit != 'true'
@@ -118,6 +120,8 @@ jobs:
         run: |
           sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
           npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Electron system dependencies
         working-directory: packages/insomnia-test

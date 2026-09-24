@@ -27,6 +27,9 @@ export enum ContextMenuItem {
   // folders use the plain "Duplicate" above.
   DuplicateWorkspace = "Duplicate / Move",
   Pin = "Pin",
+  // The request context menu's Pin action relabels to "Unpin" once the
+  // request is already pinned.
+  Unpin = "Unpin",
   OpenInNewTab = "Open in New Tab",
   Export = "Export",
   GenerateCode = "Generate Code",
