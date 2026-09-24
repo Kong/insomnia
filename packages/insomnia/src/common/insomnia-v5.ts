@@ -34,7 +34,7 @@ import type {
   Workspace,
   WorkspaceScope,
 } from 'insomnia-data';
-import { EnvironmentType, models, services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
