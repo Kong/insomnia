@@ -35,14 +35,7 @@ const INSOMNIA_DEV_MODE =
   !process.env.INSOMNIA_BINARY &&
   process.env.INSOMNIA_DEV_MODE !== "false" &&
   process.env.INSOMNIA_DEV_MODE !== "0";
-const INSOMNIA_SRC_PACKAGE = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "insomnia",
-  "packages",
-  "insomnia",
-);
+const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "..", "insomnia");
 
 /**
  * Runs the same one-shot `esbuild.entrypoints.ts` dev build `npm run
