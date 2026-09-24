@@ -280,7 +280,7 @@ const validateListResult = (method: string, result: unknown): McpListResult => {
   const items = isRecord(result) ? result[config.itemsKey] : undefined;
   if (!Array.isArray(items)) {
     // Cannot even identify the list of entries in the response - the whole response is invalid
-    return { error: { title: `Server returns ${method} response that does not meet MCP schema` } };
+    return { error: { title: `The server returned a ${method} response that does not match the MCP schema.` } };
   }
   const validItems: unknown[] = [];
   const entries: McpListEntryError[] = [];
@@ -302,9 +302,9 @@ const validateListResult = (method: string, result: unknown): McpListResult => {
   return {
     data: { ...(isRecord(result) ? result : {}), [config.itemsKey]: validItems },
     error: {
-      title: `Drop ${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} that ${
-        entries.length === 1 ? 'fails' : 'fail'
-      } the MCP schema.`,
+      title: `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} ${
+        entries.length === 1 ? 'was' : 'were'
+      } skipped because they do not match the MCP schema.`,
       entries,
     },
   };
