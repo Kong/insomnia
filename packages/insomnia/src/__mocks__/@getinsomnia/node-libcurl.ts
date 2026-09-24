@@ -6,6 +6,7 @@ import { CurlFeature } from '@getinsomnia/node-libcurl/dist/enum/CurlFeature';
 import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
 import { CurlInfoDebug } from '@getinsomnia/node-libcurl/dist/enum/CurlInfoDebug';
 import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import { CurlProtocol } from '@getinsomnia/node-libcurl/dist/enum/CurlProtocol';
 import { CurlSslOpt } from '@getinsomnia/node-libcurl/dist/enum/CurlSslOpt';
 import { EventEmitter } from 'events';
 import fs from 'fs';
@@ -50,6 +51,7 @@ class Curl extends EventEmitter {
     PROXYAUTH: 'PROXYAUTH',
     READDATA: 'READDATA',
     READFUNCTION: 'READFUNCTION',
+    REDIR_PROTOCOLS: 'REDIR_PROTOCOLS',
     SSLCERT: 'SSLCERT',
     SSLCERTTYPE: 'SSLCERTTYPE',
     SSLKEY: 'SSLKEY',
@@ -138,6 +140,14 @@ class Curl extends EventEmitter {
   }
 
   perform() {
+    const scripted = scriptedResponses[this._options[Curl.option.URL]]?.shift();
+    if (scripted) {
+      const rawHeaders = [scripted.statusLine, ...(scripted.headerLines || []), '', ''].join('\n');
+      process.nextTick(() => {
+        this.emit('end', 'NOT_USED', 'NOT_USED', rawHeaders);
+      });
+      return;
+    }
     process.nextTick(() => {
       const data = Buffer.from(
         JSON.stringify({
@@ -163,6 +173,24 @@ class Curl extends EventEmitter {
 
   close() {}
 }
+
+// Scripted end-responses for redirect tests, keyed by request URL. Each entry
+// is consumed once, in order; URLs without a script keep the default 200 echo.
+// Test-only: production code never touches this.
+export interface ScriptedResponse {
+  statusLine: string;
+  headerLines?: string[];
+}
+
+let scriptedResponses: Record<string, ScriptedResponse[]> = {};
+
+export const __setScriptedResponses = (responses: Record<string, ScriptedResponse[]>) => {
+  scriptedResponses = responses;
+};
+
+export const __clearScriptedResponses = () => {
+  scriptedResponses = {};
+};
 
 /**
  * This is just to make it easier to test
@@ -195,6 +223,7 @@ export const nodeLibcurlMock = {
   CurlInfoDebug: getTsEnumOnlyWithNamedMembers(CurlInfoDebug),
   CurlFeature: getTsEnumOnlyWithNamedMembers(CurlFeature),
   CurlNetrc: getTsEnumOnlyWithNamedMembers(CurlNetrc),
+  CurlProtocol,
   CurlHttpVersion: getTsEnumOnlyWithNamedMembers(CurlHttpVersion),
   CurlSslOpt: getTsEnumOnlyWithNamedMembers(CurlSslOpt),
 };
