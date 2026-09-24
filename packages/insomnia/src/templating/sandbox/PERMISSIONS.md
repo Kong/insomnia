@@ -23,7 +23,26 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `util` (and more via M2).
+    - `util` implements `format`, `promisify` (including a `Symbol.for("nodejs.util.promisify.custom")`
+      override and a `.custom` property), and `types.is*` (`isDate`/`isRegExp`/`isPromise`/`isMap`/
+      `isSet`/`isWeakMap`/`isWeakSet`/`isArrayBuffer`/`isDataView`/`isTypedArray`/`isNativeError`/
+      `isBooleanObject`/`isNumberObject`/`isStringObject`/`isAsyncFunction`/`isGeneratorFunction`) —
+      verified against `node:util` for all of `format`'s specifiers (`%s %d %i %f %j %o %O %c %%`),
+      its `-0`/`NaN`/`bigint`/`symbol` coercion quirks, quote-character selection for inspected
+      strings, and `promisify`'s error/multi-value/custom-override semantics. Two deliberate,
+      documented gaps: `util.inspect`/`inherits`/`deprecate` are not implemented at all (absent from
+      the exports object, so calling them throws a plain "not a function" TypeError); and `%o` is not
+      distinguished from `%O` — real Node's `%o` additionally reveals non-enumerable properties (e.g.
+      an array's `.length`) and inspects to depth 4, neither of which this module replicates. Most
+      `types.is*` checks use `instanceof` rather than Node's real V8-internal-type-tag approach —
+      deliberately, since `instanceof` can't be spoofed via a custom `Symbol.toStringTag` getter the
+      way a `toString.call`-based check can. The two exceptions, `isAsyncFunction` and
+      `isGeneratorFunction`, use `Object.prototype.toString.call` instead (there's no `instanceof`
+      target for either) and so can be made to answer wrongly by a value with a forged
+      `[Symbol.toStringTag]`. This is a correctness gap, not a capability leak: the check only ever
+      returns a boolean about a value the plugin already owns, so a spoofed answer can't expose or
+      grant access to anything the plugin couldn't already reach.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
