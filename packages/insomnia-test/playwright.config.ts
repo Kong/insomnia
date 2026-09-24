@@ -89,6 +89,8 @@ export default defineConfig({
       url: "http://localhost:4070/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
+      stdout: "ignore",
+      stderr: "ignore",
     },
     {
       command: "node misc/oauth2-server.js",
