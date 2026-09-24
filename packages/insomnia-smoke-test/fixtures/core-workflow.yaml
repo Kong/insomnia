@@ -1,0 +1,153 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Core Workflow Tests
+meta:
+  id: wrk_f0000000000000000000000000000001
+  created: 1744502400000
+  modified: 1744502400000
+collection:
+  - url: "{{_.base_url}}/pets/{{_.pet_id}}"
+    name: get pet by id
+    meta:
+      id: req_f0000000000000000000000000000005
+      created: 1744502400001
+      modified: 1744502400001
+      isPrivate: false
+      sortKey: -1744502400001
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{_.base_url}}/simple-crud"
+    name: create item
+    meta:
+      id: req_f0000000000000000000000000000006
+      created: 1744502400002
+      modified: 1744502400002
+      isPrivate: false
+      sortKey: -1744502400002
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Widget",
+          "price": 9.99
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    scripts:
+      afterResponse: |-
+        const json = JSON.parse(insomnia.response.text());
+        insomnia.environment.set('item_id', json.id);
+        insomnia.test('response has id', () => {
+          insomnia.expect(typeof json.id).to.eql('string');
+        });
+        insomnia.test('response has correct name', () => {
+          insomnia.expect(json.name).to.eql('Widget');
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{_.base_url}}/simple-crud/{{_.item_id}}"
+    name: get created item
+    meta:
+      id: req_f0000000000000000000000000000007
+      created: 1744502400003
+      modified: 1744502400003
+      isPrivate: false
+      sortKey: -1744502400003
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{_.base_url}}/echo"
+    name: echo with custom header
+    meta:
+      id: req_f0000000000000000000000000000008
+      created: 1744502400004
+      modified: 1744502400004
+      isPrivate: false
+      sortKey: -1744502400004
+    method: POST
+    body:
+      mimeType: application/json
+      text: '{"workflow":"test"}'
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: x-test-header
+        value: insomnia-rocks
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{_.base_url}}/auth/basic"
+    name: authenticated request
+    meta:
+      id: req_f0000000000000000000000000000009
+      created: 1744502400005
+      modified: 1744502400005
+      isPrivate: false
+      sortKey: -1744502400005
+    method: GET
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: user
+      password: pass
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f0000000000000000000000000000002
+    created: 1744502400000
+    modified: 1744502400000
+environments:
+  name: Base Environment
+  meta:
+    id: env_f0000000000000000000000000000003
+    created: 1744502400000
+    modified: 1744502400000
+    isPrivate: false
+  data:
+    base_url: http://127.0.0.1:4010
+    pet_id: "42"
+    item_id: placeholder
+  subEnvironments:
+    - name: Staging
+      meta:
+        id: env_f0000000000000000000000000000004
+        created: 1744502400000
+        modified: 1744502400000
+        isPrivate: false
+      data:
+        pet_id: "1"
