@@ -38,13 +38,17 @@ const VALUE_YAML = 'yaml';
 const VALUE_JSON = 'json';
 const VALUE_HAR = 'har';
 
-export type SelectedFormat = typeof VALUE_HAR | typeof VALUE_YAML;
+export type SelectedFormat = typeof VALUE_HAR | typeof VALUE_YAML | typeof VALUE_JSON;
 
 const showSelectExportTypeModal = ({ onDone }: { onDone: (selectedFormat: SelectedFormat) => Promise<void> }) => {
   const options = [
     {
-      name: 'Insomnia v5',
+      name: 'Insomnia v5 (YAML)',
       value: VALUE_YAML,
+    },
+    {
+      name: 'Insomnia v5 (JSON)',
+      value: VALUE_JSON,
     },
     {
       name: 'HAR – HTTP Archive Format',
@@ -52,11 +56,7 @@ const showSelectExportTypeModal = ({ onDone }: { onDone: (selectedFormat: Select
     },
   ];
 
-  let lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
-  if (lastFormat === 'json') {
-    window.localStorage.setItem('insomnia.lastExportFormat', VALUE_YAML);
-    lastFormat = VALUE_YAML;
-  }
+  const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
 
   const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_YAML;
 
@@ -184,12 +184,9 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             break;
           }
 
-          case VALUE_YAML: {
+          case VALUE_YAML:
+          case VALUE_JSON: {
             const dirPath = await showSaveExportedFolderDialog();
-            if (!dirPath) {
-              return;
-            }
-
             if (!dirPath) {
               return;
             }
@@ -202,10 +199,14 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
             for (const workspace of workspacesForActiveProject) {
               const workspaceName = workspace.name.replace(/ /g, '-');
-              const fileName = window.path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
+              const fileName = window.path.join(
+                insomniaProjectExportFolder,
+                `${workspaceName}-${workspace._id}.${selectedFormat}`,
+              );
               const stringifiedExport = await getInsomniaV5DataExport({
                 workspaceId: workspace._id,
                 includePrivateEnvironments: shouldExportPrivateEnvironments,
+                format: selectedFormat,
               });
               await writeExportedFileToFileSystem(fileName, stringifiedExport);
             }
@@ -337,11 +338,13 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
             break;
           }
 
-          case VALUE_YAML: {
+          case VALUE_YAML:
+          case VALUE_JSON: {
             stringifiedExport = await getInsomniaV5DataExport({
               workspaceId,
               includePrivateEnvironments: shouldExportPrivateEnvironments,
               requestIds,
+              format: selectedFormat,
             });
             break;
           }
