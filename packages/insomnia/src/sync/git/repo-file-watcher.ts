@@ -57,7 +57,7 @@ const POLL_INTERVAL_MS = 10_000;
 const DEBOUNCE_MS = 300;
 const GIT_DIR = '.git';
 
-export type FileIssueKind = 'conflict' | 'parse-error';
+export type FileIssueKind = 'conflict' | 'parse-error' | 'write-blocked';
 
 export interface FileIssue {
   /** Absolute path to the problematic file. */
@@ -274,10 +274,11 @@ class RepoFileWatcher {
 
     await Promise.all(
       workspaces.map(async workspace => {
+        let absPath = path.resolve(this.repoDir, `insomnia.${workspace._id}.yaml`);
         try {
           const meta = await services.workspaceMeta.getByParentId(workspace._id);
           const gitFilePath = meta?.gitFilePath ?? `insomnia.${workspace._id}.yaml`;
-          const absPath = path.resolve(this.repoDir, gitFilePath);
+          absPath = path.resolve(this.repoDir, gitFilePath);
 
           // Path-traversal guard
           if (isPathOutsideRepo(this.repoDir, absPath)) return;
@@ -316,6 +317,7 @@ class RepoFileWatcher {
           const normalised = path.normalize(absPath);
           this.lastWrittenHash.set(normalised, hash);
           this.lastSyncMtime.set(normalised, Date.now() + 1);
+          this.clearProblem(normalised);
 
           console.log(
             '[repo-file-watcher] DB newer than disk for workspace',
@@ -325,6 +327,13 @@ class RepoFileWatcher {
           );
         } catch (err) {
           console.warn('[repo-file-watcher] flushNewerDbWorkspacesToDisk error for workspace', workspace._id, err);
+          const normalised = path.normalize(absPath);
+          this.addProblem(normalised, {
+            filePath: normalised,
+            relPath: this.toPosixRelPath(normalised),
+            kind: 'write-blocked',
+            message: err instanceof Error ? err.message : String(err),
+          });
         }
       }),
     );
@@ -513,7 +522,7 @@ class RepoFileWatcher {
         continue;
       }
 
-      if (this.hasProblem(absPath)) {
+      if (this.hasBlockingProblem(absPath)) {
         continue;
       }
 
@@ -561,8 +570,15 @@ class RepoFileWatcher {
         this.lastKnownGitFilePath.set(workspace._id, absPath);
         // Use Date.now() — always >= the actual mtime of the file just written, saves a stat() syscall
         this.lastSyncMtime.set(absPath, Date.now());
+        this.clearProblem(absPath);
       } catch (err) {
         console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
+        this.addProblem(absPath, {
+          filePath: absPath,
+          relPath: this.toPosixRelPath(absPath),
+          kind: 'write-blocked',
+          message: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }
@@ -609,8 +625,15 @@ class RepoFileWatcher {
       this.lastWrittenHash.set(absPath, hash);
       const stat = await fs.promises.stat(absPath);
       this.lastSyncMtime.set(absPath, stat.mtimeMs);
+      this.clearProblem(absPath);
     } catch (err) {
       console.warn('[repo-file-watcher] Could not flush project lint ruleset to disk:', err);
+      this.addProblem(absPath, {
+        filePath: absPath,
+        relPath: this.toPosixRelPath(absPath),
+        kind: 'write-blocked',
+        message: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -1150,6 +1173,7 @@ class RepoFileWatcher {
       const stat = await fs.promises.stat(absPath);
       this.lastSyncMtime.set(normalised, stat.mtimeMs);
       this.lastKnownGitFilePath.set(workspace._id, normalised);
+      this.clearProblem(normalised);
 
       console.log(
         '[repo-file-watcher] Preserved local-only workspace on disk:',
@@ -1158,6 +1182,13 @@ class RepoFileWatcher {
       );
     } catch (err) {
       console.warn('[repo-file-watcher] Could not preserve local-only workspace on disk:', workspace._id, err);
+      const normalised = path.normalize(absPath);
+      this.addProblem(normalised, {
+        filePath: normalised,
+        relPath: this.toPosixRelPath(normalised),
+        kind: 'write-blocked',
+        message: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -1210,6 +1241,25 @@ class RepoFileWatcher {
   /** Return true when a normalized file path currently has a blocking import problem. */
   private hasProblem(normalisedPath: string): boolean {
     return this.problemFiles.has(normalisedPath);
+  }
+
+  /**
+   * Like {@link hasProblem}, but excludes `write-blocked` so a blocked write
+   * can keep retrying and self-clear once it succeeds.
+   */
+  private hasBlockingProblem(normalisedPath: string): boolean {
+    const problem = this.problemFiles.get(normalisedPath);
+    return Boolean(problem) && problem?.kind !== 'write-blocked';
+  }
+
+  /** Record a write refused for resolving outside the git working directory. */
+  reportWriteBlocked(absPath: string, relPath: string, message: string): void {
+    this.addProblem(path.normalize(absPath), {
+      filePath: absPath,
+      relPath,
+      kind: 'write-blocked',
+      message,
+    });
   }
 
   /** Return the current problems mapped to workspace-level issues. */
@@ -1358,5 +1408,10 @@ export class RepoFileWatcherRegistry {
       return [];
     }
     return watcher.getProblems();
+  }
+
+  /** Record a blocked write for the given repo. No-op if the watcher isn't running. */
+  reportWriteBlocked(repoId: string, absPath: string, relPath: string, message: string): void {
+    this.watchers.get(repoId)?.reportWriteBlocked(absPath, relPath, message);
   }
 }

@@ -48,7 +48,7 @@ import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
-import { fsClient } from '../sync/git/fs-client';
+import { type BlockedWrite, type BlockedWriteHandler, fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
   fetchRemoteBranches,
@@ -633,16 +633,37 @@ async function getGitFSClient({
     }
   }
 
+  // While a pull is in flight, GitVCS.pullWithConflictSupport collects
+  // blocked writes via startCollectBlockedWrites to fold into that pull's own
+  // result. Otherwise (branch checkout, clone, merge), report it as a file
+  // problem so it's still visible via the Git-Sync dropdown's listener.
+  let blockedWrites: BlockedWrite[] | null = null;
+  const onBlockedWrite: BlockedWriteHandler = (relPath, message) => {
+    if (blockedWrites) {
+      blockedWrites.push({ relPath, message });
+    } else {
+      repoFileWatcherRegistry.reportWriteBlocked(gitRepositoryId, path.join(baseDir, relPath), relPath, message);
+    }
+  };
+  const collectBlockedWrites = {
+    startCollectBlockedWrites: (target: BlockedWrite[]) => {
+      blockedWrites = target;
+    },
+    stopCollectBlockedWrites: () => {
+      blockedWrites = null;
+    },
+  };
+
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
     // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
     const neDbClient = NeDBClient.createClient(workspaceId, projectId);
 
     // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
-    const gitDataClient = fsClient(baseDir);
+    const gitDataClient = fsClient(baseDir, onBlockedWrite);
 
     // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-    const otherDataClient = fsClient(path.join(baseDir, 'other'));
+    const otherDataClient = fsClient(path.join(baseDir, 'other'), onBlockedWrite);
 
     // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
     const routableFS = routableFSClient(otherDataClient, {
@@ -650,17 +671,17 @@ async function getGitFSClient({
       [GIT_INTERNAL_DIR]: gitDataClient,
     });
 
-    return routableFS;
+    return { ...routableFS, ...collectBlockedWrites };
   }
 
   // Project FS Client
   // All git metadata in the GIT_INTERNAL_DIR directory is stored in a .git/ directory on the filesystem
-  const gitDataClient = fsClient(baseDir);
+  const gitDataClient = fsClient(baseDir, onBlockedWrite);
 
   // All files (YAML + non-YAML) are stored at the repository root so that
   // native Git tools can operate directly on the repository directory.
   // The RepoFileWatcher is solely responsible for syncing YAML ↔ NeDB.
-  const diskClient = fsClient(baseDir);
+  const diskClient = fsClient(baseDir, onBlockedWrite);
 
   // The routable FS client routes prefix-matched paths (e.g. .git) to
   // specialised FS clients; everything else goes to the disk client.
@@ -668,7 +689,7 @@ async function getGitFSClient({
     [GIT_INTERNAL_DIR]: gitDataClient,
   });
 
-  return routableFS;
+  return { ...routableFS, ...collectBlockedWrites };
 }
 
 /**
@@ -3042,7 +3063,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     invariant(credentials, 'Git Credentials not found');
 
     const bufferId = await database.bufferChanges();
-    await GitVCS.pullWithConflictSupport(gitRepository.credentialsId);
+    const pullResult = await GitVCS.pullWithConflictSupport(gitRepository.credentialsId);
 
     // Import all YAML files from disk into the DB after pull
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
@@ -3064,6 +3085,19 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     });
 
     await database.flushChanges(bufferId);
+
+    if ('blockedWrites' in pullResult && pullResult.blockedWrites?.length) {
+      const { blockedWrites } = pullResult;
+      const errors =
+        blockedWrites.length === 1
+          ? [`Blocked write outside the repository: ${path.basename(blockedWrites[0].relPath)}`]
+          : [`Blocked ${blockedWrites.length} writes outside the repository`];
+
+      return {
+        success: false,
+        errors,
+      };
+    }
 
     return {
       success: true,

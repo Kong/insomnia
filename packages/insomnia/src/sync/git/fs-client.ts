@@ -30,15 +30,37 @@ const resolveWithinBase = (basePath: string, relPath: string): string => {
   return resolvedPath;
 };
 
+/**
+ * `isomorphic-git`'s checkout write phase catches each file/symlink write
+ * error itself and never rethrows, so the caller has no other way to learn
+ * a write was refused. Called right before throwing.
+ */
+export type BlockedWriteHandler = (relPath: string, message: string) => void;
+
+export interface BlockedWrite {
+  relPath: string;
+  message: string;
+}
+
 /** This is a client for isomorphic-git. {@link https://isomorphic-git.org/docs/en/fs} */
-export const fsClient = (basePath: string) => {
+export const fsClient = (basePath: string, onBlockedWrite?: BlockedWriteHandler) => {
   console.log(`[fsClient] Created in ${basePath}`);
   fs.mkdirSync(basePath, { recursive: true });
+
+  const resolveOrReport = (relPath: string): string => {
+    try {
+      return resolveWithinBase(basePath, relPath);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      onBlockedWrite?.(relPath, message);
+      throw err;
+    }
+  };
 
   const wrap =
     (fn: FSWraps) =>
     async (filePath: string, ...args: any[]) => {
-      const modifiedPath = resolveWithinBase(basePath, filePath);
+      const modifiedPath = resolveOrReport(filePath);
 
       // @ts-expect-error -- TSCONVERSION
       return fn(modifiedPath, ...args);
@@ -47,11 +69,9 @@ export const fsClient = (basePath: string) => {
   const wrapSymlink =
     (fn: typeof fs.promises.symlink) =>
     async (filePath: string, target: string, ...args: any[]) => {
-      const modifiedPath = resolveWithinBase(basePath, filePath);
-      // The symlink's target must also resolve inside the repository —
-      // otherwise a commit can create a symlink at a legitimate, in-repo
-      // path whose target escapes the working directory entirely.
-      const modifiedTarget = resolveWithinBase(basePath, target);
+      const modifiedPath = resolveOrReport(filePath);
+      // The symlink target must also resolve within the git working directory.
+      const modifiedTarget = resolveOrReport(target);
 
       return fn(modifiedPath, modifiedTarget, ...args);
     };
