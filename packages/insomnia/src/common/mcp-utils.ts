@@ -24,11 +24,14 @@ import {
   ProgressNotificationSchema,
   type Prompt,
   PromptListChangedNotificationSchema,
+  PromptSchema,
   ReadResourceRequestSchema,
   ReadResourceResultSchema,
   type Resource,
   ResourceListChangedNotificationSchema,
+  ResourceSchema,
   type ResourceTemplate,
+  ResourceTemplateSchema,
   ResourceUpdatedNotificationSchema,
   type ServerCapabilities,
   ServerNotificationSchema,
@@ -37,9 +40,12 @@ import {
   TaskStatusNotificationSchema,
   type Tool,
   ToolListChangedNotificationSchema,
+  ToolSchema,
   UnsubscribeRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import type { RJSFSchema } from '@rjsf/utils';
+
+import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
 
 // methods for server features
 export const METHOD_INITIALIZE = InitializeRequestSchema.shape.method.value;
@@ -178,6 +184,173 @@ export const getDefaultServerCapabilities = () => {
       listChanged: false,
     },
   };
+};
+
+// One dropped entry from a partially-invalid list, e.g. a single malformed tool.
+export interface McpListEntryError {
+  label: string;
+  reason: string;
+}
+
+// Structured description of why a list request failed or came back partially invalid, meant to be
+// rendered directly (a one-line summary plus an optional per-entry breakdown) rather than a single
+// flattened string.
+export interface McpListValidationError {
+  title: string;
+  entries?: McpListEntryError[];
+}
+
+export interface McpListResult {
+  data?: any;
+  error?: McpListValidationError;
+}
+
+// Merges the (at most a couple) independent list errors for a primitive type - e.g. resources and
+// resourceTemplates are two separate requests but share one root item - into a single error so the
+// root item only ever carries one.
+export const combineListErrors = (
+  ...errors: (McpListValidationError | undefined)[]
+): McpListValidationError | undefined => {
+  const present = errors.filter((error): error is McpListValidationError => error !== undefined);
+  if (present.length === 0) {
+    return undefined;
+  }
+  if (present.length === 1) {
+    return present[0];
+  }
+  return {
+    title: present.map(error => error.title).join(' / '),
+    entries: present.flatMap(error => error.entries || []),
+  };
+};
+
+interface ZodLikeSchema {
+  safeParse: (value: unknown) => {
+    success: boolean;
+    data?: unknown;
+    error?: { issues: { path: PropertyKey[]; message: string }[] };
+  };
+}
+
+const PRIMITIVE_LIST_CONFIG: Record<
+  string,
+  { itemsKey: string; resultSchema: ZodLikeSchema; itemSchema: ZodLikeSchema }
+> = {
+  [METHOD_LIST_TOOLS]: { itemsKey: 'tools', resultSchema: ListToolsResultSchema, itemSchema: ToolSchema },
+  [METHOD_LIST_RESOURCES]: {
+    itemsKey: 'resources',
+    resultSchema: ListResourcesResultSchema,
+    itemSchema: ResourceSchema,
+  },
+  [METHOD_LIST_RESOURCE_TEMPLATES]: {
+    itemsKey: 'resourceTemplates',
+    resultSchema: ListResourceTemplatesResultSchema,
+    itemSchema: ResourceTemplateSchema,
+  },
+  [METHOD_LIST_PROMPTS]: { itemsKey: 'prompts', resultSchema: ListPromptsResultSchema, itemSchema: PromptSchema },
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const labelForListItem = (item: unknown): string | undefined => {
+  if (!isRecord(item)) {
+    return undefined;
+  }
+  for (const key of ['name', 'uriTemplate', 'uri', 'title']) {
+    const candidate = item[key];
+    if (typeof candidate === 'string' && candidate.length > 0) {
+      return candidate;
+    }
+  }
+  return undefined;
+};
+
+// Validates a list result against its schema.
+// If the whole envelope is invalid (e.g. the items are not even an array), the entire list fails to render.
+// If only some entries are malformed, the valid entries are still returned and the malformed ones are summarized as an error.
+const validateListResult = (method: string, result: unknown): McpListResult => {
+  const config = PRIMITIVE_LIST_CONFIG[method];
+  if (!config) {
+    return { data: result };
+  }
+  if (config.resultSchema.safeParse(result).success) {
+    return { data: result };
+  }
+  const items = isRecord(result) ? result[config.itemsKey] : undefined;
+  if (!Array.isArray(items)) {
+    // Cannot even identify the list of entries in the response - the whole response is invalid
+    return { error: { title: `The server returned a ${method} response that does not match the MCP schema.` } };
+  }
+  const validItems: unknown[] = [];
+  const entries: McpListEntryError[] = [];
+  items.forEach((item, index) => {
+    const parsed = config.itemSchema.safeParse(item);
+    if (parsed.success) {
+      validItems.push(parsed.data);
+      return;
+    }
+    const [issue] = parsed.error?.issues || [];
+    const reason = issue
+      ? `${issue.path.length > 0 ? `${issue.path.join('.')}: ` : ''}${issue.message}`
+      : 'did not match the expected shape';
+    entries.push({ label: labelForListItem(item) || `index ${index}`, reason });
+  });
+  if (entries.length === 0) {
+    return { data: { ...(isRecord(result) ? result : {}), [config.itemsKey]: validItems } };
+  }
+  return {
+    data: { ...(isRecord(result) ? result : {}), [config.itemsKey]: validItems },
+    error: {
+      title: `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} ${
+        entries.length === 1 ? 'was' : 'were'
+      } skipped because they do not match the MCP schema.`,
+      entries,
+    },
+  };
+};
+
+// Finds the result data of the latest incoming event for a method
+export const findFirstMatchEventData = (mcpEvents: McpEvent[], method: string) => {
+  const firstMatchEvent = mcpEvents.find(
+    event => 'method' in event && event.method === method && event.direction === 'INCOMING',
+  ) as McpMessageEvent;
+  if (firstMatchEvent) {
+    return 'result' in firstMatchEvent.data ? firstMatchEvent.data.result : undefined;
+  }
+  return;
+};
+
+// Correlates the outgoing list request  with its matching incoming response by request id, then validates the response
+export const findLatestListResult = (mcpEvents: McpEvent[], method: string): McpListResult | undefined => {
+  const outgoingEvent = mcpEvents.find(
+    event => 'method' in event && event.method === method && event.direction === 'OUTGOING',
+  ) as McpMessageEvent | undefined;
+  const outgoingRequestId = outgoingEvent && 'id' in outgoingEvent.data ? outgoingEvent.data.id : undefined;
+  if (outgoingRequestId === undefined) {
+    return undefined;
+  }
+  const incomingEvent = mcpEvents.find(event => {
+    if (event.type === 'message' && event.direction === 'INCOMING') {
+      return 'id' in event.data && event.data.id === outgoingRequestId;
+    }
+    if (event.type === 'error') {
+      return event.error?.requestId === outgoingRequestId;
+    }
+    return false;
+  });
+  if (!incomingEvent) {
+    // Response has not been received yet
+    return undefined;
+  }
+  if (incomingEvent.type === 'error') {
+    return { error: { title: incomingEvent.message || `MCP server returned an error for ${method}` } };
+  }
+  if (incomingEvent.type !== 'message') {
+    return undefined;
+  }
+  const result = 'result' in incomingEvent.data ? incomingEvent.data.result : undefined;
+  return validateListResult(method, result);
 };
 
 export const isResourceTemplate = (resource: Resource | ResourceTemplate): resource is ResourceTemplate => {
