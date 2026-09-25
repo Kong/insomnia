@@ -49,13 +49,17 @@ test.describe('import deep links', () => {
     await expect.soft(insomnia.page.getByText('Invalid cURL request')).toHaveCount(0);
   });
 
-  test('value-bearing curl param pre-populates the cURL tab', async ({ app, insomnia }) => {
+  test('value-bearing curl param auto-scans and shows the detected request', async ({ app, insomnia }) => {
     const curlCommand = 'curl --request GET --url http://insomnia.rest/';
     await sendDeepLink(app, `insomnia://app/import?curl=${encodeURIComponent(curlCommand)}`);
 
     await expect.soft(insomnia.page.getByRole('dialog')).toBeVisible();
     // A value-bearing param auto-scans: the modal skips the source picker and
-    // shows the detected resources ready to import.
-    await expect.soft(insomnia.page.getByText('http://insomnia.rest/')).toBeVisible();
+    // shows the detected resources ready to import. The scan completes within
+    // milliseconds of the modal opening, so assert on the stable post-scan
+    // state — the pre-scan form (whose textarea value contains the URL) is
+    // replaced as soon as the scan result lands.
+    await expect.soft(insomnia.page.getByText('cURL resources to be imported:')).toBeVisible();
+    await expect.soft(insomnia.page.getByText('1 Request')).toBeVisible();
   });
 });
