@@ -23,6 +23,7 @@ import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import type { FileProblemsChangedPayload } from '~/sync/git/repo-file-watcher';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
@@ -60,6 +61,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const prevHadPullError = useRef(false);
+  const writeBlockedPaths = useRef<Set<string>>(new Set());
 
   const [pushCount, setPushCount] = useState(0);
   const gitPushFetcher = useGitProjectPushActionFetcher({ key: `push-${pushCount}` });
@@ -142,6 +144,36 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       });
     }
   }, [gitStatusFetcher, projectId, shouldFetchGitRepoStatus]);
+
+  // The DB→FS flush (runs on every git-status check, including on mount) can
+  // be blocked mid-write outside the git working directory. That has no
+  // request/response of its own, so listen directly and toast once per path.
+  useEffect(() => {
+    if (!gitRepository?._id) {
+      return;
+    }
+
+    return window.main.on('git.file-problems-changed', (_event, payload: FileProblemsChangedPayload) => {
+      if (payload.repoId !== gitRepository._id) {
+        return;
+      }
+
+      const currentlyBlocked = payload.problems.filter(problem => problem.kind === 'write-blocked');
+
+      for (const problem of currentlyBlocked) {
+        if (!writeBlockedPaths.current.has(problem.filePath)) {
+          showToast({
+            icon,
+            title: 'Write blocked',
+            description: `Blocked write outside the git working directory: ${problem.relPath}`,
+            status: 'error',
+          });
+        }
+      }
+
+      writeBlockedPaths.current = new Set(currentlyBlocked.map(problem => problem.filePath));
+    });
+  }, [gitRepository?._id, icon]);
 
   useEffect(() => {
     const data = gitPushFetcher.data;
@@ -393,6 +425,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           showToast({
             icon,
             title: `Pull failed`,
+            description: pullResult.errors.join('\n'),
             status: 'error',
           });
           setOperationError(pullResult.errors.join('\n'));
@@ -484,6 +517,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       showToast({
         icon,
         title: `Pull failed`,
+        description: message,
         status: 'error',
       });
 

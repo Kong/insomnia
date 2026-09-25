@@ -694,7 +694,7 @@ export const importResourcesToNewWorkspace = async ({
 
   if (models.project.isGitProject(project)) {
     await services.workspaceMeta.update(workspaceMeta, {
-      gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
+      gitFilePath: `${sanitizeGitFileNameSegment(newWorkspace.name)}-${newWorkspace._id}.yaml`,
     });
   }
   // we sync the new workspace to the cloud in workspaceLoader when user enters the workspace
@@ -706,6 +706,17 @@ export const importResourcesToNewWorkspace = async ({
 
   return newWorkspace;
 };
+
+/**
+ * `gitFilePath` is later joined onto a git repo's working directory (see
+ * `repo-file-watcher.ts` and `git-repo-migration.ts`) — a name straight from
+ * an imported file (Insomnia export, Postman collection, OpenAPI `info.title`,
+ * etc) must never carry a path separator or traversal sequence into that path.
+ */
+export function sanitizeGitFileNameSegment(name: string): string {
+  const sanitized = name.replace(/[/\\]/g, '-').replace(/\.\./g, '_').replace(/\0/g, '');
+  return sanitized.trim() || 'workspace';
+}
 
 export function resolveOperationId(operationId: string): { method: string; name: string } | undefined {
   for (const cache of resourceCacheList) {

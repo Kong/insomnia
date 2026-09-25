@@ -28,6 +28,7 @@ import { Modal } from '~/basic-components/modal';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
+import type { FileIssueKind } from '~/sync/git/repo-file-watcher';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -72,7 +73,9 @@ export interface Child {
   ancestors?: string[];
 }
 
-const workspaceFileIssueModalText = {
+// `write-blocked` intentionally has no entry — it's reported as a toast, not
+// this page-blocking modal, since the workspace's own file may still be valid.
+const workspaceFileIssueModalText: Partial<Record<FileIssueKind, { modalTitle: string; summary: string }>> = {
   'conflict': {
     modalTitle: 'Cannot read file: Merge in progress',
     summary: 'Complete the merge in your CLI tool to unlock this page.',
@@ -82,7 +85,7 @@ const workspaceFileIssueModalText = {
     summary:
       'Recent changes introduced schema errors in the Insomnia file for this page. Resolve the file using the CLI to unlock this page.',
   },
-} as const;
+};
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
