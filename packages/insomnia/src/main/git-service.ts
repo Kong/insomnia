@@ -1143,7 +1143,7 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
  * @param projectId - The project ID to associate migrated workspaces with
  * @returns Object containing changes made during migration or errors
  */
-async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
+export async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
   const changes: { path: string; status: Status }[] = [];
   try {
     // Check if the legacy .insomnia directory exists
@@ -1203,6 +1203,15 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       // Validate that the document type matches the folder name
       if (type !== doc.type) {
         throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+      }
+
+      // Only types explicitly marked as syncable may be migrated from a legacy
+      // .insomnia folder. A folder named after a non-syncable/global-singleton
+      // type (e.g. Settings) is skipped, even though its path and id/type
+      // fields are well-formed.
+      if (!models.canSync(doc)) {
+        console.log(`[git] Ignoring non-syncable document type ${doc.type} at ${legacyInsomniaFile.filePath}`);
+        continue;
       }
 
       // Special handling for workspaces: ensure they're associated with the correct project
