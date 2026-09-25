@@ -46,6 +46,7 @@ const createNewPair = (enabled = true): EnvironmentKvPairData => ({
   value: '',
   type: EnvironmentKvPairDataType.STRING,
   enabled,
+  isConfidential: false,
 });
 
 // Add tab index -1 to button so that user can use tab navigation to editors
@@ -100,7 +101,14 @@ export const EnvironmentKVEditor = ({
     return blankIdRef.current;
   }, [persistedPairs]);
   const blankPair: EnvironmentKvPairData = useMemo(
-    () => ({ id: blankId, name: '', value: '', type: EnvironmentKvPairDataType.STRING, enabled: true }),
+    () => ({
+      id: blankId,
+      name: '',
+      value: '',
+      type: EnvironmentKvPairDataType.STRING,
+      enabled: true,
+      isConfidential: false,
+    }),
     [blankId],
   );
   // The blank row is purely visual - it is not persisted (so it never shows up in
@@ -269,6 +277,7 @@ export const EnvironmentKVEditor = ({
           onDone: async (yes: boolean) => {
             if (yes) {
               handleItemChange(id, 'type', newType);
+              handleItemChange(id, 'isConfidential', true);
               // decrypt and save the value
               handleItemChange(
                 id,
@@ -286,6 +295,7 @@ export const EnvironmentKVEditor = ({
           await getRuntime().crypto.encryptSecretValue(originValue, symmetricKey as JsonWebKey),
         );
         handleItemChange(id, 'type', newType);
+        handleItemChange(id, 'isConfidential', false);
       } else {
         handleItemChange(id, 'type', newType);
       }
@@ -317,7 +327,7 @@ export const EnvironmentKVEditor = ({
   };
 
   const renderPairItem = (kvPair: EnvironmentKvPairData) => {
-    const { id, name, value, type, enabled = false } = kvPair;
+    const { id, name, value, type, enabled = false, isConfidential = false } = kvPair;
     const isBlank = id === blankId;
     const itemIndex = kvPairs.findIndex(pair => pair.id === id);
     const itemError = kvPairError.find(p => p.id === id);
@@ -378,16 +388,25 @@ export const EnvironmentKVEditor = ({
           )}
         </div>
         <div className={`${cellCommonStyle} relative w-[50%]`}>
-          {type === EnvironmentKvPairDataType.STRING && (
-            <OneLineEditor
-              id={`environment-kv-editor-value-${id}`}
-              historyKey={`environment-kv-editor-value-${id}`}
-              placeholder={'Input Value'}
-              defaultValue={value.toString()}
-              readOnly={!enabled || disabled}
-              onChange={newValue => handleItemChange(id, 'value', newValue)}
-            />
-          )}
+          {type === EnvironmentKvPairDataType.STRING &&
+            (isConfidential ? (
+              <PasswordInput
+                itemId={id}
+                enabled={enabled && !disabled}
+                placeholder="Input Value"
+                value={value.toString()}
+                onChange={newValue => handleItemChange(id, 'value', newValue)}
+              />
+            ) : (
+              <OneLineEditor
+                id={`environment-kv-editor-value-${id}`}
+                historyKey={`environment-kv-editor-value-${id}`}
+                placeholder={'Input Value'}
+                defaultValue={value.toString()}
+                readOnly={!enabled || disabled}
+                onChange={newValue => handleItemChange(id, 'value', newValue)}
+              />
+            ))}
           {type === EnvironmentKvPairDataType.JSON && (
             <ItemButton
               className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -438,6 +457,25 @@ export const EnvironmentKVEditor = ({
                 handleItemChange(id, 'value', encryptedValue);
               }}
             />
+          )}
+        </div>
+        <div className={`${cellCommonStyle} w-10`}>
+          {type !== EnvironmentKvPairDataType.SECRET && (
+            <Tooltip message={isConfidential ? 'Remove confidential marking' : 'Mark as confidential'} delay={200}>
+              <ItemButton
+                className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                tabIndex={-1}
+                aria-label={isConfidential ? 'Remove confidential marking' : 'Mark as confidential'}
+                aria-pressed={isConfidential}
+                isDisabled={disabled}
+                onPress={() => handleItemChange(id, 'isConfidential', !isConfidential)}
+              >
+                <Icon
+                  icon={isConfidential ? 'lock' : 'unlock'}
+                  className={isConfidential ? 'text-(--color-warning)' : undefined}
+                />
+              </ItemButton>
+            </Tooltip>
           )}
         </div>
         <div className={`${cellCommonStyle} w-32`}>

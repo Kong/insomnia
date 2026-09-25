@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
-import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
+import { EnvironmentType, models } from 'insomnia-data';
 import React, { Fragment, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -22,7 +22,7 @@ import {
 import { useParams } from 'react-router';
 
 import { responseTagRegex } from '~/common/templating/utils';
-import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { invariant } from '~/common/utils/invariant';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
@@ -77,10 +77,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
     }
     return false;
   }, [selectedEnvironment]);
-  // Do not allowed to switch to json environment if contains secret item
-  const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
-    d => d.type === EnvironmentKvPairDataType.SECRET,
-  );
+  const allowSwitchEnvironment = !hasProtectedKvPairs(selectedEnvironment?.kvPairData);
 
   const environmentActionsList: {
     id: string;
