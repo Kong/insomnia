@@ -1,7 +1,7 @@
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from 'insomnia/src/common/constants';
-import { fakerFunctions } from 'insomnia/src/common/templating/faker-functions';
 import { forceBracketNotation } from 'insomnia/src/common/templating/utils';
 import type { AuthTypeOAuth2 } from 'insomnia-data';
+import { fakerFunctions } from 'insomnia-data/common';
 
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 
