@@ -73,6 +73,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
           value: val[secretKey],
           type: EnvironmentKvPairDataType.SECRET,
           enabled: true,
+          isConfidential: false,
         });
       });
     } else {
@@ -83,6 +84,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
         value: isValidObject ? JSON.stringify(val) : String(val),
         type: isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
         enabled: true,
+        isConfidential: false,
       });
     }
   });
