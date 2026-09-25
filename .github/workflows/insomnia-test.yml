@@ -1,0 +1,149 @@
+name: Insomnia Test
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+concurrency:
+  group: insomnia-test-nonblocking-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build the Insomnia binary once and cache it by commit SHA. All shards
+  # restore the same cached binary instead of each building it.
+  #
+  # continue-on-error: true so a failure here never blocks the PR merge check
+  # and downstream jobs still run instead of being skipped.
+  # ---------------------------------------------------------------------------
+  build:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+
+      - name: Cache Insomnia binary
+        id: binary-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: packages/insomnia/dist/linux-unpacked
+          key: insomnia-linux-unpacked-${{ github.sha }}
+
+      - name: Expand swap space
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=8192 status=none
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+
+      - name: Remove verify-bundle-plugins from postinstall
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          sed -i 's/ && npm run verify-bundle-plugins -w insomnia//' package.json
+
+      - name: Install dependencies
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Insomnia
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        working-directory: packages/insomnia
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: |
+          npm run build
+          echo "=== build/ contents ==="
+          ls -la build/ 2>/dev/null || echo "ERROR: build/ not found"
+          test -f build/entry.main.min.js || { echo "ERROR: entry.main.min.js missing after build"; exit 1; }
+
+      - name: Package Insomnia (Linux unpacked)
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        working-directory: packages/insomnia
+        env:
+          USE_HARD_LINKS: "false"
+        run: npx electron-builder build --config electron-builder.config.js --linux --dir --publish never
+
+  # ---------------------------------------------------------------------------
+  # Run the tests across N shards in parallel. Each shard restores the cached
+  # binary and runs a slice of the suite with a single worker.
+  # ---------------------------------------------------------------------------
+  test:
+    needs: build
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # To scale up, add indices here and bump shardTotal to match.
+        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        shardTotal: [16]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+
+      - name: Restore Insomnia binary
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: packages/insomnia/dist/linux-unpacked
+          key: insomnia-linux-unpacked-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Install test dependencies
+        run: |
+          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
+          npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Electron system dependencies
+        working-directory: packages/insomnia-test
+        run: npx playwright install-deps chromium
+
+      - name: Install ffmpeg (required for video recording)
+        working-directory: packages/insomnia-test
+        run: npx playwright install ffmpeg
+
+      - name: Run Playwright tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        working-directory: packages/insomnia-test
+        env:
+          INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
+        run: xvfb-run --auto-servernum npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.shardIndex }}
+          path: packages/insomnia-test/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

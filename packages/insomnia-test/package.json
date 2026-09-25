@@ -1,0 +1,45 @@
+{
+  "name": "insomnia-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "mock-api": "node misc/mock-api.js",
+    "echo-server": "node misc/echo-server.js",
+    "event-stream-server": "node misc/event-stream-server.js",
+    "socket-server": "node misc/socket-server.js",
+    "ws-echo-server": "node misc/ws-echo-server.js",
+    "mcp-server": "node misc/mcp-server.js",
+    "grpc-server": "node misc/grpc-server.js",
+    "git-server": "node misc/git-server.js",
+    "oauth2-server": "node misc/oauth2-server.js",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@faker-js/faker": "^10.5.0",
+    "@getinsomnia/srp-js": "1.0.0-alpha.1",
+    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/reflection": "^1.0.4",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@playwright/test": "1.59.1",
+    "@types/node": "^26.0.1",
+    "@types/prettier": "^2.7.3",
+    "electron": "^43.2.0",
+    "express": "^5.2.1",
+    "git-http-backend": "^1.1.2",
+    "graphql": "^17.0.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.1.1",
+    "prettier": "^3.9.1",
+    "socket.io": "^4.8.3",
+    "ws": "^8.21.1",
+    "zod": "^4.4.3"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md}": "prettier --write"
+  }
+}
