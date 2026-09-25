@@ -36,6 +36,7 @@ import type {
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
+import type { ZodType } from 'zod/v4';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
@@ -45,6 +46,8 @@ import { invariant } from '~/common/utils/invariant';
 
 import { database } from './database';
 import {
+  CookieJarSchema,
+  EnvironmentSchema,
   type Insomnia_GRPCRequest,
   type Insomnia_Request,
   type Insomnia_RequestGroup,
@@ -54,7 +57,11 @@ import {
   InsomniaFileSchema,
   McpRequestSchema,
   type Meta,
+  MockRouteSchema,
+  RequestCollectionSchema,
   SocketIORequestSchema,
+  SpecSchema,
+  TestSuiteSchema,
   WebsocketRequestSchema,
 } from './import-v5-parser';
 
@@ -63,6 +70,62 @@ import {
  * This is used to ensure all exported models have the correct _type field for v5 format
  */
 type WithExportType<T extends BaseModel> = T & { _type: AllExportTypes };
+
+/** A single schema violation found on an entity that had to be skipped. */
+export interface ExportEntityIssue {
+  /** Path of the offending value, relative to the entity (e.g. `settings.followRedirects`). */
+  path: string;
+  message: string;
+}
+
+/** An entity that could not be exported, with the reason it was skipped. */
+export interface ExportEntityError {
+  entityId?: string;
+  /** Insomnia model type as stored on the model, e.g. `Request`, `RequestGroup`, `Environment`. */
+  entityType: string;
+  name: string;
+  /**
+   * Where the entity sits in the export traversal, e.g. `collection[2].children[0]`. Skipped
+   * siblings keep their original index, so a path can point past the last emitted entry.
+   */
+  path: string;
+  issues: ExportEntityIssue[];
+}
+
+export interface InsomniaV5ExportResult {
+  /** The exported YAML, or `''` when nothing could be exported. Never partially invalid. */
+  yaml: string;
+  /** Entities dropped from `yaml` because they failed the v5 schema. */
+  errors: ExportEntityError[];
+}
+
+/** Identifies one exportable entity, used to report it if it has to be skipped. */
+type ExportEntityIdentity = Omit<ExportEntityError, 'issues'>;
+
+/** Renders a zod issue path (e.g. `collection[2].children[0].settings`) for humans. */
+function formatPathSegments(path: PropertyKey[]): string {
+  return path.reduce<string>(
+    (acc, segment) => (typeof segment === 'number' ? `${acc}[${segment}]` : acc ? `${acc}.${String(segment)}` : String(segment)),
+    '',
+  );
+}
+
+function toIssues(error: { issues: { path: PropertyKey[]; message: string }[] }): ExportEntityIssue[] {
+  return error.issues.map(issue => ({ path: formatPathSegments(issue.path), message: issue.message }));
+}
+
+/** Element schema of the collection tree: one request, folder, or other request type. */
+const CollectionEntrySchema = RequestCollectionSchema.element;
+
+/** Counts an entry and everything nested under it, for reporting what a dropped folder took with it. */
+const countEntries = (entries: CollectionEntries | undefined): number =>
+  (entries ?? []).reduce(
+    (total, entry) => total + 1 + ('children' in entry ? countEntries(entry.children as CollectionEntries) : 0),
+    0,
+  );
+
+/** The list of entries a collection document holds. */
+type CollectionEntries = NonNullable<Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection']>;
 
 /**
  * Maps request headers from internal format to v5 export format
@@ -810,10 +873,15 @@ export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
  * Exports workspace data to Insomnia v5 format
  * This is the main export function that converts internal models to v5 YAML format
  *
+ * Entities that do not match the v5 schema are dropped from the result and reported in
+ * `errors`, so one bad request no longer costs the whole export. When nothing usable could
+ * be exported — or when the assembled document still fails the schema — `yaml` is `''` and
+ * callers must not write a file.
+ *
  * @param workspaceId - ID of the workspace to export
  * @param includePrivateEnvironments - Whether to include private environment data
  * @param requestIds - Optional array of specific request IDs to export (if not provided, exports all)
- * @returns YAML string containing the exported workspace data
+ * @returns The exported YAML and the entities that had to be skipped
  */
 export async function getInsomniaV5DataExport({
   workspaceId,
@@ -823,12 +891,82 @@ export async function getInsomniaV5DataExport({
   workspaceId: string;
   includePrivateEnvironments: boolean;
   requestIds?: string[];
-}) {
+}): Promise<InsomniaV5ExportResult> {
+  const errors: ExportEntityError[] = [];
+
+  /** Fails the whole export, e.g. when the workspace holds nothing left to fall back on. */
+  const fail = (identity: ExportEntityIdentity, message: string): InsomniaV5ExportResult => {
+    errors.push({ ...identity, issues: [{ path: '', message }] });
+    return { yaml: '', errors };
+  };
+
   try {
     const workspace = await services.workspace.getById(workspaceId);
 
     if (!workspace) {
       throw new Error('Workspace not found');
+    }
+
+    /**
+     * Runs a whole-document schema check as a last line of defence. Anything still invalid
+     * here was not isolated by the code above, so the export yields nothing rather than a
+     * file that only looks complete.
+     */
+    const finalize = (doc: InsomniaFile): InsomniaV5ExportResult => {
+      const parsed = InsomniaFileSchema.safeParse(doc);
+
+      if (!parsed.success) {
+        errors.push({
+          entityId: workspace._id,
+          entityType: models.workspace.type,
+          name: workspace.name,
+          path: '',
+          issues: toIssues(parsed.error),
+        });
+        return { yaml: '', errors };
+      }
+
+      return { yaml: stringify(removeEmptyFields(parsed.data)), errors };
+    };
+
+    /**
+     * Validates one entity on its own. Returns `undefined` and reports the entity when it
+     * does not match the schema.
+     */
+    function parseEntity<T>(schema: ZodType<T>, value: unknown, identity: ExportEntityIdentity): T | undefined {
+      const parsed = schema.safeParse(value);
+
+      if (parsed.success) {
+        return parsed.data;
+      }
+
+      errors.push({ ...identity, issues: toIssues(parsed.error) });
+      return undefined;
+    }
+
+    /**
+     * Builds and validates a whole section (environments, cookieJar, spec, ...) as one unit.
+     * A section that cannot be built, or that fails the schema, is dropped from the export
+     * and reported, so that the remaining entities are still exported.
+     */
+    function parseSection<T>(build: () => unknown, schema: ZodType<T>, identity: ExportEntityIdentity): T | undefined {
+      let value: unknown;
+
+      try {
+        value = build();
+      } catch (err) {
+        errors.push({
+          ...identity,
+          issues: [{ path: '', message: err instanceof Error ? err.message : String(err) }],
+        });
+        return undefined;
+      }
+
+      if (value === undefined) {
+        return undefined;
+      }
+
+      return parseEntity(schema, value, identity);
     }
 
     // Get all model types that can be exported
@@ -851,15 +989,21 @@ export async function getInsomniaV5DataExport({
      * This function converts the flat list of resources into a hierarchical structure
      * that matches the v5 export format with proper parent-child relationships
      *
+     * Every entry is validated on its own against the v5 schema. An entry that fails is
+     * dropped (together with its subtree, for folders) and reported through `errors`, so
+     * that the remaining requests are still exported.
+     *
      * @param resources - Flat array of all resources in the workspace
      * @param parentId - ID of the parent to build children for
+     * @param parentPath - Document location of this level, used to report skipped entries
      * @returns Hierarchical collection structure in v5 format
      */
     function getCollectionFromResources(
       resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest)[],
       parentId: string,
-    ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
-      const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
+      parentPath: string,
+    ): CollectionEntries {
+      const collection: CollectionEntries = [];
 
       // Filter resources based on requestIds filter and parent relationship
       resources
@@ -872,102 +1016,167 @@ export async function getInsomniaV5DataExport({
           return requestIds.includes(resource._id);
         })
         .filter(resource => resource.parentId === parentId)
-        .forEach(resource => {
-          // Convert HTTP requests to v5 format
-          if (models.request.isRequest(resource)) {
-            const request: Insomnia_Request = {
-              url: resource.url,
-              name: resource.name,
-              meta: mapMeta(resource),
-              method: resource.method,
-              body: mapBody(resource.body),
-              parameters: mapParameters(resource.parameters),
-              headers: mapHeaders(resource.headers),
-              authentication: resource.authentication,
-              scripts: getScriptFromResources(resource),
-              settings: {
-                renderRequestBody: !resource.settingDisableRenderRequestBody,
-                encodeUrl: resource.settingEncodeUrl,
-                followRedirects: resource.settingFollowRedirects,
-                cookies: {
-                  send: resource.settingSendCookies,
-                  store: resource.settingStoreCookies,
-                },
-                rebuildPath: resource.settingRebuildPath,
-              },
-              pathParameters: resource.pathParameters,
-            };
-            collection.push(request);
-          } else if (models.requestGroup.isRequestGroup(resource)) {
-            // Convert request groups (folders) to v5 format
-            const requestGroup: Insomnia_RequestGroup = {
-              name: resource.name,
-              meta: mapGroupMeta(resource),
-              children: getCollectionFromResources(resources, resource._id), // Recursively build children
-              scripts: getScriptFromResources(resource),
-              authentication: resource.authentication,
-              environment: resource.environment,
-              environmentPropertyOrder: resource.environmentPropertyOrder,
-              headers: mapHeaders(resource.headers),
-            };
-            collection.push(requestGroup);
-          } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
-            // Convert WebSocket requests to v5 format
-            const webSocketRequest: Insomnia_WebsocketRequest = {
-              url: resource.url,
-              name: resource.name,
-              meta: mapMeta(resource),
-              settings: {
-                encodeUrl: resource.settingEncodeUrl,
-                followRedirects: resource.settingFollowRedirects,
-                cookies: {
-                  send: resource.settingSendCookies,
-                  store: resource.settingStoreCookies,
-                },
-              },
-              authentication: resource.authentication,
-              headers: mapHeaders(resource.headers),
-              parameters: mapParameters(resource.parameters),
-              pathParameters: resource.pathParameters,
-            };
-            collection.push(webSocketRequest);
-          } else if (models.socketIORequest.isSocketIORequest(resource)) {
-            const socketIORequest: Insomnia_SocketIORequest = {
-              url: resource.url,
-              name: resource.name,
-              meta: mapMeta(resource),
-              settings: {
-                encodeUrl: resource.settingEncodeUrl,
-                cookies: {
-                  send: resource.settingSendCookies,
-                  store: resource.settingStoreCookies,
-                },
-                path: resource.settingPath,
-              },
-              authentication: resource.authentication,
-              headers: mapHeaders(resource.headers),
-              parameters: mapParameters(resource.parameters),
-              pathParameters: resource.pathParameters,
-              eventListeners: resource.eventListeners,
-            };
-            collection.push(socketIORequest);
-          } else if (models.grpcRequest.isGrpcRequest(resource)) {
-            const grpcRequest: Insomnia_GRPCRequest = {
-              url: resource.url,
-              name: resource.name,
-              meta: mapMeta(resource),
-              body: resource.body,
-              metadata: mapHeaders(resource.metadata),
-              protoFileId: resource.protoFileId || '',
-              protoMethodName: resource.protoMethodName,
-              reflectionApi: resource.reflectionApi,
-            };
+        .forEach((resource, index) => {
+          const path = `${parentPath}[${index}]`;
+          const children = models.requestGroup.isRequestGroup(resource)
+            ? getCollectionFromResources(resources, resource._id, `${path}.children`)
+            : undefined;
 
-            collection.push(grpcRequest);
+          const entry = mapCollectionEntry(resource, children);
+
+          if (!entry) {
+            return;
           }
+
+          const parsed = CollectionEntrySchema.safeParse(entry);
+
+          if (!parsed.success) {
+            const skippedDescendants = countEntries(children);
+
+            errors.push({
+              entityId: resource._id,
+              entityType: resource.type,
+              name: resource.name,
+              path,
+              issues: [
+                ...toIssues(parsed.error),
+                // A folder carries its whole subtree, so say what else went with it.
+                ...(skippedDescendants > 0
+                  ? [
+                      {
+                        path: '',
+                        message: `skipped together with ${skippedDescendants} nested ${
+                          skippedDescendants === 1 ? 'entity' : 'entities'
+                        }`,
+                      },
+                    ]
+                  : []),
+              ],
+            });
+            return;
+          }
+
+          collection.push(parsed.data);
         });
 
       return collection;
+    }
+
+    /**
+     * Converts one resource to its v5 representation, or `undefined` for resource types
+     * that the collection format cannot represent.
+     */
+    function mapCollectionEntry(
+      resource: Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest,
+      children: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
+    ):
+      | Insomnia_Request
+      | Insomnia_RequestGroup
+      | Insomnia_WebsocketRequest
+      | Insomnia_SocketIORequest
+      | Insomnia_GRPCRequest
+      | undefined {
+      // Convert HTTP requests to v5 format
+      if (models.request.isRequest(resource)) {
+        const request: Insomnia_Request = {
+          url: resource.url,
+          name: resource.name,
+          meta: mapMeta(resource),
+          method: resource.method,
+          body: mapBody(resource.body),
+          parameters: mapParameters(resource.parameters),
+          headers: mapHeaders(resource.headers),
+          authentication: resource.authentication,
+          scripts: getScriptFromResources(resource),
+          settings: {
+            renderRequestBody: !resource.settingDisableRenderRequestBody,
+            encodeUrl: resource.settingEncodeUrl,
+            followRedirects: resource.settingFollowRedirects,
+            cookies: {
+              send: resource.settingSendCookies,
+              store: resource.settingStoreCookies,
+            },
+            rebuildPath: resource.settingRebuildPath,
+          },
+          pathParameters: resource.pathParameters,
+        };
+        return request;
+      }
+
+      if (models.requestGroup.isRequestGroup(resource)) {
+        // Convert request groups (folders) to v5 format
+        const requestGroup: Insomnia_RequestGroup = {
+          name: resource.name,
+          meta: mapGroupMeta(resource),
+          children: children as Insomnia_RequestGroup['children'],
+          scripts: getScriptFromResources(resource),
+          authentication: resource.authentication,
+          environment: resource.environment,
+          environmentPropertyOrder: resource.environmentPropertyOrder,
+          headers: mapHeaders(resource.headers),
+        };
+        return requestGroup;
+      }
+
+      if (models.webSocketRequest.isWebSocketRequest(resource)) {
+        // Convert WebSocket requests to v5 format
+        const webSocketRequest: Insomnia_WebsocketRequest = {
+          url: resource.url,
+          name: resource.name,
+          meta: mapMeta(resource),
+          settings: {
+            encodeUrl: resource.settingEncodeUrl,
+            followRedirects: resource.settingFollowRedirects,
+            cookies: {
+              send: resource.settingSendCookies,
+              store: resource.settingStoreCookies,
+            },
+          },
+          authentication: resource.authentication,
+          headers: mapHeaders(resource.headers),
+          parameters: mapParameters(resource.parameters),
+          pathParameters: resource.pathParameters,
+        };
+        return webSocketRequest;
+      }
+
+      if (models.socketIORequest.isSocketIORequest(resource)) {
+        const socketIORequest: Insomnia_SocketIORequest = {
+          url: resource.url,
+          name: resource.name,
+          meta: mapMeta(resource),
+          settings: {
+            encodeUrl: resource.settingEncodeUrl,
+            cookies: {
+              send: resource.settingSendCookies,
+              store: resource.settingStoreCookies,
+            },
+            path: resource.settingPath,
+          },
+          authentication: resource.authentication,
+          headers: mapHeaders(resource.headers),
+          parameters: mapParameters(resource.parameters),
+          pathParameters: resource.pathParameters,
+          eventListeners: resource.eventListeners,
+        };
+        return socketIORequest;
+      }
+
+      if (models.grpcRequest.isGrpcRequest(resource)) {
+        const grpcRequest: Insomnia_GRPCRequest = {
+          url: resource.url,
+          name: resource.name,
+          meta: mapMeta(resource),
+          body: resource.body,
+          metadata: mapHeaders(resource.metadata),
+          protoFileId: resource.protoFileId || '',
+          protoMethodName: resource.protoMethodName,
+          reflectionApi: resource.reflectionApi,
+        };
+        return grpcRequest;
+      }
+
+      return;
     }
 
     function getScriptFromResources(resource: Request | RequestGroup) {
@@ -992,9 +1201,8 @@ export async function getInsomniaV5DataExport({
     function getEnvironmentsFromResources(
       resources: Environment[],
       includePrivateEnvironments: boolean,
+      baseEnvironment: Environment | undefined,
     ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
-      const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
-
       if (!baseEnvironment) {
         throw new Error('Base environment not found');
       }
@@ -1063,31 +1271,44 @@ export async function getInsomniaV5DataExport({
     ): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] {
       const testSuites: Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] = [];
 
-      resources.filter(models.unitTestSuite.isUnitTestSuite).forEach(testSuite => {
+      resources.filter(models.unitTestSuite.isUnitTestSuite).forEach((testSuite, index) => {
         const tests = resources.filter(models.unitTest.isUnitTest).filter(test => test.parentId === testSuite._id);
 
-        testSuites.push({
-          name: testSuite.name,
-          meta: {
-            id: testSuite._id,
-            created: testSuite.created,
-            modified: testSuite.modified,
-            isPrivate: testSuite.isPrivate,
-            sortKey: testSuite.metaSortKey,
-          },
-          tests: tests.map(test => ({
-            name: test.name,
+        const parsed = parseEntity(
+          TestSuiteSchema,
+          {
+            name: testSuite.name,
             meta: {
-              id: test._id,
-              created: test.created,
-              modified: test.modified,
-              isPrivate: test.isPrivate,
-              sortKey: test.metaSortKey,
+              id: testSuite._id,
+              created: testSuite.created,
+              modified: testSuite.modified,
+              isPrivate: testSuite.isPrivate,
+              sortKey: testSuite.metaSortKey,
             },
-            requestId: test.requestId,
-            code: test.code,
-          })),
-        });
+            tests: tests.map(test => ({
+              name: test.name,
+              meta: {
+                id: test._id,
+                created: test.created,
+                modified: test.modified,
+                isPrivate: test.isPrivate,
+                sortKey: test.metaSortKey,
+              },
+              requestId: test.requestId,
+              code: test.code,
+            })),
+          },
+          {
+            entityId: testSuite._id,
+            entityType: testSuite.type,
+            name: testSuite.name,
+            path: `testSuites[${index}]`,
+          },
+        );
+
+        if (parsed) {
+          testSuites.push(parsed);
+        }
       });
 
       return testSuites;
@@ -1125,27 +1346,46 @@ export async function getInsomniaV5DataExport({
 
     function getRoutesFromResources(
       resources: MockRoute[],
-    ): Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes'] {
-      return resources.map(resource => ({
-        name: resource.name,
-        meta: {
-          id: resource._id,
-          created: resource.created,
-          modified: resource.modified,
-          isPrivate: resource.isPrivate,
-        },
-        body: resource.body,
-        headers: resource.headers.map(header => ({
-          name: header.name,
-          value: header.value,
-          description: header.description,
-          disabled: header.disabled,
-        })),
-        method: resource.method,
-        mimeType: resource.mimeType,
-        statusCode: resource.statusCode,
-        statusText: resource.statusText,
-      }));
+    ): NonNullable<Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes']> {
+      const routes: NonNullable<Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes']> = [];
+
+      resources.forEach((resource, index) => {
+        const parsed = parseEntity(
+          MockRouteSchema,
+          {
+            name: resource.name,
+            meta: {
+              id: resource._id,
+              created: resource.created,
+              modified: resource.modified,
+              isPrivate: resource.isPrivate,
+            },
+            body: resource.body,
+            headers: resource.headers.map(header => ({
+              name: header.name,
+              value: header.value,
+              description: header.description,
+              disabled: header.disabled,
+            })),
+            method: resource.method,
+            mimeType: resource.mimeType,
+            statusCode: resource.statusCode,
+            statusText: resource.statusText,
+          },
+          {
+            entityId: resource._id,
+            entityType: resource.type,
+            name: resource.name,
+            path: `routes[${index}]`,
+          },
+        );
+
+        if (parsed) {
+          routes.push(parsed);
+        }
+      });
+
+      return routes;
     }
 
     function getMcpRequestFromResources(
@@ -1175,47 +1415,93 @@ export async function getInsomniaV5DataExport({
       };
     }
 
+    const environmentResources = exportableResources.filter(models.environment.isEnvironment);
+    // The base environment lives directly under the workspace; the rest hang off the base one.
+    const baseEnvironment = environmentResources.find(environment => environment.parentId.startsWith('wrk_'));
+    const environmentsIdentity: ExportEntityIdentity = {
+      entityId: baseEnvironment?._id,
+      entityType: models.environment.type,
+      name: baseEnvironment?.name ?? '',
+      path: 'environments',
+    };
+    const cookieJarResources = exportableResources.filter(models.cookieJar.isCookieJar);
+    const cookieJarIdentity: ExportEntityIdentity = {
+      entityId: cookieJarResources[0]?._id,
+      entityType: models.cookieJar.type,
+      name: cookieJarResources[0]?.name ?? '',
+      path: 'cookieJar',
+    };
+    const apiSpecResources = exportableResources.filter(models.apiSpec.isApiSpec);
+    const apiSpecIdentity: ExportEntityIdentity = {
+      entityId: apiSpecResources[0]?._id,
+      entityType: models.apiSpec.type,
+      name: apiSpecResources[0]?.name ?? '',
+      path: 'spec',
+    };
+
     if (workspace.scope === 'collection') {
-      const collectionApiSpec = exportableResources.filter(models.apiSpec.isApiSpec);
       const collectionTestSuites = exportableResources.filter(
         resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource),
       );
-      const collectionContainsApiSpecOrTestSuites = collectionApiSpec.length > 0 || collectionTestSuites.length > 0;
-      const collection: InsomniaFile = {
-        type: collectionContainsApiSpecOrTestSuites
-          ? // We added api spec and test suites to the collection workspace in V13.3.
-            // In order not to break legacy versions which only handles api spec and test suites in the spec workspace for git sync.
-            // We export collection workspaces type as spec.insomnia.rest/5.0 if it contains api spec or test suites.
-            'spec.insomnia.rest/5.0'
-          : 'collection.insomnia.rest/5.0',
+      const collectionContainsApiSpecOrTestSuites = apiSpecResources.length > 0 || collectionTestSuites.length > 0;
+      const collectionResources = exportableResources.filter(
+        resource =>
+          models.requestGroup.isRequestGroup(resource) ||
+          models.request.isRequest(resource) ||
+          models.webSocketRequest.isWebSocketRequest(resource) ||
+          models.grpcRequest.isGrpcRequest(resource) ||
+          models.socketIORequest.isSocketIORequest(resource),
+      );
+
+      const errorsBeforeCollection = errors.length;
+      const collection = getCollectionFromResources(collectionResources, workspace._id, 'collection');
+
+      // Requests are what the file is for: exporting none of them would look like a success
+      // while wiping the collection on the next import.
+      if (collection.length === 0 && errors.length > errorsBeforeCollection) {
+        return { yaml: '', errors };
+      }
+
+      const specSection =
+        apiSpecResources.length > 0
+          ? parseSection(() => getSpecFromResources(apiSpecResources), SpecSchema, apiSpecIdentity)
+          : undefined;
+
+      const collectionSections = {
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
-        collection: getCollectionFromResources(
-          exportableResources.filter(
-            resource =>
-              models.requestGroup.isRequestGroup(resource) ||
-              models.request.isRequest(resource) ||
-              models.webSocketRequest.isWebSocketRequest(resource) ||
-              models.grpcRequest.isGrpcRequest(resource) ||
-              models.socketIORequest.isSocketIORequest(resource),
-          ),
-          workspace._id,
+        collection,
+        cookieJar: parseSection(() => getCookieJarFromResources(cookieJarResources), CookieJarSchema, cookieJarIdentity),
+        environments: parseSection(
+          () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
+          EnvironmentSchema,
+          environmentsIdentity,
         ),
-        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
-        ),
-        spec: collectionApiSpec.length > 0 ? getSpecFromResources(collectionApiSpec) : {},
         testSuites: getTestSuitesFromResources(collectionTestSuites),
       };
 
-      const parsedCollection = InsomniaFileSchema.parse(collection);
+      // We added api spec and test suites to the collection workspace in V13.3.
+      // In order not to break legacy versions which only handles api spec and test suites in the spec workspace for git sync.
+      // We export collection workspaces type as spec.insomnia.rest/5.0 if it contains api spec or test suites.
+      if (collectionContainsApiSpecOrTestSuites) {
+        return finalize({ type: 'spec.insomnia.rest/5.0', ...collectionSections, spec: specSection ?? {} });
+      }
 
-      return stringify(removeEmptyFields(parsedCollection));
+      return finalize({ type: 'collection.insomnia.rest/5.0', ...collectionSections, spec: specSection });
     } else if (workspace.scope === 'design') {
-      const spec: InsomniaFile = {
+      if (apiSpecResources.length === 0) {
+        return fail(apiSpecIdentity, 'Design workspace has no API spec to export');
+      }
+
+      const specSection = parseSection(() => getSpecFromResources(apiSpecResources), SpecSchema, apiSpecIdentity);
+
+      // The document is the spec; there is nothing left to export without it.
+      if (!specSection) {
+        return { yaml: '', errors };
+      }
+
+      const specDoc: InsomniaFile = {
         type: 'spec.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
@@ -1229,13 +1515,19 @@ export async function getInsomniaV5DataExport({
               models.grpcRequest.isGrpcRequest(resource),
           ),
           workspace._id,
+          'collection',
         ),
-        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
+        cookieJar: parseSection(
+          () => getCookieJarFromResources(cookieJarResources),
+          CookieJarSchema,
+          cookieJarIdentity,
         ),
-        spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
+        environments: parseSection(
+          () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
+          EnvironmentSchema,
+          environmentsIdentity,
+        ),
+        spec: specSection,
         testSuites: getTestSuitesFromResources(
           exportableResources.filter(
             resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource),
@@ -1243,28 +1535,42 @@ export async function getInsomniaV5DataExport({
         ),
       };
 
-      const parsedSpec = InsomniaFileSchema.parse(spec);
-
-      return stringify(removeEmptyFields(parsedSpec));
+      return finalize(specDoc);
     } else if (workspace.scope === 'environment') {
-      const environment: InsomniaFile = {
+      const environments = parseSection(
+        () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
+        EnvironmentSchema,
+        environmentsIdentity,
+      );
+
+      // The environment is the whole document; without it the export would be empty.
+      if (!environments) {
+        return { yaml: '', errors };
+      }
+
+      const environmentDoc: InsomniaFile = {
         type: 'environment.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
-        ),
+        environments,
       };
 
-      const parsedEnvironment = InsomniaFileSchema.parse(environment);
-
-      return stringify(removeEmptyFields(parsedEnvironment));
+      return finalize(environmentDoc);
     } else if (workspace.scope === 'mock-server') {
       const server = exportableResources.find(models.mockServer.isMockServer);
       invariant(server, 'Mock Server not found');
-      const mockServer: InsomniaFile = {
+      const mockRouteResources = exportableResources.filter(models.mockRoute.isMockRoute);
+
+      const errorsBeforeRoutes = errors.length;
+      const routes = getRoutesFromResources(mockRouteResources);
+
+      // Same as the collection case: a mock server file without routes is not a success.
+      if (routes.length === 0 && errors.length > errorsBeforeRoutes) {
+        return { yaml: '', errors };
+      }
+
+      const mockServerDoc: InsomniaFile = {
         type: 'mock.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
@@ -1279,34 +1585,46 @@ export async function getInsomniaV5DataExport({
           url: server.url,
           useInsomniaCloud: server.useInsomniaCloud,
         },
-        routes: getRoutesFromResources(exportableResources.filter(models.mockRoute.isMockRoute)),
+        routes,
       };
 
-      const parsedMockServer = InsomniaFileSchema.parse(mockServer);
-      return stringify(removeEmptyFields(parsedMockServer), {});
+      return finalize(mockServerDoc);
     } else if (workspace.scope === 'mcp') {
       const mcpRequest = exportableResources.find(models.mcpRequest.isMcpRequest);
       invariant(mcpRequest, 'No MCP Request found in MCP workspace');
-      const mcpClient: InsomniaFile = {
+      const mcpRequestSection = parseSection(
+        () => getMcpRequestFromResources(mcpRequest),
+        McpRequestSchema,
+        { entityId: mcpRequest._id, entityType: mcpRequest.type, name: mcpRequest.name, path: 'mcpRequest' },
+      );
+
+      // Each mcp workspace holds exactly one request, which is the whole document.
+      if (!mcpRequestSection) {
+        return { yaml: '', errors };
+      }
+
+      const mcpClientDoc: InsomniaFile = {
         type: 'mcpClient.insomnia/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         // each mcp workspace has exactly one mcpRequest
-        mcpRequest: getMcpRequestFromResources(mcpRequest),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
+        mcpRequest: mcpRequestSection,
+        environments: parseSection(
+          () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
+          EnvironmentSchema,
+          environmentsIdentity,
         ),
       };
 
-      const parsedMcpClient = InsomniaFileSchema.parse(mcpClient);
-
-      return stringify(removeEmptyFields(parsedMcpClient));
+      return finalize(mcpClientDoc);
     }
     throw new Error('Unknown workspace scope');
   } catch (err) {
     console.error('Failed to export Insomnia v5 data', err);
-    return '';
+    return fail(
+      { entityId: workspaceId, entityType: models.workspace.type, name: workspaceId, path: '' },
+      err instanceof Error ? err.message : String(err),
+    );
   }
 }
