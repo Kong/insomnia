@@ -1078,12 +1078,16 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
   },
   'app.prompt': async (body: { title: string; options?: AppPromptOptions }) => {
-    return requestPromptFromRenderer({
+    const value = await requestPromptFromRenderer({
       ...body.options,
       title: body.title,
       label: body.options?.label ?? body.title,
       defaultValue: body.options?.defaultValue ?? '',
     });
+    if (value === null) {
+      throw new Error(`Prompt ${body.title} cancelled`);
+    }
+    return value;
   },
   'app.getPath': async (body: { name: string }) => {
     return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
