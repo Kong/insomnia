@@ -528,3 +528,53 @@ describe('file tag: filesystem access isolation', () => {
     await expect(fileTag.run(ctx, '/some/path')).rejects.toBeDefined();
   });
 });
+
+describe('prompt tag', () => {
+  const promptTag = localTemplateTags.find(p => p.templateTag.name === 'prompt')?.templateTag;
+  invariant(promptTag, 'missing prompt tag in localTemplateTags');
+
+  it('throws an error when the user cancels the prompt dialog in send mode', async () => {
+    const promptMock = vi.fn(async () => null);
+    const setItemMock = vi.fn();
+    const ctx = {
+      renderPurpose: 'send',
+      meta: { requestId: 'req_1' },
+      app: { prompt: promptMock },
+      store: { getItem: vi.fn(async () => null), setItem: setItemMock },
+    } as unknown as PluginTemplateTagContext;
+
+    await expect(promptTag.run(ctx, 'Auth Code', 'Enter code', '', '', false, false)).rejects.toThrow(
+      'Prompt Auth Code cancelled',
+    );
+    expect(setItemMock).not.toHaveBeenCalled();
+  });
+
+  it('returns and stores the submitted value when user completes prompt in send mode', async () => {
+    const promptMock = vi.fn(async () => 'secret-123');
+    const setItemMock = vi.fn();
+    const ctx = {
+      renderPurpose: 'send',
+      meta: { requestId: 'req_1' },
+      app: { prompt: promptMock },
+      store: { getItem: vi.fn(async () => null), setItem: setItemMock },
+    } as unknown as PluginTemplateTagContext;
+
+    const result = await promptTag.run(ctx, 'Auth Code', 'Enter code', '', 'storage_key', false, false);
+    expect(result).toBe('secret-123');
+    expect(setItemMock).toHaveBeenCalledWith('storage_key', 'secret-123');
+  });
+
+  it('returns default value in preview/general mode without prompting', async () => {
+    const promptMock = vi.fn();
+    const ctx = {
+      renderPurpose: 'general',
+      meta: { requestId: 'req_1' },
+      app: { prompt: promptMock },
+      store: { getItem: vi.fn(async () => null) },
+    } as unknown as PluginTemplateTagContext;
+
+    const result = await promptTag.run(ctx, 'Auth Code', 'Enter code', 'default-val', '', false, false);
+    expect(result).toBe('default-val');
+    expect(promptMock).not.toHaveBeenCalled();
+  });
+});
