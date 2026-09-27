@@ -269,6 +269,131 @@ collection: []
       expect(parsed.collection[0].name).toBe('Request 1');
     });
 
+    it('preserves requests at the workspace root alongside pruned folders when filtering', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_mixed_filter',
+        name: 'Mixed Filter Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_mixed_filter',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      // Request at workspace root (no parent folder).
+      const rootRequest = await services.request.create({
+        _id: 'req_root',
+        name: 'Root Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/root',
+        method: 'GET',
+      });
+
+      // Unrelated folder + request that must not appear in the export.
+      const unrelatedFolder = await services.requestGroup.create({
+        _id: 'fld_unrelated',
+        name: 'Unrelated Folder',
+        parentId: workspace._id,
+      });
+
+      await services.request.create({
+        _id: 'req_skipped',
+        name: 'Skipped Request',
+        parentId: unrelatedFolder._id,
+        url: 'https://api.example.com/skipped',
+        method: 'GET',
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+        requestIds: [rootRequest._id],
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.collection[0].name).toBe('Root Request');
+      expect(result).not.toContain('Unrelated Folder');
+      expect(result).not.toContain('Skipped Request');
+    });
+
+    it('only includes folders that are ancestors of selected requests when filtering', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_folder_filter',
+        name: 'Folder Filter Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_folder_filter',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      // Folder A contains the selected request.
+      const folderA = await services.requestGroup.create({
+        _id: 'fld_A',
+        name: 'Folder A',
+        parentId: workspace._id,
+        description: 'folder a docs',
+      });
+
+      const subFolderA = await services.requestGroup.create({
+        _id: 'fld_A_sub',
+        name: 'Sub Folder A',
+        parentId: folderA._id,
+        description: 'sub folder a docs',
+      });
+
+      const selectedRequest = await services.request.create({
+        _id: 'req_selected',
+        name: 'Leaf A',
+        parentId: subFolderA._id,
+        url: 'https://api.example.com/leaf-a',
+        method: 'GET',
+      });
+
+      // Folder B is unrelated and must not appear in the export.
+      const folderB = await services.requestGroup.create({
+        _id: 'fld_B',
+        name: 'Folder B',
+        parentId: workspace._id,
+        description: 'folder b docs that should not leak into a filtered export',
+      });
+
+      await services.request.create({
+        _id: 'req_unrelated',
+        name: 'Unrelated Request',
+        parentId: folderB._id,
+        url: 'https://api.example.com/unrelated',
+        method: 'GET',
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+        requestIds: [selectedRequest._id],
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.collection[0].name).toBe('Folder A');
+      expect(parsed.collection[0].children).toHaveLength(1);
+      expect(parsed.collection[0].children[0].name).toBe('Sub Folder A');
+      expect(parsed.collection[0].children[0].children).toHaveLength(1);
+      expect(parsed.collection[0].children[0].children[0].name).toBe('Leaf A');
+      // Ensure the serialized YAML does not carry over docs/names from unrelated folders.
+      expect(result).not.toContain('Folder B');
+      expect(result).not.toContain('folder b docs');
+      expect(result).not.toContain('Unrelated Request');
+    });
+
     it('handles design workspace correctly', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_design_test',
