@@ -88,7 +88,8 @@ jobs:
   # Run the tests across N shards in parallel. Each shard restores the cached
   # binary and runs a slice of the suite with a single worker.
   # ---------------------------------------------------------------------------
-  test:
+  parallel-test:
+    name: Parallel Test
     needs: build
     timeout-minutes: 60
     runs-on: ubuntu-latest
@@ -151,10 +152,11 @@ jobs:
   # ---------------------------------------------------------------------------
   # Run tests tagged sequential with a single worker. These cases interfere with
   # each other (or with the parallel shards above) when run concurrently, so
-  # they're isolated into their own single-threaded stage.
+  # they're isolated into their own single-threaded stage that runs after the
+  # sharded tests finish.
   # ---------------------------------------------------------------------------
-  test-sequential:
-    needs: build
+  sequential-test:
+    needs: parallel-test
     timeout-minutes: 30
     runs-on: ubuntu-latest
     continue-on-error: true
