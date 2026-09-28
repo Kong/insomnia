@@ -14,6 +14,11 @@ import {
 
 import { FlowManager } from "../flows/flow-manager";
 import { PageManager } from "../pages/page-manager";
+import {
+  collectWindowCoverage,
+  coverageLaunchEnv,
+  startWindowCoverage,
+} from "./coverage";
 import { closeOpenStepGroup } from "./step-instrumentation";
 
 export const DEFAULT_TIMEOUT = 10_000;
@@ -363,6 +368,7 @@ export async function launchInsomniaElectron(options: {
     args,
     env: {
       ...launchEnv,
+      ...coverageLaunchEnv(),
       ...(INSOMNIA_DEV_MODE ? { NODE_ENV: "development" } : {}),
       INSOMNIA_DATA_PATH: dataPath,
       // Empty string (not "false") so the renderer's `if (skipOnboarding)`
@@ -590,11 +596,15 @@ export const test = base.extend<Fixtures>({
 
     const videoPath = testInfo.outputPath("video.webm");
     await win.screencast.start({ path: videoPath });
+    await startWindowCoverage(win);
 
     await use(win);
 
     // A test that called AppFlow.restart() already closed this `win` —
-    // its screencast can't be stopped, so tolerate that on teardown.
+    // its screencast can't be stopped, so tolerate that on teardown. Its
+    // coverage was already collected by `AppFlow.restart()` itself before
+    // tearing it down (see flows/app.flow.ts), so this is a no-op then.
+    await collectWindowCoverage(win);
     await win.screencast.stop().catch(() => {});
     if (
       testInfo.status !== testInfo.expectedStatus &&

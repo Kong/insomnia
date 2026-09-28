@@ -34,6 +34,7 @@
     "graphql": "^17.0.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.1.1",
+    "monocart-coverage-reports": "^2.13.0",
     "prettier": "^3.9.1",
     "socket.io": "^4.8.3",
     "ws": "^8.21.1",

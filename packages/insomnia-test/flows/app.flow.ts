@@ -1,5 +1,6 @@
 import type { Page } from "playwright-core";
 
+import { collectWindowCoverage, startWindowCoverage } from "../misc/coverage";
 import { DEFAULT_TIMEOUT, launchInsomniaElectron } from "../misc/fixtures";
 import { BaseFlow } from "./base.flow";
 
@@ -20,12 +21,18 @@ export class AppFlow extends BaseFlow {
       );
     }
 
+    await collectWindowCoverage(
+      await this.flowManager.electronApp!.firstWindow({
+        timeout: DEFAULT_TIMEOUT,
+      }),
+    );
     await this.flowManager.electronApp!.close();
     const app = await launchInsomniaElectron(config);
 
     const win = await app.firstWindow({ timeout: DEFAULT_TIMEOUT });
     await win.waitForLoadState(undefined, { timeout: DEFAULT_TIMEOUT });
     win.setDefaultTimeout(DEFAULT_TIMEOUT);
+    await startWindowCoverage(win);
     await app.evaluate(({ BrowserWindow }) => {
       const mainWindow = BrowserWindow.getAllWindows().find((w) =>
         w.isVisible(),

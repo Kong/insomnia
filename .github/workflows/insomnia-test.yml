@@ -142,7 +142,21 @@ jobs:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_JSON_OUTPUT_NAME: results-${{ matrix.shardIndex }}.json
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
+          # Only on develop pushes, not every PR — instrumented coverage
+          # collection adds real per-test overhead, and each shard's raw
+          # data (source content + sourcemaps for every file touched) runs
+          # tens of MB, which isn't worth paying on every PR's 16 shards.
+          COVERAGE: ${{ github.event_name == 'push' && 'true' || '' }}
         run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,json,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Upload coverage (raw)
+        if: ${{ github.event_name == 'push' && !cancelled() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: coverage-raw-${{ matrix.shardIndex }}
+          path: packages/insomnia-test/coverage/raw/
+          retention-days: 1
+          if-no-files-found: ignore
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -170,6 +184,67 @@ jobs:
           path: packages/insomnia-test/blob-report/blob-report-${{ matrix.shardIndex }}.zip
           retention-days: 1
           if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Merges every shard's raw V8 coverage data (only produced on develop
+  # pushes — see parallel-test's COVERAGE env) into one report, then deletes
+  # the per-shard intermediates so only the merged report's artifact
+  # remains.
+  # ---------------------------------------------------------------------------
+  merge-coverage:
+    name: Merge Coverage
+    needs: parallel-test
+    if: ${{ github.event_name == 'push' && !cancelled() }}
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+
+      - name: Install test dependencies
+        working-directory: packages/insomnia-test
+        run: npm install --no-save monocart-coverage-reports
+
+      - name: Download raw coverage from all shards
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: coverage-raw
+          pattern: coverage-raw-*
+
+      - name: Merge coverage reports
+        working-directory: packages/insomnia-test
+        run: node misc/merge-coverage.js ../../coverage-raw
+
+      - name: Upload merged coverage report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: coverage-report
+          path: packages/insomnia-test/coverage-merged/
+          retention-days: 30
+
+      # The per-shard coverage-raw-* artifacts are only a transport into
+      # this job — now that they're merged, delete them so only the final
+      # coverage-report artifact remains.
+      - name: Delete per-shard intermediate artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ids=$(gh api --paginate \
+            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.name | test("^coverage-raw-[0-9]+$")) | .id')
+          for id in $ids; do
+            echo "Deleting intermediate artifact $id"
+            gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
+          done
 
   # ---------------------------------------------------------------------------
   # Look at every shard's JSON report and collect the tests that were still

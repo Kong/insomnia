@@ -29,6 +29,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
+  // Only wired up when COVERAGE=true (see misc/coverage.ts) — cleans/merges
+  // the shared V8 coverage cache once per run rather than per test.
+  globalSetup: "./misc/coverage-global-setup.ts",
+  globalTeardown: "./misc/coverage-global-teardown.ts",
   reporter: [
     ["list"],
     ["html", { open: "never" }],
