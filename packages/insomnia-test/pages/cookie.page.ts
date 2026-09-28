@@ -122,7 +122,6 @@ export class CookiePage extends BasePage {
       await expect(this.rows()).toHaveCount(countBeforeAdd + 1, {
         timeout: DEFAULT_TIMEOUT,
       });
-      await this.rows().first().getByRole("button", { name: "Edit" }).click();
       await this.editCookie(cookie);
     }
   }
@@ -174,35 +173,63 @@ export class CookiePage extends BasePage {
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
+  /**
+   * Edits the most-recently-added (topmost) cookie row's structured
+   * "Friendly" fields, then verifies the row now reflects the saved
+   * values before returning.
+   *
+   * Each field's `onChange` debounces its autosave; clicking "Done"
+   * unmounts the edit dialog immediately regardless of whether that
+   * autosave has actually landed, so under CI load the whole edit can be
+   * silently lost (same species of lost write as `editCookieRaw` above
+   * works around). So this retries the whole open-fill-submit cycle
+   * until the list actually shows the saved result, instead of trusting
+   * fixed delays to beat the debounce.
+   * @param cookie - The cookie fields to write into the just-added row
+   */
   private async editCookie(cookie: Cookie): Promise<void> {
-    await this.editDialog.waitFor({
-      state: "visible",
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await expect(async () => {
+      await this.rows().first().getByRole("button", { name: "Edit" }).click();
+      await this.editDialog.waitFor({
+        state: "visible",
+        timeout: DEFAULT_TIMEOUT,
+      });
 
-    await this.fillField("CookieKey", cookie.key);
-    await this.fillField("CookieValue", cookie.value);
-    if (cookie.domain) await this.fillField("CookieDomain", cookie.domain);
-    if (cookie.path) await this.fillField("CookiePath", cookie.path);
-    if (cookie.expires) await this.fillExpires(new Date(cookie.expires));
-    if (cookie.secure) {
-      await this.editDialog.getByRole("checkbox", { name: "Secure" }).check();
-      await this.page.waitForTimeout(FIELD_SAVE_DELAY);
-    }
-    if (cookie.httpOnly) {
-      await this.editDialog.getByRole("checkbox", { name: "HttpOnly" }).check();
-      await this.page.waitForTimeout(FIELD_SAVE_DELAY);
-    }
-    if (cookie.hostOnly) {
-      await this.editDialog.getByRole("checkbox", { name: "HostOnly" }).check();
-      await this.page.waitForTimeout(FIELD_SAVE_DELAY);
-    }
+      await this.fillField("CookieKey", cookie.key);
+      await this.fillField("CookieValue", cookie.value);
+      if (cookie.domain) await this.fillField("CookieDomain", cookie.domain);
+      if (cookie.path) await this.fillField("CookiePath", cookie.path);
+      if (cookie.expires) await this.fillExpires(new Date(cookie.expires));
+      if (cookie.secure) {
+        await this.editDialog
+          .getByRole("checkbox", { name: "Secure" })
+          .check();
+        await this.page.waitForTimeout(FIELD_SAVE_DELAY);
+      }
+      if (cookie.httpOnly) {
+        await this.editDialog
+          .getByRole("checkbox", { name: "HttpOnly" })
+          .check();
+        await this.page.waitForTimeout(FIELD_SAVE_DELAY);
+      }
+      if (cookie.hostOnly) {
+        await this.editDialog
+          .getByRole("checkbox", { name: "HostOnly" })
+          .check();
+        await this.page.waitForTimeout(FIELD_SAVE_DELAY);
+      }
 
-    await this.editDialog.getByRole("button", { name: "Done" }).click();
-    await this.editDialog.waitFor({
-      state: "hidden",
-      timeout: DEFAULT_TIMEOUT,
-    });
+      await this.editDialog.getByRole("button", { name: "Done" }).click();
+      await this.editDialog.waitFor({
+        state: "hidden",
+        timeout: DEFAULT_TIMEOUT,
+      });
+
+      const cookies = await this.getCookies();
+      expect(cookies).toContainEqual(
+        expect.objectContaining({ key: cookie.key, value: cookie.value }),
+      );
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   private async fillExpires(expires: Date): Promise<void> {

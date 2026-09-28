@@ -1014,7 +1014,11 @@ export class WorkspaceFlow extends BaseFlow {
     await workspace.clickNewProject();
     await workspace.setNewItemName(project.name);
     await workspace.setNewProjectType(project.type);
-    await workspace.clickCreate();
+    // Project creation also provisions the project's NeDB records before
+    // the dialog closes, which has been observed to run past the default
+    // UI-only timeout under CI load — give it the same extra room as a
+    // Git-backed collection's create dialog.
+    await workspace.clickCreate(DEFAULT_TIMEOUT * 2);
   }
 
   /**
@@ -1196,6 +1200,8 @@ export class WorkspaceFlow extends BaseFlow {
   private async openTests(
     item: string | { name: string; id?: string },
   ): Promise<{ _id: string } | undefined> {
+    await this.ensureLegacyUnitTestsEnabled();
+
     const identity = typeof item === "string" ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
 

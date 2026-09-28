@@ -51,19 +51,14 @@ export class CommandPalettePage extends BasePage {
   }
 
   /**
-   * Opens the command palette via its keyboard shortcut (Cmd+P on
-   * macOS).
-   *
-   * The shortcut listener is rebound on every render of the component
-   * that owns it — including the one a just-completed navigation (e.g.
-   * a breadcrumb jump) triggers a moment *after* it resolves — so
-   * sending the keypress right away can land in the gap between the old
-   * binding's teardown and the new one's setup. Draining the renderer's
-   * task queue first ensures that re-render has already happened.
+   * Opens the command palette via its keyboard shortcut: `request_quickSwitch`
+   * is registered as Cmd+P on macOS but Ctrl+P on Windows/Linux (see
+   * `hotkeys.ts`), so this must send Playwright's `ControlOrMeta` alias
+   * rather than a hardcoded `Meta+p` — the latter is a no-op on Linux CI
+   * runners, where the app never binds Meta+P at all.
    */
   async openViaShortcut(): Promise<void> {
-    await this.waitForRendererIdle();
-    await this.page.keyboard.press("Meta+p");
+    await this.page.keyboard.press("ControlOrMeta+p");
     await this.navigate();
   }
 

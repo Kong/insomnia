@@ -6,7 +6,14 @@ import { expect, HTTP_SERVER,test } from "../../../../misc/fixtures";
 import { EnvironmentKvPairDataType } from "../../../../models/environment";
 import { Project } from "../../../../models/project";
 
-test("Import OpenAPI Spec by Url", async ({ user }) => {
+test("Import OpenAPI Spec by Url", async ({ user }, testInfo) => {
+  // This test's later cookie-persistence check (CookieFlow.link ->
+  // waitForPersisted) polls the on-disk NeDB file for up to DEFAULT_TIMEOUT
+  // (60s) on its own, which combined with the import/environment/request
+  // setup steps ahead of it has been observed to exceed the default 90s
+  // test timeout under CI load. Give the whole test more headroom.
+  testInfo.setTimeout(150_000);
+
   const {
     importFlow,
     workspaceFlow,
