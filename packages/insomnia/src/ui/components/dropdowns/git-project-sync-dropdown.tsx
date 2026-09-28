@@ -165,7 +165,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           showToast({
             icon,
             title: 'Write blocked',
-            description: `Blocked write outside the git working directory: ${problem.relPath}`,
+            description: `Blocked write: ${problem.relPath} — ${problem.message}`,
             status: 'error',
           });
         }
