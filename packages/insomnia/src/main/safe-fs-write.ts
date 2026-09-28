@@ -50,7 +50,7 @@ export async function assertPathWithinDir(baseDir: string, targetPath: string): 
   const resolvedTarget = path.resolve(targetPath);
   const lexicalRelative = path.relative(resolvedBase, resolvedTarget);
 
-  if (lexicalRelative.startsWith('..') || path.isAbsolute(lexicalRelative)) {
+  if (lexicalRelative === '..' || lexicalRelative.startsWith(`..${path.sep}`) || path.isAbsolute(lexicalRelative)) {
     throw new Error(`Refusing to write outside of directory "${resolvedBase}": ${targetPath}`);
   }
 

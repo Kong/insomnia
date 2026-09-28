@@ -23,7 +23,7 @@ const resolveWithinBase = (basePath: string, relPath: string): string => {
   const resolvedPath = path.join(basePath, path.normalize(relPath));
   const relative = path.relative(basePath, resolvedPath);
 
-  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
     throw new Error(`[fsClient] Refusing to access path outside repository working directory: ${relPath}`);
   }
 
