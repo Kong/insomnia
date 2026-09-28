@@ -91,7 +91,7 @@ jobs:
   # so collect-failed-tests can find whatever is still failing afterwards.
   # ---------------------------------------------------------------------------
   parallel-test:
-    name: Initial Test
+    name: Parallel Test
     needs: build
     timeout-minutes: 60
     runs-on: ubuntu-latest
@@ -293,7 +293,7 @@ jobs:
   # ---------------------------------------------------------------------------
   # Every prior job sets continue-on-error: true so a failure never blocks
   # this job from running. This is the one job that actually gates the
-  # workflow: pass if Initial Test had no failures, otherwise pass only if
+  # workflow: pass if Parallel Test had no failures, otherwise pass only if
   # Failed Test Review's re-run of the failures succeeded.
   # ---------------------------------------------------------------------------
   insomnia-test-result:
@@ -305,12 +305,12 @@ jobs:
       - name: Evaluate result
         run: |
           if [ "${{ needs.collect-failed-tests.outputs.has_failures }}" != "true" ]; then
-            echo "Initial Test passed."
+            echo "Parallel Test passed."
             exit 0
           fi
           if [ "${{ needs.sequential-test.outputs.passed }}" == "true" ]; then
-            echo "Initial Test had failures, but Rerun Failed Test re-ran them successfully."
+            echo "Parallel Test had failures, but Rerun Failed Test re-ran them successfully."
             exit 0
           fi
-          echo "Initial Test had failures, and Rerun Failed Test failed to re-run them successfully."
+          echo "Parallel Test had failures, and Rerun Failed Test failed to re-run them successfully."
           exit 1
