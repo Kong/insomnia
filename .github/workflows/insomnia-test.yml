@@ -92,7 +92,7 @@ jobs:
     name: Parallel Test
     needs: build
     timeout-minutes: 60
-    runs-on: ubuntu-latest-4-cores
+    runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
       contents: read
@@ -159,7 +159,7 @@ jobs:
     name: Sequential Test
     needs: parallel-test
     timeout-minutes: 30
-    runs-on: ubuntu-latest-4-cores
+    runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
       contents: read
