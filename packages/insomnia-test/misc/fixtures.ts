@@ -166,6 +166,23 @@ export async function setKonnectSyncFeatureFlag(
 }
 
 /**
+ * Toggles misc/mock-api.js's `GET /v1/user/entitlements` response, which the
+ * app reads on startup to decide whether the account holds the Konnect
+ * control-planes entitlement — the Konnect organization ("Control Planes")
+ * only appears in the organization switcher once this (or a local Konnect
+ * project) makes it visible. Same pre-launch timing/reset requirements and
+ * per-worker scoping as `setGitSyncFeatureFlag()`.
+ * @param enabled - Whether the account should hold the Konnect entitlement
+ */
+export async function setKonnectEntitlement(enabled: boolean): Promise<void> {
+  await fetch(`${MOCK_API_SERVER}/_admin/features/konnect-entitlement`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled, sessionId: SESSION_ID }),
+  });
+}
+
+/**
  * Resets misc/mock-api.js's Cloud Sync mutable state (new snapshots/blobs,
  * deleted-project ids, "remote has new commit" flag) back to its seeded
  * defaults, scoped to this worker's SESSION_ID — mirrors the isolation

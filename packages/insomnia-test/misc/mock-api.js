@@ -43,6 +43,7 @@ const DEFAULT_FEATURE_STATE = {
   gitSyncEnabled: true,
   gitSyncStorageRuleEnabled: true,
   konnectSyncEnabled: true,
+  konnectEntitlementEnabled: false,
 };
 const featureStateBySession = new Map(); // sessionId -> partial DEFAULT_FEATURE_STATE overrides
 
@@ -852,6 +853,15 @@ async function handleAdmin(req, res, url) {
     setFeatureState(body.sessionId, { konnectSyncEnabled: enabled });
     return sendJson(res, 200, { enabled });
   }
+  if (
+    url.pathname === "/_admin/features/konnect-entitlement" &&
+    req.method === "PUT"
+  ) {
+    const body = await readJsonBody(req);
+    const enabled = body.enabled !== false;
+    setFeatureState(body.sessionId, { konnectEntitlementEnabled: enabled });
+    return sendJson(res, 200, { enabled });
+  }
   if (url.pathname === "/_admin/cloud-sync/new-commit" && req.method === "PUT") {
     const body = await readJsonBody(req);
     const state = getCloudSyncState(body.sessionId);
@@ -1368,6 +1378,21 @@ function matchDynamic(req, url) {
   }
   if (method === "GET" && pathname.startsWith("/v2/control-planes")) {
     return { data: [] };
+  }
+
+  if (method === "GET" && pathname === "/v1/user/entitlements") {
+    return {
+      entitlements: featureState.konnectEntitlementEnabled
+        ? [
+            {
+              featureKey: "konnectControlPlanes_default",
+              type: "metered",
+              hasAccess: true,
+              allowance: null,
+            },
+          ]
+        : [],
+    };
   }
 
   return null;

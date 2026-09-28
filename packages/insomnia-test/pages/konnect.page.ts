@@ -4,38 +4,50 @@ import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { BasePage } from "./base.page";
 
 export class KonnectPage extends BasePage {
-  private readonly SIDEBAR_TAB = '[data-testid="sidebar-tab-konnect"]';
-  private readonly PROJECTS_TAB = '[data-testid="sidebar-tab-projects"]';
+  private readonly SIDEBAR = '[data-testid="global-navigation-sidebar"]';
+  private readonly PROJECT_TREE =
+    '[data-testid="project-navigation-tree-container"]';
 
   /**
-   * Confirms the Konnect sidebar tab is currently visible.
+   * Confirms the sidebar is currently visible. There is no separate Konnect
+   * "tab" — the sidebar shows either the pre-configuration intro card or the
+   * normal project tree, based on whether a Konnect PAT is already saved.
    */
   async navigate(): Promise<void> {
-    await expect(this.page.locator(this.SIDEBAR_TAB)).toBeVisible({
+    await expect(this.page.locator(this.SIDEBAR)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
 
   /**
-   * Reports whether the Konnect sidebar tab is currently visible — hidden
-   * when the `konnectSync` org feature flag is disabled.
+   * Reports whether the sidebar is currently visible.
    */
   async isTabVisible(): Promise<boolean> {
-    return this.page.locator(this.SIDEBAR_TAB).isVisible();
+    return this.page.locator(this.SIDEBAR).isVisible();
   }
 
   /**
-   * Clicks the Konnect sidebar tab.
+   * Waits for the pre-configuration intro card to render. Resolving the
+   * sidebar's intro-card-vs-project-tree choice depends on organization
+   * data that loads asynchronously right after switching into the Konnect
+   * organization, so this waits on the card itself rather than just the
+   * sidebar container — otherwise a caller's next `isIntroCardVisible()`
+   * check can race that resolution and see a false negative.
    */
   async openTab(): Promise<void> {
-    await this.page.locator(this.SIDEBAR_TAB).click();
+    await expect(
+      this.page.getByText("Auto-sync your gateway service routes"),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
-   * Clicks the Projects sidebar tab.
+   * Waits for the normal project tree to be visible — shown automatically
+   * once a Konnect PAT has been saved (the intro card is replaced by it).
    */
   async openProjectsTab(): Promise<void> {
-    await this.page.locator(this.PROJECTS_TAB).click();
+    await expect(this.page.locator(this.PROJECT_TREE)).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**

@@ -1103,6 +1103,16 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
+   * Opens the organization switcher and selects the organization with the
+   * given name (e.g. "Control Planes" for the Konnect organization).
+   * @param name - The organization's display name
+   */
+  async switchOrganization(name: string): Promise<void> {
+    await this.page.getByRole("button", { name: "Organizations" }).click();
+    await this.page.getByRole("option", { name }).click();
+  }
+
+  /**
    * Resolves a node reference to a full TreeNode, looking it up by name
    * (and optional id) if it isn't already a TreeNode.
    * @param parent - Either an existing TreeNode or a name/id reference to resolve

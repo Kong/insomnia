@@ -1,6 +1,19 @@
 import { faker } from '@faker-js/faker';
 
-import { DEFAULT_TIMEOUT, expect, test } from '../../misc/fixtures';
+import {
+  DEFAULT_TIMEOUT,
+  expect,
+  setKonnectEntitlement,
+  test,
+} from '../../misc/fixtures';
+
+test.beforeAll(async () => {
+  await setKonnectEntitlement(true);
+});
+
+test.afterAll(async () => {
+  await setKonnectEntitlement(false);
+});
 
 test(
   'Verify configuring a Konnect PAT closes the settings modal, shows the Sync Konnect button, and leaves the Projects tab usable',
@@ -8,6 +21,7 @@ test(
   async ({ user }) => {
     const { konnectPage, workspacePage } = user.pageManager;
 
+    await workspacePage.switchOrganization('Control Planes');
     await konnectPage.openTab();
     const introVisibleBeforeConfigure = await konnectPage.isIntroCardVisible();
     await konnectPage.clickConfigure();
@@ -21,7 +35,6 @@ test(
       .toBe(true);
 
     await konnectPage.openProjectsTab();
-    await workspacePage.navigate();
 
     expect(introVisibleBeforeConfigure).toBe(true);
     expect(settingsModalOpenAfterConnect).toBe(false);
