@@ -382,8 +382,13 @@ export class WorkspacePage extends BasePage {
   /**
    * Clicks the "Create" button and waits for the create/update dialog to
    * close.
+   * @param timeoutMs - How long to wait for the dialog to close; defaults
+   * to `DEFAULT_TIMEOUT`. Callers that create a Git-backed collection
+   * should pass a longer budget — that path writes the new file into the
+   * repo and stages it before the dialog closes, which can run past the
+   * default timeout under CI load.
    */
-  async clickCreate(): Promise<void> {
+  async clickCreate(timeoutMs: number = DEFAULT_TIMEOUT): Promise<void> {
     const createButton = this.page.getByRole("button", {
       name: "Create",
       exact: true,
@@ -391,7 +396,7 @@ export class WorkspacePage extends BasePage {
     await createButton.click();
     await this.page
       .locator(this.NEW_PROJECT_DIALOG)
-      .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
+      .waitFor({ state: "hidden", timeout: timeoutMs });
   }
 
   /**
@@ -711,6 +716,12 @@ export class WorkspacePage extends BasePage {
     // (and its effect) happen before the menu ever opens, so it can't
     // close a menu that doesn't exist yet.
     await this.waitForSelectionSettled(node);
+    // The shortcut listener is rebound on every render of the component
+    // that owns it (see CommandPalettePage.openViaShortcut()'s doc comment
+    // for the same race), so draining the renderer's task queue first
+    // ensures the re-render `waitForSelectionSettled()` just waited out has
+    // actually finished before the keypress is sent.
+    await this.waitForRendererIdle();
     await this.page.keyboard.press("ControlOrMeta+n");
     await expect(this.page.getByRole("menu")).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
@@ -1260,6 +1271,12 @@ export class WorkspacePage extends BasePage {
    * @returns The indicator's current state, or undefined if none is rendered
    */
   async getDropIndicator(): Promise<DropIndicator | undefined> {
+    // dragOver()'s pointer moves are handled asynchronously (react-aria's
+    // own drag-and-drop machinery resolves the hovered drop target off the
+    // pointermove event, then re-renders the indicator a tick later), so
+    // reading it back immediately can catch the DOM before that render has
+    // happened. Draining the renderer's task queue first ensures it has.
+    await this.waitForRendererIdle();
     const indicator = this.page.locator(
       '[class*="outline-(--color-surprise)"], [class*="outline-(--color-danger)"]',
     );

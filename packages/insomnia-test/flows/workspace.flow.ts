@@ -951,7 +951,12 @@ export class WorkspaceFlow extends BaseFlow {
     if (fileName !== undefined) {
       await workspace.setCollectionFileName(fileName);
     }
-    await workspace.clickCreate();
+    // A file name means this collection is backed by its own file in a Git
+    // Sync project, which writes and stages that file before the dialog
+    // closes — give it more room than the default UI-only timeout.
+    await workspace.clickCreate(
+      fileName !== undefined ? DEFAULT_TIMEOUT * 2 : undefined,
+    );
   }
 
   /**
