@@ -9,7 +9,7 @@ import { Project } from '../../models/project';
 
 test(
   'Verify dragging a request between a Cloud project and a Local project moves it in both directions',
-  { tag: 'sequential' },
+  { tag: '@sequential' },
   async ({ user }) => {
     test.fail(true, 'INS-3844');
 

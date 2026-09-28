@@ -138,7 +138,7 @@ jobs:
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-        run: xvfb-run --auto-servernum npx playwright test --grep-invert 'sequential' --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: xvfb-run --auto-servernum npx playwright test --grep-invert '@sequential' --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -150,7 +150,7 @@ jobs:
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------
-  # Run tests tagged sequential with a single worker. These cases interfere with
+  # Run tests tagged @sequential with a single worker. These cases interfere with
   # each other (or with the parallel shards above) when run concurrently, so
   # they're isolated into their own single-threaded stage that runs after the
   # sharded tests finish.
@@ -198,7 +198,7 @@ jobs:
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-        run: xvfb-run --auto-servernum npx playwright test --grep 'sequential' --workers=1
+        run: xvfb-run --auto-servernum npx playwright test --grep '@sequential' --workers=1
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

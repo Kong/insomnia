@@ -4,7 +4,7 @@ import { DEFAULT_TIMEOUT, expect, test } from '../../misc/fixtures';
 
 test(
   'Verify configuring a Konnect PAT closes the settings modal, shows the Sync Konnect button, and leaves the Projects tab usable',
-  { tag: 'sequential' },
+  { tag: '@sequential' },
   async ({ user }) => {
     const { konnectPage, workspacePage } = user.pageManager;
 

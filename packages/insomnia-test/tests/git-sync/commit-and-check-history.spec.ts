@@ -5,7 +5,7 @@ import { expect, getServerCommits, GIT_CREDENTIAL, test } from '../../misc/git-f
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 
-test('Verify committing changes in a Git Sync project appears in History', { tag: 'sequential' }, async ({ user }) => {
+test('Verify committing changes in a Git Sync project appears in History', { tag: '@sequential' }, async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);

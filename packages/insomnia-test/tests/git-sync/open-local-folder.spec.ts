@@ -10,7 +10,7 @@ import { Project } from '../../models/project';
 
 test(
   'Verify adopting an existing local folder as a Git project runs git init in it',
-  { tag: 'sequential' },
+  { tag: '@sequential' },
   async ({ user }) => {
     const { workspaceFlow } = user.flowManager;
 
