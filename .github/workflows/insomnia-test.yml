@@ -221,7 +221,7 @@ jobs:
   # interference as the cause before treating a failure as real.
   # ---------------------------------------------------------------------------
   sequential-test:
-    name: Failed Test Review
+    name: Rerun Failed Test
     needs: collect-failed-tests
     if: needs.collect-failed-tests.outputs.has_failures == 'true'
     timeout-minutes: 30
@@ -274,8 +274,7 @@ jobs:
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-          PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-sequential.zip
-        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --workers=1 $(cat failed-tests.txt)
+        run: xvfb-run --auto-servernum npx playwright test --workers=1 $(cat failed-tests.txt)
 
       - name: Record test outcome
         id: outcome
@@ -291,67 +290,18 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Upload blob report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ !cancelled() }}
-        with:
-          name: blob-report-sequential
-          path: packages/insomnia-test/blob-report/blob-report-sequential.zip
-          retention-days: 1
-          if-no-files-found: ignore
-
   # ---------------------------------------------------------------------------
   # Every prior job sets continue-on-error: true so a failure never blocks
-  # this job from running. This job merges every shard's blob report from
-  # Initial Test with Failed Test Review's blob report into a single HTML
-  # report, then gates the workflow: pass if Initial Test had no failures,
-  # otherwise pass only if Failed Test Review's re-run of the failures
-  # succeeded.
+  # this job from running. This is the one job that actually gates the
+  # workflow: pass if Initial Test had no failures, otherwise pass only if
+  # Failed Test Review's re-run of the failures succeeded.
   # ---------------------------------------------------------------------------
   insomnia-test-result:
     name: Insomnia Test Result
-    needs: [parallel-test, collect-failed-tests, sequential-test]
+    needs: [collect-failed-tests, sequential-test]
     if: always()
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: '24'
-
-      - name: Install test dependencies
-        run: |
-          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
-          npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download blob reports
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: blob-report-*
-          path: packages/insomnia-test/all-blob-reports
-          merge-multiple: true
-
-      - name: Merge into a single HTML report
-        working-directory: packages/insomnia-test
-        run: npx playwright merge-reports --reporter html ./all-blob-reports
-
-      - name: Upload merged report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report-merged
-          path: packages/insomnia-test/playwright-report/
-          retention-days: 14
-          if-no-files-found: ignore
-
       - name: Evaluate result
         run: |
           if [ "${{ needs.collect-failed-tests.outputs.has_failures }}" != "true" ]; then
@@ -359,8 +309,8 @@ jobs:
             exit 0
           fi
           if [ "${{ needs.sequential-test.outputs.passed }}" == "true" ]; then
-            echo "Initial Test had failures, but Failed Test Review re-ran them successfully."
+            echo "Initial Test had failures, but Rerun Failed Test re-ran them successfully."
             exit 0
           fi
-          echo "Initial Test had failures, and Failed Test Review failed to re-run them successfully."
+          echo "Initial Test had failures, and Rerun Failed Test failed to re-run them successfully."
           exit 1
