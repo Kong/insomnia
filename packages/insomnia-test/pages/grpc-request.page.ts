@@ -131,8 +131,19 @@ export class GrpcRequestPage extends RequestPage {
    * button reads the request's patched-in-the-background state rather
    * than the CodeMirror instance directly, and clicking too early streams
    * the previous content.
+   *
+   * That on-disk check alone isn't quite enough: the button reads
+   * `activeRequest` from the request's React Router loader data, which
+   * only refreshes a moment *after* the write lands on disk, once the
+   * save fetcher's action resolves and triggers a loader revalidation —
+   * so an on-disk match doesn't guarantee the button's own in-memory
+   * state has caught up yet. Under CI load that gap can widen enough for
+   * a click to still read the previous message's body. Draining the
+   * page's own task queue first closes that window without needing a
+   * guessed sleep duration.
    */
   async clickStream(): Promise<void> {
+    await this.waitForRendererIdle();
     await this.page.locator(this.STREAM_BUTTON).click();
   }
 }

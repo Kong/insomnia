@@ -120,6 +120,29 @@ export abstract class BasePage {
   }
 
   /**
+   * Waits for the page's own event loop to drain everything already
+   * queued in it — every pending microtask (promise `.then()` chains),
+   * then one full macrotask turn — before returning. Use right before an
+   * action whose outcome depends on a React state update that a
+   * just-confirmed async write (e.g. a fetcher action landing in NeDB)
+   * triggers a moment *later* rather than synchronously, such as a
+   * React Router loader revalidation. Because this round-trips through
+   * the renderer's own task queue instead of guessing a duration from the
+   * test process (`page.waitForTimeout()`), anything already scheduled
+   * inside the page — including a slow revalidation stalled behind a busy
+   * main thread under CI load — is guaranteed to have run by the time
+   * this resolves, in a way a fixed sleep can't reliably promise.
+   */
+  protected async waitForRendererIdle(): Promise<void> {
+    await this.page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => setTimeout(resolve, 0), 0);
+        }),
+    );
+  }
+
+  /**
    * Stubs Electron's native file-picker dialog so a "Choose File" button
    * can be automated without an OS-level file chooser.
    * @param filePath - Absolute path the stubbed dialog should return
