@@ -3079,9 +3079,11 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     const bufferId = await database.bufferChanges();
     const pullResult = await GitVCS.pullWithConflictSupport(gitRepository.credentialsId);
+    const hasBlockedWrites = 'blockedWrites' in pullResult && !!pullResult.blockedWrites?.length;
 
-    // Import all YAML files from disk into the DB after pull
-    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Import all YAML files from disk. Skip orphan removal on blocked writes,
+    // as disk state may be left inconsistent by refused replacements.
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id, { skipOrphanRemoval: hasBlockedWrites });
     clearConflictSuppression(repoId);
 
     trackAnalyticsEvent(AnalyticsEvent.vcsAction, {

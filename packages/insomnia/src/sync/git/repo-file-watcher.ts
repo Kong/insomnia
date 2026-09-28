@@ -349,7 +349,9 @@ class RepoFileWatcher {
    * Also detects workspace YAML files that were removed from disk (e.g. deleted
    * on the remote) and removes the corresponding workspaces from the DB.
    */
-  async importAllFiles(options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
+  async importAllFiles(
+    options: { removeLocalOnlyOrphans?: boolean; skipOrphanRemoval?: boolean } = {},
+  ): Promise<void> {
     if (this.stopped) {
       return;
     }
@@ -376,7 +378,11 @@ class RepoFileWatcher {
     }
 
     // Detect deleted files: workspaces in DB whose YAML is no longer on disk.
-    this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles, options.removeLocalOnlyOrphans));
+    // Skip on blocked writes — disk state may appear deleted but only due to
+    // refused replacement writes.
+    if (!options.skipOrphanRemoval) {
+      this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles, options.removeLocalOnlyOrphans));
+    }
 
     await this.queue.waitUntilDone();
   }
@@ -1390,7 +1396,10 @@ export class RepoFileWatcherRegistry {
    * Call after bulk git operations (clone, pull, merge, checkout) so the DB
    * reflects the new disk state. Content-hash dedup makes repeated calls cheap.
    */
-  importAllFiles(repoId: string, options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
+  importAllFiles(
+    repoId: string,
+    options: { removeLocalOnlyOrphans?: boolean; skipOrphanRemoval?: boolean } = {},
+  ): Promise<void> {
     const watcher = this.watchers.get(repoId);
     if (!watcher) {
       return Promise.resolve();
