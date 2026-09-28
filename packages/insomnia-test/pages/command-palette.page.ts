@@ -53,8 +53,16 @@ export class CommandPalettePage extends BasePage {
   /**
    * Opens the command palette via its keyboard shortcut (Cmd+P on
    * macOS).
+   *
+   * The shortcut listener is rebound on every render of the component
+   * that owns it — including the one a just-completed navigation (e.g.
+   * a breadcrumb jump) triggers a moment *after* it resolves — so
+   * sending the keypress right away can land in the gap between the old
+   * binding's teardown and the new one's setup. Draining the renderer's
+   * task queue first ensures that re-render has already happened.
    */
   async openViaShortcut(): Promise<void> {
+    await this.waitForRendererIdle();
     await this.page.keyboard.press("Meta+p");
     await this.navigate();
   }
