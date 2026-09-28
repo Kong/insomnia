@@ -3,15 +3,27 @@
 // Runs dependency-cruiser per workspace package to find circular imports, and fails only on
 // cycles that are not already recorded in the baseline file. Run with --update-baseline to
 // regenerate the baseline from the current state (e.g. after fixing a cycle).
+//
+// Exits 0 when the tree matches the baseline, 1 when a new cycle appeared, and 2 when the
+// baseline is merely stale. CI distinguishes the last two when reporting.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const depcruiseBin = path.join(repoRoot, 'node_modules', '.bin', 'depcruise');
+// Resolve dependency-cruiser's own entry point rather than the `.bin` shim, and run it with the
+// current Node binary. On Windows the shim is split into an extensionless shell script (which
+// `execFileSync` cannot launch) and a `.cmd` (which Node >=18 refuses to spawn without a shell,
+// see CVE-2024-27980), so going through `.bin` makes this script POSIX-only for no benefit.
+const depcruiseBin = path.join(repoRoot, 'node_modules', 'dependency-cruiser', 'bin', 'dependency-cruise.mjs');
 const configPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dependency-cruiser.json');
 const baselinePath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'known-violations.json');
+
+/** A cycle exists that the baseline does not record — a regression. */
+const EXIT_NEW_CYCLES = 1;
+/** The baseline records cycles that no longer exist — it just needs regenerating. */
+const EXIT_BASELINE_DRIFT = 2;
 
 // Same scope as `npm run lint`/`type-check`/`test` (--workspaces --if-present): the packages
 // actually declared as npm workspaces, not every directory under packages/ (e.g.
@@ -48,7 +60,11 @@ function cruisePackage({ name, dir }) {
 
   let stdout;
   try {
-    stdout = execFileSync(depcruiseBin, args, { cwd: dir, encoding: 'utf8', maxBuffer: 1024 * 1024 * 100 });
+    stdout = execFileSync(process.execPath, [depcruiseBin, ...args], {
+      cwd: dir,
+      encoding: 'utf8',
+      maxBuffer: 1024 * 1024 * 100,
+    });
   } catch (error) {
     if (error?.status !== 1 || !error.stdout) throw error;
     // dependency-cruiser exits with status 1 when forbidden violations are found. Parse its JSON
@@ -143,7 +159,10 @@ function main() {
     if (hasNew) console.log('\nNew circular dependencies detected that are not in the baseline.');
     if (hasDrift) console.log('\nBaseline contains circular dependencies no longer present in the current tree.');
     console.log(`Run "npm run check-cycle-references:baseline" and commit the updated ${path.basename(baselinePath)}.`);
-    process.exit(1);
+    // Both cases need the baseline regenerated, but they mean opposite things — a new cycle is a
+    // regression, while drift alone means cycles were fixed and the baseline was left behind.
+    // Exit 1 vs 2 so CI can say which happened instead of reporting every failure as "new".
+    process.exit(hasNew ? EXIT_NEW_CYCLES : EXIT_BASELINE_DRIFT);
   }
   console.log('\nNo new circular dependencies.');
 }

@@ -107,7 +107,15 @@ jobs:
         id: check-cycles
         continue-on-error: true
         shell: bash
-        run: npm run check-cycle-references | tee cycle-report.txt
+        # Exit code 1 (a new cycle) and 2 (a stale baseline) are reported differently below, so
+        # capture it rather than letting `-e` collapse both into a generic step failure.
+        run: |
+          set +e
+          npm run check-cycle-references | tee cycle-report.txt
+          status=${PIPESTATUS[0]}
+          set -e
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
 
       - name: Post circular references PR comment
         if: github.event_name == 'pull_request' && always() && steps.check-cycles.outcome != 'skipped'
@@ -117,12 +125,21 @@ jobs:
           script: |
             const fs = require('fs');
 
-            const passed = '${{ steps.check-cycles.outcome }}' === 'success';
+            // 0 = matches baseline, 1 = a new cycle appeared, 2 = baseline is stale. Anything
+            // else means the check itself blew up, which is not a claim about cycles either way.
+            const status = '${{ steps.check-cycles.outputs.status }}';
+            const passed = status === '0';
+            const summaryByStatus = {
+              '0': { icon: '✅', text: 'No new circular references' },
+              '1': { icon: '⚠️', text: 'New circular references detected' },
+              '2': { icon: '♻️', text: 'No new circular references, but the baseline is stale — regenerate and commit it' },
+            };
+            const { icon, text } = summaryByStatus[status] ?? { icon: '💥', text: 'The circular reference check failed to run' };
             const report = fs.readFileSync('cycle-report.txt', 'utf8').trim();
             const markdownContent = `<details>
-            <summary>${passed ? '✅' : '⚠️'} Circular References Report</summary>
+            <summary>${icon} Circular References Report</summary>
 
-            **Status:** ${passed ? 'No new circular references' : 'New circular references detected'}
+            **Status:** ${text}
 
             \`\`\`
             ${report}
@@ -170,6 +187,8 @@ jobs:
               console.log('Created new PR comment');
             }
 
-      - name: Fail if new circular references found
+      # Fails on a stale baseline too, not just on new cycles: the baseline is a ratchet, so a
+      # cycle left in it after being fixed would silently keep permitting its reintroduction.
+      - name: Fail if the circular reference check did not pass
         if: steps.check-cycles.outcome == 'failure'
         run: exit 1
