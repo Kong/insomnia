@@ -63,10 +63,10 @@ export async function assertPathWithinDir(baseDir: string, targetPath: string): 
   }
 }
 
-// O_NOFOLLOW is POSIX-only; Node exposes it as undefined on Windows, where
-// creating a symlink already requires elevated privileges, so this specific
-// risk is much lower there. Fall back to plain flags rather than failing
-// outright.
+// O_NOFOLLOW is POSIX-only; Node exposes it as undefined on Windows. Windows
+// has allowed unprivileged symlink creation via Developer Mode since 10
+// 1703, so a crafted checkout can still plant a symlink at the leaf — fall
+// back to an lstat pre-check there instead of assuming the risk is lower.
 const NO_FOLLOW_WRITE_FLAGS =
   fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | (fs.constants.O_NOFOLLOW ?? 0);
 
@@ -78,7 +78,10 @@ const NO_FOLLOW_WRITE_FLAGS =
  * The final-component symlink guard uses `O_NOFOLLOW` at `open()` time
  * (rather than an `lstat` check beforehand) so there's no TOCTOU window for
  * that specific check — if `absPath`'s final component is a symlink, the
- * `open()` call itself fails with `ELOOP`.
+ * `open()` call itself fails with `ELOOP`. On Windows, where `O_NOFOLLOW`
+ * doesn't exist, an `lstat` pre-check is used instead — it has a narrow
+ * TOCTOU window, but no worse than the directory-level one already accepted
+ * above in `assertPathWithinDir`.
  */
 export async function writeFileWithinDir(
   baseDir: string,
@@ -87,6 +90,13 @@ export async function writeFileWithinDir(
   encoding: BufferEncoding = 'utf8',
 ): Promise<void> {
   await assertPathWithinDir(baseDir, absPath);
+
+  if (!fs.constants.O_NOFOLLOW) {
+    const leaf = await fs.promises.lstat(absPath).catch(() => null);
+    if (leaf?.isSymbolicLink()) {
+      throw new Error(`Refusing to write through symlink: ${absPath}`);
+    }
+  }
 
   const handle = await fs.promises.open(absPath, NO_FOLLOW_WRITE_FLAGS, 0o644).catch((err: unknown) => {
     if (err instanceof Error && 'code' in err && err.code === 'ELOOP') {
