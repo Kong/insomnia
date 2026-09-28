@@ -1563,16 +1563,35 @@ export const cloneGitRepoAction = async ({
       const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
 
       if (gitRepository.needsFullClone) {
-        await GitVCS.initFromClone({
-          repoId: gitRepository._id,
-          url: uri,
-          credentialsId: gitRepository.credentialsId,
-          directory: GIT_CLONE_DIR,
-          fs: fsClient,
-          gitDirectory: GIT_INTERNAL_DIR,
-          ref,
-          repoPath: repoBaseDir,
-        });
+        // The watcher isn't started until after this block, so blocked-write
+        // reports would otherwise be dropped silently (reportWriteBlocked is
+        // a no-op with no watcher registered yet). Collect them directly so
+        // a clone whose commit holds an escaping symlink/path is reported as
+        // a failure instead of silently dropping the file and reporting success.
+        const cloneBlockedWrites: BlockedWrite[] = [];
+        fsClient.startCollectBlockedWrites(cloneBlockedWrites);
+        try {
+          await GitVCS.initFromClone({
+            repoId: gitRepository._id,
+            url: uri,
+            credentialsId: gitRepository.credentialsId,
+            directory: GIT_CLONE_DIR,
+            fs: fsClient,
+            gitDirectory: GIT_INTERNAL_DIR,
+            ref,
+            repoPath: repoBaseDir,
+          });
+        } finally {
+          fsClient.stopCollectBlockedWrites();
+        }
+
+        if (cloneBlockedWrites.length > 0) {
+          const errors =
+            cloneBlockedWrites.length === 1
+              ? [`Blocked write outside the repository: ${path.basename(cloneBlockedWrites[0].relPath)}`]
+              : [`Blocked ${cloneBlockedWrites.length} writes outside the repository`];
+          return { errors, gitRepository: repoSettingsPatch };
+        }
 
         await services.gitRepository.update(gitRepository, {
           needsFullClone: false,
