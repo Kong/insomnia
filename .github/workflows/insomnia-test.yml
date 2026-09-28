@@ -85,8 +85,10 @@ jobs:
         run: npx electron-builder build --config electron-builder.config.js --linux --dir --publish never
 
   # ---------------------------------------------------------------------------
-  # Run the tests across N shards in parallel. Each shard restores the cached
-  # binary and runs a slice of the suite with a single worker.
+  # Run the whole suite across N shards in parallel. Each shard restores the
+  # cached binary and runs a slice of the suite, retrying failures in-process
+  # (see playwright.config.ts `retries`). Each shard also emits a JSON report
+  # so collect-failed-tests can find whatever is still failing afterwards.
   # ---------------------------------------------------------------------------
   parallel-test:
     name: Parallel Test
@@ -138,7 +140,8 @@ jobs:
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-        run: xvfb-run --auto-servernum npx playwright test --grep-invert '@sequential' --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results-${{ matrix.shardIndex }}.json
+        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,json --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -149,21 +152,76 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Upload JSON results
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-json-${{ matrix.shardIndex }}
+          path: packages/insomnia-test/results-${{ matrix.shardIndex }}.json
+          retention-days: 1
+          if-no-files-found: ignore
+
   # ---------------------------------------------------------------------------
-  # Run tests tagged @sequential with a single worker. These cases interfere with
-  # each other (or with the parallel shards above) when run concurrently, so
-  # they're isolated into their own single-threaded stage that runs after the
-  # sharded tests finish.
+  # Look at every shard's JSON report and collect the tests that were still
+  # failing after Playwright's own in-job retries. These get handed to
+  # sequential-test to run one more time, single-threaded.
+  # ---------------------------------------------------------------------------
+  collect-failed-tests:
+    name: Collect Failed Tests
+    needs: parallel-test
+    if: ${{ !cancelled() }}
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      has_failures: ${{ steps.collect.outputs.has_failures }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Download JSON results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: playwright-json-*
+          path: json-reports
+          merge-multiple: true
+
+      - name: Collect failed tests
+        id: collect
+        run: |
+          node .github/scripts/collect-failed-tests.js json-reports failed-tests.txt
+          if [ -s failed-tests.txt ]; then
+            echo "has_failures=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_failures=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload failed tests list
+        if: steps.collect.outputs.has_failures == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: failed-tests-list
+          path: failed-tests.txt
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Re-run whatever collect-failed-tests found, single-threaded. Running them
+  # in isolation (one worker, no sharding) rules out cross-test/cross-shard
+  # interference as the cause before treating a failure as real.
   # ---------------------------------------------------------------------------
   sequential-test:
     name: Sequential Test
-    needs: parallel-test
+    needs: collect-failed-tests
+    if: needs.collect-failed-tests.outputs.has_failures == 'true'
     timeout-minutes: 30
     runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
       contents: read
       packages: read
+    outputs:
+      passed: ${{ steps.outcome.outputs.passed }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -195,11 +253,23 @@ jobs:
         working-directory: packages/insomnia-test
         run: npx playwright install ffmpeg
 
-      - name: Run Playwright tests (sequential, single worker)
+      - name: Download failed tests list
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: failed-tests-list
+          path: packages/insomnia-test
+
+      - name: Run Playwright tests (failed tests, single worker)
+        id: run_tests
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-        run: xvfb-run --auto-servernum npx playwright test --grep '@sequential' --workers=1
+        run: xvfb-run --auto-servernum npx playwright test --workers=1 $(cat failed-tests.txt)
+
+      - name: Record test outcome
+        id: outcome
+        if: always()
+        run: echo "passed=${{ steps.run_tests.outcome == 'success' }}" >> "$GITHUB_OUTPUT"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -209,3 +279,28 @@ jobs:
           path: packages/insomnia-test/playwright-report/
           retention-days: 7
           if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Every prior job sets continue-on-error: true so a failure never blocks
+  # this job from running. This is the one job that actually gates the
+  # workflow: pass if Parallel Test had no failures, otherwise pass only if
+  # Sequential Test's re-run of the failures succeeded.
+  # ---------------------------------------------------------------------------
+  test-result:
+    name: Test Result
+    needs: [collect-failed-tests, sequential-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate result
+        run: |
+          if [ "${{ needs.collect-failed-tests.outputs.has_failures }}" != "true" ]; then
+            echo "Parallel Test passed."
+            exit 0
+          fi
+          if [ "${{ needs.sequential-test.outputs.passed }}" == "true" ]; then
+            echo "Parallel Test had failures, but Sequential Test re-ran them successfully."
+            exit 0
+          fi
+          echo "Parallel Test had failures, and Sequential Test failed to re-run them successfully."
+          exit 1

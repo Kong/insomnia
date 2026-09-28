@@ -12,7 +12,6 @@ import { Project } from '../../../models/project';
 
 test(
   "Verify a plugin's context-menu action shows the target item's name and type in a modal",
-  { tag: '@sequential' },
   async ({ user }) => {
 
     const { appFlow, workspaceFlow, httpRequestFlow } = user.flowManager;

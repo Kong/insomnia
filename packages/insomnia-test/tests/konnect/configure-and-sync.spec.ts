@@ -17,7 +17,6 @@ test.afterAll(async () => {
 
 test(
   'Verify configuring a Konnect PAT closes the settings modal, shows the Sync Konnect button, and leaves the Projects tab usable',
-  { tag: '@sequential' },
   async ({ user }) => {
     const { konnectPage, workspacePage } = user.pageManager;
 

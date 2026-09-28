@@ -10,7 +10,6 @@ import { Project } from '../../models/project';
 
 test(
   'Verify dragging a request out of a Git Sync collection into an empty Git Sync collection',
-  { tag: '@sequential' },
   async ({ user }) => {
     const { workspaceFlow, httpRequestFlow, preferencesFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;

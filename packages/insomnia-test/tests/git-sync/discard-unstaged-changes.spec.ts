@@ -13,7 +13,6 @@ import { Project } from "../../models/project";
 
 test(
   "Verify discarding all unstaged changes removes the uncommitted collection",
-  { tag: "@sequential" },
   async ({ user }) => {
     const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;

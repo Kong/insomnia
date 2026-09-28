@@ -11,7 +11,6 @@ import { Project } from "../../models/project";
 
 test(
   "Verify relocating a Git Sync project's repository to a new folder updates the displayed path",
-  { tag: "@sequential" },
   async ({ user }) => {
     const { preferencesFlow, workspaceFlow } = user.flowManager;
     const { projectSettingsPage } = user.pageManager;

@@ -12,7 +12,6 @@ test.afterAll(async () => {
 
 test(
   "Verify selecting the Git project type shows the disabled-feature banner, hides the setup form, and disables Scan for files when Git Sync is disabled by org feature flag",
-  { tag: "@sequential" },
   async ({ user }) => {
     const { workspacePage, projectSettingsPage } = user.pageManager;
 

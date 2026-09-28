@@ -10,9 +10,7 @@ import { Project } from '../../../models/project';
 
 test(
   "Verify a plugin's context-menu action shows the Collection's name and type in a modal",
-  { tag: '@sequential' },
   async ({ user }) => {
-    test.fail(true, 'INS-3521');
 
     const { appFlow, workspaceFlow } = user.flowManager;
     const { preferencesPage, workspacePage } = user.pageManager;

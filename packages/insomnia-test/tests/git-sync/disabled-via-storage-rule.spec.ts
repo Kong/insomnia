@@ -12,7 +12,6 @@ test.afterAll(async () => {
 
 test(
   "Verify the create-project dialog shows a storage-restriction banner and disables the Git project type when Git Sync is disabled by org storage rule",
-  { tag: "@sequential" },
   async ({ user }) => {
     const { workspacePage, projectSettingsPage } = user.pageManager;
 

@@ -11,7 +11,6 @@ import { Project } from '../../models/project';
 
 test(
   "Verify relocating a Git Sync project's repository shows an error when the destination folder already exists",
-  { tag: '@sequential' },
   async ({ user }) => {
     const { preferencesFlow, workspaceFlow } = user.flowManager;
     const { projectSettingsPage } = user.pageManager;

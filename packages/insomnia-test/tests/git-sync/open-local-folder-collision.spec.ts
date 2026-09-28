@@ -10,7 +10,6 @@ import { Project } from "../../models/project";
 
 test(
   "Verify opening a folder already adopted by another project shows a collision warning and disables Open",
-  { tag: "@sequential" },
   async ({ user }) => {
     const { workspaceFlow } = user.flowManager;
     const { projectSettingsPage } = user.pageManager;

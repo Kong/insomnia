@@ -7,7 +7,6 @@ import { Project } from '../../models/project';
 
 test(
   'Verify merging a branch carries its committed changes into the current branch',
-  { tag: '@sequential' },
   async ({ user }) => {
     const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;

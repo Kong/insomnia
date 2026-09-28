@@ -13,7 +13,6 @@ const WINDOW_HEIGHT = 859;
 
 test(
   'Verify dragging an item into a folder via its name region reparents it',
-  { tag: '@sequential' },
   async ({ user, insomnia }) => {
     const { workspaceFlow, folderFlow, httpRequestFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;
