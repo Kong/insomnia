@@ -9,7 +9,7 @@ import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 
-test("Verify pending async work in a pre-request script (Promise, setTimeout, sendRequest callback/await) is settled before the request is sent", async ({
+test("Verify pending async work in a pre-request script (Promise, setTimeout, sendRequest callback/await) is settled before the request is sent, and a synchronous replaceIn call in the same script is unaffected by it", async ({
   user,
 }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
@@ -22,6 +22,9 @@ test("Verify pending async work in a pre-request script (Promise, setTimeout, se
     new Collection(faker.string.alphanumeric(10)),
   );
 
+  const syncVariableName = faker.string.alpha(8);
+  const syncVariableValue = faker.string.alphanumeric(10);
+
   const marker = faker.string.alphanumeric(10);
   const request = await httpRequestFlow.create(collection, {
     name: faker.string.alphanumeric(10),
@@ -29,9 +32,13 @@ test("Verify pending async work in a pre-request script (Promise, setTimeout, se
     url,
     body: {
       mimeType: ContentType.JSON,
-      text: `{"asyncDoneViaPromise": {{ asyncDoneViaPromise }}, "asyncDoneViaTimeout": {{ asyncDoneViaTimeout }}, "asyncDoneViaCallback": {{ asyncDoneViaCallback }}, "bodyFromAwait": {{ bodyFromAwait }}, "bodyFromCallback": {{ bodyFromCallback }}}`,
+      text: `{"asyncDoneViaPromise": {{ asyncDoneViaPromise }}, "asyncDoneViaTimeout": {{ asyncDoneViaTimeout }}, "asyncDoneViaCallback": {{ asyncDoneViaCallback }}, "bodyFromAwait": {{ bodyFromAwait }}, "bodyFromCallback": {{ bodyFromCallback }}, "syncReplaceInResult": "{{ syncReplaceInResult }}"}`,
     },
     preRequestScript: `
+      insomnia.environment.set('${syncVariableName}', '${syncVariableValue}');
+      const syncReplaceInResult = insomnia.environment.replaceIn('{{ ${syncVariableName} }}');
+      insomnia.environment.set('syncReplaceInResult', syncReplaceInResult);
+
       new Promise((resolve) => {
         setTimeout(() => {
           insomnia.environment.set('asyncDoneViaPromise', true);
@@ -77,6 +84,7 @@ test("Verify pending async work in a pre-request script (Promise, setTimeout, se
       asyncDoneViaCallback: true,
       bodyFromAwait: expect.objectContaining({ data: marker }),
       bodyFromCallback: expect.objectContaining({ data: marker }),
+      syncReplaceInResult: syncVariableValue,
     },
   });
 });

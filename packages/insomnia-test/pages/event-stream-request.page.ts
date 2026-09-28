@@ -19,7 +19,7 @@ export class EventStreamRequestPage extends RequestPage {
    * @returns the event-stream request fields, excluding `name`
    */
   async get(): Promise<Omit<EventStreamRequest, "name">> {
-    const scripts = await this.getScripts();
+    const scripts = await this.scripts.getScripts();
     return {
       method: (await this.getMethod()).trim() as EventStreamMethod,
       url: await this.getUrl(),

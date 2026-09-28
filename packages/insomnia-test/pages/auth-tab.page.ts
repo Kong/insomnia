@@ -8,7 +8,7 @@ import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
 import { AuthType } from "../enums/auth-type";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { BasePage } from "./base.page";
+import { TabPanelPage } from "./tab-panel.page";
 
 type OAuth1TextField = keyof Omit<
   AuthTypeOAuth1,
@@ -88,21 +88,15 @@ export interface OAuth2Tokens {
 const OAUTH2_FETCH_TIMEOUT = 15 * 1000;
 
 /**
- * Shared Auth-tab logic for any page that renders the same Auth tab
- * component — currently `RequestPage` (HTTP/GraphQL/gRPC/... requests) and
- * `FolderPage` (a Collection folder's own settings tab, opened via its
- * "Open in New Tab" context-menu item). Subclasses only need to supply
- * `PANE`, the CSS selector for their tab's outer container.
+ * The Auth tab component, shared by any page that renders it — a
+ * request's own pane (`RequestPage`, composing an instance as
+ * `this.auth`) and a Folder's own settings tab (`FolderPage`, same).
+ * Constructed with the owning page's `pane` selector (its tab-bar's outer
+ * container), since that's the only thing that differs between them.
  */
-export abstract class AuthTabPage extends BasePage {
-  protected abstract readonly PANE: string;
-
+export class AuthTabComponent extends TabPanelPage {
   protected get AUTH_TYPE_BUTTON(): string {
     return `${this.PANE} [aria-label="Change Authentication type"]`;
-  }
-
-  protected get TABPANEL(): string {
-    return `${this.PANE} [role="tabpanel"]`;
   }
 
   /**
@@ -291,16 +285,6 @@ export abstract class AuthTabPage extends BasePage {
         .selectOption(fields.credentialsInBody ? "true" : "false");
       await this.page.waitForTimeout(500);
     }
-  }
-
-  /**
-   * Clicks the tab within this page's pane identified by its data-key.
-   * @param tab - The data-key of the tab to switch to
-   */
-  protected async switchTab(tab: string): Promise<void> {
-    await this.page
-      .locator(`${this.PANE} [data-key="${tab}"][role="tab"]`)
-      .click();
   }
 
   /**

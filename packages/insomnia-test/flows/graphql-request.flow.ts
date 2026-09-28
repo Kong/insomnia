@@ -101,7 +101,7 @@ export class GraphQLRequestFlow extends BaseFlow {
       await page.prettify();
     }
     if (request.preRequestScript || request.afterResponseScript) {
-      await page.setScripts({
+      await page.scripts.setScripts({
         preRequest: request.preRequestScript,
         afterResponse: request.afterResponseScript,
       });

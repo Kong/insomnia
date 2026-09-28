@@ -104,7 +104,7 @@ export class EventStreamRequestFlow extends BaseFlow {
       await page.setBody(request.body);
     }
     if (request.preRequestScript || request.afterResponseScript) {
-      await page.setScripts({
+      await page.scripts.setScripts({
         preRequest: request.preRequestScript,
         afterResponse: request.afterResponseScript,
       });

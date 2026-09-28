@@ -85,7 +85,7 @@ export class HttpRequestFlow extends BaseFlow {
 
   /**
    * Navigates to `request` and clicks its Auth tab's token-fetch button
-   * (see `HttpRequestPage.fetchOAuth2Tokens()` — "Fetch Tokens" before
+   * (see `AuthTabComponent.fetchOAuth2Tokens()` — "Fetch Tokens" before
    * any token exists, "Refresh Token" once one does), then reads back
    * the resulting Refresh/Identity/Access Token fields in one call.
    * @param request - The request whose Auth tab already has OAuth 2.0 configured
@@ -99,8 +99,8 @@ export class HttpRequestFlow extends BaseFlow {
     await workspace.clickNode(node!);
     await httpRequestPage.navigate();
 
-    await httpRequestPage.fetchOAuth2Tokens();
-    return httpRequestPage.getOAuth2Tokens();
+    await httpRequestPage.auth.fetchOAuth2Tokens();
+    return httpRequestPage.auth.getOAuth2Tokens();
   }
 
   private async applyRequestFields(
@@ -124,7 +124,7 @@ export class HttpRequestFlow extends BaseFlow {
       await this.applyAuthentication(page, request.authentication);
     }
     if (request.preRequestScript || request.afterResponseScript) {
-      await page.setScripts({
+      await page.scripts.setScripts({
         preRequest: request.preRequestScript,
         afterResponse: request.afterResponseScript,
       });
@@ -176,10 +176,10 @@ export class HttpRequestFlow extends BaseFlow {
     authentication: RequestAuthentication,
   ): Promise<void> {
     if (authentication.type === "oauth1") {
-      await page.setOAuth1Fields(authentication);
+      await page.auth.setOAuth1Fields(authentication);
     }
     if (authentication.type === "oauth2") {
-      await page.setOAuth2Fields(authentication);
+      await page.auth.setOAuth2Fields(authentication);
     }
   }
 

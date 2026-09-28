@@ -1349,9 +1349,11 @@ export class WorkspacePage extends BasePage {
     }
     await this.rightClick(node);
 
-    const menuItem = this.page
-      .getByRole("menu")
-      .getByRole("menuitem", { name: contextMenu });
+    const menu = this.page.getByRole("menu");
+    const menuItem = menu
+      .getByRole("menuitem", { name: contextMenu })
+      .or(menu.getByRole("menuitemradio", { name: contextMenu }))
+      .or(menu.getByRole("menuitemcheckbox", { name: contextMenu }));
     try {
       await menuItem.waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
     } catch {

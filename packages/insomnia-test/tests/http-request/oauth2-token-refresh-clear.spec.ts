@@ -92,8 +92,8 @@ test("Verify clearing OAuth 2.0 tokens wipes the stored Refresh/Identity/Access 
 
   const tokensAfterFetch = await httpRequestFlow.fetchOAuth2Tokens(request);
 
-  await httpRequestPage.clearOAuth2Tokens();
-  const tokensAfterClear = await httpRequestPage.getOAuth2Tokens();
+  await httpRequestPage.auth.clearOAuth2Tokens();
+  const tokensAfterClear = await httpRequestPage.auth.getOAuth2Tokens();
 
   expect(tokensAfterFetch.accessToken).not.toBe("");
   expect(tokensAfterClear.accessToken).toBe("");

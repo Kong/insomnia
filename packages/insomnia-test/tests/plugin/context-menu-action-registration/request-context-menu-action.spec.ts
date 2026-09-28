@@ -14,7 +14,6 @@ test(
   "Verify a plugin's context-menu action shows the target item's name and type in a modal",
   { tag: '@sequential' },
   async ({ user }) => {
-    test.fail(true, 'INS-3521');
 
     const { appFlow, workspaceFlow, httpRequestFlow } = user.flowManager;
     const { preferencesPage, workspacePage } = user.pageManager;

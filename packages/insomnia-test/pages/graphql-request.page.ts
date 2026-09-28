@@ -19,7 +19,7 @@ export class GraphQLRequestPage extends RequestPage {
    * @returns the GraphQL request fields, excluding `name`
    */
   async get(): Promise<Omit<GraphQLRequest, "name">> {
-    const scripts = await this.getScripts();
+    const scripts = await this.scripts.getScripts();
     return {
       method: (await this.getMethod()).trim() as HttpMethod,
       url: await this.getUrl(),

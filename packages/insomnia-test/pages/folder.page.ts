@@ -1,7 +1,11 @@
-import { expect } from "@playwright/test";
+import type { ElectronApplication } from "@playwright/test";
+import type { Page } from "playwright-core";
 
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { AuthTabPage } from "./auth-tab.page";
+import { AuthTabComponent } from "./auth-tab.page";
+import { ScriptTabComponent } from "./script-tab.page";
+import { TabPanelPage } from "./tab-panel.page";
+
+const FOLDER_PANE = 'div:has(> [aria-label="Request pane tabs"])';
 
 /**
  * A Collection folder's own editor tab (Auth/Headers/Scripts/Environment/
@@ -9,21 +13,21 @@ import { AuthTabPage } from "./auth-tab.page";
  * confused with the "Folder Settings" dialog its "Settings" item opens,
  * which only has a Name field and a Move/Copy-to-workspace control.
  *
- * Renders the exact same Auth tab component as a request's own pane (see
- * `AuthTabPage`), just without the wrapping `data-testid="request-pane"`
- * a request's pane carries — scoped instead via the tab bar's
- * `aria-label`, which is unique to whichever tab is currently active.
+ * Renders the exact same tab-bar component as a request's own pane, just
+ * without the wrapping `data-testid="request-pane"` a request's pane
+ * carries — scoped instead via the tab bar's `aria-label`, which is
+ * unique to whichever tab is currently active.
  */
-export class FolderPage extends AuthTabPage {
-  protected readonly PANE = 'div:has(> [aria-label="Request pane tabs"])';
+export class FolderPage extends TabPanelPage {
+  /** The Auth tab component for this folder's own pane. */
+  readonly auth: AuthTabComponent;
 
-  /**
-   * Waits for the folder's tab pane to become visible, confirming it's
-   * open and active.
-   */
-  async navigate(): Promise<void> {
-    await expect(this.page.locator(this.PANE)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+  /** The Scripts tab component for this folder's own pane. */
+  readonly scripts: ScriptTabComponent;
+
+  constructor(page: Page, insomnia?: ElectronApplication) {
+    super(page, FOLDER_PANE, insomnia);
+    this.auth = new AuthTabComponent(page, FOLDER_PANE, insomnia);
+    this.scripts = new ScriptTabComponent(page, FOLDER_PANE, insomnia);
   }
 }

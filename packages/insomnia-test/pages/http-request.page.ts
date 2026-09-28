@@ -20,7 +20,7 @@ export class HttpRequestPage extends RequestPage {
    * @returns The request data, omitting its name
    */
   async get(): Promise<Omit<HttpRequest, "name">> {
-    const scripts = await this.getScripts();
+    const scripts = await this.scripts.getScripts();
     return {
       method: (await this.getMethod()).trim() as HttpMethod,
       url: await this.getUrl(),

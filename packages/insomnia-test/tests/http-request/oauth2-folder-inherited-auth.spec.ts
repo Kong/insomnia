@@ -33,7 +33,7 @@ test("Verify a request set to Inherit from parent picks up its folder's OAuth 2.
   );
 
   await folderFlow.open(folder);
-  await folderPage.setOAuth2Fields({
+  await folderPage.auth.setOAuth2Fields({
     type: "oauth2",
     grantType: "client_credentials",
     accessTokenUrl: `${OAUTH2_SERVER}/token`,
@@ -47,7 +47,7 @@ test("Verify a request set to Inherit from parent picks up its folder's OAuth 2.
     method: HttpMethod.Get,
     url: `${OAUTH2_SERVER}/resource`,
   });
-  await httpRequestPage.setAuthType(AuthType.Inherit);
+  await httpRequestPage.auth.setAuthType(AuthType.Inherit);
 
   const response = await httpRequestFlow.send(request);
   const body = response.body as { authorization?: string };

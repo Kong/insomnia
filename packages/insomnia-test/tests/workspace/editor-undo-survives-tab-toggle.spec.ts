@@ -59,12 +59,12 @@ test("Verify a request script keeps undo history across a Pre-request/After-resp
     url: `${HTTP_SERVER}/get`,
   });
 
-  await httpRequestPage.typeScripts({ preRequest: marker });
-  await httpRequestPage.switchScriptTab(ScriptTab.AfterResponse);
-  await httpRequestPage.switchScriptTab(ScriptTab.PreRequest);
+  await httpRequestPage.scripts.typeScripts({ preRequest: marker });
+  await httpRequestPage.scripts.switchScriptTab(ScriptTab.AfterResponse);
+  await httpRequestPage.scripts.switchScriptTab(ScriptTab.PreRequest);
   const requestAfterToggle = await httpRequestPage.get();
 
-  await httpRequestPage.undoScript(ScriptTab.PreRequest);
+  await httpRequestPage.scripts.undoScript(ScriptTab.PreRequest);
   const requestAfterUndo = await httpRequestPage.get();
 
   expect(requestAfterToggle.preRequestScript).toContain(marker);

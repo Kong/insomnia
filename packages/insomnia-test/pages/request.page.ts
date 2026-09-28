@@ -1,15 +1,19 @@
-import type { Locator } from "@playwright/test";
+import type { ElectronApplication, Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
   RequestHeader,
   RequestParameter,
 } from "insomnia-data";
+import type { Page } from "playwright-core";
 
 import type { HttpMethod } from "../enums/http-method";
-import { ScriptTab } from "../enums/script-tab";
 import { throwOnDialog } from "../misc/decorators";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { AuthTabPage } from "./auth-tab.page";
+import { AuthTabComponent } from "./auth-tab.page";
+import { ScriptTabComponent } from "./script-tab.page";
+import { TabPanelPage } from "./tab-panel.page";
+
+const REQUEST_PANE = '[data-testid="request-pane"]';
 
 interface KeyValuePair {
   name: string;
@@ -22,22 +26,26 @@ export interface RequestBody {
   content: string;
 }
 
-export interface RequestScripts {
-  preRequest?: string;
-  afterResponse?: string;
-}
-
-export abstract class RequestPage extends AuthTabPage {
-  protected readonly AFTER_RESPONSE_EDITOR = "div[data-key='after-response']";
+export abstract class RequestPage extends TabPanelPage {
   protected readonly METHOD_BUTTON =
     '[data-testid="request-pane"] button[aria-label="Request Method"]';
   protected readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
-  protected readonly PANE = '[data-testid="request-pane"]';
-  protected readonly PRE_REQUEST_EDITOR = "div[data-key='pre-request']";
   protected readonly SEND_BUTTON: string =
     '[data-testid="request-pane"] button:has-text("Send")';
 
   protected abstract readonly urlBarId: string;
+
+  /** The Auth tab component for this request's own pane. */
+  readonly auth: AuthTabComponent;
+
+  /** The Scripts tab component for this request's own pane. */
+  readonly scripts: ScriptTabComponent;
+
+  constructor(page: Page, insomnia?: ElectronApplication) {
+    super(page, REQUEST_PANE, insomnia);
+    this.auth = new AuthTabComponent(page, REQUEST_PANE, insomnia);
+    this.scripts = new ScriptTabComponent(page, REQUEST_PANE, insomnia);
+  }
 
   /**
    * Builds the CSS selector for this request type's URL bar CodeMirror
@@ -198,35 +206,6 @@ export abstract class RequestPage extends AuthTabPage {
   }
 
   /**
-   * Reads back both the pre-request and after-response scripts by
-   * switching to each script's editor pane in turn. Returns undefined
-   * if both scripts are empty.
-   * @returns The current script(s), or undefined if neither script has content
-   */
-  protected async getScripts(): Promise<RequestScripts | undefined> {
-    await this.page
-      .locator(`${this.PANE} [data-key="scripts"][role="tab"]`)
-      .click();
-    const panel = this.page.locator(this.TABPANEL);
-    const editors = panel.locator(".CodeMirror");
-
-    const preEditor = panel.locator(this.PRE_REQUEST_EDITOR);
-    await preEditor.isVisible();
-    await preEditor.click();
-    const preRequest = await this.readCodeMirror(editors.first());
-
-    const afterEditor = panel.locator(this.AFTER_RESPONSE_EDITOR);
-    await afterEditor.isVisible();
-    await afterEditor.click();
-    const afterResponse = await this.readCodeMirror(editors.first());
-    if (!preRequest && !afterResponse) return undefined;
-    return {
-      ...(preRequest ? { preRequest } : {}),
-      ...(afterResponse ? { afterResponse } : {}),
-    };
-  }
-
-  /**
    * Reads the current value of the URL bar's CodeMirror editor. Confirmed
    * live: right after re-navigating to a just-created/edited request (e.g.
    * `HttpRequestFlow.create()`'s own read-back), the URL bar's CodeMirror
@@ -242,16 +221,6 @@ export abstract class RequestPage extends AuthTabPage {
       expect(attached).toBe(true);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
     return urlBar.evaluate((el) => (el as any).CodeMirror.getValue());
-  }
-
-  /**
-   * Waits for the request pane to become visible, confirming a request
-   * has been opened.
-   */
-  async navigate(): Promise<void> {
-    await expect(this.page.locator(this.PANE)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
   }
 
   /**
@@ -403,33 +372,6 @@ export abstract class RequestPage extends AuthTabPage {
   }
 
   /**
-   * Sets the request's pre-request and/or after-response scripts,
-   * switching to each script's editor pane before writing into it. Only
-   * scripts that are provided are written.
-   * @param scripts - The script(s) to set
-   */
-  async setScripts(scripts: RequestScripts): Promise<void> {
-    await this.switchTab("scripts");
-    const panel = this.page.locator(this.TABPANEL);
-    if (scripts.preRequest) {
-      const preEditor = panel.locator(this.PRE_REQUEST_EDITOR);
-      await preEditor.isVisible();
-      await preEditor.click();
-
-      const editor = panel.locator(".CodeMirror").first();
-      await this.setCodeMirrorValue(editor, scripts.preRequest);
-    }
-    if (scripts.afterResponse) {
-      const afterEditor = panel.locator(this.AFTER_RESPONSE_EDITOR);
-      await afterEditor.isVisible();
-      await afterEditor.click();
-
-      const editor = panel.locator(".CodeMirror").first();
-      await this.setCodeMirrorValue(editor, scripts.afterResponse);
-    }
-  }
-
-  /**
    * Sets the request URL by writing into the URL bar's CodeMirror editor.
    * `setCodeMirrorValue()` itself now handles retrying past a revert
    * (e.g. a `{{ }}`/`{% %}` tag's inline widget redrawing and racing the
@@ -526,61 +468,5 @@ export abstract class RequestPage extends AuthTabPage {
   async undoDocs(): Promise<void> {
     const editor = this.page.locator(this.TABPANEL).locator(".CodeMirror").first();
     await this.undo(() => editor.click());
-  }
-
-  /**
-   * Types into the Scripts tab's Pre-request and/or After-response
-   * editors via real keystrokes (rather than replacing the value
-   * outright like `setScripts()`), so it builds genuine CodeMirror undo
-   * history the way a user's typing would. Only scripts that are
-   * provided are typed into.
-   * @param scripts - The script(s) to type at the end of their current content
-   */
-  async typeScripts(scripts: RequestScripts): Promise<void> {
-    if (scripts.preRequest) {
-      await this.switchScriptTab(ScriptTab.PreRequest);
-      const panel = this.page.locator(this.TABPANEL);
-      const editor = panel.locator(".CodeMirror").first();
-      await editor.click();
-      await this.page.keyboard.press("End");
-      await this.page.keyboard.type(scripts.preRequest);
-      await this.page.waitForTimeout(500);
-    }
-    if (scripts.afterResponse) {
-      await this.switchScriptTab(ScriptTab.AfterResponse);
-      const panel = this.page.locator(this.TABPANEL);
-      const editor = panel.locator(".CodeMirror").first();
-      await editor.click();
-      await this.page.keyboard.press("End");
-      await this.page.keyboard.type(scripts.afterResponse);
-      await this.page.waitForTimeout(500);
-    }
-  }
-
-  /**
-   * Switches to the Scripts tab's Pre-request or After-response sub-tab,
-   * clicks into its editor, and sends the platform's Undo shortcut
-   * (Cmd+Z on macOS, Ctrl+Z elsewhere).
-   * @param which - Which script's editor to undo in
-   */
-  async undoScript(which: ScriptTab): Promise<void> {
-    await this.switchScriptTab(which);
-    const panel = this.page.locator(this.TABPANEL);
-    const editor = panel.locator(".CodeMirror").first();
-    await this.undo(() => editor.click());
-  }
-
-  /**
-   * Switches to the Scripts tab, then to the given script's own sub-tab.
-   * @param which - Which script's sub-tab to switch to
-   */
-  async switchScriptTab(which: ScriptTab): Promise<void> {
-    await this.switchTab("scripts");
-    const panel = this.page.locator(this.TABPANEL);
-    const editorSelector =
-      which === ScriptTab.PreRequest
-        ? this.PRE_REQUEST_EDITOR
-        : this.AFTER_RESPONSE_EDITOR;
-    await panel.locator(editorSelector).click();
   }
 }

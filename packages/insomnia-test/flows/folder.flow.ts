@@ -4,6 +4,7 @@ import type { Collection } from "../models/collection";
 import { Folder } from "../models/folder";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { FolderPage } from "../pages/folder.page";
+import type { RequestScripts } from "../pages/script-tab.page";
 import { BaseFlow } from "./base.flow";
 
 export class FolderFlow extends BaseFlow {
@@ -67,15 +68,27 @@ export class FolderFlow extends BaseFlow {
 
   /**
    * Opens `folder` and clicks its Auth tab's token-fetch button (see
-   * `AuthTabPage.fetchOAuth2Tokens()` — "Fetch Tokens" before any token
-   * exists, "Refresh Token" once one does), then reads back the
+   * `AuthTabComponent.fetchOAuth2Tokens()` — "Fetch Tokens" before any
+   * token exists, "Refresh Token" once one does), then reads back the
    * resulting Refresh/Identity/Access Token fields in one call.
    * @param folder - The folder whose Auth tab already has OAuth 2.0 configured
    * @returns The tokens now stored on that folder's Auth tab
    */
   async fetchOAuth2Tokens(folder: Folder): Promise<OAuth2Tokens> {
     const folderPage = await this.open(folder);
-    await folderPage.fetchOAuth2Tokens();
-    return folderPage.getOAuth2Tokens();
+    await folderPage.auth.fetchOAuth2Tokens();
+    return folderPage.auth.getOAuth2Tokens();
+  }
+
+  /**
+   * Opens `folder` and sets its own pre-request and/or after-response
+   * scripts (see `ScriptTabComponent.setScripts()`) — these run for
+   * every descendant request before/after that request's own script.
+   * @param folder - The folder to set scripts on, as returned by `create()`/`get()`
+   * @param scripts - The script(s) to set
+   */
+  async setScripts(folder: Folder, scripts: RequestScripts): Promise<void> {
+    const folderPage = await this.open(folder);
+    await folderPage.scripts.setScripts(scripts);
   }
 }
