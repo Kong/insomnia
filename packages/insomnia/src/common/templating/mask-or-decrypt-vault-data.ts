@@ -12,13 +12,19 @@ import { getRuntime } from '~/runtimes';
  *
  * Given an object the result is always a fresh copy; a non-object input is returned as is.
  */
-export async function maskOrDecryptVaultDataIfNecessary(
-  vaultEnvironmentData: any,
-  renderPurpose?: RenderPurpose,
-  hideSecretValues?: boolean,
-  forceReveal?: boolean,
-  sensitiveValueCollector?: SensitiveValueCollector | null,
-) {
+export async function maskOrDecryptVaultDataIfNecessary({
+  vaultEnvironmentData,
+  renderPurpose,
+  hideSecretValues,
+  forceReveal,
+  sensitiveValueCollector,
+}: {
+  vaultEnvironmentData: any;
+  renderPurpose?: RenderPurpose;
+  hideSecretValues?: boolean;
+  forceReveal?: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
+}) {
   // getConfidentialValuePolicy is the single decision point for reveal/mask across all render surfaces
   const shouldDecrypt =
     getConfidentialValuePolicy({ purpose: renderPurpose, hideSecretValues, forceReveal }) === 'reveal';
