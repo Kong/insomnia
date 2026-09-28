@@ -156,6 +156,7 @@ jobs:
   # sharded tests finish.
   # ---------------------------------------------------------------------------
   sequential-test:
+    name: Sequential Test
     needs: parallel-test
     timeout-minutes: 30
     runs-on: ubuntu-latest
