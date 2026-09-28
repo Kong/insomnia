@@ -5,6 +5,7 @@ import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
+import { createSensitiveValueCollector } from '../network/sensitive-value-collector';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
@@ -789,6 +790,140 @@ describe('render tests', () => {
     it('works with minimal parameters', async () => {
       const context = await renderUtils.buildRenderContext({});
       expect(context).toEqual({});
+    });
+  });
+
+  describe('collectConfidentialRawValues()', () => {
+    it('registers raw STRING confidential values from all five layers', () => {
+      const rootGlobalEnvironment = envBuilder
+        .data({ globalToken: 'global-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_global',
+            name: 'globalToken',
+            value: 'global-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+      const rootEnvironment = envBuilder
+        .data({ token: 'root-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_root',
+            name: 'token',
+            value: 'root-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+      const subEnvironment = envBuilder
+        .data({ subToken: 'sub-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_sub',
+            name: 'subToken',
+            value: 'sub-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+      const ancestors = [
+        {
+          ...reqGroupBuilder.environment({ folderToken: 'folder-secret' }).build(),
+          kvPairData: [
+            {
+              id: 'envPair_folder',
+              name: 'folderToken',
+              value: 'folder-secret',
+              type: EnvironmentKvPairDataType.STRING,
+              enabled: true,
+              isConfidential: true,
+            },
+          ],
+        },
+      ];
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues(
+        { ancestors, rootEnvironment, subEnvironment, rootGlobalEnvironment },
+        collector,
+      );
+
+      expect(collector.redact('global-secret root-secret sub-secret folder-secret')).toBe(
+        '•••••• •••••• •••••• ••••••',
+      );
+    });
+
+    it('parses JSON confidential rows and registers each leaf value', () => {
+      const rootEnvironment = envBuilder
+        .data({ config: { enabled: true } })
+        .kvPairData([
+          {
+            id: 'envPair_config',
+            name: 'config',
+            value: JSON.stringify({ token: 'nested-secret', nested: { deep: 'deep-secret' } }),
+            type: EnvironmentKvPairDataType.JSON,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.redact('nested-secret and deep-secret')).toBe('•••••• and ••••••');
+    });
+
+    it('ignores non-confidential, disabled, and SECRET rows', () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'not-confidential' })
+        .kvPairData([
+          {
+            id: 'envPair_public',
+            name: 'token',
+            value: 'not-confidential',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: false,
+          },
+          {
+            id: 'envPair_disabled',
+            name: 'disabledToken',
+            value: 'disabled-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: false,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_secret',
+            name: 'vaultToken',
+            value: 'vault-secret',
+            type: EnvironmentKvPairDataType.SECRET,
+            enabled: true,
+            isConfidential: false,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.isEmpty).toBe(true);
+    });
+
+    it('does nothing when given no layers', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({}, collector);
+
+      expect(collector.isEmpty).toBe(true);
     });
   });
 

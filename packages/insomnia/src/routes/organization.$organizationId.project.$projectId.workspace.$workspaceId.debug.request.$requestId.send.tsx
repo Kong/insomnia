@@ -15,7 +15,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
 import { getContentDispositionHeader } from '~/common/misc';
-import { createSensitiveValueCollector } from '~/common/network/sensitive-value-collector';
+import { createSensitiveValueCollector, withRedaction } from '~/common/network/sensitive-value-collector';
+import { collectConfidentialRawValues } from '~/common/render';
+import type { RenderContextAncestor } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
@@ -132,6 +134,27 @@ export const sendActionImplementation = async (options: {
   const requestData = await fetchRequestData(requestId);
   const requestMeta = await services.requestMeta.getOrCreateByParentId(requestId);
   const collector = createSensitiveValueCollector(requestData.settings.hideSecretValuesInPreviewAndConsole ?? true);
+  if (collector) {
+    // Pre-fill with every isConfidential:true KV pair's raw value across all five
+    // environment layers, before the pre-request script (and its own early-exit paths:
+    // a thrown error, or skipRequest) ever runs. Render below registers the same values
+    // again (now rendered) — harmless, the collector dedupes via a Set.
+    collectConfidentialRawValues(
+      {
+        ancestors: requestData.ancestors as RenderContextAncestor[],
+        rootEnvironment: requestData.baseEnvironment,
+        subEnvironment: requestData.environment,
+        rootGlobalEnvironment: requestData.activeGlobalBaseEnvironment,
+        subGlobalEnvironment: requestData.activeGlobalEnvironment,
+      },
+      collector,
+    );
+  }
+  // Constructed up-front (before either script runs) rather than after render, so both
+  // script executions and the curl send below can share one redacting runtime. redact()
+  // reads the collector's live contents at call time, so values registered later by
+  // render/vault-decrypt/tag-execution are still picked up on every subsequent write.
+  const redactingRuntime = withRedaction(runtime, collector);
   const transientVariables = nullableTransientVariables || {
     ...models.environment.init(),
     _id: uuidv4(),
@@ -150,7 +173,8 @@ export const sendActionImplementation = async (options: {
     userUploadEnvironment,
     iteration,
     iterationCount,
-    runtime,
+    redactingRuntime,
+    collector,
   );
 
   if ('error' in mutatedContext) {
@@ -217,10 +241,6 @@ export const sendActionImplementation = async (options: {
   // TODO: remove this temporary hack to support GraphQL variables in the request body properly
   parseGraphQLReqeustBody(renderedRequest);
 
-  const redactingRuntime: SendActionRuntime = collector
-    ? { appendTimeline: (path, logs) => runtime.appendTimeline(path, logs.map(line => collector.redact(line))) }
-    : runtime;
-
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(
     renderedRequest,
@@ -272,7 +292,8 @@ export const sendActionImplementation = async (options: {
     response,
     iteration,
     iterationCount,
-    runtime,
+    runtime: redactingRuntime,
+    sensitiveValueCollector: collector,
   });
 
   if ('error' in postMutatedContext) {

@@ -5,13 +5,19 @@ import type { RenderPurpose, SensitiveValueCollector } from '~/common/templating
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 
-export async function maskOrDecryptVaultDataIfNecessary(
-  vaultEnvironmentData: any,
-  renderPurpose?: RenderPurpose,
-  hideSecretValues?: boolean,
-  forceReveal?: boolean,
-  sensitiveValueCollector?: SensitiveValueCollector | null,
-) {
+export async function maskOrDecryptVaultDataIfNecessary({
+  vaultEnvironmentData,
+  renderPurpose,
+  hideSecretValues,
+  forceReveal,
+  sensitiveValueCollector,
+}: {
+  vaultEnvironmentData: any;
+  renderPurpose?: RenderPurpose;
+  hideSecretValues?: boolean;
+  forceReveal?: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
+}) {
   const shouldDecrypt =
     getConfidentialValuePolicy({ purpose: renderPurpose, hideSecretValues, forceReveal }) === 'reveal';
 

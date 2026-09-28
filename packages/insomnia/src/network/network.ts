@@ -49,6 +49,7 @@ const { isRequestGroup } = models.requestGroup;
 
 export interface SendActionRuntime {
   appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
+  appendTimelineOnError: (timelinePath: string, data: string) => Promise<void>;
 }
 
 export const getOrInheritAuthentication = ({
@@ -292,6 +293,7 @@ export const tryToExecutePreRequestScript = async (
   iteration?: number,
   iterationCount?: number,
   runtime?: SendActionRuntime,
+  sensitiveValueCollector?: SensitiveValueCollector | null,
 ) => {
   const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups
@@ -350,6 +352,7 @@ export const tryToExecutePreRequestScript = async (
     transientVariables,
     runtime,
     parentFolders,
+    sensitiveValueCollector,
   });
   if (!mutatedContext || 'error' in mutatedContext) {
     return {
@@ -507,6 +510,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     runtime,
     parentFolders,
     settings,
+    sensitiveValueCollector,
   } = context;
   invariant(script, 'script must be provided');
 
@@ -521,10 +525,11 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   let vault;
   if (globals && models.environment.vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
-    globals.data[models.environment.vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
-      globals.data[models.environment.vaultEnvironmentPath],
-      'script',
-    );
+    globals.data[models.environment.vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary({
+      vaultEnvironmentData: globals.data[models.environment.vaultEnvironmentPath],
+      renderPurpose: 'script',
+      sensitiveValueCollector,
+    });
     vault = globals.data[models.environment.vaultEnvironmentPath];
   }
 
@@ -662,10 +667,13 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await getRuntime().network.appendToTimelineOnError(
-      timelinePath,
-      serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
-    );
+    const errorTimelineData = serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]);
+    // Route through the (possibly redacting) runtime rather than calling the underlying
+    // service directly, so a thrown error message that echoes a confidential value
+    // (e.g. `throw new Error('auth failed for ' + token)`) is still redacted before disk.
+    runtime
+      ? await runtime.appendTimelineOnError(timelinePath, errorTimelineData)
+      : await getRuntime().network.appendToTimelineOnError(timelinePath, errorTimelineData);
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
     return { error: errMessage };
@@ -688,6 +696,7 @@ interface RequestContextForScript {
   execution?: ExecutionOption;
   transientVariables: Environment;
   parentFolders: { id: string; name: string; environment: Record<string, any> }[];
+  sensitiveValueCollector?: SensitiveValueCollector | null;
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
@@ -1043,4 +1052,5 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
 
 export const defaultSendActionRuntime: SendActionRuntime = {
   appendTimeline: (timelinePath, logs) => getRuntime().network.appendTimelineLines(timelinePath, logs),
+  appendTimelineOnError: (timelinePath, data) => getRuntime().network.appendToTimelineOnError(timelinePath, data),
 };

@@ -1,8 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 
-import { collectLeafStrings, createSensitiveValueCollector, redactConfidentialText } from './sensitive-value-collector';
+import {
+  collectLeafStrings,
+  createSensitiveValueCollector,
+  redactConfidentialText,
+  withRedaction,
+} from './sensitive-value-collector';
 
 describe('redactConfidentialText', () => {
   it('replaces a matching substring', () => {
@@ -92,5 +97,48 @@ describe('collectLeafStrings', () => {
     const collector = createSensitiveValueCollector(true)!;
     collectLeafStrings({ n: 42, b: true, nil: null }, collector);
     expect(collector.isEmpty).toBe(true);
+  });
+});
+
+describe('withRedaction', () => {
+  const makeRuntime = () => ({
+    appendTimeline: vi.fn(async () => {}),
+    appendTimelineOnError: vi.fn(async () => {}),
+  });
+
+  it('returns the runtime unchanged when the collector is null', () => {
+    const runtime = makeRuntime();
+    expect(withRedaction(runtime, null)).toBe(runtime);
+  });
+
+  it('redacts every log line before delegating to the wrapped appendTimeline', async () => {
+    const runtime = makeRuntime();
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('mysecret');
+
+    await withRedaction(runtime, collector).appendTimeline('/tmp/timeline', ['value=mysecret', 'unrelated']);
+
+    expect(runtime.appendTimeline).toHaveBeenCalledWith('/tmp/timeline', ['value=••••••', 'unrelated']);
+  });
+
+  it('redacts the error payload before delegating to the wrapped appendTimelineOnError', async () => {
+    const runtime = makeRuntime();
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('mysecret');
+
+    await withRedaction(runtime, collector).appendTimelineOnError('/tmp/timeline', 'auth failed for mysecret');
+
+    expect(runtime.appendTimelineOnError).toHaveBeenCalledWith('/tmp/timeline', 'auth failed for ••••••');
+  });
+
+  it('picks up values registered after the wrapper was constructed', async () => {
+    const runtime = makeRuntime();
+    const collector = createSensitiveValueCollector(true)!;
+    const redactingRuntime = withRedaction(runtime, collector);
+
+    collector.register('late-secret');
+    await redactingRuntime.appendTimeline('/tmp/timeline', ['late-secret']);
+
+    expect(runtime.appendTimeline).toHaveBeenCalledWith('/tmp/timeline', ['••••••']);
   });
 });

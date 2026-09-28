@@ -4,6 +4,10 @@
 //
 //   sendActionImplementation
 //     │ createSensitiveValueCollector(hideSecretValuesInPreviewAndConsole)
+//     │ collectConfidentialRawValues(...) pre-fills the collector with every isConfidential:true
+//     │   KV pair's raw value across all five environment layers, before any render happens.
+//     │   This covers early-exit paths (pre-request script throws, skipRequest) where the
+//     │   normal render-time registration below never runs.
 //     ↓
 //   tryToInterpolateRequest → getRenderedRequestAndContext → getRenderContext
 //     │  buildRenderContext registers three value categories into the collector:
@@ -11,19 +15,39 @@
 //     │    ② decrypted SECRET vault values   (maskOrDecryptVaultDataIfNecessary)
 //     │    ③ external vault tag results      (liquid-extension.ts ext.run() return value)
 //     ↓
-//   redactingRuntime.appendTimeline wraps the real appendTimeline:
+//   withRedaction(runtime, collector) wraps appendTimeline/appendTimelineOnError:
 //     logs.map(line => collector.redact(line))   ← replaces every registered value with ••••••
 //     ↓
-//   sendCurlAndWriteTimeline → timeline lines written to disk are already redacted
+//   sendCurlAndWriteTimeline, and pre-/after-response script console logs
+//   (tryToExecuteScript → runtime.appendTimeline / runtime.appendTimelineOnError) →
+//   timeline lines written to disk are already redacted.
 //
-// Script console redaction (pre/after-response scripts) and WebSocket/SocketIO
-// timeline redaction are deferred to a follow-up phase.
+// Pre-/after-response scripts also decrypt global-vault secrets via
+// maskOrDecryptVaultDataIfNecessary({ ..., sensitiveValueCollector }) inside tryToExecuteScript,
+// so those register into the same collector before their console.log output is written.
+//
+// WebSocket/SocketIO timeline redaction is deferred to a follow-up phase (T10).
 
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import type { SensitiveValueCollector } from '~/common/templating/types';
+import type { SendActionRuntime } from '~/network/network';
 
 
 export type { SensitiveValueCollector };
+
+export function withRedaction(
+  runtime: SendActionRuntime,
+  collector: SensitiveValueCollector | null,
+): SendActionRuntime {
+  if (!collector) {
+    return runtime;
+  }
+
+  return {
+    appendTimeline: (timelinePath, logs) => runtime.appendTimeline(timelinePath, logs.map(line => collector.redact(line))),
+    appendTimelineOnError: (timelinePath, data) => runtime.appendTimelineOnError(timelinePath, collector.redact(data)),
+  };
+}
 
 export function collectLeafStrings(value: any, collector: SensitiveValueCollector): void {
   if (typeof value === 'string') {
