@@ -285,7 +285,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-sequential
+          name: playwright-report
           path: packages/insomnia-test/playwright-report/
           retention-days: 7
           if-no-files-found: ignore
