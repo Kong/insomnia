@@ -6,7 +6,7 @@ import { Project } from '../../models/project';
 
 test(
   'Verify deleting a branch checks out master and removes it from the list',
-  { tag: '@sequential' },
+  { tag: 'sequential' },
   async ({ user }) => {
     const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
     const { gitSyncPage } = user.pageManager;

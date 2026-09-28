@@ -37,7 +37,7 @@ test('Verify pre-request script manipulates request headers and body via insomni
 
 test(
   'Verify pre-request script sets bearer auth via insomnia.request.auth',
-  { tag: '@sequential' },
+  { tag: 'sequential' },
   async ({ user }) => {
     const { httpRequestFlow, workspaceFlow } = user.flowManager;
 

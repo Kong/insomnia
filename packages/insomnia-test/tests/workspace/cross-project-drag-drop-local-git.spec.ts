@@ -10,7 +10,7 @@ import { Project } from '../../models/project';
 
 test(
   'Verify dragging a request between a Local project and a Git project moves it in both directions',
-  { tag: '@sequential' },
+  { tag: 'sequential' },
   async ({ user }) => {
     const { workspaceFlow, httpRequestFlow, preferencesFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;

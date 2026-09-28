@@ -5,7 +5,7 @@ import { expect, getServerBranches, getServerCommits, GIT_CREDENTIAL, test } fro
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 
-test('Verify pushing committed changes to the remote succeeds', { tag: '@sequential' }, async ({ user }) => {
+test('Verify pushing committed changes to the remote succeeds', { tag: 'sequential' }, async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
