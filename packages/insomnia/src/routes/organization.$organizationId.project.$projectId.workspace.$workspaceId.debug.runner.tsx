@@ -999,6 +999,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const noLogRuntime = {
     appendTimeline: async (_timelinePath: string, _logs: string[]) => {}, // no op
+    appendTimelineOnError: async (_timelinePath: string, _data: string) => {}, // no op
   };
 
   try {
