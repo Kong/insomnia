@@ -638,13 +638,18 @@ async function getGitFSClient({
   // result. Otherwise (branch checkout, clone, merge), report it as a file
   // problem so it's still visible via the Git-Sync dropdown's listener.
   let blockedWrites: BlockedWrite[] | null = null;
-  const onBlockedWrite: BlockedWriteHandler = (relPath, message) => {
+  // `relPath` is relative to whichever client's own base reported it (e.g.
+  // the "other" data client below is rooted at `baseDir/other`, not
+  // `baseDir`) — bind the handler to that base so the recorded absolute
+  // path matches the real target.
+  const makeOnBlockedWrite = (clientBase: string): BlockedWriteHandler => (relPath, message) => {
     if (blockedWrites) {
       blockedWrites.push({ relPath, message });
     } else {
-      repoFileWatcherRegistry.reportWriteBlocked(gitRepositoryId, path.join(baseDir, relPath), relPath, message);
+      repoFileWatcherRegistry.reportWriteBlocked(gitRepositoryId, path.join(clientBase, relPath), relPath, message);
     }
   };
+  const onBlockedWrite = makeOnBlockedWrite(baseDir);
   const collectBlockedWrites = {
     startCollectBlockedWrites: (target: BlockedWrite[]) => {
       blockedWrites = target;
@@ -663,7 +668,8 @@ async function getGitFSClient({
     const gitDataClient = fsClient(baseDir, onBlockedWrite);
 
     // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-    const otherDataClient = fsClient(path.join(baseDir, 'other'), onBlockedWrite);
+    const otherBaseDir = path.join(baseDir, 'other');
+    const otherDataClient = fsClient(otherBaseDir, makeOnBlockedWrite(otherBaseDir));
 
     // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
     const routableFS = routableFSClient(otherDataClient, {
