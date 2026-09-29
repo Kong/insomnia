@@ -285,12 +285,25 @@ jobs:
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-rerun.zip
+          COVERAGE: 'true'
         run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --workers=1 $(cat failed-tests.txt)
 
       - name: Record test outcome
         id: outcome
         if: always()
         run: echo "passed=${{ steps.run_tests.outcome == 'success' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload coverage (raw)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          # Feeds insomnia-test-result's "Merge coverage reports" step (its
+          # download pattern is "coverage-raw-*") so the rerun's coverage is
+          # folded into the final merged coverage report too.
+          name: coverage-raw-rerun
+          path: packages/insomnia-test/coverage/raw/
+          retention-days: 1
+          if-no-files-found: ignore
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -323,8 +336,9 @@ jobs:
   # Failed Test Review's re-run of the failures succeeded.
   #
   # It also merges every shard's raw V8 coverage data (collected on both
-  # develop pushes and PRs — see parallel-test's COVERAGE env) into one
-  # coverage report — that part runs on every trigger this workflow has
+  # develop pushes and PRs — see parallel-test's COVERAGE env), plus
+  # sequential-test's rerun coverage when it ran (coverage-raw-rerun), into
+  # one coverage report — that part runs on every trigger this workflow has
   # (push and pull_request are the only two, so no `if` gate is needed) —
   # and every shard's blob report into one full-suite Playwright report,
   # which stays `if: github.event_name == 'push'` (PR-only isn't wired up
@@ -422,7 +436,7 @@ jobs:
         run: |
           ids=$(gh api --paginate \
             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-            --jq '.artifacts[] | select(.name | test("^(coverage-raw|playwright-report|playwright-json)-[0-9]+$|^blob-report-([0-9]+|rerun)$")) | .id')
+            --jq '.artifacts[] | select(.name | test("^(playwright-report|playwright-json)-[0-9]+$|^coverage-raw-([0-9]+|rerun)$|^blob-report-([0-9]+|rerun)$")) | .id')
           for id in $ids; do
             echo "Deleting intermediate artifact $id"
             gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
