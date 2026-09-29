@@ -328,7 +328,7 @@ jobs:
   insomnia-test-result:
     name: Insomnia Test Result
     needs: [parallel-test, sequential-test]
-    if: always()
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
