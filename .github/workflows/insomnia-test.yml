@@ -315,16 +315,14 @@ jobs:
   # It also merges every shard's raw V8 coverage data (collected on both
   # develop pushes and PRs — see parallel-test's COVERAGE env), plus
   # sequential-test's rerun coverage when it ran (coverage-raw-rerun), into
-  # one coverage report — that part runs on every trigger this workflow has
-  # (push and pull_request are the only two, so no `if` gate is needed) —
-  # and every shard's blob report into one full-suite Playwright report,
-  # which stays `if: github.event_name == 'push'` (PR-only isn't wired up
-  # for that part yet). Each merge step is its own `continue-on-error: true`
-  # so it never affects the pass/fail gate below. By the time this job runs,
-  # sequential-test is already done consuming the per-shard artifacts, so it
-  # finishes by deleting every per-shard intermediate (coverage-raw-*,
-  # playwright-report-*, playwright-json-*, blob-report-*), leaving only the
-  # merged artifact(s).
+  # one coverage report, and every shard's blob report into one full-suite
+  # Playwright report — both run on every trigger this workflow has (push
+  # and pull_request are the only two, so no `if` gate is needed on either).
+  # Each merge step is its own `continue-on-error: true` so it never affects
+  # the pass/fail gate below. By the time this job runs, sequential-test is
+  # already done consuming the per-shard artifacts, so it finishes by
+  # deleting every per-shard intermediate (coverage-raw-*, playwright-report-*,
+  # playwright-json-*, blob-report-*), leaving only the merged artifact(s).
   # ---------------------------------------------------------------------------
   insomnia-test-result:
     name: Insomnia Test Result
@@ -378,7 +376,6 @@ jobs:
           retention-days: 30
 
       - name: Download blob reports from all shards
-        if: ${{ github.event_name == 'push' }}
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -387,13 +384,11 @@ jobs:
           merge-multiple: true
 
       - name: Merge Playwright reports
-        if: ${{ github.event_name == 'push' }}
         continue-on-error: true
         working-directory: packages/insomnia-test
         run: npx playwright merge-reports --reporter=html ../../all-blob-reports
 
       - name: Upload merged Playwright report
-        if: ${{ github.event_name == 'push' }}
         continue-on-error: true
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
@@ -401,11 +396,10 @@ jobs:
           path: packages/insomnia-test/playwright-report/
           retention-days: 30
 
-      # coverage-raw-*/playwright-report-[0-9]+/playwright-json-*/
+      # coverage-raw-*/playwright-report-([0-9]+|rerun)/playwright-json-*/
       # blob-report-([0-9]+|rerun) were only a transport into this job — now
       # that they're merged, delete them so only the two artifacts uploaded
-      # above remain. playwright-report-rerun is intentionally left alone —
-      # see its own upload step's comment.
+      # above remain.
       - name: Delete per-shard intermediate artifacts
         continue-on-error: true
         env:
@@ -413,7 +407,7 @@ jobs:
         run: |
           ids=$(gh api --paginate \
             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-            --jq '.artifacts[] | select(.name | test("^(playwright-report|playwright-json)-[0-9]+$|^coverage-raw-([0-9]+|rerun)$|^blob-report-([0-9]+|rerun)$")) | .id')
+            --jq '.artifacts[] | select(.name | test("^playwright-report-([0-9]+|rerun)$|^playwright-json-[0-9]+$|^coverage-raw-([0-9]+|rerun)$|^blob-report-([0-9]+|rerun)$")) | .id')
           for id in $ids; do
             echo "Deleting intermediate artifact $id"
             gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
