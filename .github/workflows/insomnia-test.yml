@@ -186,67 +186,6 @@ jobs:
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------
-  # Merges every shard's raw V8 coverage data (only produced on develop
-  # pushes — see parallel-test's COVERAGE env) into one report, then deletes
-  # the per-shard intermediates so only the merged report's artifact
-  # remains.
-  # ---------------------------------------------------------------------------
-  merge-coverage:
-    name: Merge Coverage
-    needs: parallel-test
-    if: ${{ github.event_name == 'push' && !cancelled() }}
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: '24'
-
-      - name: Install test dependencies
-        working-directory: packages/insomnia-test
-        run: npm install --no-save monocart-coverage-reports
-
-      - name: Download raw coverage from all shards
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          path: coverage-raw
-          pattern: coverage-raw-*
-
-      - name: Merge coverage reports
-        working-directory: packages/insomnia-test
-        run: node misc/merge-coverage.js ../../coverage-raw
-
-      - name: Upload merged coverage report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: coverage-report
-          path: packages/insomnia-test/coverage-merged/
-          retention-days: 30
-
-      # The per-shard coverage-raw-* artifacts are only a transport into
-      # this job — now that they're merged, delete them so only the final
-      # coverage-report artifact remains.
-      - name: Delete per-shard intermediate artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ids=$(gh api --paginate \
-            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-            --jq '.artifacts[] | select(.name | test("^coverage-raw-[0-9]+$")) | .id')
-          for id in $ids; do
-            echo "Deleting intermediate artifact $id"
-            gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
-          done
-
-  # ---------------------------------------------------------------------------
   # Look at every shard's JSON report and collect the tests that were still
   # failing after Playwright's own in-job retries. These get handed to
   # sequential-test to run one more time, single-threaded.
@@ -360,7 +299,10 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          # Distinct from merge-coverage's "playwright-report" (the full
+          # merged suite report) — this one only covers the tests re-run
+          # here.
+          name: playwright-report-rerun
           path: packages/insomnia-test/playwright-report/
           retention-days: 7
           if-no-files-found: ignore
@@ -370,13 +312,116 @@ jobs:
   # this job from running. This is the one job that actually gates the
   # workflow: pass if Parallel Test had no failures, otherwise pass only if
   # Failed Test Review's re-run of the failures succeeded.
+  #
+  # It also merges every shard's raw V8 coverage data (only produced on
+  # develop pushes — see parallel-test's COVERAGE env) and every shard's
+  # blob report into one coverage report and one full-suite Playwright
+  # report — each merge step is its own `if: github.event_name == 'push'` +
+  # `continue-on-error: true`, so it never affects the pass/fail gate below.
+  # By the time this job runs, collect-failed-tests/sequential-test are
+  # already done consuming the per-shard artifacts, so it finishes by
+  # deleting every per-shard intermediate (coverage-raw-*,
+  # playwright-report-*, playwright-json-*, blob-report-*), leaving only
+  # the two merged artifacts.
   # ---------------------------------------------------------------------------
   insomnia-test-result:
     name: Insomnia Test Result
-    needs: [collect-failed-tests, sequential-test]
+    needs: [parallel-test, collect-failed-tests, sequential-test]
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      actions: write
     steps:
+      - name: Checkout repo
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Node.js
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+
+      # Full install (not just monocart-coverage-reports) so `npx playwright
+      # merge-reports` below is the exact same Playwright version the shards
+      # generated their blob reports with.
+      - name: Install test dependencies
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        run: |
+          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
+          npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download raw coverage from all shards
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: coverage-raw
+          pattern: coverage-raw-*
+
+      - name: Merge coverage reports
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        working-directory: packages/insomnia-test
+        run: node misc/merge-coverage.js ../../coverage-raw
+
+      - name: Upload merged coverage report
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: coverage-report
+          path: packages/insomnia-test/coverage-merged/
+          retention-days: 30
+
+      - name: Download blob reports from all shards
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge Playwright reports
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        working-directory: packages/insomnia-test
+        run: npx playwright merge-reports --reporter=html ../../all-blob-reports
+
+      - name: Upload merged Playwright report
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: playwright-report
+          path: packages/insomnia-test/playwright-report/
+          retention-days: 30
+
+      # coverage-raw-*/playwright-report-*/playwright-json-*/blob-report-*
+      # were only a transport into this job — now that they're merged,
+      # delete them so only the two artifacts uploaded above remain.
+      - name: Delete per-shard intermediate artifacts
+        if: ${{ github.event_name == 'push' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ids=$(gh api --paginate \
+            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.name | test("^(coverage-raw|playwright-report|playwright-json|blob-report)-[0-9]+$")) | .id')
+          for id in $ids; do
+            echo "Deleting intermediate artifact $id"
+            gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
+          done
+
       - name: Evaluate result
         run: |
           if [ "${{ needs.collect-failed-tests.outputs.has_failures }}" != "true" ]; then
