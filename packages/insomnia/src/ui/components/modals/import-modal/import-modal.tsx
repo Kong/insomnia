@@ -188,6 +188,10 @@ export interface ImportSource {
   operationId?: string;
   autoScan?: boolean;
   startedAt?: number;
+  // Preselects this API Collection as the import target in the scan-results
+  // form. Set when the import is triggered from inside a workspace (e.g.
+  // pasting a cURL with no focus).
+  defaultWorkspaceId?: string;
 }
 
 interface ImportModalProps extends ModalProps {
@@ -340,7 +344,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       data.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
     );
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
-  const header = shouldImportToWorkspace
+  const header = shouldImportToWorkspace && workspaceName
     ? `Import to "${workspaceName}" Workspace`
     : projectName
       ? `Import to "${projectName}" Project`
@@ -379,6 +383,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
             defaultProjectId={defaultProjectId}
+            defaultWorkspaceId={from.defaultWorkspaceId}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -641,6 +646,7 @@ const ImportResourcesForm = ({
   disabled,
   loading,
   defaultProjectId,
+  defaultWorkspaceId,
   isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
@@ -654,6 +660,7 @@ const ImportResourcesForm = ({
   disabled: boolean;
   loading: boolean;
   defaultProjectId: string;
+  defaultWorkspaceId?: string;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
   const { organizationId } = useParams() as {
@@ -684,6 +691,24 @@ const ImportResourcesForm = ({
       });
     }
   }, [organizationId, selectedProjectId, workspacesFetcher]);
+  // Preselect the current API Collection when the import was triggered from
+  // inside one (e.g. pasting a cURL). Waits for the workspace list so the
+  // preselect only applies to collections the select actually offers, and
+  // applies exactly once so revalidation cannot override the user's choice.
+  const didPreselectRef = useRef(false);
+  useEffect(() => {
+    if (didPreselectRef.current || !defaultWorkspaceId || !workspacesFetcher.data) {
+      return;
+    }
+    const isOffered = workspacesFetcher.data.files.some(
+      file =>
+        file.workspace?._id === defaultWorkspaceId && (file.scope === 'collection' || file.scope === 'design'),
+    );
+    if (isOffered) {
+      didPreselectRef.current = true;
+      setSelectedWorkspaceId(defaultWorkspaceId);
+    }
+  }, [defaultWorkspaceId, workspacesFetcher.data]);
   // List collections for active project, sorted by last modified timestamp descending
   // Should we list design or mcp?
   const selectedNewProject = !selectedProjectId;
