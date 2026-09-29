@@ -60,11 +60,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
 };
 
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
-  // TEMP DIAGNOSTIC: see matching note in ~/common/project.ts's wrapWithLock.
-  const diagStart = Date.now();
-  console.log(`[create-project-timing] createProjectImpl start (storageType=${newProjectData.storageType})`);
   const user = await services.userSession.get();
-  console.log(`[create-project-timing] userSession.get() done after ${Date.now() - diagStart}ms`);
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
   invariant(
@@ -73,12 +69,10 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
   );
 
   if (newProjectData.storageType === 'local') {
-    const dbStart = Date.now();
     const project = await services.project.create({
       name: newProjectData.name,
       parentId: organizationId,
     });
-    console.log(`[create-project-timing] services.project.create() done after ${Date.now() - dbStart}ms (total ${Date.now() - diagStart}ms)`);
 
     return project._id;
   }

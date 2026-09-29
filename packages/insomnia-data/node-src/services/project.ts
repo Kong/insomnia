@@ -75,8 +75,6 @@ export async function getFirstProjectOfOrganization(organizationId: string) {
 const TEAM_PROJECTS_FETCH_TIMEOUT_MS = 8000;
 
 export async function getAllTeamProjects(organizationId: string) {
-  // TEMP DIAGNOSTIC: see matching note in insomnia/src/common/project.ts's wrapWithLock.
-  const diagStart = Date.now();
   const { id: sessionId } = await userSessionService.get();
   if (!sessionId) {
     return [];
@@ -84,7 +82,6 @@ export async function getAllTeamProjects(organizationId: string) {
 
   console.log('[project] Fetching', organizationId);
   const response = await fetchTeamProjects({ sessionId, organizationId, timeout: TEAM_PROJECTS_FETCH_TIMEOUT_MS });
-  console.log(`[create-project-timing] fetchTeamProjects done after ${Date.now() - diagStart}ms`);
   return response.data;
 }
 
@@ -160,21 +157,14 @@ export async function syncTeamProjects({
 }
 
 export async function syncProjects(organizationId: string) {
-  // TEMP DIAGNOSTIC: see matching note in insomnia/src/common/project.ts's wrapWithLock.
-  const diagStart = Date.now();
-  console.log(`[create-project-timing] syncProjects(${organizationId}) start`);
   // Local-only organizations have no team projects to fetch, so bail out before the request.
   if (models.organization.isLocalOrganizationId(organizationId)) {
-    console.log('[create-project-timing] syncProjects bailed out (local-only organization)');
     return;
   }
   const user = await userSessionService.get();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
   if (Array.isArray(teamProjects) && user.id) {
-    const syncStart = Date.now();
     await syncTeamProjects({ teamProjects, organizationId });
-    console.log(`[create-project-timing] syncTeamProjects() done after ${Date.now() - syncStart}ms`);
   }
-  console.log(`[create-project-timing] syncProjects total ${Date.now() - diagStart}ms`);
 }

@@ -87,23 +87,11 @@ const lockGenerator = () => {
 
   const wrapWithLock = <T extends (...args: any[]) => Promise<any>>(fn: T): T => {
     const wrappedFn = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
-      // TEMP DIAGNOSTIC: timing breakdown to root-cause the intermittent
-      // "Create project" hang seen in CI (see insomnia PR #10556). Remove
-      // once the real bottleneck is identified from CI console-log output.
-      const callId = Math.random().toString(36).slice(2, 8);
-      const waitStart = Date.now();
-      console.log(`[lock-timing] ${callId} waiting for lock`);
       await lock();
-      const waitMs = Date.now() - waitStart;
-      console.log(`[lock-timing] ${callId} acquired lock after ${waitMs}ms`);
       try {
-        const runStart = Date.now();
-        const result = await fn(...args);
-        console.log(`[lock-timing] ${callId} fn() finished after ${Date.now() - runStart}ms (holding lock)`);
-        return result;
+        return await fn(...args);
       } finally {
         await unlock();
-        console.log(`[lock-timing] ${callId} released lock`);
       }
     };
     return wrappedFn as T;
