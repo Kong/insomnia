@@ -78,6 +78,12 @@ openSettings(project: Project): Promise<void>
   // right-clicks project's node -> context menu "Settings" -> waits for pageManager.projectSettingsPage.navigate()
   // to confirm the "Create or update dialog" loaded in settings mode. Leaves the dialog open for further
   // pageManager.projectSettingsPage interaction (e.g. relocating a Git Sync project's repo — see gitSyncFlow below).
+// create(item: Project) gives WorkspacePage.clickCreate() a longer-than-default timeout budget
+// (DEFAULT_TIMEOUT * 2) before waiting for the create dialog to close — creating a Project also
+// provisions its NeDB records before the dialog closes, observed to occasionally run past the
+// plain UI-only default under CI load. clickCreate(timeoutMs = DEFAULT_TIMEOUT) itself now takes
+// an optional timeout param for exactly this — pass a wider one yourself if you call it directly
+// for a scenario that's slow to settle (e.g. a Git-backed collection's fileName-carrying create).
 
 renameProject(project: Project, newName: string): Promise<Project>
   // Project has no "Rename" context-menu item (see above) — this is the only way to rename one. Calls
@@ -154,6 +160,8 @@ clickItemContextMenu(nodeName: string, contextMenu: string, parent?: TreeNode): 
   // clickContextMenu, the label isn't restricted to the ContextMenuItem enum — this is what a
   // plugin-injected request/collection action (a `requestActions` entry with a dynamic label) needs to
   // trigger. Throws if the node or the menu item is never found, instead of returning undefined/hanging.
+  // Matches the item by role="menuitem" OR "menuitemradio" OR "menuitemcheckbox" — covers a
+  // checked/radio-style context-menu entry (e.g. a Sort submenu option), not just a plain action item.
 
 // WorkspaceFlow
 pin(request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest): Promise<void>
@@ -251,7 +259,7 @@ getByPalette<T = WorkspaceItem>(name: string): Promise<T | undefined>
 ```ts
 // pageManager.commandPalettePage (pages/command-palette.page.ts) — direct access for anything beyond a bare search
 open(): Promise<void>                       // clicks the toolbar's "Search.." trigger button
-openViaShortcut(): Promise<void>             // Cmd+P (macOS)
+openViaShortcut(): Promise<void>             // sends Playwright's `ControlOrMeta+p` alias (Cmd+P on macOS, Ctrl+P on Windows/Linux — the app's own `request_quickSwitch` hotkey binds differently per platform); a hardcoded `Meta+p` is a no-op on Linux CI runners, so don't revert to that
 search(query: string): Promise<void>         // fills the search input; waits out its 250ms debounce + round trip
 getResultNames(): Promise<string[]>          // every listed result across all sections (Requests/Collections, documents/Environments/etc.)
 selectResult(name: string): Promise<void>    // clicks the first result whose text contains `name`, navigating to it
@@ -472,12 +480,12 @@ Every `get()` above takes an optional second `parent?: Collection` — pass a Do
 // in the Auth tab's own read-only "Identity Token" display field (OAuth2Tokens.identityToken below), not on AuthTypeOAuth2 itself.
 ```
 
-`HttpRequestFlow.create()`'s `applyRequestFields()` calls a private `applyAuthentication()` whenever `request.authentication` is given — it branches on `authentication.type`, calling `page.setOAuth1Fields(authentication)` or `page.setOAuth2Fields(authentication)`; extend that branch (and its own Page setter) before another `AuthType` can be composed through `create()`.
+`HttpRequestFlow.create()`'s `applyRequestFields()` calls a private `applyAuthentication()` whenever `request.authentication` is given — it branches on `authentication.type`, calling `page.auth.setOAuth1Fields(authentication)` or `page.auth.setOAuth2Fields(authentication)`; extend that branch (and its own Page setter) before another `AuthType` can be composed through `create()`.
 
-**`pages/auth-tab.page.ts`'s `AuthTabPage` is the shared base** both `RequestPage` (every protocol's request Page, though only `HttpRequest`'s Model carries `authentication`) and `FolderPage` extend — a subclass only has to supply its own `PANE` selector; every method below works identically on a request's Auth tab or a Folder's:
+**`pages/auth-tab.page.ts`'s `AuthTabComponent` is a composed component, not a base class** — `RequestPage` (every protocol's request Page, though only `HttpRequest`'s Model carries `authentication`) and `FolderPage` each construct one as `this.auth` (passing their own `PANE` selector into its constructor) rather than extending it. Every method below is called as `xxxPage.auth.method()`, not directly on the request/folder Page itself:
 
 ```ts
-// pageManager.httpRequestPage / pageManager.folderPage (both extend AuthTabPage)
+// pageManager.httpRequestPage.auth / pageManager.folderPage.auth (both an AuthTabComponent instance)
 setAuthType(type: AuthType): Promise<void>            // switches to the Auth tab, opens the dropdown, selects `type`
 setOAuth1Fields(fields: Partial<AuthTypeOAuth1>): Promise<void>  // switches auth type to OAuth 1.0 first; fields left undefined are not written, leaving whatever's already there
 setOAuth2Fields(fields: Partial<AuthTypeOAuth2>): Promise<void>  // switches to OAuth 2.0, sets grantType first (it controls which other rows render), auto-expands "Advanced Options" for scope/state/tokenPrefix/audience/resource/origin/credentialsInBody/responseType, silently skips a field with no row for the current grant type
@@ -486,15 +494,17 @@ getOAuth2Tokens(): Promise<OAuth2Tokens>              // { refreshToken; identit
 clearOAuth2Tokens(): Promise<void>                    // clicks the "Clear" button next to Refresh Token/Fetch Tokens (only rendered once a token exists) — wipes the 3 fields. NOT the same as "Advanced Options"' own "Clear OAuth 2 session" button, which resets the popup's embedded browser session/cookies, not the app's stored tokens
 ```
 
-`getAuthType()`/`getOAuth1Fields()`/`getOAuth2Fields()`/`getAuthentication()`/`expandOAuth2AdvancedOptions()` used to exist as read-back helpers but were removed (dead code — no test ever called them; `expandOAuth2AdvancedOptions()`'s behavior lives on as a private step inside `setOAuth2Fields()`). **AuthTabPage is write-only from a spec's perspective today** — the only way to read auth state back is `getOAuth2Tokens()` for tokens, or asserting on the app's externally-visible behavior (e.g. the request's outgoing `Authorization` header). Add a public getter back to `pages/auth-tab.page.ts` if a future test needs to read OAuth1/OAuth2 fields or the current auth type.
+`getAuthType()`/`getOAuth1Fields()`/`getOAuth2Fields()`/`getAuthentication()`/`expandOAuth2AdvancedOptions()` used to exist as read-back helpers but were removed (dead code — no test ever called them; `expandOAuth2AdvancedOptions()`'s behavior lives on as a private step inside `setOAuth2Fields()`). **`AuthTabComponent` is write-only from a spec's perspective today** — the only way to read auth state back is `getOAuth2Tokens()` for tokens, or asserting on the app's externally-visible behavior (e.g. the request's outgoing `Authorization` header). Add a public getter back to `pages/auth-tab.page.ts` if a future test needs to read OAuth1/OAuth2 fields or the current auth type.
+
+Both `AuthTabComponent` and its sibling `ScriptTabComponent` (see `folderFlow`/scripts section below) extend the shared `TabPanelPage` (`pages/tab-panel.page.ts`), which owns the tab-bar's generic `navigate()`/`switchTab()`/`TABPANEL` plumbing common to any pane rendering that same `["Auth", "Headers", "Scripts", "Environment", "Docs"]` tab bar. `RequestPage`/`FolderPage` themselves now extend `TabPanelPage` directly too (not `AuthTabPage`, which no longer exists), composing an `auth`/`scripts` instance each rather than inheriting their methods.
 
 **Confirmed live, non-obvious DOM structure**: the Refresh/Identity/Access Token display inputs have **no `id` of their own** — only their wrapping `<label>` carries a (dangling) `for="Access-Token"`-style attribute, so they're read via `label[for="Access-Token"] input`, never a `#Access-Token` id selector (that silently matches nothing). "Response Type" (Implicit grant) lives inside "Advanced Options" exactly like Scope/State/etc., even though it isn't obviously an "advanced" field — `setOAuth2Fields()` already accounts for this. The token-fetch button's own accessible name flips from "Fetch Tokens" to "Refresh Token" once a token exists — `fetchOAuth2Tokens()` matches either. Clicking it again when a refresh token is already stored performs an actual `grant_type=refresh_token` exchange (new access token, same refresh token) **without reopening the popup** — confirmed via `insomnia.windows().length` staying flat across the second call.
 
 **Popup vs. no popup, confirmed live**: Authorization Code and Implicit both open a real Electron popup window (`insomnia.waitForEvent("window")` fires) that navigates through `/authorize` and closes itself once the redirect lands — `fetchOAuth2Tokens()`'s wait condition (`Access Token` becomes non-empty) covers this transparently, no popup-handling code needed in a spec. Client Credentials, Resource Owner Password, and a refresh-token re-fetch never open a popup — verified by diffing `insomnia.windows().length` before/after. **App quirk, not a test bug**: with the Implicit grant's Response Type set to plain `"id_token"` (no `"token"`), the Access Token display field still ends up populated — with the _same_ JWT as Identity Token, labeled "(never expires)" instead of a real TTL — rather than staying empty; assert `accessToken === identityToken` for that case, not `accessToken === ""`.
 
-`HttpRequestFlow.fetchOAuth2Tokens(request): Promise<OAuth2Tokens>` wraps navigate + `page.fetchOAuth2Tokens()` + `page.getOAuth2Tokens()` in one call (mirrors how `send()` wraps navigate + send + read-response) — prefer it in specs over driving `httpRequestPage` directly. `FolderFlow.fetchOAuth2Tokens(folder): Promise<OAuth2Tokens>` is the same convenience for a Folder's own Auth tab (wraps `open(folder)` + `page.fetchOAuth2Tokens()` + `page.getOAuth2Tokens()`) — prefer it over driving `folderPage` directly too.
+`HttpRequestFlow.fetchOAuth2Tokens(request): Promise<OAuth2Tokens>` wraps navigate + `page.auth.fetchOAuth2Tokens()` + `page.auth.getOAuth2Tokens()` in one call (mirrors how `send()` wraps navigate + send + read-response) — prefer it in specs over driving `httpRequestPage.auth` directly. `FolderFlow.fetchOAuth2Tokens(folder): Promise<OAuth2Tokens>` is the same convenience for a Folder's own Auth tab (wraps `open(folder)` + `page.auth.fetchOAuth2Tokens()` + `page.auth.getOAuth2Tokens()`) — prefer it over driving `folderPage.auth` directly too.
 
-**Folder-level OAuth 2.0 + `AuthType.Inherit`**: a Folder's own Auth tab (opened via `folderFlow.open(folder)` → `pageManager.folderPage`, itself an `AuthTabPage`) can carry a full OAuth 2.0 config exactly like a request's. A child request set to `AuthType.Inherit` (`setAuthType(AuthType.Inherit)`) picks up the folder's authentication at `send()` time — confirmed live end-to-end with Client Credentials (fetch the folder's tokens once via `folderFlow.fetchOAuth2Tokens(folder)`, then a child request's `send()` carries that same `Bearer <token>` with no auth configured on the request itself). `HttpRequestFlow.create()`'s `parent` param is typed `Collection | Folder` — `httpRequestFlow.create(folder, {...})` creates the request as the folder's child rather than the collection's, no cast needed.
+**Folder-level OAuth 2.0 + `AuthType.Inherit`**: a Folder's own Auth tab (opened via `folderFlow.open(folder)` → `pageManager.folderPage`, whose `.auth` is an `AuthTabComponent`) can carry a full OAuth 2.0 config exactly like a request's. A child request set to `AuthType.Inherit` (`setAuthType(AuthType.Inherit)`) picks up the folder's authentication at `send()` time — confirmed live end-to-end with Client Credentials (fetch the folder's tokens once via `folderFlow.fetchOAuth2Tokens(folder)`, then a child request's `send()` carries that same `Bearer <token>` with no auth configured on the request itself). `HttpRequestFlow.create()`'s `parent` param is typed `Collection | Folder` — `httpRequestFlow.create(folder, {...})` creates the request as the folder's child rather than the collection's, no cast needed.
 
 Real examples: `tests/http-request/oauth1-authentication.spec.ts` (OAuth 1.0 — signed `Authorization: OAuth ...` header), `tests/http-request/oauth2-authorization-code.spec.ts` / `oauth2-authorization-code-pkce.spec.ts` (S256 + plain) / `oauth2-implicit.spec.ts` (ID Token / ID+Access Token) / `oauth2-client-credentials.spec.ts` / `oauth2-password.spec.ts` / `oauth2-token-refresh-clear.spec.ts` (refresh + clear) / `oauth2-folder-inherited-auth.spec.ts`.
 
@@ -691,11 +701,12 @@ Folders didn't exist in this framework at all until the OAuth2 Auth-tab work nee
 ```ts
 create(parent: Collection | Folder, folder: Folder): Promise<Folder>   // right-click parent -> ContextMenuItem.Folder ("New Folder") -> names it via the PROMPT_INPUT dialog (workspace.setItemName(), NOT setNewItemName() — see gotcha below) -> clickCreate()
 open(folder: Folder): Promise<FolderPage>                       // right-click folder -> ContextMenuItem.OpenInNewTab -> returns pageManager.folderPage once its pane is visible
-fetchOAuth2Tokens(folder: Folder): Promise<OAuth2Tokens>        // open(folder) + page.fetchOAuth2Tokens() + page.getOAuth2Tokens() in one call — see Authentication below
+fetchOAuth2Tokens(folder: Folder): Promise<OAuth2Tokens>        // open(folder) + page.auth.fetchOAuth2Tokens() + page.auth.getOAuth2Tokens() in one call — see Authentication below
+setScripts(folder: Folder, scripts: RequestScripts): Promise<void>  // open(folder) + page.scripts.setScripts(scripts) — a folder's own pre-request/after-response scripts run for every descendant request before/after that request's own script
 // get(name) (findItemNode({ name }, TreeNodeType.Folder)) is private — only create() re-fetches through it after creation
 ```
 
-`Folder` (`models/folder.ts`): `{ name: string; id?: string }` — deliberately minimal, no fields beyond identity; set its Auth/Headers/etc. via `pageManager.folderPage` (an `AuthTabPage`) after `open()`, not through `create()`'s params.
+`Folder` (`models/folder.ts`): `{ name: string; id?: string }` — deliberately minimal, no fields beyond identity; set its Auth/Headers/Scripts/etc. via `pageManager.folderPage.auth`/`.scripts` (each an `AuthTabComponent`/`ScriptTabComponent`) after `open()`, not through `create()`'s params — or prefer `folderFlow.fetchOAuth2Tokens()`/`.setScripts()` above, which wrap `open()` + the Page call in one call. Real example of `setScripts()`: `tests/http-request/folder-level-replace-in-utility.spec.ts` (a folder-level pre-request script setting a global that a child request's own script reads back synchronously).
 
 **Confirmed live, non-obvious behavior**:
 
@@ -839,20 +850,31 @@ Use `vaultKey` (+ matching `vaultSalt`) to pre-unlock the vault for a scenario t
 
 No Flow — call `user.pageManager.konnectPage` directly, same pattern as `commandPalettePage`. Configuring a PAT hits the real Konnect API surface at `KONNECT_API_URL` (`misc/fixtures.ts` already points this at `MOCK_API_SERVER`), whose `GET /v2/control-planes` route `misc/mock-api.js` already stubs to return `{ data: [] }` — any non-empty string is accepted as a "valid" PAT with no further mock-server work needed.
 
+**There is no separate Konnect "tab" any more.** The sidebar is a single container that renders either a pre-configuration intro card or the normal project tree depending on whether a PAT is already saved — a spec first switches into the Konnect organization itself via `workspacePage.switchOrganization("Control Planes")` (opens the header's "Organizations" switcher and picks the option by name), then drives `konnectPage` against whatever the sidebar shows next:
+
 ```ts
-pageManager.konnectPage.navigate(): Promise<void>                    // waits for the sidebar tab to be visible
-pageManager.konnectPage.isTabVisible(): Promise<boolean>             // false once konnectSync org feature flag is disabled
-pageManager.konnectPage.openTab(): Promise<void>
-pageManager.konnectPage.openProjectsTab(): Promise<void>
-pageManager.konnectPage.isIntroCardVisible(): Promise<boolean>       // "Auto-sync your gateway service routes" — shown only pre-PAT
-pageManager.konnectPage.clickConfigure(): Promise<void>
-pageManager.konnectPage.setPat(pat: string): Promise<void>
-pageManager.konnectPage.clickConnectAndSync(): Promise<void>         // waits for the settings modal to close itself — confirmed live: PAT validation + org-id fetch are async, so reading isSettingsModalOpen() immediately after the click would still see it open without this wait
-pageManager.konnectPage.isSettingsModalOpen(): Promise<boolean>
-pageManager.konnectPage.isSyncButtonVisible(): Promise<boolean>      // only rendered while the Konnect tab itself is active (`!isProjectTabActive`) — switching to Projects unmounts it, so read this *before* `openProjectsTab()`; also confirmed live to lag slightly after connecting, needs `expect.poll(...)`, not a bare read
+// pageManager.workspacePage
+switchOrganization(name: string): Promise<void>   // opens the "Organizations" switcher button, clicks the option with this display name — e.g. "Control Planes" for the Konnect organization
+
+// pageManager.konnectPage
+navigate(): Promise<void>                     // waits for the global navigation sidebar container to be visible (not a Konnect-specific tab any more)
+isTabVisible(): Promise<boolean>              // whether that same sidebar container is visible
+openTab(): Promise<void>                      // waits for the pre-configuration intro card ("Auto-sync your gateway service routes") to render — organization data resolves asynchronously right after switchOrganization(), so this waits on the card itself rather than just the sidebar, to avoid a caller's next isIntroCardVisible() racing that resolution
+openProjectsTab(): Promise<void>              // waits for the normal project-navigation tree to be visible instead — shown automatically once a PAT has been saved (the intro card is replaced by it)
+isIntroCardVisible(): Promise<boolean>        // "Auto-sync your gateway service routes" — shown only pre-PAT
+clickConfigure(): Promise<void>
+setPat(pat: string): Promise<void>
+clickConnectAndSync(): Promise<void>          // waits for the settings modal to close itself — confirmed live: PAT validation + org-id fetch are async, so reading isSettingsModalOpen() immediately after the click would still see it open without this wait
+isSettingsModalOpen(): Promise<boolean>
+isSyncButtonVisible(): Promise<boolean>        // confirmed live to lag slightly after connecting, needs `expect.poll(...)`, not a bare read
 ```
 
-`misc/mock-api.js`'s `konnectSync` org-feature flag is mutable the same way Git Sync's flags are — `misc/fixtures.ts`'s `setKonnectSyncFeatureFlag(enabled)` toggles `PUT /_admin/features/konnect-sync`. Unlike Git Sync's flags, confirmed live that a plain `user.page.reload()` (no app relaunch) is enough to pick up the new value mid-session — no `beforeAll`/pre-launch requirement. **Don't pass `{ waitUntil: "networkidle" }`**: confirmed live it can never resolve on the organization/project route, since the app keeps a real-time team-updates SSE connection open there (`insomnia-event-source://v1/teams/{orgId}/streams`) that never goes idle — the default `waitUntil: "load"` plus the existing `expect.poll(...)` on the UI state already covers the app's async re-render. Real examples: `tests/konnect/configure-and-sync.spec.ts`, `tests/konnect/hidden-via-feature-flag.spec.ts`.
+Two mutable mock-server flags gate this, both toggled the same way Git Sync's flags are (`misc/fixtures.ts` helpers hitting `misc/mock-api.js`'s `PUT /_admin/features/...`):
+
+- `setKonnectSyncFeatureFlag(enabled)` — toggles the `konnectSync` org feature flag (`/_admin/features/konnect-sync`). Confirmed live that a plain `user.page.reload()` (no app relaunch) is enough to pick up the new value mid-session — no `beforeAll`/pre-launch requirement.
+- `setKonnectEntitlement(enabled)` — toggles the `GET /v1/user/entitlements` response (`/_admin/features/konnect-entitlement`) the app reads on startup to decide whether the account holds the Konnect control-planes entitlement at all; the Konnect organization ("Control Planes") only appears in `switchOrganization()`'s picker once this (or a local Konnect project) makes it visible. Same pre-launch timing/reset requirements and per-worker scoping as `setGitSyncFeatureFlag()` — call from `test.beforeAll()`/`test.afterAll()`.
+
+**Don't pass `{ waitUntil: "networkidle" }`**: confirmed live it can never resolve on the organization/project route, since the app keeps a real-time team-updates SSE connection open there (`insomnia-event-source://v1/teams/{orgId}/streams`) that never goes idle — the default `waitUntil: "load"` plus the existing `expect.poll(...)` on the UI state already covers the app's async re-render. Real examples: `tests/konnect/configure-and-sync.spec.ts` (`setKonnectEntitlement` + `switchOrganization` + configure-PAT happy path), `tests/konnect/hidden-via-feature-flag.spec.ts`.
 
 ### Plugins & Script Sandbox (Preferences → Plugins / Scripting tabs)
 
@@ -1118,6 +1140,8 @@ create(parent: Project, item: Collection, fileName: string): Promise<Collection>
   // only meaningful for Git Sync projects, where each collection is backed by its own file
 ```
 
+A `fileName`-carrying collection additionally writes and stages that file into the repo before the create dialog closes — `WorkspaceFlow` gives `WorkspacePage.clickCreate()` a longer-than-default timeout budget (`DEFAULT_TIMEOUT * 2`) for it, same as it already does for any project's own creation (see `clickCreate()`'s note under `workspaceFlow` above). Nothing a spec needs to do differently — this is handled inside `create()`.
+
 `GitRepoConnection` (`models/git-repo-connection.ts`): `{ uri: string; branch?: string; cloneParentDir?: string }` — pass as `Partial<GitRepoConnection>`; every field is optional since `uri`/`branch` default. Only set `cloneParentDir` when a test needs to assert on/reuse the on-disk clone path — otherwise omit `repo` entirely and let it default to the mock server.
 
 **Adding a credential** goes through `preferencesFlow`, not `gitSyncFlow`:
@@ -1375,7 +1399,7 @@ AuthType: None |
   Hawk |
   Asap |
   Netrc |
-  Token; // enums/auth-type.ts — AuthTabPage's Auth-tab type dropdown (shared by RequestPage and FolderPage); OAuth1 and OAuth2 have Page setters/getters today, every other option doesn't yet
+  Token; // enums/auth-type.ts — AuthTabComponent's Auth-tab type dropdown (composed as `.auth` on both RequestPage and FolderPage); OAuth1 and OAuth2 have Page setters/getters today, every other option doesn't yet
 HttpMethod: Get | Post | Put | Patch | Delete | Head | Options | Query;
 ContentType: Multipart |
   Form |
@@ -1425,7 +1449,7 @@ ScriptSandboxRuleGroup: GlobalAndNodeJsInternals |
   NodeJsInternals |
   Scopes;
 // enums/script-sandbox-rule-group.ts — Preferences → Scripting tab's per-rule-group switches
-ScriptTab: PreRequest | AfterResponse; // enums/script-tab.ts — RequestPage's typeScripts()/undoScript()/switchScriptTab() sub-tab selector
+ScriptTab: PreRequest | AfterResponse; // enums/script-tab.ts — ScriptTabComponent's (RequestPage.scripts/FolderPage.scripts) typeScripts()/undoScript()/switchScriptTab() sub-tab selector
 SendButtonState: Idle | Sending;
 SpecFormat: JSON | YAML;
 TreeNodeType: Project | Workspace | Request | Folder | Empty | Unknown;
@@ -1437,7 +1461,7 @@ TreeNodeType: Project | Workspace | Request | Folder | Empty | Unknown;
 
 Opt-out paths, both read once at module scope (not per-test):
 
-- Setting `INSOMNIA_BINARY` (CI always does — see `.github/workflows/playwright.yml`) skips dev mode entirely and launches that binary directly, same as before.
+- Setting `INSOMNIA_BINARY` (CI always does — see `.github/workflows/insomnia-test.yml`) skips dev mode entirely and launches that binary directly, same as before.
 - `INSOMNIA_DEV_MODE=false`/`0` (with `INSOMNIA_BINARY` unset) falls back to the packaged `/Applications/Insomnia.app` build locally without pointing at a specific binary.
 
 No spec-facing API changed — this only affects local/CI environment setup, not anything a test calls.
@@ -1502,12 +1526,16 @@ pageManager.<domain>RequestPage.typeDocs(text: string): Promise<void>
   // switches to the Docs tab's Write sub-tab, clicks its editor, moves the cursor to the end, and
   // types `text` via real keystrokes — same "build genuine undo history" shape as typeUrl()
 pageManager.<domain>RequestPage.undoDocs(): Promise<void>  // clicks the Docs editor and sends the platform's Undo shortcut
-pageManager.<domain>RequestPage.typeScripts(scripts: RequestScripts): Promise<void>
+pageManager.<domain>RequestPage.scripts.typeScripts(scripts: RequestScripts): Promise<void>
   // types into the Scripts tab's Pre-request and/or After-response editors via real keystrokes
   // (only whichever of scripts.preRequest/scripts.afterResponse is provided), unlike setScripts()
   // which replaces the value outright with no undo history behind it
-pageManager.<domain>RequestPage.undoScript(which: ScriptTab): Promise<void>   // switches to that script's sub-tab, clicks its editor, sends the platform's Undo shortcut
-pageManager.<domain>RequestPage.switchScriptTab(which: ScriptTab): Promise<void>  // switches to the Scripts tab, then to the PreRequest/AfterResponse sub-tab
+pageManager.<domain>RequestPage.scripts.undoScript(which: ScriptTab): Promise<void>   // switches to that script's sub-tab, clicks its editor, sends the platform's Undo shortcut
+pageManager.<domain>RequestPage.scripts.switchScriptTab(which: ScriptTab): Promise<void>  // switches to the Scripts tab, then to the PreRequest/AfterResponse sub-tab
+// getScripts()/setScripts() (read/write both scripts in one call) live on the same `.scripts`
+// component (`pages/script-tab.page.ts`'s ScriptTabComponent) — composed as `.scripts` on both
+// RequestPage and FolderPage, the same pattern as `.auth` above. FolderFlow.setScripts() wraps
+// open() + page.scripts.setScripts() for a Folder's own scripts — see folderFlow above.
 pageManager.<any Page>.hasFocus(container: Locator): Promise<boolean>
   // BasePage-inherited by every Page class; reads the app's own `data-focused` attribute the app sets
   // on an editor's container on focus/blur (see one-line-editor.tsx) — more reliable than comparing
