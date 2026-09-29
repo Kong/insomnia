@@ -4,7 +4,7 @@ import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
+import { updateMimeType } from '~/ui/utils/request-mime-type';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';

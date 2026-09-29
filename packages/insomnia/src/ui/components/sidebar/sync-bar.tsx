@@ -1,11 +1,11 @@
 import { models } from 'insomnia-data';
 
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
 import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
+import { useProjectLoaderData } from '~/ui/hooks/use-project-loader-data';
 
 export function SyncBar() {
   const { activeProject, activeProjectGitRepository } = useProjectLoaderData() || {};

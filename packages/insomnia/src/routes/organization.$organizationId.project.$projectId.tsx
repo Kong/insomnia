@@ -1,9 +1,10 @@
 import { models, services } from 'insomnia-data';
-import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useOutletContext, useParams } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import { logout } from '~/ui/account/session';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import type { ProjectLoaderData } from '~/ui/hooks/use-project-loader-data';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -57,11 +58,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return {
     activeProject: project,
     activeProjectGitRepository,
-  };
-}
-
-export function useProjectLoaderData() {
-  return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
+  } satisfies ProjectLoaderData;
 }
 
 export interface ProjectRouteContextValue {
