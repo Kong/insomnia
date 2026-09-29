@@ -67,6 +67,13 @@ export async function getFirstProjectOfOrganization(organizationId: string) {
   return db.findOne<Project>(type, { parentId: organizationId });
 }
 
+// syncProjects() runs this in the background under the same lock that
+// guards interactive project creation (see `projectLock` in
+// packages/insomnia/src/common/project.ts), so it must not be allowed to
+// hold that lock for as long as the default fetch timeout (30s) — that
+// blocks a user's "Create project" action for far longer than they'd wait.
+const TEAM_PROJECTS_FETCH_TIMEOUT_MS = 8000;
+
 export async function getAllTeamProjects(organizationId: string) {
   const { id: sessionId } = await userSessionService.get();
   if (!sessionId) {
@@ -74,7 +81,7 @@ export async function getAllTeamProjects(organizationId: string) {
   }
 
   console.log('[project] Fetching', organizationId);
-  const response = await fetchTeamProjects({ sessionId, organizationId });
+  const response = await fetchTeamProjects({ sessionId, organizationId, timeout: TEAM_PROJECTS_FETCH_TIMEOUT_MS });
   return response.data;
 }
 
