@@ -7,12 +7,11 @@ interface TeamProjects {
   }[];
 }
 
-export const fetchTeamProjects = ({ sessionId, organizationId, timeout }: { sessionId: string; organizationId: string; timeout?: number }) => {
+export const fetchTeamProjects = ({ sessionId, organizationId }: { sessionId: string; organizationId: string }) => {
   return fetch<TeamProjects>({
     method: 'GET',
     path: `/v1/organizations/${organizationId}/team-projects`,
     sessionId,
-    timeout,
   });
 };
 
