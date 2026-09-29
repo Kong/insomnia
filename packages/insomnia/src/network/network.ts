@@ -41,7 +41,6 @@ import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { ResponsePatch } from '../main/network/libcurl-promise';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
-import { filterClientCertificates } from './certificate';
 import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 
 const { isRequest } = models.request;
@@ -876,7 +875,7 @@ export async function sendCurlAndWriteTimeline(
     finalUrl,
     socketPath,
     settings,
-    certificates: filterClientCertificates(clientCertificates, renderedRequest.url, 'https:'),
+    certificates: models.clientCertificate.filterClientCertificates(clientCertificates, renderedRequest.url, 'https:'),
     caCertficatePath: caCert?.disabled === false ? caCert.path : null,
     authHeader,
   };
