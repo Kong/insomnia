@@ -2,7 +2,7 @@ import type { IpcMainInvokeEvent } from 'electron';
 
 import { getPluginWindow } from '../plugin-window';
 import { getOrCreateTemplatingDbAuthToken } from '../templating-worker-database-auth';
-import { getMainWindow } from '../window-utils';
+import { getMainWindow } from '../window-registry';
 import { ipcMainHandle } from './electron';
 
 // Only hands the templating db auth token to the main app window or the hidden plugin window.

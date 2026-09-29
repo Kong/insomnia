@@ -40,7 +40,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('../window-utils', () => ({
+vi.mock('../window-registry', () => ({
   getMainWindow: vi.fn(() => fakeMainWindow),
 }));
 

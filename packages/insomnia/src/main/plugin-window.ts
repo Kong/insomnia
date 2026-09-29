@@ -3,8 +3,10 @@ import path from 'node:path';
 
 import { app, BrowserWindow, ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 
+import { invariant } from '~/common/utils/invariant';
+
 import { requestPromptFromRenderer } from './prompt-bridge';
-import { getMainWindow } from './window-utils';
+import { getMainWindow } from './window-registry';
 
 let pluginWindow: BrowserWindow | null = null;
 let windowReady = false;
@@ -284,6 +286,17 @@ export function destroyPluginWindow() {
   pluginWindow?.destroy();
   pluginWindow = null;
   windowReady = false;
+}
+
+// Exposed so `window-utils` (dev menu, main-window load hook) can drive the plugin window without
+// holding a registration registry: `plugin-window` is the single owner of these operations.
+export function togglePluginWindowVisibility() {
+  invariant(pluginWindow, 'pluginWindow is not defined');
+  pluginWindow.isVisible() ? pluginWindow.hide() : pluginWindow.show();
+}
+
+export function destroyOrCreatePluginWindow() {
+  pluginWindow ? destroyPluginWindow() : createPluginWindow();
 }
 
 export function reloadPluginsInWindow() {
