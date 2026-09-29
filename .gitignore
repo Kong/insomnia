@@ -42,3 +42,4 @@ final.cpp
 insomnia.ico
 final.rc
 .tmp*
+.playwright-mcp
