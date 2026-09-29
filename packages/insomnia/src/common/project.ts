@@ -39,6 +39,12 @@ export interface InsomniaFile {
   };
 }
 
+// How long a caller will wait in queue for the lock before giving up. Without
+// this, a slow or stuck lock holder (e.g. a background project sync) blocks
+// every other queued operation (e.g. creating a project) indefinitely, with
+// no error surfaced to the user.
+const LOCK_ACQUIRE_TIMEOUT_MS = 15_000;
+
 const lockGenerator = () => {
   // Simple mutex lock implementation
   let isLocked = false;
@@ -51,8 +57,20 @@ const lockGenerator = () => {
     }
 
     // If already locked, wait in queue
-    return new Promise<void>(resolve => {
-      lockQueue.push(resolve);
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const index = lockQueue.indexOf(onUnlocked);
+        if (index !== -1) {
+          lockQueue.splice(index, 1);
+        }
+        reject(new Error('Timed out waiting for another project operation to finish. Please try again.'));
+      }, LOCK_ACQUIRE_TIMEOUT_MS);
+
+      const onUnlocked = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      lockQueue.push(onUnlocked);
     });
   };
 
