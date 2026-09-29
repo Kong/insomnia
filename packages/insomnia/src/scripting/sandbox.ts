@@ -335,7 +335,7 @@ export async function prepareSandbox(
     ({ names: maskNames, values: maskValues } = alwaysOnPolicy.buildMaskScope(checkSandboxViolations));
   }
 
-  const executionContext = await initInsomniaObject(sandboxContext, scriptConsole.log);
+  const executionContext = await initInsomniaObject(sandboxContext, scriptConsole.log, options => window.bridge.curlRequest(options));
 
   const bridgeOps: BridgeOps = {
     resetAsyncTasks: Object.freeze(window.bridge.resetAsyncTasks.bind(window.bridge)),

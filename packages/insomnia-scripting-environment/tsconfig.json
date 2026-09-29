@@ -10,9 +10,6 @@
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "noEmit": true,
-    "paths": {
-      "~/*": ["../insomnia/src/*"]
-    },
     /* Strictness */
     "strict": true,
     "noImplicitReturns": true,
@@ -25,6 +22,6 @@
     /* If your code runs in the DOM: */
     "lib": ["es2023", "dom", "dom.iterable"]
   },
-  "include": ["../insomnia/types"],
+  "include": ["src/**/*.ts"],
   "exclude": ["**/__tests__", "node_modules"]
 }
