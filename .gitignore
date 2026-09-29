@@ -42,7 +42,6 @@ final.cpp
 insomnia.ico
 final.rc
 .tmp*
-
 test-results/
 playwright-report/
 blob-report/
