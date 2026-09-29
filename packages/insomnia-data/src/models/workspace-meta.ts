@@ -19,6 +19,7 @@ export interface BaseWorkspaceMeta {
   hasUnpushedChanges: boolean;
   gitFilePath: string | null;
   gitFileLastSyncTime: number | null;
+  gitFileLastSyncHash: string | null;
 }
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -35,6 +36,7 @@ export function init(): BaseWorkspaceMeta {
     gitRepositoryId: null,
     gitFilePath: null,
     gitFileLastSyncTime: null,
+    gitFileLastSyncHash: null,
     parentId: null,
     pushSnapshotOnInitialize: false,
     hasUncommittedChanges: false,
