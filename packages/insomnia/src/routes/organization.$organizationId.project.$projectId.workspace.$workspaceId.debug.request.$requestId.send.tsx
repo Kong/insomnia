@@ -14,7 +14,7 @@ import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
-import { getContentDispositionHeader } from '~/common/misc';
+import { getContentDispositionHeader, sanitizeDownloadFilename } from '~/common/misc';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
@@ -317,9 +317,10 @@ export const sendActionImplementation = async (options: {
 
   if (requestMeta.downloadPath) {
     const header = getContentDispositionHeader(responsePatch.headers || []);
+    const fallbackName = `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.unknown`;
     const name = header
-      ? contentDisposition.parse(header.value).parameters.filename
-      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.unknown`;
+      ? sanitizeDownloadFilename(contentDisposition.parse(header.value).parameters.filename, fallbackName)
+      : fallbackName;
     await writeToDownloadPath(
       window.path.join(requestMeta.downloadPath, name),
       responsePatch,

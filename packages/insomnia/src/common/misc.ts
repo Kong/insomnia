@@ -77,6 +77,13 @@ export function getContentDispositionHeader<T extends Header>(headers: T[]): T |
   return matches.length ? matches[0] : null;
 }
 
+// Constrains a Content-Disposition filename to a plain, single-segment name so it can be
+// joined onto a base download directory without changing which directory the result lands in.
+export function sanitizeDownloadFilename(filename: string, fallback: string): string {
+  const base = filename.split(/[/\\]/).pop() || '';
+  return base === '' || base === '.' || base === '..' ? fallback : base;
+}
+
 export { generateId } from 'insomnia-data/common';
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
