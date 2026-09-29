@@ -72,7 +72,8 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=8192
         run: |
-          npm run build
+          npm run build:react-router -- --minify=false
+          npx esr --cache ./scripts/build.ts --noErrorTruncation
           echo "=== build/ contents ==="
           ls -la build/ 2>/dev/null || echo "ERROR: build/ not found"
           test -f build/entry.main.min.js || { echo "ERROR: entry.main.min.js missing after build"; exit 1; }
