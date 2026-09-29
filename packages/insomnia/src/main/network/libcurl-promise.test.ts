@@ -1,8 +1,11 @@
 // @ts-nocheck
-import { Curl } from '@getinsomnia/node-libcurl';
-import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
 
-import { createConfiguredCurlInstance } from './libcurl-promise';
+import { Curl } from '@getinsomnia/node-libcurl';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { __clearScriptedResponses, __setScriptedResponses } from '../../__mocks__/@getinsomnia/node-libcurl';
+import { createConfiguredCurlInstance, curlRequest } from './libcurl-promise';
 
 const baseReq = (overrides: Record<string, unknown> = {}) => ({
   headers: [],
@@ -55,5 +58,99 @@ describe('createConfiguredCurlInstance', () => {
     });
 
     expect(curl._options[Curl.option.PROXY]).toBe('');
+  });
+
+  it('restricts redirect targets to http and https', async () => {
+    const { curl } = await createConfiguredCurlInstance({
+      req: baseReq(),
+      settings: baseSettings(),
+      caCert: null,
+      certificates: [],
+    });
+
+    // CurlProtocol.HTTP (1) | CurlProtocol.HTTPS (2)
+    expect(curl._options[Curl.option.REDIR_PROTOCOLS]).toBe(3);
+  });
+});
+
+describe('curlRequest redirect handling', () => {
+  afterEach(() => {
+    __clearScriptedResponses();
+  });
+
+  const secretHeaders = [
+    { name: 'X-Api-Key', value: 'prod-secret' },
+    { name: 'Accept', value: 'application/json' },
+  ];
+
+  const sentHeadersOf = async (responseBodyPath: string) => {
+    const echoed = JSON.parse(await fs.promises.readFile(responseBodyPath, 'utf8'));
+    return echoed.options.HTTPHEADER as string[];
+  };
+
+  it('strips secret headers when following a cross-origin redirect', async () => {
+    __setScriptedResponses({
+      'https://api.example.com/data': [
+        { statusLine: 'HTTP/1.1 302 Found', headerLines: ['Location: https://collector.example/harvest'] },
+      ],
+    });
+
+    const output = await curlRequest({
+      requestId: 'req_redirect_strip_test',
+      req: baseReq({ url: 'https://api.example.com/data', headers: secretHeaders }),
+      finalUrl: 'https://api.example.com/data',
+      settings: baseSettings(),
+      certificates: [],
+      caCertficatePath: null,
+    });
+
+    expect(output.patch.url).toBe('https://collector.example/harvest');
+    const sent = await sentHeadersOf(output.responseBodyPath);
+    expect(sent.join('\n')).not.toContain('prod-secret');
+    expect(sent.join('\n')).toContain('Accept: application/json');
+    const timeline = output.debugTimeline.map(entry => entry.value).join('\n');
+    expect(timeline).toContain('cross-origin');
+    expect(timeline).toContain('X-Api-Key');
+  });
+
+  it('preserves headers on a same-origin redirect', async () => {
+    __setScriptedResponses({
+      'https://api.example.com/v1/data': [
+        { statusLine: 'HTTP/1.1 302 Found', headerLines: ['Location: /v2/data'] },
+      ],
+    });
+
+    const output = await curlRequest({
+      requestId: 'req_redirect_same_origin_test',
+      req: baseReq({ url: 'https://api.example.com/v1/data', headers: secretHeaders }),
+      finalUrl: 'https://api.example.com/v1/data',
+      settings: baseSettings(),
+      certificates: [],
+      caCertficatePath: null,
+    });
+
+    expect(output.patch.url).toBe('https://api.example.com/v2/data');
+    const sent = await sentHeadersOf(output.responseBodyPath);
+    expect(sent.join('\n')).toContain('X-Api-Key: prod-secret');
+  });
+
+  it('refuses a redirect to a file URL', async () => {
+    __setScriptedResponses({
+      'https://api.example.com/data': [
+        { statusLine: 'HTTP/1.1 302 Found', headerLines: ['Location: file:///etc/passwd'] },
+      ],
+    });
+
+    const output = await curlRequest({
+      requestId: 'req_redirect_blocked_test',
+      req: baseReq({ url: 'https://api.example.com/data', headers: secretHeaders }),
+      finalUrl: 'https://api.example.com/data',
+      settings: baseSettings(),
+      certificates: [],
+      caCertficatePath: null,
+    });
+
+    expect(output.patch.url).toBe('https://api.example.com/data');
+    expect(output.patch.error || '').toContain('only http and https');
   });
 });
