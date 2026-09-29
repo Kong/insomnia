@@ -185,7 +185,7 @@ export function createLiquidTagWorker(
 
       // Short-circuit external vault before any provider fetch when the policy says mask.
       const renderSettings = renderContext.getSettings?.();
-      if (shouldMaskExternalVaultTag(plugin.name, ext.name, renderPurpose, renderSettings)) {
+      if (shouldMaskExternalVaultTag({ pluginName: plugin.name, tagName: ext.name, renderPurpose, settings: renderSettings })) {
         emitter.write(CONFIDENTIAL_MASK_VALUE);
         return;
       }
