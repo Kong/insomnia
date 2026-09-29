@@ -6,7 +6,7 @@ import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
-import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
+import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-display-input';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
