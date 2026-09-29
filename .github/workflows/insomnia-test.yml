@@ -284,7 +284,8 @@ jobs:
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-        run: xvfb-run --auto-servernum npx playwright test --workers=1 $(cat failed-tests.txt)
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-rerun.zip
+        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --workers=1 $(cat failed-tests.txt)
 
       - name: Record test outcome
         id: outcome
@@ -301,6 +302,18 @@ jobs:
           name: playwright-report-rerun
           path: packages/insomnia-test/playwright-report/
           retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload blob report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: ${{ !cancelled() }}
+        with:
+          # Feeds insomnia-test-result's "Merge Playwright reports" step so
+          # the rerun's outcome (pass or fail) is reflected in the final
+          # merged suite report, not just this job's own HTML report above.
+          name: blob-report-rerun
+          path: packages/insomnia-test/blob-report/blob-report-rerun.zip
+          retention-days: 1
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------
@@ -397,9 +410,11 @@ jobs:
           path: packages/insomnia-test/playwright-report/
           retention-days: 30
 
-      # coverage-raw-*/playwright-report-*/playwright-json-*/blob-report-*
-      # were only a transport into this job — now that they're merged,
-      # delete them so only the two artifacts uploaded above remain.
+      # coverage-raw-*/playwright-report-[0-9]+/playwright-json-*/
+      # blob-report-([0-9]+|rerun) were only a transport into this job — now
+      # that they're merged, delete them so only the two artifacts uploaded
+      # above remain. playwright-report-rerun is intentionally left alone —
+      # see its own upload step's comment.
       - name: Delete per-shard intermediate artifacts
         continue-on-error: true
         env:
@@ -407,7 +422,7 @@ jobs:
         run: |
           ids=$(gh api --paginate \
             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-            --jq '.artifacts[] | select(.name | test("^(coverage-raw|playwright-report|playwright-json|blob-report)-[0-9]+$")) | .id')
+            --jq '.artifacts[] | select(.name | test("^(coverage-raw|playwright-report|playwright-json)-[0-9]+$|^blob-report-([0-9]+|rerun)$")) | .id')
           for id in $ids; do
             echo "Deleting intermediate artifact $id"
             gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
