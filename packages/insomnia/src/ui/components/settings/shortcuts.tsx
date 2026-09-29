@@ -9,7 +9,7 @@ import {
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { generateId } from '../../../common/misc';
 import { useSettingsPatcher } from '../../hooks/use-request';

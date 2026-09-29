@@ -1,7 +1,7 @@
 import { models } from 'insomnia-data';
 import React, { type FC } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';

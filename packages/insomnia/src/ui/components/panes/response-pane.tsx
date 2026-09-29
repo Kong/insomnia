@@ -6,8 +6,8 @@ import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
-import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation.renderer';

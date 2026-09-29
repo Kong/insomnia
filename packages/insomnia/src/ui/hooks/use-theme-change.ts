@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import * as themes from '~/ui/plugins/misc';
 
 export const useThemeChange = () => {

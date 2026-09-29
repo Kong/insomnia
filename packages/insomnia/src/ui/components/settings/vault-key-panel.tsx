@@ -4,7 +4,6 @@ import * as reactUse from 'react-use';
 
 import { getProductName } from '~/common/constants';
 import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '~/common/utils/vault';
-import { useRootLoaderData } from '~/root';
 import { useCreateVaultKeyFetcher } from '~/routes/auth.create-vault-key';
 import { useUpdateVaultSaltFetcher } from '~/routes/auth.update-vault-salt';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -13,6 +12,7 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { BooleanSetting } from './boolean-setting';
 

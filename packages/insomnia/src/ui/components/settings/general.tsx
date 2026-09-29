@@ -1,7 +1,7 @@
 import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import {

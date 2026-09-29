@@ -1,9 +1,9 @@
 import React, { type ComponentProps, type FC, type ReactNode, useCallback, useEffect, useRef } from 'react';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/root';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { Tooltip } from '~/ui/components/tooltip';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { toKebabCase } from '../../../../../common/misc';
 import {
