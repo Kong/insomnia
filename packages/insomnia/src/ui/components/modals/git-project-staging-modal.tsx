@@ -56,6 +56,7 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { GitChangeAnalysis } from '~/ui/components/git/git-change-analysis';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
@@ -1041,11 +1042,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         )}
         {pushFailedError ? (
           <PushFailedAfterCommitBanner
-          error={pushFailedError}
-          isRetrying={isRetryingPush}
-          onRetry={retryPush}
-          projectId={projectId}
-        />
+            error={pushFailedError}
+            isRetrying={isRetryingPush}
+            onRetry={retryPush}
+            projectId={projectId}
+          />
         ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
@@ -1367,7 +1368,12 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 // that was renamed, moved, or deleted outside Insomnia.
                 const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
                 if ('errors' in result && result.errors) {
-                  showToast({ icon: 'exclamation-triangle', title: 'Folder not found', description: result.errors.join(', '), status: 'error' });
+                  showToast({
+                    icon: 'exclamation-triangle',
+                    title: 'Folder not found',
+                    description: result.errors.join(', '),
+                    status: 'error',
+                  });
                   return;
                 }
                 if (result.path) {
@@ -1811,6 +1817,7 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
+                      {previewDiffItem.diagnostics && <GitChangeAnalysis diagnostics={previewDiffItem.diagnostics} />}
                       {previewDiffItem && (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor
@@ -2032,7 +2039,7 @@ const CreateBranchAndPushModal = ({
                 <Button
                   type="submit"
                   isDisabled={isCreating || !branchName.trim()}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80 disabled:opacity-50"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:opacity-80"
                 >
                   <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
                   Create branch &amp; push
