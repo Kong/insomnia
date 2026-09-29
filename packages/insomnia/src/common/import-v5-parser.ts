@@ -19,7 +19,7 @@ import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/sch
 
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
 
-const { environment } = models;
+const { environment, mockServer, mockRoute } = models;
 
 // Basic literal types that can appear in JSON data
 export const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -141,24 +141,11 @@ export const GRPCRequestSchema = z.object({
   }),
 });
 
-export const MockRouteSchema = z.object({
-  name: z.string().optional(),
+export const MockRouteSchema = mockRoute.baseMockRouteSchema.omit({ parentId: true }).extend({
   meta: MetaSchema.optional(),
-  body: z.string().optional(),
-  headers: z
-    .array(
-      z.object({
-        name: z.string(),
-        value: z.string(),
-        description: z.string().optional(),
-        disabled: z.boolean().optional(),
-      }),
-    )
-    .optional(),
-  method: z.string().optional(),
-  mimeType: z.string().optional(),
-  statusCode: z.number().optional().default(200),
-  statusText: z.string().optional(),
+});
+const baseMockServerSchema = mockServer.baseMockServerSchema.omit({ parentId: true, name: true }).extend({
+  meta: MetaSchema.optional(),
 });
 
 const BasicAuthenticationSchema = z.object({
@@ -592,13 +579,7 @@ export const MockServerSchema = z.object({
   schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
   meta: MetaSchema.optional(),
-  server: z
-    .object({
-      meta: MetaSchema.optional(),
-      url: z.string(),
-      useInsomniaCloud: z.boolean().default(true),
-    })
-    .optional(),
+  server: baseMockServerSchema.optional(),
   routes: z.array(MockRouteSchema).optional(),
 });
 
