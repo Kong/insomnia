@@ -13,6 +13,7 @@
  *
  */
 
+import { models } from 'insomnia-data';
 import { z } from 'zod/v4';
 
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
@@ -125,7 +126,10 @@ export const EnvironmentSchema = z.object({
 export const GRPCRequestSchema = z.object({
   url: z.string().optional().default(''),
   name: z.string().optional().default(''),
-  meta: MetaSchema.optional(),
+  meta: MetaSchema.extend({
+    id: z.string().startsWith(models.grpcRequest.prefix),
+  }).optional(),
+  type: z.literal(models.grpcRequest.type),
   body: z
     .object({
       text: z.string().optional(),
@@ -379,7 +383,10 @@ const RequestParametersSchema = z.array(
 
 export const RequestGroupSchema = z.object({
   name: z.string().optional().default(''),
-  meta: MetaGroupSchema.optional(),
+  type: z.literal(models.requestGroup.type),
+  meta: MetaGroupSchema.extend({
+    id: z.string().startsWith(models.requestGroup.prefix),
+  }).optional(),
   children: z.array(z.any()).optional(),
   scripts: ScriptsSchema.optional(),
   authentication: AuthenticationSchema.optional().nullable(),
@@ -391,7 +398,10 @@ export const RequestGroupSchema = z.object({
 export const RequestSchema = z.object({
   url: z.string().optional().default(''),
   name: z.string().optional().default(''),
-  meta: MetaSchema.optional(),
+  type: z.literal(models.request.type),
+  meta: MetaSchema.extend({
+    id: z.string().startsWith(models.request.prefix),
+  }).optional(),
   method: z.string(),
   body: z
     .object({
@@ -433,8 +443,9 @@ export const RequestSchema = z.object({
 export const WebsocketRequestSchema = z.object({
   url: z.string().optional().default(''),
   name: z.string().optional().default(''),
+  type: z.literal(models.webSocketRequest.type),
   meta: MetaSchema.extend({
-    id: z.string().startsWith('ws-req'),
+    id: z.string().startsWith(models.webSocketRequest.prefix),
   }).optional(),
   settings: WebSocketRequestSettingsSchema.optional().default({
     encodeUrl: true,
@@ -460,8 +471,9 @@ export const SocketIOEventListenerSchema = z.object({
 export const SocketIORequestSchema = z.object({
   url: z.string().optional().default(''),
   name: z.string().optional().default(''),
+  type: z.literal(models.socketIORequest.type),
   meta: MetaSchema.extend({
-    id: z.string().startsWith('socketio-req'),
+    id: z.string().startsWith(models.socketIORequest.prefix),
   }).optional(),
   settings: SocketIORequestSettingsSchema.optional().default({
     encodeUrl: true,
@@ -509,43 +521,29 @@ type Request = z.infer<typeof RequestSchema>;
 type GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 type WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
 type SocketIORequest = z.infer<typeof SocketIORequestSchema>;
-type RequestGroup = z.input<typeof RequestGroupSchema> & {
+type RequestGroup = z.infer<typeof RequestGroupSchema> & {
   children?: (Request | GRPCRequest | WebsocketRequest | RequestGroup | SocketIORequest)[];
 };
+export type RequestCollectionChild = Request | GRPCRequest | WebsocketRequest | SocketIORequest | RequestGroup;
 
-const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
-  children: z.lazy(() => RequestCollectionSchema).optional(),
-  // These undefined properties are added to differentiate between the different types of children in the union
-  method: z.undefined(),
-  url: z.undefined(),
-  parameters: z.undefined(),
-  pathParameters: z.undefined(),
+const RequestGroupWithChildrenSchema = RequestGroupSchema.extend({
+  children: z
+    .lazy(
+      (): z.ZodType<RequestCollectionChild[]> =>
+        RequestCollectionSchema as unknown as z.ZodType<RequestCollectionChild[]>,
+    )
+    .optional(),
 });
 
-export const RequestCollectionSchema = z
-  .union([
-    GRPCRequestSchema.extend({
-      // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
-      method: z.undefined(),
-    }),
-    RequestSchema.extend({
-      // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
-    }),
-    WebsocketRequestSchema.extend({
-      // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
-      method: z.undefined(),
-    }),
-    SocketIORequestSchema.extend({
-      // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
-      method: z.undefined(),
-    }),
+export const RequestCollectionSchema = z.array(
+  z.discriminatedUnion('type', [
+    GRPCRequestSchema,
+    RequestSchema,
+    WebsocketRequestSchema,
+    SocketIORequestSchema,
     RequestGroupWithChildrenSchema,
-  ])
-  .array();
+  ]),
+);
 
 const TestSchema = z.object({
   name: z.string().optional().default(''),

@@ -504,122 +504,129 @@ function getCollection(
       parentId: string,
     ) {
       collection?.forEach(item => {
-        // Detect groups: items that are NOT requests, gRPC, or WebSocket
-        const isGroup = !('method' in item) && !('reflectionApi' in item) && !('url' in item);
-
-        if (isGroup) {
-          const requestGroup: WithExportType<RequestGroup> = {
-            ...mapMetaToInsomniaMeta(
-              item.meta || {
-                id: '__REQUEST_GROUP_ID__',
-              },
-            ),
-            type: 'RequestGroup',
-            _type: 'request_group',
-            name: item.name || 'Imported Folder',
-            parentId,
-            headers: mapHeaders(item.headers),
-            preRequestScript: item.scripts?.preRequest || '',
-            afterResponseScript: item.scripts?.afterResponse || '',
-            authentication: item.authentication || {},
-            environment: (item.environment as Record<string, any>) || {},
-            // 🚧 WARNING 🚧 If we set the order to an empty object instead of undefined it will remove the environment from the folder due to filtering logic (related to json-order)
-            environmentPropertyOrder: (item.environmentPropertyOrder as Record<string, any>) || undefined,
-          };
-
-          resources.push(requestGroup);
-
-          // Process children if they exist
-          if (item.children && Array.isArray(item.children)) {
-            walkCollection(item.children, requestGroup._id);
-          }
-        } else if ('method' in item && item.method) {
-          const request: WithExportType<Request> = {
-            ...mapMetaToInsomniaMeta(
-              item.meta || {
-                id: '__REQUEST_ID__',
-              },
-            ),
-            type: 'Request',
-            _type: 'request',
-            name: item.name || 'Imported Request',
-            parentId,
-            url: item.url,
-            method: item.method,
-            body: mapBody(item.body),
-            parameters: mapParameters(item.parameters),
-            headers: mapHeaders(item.headers),
-            authentication: item.authentication || {},
-            preRequestScript: item.scripts?.preRequest || '',
-            settingDisableRenderRequestBody: !item.settings.renderRequestBody,
-            settingEncodeUrl: item.settings.encodeUrl,
-            settingFollowRedirects: item.settings.followRedirects,
-            settingSendCookies: item.settings.cookies.send,
-            settingStoreCookies: item.settings.cookies.store,
-            settingRebuildPath: item.settings.rebuildPath,
-            afterResponseScript: item.scripts?.afterResponse || '',
-            pathParameters: item.pathParameters || [],
-            metaSortKey: item.meta?.sortKey ?? 0,
-            disableUserAgentHeader: false,
-          };
-
-          resources.push(request);
-        } else if ('reflectionApi' in item) {
-          const grpcRequest: WithExportType<GrpcRequest> = {
-            ...mapMetaToInsomniaMeta(
-              item.meta || {
-                id: '__GRPC_REQUEST_ID__',
-              },
-            ),
-            type: 'GrpcRequest',
-            _type: 'grpc_request',
-            name: item.name || 'Imported gRPC Request',
-            parentId,
-            url: item.url,
-            protoMethodName: item.protoMethodName,
-            metadata: mapHeaders(item.metadata),
-            body: item.body || {},
-            metaSortKey: item.meta?.sortKey ?? 0,
-            reflectionApi: item.reflectionApi || {
-              enabled: false,
-              url: '',
-              apiKey: '',
-              module: '',
-            },
-            protoFileId: item.protoFileId || '',
-            disableUserAgentHeader: false,
-          };
-
-          resources.push(grpcRequest);
-        } else {
-          const wbRequest = WebsocketRequestSchema.safeParse(item);
-          if (wbRequest.success) {
-            const data = wbRequest.data;
-            const websocketRequest: WithExportType<WebSocketRequest> = {
+        switch (item.type) {
+          case 'RequestGroup': {
+            const requestGroup: WithExportType<RequestGroup> = {
               ...mapMetaToInsomniaMeta(
-                data.meta || {
-                  id: '__WEBSOCKET_REQUEST_ID__',
+                item.meta || {
+                  id: '__REQUEST_GROUP_ID__',
                 },
               ),
-              type: 'WebSocketRequest',
-              _type: 'websocket_request',
-              name: item.name || 'Imported WebSocket Request',
+              type: 'RequestGroup',
+              _type: 'request_group',
+              name: item.name || 'Imported Folder',
               parentId,
-              url: data.url,
-              authentication: data.authentication || {},
+              headers: mapHeaders(item.headers),
+              preRequestScript: item.scripts?.preRequest || '',
+              afterResponseScript: item.scripts?.afterResponse || '',
+              authentication: item.authentication || {},
+              environment: (item.environment as Record<string, any>) || {},
+              // 🚧 WARNING 🚧 If we set the order to an empty object instead of undefined it will remove the environment from the folder due to filtering logic (related to json-order)
+              environmentPropertyOrder: (item.environmentPropertyOrder as Record<string, any>) || undefined,
+            };
+
+            resources.push(requestGroup);
+
+            // Process children if they exist
+            if (item.children && Array.isArray(item.children)) {
+              walkCollection(item.children, requestGroup._id);
+            }
+            break;
+          }
+          case 'Request': {
+            const request: WithExportType<Request> = {
+              ...mapMetaToInsomniaMeta(
+                item.meta || {
+                  id: '__REQUEST_ID__',
+                },
+              ),
+              type: 'Request',
+              _type: 'request',
+              name: item.name || 'Imported Request',
+              parentId,
+              url: item.url,
+              method: item.method,
+              body: mapBody(item.body),
+              parameters: mapParameters(item.parameters),
+              headers: mapHeaders(item.headers),
+              authentication: item.authentication || {},
+              preRequestScript: item.scripts?.preRequest || '',
+              settingDisableRenderRequestBody: !item.settings.renderRequestBody,
+              settingEncodeUrl: item.settings.encodeUrl,
+              settingFollowRedirects: item.settings.followRedirects,
+              settingSendCookies: item.settings.cookies.send,
+              settingStoreCookies: item.settings.cookies.store,
+              settingRebuildPath: item.settings.rebuildPath,
+              afterResponseScript: item.scripts?.afterResponse || '',
+              pathParameters: item.pathParameters || [],
               metaSortKey: item.meta?.sortKey ?? 0,
-              headers: mapHeaders(data.headers),
-              parameters: mapParameters(data.parameters),
-              settingEncodeUrl: data.settings.encodeUrl,
-              settingFollowRedirects: data.settings.followRedirects,
-              settingSendCookies: data.settings.cookies.send,
-              settingStoreCookies: data.settings.cookies.store,
-              pathParameters: data.pathParameters || [],
               disableUserAgentHeader: false,
             };
 
-            resources.push(websocketRequest);
-          } else {
+            resources.push(request);
+            break;
+          }
+          case 'GrpcRequest': {
+            const grpcRequest: WithExportType<GrpcRequest> = {
+              ...mapMetaToInsomniaMeta(
+                item.meta || {
+                  id: '__GRPC_REQUEST_ID__',
+                },
+              ),
+              type: 'GrpcRequest',
+              _type: 'grpc_request',
+              name: item.name || 'Imported gRPC Request',
+              parentId,
+              url: item.url,
+              protoMethodName: item.protoMethodName,
+              metadata: mapHeaders(item.metadata),
+              body: item.body || {},
+              metaSortKey: item.meta?.sortKey ?? 0,
+              reflectionApi: item.reflectionApi || {
+                enabled: false,
+                url: '',
+                apiKey: '',
+                module: '',
+              },
+              protoFileId: item.protoFileId || '',
+              disableUserAgentHeader: false,
+            };
+
+            resources.push(grpcRequest);
+            break;
+          }
+          case 'WebSocketRequest': {
+            const wbRequest = WebsocketRequestSchema.safeParse(item);
+            if (wbRequest.success) {
+              const data = wbRequest.data;
+              const websocketRequest: WithExportType<WebSocketRequest> = {
+                ...mapMetaToInsomniaMeta(
+                  data.meta || {
+                    id: '__WEBSOCKET_REQUEST_ID__',
+                  },
+                ),
+                type: 'WebSocketRequest',
+                _type: 'websocket_request',
+                name: item.name || 'Imported WebSocket Request',
+                parentId,
+                url: data.url,
+                authentication: data.authentication || {},
+                metaSortKey: item.meta?.sortKey ?? 0,
+                headers: mapHeaders(data.headers),
+                parameters: mapParameters(data.parameters),
+                settingEncodeUrl: data.settings.encodeUrl,
+                settingFollowRedirects: data.settings.followRedirects,
+                settingSendCookies: data.settings.cookies.send,
+                settingStoreCookies: data.settings.cookies.store,
+                pathParameters: data.pathParameters || [],
+                disableUserAgentHeader: false,
+              };
+
+              resources.push(websocketRequest);
+            }
+            break;
+          }
+          case 'SocketIORequest': {
             const socketIORequest = SocketIORequestSchema.safeParse(item);
             if (socketIORequest.success) {
               const data = socketIORequest.data;
@@ -649,6 +656,10 @@ function getCollection(
 
               resources.push(socketIO);
             }
+            break;
+          }
+          default: {
+            break;
           }
         }
       });
@@ -878,6 +889,7 @@ export async function getInsomniaV5DataExport({
             const request: Insomnia_Request = {
               url: resource.url,
               name: resource.name,
+              type: models.request.type,
               meta: mapMeta(resource),
               method: resource.method,
               body: mapBody(resource.body),
@@ -902,6 +914,7 @@ export async function getInsomniaV5DataExport({
             // Convert request groups (folders) to v5 format
             const requestGroup: Insomnia_RequestGroup = {
               name: resource.name,
+              type: models.requestGroup.type,
               meta: mapGroupMeta(resource),
               children: getCollectionFromResources(resources, resource._id), // Recursively build children
               scripts: getScriptFromResources(resource),
@@ -916,6 +929,7 @@ export async function getInsomniaV5DataExport({
             const webSocketRequest: Insomnia_WebsocketRequest = {
               url: resource.url,
               name: resource.name,
+              type: models.webSocketRequest.type,
               meta: mapMeta(resource),
               settings: {
                 encodeUrl: resource.settingEncodeUrl,
@@ -935,6 +949,7 @@ export async function getInsomniaV5DataExport({
             const socketIORequest: Insomnia_SocketIORequest = {
               url: resource.url,
               name: resource.name,
+              type: models.socketIORequest.type,
               meta: mapMeta(resource),
               settings: {
                 encodeUrl: resource.settingEncodeUrl,
@@ -955,6 +970,7 @@ export async function getInsomniaV5DataExport({
             const grpcRequest: Insomnia_GRPCRequest = {
               url: resource.url,
               name: resource.name,
+              type: models.grpcRequest.type,
               meta: mapMeta(resource),
               body: resource.body,
               metadata: mapHeaders(resource.metadata),
