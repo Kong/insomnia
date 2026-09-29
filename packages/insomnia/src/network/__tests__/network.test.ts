@@ -14,6 +14,7 @@ import { getRenderedRequestAndContext } from '../../common/render';
 import { getAuthHeader } from '../../main/network/get-auth-header';
 import { _parseHeaders, curlRequest, getHttpVersion } from '../../main/network/libcurl-promise';
 import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
+import * as networkInheritanceUtils from '../inheritance';
 import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
 import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
@@ -1092,7 +1093,7 @@ describe('getOrInheritAuthentication', () => {
       { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
     ];
 
-    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({
+    expect(networkInheritanceUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({
       type: 'basic',
       username: 'closest',
       password: 'closest-pass',
@@ -1106,7 +1107,7 @@ describe('getOrInheritAuthentication', () => {
       { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
     ];
 
-    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
+    expect(networkInheritanceUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
   });
 });
 
@@ -1119,7 +1120,7 @@ describe('getOrInheritHeaders', () => {
         { name: 'baz', value: 'qux' },
       ],
     };
-    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
+    expect(networkInheritanceUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
       { name: 'baz', value: 'qux, qux' },
       { name: 'foo', value: 'bar, bar' },
     ]);
@@ -1127,7 +1128,7 @@ describe('getOrInheritHeaders', () => {
   it('should use last header casing', () => {
     const requestGroups = [{ headers: [{ name: 'x-foo', value: 'bar' }] }];
     const request = { headers: [{ name: 'X-Foo', value: 'baz' }] };
-    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
+    expect(networkInheritanceUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
       { name: 'X-Foo', value: 'bar, baz' },
     ]);
   });
@@ -1146,7 +1147,7 @@ describe('getOrInheritHeaders', () => {
         { name: 'connection', value: 'keep-alive' },
       ],
     };
-    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
+    expect(networkInheritanceUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
       { name: 'connection', value: 'keep-alive' },
       { name: 'Content-Type', value: 'text/plain' },
     ]);
@@ -1166,7 +1167,7 @@ describe('getOrInheritHeaders', () => {
         { name: '     ', value: 'qux' },
       ],
     };
-    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
+    expect(networkInheritanceUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
   });
 });
 
