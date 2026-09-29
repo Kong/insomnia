@@ -95,3 +95,76 @@ jobs:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
+
+  Package-macOS:
+    timeout-minutes: 30
+    runs-on: macos-15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
+
+      - name: Install packages
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Install node version of node-libcurl for inso tests
+        run: npm run install-libcurl-node
+
+      - name: Set Inso CLI variables
+        id: inso-variables-macos
+        shell: bash
+        run: |
+          INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
+          PKG_NAME="inso-macos-arm64-$INSO_VERSION"
+          echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
+          echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Package Inso CLI binary
+        run: |
+          npm run build -w insomnia-inso
+          npm run package -w insomnia-inso
+        env:
+          VERSION: ${{ steps.inso-variables-macos.outputs.inso-version }}
+
+      - name: Start test server
+        run: npm run serve -w insomnia-smoke-test & npx -y wait-on http://localhost:4010
+
+      - name: Run Inso binary e2e tests
+        run: npm run test:binary -w insomnia-inso
+
+      # artifacts.ts emits inso-macos-<version>.zip (the x64 release asset name),
+      # so the arm64 zip is created explicitly with the arm64 marker
+      - name: Create Inso ARM64 zip artifact
+        run: |
+          mkdir -p packages/insomnia-inso/artifacts
+          ditto -c -k \
+            packages/insomnia-inso/binaries/inso \
+            "packages/insomnia-inso/artifacts/inso-macos-arm64-${{ steps.inso-variables-macos.outputs.inso-version }}.zip"
+
+      - name: Upload Inso CLI artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          if-no-files-found: ignore
+          name: ${{ steps.inso-variables-macos.outputs.pkg-name }}
+          path: packages/insomnia-inso/artifacts
