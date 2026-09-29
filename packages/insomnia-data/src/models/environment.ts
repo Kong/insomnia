@@ -43,6 +43,7 @@ export interface EnvironmentKvPairData {
   value: string;
   type: EnvironmentKvPairDataType;
   enabled?: boolean;
+  isConfidential?: boolean;
 }
 
 export type Environment = BaseModel & BaseEnvironment;
