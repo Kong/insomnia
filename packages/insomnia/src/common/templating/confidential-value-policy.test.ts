@@ -50,33 +50,33 @@ describe('shouldMaskExternalVaultTag', () => {
   const TAG = 'vault';
 
   it('returns false for non-vault plugin', () => {
-    expect(shouldMaskExternalVaultTag('other-plugin', TAG, 'preview', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
+    expect(shouldMaskExternalVaultTag({ pluginName: 'other-plugin', tagName: TAG, renderPurpose: 'preview', settings: { hideSecretValuesInPreviewAndConsole: true } })).toBe(false);
   });
 
   it('returns false for non-vault tag name', () => {
-    expect(shouldMaskExternalVaultTag(PLUGIN, 'other-tag', 'preview', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: 'other-tag', renderPurpose: 'preview', settings: { hideSecretValuesInPreviewAndConsole: true } })).toBe(false);
   });
 
   it('returns false for non-preview purposes — plugin run() handles its own placeholder', () => {
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'send', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'script', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, undefined, { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'general', { hideSecretValuesInPreviewAndConsole: true })).toBe(false);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'send', settings: { hideSecretValuesInPreviewAndConsole: true } })).toBe(false);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'script', settings: { hideSecretValuesInPreviewAndConsole: true } })).toBe(false);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, settings: { hideSecretValuesInPreviewAndConsole: true } })).toBe(false);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'general', settings: { hideSecretValuesInPreviewAndConsole: true } })).toBe(false);
   });
 
   it('returns true for preview when setting is ON (default-closed)', () => {
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'preview', { hideSecretValuesInPreviewAndConsole: true })).toBe(true);
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'preview', {})).toBe(true);
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'preview', undefined)).toBe(true);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'preview', settings: { hideSecretValuesInPreviewAndConsole: true } })).toBe(true);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'preview', settings: {} })).toBe(true);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'preview' })).toBe(true);
   });
 
   it('returns false for preview when setting is OFF — reveal real value', () => {
-    expect(shouldMaskExternalVaultTag(PLUGIN, TAG, 'preview', { hideSecretValuesInPreviewAndConsole: false })).toBe(false);
+    expect(shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'preview', settings: { hideSecretValuesInPreviewAndConsole: false } })).toBe(false);
   });
 
   it('returns false for preview when forceReveal is true — eye-button reveal bypasses setting', () => {
     expect(
-      shouldMaskExternalVaultTag(PLUGIN, TAG, 'preview', { hideSecretValuesInPreviewAndConsole: true, forceReveal: true }),
+      shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'preview', settings: { hideSecretValuesInPreviewAndConsole: true, forceReveal: true } }),
     ).toBe(false);
   });
 });

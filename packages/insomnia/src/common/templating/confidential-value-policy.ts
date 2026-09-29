@@ -48,12 +48,17 @@ export function getConfidentialValuePolicy({
  * purpose:'preview' so they are covered here. For 'general', undefined, and other purposes
  * the plugin's own run() handles its behavior.
  */
-export function shouldMaskExternalVaultTag(
-  pluginName: string,
-  tagName: string | undefined,
-  renderPurpose: RenderPurpose | undefined,
-  settings: { hideSecretValuesInPreviewAndConsole?: boolean; forceReveal?: boolean } | undefined,
-): boolean {
+export function shouldMaskExternalVaultTag({
+  pluginName,
+  tagName,
+  renderPurpose,
+  settings,
+}: {
+  pluginName: string;
+  tagName?: string;
+  renderPurpose?: RenderPurpose;
+  settings?: { hideSecretValuesInPreviewAndConsole?: boolean; forceReveal?: boolean };
+}): boolean {
   if (pluginName !== EXTERNAL_VAULT_PLUGIN_NAME || tagName !== BUNDLED_EXTERNAL_VAULT_TAG) {
     return false;
   }
