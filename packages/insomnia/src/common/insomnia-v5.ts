@@ -813,17 +813,23 @@ export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
  * @param workspaceId - ID of the workspace to export
  * @param includePrivateEnvironments - Whether to include private environment data
  * @param requestIds - Optional array of specific request IDs to export (if not provided, exports all)
- * @returns YAML string containing the exported workspace data
+ * @param format - Output serialization format: 'yaml' (default) or 'json'
+ * @returns String containing the exported workspace data in the requested format
  */
 export async function getInsomniaV5DataExport({
   workspaceId,
   includePrivateEnvironments,
   requestIds,
+  format = 'yaml',
 }: {
   workspaceId: string;
   includePrivateEnvironments: boolean;
   requestIds?: string[];
+  format?: 'yaml' | 'json';
 }) {
+  // Serializes a validated InsomniaFile to the requested output format.
+  const serialize = (data: unknown): string =>
+    format === 'json' ? JSON.stringify(removeEmptyFields(data), null, 2) : stringify(removeEmptyFields(data));
   try {
     const workspace = await services.workspace.getById(workspaceId);
 
@@ -1213,7 +1219,7 @@ export async function getInsomniaV5DataExport({
 
       const parsedCollection = InsomniaFileSchema.parse(collection);
 
-      return stringify(removeEmptyFields(parsedCollection));
+      return serialize(parsedCollection);
     } else if (workspace.scope === 'design') {
       const spec: InsomniaFile = {
         type: 'spec.insomnia.rest/5.0',
@@ -1245,7 +1251,7 @@ export async function getInsomniaV5DataExport({
 
       const parsedSpec = InsomniaFileSchema.parse(spec);
 
-      return stringify(removeEmptyFields(parsedSpec));
+      return serialize(parsedSpec);
     } else if (workspace.scope === 'environment') {
       const environment: InsomniaFile = {
         type: 'environment.insomnia.rest/5.0',
@@ -1260,7 +1266,7 @@ export async function getInsomniaV5DataExport({
 
       const parsedEnvironment = InsomniaFileSchema.parse(environment);
 
-      return stringify(removeEmptyFields(parsedEnvironment));
+      return serialize(parsedEnvironment);
     } else if (workspace.scope === 'mock-server') {
       const server = exportableResources.find(models.mockServer.isMockServer);
       invariant(server, 'Mock Server not found');
@@ -1283,7 +1289,7 @@ export async function getInsomniaV5DataExport({
       };
 
       const parsedMockServer = InsomniaFileSchema.parse(mockServer);
-      return stringify(removeEmptyFields(parsedMockServer), {});
+      return serialize(parsedMockServer);
     } else if (workspace.scope === 'mcp') {
       const mcpRequest = exportableResources.find(models.mcpRequest.isMcpRequest);
       invariant(mcpRequest, 'No MCP Request found in MCP workspace');
@@ -1302,7 +1308,7 @@ export async function getInsomniaV5DataExport({
 
       const parsedMcpClient = InsomniaFileSchema.parse(mcpClient);
 
-      return stringify(removeEmptyFields(parsedMcpClient));
+      return serialize(parsedMcpClient);
     }
     throw new Error('Unknown workspace scope');
   } catch (err) {
