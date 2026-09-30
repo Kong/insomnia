@@ -8,6 +8,7 @@ import {
   ensureKeyIsValid,
   getDataFromKVPair,
   getKVPairFromData,
+  hasProtectedKvPairs,
   maskVaultEnvironmentData,
 } from './environment-utils';
 
@@ -261,6 +262,23 @@ describe('getDataFromKVPair()', () => {
   it('returns dataPropertyOrder as null', () => {
     const { dataPropertyOrder } = getDataFromKVPair([]);
     expect(dataPropertyOrder).toBeNull();
+  });
+});
+
+describe('hasProtectedKvPairs()', () => {
+  it('identifies secret and confidential pairs', () => {
+    expect(hasProtectedKvPairs()).toBe(false);
+    expect(
+      hasProtectedKvPairs([{ id: '1', name: 'token', value: 'secret', type: EnvironmentKvPairDataType.STRING }]),
+    ).toBe(false);
+    expect(
+      hasProtectedKvPairs([
+        { id: '1', name: 'token', value: 'secret', type: EnvironmentKvPairDataType.STRING, isConfidential: true },
+      ]),
+    ).toBe(true);
+    expect(
+      hasProtectedKvPairs([{ id: '1', name: 'token', value: 'secret', type: EnvironmentKvPairDataType.SECRET }]),
+    ).toBe(true);
   });
 });
 
