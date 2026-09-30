@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
 import type { Environment, Workspace } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
@@ -9,6 +9,16 @@ import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
+
+const makeBaseContext = (
+  purpose: 'preview' | 'send' | 'no-render' | 'script',
+  hideSecretValuesInPreviewAndConsole = true,
+  forceReveal?: boolean,
+) =>
+  ({
+    getPurpose: () => purpose,
+    getSettings: () => ({ dataFolders: [], hideSecretValuesInPreviewAndConsole, forceReveal }),
+  }) as any;
 
 describe('render tests', () => {
   beforeEach(async () => {
@@ -76,6 +86,273 @@ describe('render tests', () => {
   });
 
   describe('buildRenderContext()', () => {
+    it('preserves legacy vault masking for no-render', async () => {
+      const rootEnvironment = envBuilder
+        .data({ [models.environment.vaultEnvironmentPath]: { token: 'encrypted-value' } })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'encrypted-value',
+            type: EnvironmentKvPairDataType.SECRET,
+            enabled: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('no-render'),
+      });
+
+      expect(context.vault.token).toBe(models.environment.vaultEnvironmentMaskValue);
+    });
+
+    it('masks confidential values in preview while preserving JSON shape and derived variables', async () => {
+      const rootEnvironment = envBuilder
+        .data({
+          token: 'top-secret',
+          config: { token: 'nested-secret', enabled: true, retries: 3, empty: null, values: ['secret'] },
+          authorization: 'Bearer {{ token }}',
+        })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_config',
+            name: 'config',
+            value: '{}',
+            type: EnvironmentKvPairDataType.JSON,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe(models.environment.vaultEnvironmentMaskValue);
+      expect(context.config).toEqual({
+        token: models.environment.vaultEnvironmentMaskValue,
+        enabled: models.environment.vaultEnvironmentMaskValue,
+        retries: models.environment.vaultEnvironmentMaskValue,
+        empty: models.environment.vaultEnvironmentMaskValue,
+        values: [models.environment.vaultEnvironmentMaskValue],
+      });
+      expect(context.authorization).toBe(`Bearer ${models.environment.vaultEnvironmentMaskValue}`);
+    });
+
+    it('uses the last enabled KV row and higher-priority public layers to clear confidentiality', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'root-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_confidential',
+            name: 'token',
+            value: 'root-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_public',
+            name: 'token',
+            value: 'root-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: false,
+          },
+        ])
+        .build();
+      const subEnvironment = envBuilder.data({ token: 'sub-public' }).build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        subEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe('sub-public');
+    });
+
+    it('masks a higher-priority confidential value that overrides a public value', async () => {
+      const rootEnvironment = envBuilder.data({ token: 'root-public' }).build();
+      const subEnvironment = envBuilder
+        .data({ token: 'sub-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_sub',
+            name: 'token',
+            value: 'sub-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        subEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe(models.environment.vaultEnvironmentMaskValue);
+    });
+
+    it('reveals confidential values in preview when the local setting is disabled', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview', false),
+      });
+
+      expect(context.token).toBe('top-secret');
+    });
+
+    it('ignores disabled confidential rows', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'visible' })
+        .kvPairData([
+          {
+            id: 'envPair_disabled',
+            name: 'token',
+            value: 'visible',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: false,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe('visible');
+    });
+
+    it('script purpose reveals confidential values', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('script'),
+      });
+
+      expect(context.token).toBe('top-secret');
+    });
+
+    it('forceReveal in preview bypasses hideSecretValuesInPreviewAndConsole', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview', true, true),
+      });
+
+      expect(context.token).toBe('top-secret');
+    });
+
+    it('does not mutate vault data object when preview masking runs', async () => {
+      const rootEnvironment = envBuilder
+        .data({ [models.environment.vaultEnvironmentPath]: { token: 'encrypted-value' } })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'encrypted-value',
+            type: EnvironmentKvPairDataType.SECRET,
+            enabled: true,
+          },
+        ])
+        .build();
+
+      await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(rootEnvironment.data[models.environment.vaultEnvironmentPath].token).toBe('encrypted-value');
+    });
+
+    it('does not mutate environment data when preview masking precedes a send render', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const previewContext = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+      const sendContext = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('send'),
+      });
+
+      expect(previewContext.token).toBe(models.environment.vaultEnvironmentMaskValue);
+      expect(sendContext.token).toBe('top-secret');
+      expect(rootEnvironment.data.token).toBe('top-secret');
+      expect(rootEnvironment.kvPairData?.[0].value).toBe('top-secret');
+    });
+
     it('cascades properly', async () => {
       const ancestors = [
         reqGroupBuilder.environment({ foo: 'parent', ancestor: true }).build(),
@@ -93,6 +370,25 @@ describe('render tests', () => {
         root: true,
         sub: true,
       });
+    });
+
+    it('does not mutate the ancestors array passed by the caller', async () => {
+      const ancestors = [
+        reqGroupBuilder.environment({ foo: 'parent', ancestor: true }).build(),
+        reqGroupBuilder.environment({ foo: 'grandparent', ancestor: true }).build(),
+      ];
+      const originalOrder = [...ancestors];
+
+      // Calling buildRenderContext twice with the same array (e.g. a prefill
+      // pass followed by the real render pass) must yield the same result
+      // both times. A previous bug reversed `ancestors` in place, so the
+      // second call would see an already-reversed array and flip precedence.
+      const firstContext = await renderUtils.buildRenderContext({ ancestors });
+      const secondContext = await renderUtils.buildRenderContext({ ancestors });
+
+      expect(ancestors).toEqual(originalOrder);
+      expect(firstContext.foo).toBe('parent');
+      expect(secondContext.foo).toBe('parent');
     });
 
     it('rendered recursive should not infinite loop', async () => {
