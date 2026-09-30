@@ -351,7 +351,7 @@ export class ResponsePage extends BasePage {
     const previewTab = this.page.locator(
       `${this.PANE} [data-key="timeline"][role="tab"]`,
     );
-    await expect(previewTab).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(previewTab).toBeVisible({ timeout: 30_000 });
   }
 
   /**
