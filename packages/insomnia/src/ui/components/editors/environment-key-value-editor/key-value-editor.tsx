@@ -554,6 +554,7 @@ export const EnvironmentKVEditor = ({
       <ListBox
         aria-label="Environment Key Value Pair"
         selectionMode="none"
+        disallowTypeAhead
         dragAndDropHooks={dragAndDropHooks}
         dependencies={[kvPairError, data, symmetricKey, blankId, decryptedValues]}
         className="h-full w-full overflow-y-auto p-(--padding-sm)"
