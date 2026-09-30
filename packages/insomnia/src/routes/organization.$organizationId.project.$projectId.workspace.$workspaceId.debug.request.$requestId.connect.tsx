@@ -31,6 +31,8 @@ export interface ConnectActionParams {
   query?: Record<string, string>;
   path?: string;
   env?: Record<string, string>;
+  /** confidential values registered while rendering the connect payload, for main-process timeline/event-log redaction */
+  sensitiveValues?: string[];
 }
 
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
@@ -50,6 +52,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
+      sensitiveValues: rendered.sensitiveValues,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
@@ -78,6 +81,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
+      sensitiveValues: rendered.sensitiveValues,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
@@ -103,6 +107,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       query: rendered.query || {},
       path: rendered.path,
       suppressUserAgent: rendered.suppressUserAgent,
+      sensitiveValues: rendered.sensitiveValues,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
@@ -122,6 +127,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       headers: rendered.headers,
       authentication: rendered.authentication,
       env: rendered.env || {},
+      sensitiveValues: rendered.sensitiveValues,
     });
   }
   // HACK: even more elaborate hack to get the request to update

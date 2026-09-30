@@ -21,6 +21,7 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
+import { redactConfidentialText, redactDeep } from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
@@ -81,6 +82,50 @@ const WebSocketConnections = new Map<string, WebSocket>();
 const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+// Confidential values to redact from timeline/event-log writes before they reach disk (T10).
+// Only grows for the lifetime of a connection (each open/send IPC call merges in more values);
+// cleaned up in deleteRequestMaps.
+const sensitiveValuesByRequestId = new Map<string, Set<string>>();
+
+const registerSensitiveValues = (requestId: string, values: string[] | undefined) => {
+  if (!values || values.length === 0) {
+    return;
+  }
+  let set = sensitiveValuesByRequestId.get(requestId);
+  if (!set) {
+    set = new Set();
+    sensitiveValuesByRequestId.set(requestId, set);
+  }
+  for (const value of values) {
+    if (value) {
+      set.add(value);
+    }
+  }
+};
+
+const redactForRequest = (requestId: string, text: string): string => {
+  const values = sensitiveValuesByRequestId.get(requestId);
+  if (!values || values.size === 0) {
+    return text;
+  }
+  return redactConfidentialText(text, [...values]);
+};
+
+const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ ...entry, value: redactForRequest(requestId, entry.value) }) + '\n');
+};
+
+const writeWsEventLog = (requestId: string, event: WebSocketEvent, opts: { clearRequestIdMap?: boolean } = {}) => {
+  const values = sensitiveValuesByRequestId.get(requestId);
+  const redactedEvent = values && values.size > 0 ? redactDeep(event, [...values]) : event;
+  writeEventLogAndNotify({
+    requestId,
+    data: JSON.stringify(redactedEvent) + '\n',
+    clearRequestIdMap: opts.clearRequestIdMap,
+  });
+};
 
 const getEventNotificationChannel = (responseId: string) =>
   `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
@@ -148,6 +193,8 @@ interface OpenWebSocketRequestOptions {
   initialPayload?: string;
   isGraphqlSubscriptionRequest?: boolean;
   suppressUserAgent?: boolean;
+  /** confidential values registered while rendering the connect payload, for timeline/event-log redaction (T10) */
+  sensitiveValues?: string[];
 }
 const openWebSocketConnection = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -175,6 +222,7 @@ const openWebSocketConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
+  registerSensitiveValues(options.requestId, options.sensitiveValues);
 
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
@@ -204,11 +252,16 @@ const openWebSocketConnection = async (
     const headers = options.headers;
     let url = options.url;
     let authCookie = null;
+    const settings = await services.settings.get();
     if (!options.authentication.disabled) {
       if (options.authentication.type === 'basic') {
         const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
-        headers.push(getBasicAuthHeader(username, password, encoding));
+        const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
+        headers.push(basicAuthHeader);
+        if (settings.hideSecretValuesInPreviewAndConsole && basicAuthHeader.value) {
+          registerSensitiveValues(options.requestId, [basicAuthHeader.value]);
+        }
       }
       if (options.authentication.type === 'apikey') {
         const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
@@ -238,7 +291,6 @@ const openWebSocketConnection = async (
     if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
       lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
     }
-    const settings = await services.settings.get();
     const start = performance.now();
 
     const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
@@ -251,30 +303,29 @@ const openWebSocketConnection = async (
       const { passphrase, cert, key, pfx } = clientCertificate;
 
       if (cert) {
-        timelineFileStreams
-          .get(options.requestId)
-          ?.write(
-            JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) +
-              '\n',
-          );
+        writeTimelineEntry(options.requestId, {
+          value: `Adding SSL PEM certificate: ${cert}`,
+          name: 'Text',
+          timestamp: Date.now(),
+        });
         pemCertificates.push(fs.readFileSync(cert, 'utf8'));
       }
 
       if (key) {
-        timelineFileStreams
-          .get(options.requestId)
-          ?.write(
-            JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
-          );
+        writeTimelineEntry(options.requestId, {
+          value: `Adding SSL KEY certificate: ${key}`,
+          name: 'Text',
+          timestamp: Date.now(),
+        });
         pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf8'), passphrase: passphrase ?? undefined });
       }
 
       if (pfx) {
-        timelineFileStreams
-          .get(options.requestId)
-          ?.write(
-            JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
-          );
+        writeTimelineEntry(options.requestId, {
+          value: `Adding SSL P12 certificate: ${pfx}`,
+          name: 'Text',
+          timestamp: Date.now(),
+        });
         pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf8'), passphrase: passphrase ?? undefined });
       }
     });
@@ -326,7 +377,7 @@ const openWebSocketConnection = async (
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: url,
+        url: redactForRequest(options.requestId, url),
         statusCode,
         statusMessage,
         httpVersion,
@@ -362,13 +413,11 @@ const openWebSocketConnection = async (
         }
       }
 
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+      timeline.forEach(t => writeTimelineEntry(options.requestId, t));
     });
     ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
       incomingMessage.on('data', chunk => {
-        timelineFileStreams
-          .get(options.requestId)
-          ?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
+        writeTimelineEntry(options.requestId, { value: chunk.toString(), name: 'DataOut', timestamp: Date.now() });
       });
       // @ts-expect-error -- private property
       const internalRequestHeader = clientRequest._header;
@@ -377,13 +426,13 @@ const openWebSocketConnection = async (
         incomingMessage,
         internalRequestHeader,
       );
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+      timeline.forEach(t => writeTimelineEntry(options.requestId, t));
       const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: url,
+        url: redactForRequest(options.requestId, url),
         statusCode,
         statusMessage,
         httpVersion,
@@ -406,12 +455,12 @@ const openWebSocketConnection = async (
         type: 'open',
         timestamp: Date.now(),
       };
-      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
-      timelineFileStreams
-        .get(options.requestId)
-        ?.write(
-          JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n',
-        );
+      writeWsEventLog(options.requestId, openEvent);
+      writeTimelineEntry(options.requestId, {
+        value: 'WebSocket connection established',
+        name: 'Text',
+        timestamp: Date.now(),
+      });
       sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
 
       if (options.initialPayload) {
@@ -428,7 +477,7 @@ const openWebSocketConnection = async (
         direction: 'INCOMING',
         timestamp: Date.now(),
       };
-      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
+      writeWsEventLog(options.requestId, messageEvent);
       // send subscribe operation to graphql websocket server
       if (options.isGraphqlSubscriptionRequest) {
         handleGraphQLWsMessage(data, request as Request);
@@ -463,10 +512,10 @@ const openWebSocketConnection = async (
         timestamp: Date.now(),
       };
 
-      deleteRequestMaps(request._id, message, errorEvent);
-      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
+      // createErrorResponse must run before deleteRequestMaps: it redacts using
+      // sensitiveValuesByRequestId, which deleteRequestMaps clears for this requestId.
       if (error.code) {
-        createErrorResponse(
+        await createErrorResponse(
           responseId,
           request._id,
           responseEnvironmentId,
@@ -474,18 +523,21 @@ const openWebSocketConnection = async (
           message || 'Something went wrong',
         );
       }
+      deleteRequestMaps(request._id, message, errorEvent);
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
     });
   } catch (e) {
     console.error('unhandled error:', e);
 
-    deleteRequestMaps(request._id, e.message || 'Something went wrong');
-    createErrorResponse(
+    // See the comment above: createErrorResponse must run before deleteRequestMaps.
+    await createErrorResponse(
       responseId,
       request._id,
       responseEnvironmentId,
       timelinePath,
       e.message || 'Something went wrong',
     );
+    deleteRequestMaps(request._id, e.message || 'Something went wrong');
   }
 };
 
@@ -530,7 +582,7 @@ const createErrorResponse = async (
     environmentId: environmentId,
     timelinePath,
     statusMessage: 'Error',
-    error: message,
+    error: redactForRequest(requestId, message),
   };
   const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
   services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
@@ -542,20 +594,15 @@ const deleteRequestMaps = async (
   event?: WebSocketCloseEvent | WebSocketErrorEvent,
 ) => {
   if (event) {
-    writeEventLogAndNotify({
-      requestId,
-      data: JSON.stringify(event) + '\n',
-      clearRequestIdMap: true,
-    });
+    writeWsEventLog(requestId, event, { clearRequestIdMap: true });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
-  timelineFileStreams
-    .get(requestId)
-    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  writeTimelineEntry(requestId, { value: message, name: 'Text', timestamp: Date.now() });
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   WebSocketConnections.delete(requestId);
+  sensitiveValuesByRequestId.delete(requestId);
 };
 
 const getWebSocketReadyState = async (options: { requestId: string }): Promise<boolean> => {
@@ -582,7 +629,7 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
     timestamp: Date.now(),
   };
 
-  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(lastMessage) + '\n' });
+  writeWsEventLog(options.requestId, lastMessage);
   const response = await database.findOne<WebSocketResponse>(
     'WebSocketResponse',
     {
@@ -596,7 +643,11 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
   }
 };
 
-const sendWebSocketEvent = async (options: { payload: string; requestId: string }): Promise<void> => {
+const sendWebSocketEvent = async (options: {
+  payload: string;
+  requestId: string;
+  sensitiveValues?: string[];
+}): Promise<void> => {
   const ws = WebSocketConnections.get(options.requestId);
 
   if (!ws) {
@@ -604,6 +655,7 @@ const sendWebSocketEvent = async (options: { payload: string; requestId: string 
     return;
   }
 
+  registerSensitiveValues(options.requestId, options.sensitiveValues);
   sendPayload(ws, options);
 };
 

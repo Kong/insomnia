@@ -11,6 +11,7 @@ import type { McpResponse, RequestHeader } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { Dispatcher } from 'undici';
 
+import { redactConfidentialText } from '~/common/network/sensitive-value-collector';
 import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
@@ -100,7 +101,7 @@ const wrappedFetch = async (
       { value: `Preparing request to ${url.toString()}`, name: 'Text', timestamp: Date.now() },
       { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
     ];
-    initialTimelines.map(t => writeTimeline(context, JSON.stringify(t)));
+    initialTimelines.map(t => writeTimeline(context, t));
   }
   const requestHeaders: { name: string; value: string }[] = [...reqHeader.entries()].map(([name, value]) => ({
     name,
@@ -117,16 +118,18 @@ const wrappedFetch = async (
     `${requestMethodLine}\n${headersOut}`,
     response,
   );
-  timeline.map(t => writeTimeline(context, JSON.stringify(t)));
+  timeline.map(t => writeTimeline(context, t));
 
   if (isMcpInitializeRequest) {
     // Create response model only for initialize response
+    const { sensitiveValues } = context;
+    const responseUrl = url.toString();
     const responsePatch: Partial<McpResponse> = {
       _id: responseId,
       parentId: requestId,
       environmentId,
       headers: responseHeaders,
-      url: url.toString(),
+      url: sensitiveValues.size > 0 ? redactConfidentialText(responseUrl, [...sensitiveValues]) : responseUrl,
       statusCode,
       statusMessage,
       elapsedTime: performance.now() - start,
