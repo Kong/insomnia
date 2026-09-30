@@ -17,8 +17,8 @@ import { version } from '../../package.json';
 // In the inso CLI and main process, fall back to process.env.
 const ENV = 'env';
 
-// eslint-disable-next-line no-restricted-globals -- isomorphic: guarded by `typeof window`. Renderer reads env from the preload (`window.env`); main process, UtilityProcess and the inso CLI fall back to process.env.
-const env = typeof window !== 'undefined' && window.env ? window.env : process[ENV];
+// eslint-disable-next-line no-restricted-globals -- isomorphic: guarded by `typeof window`/`typeof process`. Renderer reads env from the preload (`window.env`); main process, UtilityProcess and the inso CLI fall back to process.env; dedicated Web Workers (e.g. the templating worker) have neither, so fall back to `{}` there instead of throwing.
+const env = typeof window !== 'undefined' && window.env ? window.env : typeof process !== 'undefined' ? process[ENV] : {};
 
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
