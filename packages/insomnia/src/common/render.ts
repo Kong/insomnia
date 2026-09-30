@@ -15,6 +15,7 @@ import type {
 import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
+import { collectLeafStrings, type SensitiveValueCollector } from '~/common/network/sensitive-value-collector';
 import { type ConfidentialValueKind, getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
@@ -166,6 +167,65 @@ export function buildEnvironmentRenderLayers({
   return environmentLayers;
 }
 
+// Enumerates the same five confidential-capable layers as buildEnvironmentRenderLayers
+// (rootGlobal, subGlobal, rootEnvironment, subEnvironment, folder ancestors) and registers
+// every isConfidential:true KV pair's raw, unrendered value into the collector.
+//
+// Used to pre-fill a collector before a pre-request script runs or a WebSocket/MCP
+// connection is opened, i.e. before any render pass would otherwise register these values.
+// This covers early-exit paths (a pre-request script that throws, skipRequest, a connection
+// that's closed before its first message) where the normal render-time registration never runs.
+//
+// iteration/transient layers are intentionally excluded: they carry no kvPairData and can
+// never be confidential (see buildEnvironmentRenderLayers).
+export function collectConfidentialRawValues(
+  {
+    ancestors,
+    rootEnvironment,
+    subEnvironment,
+    rootGlobalEnvironment,
+    subGlobalEnvironment,
+  }: {
+    ancestors?: RenderContextAncestor[];
+    rootEnvironment?: Environment;
+    subEnvironment?: Environment;
+    rootGlobalEnvironment?: Environment | null;
+    subGlobalEnvironment?: Environment | null;
+  },
+  collector: SensitiveValueCollector,
+): void {
+  const layers = buildEnvironmentRenderLayers({
+    ancestors,
+    rootEnvironment,
+    subEnvironment,
+    rootGlobalEnvironment,
+    subGlobalEnvironment,
+  });
+
+  for (const layer of layers) {
+    for (const pair of layer.kvPairData ?? []) {
+      // SECRET values are decrypted and registered separately by
+      // maskOrDecryptVaultDataIfNecessary; double-registering them here would be harmless
+      // but redundant, so they're excluded for the same reason getConfidentialityByKey excludes them.
+      if (pair.enabled === false || !pair.isConfidential || pair.type === EnvironmentKvPairDataType.SECRET) {
+        continue;
+      }
+
+      if (pair.type === EnvironmentKvPairDataType.JSON) {
+        // pair.value is the JSON-stringified raw text (see getKVPairFromData); parse it so
+        // collectLeafStrings registers each scalar leaf rather than the whole JSON string.
+        try {
+          collectLeafStrings(JSON.parse(pair.value), collector);
+        } catch {
+          collector.register(pair.value);
+        }
+      } else {
+        collector.register(pair.value);
+      }
+    }
+  }
+}
+
 export async function buildRenderContext({
   ancestors,
   rootEnvironment,
@@ -277,20 +337,20 @@ export async function buildRenderContext({
       // correct "public" signal and clears any confidentiality from lower layers.
       confidentialityByKey.set(key, layerConfidentialityByKey.get(key));
       const confidentiality = confidentialityByKey.get(key);
-      renderableData[key] = confidentiality && confidentialPolicy === 'mask'
-        ? maskConfidentialValue(value)
-        : value;
+      renderableData[key] = confidentiality && confidentialPolicy === 'mask' ? maskConfidentialValue(value) : value;
     }
 
     finalRenderContext = await renderSubContext(renderableData, finalRenderContext);
   }
 
-  const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
-    finalRenderContext[models.environment.vaultEnvironmentPath],
-    purpose,
+  const collector = baseContext?.getSensitiveValueCollector?.() ?? null;
+  const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary({
+    vaultEnvironmentData: finalRenderContext[models.environment.vaultEnvironmentPath],
+    renderPurpose: purpose,
     hideSecretValues,
     forceReveal,
-  );
+    sensitiveValueCollector: collector,
+  });
   if (vaultEnvironmentData) {
     // avoid add undefined data to render context
     finalRenderContext[models.environment.vaultEnvironmentPath] = vaultEnvironmentData;
@@ -339,6 +399,15 @@ export async function buildRenderContext({
       }
 
       finalRenderContext[key] = renderResult;
+    }
+  }
+
+  // Register fully-rendered normal confidential values for timeline redaction (purpose='send' only).
+  if (collector) {
+    for (const key of keys) {
+      if (confidentialityByKey.get(key) === 'normal') {
+        collectLeafStrings(finalRenderContext[key], collector);
+      }
     }
   }
 
@@ -398,8 +467,9 @@ export async function render<T>(
       }
 
       try {
+        const sensitiveValueCollector = context?.getSensitiveValueCollector?.();
         // @ts-expect-error -- TSCONVERSION
-        input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
+        input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable, sensitiveValueCollector });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -410,7 +480,7 @@ export async function render<T>(
         // @ts-expect-error -- TSCONVERSION
         if (!hasNunjucksCustomTagSymbols && input.includes('{%')) {
           // @ts-expect-error -- TSCONVERSION
-          input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
+          input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable, sensitiveValueCollector });
         }
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);
@@ -477,6 +547,7 @@ export async function getRenderContext({
   purpose,
   extraInfo,
   forceReveal,
+  sensitiveValueCollector,
 }: RenderContextOptions): Promise<BaseRenderContext> {
   const ancestors = _ancestors || (await getRenderContextAncestors(request));
 
@@ -606,6 +677,7 @@ export async function getRenderContext({
       hideSecretValuesInPreviewAndConsole: settings.hideSecretValuesInPreviewAndConsole,
       forceReveal: forceReveal,
     }),
+    ...(sensitiveValueCollector != null ? { getSensitiveValueCollector: () => sensitiveValueCollector } : {}),
   };
 
   // Generate the context we need to render
@@ -661,6 +733,7 @@ export async function getRenderedRequestAndContext({
   extraInfo,
   purpose,
   ignoreUndefinedEnvVariable,
+  sensitiveValueCollector,
 }: BaseRenderContextOptions & { request: Request }): Promise<{
   request: RenderedRequest;
   context: Record<string, any>;
@@ -681,6 +754,7 @@ export async function getRenderedRequestAndContext({
     baseEnvironment,
     userUploadEnvironment,
     transientVariables,
+    sensitiveValueCollector,
   });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
