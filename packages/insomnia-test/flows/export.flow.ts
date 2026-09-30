@@ -1,3 +1,4 @@
+import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import type { ExportFormat } from "../enums/export-format";
 import { Collection } from "../models/collection";
@@ -79,5 +80,31 @@ export class ExportFlow extends BaseFlow {
     await exportPage.confirmFormat();
     await exportPage.dismissCompletionIfShown();
     if (await preferencesPage.isOpen()) await preferencesPage.close();
+  }
+
+  /**
+   * Exports a Collection's OpenAPI spec (only the spec, not the rest of
+   * the collection) to a single file via the sidebar workspace
+   * dropdown's "Export OpenAPI Spec" item, choosing `format` in the
+   * resulting modal. If the collection's spec is empty/missing, the
+   * click surfaces a "Cannot export" alert instead of the format modal —
+   * `ExportPage.exportOpenApiSpec()` is decorated with `@throwOnDialog`,
+   * so this rejects with that alert's trimmed text in that case; dismiss
+   * it with `workspaceFlow.closeDialog()` before continuing.
+   * @param item - The Collection whose OpenAPI spec to export
+   * @param format - YAML or JSON
+   * @param path - Absolute file path the exported spec should be written to
+   */
+  async exportOpenApiSpec(
+    item: Collection,
+    format: ApiSpecExportFormat,
+    path: string,
+  ): Promise<void> {
+    const { workspacePage, exportPage } = this.pageManager;
+    const node = await workspacePage.resolveNode(item);
+    await exportPage.stubSaveFileLocation(path);
+    await workspacePage.openWorkspaceActionsDropdown(node);
+    await workspacePage.clickContextMenu(ContextMenuItem.ExportOpenApiSpec);
+    await exportPage.exportOpenApiSpec(format);
   }
 }

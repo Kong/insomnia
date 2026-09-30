@@ -367,16 +367,42 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
+   * Locates a context-menu item by name, matching either a menuitem or a
+   * menuitemradio role since some menu entries render as radio options.
+   * Exposed (unlike `clickContextMenu`) so a caller can assert visibility
+   * without clicking, e.g. confirming an item is offered on a given
+   * surface.
+   * @param item - The context-menu item to locate
+   */
+  getContextMenuItem(item: ContextMenuItem): Locator {
+    const menu = this.page.getByRole("menu");
+    return menu
+      .getByRole("menuitem", { name: item, exact: true })
+      .or(menu.getByRole("menuitemradio", { name: item, exact: true }));
+  }
+
+  /**
    * Clicks a context-menu item, matching either a menuitem or a
    * menuitemradio role since some menu entries render as radio options.
    * @param item - The context-menu item to click
    */
   async clickContextMenu(item: ContextMenuItem): Promise<void> {
-    const menu = this.page.getByRole("menu");
-    const menuItem = menu
-      .getByRole("menuitem", { name: item, exact: true })
-      .or(menu.getByRole("menuitemradio", { name: item, exact: true }));
-    await menuItem.click();
+    await this.getContextMenuItem(item).click();
+  }
+
+  /**
+   * Opens a workspace row's "⋮" actions dropdown (the "SideBar Workspace
+   * Actions" trigger, only rendered on hover) — the same underlying menu
+   * `rightClick()` also opens.
+   * @param node - The workspace tree node to open the dropdown for
+   */
+  async openWorkspaceActionsDropdown(node: TreeNode): Promise<void> {
+    const row = this.page
+      .getByTestId("project-navigation-tree-container")
+      .locator(`div[role="row"][data-key="${node._id}"]`);
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByLabel("SideBar Workspace Actions").click();
   }
 
   /**

@@ -1,37 +1,37 @@
-import { expect } from "@playwright/test";
+import { expect } from '@playwright/test';
 
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { ProjectType } from "../enums/project-types";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
-import { Collection, TestSuite, UnitTest } from "../models/collection";
-import { Environment, isEnvironmentItem } from "../models/environment";
-import type { EventStreamRequest } from "../models/event-stream-request";
-import type { GitRepoConnection } from "../models/git-repo-connection";
-import type { GraphQLRequest } from "../models/graphql-request";
-import type { GrpcRequest } from "../models/grpc-request";
-import type { HttpRequest } from "../models/http-request";
-import { McpClient } from "../models/mcp-client";
-import { Project } from "../models/project";
-import type { RunnerOptions, RunnerRunResult } from "../models/runner";
-import { Settings } from "../models/settings";
-import type { SocketIORequest } from "../models/socket-io-request";
-import type { WebSocketRequest } from "../models/websocket-request";
-import type { PageManager } from "../pages/page-manager";
-import type { TreeNode, UnitTestResultRow } from "../pages/workspace.page";
-import { BaseFlow } from "./base.flow";
-import type { FlowManager } from "./flow-manager";
+import { ContextMenuItem } from '../enums/context-menu-items';
+import { ProjectType } from '../enums/project-types';
+import { TreeNodeType } from '../enums/tree-node-types';
+import { DEFAULT_TIMEOUT } from '../misc/fixtures';
+import { Collection, TestSuite, UnitTest } from '../models/collection';
+import { Environment, isEnvironmentItem } from '../models/environment';
+import type { EventStreamRequest } from '../models/event-stream-request';
+import type { GitRepoConnection } from '../models/git-repo-connection';
+import type { GraphQLRequest } from '../models/graphql-request';
+import type { GrpcRequest } from '../models/grpc-request';
+import type { HttpRequest } from '../models/http-request';
+import { McpClient } from '../models/mcp-client';
+import { Project } from '../models/project';
+import type { RunnerOptions, RunnerRunResult } from '../models/runner';
+import { Settings } from '../models/settings';
+import type { SocketIORequest } from '../models/socket-io-request';
+import type { WebSocketRequest } from '../models/websocket-request';
+import type { PageManager } from '../pages/page-manager';
+import type { TreeNode, UnitTestResultRow } from '../pages/workspace.page';
+import { BaseFlow } from './base.flow';
+import type { FlowManager } from './flow-manager';
 
 export type WorkspaceItem =
-  | (Project & { kind: "project" })
-  | (Collection & { kind: "collection" })
-  | (McpClient & { kind: "mcpClient" })
-  | (HttpRequest & { kind: "http" })
-  | (GraphQLRequest & { kind: "graphql" })
-  | (GrpcRequest & { kind: "grpc" })
-  | (EventStreamRequest & { kind: "eventStream" })
-  | (SocketIORequest & { kind: "socketIO" })
-  | (WebSocketRequest & { kind: "webSocket" });
+  | (Project & { kind: 'project' })
+  | (Collection & { kind: 'collection' })
+  | (McpClient & { kind: 'mcpClient' })
+  | (HttpRequest & { kind: 'http' })
+  | (GraphQLRequest & { kind: 'graphql' })
+  | (GrpcRequest & { kind: 'grpc' })
+  | (EventStreamRequest & { kind: 'eventStream' })
+  | (SocketIORequest & { kind: 'socketIO' })
+  | (WebSocketRequest & { kind: 'webSocket' });
 
 /** The settled outcome of `WorkspaceFlow.runAllTests()`. */
 export interface UnitTestRunResult {
@@ -74,11 +74,7 @@ export class WorkspaceFlow extends BaseFlow {
    * where each collection is backed by its own file
    * @returns The created Collection, with `id` populated
    */
-  async create(
-    parent: Project,
-    item: Collection,
-    fileName?: string,
-  ): Promise<Collection>;
+  async create(parent: Project, item: Collection, fileName?: string): Promise<Collection>;
   /**
    * Creates an McpClient under `parent`.
    * @param parent - The Project to create `item` under
@@ -145,7 +141,7 @@ export class WorkspaceFlow extends BaseFlow {
       await (p.folderPath !== undefined ? this.openFolder(p) : this.createProject(p));
       return this.assertCreated(await this.getProject(p.name), p.name);
     }
-    if (typeof itemOrCredentialName === "string") {
+    if (typeof itemOrCredentialName === 'string') {
       return this.cloneFromRemote(
         parentOrItem,
         itemOrCredentialName,
@@ -161,24 +157,15 @@ export class WorkspaceFlow extends BaseFlow {
     }
     if (isEnvironmentItem(item)) {
       await this.createEnvironment(parent, item.name);
-      return this.assertCreated(
-        await this.getEnvironment(item.name),
-        item.name,
-      );
+      return this.assertCreated(await this.getEnvironment(item.name), item.name);
     }
     const collection = item as Collection;
     await this.createCollection(parent, collection.name, fileName);
     if (collection.spec) {
       await this.authorSpec(collection.name, collection.spec);
-      return this.assertCreated(
-        await this.getCollectionSpec(collection.name),
-        collection.name,
-      );
+      return this.assertCreated(await this.getCollectionSpec(collection.name), collection.name);
     }
-    return this.assertCreated(
-      await this.getCollection(collection.name),
-      collection.name,
-    );
+    return this.assertCreated(await this.getCollection(collection.name), collection.name);
   }
 
   /**
@@ -192,10 +179,7 @@ export class WorkspaceFlow extends BaseFlow {
    * @param collection - The collection to create, with an optional `spec` to author
    * @returns The created collection, re-fetched via `getCollectionSpec()`/`getCollection()`
    */
-  async createInEmptyState(
-    parent: Project,
-    collection: Collection,
-  ): Promise<Collection> {
+  async createInEmptyState(parent: Project, collection: Collection): Promise<Collection> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
     await workspace.clickNode(node);
@@ -203,15 +187,9 @@ export class WorkspaceFlow extends BaseFlow {
 
     if (collection.spec) {
       await this.authorSpec(collection.name, collection.spec);
-      return this.assertCreated(
-        await this.getCollectionSpec(collection.name),
-        collection.name,
-      );
+      return this.assertCreated(await this.getCollectionSpec(collection.name), collection.name);
     }
-    return this.assertCreated(
-      await this.getCollection(collection.name),
-      collection.name,
-    );
+    return this.assertCreated(await this.getCollection(collection.name), collection.name);
   }
 
   /**
@@ -289,9 +267,7 @@ export class WorkspaceFlow extends BaseFlow {
     const node = await this.pageManager.workspacePage.findItemNode(item);
     if (!node) return;
     await this.pageManager.workspacePage.rightClick(node);
-    await this.pageManager.workspacePage.clickContextMenu(
-      ContextMenuItem.Delete,
-    );
+    await this.pageManager.workspacePage.clickContextMenu(ContextMenuItem.Delete);
     await this.pageManager.workspacePage.clickDelete();
     await this.pageManager.workspacePage.waitForNodeRemoved(node);
   }
@@ -320,24 +296,16 @@ export class WorkspaceFlow extends BaseFlow {
    * @returns The generated code snippet's text (curl by default)
    */
   async generateCode(
-    request:
-      | HttpRequest
-      | GraphQLRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
+    request: HttpRequest | GraphQLRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
     options?: { target?: string; client?: string },
   ): Promise<string> {
     const { workspacePage } = this.pageManager;
     const node = await workspacePage.findItemNode(request);
-    if (!node)
-      throw new Error(`Failed to find "${request.name}" to generate code for`);
+    if (!node) throw new Error(`Failed to find "${request.name}" to generate code for`);
     await workspacePage.rightClick(node);
     await workspacePage.clickContextMenu(ContextMenuItem.GenerateCode);
-    if (options?.target)
-      await workspacePage.setGenerateCodeTarget(options.target);
-    if (options?.client)
-      await workspacePage.setGenerateCodeClient(options.client);
+    if (options?.target) await workspacePage.setGenerateCodeTarget(options.target);
+    if (options?.client) await workspacePage.setGenerateCodeClient(options.client);
     return workspacePage.getGeneratedCode();
   }
 
@@ -361,13 +329,7 @@ export class WorkspaceFlow extends BaseFlow {
    * @returns The duplicated request's id and name
    */
   async duplicate(
-    item:
-      | HttpRequest
-      | GraphQLRequest
-      | GrpcRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
+    item: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
     newName: string,
   ): Promise<{ id: string; name: string }>;
   /**
@@ -398,19 +360,14 @@ export class WorkspaceFlow extends BaseFlow {
     const node = await workspace.resolveNode(item);
     await workspace.rightClick(node);
     await workspace.clickContextMenu(
-      node.type === TreeNodeType.Workspace
-        ? ContextMenuItem.DuplicateWorkspace
-        : ContextMenuItem.Duplicate,
+      node.type === TreeNodeType.Workspace ? ContextMenuItem.DuplicateWorkspace : ContextMenuItem.Duplicate,
     );
 
     if (node.type === TreeNodeType.Request) {
       await workspace.setItemName(newName);
       await workspace.clickDuplicateRequest();
       const newNode = await workspace.findNode(newName, TreeNodeType.Request);
-      return this.assertCreated(
-        newNode ? { id: newNode._id, name: newName } : undefined,
-        newName,
-      );
+      return this.assertCreated(newNode ? { id: newNode._id, name: newName } : undefined, newName);
     }
 
     await workspace.setDuplicateName(newName);
@@ -431,15 +388,9 @@ export class WorkspaceFlow extends BaseFlow {
     // populate `containerName` the way environmentFlow.create() does.
     if (item.name !== newName) {
       await this.pageManager.environmentPage.navigate();
-      await this.pageManager.environmentPage.renameEnvironment(
-        item.name,
-        newName,
-      );
+      await this.pageManager.environmentPage.renameEnvironment(item.name, newName);
     }
-    const duplicated = await this.assertCreated(
-      await this.getEnvironment(newName),
-      newName,
-    );
+    const duplicated = await this.assertCreated(await this.getEnvironment(newName), newName);
     return Object.assign(duplicated, { containerName: newName });
   }
 
@@ -449,13 +400,7 @@ export class WorkspaceFlow extends BaseFlow {
    * @param request - The request to pin
    */
   async pin(
-    request:
-      | HttpRequest
-      | GraphQLRequest
-      | GrpcRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
+    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
   ): Promise<void> {
     await this.togglePin(request, ContextMenuItem.Pin);
   }
@@ -466,25 +411,13 @@ export class WorkspaceFlow extends BaseFlow {
    * @param request - The request to unpin
    */
   async unpin(
-    request:
-      | HttpRequest
-      | GraphQLRequest
-      | GrpcRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
+    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
   ): Promise<void> {
     await this.togglePin(request, ContextMenuItem.Unpin);
   }
 
   private async togglePin(
-    request:
-      | HttpRequest
-      | GraphQLRequest
-      | GrpcRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
+    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
     action: ContextMenuItem.Pin | ContextMenuItem.Unpin,
   ): Promise<void> {
     const { workspacePage } = this.pageManager;
@@ -515,13 +448,7 @@ export class WorkspaceFlow extends BaseFlow {
    * @returns The renamed request's id and name
    */
   async rename(
-    item:
-      | HttpRequest
-      | GraphQLRequest
-      | GrpcRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
+    item: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
     newName: string,
   ): Promise<{ id: string; name: string }>;
   /**
@@ -555,10 +482,7 @@ export class WorkspaceFlow extends BaseFlow {
 
     if (node.type === TreeNodeType.Request) {
       const newNode = await workspace.findNode(newName, TreeNodeType.Request);
-      return this.assertCreated(
-        newNode ? { id: newNode._id, name: newName } : undefined,
-        newName,
-      );
+      return this.assertCreated(newNode ? { id: newNode._id, name: newName } : undefined, newName);
     }
 
     if (item instanceof Collection) {
@@ -581,10 +505,7 @@ export class WorkspaceFlow extends BaseFlow {
    * @param collection - The Collection to run
    * @param options - Iterations/delay/keep-logs/bail settings to apply before running
    */
-  async openRunner(
-    collection: Collection,
-    options?: RunnerOptions,
-  ): Promise<void> {
+  async openRunner(collection: Collection, options?: RunnerOptions): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const runner = this.pageManager.runnerPage;
     const node = await workspace.resolveNode(collection);
@@ -592,8 +513,7 @@ export class WorkspaceFlow extends BaseFlow {
     await workspace.clickContextMenu(ContextMenuItem.RunCollection);
     await runner.navigate();
 
-    if (options?.keepLogs !== undefined)
-      await runner.setKeepLogs(options.keepLogs);
+    if (options?.keepLogs !== undefined) await runner.setKeepLogs(options.keepLogs);
     if (options?.bail !== undefined) await runner.setBail(options.bail);
     if (options?.dataFilePath !== undefined) {
       await runner.uploadData(options.dataFilePath);
@@ -617,17 +537,12 @@ export class WorkspaceFlow extends BaseFlow {
    * whether the request's own result row appears), each filter's array has the
    * same request rows; only their per-assertion detail differs
    */
-  async run(
-    collection: Collection,
-    options?: RunnerOptions,
-  ): Promise<RunnerRunResult> {
+  async run(collection: Collection, options?: RunnerOptions): Promise<RunnerRunResult> {
     const runner = this.pageManager.runnerPage;
     await this.openRunner(collection, options);
 
-    await runner.switchRequestTab("request-order");
-    const selectedRequestCount = (await runner.getRequestOrder()).filter(
-      (item) => item.selected,
-    ).length;
+    await runner.switchRequestTab('request-order');
+    const selectedRequestCount = (await runner.getRequestOrder()).filter(item => item.selected).length;
     const targetIterations = await runner.getIterations();
 
     await runner.clickRun();
@@ -636,10 +551,7 @@ export class WorkspaceFlow extends BaseFlow {
       .poll(
         async () => {
           const results = await runner.getIterationResults();
-          return (
-            results.length === targetIterations &&
-            results.every((it) => it.results.length === selectedRequestCount)
-          );
+          return results.length === targetIterations && results.every(it => it.results.length === selectedRequestCount);
         },
         { timeout: DEFAULT_TIMEOUT },
       )
@@ -664,13 +576,11 @@ export class WorkspaceFlow extends BaseFlow {
     item: string | { name: string; id?: string },
     parent?: Project | Collection,
   ): Promise<T | undefined> {
-    const identity = typeof item === "string" ? { name: item } : item;
+    const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
     const parentNode = parent ? await workspace.resolveNode(parent) : undefined;
     const node = await workspace.findItemNode(identity, undefined, parentNode);
-    const result = node
-      ? await this.getResolved(node, { name: node.name, id: node._id })
-      : undefined;
+    const result = node ? await this.getResolved(node, { name: node.name, id: node._id }) : undefined;
     return result as T | undefined;
   }
 
@@ -697,10 +607,8 @@ export class WorkspaceFlow extends BaseFlow {
    * @param item - The collection name, or an object with name and optional id to match
    * @returns The matching Collection with `id` populated, or undefined if not found
    */
-  async getCollection(
-    item: string | { name: string; id?: string },
-  ): Promise<Collection | undefined> {
-    const identity = typeof item === "string" ? { name: item } : item;
+  async getCollection(item: string | { name: string; id?: string }): Promise<Collection | undefined> {
+    const identity = typeof item === 'string' ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
     if (!node) return undefined;
     return Object.assign(new Collection(identity.name), { id: node._id });
@@ -717,10 +625,8 @@ export class WorkspaceFlow extends BaseFlow {
    * @param item - The collection's name, or an object with `name`/`id`
    * @returns The found collection (with `specification`/`rulesetType`/`version` populated), or `undefined` if not found
    */
-  async getCollectionSpec(
-    item: string | { name: string; id?: string },
-  ): Promise<Collection | undefined> {
-    const identity = typeof item === "string" ? { name: item } : item;
+  async getCollectionSpec(item: string | { name: string; id?: string }): Promise<Collection | undefined> {
+    const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
 
     const node = await workspace.findItemNode(identity);
@@ -739,6 +645,33 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
+   * Types `spec` into an already-existing collection's spec editor,
+   * replacing whatever content (if any) is currently there. Unlike the
+   * `spec` passed to `create()` (which only authors right after
+   * creation), this can be called at any later point — e.g. filling in a
+   * collection that started out with no spec.
+   * @param item - The collection to author into
+   * @param spec - The spec to author; written verbatim when given as a string, boilerplate-wrapped into Swagger 2.0 JSON when given as a `Specification`
+   */
+  async fillSpecification(item: Collection, spec: NonNullable<Collection['spec']>): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.resolveNode(item);
+    await workspace.clickNode(node);
+    await workspace.navigateSpec();
+    await workspace.setSpecification(
+      typeof spec === 'string'
+        ? spec
+        : JSON.stringify({
+            swagger: '2.0',
+            host: 'localhost',
+            schemes: ['http'],
+            info: spec.info,
+            paths: spec.paths,
+          }),
+    );
+  }
+
+  /**
    * Opens `item`'s Tests tab, then creates a default-named test suite (via
    * `WorkspacePage.createTestSuite()`, which also navigates into it) and
    * renames it — the two nearly always happen together, since a fresh
@@ -746,14 +679,11 @@ export class WorkspaceFlow extends BaseFlow {
    * @param item - The collection's name, or an object with `name`/`id`
    * @param name - The name to give the new suite
    */
-  async createTestSuite(
-    item: string | { name: string; id?: string },
-    name: string,
-  ): Promise<void> {
+  async createTestSuite(item: string | { name: string; id?: string }, name: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     await this.openTests(item);
     await workspace.createTestSuite();
-    await workspace.renameTestSuite("New Suite", name);
+    await workspace.renameTestSuite('New Suite', name);
   }
 
   /**
@@ -770,7 +700,7 @@ export class WorkspaceFlow extends BaseFlow {
     await workspace.selectTestSuite(testSuite.name);
 
     await workspace.createTest();
-    await workspace.renameUnitTest("Returns 200", testName);
+    await workspace.renameUnitTest('Returns 200', testName);
   }
 
   /**
@@ -779,10 +709,7 @@ export class WorkspaceFlow extends BaseFlow {
    * @param item - The collection's name, or an object with `name`/`id`
    * @param suiteName - The exact name of the suite to delete
    */
-  async deleteTestSuite(
-    item: string | { name: string; id?: string },
-    suiteName: string,
-  ): Promise<void> {
+  async deleteTestSuite(item: string | { name: string; id?: string }, suiteName: string): Promise<void> {
     await this.openTests(item);
     await this.pageManager.workspacePage.deleteTestSuite(suiteName);
   }
@@ -800,9 +727,7 @@ export class WorkspaceFlow extends BaseFlow {
    * @param minLintErrors - The minimum error count to wait for before reading the settled lint state; leave at 0 when no errors are expected
    * @returns The settled lint summary and fired rule codes
    */
-  async getLintState(
-    minLintErrors = 0,
-  ): Promise<NonNullable<Collection["lint"]>> {
+  async getLintState(minLintErrors = 0): Promise<NonNullable<Collection['lint']>> {
     const workspace = this.pageManager.workspacePage;
 
     await workspace.expandLintPanel();
@@ -810,7 +735,7 @@ export class WorkspaceFlow extends BaseFlow {
       .poll(
         async () => {
           const summary = await workspace.getLintSummary();
-          return summary === "none" ? 0 : summary.errors;
+          return summary === 'none' ? 0 : summary.errors;
         },
         { timeout: DEFAULT_TIMEOUT },
       )
@@ -818,8 +743,8 @@ export class WorkspaceFlow extends BaseFlow {
     const summary = await workspace.getLintSummary();
     const entries = await workspace.getLintEntries();
     return {
-      errors: summary === "none" ? 0 : summary.errors,
-      warnings: summary === "none" ? 0 : summary.warnings,
+      errors: summary === 'none' ? 0 : summary.errors,
+      warnings: summary === 'none' ? 0 : summary.warnings,
       entries,
     };
   }
@@ -834,24 +759,16 @@ export class WorkspaceFlow extends BaseFlow {
    * @param testSuiteName - The exact name of the suite to select and read
    * @returns The selected suite, with its unit tests and source collection populated
    */
-  async getTestSuite(
-    item: string | { name: string; id?: string },
-    testSuiteName: string,
-  ): Promise<TestSuite> {
+  async getTestSuite(item: string | { name: string; id?: string }, testSuiteName: string): Promise<TestSuite> {
     const workspace = this.pageManager.workspacePage;
     const node = await this.openTests(item);
     await workspace.selectTestSuite(testSuiteName);
 
-    const collection =
-      item instanceof Collection
-        ? item
-        : new Collection(typeof item === "string" ? item : item.name);
+    const collection = item instanceof Collection ? item : new Collection(typeof item === 'string' ? item : item.name);
     if (!collection.id && node) collection.id = node._id;
 
     const name = await workspace.getSelectedTestSuiteName();
-    const tests = (await workspace.getUnitTestNames()).map(
-      (testName) => new UnitTest(testName),
-    );
+    const tests = (await workspace.getUnitTestNames()).map(testName => new UnitTest(testName));
     return new TestSuite(name, tests, collection);
   }
 
@@ -860,9 +777,7 @@ export class WorkspaceFlow extends BaseFlow {
    * listed in the Test Suites sidebar (`WorkspacePage.getTestSuiteNames()`).
    * @param item - The collection's name, or an object with `name`/`id`
    */
-  async getTestSuiteNames(
-    item: string | { name: string; id?: string },
-  ): Promise<string[]> {
+  async getTestSuiteNames(item: string | { name: string; id?: string }): Promise<string[]> {
     await this.openTests(item);
     return this.pageManager.workspacePage.getTestSuiteNames();
   }
@@ -873,10 +788,8 @@ export class WorkspaceFlow extends BaseFlow {
    * the default OAS ruleset.
    * @param item - The collection's name, or an object with `name`/`id`
    */
-  async removeRuleset(
-    item: string | { name: string; id?: string },
-  ): Promise<void> {
-    const identity = typeof item === "string" ? { name: item } : item;
+  async removeRuleset(item: string | { name: string; id?: string }): Promise<void> {
+    const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
 
     const node = await workspace.findItemNode(identity);
@@ -916,15 +829,12 @@ export class WorkspaceFlow extends BaseFlow {
    * @param expectCode - A rule id the accepted ruleset should introduce, e.g. "require-x-test-marker" — omit when uploading a ruleset expected to be rejected
    * @returns The settled list of fired rule ids if accepted, or `"invalid"` if rejected
    */
-  async uploadRuleset(
-    filePath: string,
-    expectCode?: string,
-  ): Promise<string[] | "invalid"> {
+  async uploadRuleset(filePath: string, expectCode?: string): Promise<string[] | 'invalid'> {
     const workspace = this.pageManager.workspacePage;
     const result = await workspace.uploadRuleset(filePath);
-    if (result === "invalid") {
+    if (result === 'invalid') {
       await workspace.closeDialog();
-      return "invalid";
+      return 'invalid';
     }
 
     await workspace.expandLintPanel();
@@ -938,11 +848,7 @@ export class WorkspaceFlow extends BaseFlow {
     return workspace.getLintEntryCodes();
   }
 
-  private async createCollection(
-    parent: Project,
-    name: string,
-    fileName?: string,
-  ): Promise<void> {
+  private async createCollection(parent: Project, name: string, fileName?: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
     await workspace.rightClick(node);
@@ -954,9 +860,7 @@ export class WorkspaceFlow extends BaseFlow {
     // A file name means this collection is backed by its own file in a Git
     // Sync project, which writes and stages that file before the dialog
     // closes — give it more room than the default UI-only timeout.
-    await workspace.clickCreate(
-      fileName !== undefined ? DEFAULT_TIMEOUT * 2 : undefined,
-    );
+    await workspace.clickCreate(fileName !== undefined ? DEFAULT_TIMEOUT * 2 : undefined);
   }
 
   /**
@@ -967,31 +871,25 @@ export class WorkspaceFlow extends BaseFlow {
    * @param name - The name of the just-created collection to author into
    * @param spec - The spec to author
    */
-  private async authorSpec(
-    name: string,
-    spec: NonNullable<Collection["spec"]>,
-  ): Promise<void> {
+  private async authorSpec(name: string, spec: NonNullable<Collection['spec']>): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.findItemNode({ name });
     await workspace.clickNode(node!);
     await workspace.navigateSpec();
     await workspace.setSpecification(
-      typeof spec === "string"
+      typeof spec === 'string'
         ? spec
         : JSON.stringify({
-            swagger: "2.0",
-            host: "localhost",
-            schemes: ["http"],
+            swagger: '2.0',
+            host: 'localhost',
+            schemes: ['http'],
             info: spec.info,
             paths: spec.paths,
           }),
     );
   }
 
-  private async createEnvironment(
-    parent: Project,
-    name: string,
-  ): Promise<void> {
+  private async createEnvironment(parent: Project, name: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
     await workspace.rightClick(node);
@@ -1046,10 +944,10 @@ export class WorkspaceFlow extends BaseFlow {
     const uri = repo?.uri ?? this.gitRepoUrl;
     if (!uri) {
       throw new Error(
-        "create(): no repo URI given for a Git Sync project — either pass repo.uri, or use the `user` fixture from misc/git-fixtures.ts, which injects one",
+        'create(): no repo URI given for a Git Sync project — either pass repo.uri, or use the `user` fixture from misc/git-fixtures.ts, which injects one',
       );
     }
-    const branch = repo?.branch ?? "master";
+    const branch = repo?.branch ?? 'master';
 
     const { workspacePage, projectSettingsPage } = this.pageManager;
     await workspacePage.clickNewProject();
@@ -1065,16 +963,11 @@ export class WorkspaceFlow extends BaseFlow {
     await projectSettingsPage.submitScanForFiles();
     await projectSettingsPage.confirmClone();
 
-    return this.assertCreated(
-      await this.getProject(project.name),
-      project.name,
-    );
+    return this.assertCreated(await this.getProject(project.name), project.name);
   }
 
-  private async getEnvironment(
-    item: string | { name: string; id?: string },
-  ): Promise<Environment | undefined> {
-    const identity = typeof item === "string" ? { name: item } : item;
+  private async getEnvironment(item: string | { name: string; id?: string }): Promise<Environment | undefined> {
+    const identity = typeof item === 'string' ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
     if (!node) return undefined;
     return Object.assign(new Environment({ name: identity.name }), {
@@ -1087,10 +980,8 @@ export class WorkspaceFlow extends BaseFlow {
    * @param item - The MCP Client name, or an object with name and optional id to match
    * @returns The matching McpClient with `id` populated, or undefined if not found
    */
-  private async getMcpClient(
-    item: string | { name: string; id?: string },
-  ): Promise<McpClient | undefined> {
-    const identity = typeof item === "string" ? { name: item } : item;
+  private async getMcpClient(item: string | { name: string; id?: string }): Promise<McpClient | undefined> {
+    const identity = typeof item === 'string' ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
     if (!node) return undefined;
     const mcpClient = new McpClient(identity.name);
@@ -1103,10 +994,8 @@ export class WorkspaceFlow extends BaseFlow {
    * @param item - The project name, or an object with name and optional id to match
    * @returns The matching Project with `id` populated, or undefined if not found
    */
-  async getProject(
-    item: string | { name: string; id?: string },
-  ): Promise<Project | undefined> {
-    const identity = typeof item === "string" ? { name: item } : item;
+  async getProject(item: string | { name: string; id?: string }): Promise<Project | undefined> {
+    const identity = typeof item === 'string' ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
     if (!node) return undefined;
     return Object.assign(new Project(identity.name, ProjectType.Local), {
@@ -1122,49 +1011,47 @@ export class WorkspaceFlow extends BaseFlow {
 
     if (node.type === TreeNodeType.Project) {
       const project = await this.getProject(resolved);
-      return project && { ...project, kind: "project" };
+      return project && { ...project, kind: 'project' };
     }
 
     if (node.type === TreeNodeType.Request) {
       const flows = this.flowManager;
       const label = await workspace.getRequestTypeLabel(node);
       switch (label) {
-        case "GQL": {
+        case 'GQL': {
           const request = await flows.graphqlRequestFlow.get(resolved);
-          return request && { ...request, kind: "graphql" };
+          return request && { ...request, kind: 'graphql' };
         }
-        case "gRPC": {
+        case 'gRPC': {
           const request = await flows.grpcRequestFlow.get(resolved);
-          return request && { ...request, kind: "grpc" };
+          return request && { ...request, kind: 'grpc' };
         }
-        case "SSE": {
+        case 'SSE': {
           const request = await flows.eventStreamRequestFlow.get(resolved);
-          return request && { ...request, kind: "eventStream" };
+          return request && { ...request, kind: 'eventStream' };
         }
-        case "IO": {
+        case 'IO': {
           const request = await flows.socketIoRequestFlow.get(resolved);
-          return request && { ...request, kind: "socketIO" };
+          return request && { ...request, kind: 'socketIO' };
         }
-        case "WS": {
+        case 'WS': {
           const request = await flows.webSocketRequestFlow.get(resolved);
-          return request && { ...request, kind: "webSocket" };
+          return request && { ...request, kind: 'webSocket' };
         }
         default: {
           const request = await flows.httpRequestFlow.get(resolved);
-          return request && { ...request, kind: "http" };
+          return request && { ...request, kind: 'http' };
         }
       }
     }
 
     const subKind = await workspace.getWorkspaceItemKind(node);
-    if (subKind === "mcpClient") {
+    if (subKind === 'mcpClient') {
       const mcpClient = await this.getMcpClient(resolved);
-      return (
-        mcpClient && Object.assign(mcpClient, { kind: "mcpClient" as const })
-      );
+      return mcpClient && Object.assign(mcpClient, { kind: 'mcpClient' as const });
     }
     const collection = await this.getCollection(resolved);
-    return collection && { ...collection, kind: "collection" };
+    return collection && { ...collection, kind: 'collection' };
   }
 
   /**
@@ -1182,9 +1069,7 @@ export class WorkspaceFlow extends BaseFlow {
    */
   private async ensureLegacyUnitTestsEnabled(): Promise<void> {
     if (this.legacyUnitTestsEnabled) return;
-    await this.flowManager.preferencesFlow.set(
-      new Settings({ showLegacyUnitTests: true }),
-    );
+    await this.flowManager.preferencesFlow.set(new Settings({ showLegacyUnitTests: true }));
     this.legacyUnitTestsEnabled = true;
   }
 
@@ -1197,12 +1082,10 @@ export class WorkspaceFlow extends BaseFlow {
    * @param item - The collection's name, or an object with `name`/`id`
    * @returns The resolved tree node, or `undefined` if `item` couldn't be found
    */
-  private async openTests(
-    item: string | { name: string; id?: string },
-  ): Promise<{ _id: string } | undefined> {
+  private async openTests(item: string | { name: string; id?: string }): Promise<{ _id: string } | undefined> {
     await this.ensureLegacyUnitTestsEnabled();
 
-    const identity = typeof item === "string" ? { name: item } : item;
+    const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
 
     const node = await workspace.findItemNode(identity);

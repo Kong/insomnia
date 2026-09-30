@@ -32,5 +32,6 @@ export enum ContextMenuItem {
   Unpin = "Unpin",
   OpenInNewTab = "Open in New Tab",
   Export = "Export",
+  ExportOpenApiSpec = "Export OpenAPI Spec",
   GenerateCode = "Generate Code",
 }

@@ -1,6 +1,8 @@
 import { expect } from "@playwright/test";
 
+import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
 import type { ExportFormat } from "../enums/export-format";
+import { throwOnDialog } from "../misc/decorators";
 import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { BasePage } from "./base.page";
 
@@ -12,6 +14,10 @@ export class ExportPage extends BasePage {
   private readonly selectExportTypeDialog = this.page
     .getByRole("dialog")
     .filter({ hasText: "Select Export Type" });
+
+  private readonly selectSpecFormatDialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Select Specification Format" });
 
   /**
    * Confirms either the "Export requests" or "Select Export Type" dialog
@@ -61,6 +67,34 @@ export class ExportPage extends BasePage {
       .getByRole("button", { name: "Done" })
       .click();
     await expect(this.selectExportTypeDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Handles whatever "Export OpenAPI Spec" opened: if the "Select
+   * Specification Format" modal appeared (the workspace had a spec),
+   * chooses `format` and clicks "Done", writing the file via the
+   * stubbed native save dialog. Otherwise, a "Cannot export" alert must
+   * have appeared instead (the spec was empty/missing), so this is a
+   * no-op — the alert is left open, and `@throwOnDialog` (below) then
+   * rejects with its trimmed text once this method returns.
+   * @param format - The format to export the spec as
+   */
+  @throwOnDialog()
+  async exportOpenApiSpec(format: ApiSpecExportFormat): Promise<void> {
+    await expect(this.page.getByRole("dialog").first()).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    if (!(await this.selectSpecFormatDialog.isVisible())) return;
+
+    await this.selectSpecFormatDialog
+      .locator("select")
+      .selectOption({ label: format });
+    await this.selectSpecFormatDialog
+      .getByRole("button", { name: "Done" })
+      .click();
+    await expect(this.selectSpecFormatDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
   }
