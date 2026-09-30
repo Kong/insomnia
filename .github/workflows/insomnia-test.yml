@@ -88,15 +88,13 @@ jobs:
   # ---------------------------------------------------------------------------
   # Run the whole suite across N shards in parallel. Each shard restores the
   # cached binary and runs a slice of the suite, retrying failures in-process
-  # (see playwright.config.ts `retries`). Each shard also emits a JSON report
-  # so collect-failed-tests can find whatever is still failing afterwards.
+  # (see playwright.config.ts `retries`).
   # ---------------------------------------------------------------------------
   parallel-test:
     name: Parallel Test
     needs: build
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: read
       packages: read
@@ -141,10 +139,9 @@ jobs:
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-          PLAYWRIGHT_JSON_OUTPUT_NAME: results-${{ matrix.shardIndex }}.json
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
           COVERAGE: 'true'
-        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,json,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload coverage (raw)
         if: ${{ !cancelled() }}
@@ -164,15 +161,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Upload JSON results
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-json-${{ matrix.shardIndex }}
-          path: packages/insomnia-test/results-${{ matrix.shardIndex }}.json
-          retention-days: 1
-          if-no-files-found: ignore
-
       - name: Upload blob report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ !cancelled() }}
@@ -183,151 +171,21 @@ jobs:
           if-no-files-found: ignore
 
   # ---------------------------------------------------------------------------
-  # Look at every shard's JSON report to find tests still failing after
-  # Playwright's own in-job retries, then re-run just those, single-threaded.
-  # Running them in isolation (one worker, no sharding) rules out
-  # cross-test/cross-shard interference as the cause before treating a
-  # failure as real. Every step after "Collect failed tests" is gated on
-  # there being failures, so a clean run costs only the collect step itself.
-  # ---------------------------------------------------------------------------
-  sequential-test:
-    name: Rerun Failed Test
-    needs: parallel-test
-    if: ${{ !cancelled() }}
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    permissions:
-      contents: read
-      packages: read
-    outputs:
-      has_failures: ${{ steps.collect.outputs.has_failures }}
-      passed: ${{ steps.outcome.outputs.passed }}
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-
-      - name: Download JSON results
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: playwright-json-*
-          path: json-reports
-          merge-multiple: true
-
-      - name: Collect failed tests
-        id: collect
-        run: |
-          node .github/scripts/collect-failed-tests.js json-reports packages/insomnia-test/failed-tests.txt
-          if [ -s packages/insomnia-test/failed-tests.txt ]; then
-            echo "has_failures=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_failures=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Setup Node.js
-        if: steps.collect.outputs.has_failures == 'true'
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: '24'
-
-      - name: Restore Insomnia binary
-        if: steps.collect.outputs.has_failures == 'true'
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
-        with:
-          path: packages/insomnia/dist/linux-unpacked
-          key: insomnia-linux-unpacked-${{ github.sha }}
-          fail-on-cache-miss: true
-
-      - name: Install test dependencies
-        if: steps.collect.outputs.has_failures == 'true'
-        run: |
-          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
-          npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install Electron system dependencies
-        if: steps.collect.outputs.has_failures == 'true'
-        working-directory: packages/insomnia-test
-        run: npx playwright install-deps chromium
-
-      - name: Install ffmpeg (required for video recording)
-        if: steps.collect.outputs.has_failures == 'true'
-        working-directory: packages/insomnia-test
-        run: npx playwright install ffmpeg
-
-      - name: Run Playwright tests (failed tests, single worker)
-        id: run_tests
-        if: steps.collect.outputs.has_failures == 'true'
-        working-directory: packages/insomnia-test
-        env:
-          INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-          PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-rerun.zip
-          COVERAGE: 'true'
-        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --workers=1 --retries=0 $(cat failed-tests.txt)
-
-      - name: Record test outcome
-        id: outcome
-        if: ${{ steps.collect.outputs.has_failures == 'true' && always() }}
-        run: echo "passed=${{ steps.run_tests.outcome == 'success' }}" >> "$GITHUB_OUTPUT"
-
-      - name: Upload coverage (raw)
-        if: ${{ steps.collect.outputs.has_failures == 'true' && !cancelled() }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          # Feeds insomnia-test-result's "Merge coverage reports" step (its
-          # download pattern is "coverage-raw-*") so the rerun's coverage is
-          # folded into the final merged coverage report too.
-          name: coverage-raw-rerun
-          path: packages/insomnia-test/coverage/raw/
-          retention-days: 1
-          if-no-files-found: ignore
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ steps.collect.outputs.has_failures == 'true' && !cancelled() }}
-        with:
-          # Distinct from merge-coverage's "playwright-report" (the full
-          # merged suite report) — this one only covers the tests re-run
-          # here.
-          name: playwright-report-rerun
-          path: packages/insomnia-test/playwright-report/
-          retention-days: 7
-          if-no-files-found: ignore
-
-      - name: Upload blob report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ steps.collect.outputs.has_failures == 'true' && !cancelled() }}
-        with:
-          # Feeds insomnia-test-result's "Merge Playwright reports" step so
-          # the rerun's outcome (pass or fail) is reflected in the final
-          # merged suite report, not just this job's own HTML report above.
-          name: blob-report-rerun
-          path: packages/insomnia-test/blob-report/blob-report-rerun.zip
-          retention-days: 1
-          if-no-files-found: ignore
-
-  # ---------------------------------------------------------------------------
-  # Every prior job sets continue-on-error: true so a failure never blocks
-  # this job from running. This is the one job that actually gates the
-  # workflow: pass if Parallel Test had no failures, otherwise pass only if
-  # Failed Test Review's re-run of the failures succeeded.
-  #
-  # It also merges every shard's raw V8 coverage data (collected on both
-  # develop pushes and PRs — see parallel-test's COVERAGE env), plus
-  # sequential-test's rerun coverage when it ran (coverage-raw-rerun), into
-  # one coverage report, and every shard's blob report into one full-suite
-  # Playwright report — both run on every trigger this workflow has (push
-  # and pull_request are the only two, so no `if` gate is needed on either).
-  # Each merge step is its own `continue-on-error: true` so it never affects
-  # the pass/fail gate below. By the time this job runs, sequential-test is
-  # already done consuming the per-shard artifacts, so it finishes by
-  # deleting every per-shard intermediate (coverage-raw-*, playwright-report-*,
-  # playwright-json-*, blob-report-*), leaving only the merged artifact(s).
+  # This job doesn't gate the workflow — parallel-test (no continue-on-error)
+  # already fails the run on its own if any shard fails. This job only
+  # merges every shard's raw V8 coverage data (collected on both develop
+  # pushes and PRs — see parallel-test's COVERAGE env) into one coverage
+  # report, and every shard's blob report into one full-suite Playwright
+  # report — both run on every trigger this workflow has (push and
+  # pull_request are the only two, so no `if` gate is needed on either).
+  # Each merge step is its own `continue-on-error: true` so a merge failure
+  # never fails this job. It finishes by deleting every per-shard
+  # intermediate (coverage-raw-*, playwright-report-*, blob-report-*),
+  # leaving only the merged artifact(s).
   # ---------------------------------------------------------------------------
   insomnia-test-result:
     name: Insomnia Test Result
-    needs: [parallel-test, sequential-test]
+    needs: parallel-test
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
@@ -357,8 +215,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Coverage raw data can embed `file:` sourcemap URLs pointing into this
-      # build output (see parallel-test/sequential-test's own restore step).
-      # Without it here, sourcemap resolution silently fails for those
+      # build output (see parallel-test's own restore step). Without it
+      # here, sourcemap resolution silently fails for those
       # scripts during the merge below, deflating line/statement/branch
       # coverage relative to what each shard reports locally.
       - name: Restore Insomnia binary
@@ -397,16 +255,6 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
 
-      # blob-report-rerun.zip re-runs tests that already have a (failing)
-      # result in one of the shard blobs above. Left as-is, merge-reports
-      # would show that test twice instead of once with an extra retry
-      # attempt (see the script for why). This splices the rerun's result
-      # into its origin shard blob as the next retry and removes
-      # blob-report-rerun.zip, so it never reaches merge-reports.
-      - name: Stitch rerun attempts into origin shard blobs
-        continue-on-error: true
-        run: node .github/scripts/stitch-rerun-attempts.js all-blob-reports
-
       - name: Merge Playwright reports
         continue-on-error: true
         working-directory: packages/insomnia-test
@@ -420,10 +268,9 @@ jobs:
           path: packages/insomnia-test/playwright-report/
           retention-days: 30
 
-      # coverage-raw-*/playwright-report-([0-9]+|rerun)/playwright-json-*/
-      # blob-report-([0-9]+|rerun) were only a transport into this job — now
-      # that they're merged, delete them so only the two artifacts uploaded
-      # above remain.
+      # coverage-raw-*/playwright-report-[0-9]+/blob-report-[0-9]+ were only a
+      # transport into this job — now that they're merged, delete them so
+      # only the two artifacts uploaded above remain.
       - name: Delete per-shard intermediate artifacts
         continue-on-error: true
         env:
@@ -431,21 +278,8 @@ jobs:
         run: |
           ids=$(gh api --paginate \
             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-            --jq '.artifacts[] | select(.name | test("^playwright-report-([0-9]+|rerun)$|^playwright-json-[0-9]+$|^coverage-raw-([0-9]+|rerun)$|^blob-report-([0-9]+|rerun)$")) | .id')
+            --jq '.artifacts[] | select(.name | test("^playwright-report-[0-9]+$|^coverage-raw-[0-9]+$|^blob-report-[0-9]+$")) | .id')
           for id in $ids; do
             echo "Deleting intermediate artifact $id"
             gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
           done
-
-      - name: Evaluate result
-        run: |
-          if [ "${{ needs.sequential-test.outputs.has_failures }}" != "true" ]; then
-            echo "Parallel Test passed."
-            exit 0
-          fi
-          if [ "${{ needs.sequential-test.outputs.passed }}" == "true" ]; then
-            echo "Parallel Test had failures, but Rerun Failed Test re-ran them successfully."
-            exit 0
-          fi
-          echo "Parallel Test had failures, and Rerun Failed Test failed to re-run them successfully."
-          exit 1
