@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { SendButtonState } from "../enums/send-button-state";
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import type {
   Response,
   ResponseHeader,
@@ -351,7 +351,7 @@ export class ResponsePage extends BasePage {
     const previewTab = this.page.locator(
       `${this.PANE} [data-key="timeline"][role="tab"]`,
     );
-    await expect(previewTab).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(previewTab).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

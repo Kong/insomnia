@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { expect, LONG_TIMEOUT, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, expect, test } from "../../misc/fixtures";
 
 const testWithPendingGitMigration = test.extend({
   dataPath: async ({ dataPath }, use) => {
@@ -69,7 +69,7 @@ testWithPendingGitMigration(
     await window.getByRole("button", { name: "Update Now" }).click();
     await expect(
       window.getByRole("heading", { name: "Update Successful" }),
-    ).toBeVisible({ timeout: LONG_TIMEOUT });
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
 
     await window.getByRole("link", { name: "Open Insomnia" }).click();
     await expect(

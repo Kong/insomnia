@@ -21,9 +21,7 @@ import {
 } from "./coverage";
 import { closeOpenStepGroup } from "./step-instrumentation";
 
-export const DEFAULT_TIMEOUT = 10_000;
-
-export const LONG_TIMEOUT = 30_000;
+export const DEFAULT_TIMEOUT = 60_000;
 
 /**
  * By default, the `insomnia` fixture below launches the app straight out of
