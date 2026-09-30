@@ -23,6 +23,8 @@ import { closeOpenStepGroup } from "./step-instrumentation";
 
 export const DEFAULT_TIMEOUT = 10_000;
 
+export const LONG_TIMEOUT = 30_000;
+
 /**
  * By default, the `insomnia` fixture below launches the app straight out of
  * the sibling `../insomnia` source checkout (its local `electron` binary
