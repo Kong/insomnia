@@ -264,7 +264,7 @@ jobs:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-rerun.zip
           COVERAGE: 'true'
-        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --workers=1 $(cat failed-tests.txt)
+        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --workers=1 --retries=0 $(cat failed-tests.txt)
 
       - name: Record test outcome
         id: outcome
