@@ -212,6 +212,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 body: rendered.body,
                 cookieJar: rendered.workspaceCookieJar,
                 suppressUserAgent: rendered.suppressUserAgent,
+                sensitiveValues: rendered.sensitiveValues,
               });
             rendered &&
               recordProjectRecentRequest({

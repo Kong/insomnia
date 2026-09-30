@@ -5,6 +5,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { createSensitiveValueCollector } from '~/common/network/sensitive-value-collector';
 import { RenderError } from '~/common/templating/render-error';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
@@ -403,23 +404,31 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                       <button
                         className="btn btn--compact btn--clicky-small margin-left-sm bg-default"
                         onClick={async () => {
+                          const settings = await services.settings.get();
+                          const collector = createSensitiveValueCollector(
+                            settings.hideSecretValuesInPreviewAndConsole ?? true,
+                          );
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
                             environment: environmentId,
                             purpose: 'send',
+                            sensitiveValueCollector: collector,
                           });
                           const preparedMessage = {
                             body: requestBody,
                             requestId,
                           };
+                          // Send the real (unredacted) body to the server; only the copy kept for
+                          // display in the Stream tab is redacted (T10 — this tab never writes to disk).
                           window.main.grpc.sendMessage(preparedMessage);
+                          const displayText = preparedMessage.body.text || '';
                           setGrpcState({
                             ...grpcState,
                             requestMessages: [
                               ...requestMessages,
                               {
                                 id: generateId(),
-                                text: preparedMessage.body.text || '',
+                                text: collector ? collector.redact(displayText) : displayText,
                                 created: Date.now(),
                               },
                             ],

@@ -717,8 +717,9 @@ export async function getRenderedGrpcRequestMessage({
   request,
   extraInfo,
   purpose,
+  sensitiveValueCollector,
 }: BaseRenderContextOptions & { request: GrpcRequest }) {
-  const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
+  const renderContext = await getRenderContext({ request, environment, purpose, extraInfo, sensitiveValueCollector });
   // Render request body
   const renderedBody: GrpcRequestBody = await render(request.body, renderContext);
   return renderedBody;

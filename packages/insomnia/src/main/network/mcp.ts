@@ -21,6 +21,7 @@ import { models, services } from 'insomnia-data';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
+import { redactConfidentialText } from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import {
@@ -85,7 +86,7 @@ const _handleCloseMcpConnection = (context: ConnectionContext) => {
   };
   writeEventLogAndNotify(context, closeEvent);
 
-  writeTimeline(context, JSON.stringify({ value: 'Closed MCP connection', name: 'Text', timestamp: Date.now() }));
+  writeTimeline(context, { value: 'Closed MCP connection', name: 'Text', timestamp: Date.now() });
 
   clearConnectionContext(context);
 };
@@ -188,7 +189,7 @@ const createErrorResponse = async (
     errorType?: string;
   },
 ) => {
-  const { requestId, responseId, environmentId, timelinePath, options } = context;
+  const { requestId, responseId, environmentId, timelinePath, options, sensitiveValues } = context;
   const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
@@ -197,7 +198,7 @@ const createErrorResponse = async (
     timelinePath,
     status: 'danger',
     statusMessage: 'Error',
-    error: message,
+    error: sensitiveValues.size > 0 ? redactConfidentialText(message, [...sensitiveValues]) : message,
     errorType,
     transportType: options.transportType,
   };

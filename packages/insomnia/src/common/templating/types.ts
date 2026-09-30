@@ -71,6 +71,8 @@ export interface SensitiveValueCollector {
   register(value: string): void;
   redact(text: string): string;
   readonly isEmpty: boolean;
+  /** Snapshot of every registered raw value, for cross-IPC transfer (e.g. to the main process for WS/SocketIO/MCP timeline redaction). */
+  readonly values: readonly string[];
 }
 export type PluginToMainAPIPaths =
   | 'readFile'

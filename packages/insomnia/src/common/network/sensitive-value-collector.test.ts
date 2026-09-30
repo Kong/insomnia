@@ -6,6 +6,7 @@ import {
   collectLeafStrings,
   createSensitiveValueCollector,
   redactConfidentialText,
+  redactDeep,
   withRedaction,
 } from './sensitive-value-collector';
 
@@ -71,6 +72,61 @@ describe('createSensitiveValueCollector', () => {
       collector.register('');
       expect(collector.isEmpty).toBe(true);
     });
+
+    it('exposes every registered value as a snapshot array, for cross-IPC transfer (T10)', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      collector.register('a');
+      collector.register('b');
+      collector.register('a');
+      expect([...collector.values].sort()).toEqual(['a', 'b']);
+    });
+
+    it('returns an empty array from values when nothing was registered', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      expect(collector.values).toEqual([]);
+    });
+
+    it('does not let external mutation of the values snapshot affect subsequent redaction', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      collector.register('secret');
+      const snapshot = collector.values as string[];
+      snapshot.push('unregistered');
+      expect(collector.redact('secret unregistered')).toBe('•••••• unregistered');
+    });
+  });
+});
+
+describe('redactDeep', () => {
+  it('redacts a top-level string', () => {
+    expect(redactDeep('mysecret', ['mysecret'])).toBe('••••••');
+  });
+
+  it('redacts string leaves nested in an object, preserving shape', () => {
+    const input = { a: 'mysecret', b: { c: 'mysecret', d: 42 } };
+    expect(redactDeep(input, ['mysecret'])).toEqual({ a: '••••••', b: { c: '••••••', d: 42 } });
+  });
+
+  it('redacts string leaves inside an array', () => {
+    expect(redactDeep(['mysecret', 'unrelated'], ['mysecret'])).toEqual(['••••••', 'unrelated']);
+  });
+
+  it('redacts a value containing quotes and newlines before JSON.stringify would have escaped them', () => {
+    const secret = 'p@ss"with\nquotes';
+    const input = { data: secret };
+    expect(redactDeep(input, [secret])).toEqual({ data: '••••••' });
+  });
+
+  it('leaves non-plain-object values (e.g. Buffer, Error) unchanged', () => {
+    const buf = Buffer.from('mysecret');
+    expect(redactDeep(buf, ['mysecret'])).toBe(buf);
+    const err = new Error('mysecret');
+    expect(redactDeep(err, ['mysecret'])).toBe(err);
+  });
+
+  it('leaves numbers, booleans and null unchanged', () => {
+    expect(redactDeep(42, ['x'])).toBe(42);
+    expect(redactDeep(true, ['x'])).toBe(true);
+    expect(redactDeep(null, ['x'])).toBe(null);
   });
 });
 
