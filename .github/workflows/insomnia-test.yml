@@ -397,6 +397,16 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
 
+      # blob-report-rerun.zip re-runs tests that already have a (failing)
+      # result in one of the shard blobs above. Left as-is, merge-reports
+      # would show that test twice instead of once with an extra retry
+      # attempt (see the script for why). This splices the rerun's result
+      # into its origin shard blob as the next retry and removes
+      # blob-report-rerun.zip, so it never reaches merge-reports.
+      - name: Stitch rerun attempts into origin shard blobs
+        continue-on-error: true
+        run: node .github/scripts/stitch-rerun-attempts.js all-blob-reports
+
       - name: Merge Playwright reports
         continue-on-error: true
         working-directory: packages/insomnia-test
