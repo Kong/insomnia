@@ -160,16 +160,18 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
-   * Opens the History modal via the Git Sync dropdown's "History" action
-   * and waits for its commit log to finish loading.
+   * Opens the History modal via the Git Sync dropdown's "History" action.
+   * Does not wait for the commit log itself to finish loading — `Table`'s
+   * `renderEmptyState` renders both the "Loading..." and "No history
+   * available" placeholders as a `role="row"` element indistinguishable
+   * from a real commit row by role alone, so that has to be done by
+   * `getLatestCommit()`, which can tell a real commit row apart from a
+   * placeholder by its `data-key` attribute.
    */
   async openHistory(): Promise<void> {
     await this.openSyncMenu();
     await this.syncMenu.getByText("History", { exact: true }).click();
     await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    await this.historyDialog
-      .getByText("Loading...")
-      .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -178,13 +180,25 @@ export class GitSyncPage extends BasePage {
    * log lists commits newest-first, and the first row after the column
    * header is that newest commit. Requires `openHistory()` to have been
    * called first.
+   *
+   * Matched by `[data-key]` rather than by row position: the table's
+   * loading/empty placeholder is also a `role="row"` element (see
+   * `openHistory()`), so `getByRole("row").nth(1)` can match that
+   * placeholder — which carries no `data-key` — instead of the first real
+   * commit row while the log is still being fetched. Only actual data rows
+   * get a `data-key`, so waiting for one to appear here doubles as waiting
+   * for the log to finish loading.
    * @returns The latest commit's id and message, or undefined if the log is empty
    */
   async getLatestCommit(): Promise<
     { id: string; message: string } | undefined
   > {
-    const row = this.historyDialog.getByRole("row").nth(1);
-    if (!(await row.isVisible())) return undefined;
+    const row = this.historyDialog.locator('[role="row"][data-key]').first();
+    try {
+      await expect(row).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    } catch {
+      return undefined;
+    }
     const id = await row.getAttribute("data-key");
     if (!id) return undefined;
     const message = await row.getByRole("rowheader").innerText();
