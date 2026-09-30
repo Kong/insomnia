@@ -461,11 +461,14 @@ export const EnvironmentKVEditor = ({
         </div>
         <div className={`${cellCommonStyle} w-10`}>
           {type !== EnvironmentKvPairDataType.SECRET && (
-            <Tooltip message={isConfidential ? 'Remove confidential marking' : 'Mark as confidential'} delay={200}>
+            <Tooltip
+              message={isConfidential ? 'Mark variable as not confidential' : 'Mark variable as confidential'}
+              delay={200}
+            >
               <ItemButton
                 className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 tabIndex={-1}
-                aria-label={isConfidential ? 'Remove confidential marking' : 'Mark as confidential'}
+                aria-label={isConfidential ? 'Mark variable as not confidential' : 'Mark variable as confidential'}
                 aria-pressed={isConfidential}
                 isDisabled={disabled}
                 onPress={() => handleItemChange(id, 'isConfidential', !isConfidential)}
