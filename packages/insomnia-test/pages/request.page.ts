@@ -179,14 +179,27 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Switches to the params tab and clicks "Import from URL", which parses
    * the URL bar's current query string into structured params rows and
-   * strips the query string off the URL bar.
+   * strips the query string off the URL bar. Waits for the params rows to
+   * finish mounting (one per parsed query param) before returning, since
+   * the key/value editor's rows — and their CodeMirror instances — render
+   * asynchronously after the click.
    */
   async importParamsFromUrl(): Promise<void> {
     await this.switchTab("params");
+    const query = (await this.getUrl()).split("?")[1] ?? "";
+    const paramCount = query.length
+      ? query.split("&").filter(Boolean).length
+      : 0;
+    const panel = this.page.locator(this.TABPANEL);
+    const rows = panel.locator('[role="listbox"] [role="option"]');
+    const countBefore = await rows.count();
     await this.page
       .locator(this.PANE)
       .getByRole("button", { name: "Import from URL" })
       .click();
+    await expect(rows).toHaveCount(countBefore + paramCount, {
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
