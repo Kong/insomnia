@@ -256,7 +256,9 @@ export class EnvironmentPage extends BasePage {
       `${this.SIDEBAR} [role="row"][data-key="${key}"]`,
     );
 
-    await row.locator(this.EDITABLE_NAME).dblclick();
+    const editableName = row.locator(this.EDITABLE_NAME);
+    await editableName.waitFor({ state: "visible" });
+    await editableName.dblclick();
     const input = stableRow.locator(
       'input[name="name"][aria-label="Environment name"]',
     );
