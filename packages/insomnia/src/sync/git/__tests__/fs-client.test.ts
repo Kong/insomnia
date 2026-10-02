@@ -28,6 +28,30 @@ describe('fsClient symlink containment', () => {
     expect(await fs.promises.readFile(linkAbsPath, 'utf8')).toBe('hi');
   });
 
+  // Regression: isomorphic-git stats/readdirs the working dir itself as '.'.
+  it('allows access to the working directory itself', async () => {
+    const client = fsClient(basePath);
+    await expect(client.promises.readdir('.')).resolves.toEqual([]);
+    await expect(client.promises.stat('.')).resolves.toBeTruthy();
+  });
+
+  it('works when basePath is reached through a symlink, but still blocks in-repo symlink escapes', async () => {
+    const holder = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-fs-client-holder-'));
+    try {
+      const linkedBase = path.join(holder, 'base-link');
+      await fs.promises.symlink(basePath, linkedBase);
+      await fs.promises.symlink(holder, path.join(basePath, 'escape'));
+
+      const client = fsClient(linkedBase);
+      await expect(client.promises.readdir('.')).resolves.toBeTruthy();
+      await client.promises.writeFile('ok.txt', 'hi');
+      expect(await fs.promises.readFile(path.join(basePath, 'ok.txt'), 'utf8')).toBe('hi');
+      await expect(client.promises.writeFile('escape/x.txt', 'x')).rejects.toThrow();
+    } finally {
+      await fs.promises.rm(holder, { recursive: true, force: true });
+    }
+  });
+
   // Regression for the Git-Sync symlink write-containment fix: a commit's
   // tree entry can set a symlink target that, once resolved against the
   // repo's working directory, escapes it entirely (e.g. a long chain of

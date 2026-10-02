@@ -42,6 +42,35 @@ describe('safe-fs-write', () => {
     await expect(fs.promises.access(path.join(outsideDir, 'escaped.yaml'))).rejects.toThrow();
   });
 
+  // Regression: fs-client resolves `.` (the working dir itself) for stat/readdir.
+  it('allows the base directory itself', async () => {
+    await expect(assertPathWithinDir(baseDir, baseDir)).resolves.not.toThrow();
+    await expect(assertPathWithinDir(baseDir, path.join(baseDir, '.'))).resolves.not.toThrow();
+  });
+
+  // Regression: the data/temp dir can legitimately be reached via a symlink.
+  it('tolerates a symlinked base directory and symlinked ancestors of it', async () => {
+    const linkedBase = path.join(outsideDir, 'base-link');
+    await fs.promises.symlink(baseDir, linkedBase);
+
+    await expect(assertPathWithinDir(linkedBase, linkedBase)).resolves.not.toThrow();
+    await expect(assertPathWithinDir(linkedBase, path.join(linkedBase, 'sub', 'ok.txt'))).resolves.not.toThrow();
+    await writeFileWithinDir(linkedBase, path.join(linkedBase, 'ok.txt'), 'hello');
+    expect(await fs.promises.readFile(path.join(baseDir, 'ok.txt'), 'utf8')).toBe('hello');
+  });
+
+  it('still blocks an in-repo symlink escape when the base itself is symlinked', async () => {
+    const linkedBase = path.join(outsideDir, 'base-link');
+    await fs.promises.symlink(baseDir, linkedBase);
+    await fs.promises.symlink(outsideDir, path.join(baseDir, 'escape'));
+
+    await expect(assertPathWithinDir(linkedBase, path.join(linkedBase, 'escape', 'x.yaml'))).rejects.toThrow();
+  });
+
+  it('allows a dot-prefixed sibling name that merely starts with ..', async () => {
+    await expect(assertPathWithinDir(baseDir, path.join(baseDir, '..hidden', 'a.txt'))).resolves.not.toThrow();
+  });
+
   it('writes content and refuses to follow a symlinked leaf file', async () => {
     const okPath = path.join(baseDir, 'ok.txt');
     await writeFileWithinDir(baseDir, okPath, 'hello');

@@ -54,11 +54,18 @@ export async function assertPathWithinDir(baseDir: string, targetPath: string): 
     throw new Error(`Refusing to write outside of directory "${resolvedBase}": ${targetPath}`);
   }
 
+  // The base directory itself (e.g. `.` in fs-client) is the trusted root, not
+  // something inside it. Falling through would check its *parent*, which is
+  // always outside the base and would be wrongly rejected.
+  if (lexicalRelative === '') {
+    return;
+  }
+
   const realBase = await fs.promises.realpath(resolvedBase).catch(() => resolvedBase);
   const realAncestor = await realpathOfDeepestExistingAncestor(path.dirname(resolvedTarget));
   const realRelative = path.relative(realBase, realAncestor);
 
-  if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
+  if (realRelative === '..' || realRelative.startsWith(`..${path.sep}`) || path.isAbsolute(realRelative)) {
     throw new Error(`Refusing to write through a symlinked directory outside of "${realBase}": ${targetPath}`);
   }
 }
