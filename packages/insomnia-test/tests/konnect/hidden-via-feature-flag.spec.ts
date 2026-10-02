@@ -1,16 +1,19 @@
-import { expect, setKonnectSyncFeatureFlag,test } from "../../misc/fixtures";
+import { expect, setKonnectEntitlement, test } from "../../misc/fixtures";
 
 test.afterEach(async () => {
-  await setKonnectSyncFeatureFlag(true);
+  await setKonnectEntitlement(false);
 });
 
-test("Verify the Konnect sidebar tab hides once the konnectSync org feature flag is disabled", async ({
+test("Verify the Konnect organization disappears from the organization switcher once the konnect-control-planes entitlement is revoked", async ({
   user,
 }) => {
   const { konnectPage } = user.pageManager;
 
-  await setKonnectSyncFeatureFlag(false);
+  await setKonnectEntitlement(true);
   await user.page.reload();
+  await expect.poll(() => konnectPage.isTabVisible()).toBe(true);
 
+  await setKonnectEntitlement(false);
+  await user.page.reload();
   await expect.poll(() => konnectPage.isTabVisible()).toBe(false);
 });

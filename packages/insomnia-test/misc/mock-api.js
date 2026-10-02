@@ -42,7 +42,6 @@ const ENC_KEY_D =
 const DEFAULT_FEATURE_STATE = {
   gitSyncEnabled: true,
   gitSyncStorageRuleEnabled: true,
-  konnectSyncEnabled: true,
   konnectEntitlementEnabled: false,
 };
 const featureStateBySession = new Map(); // sessionId -> partial DEFAULT_FEATURE_STATE overrides
@@ -845,15 +844,6 @@ async function handleAdmin(req, res, url) {
     return sendJson(res, 200, { enabled });
   }
   if (
-    url.pathname === "/_admin/features/konnect-sync" &&
-    req.method === "PUT"
-  ) {
-    const body = await readJsonBody(req);
-    const enabled = body.enabled !== false;
-    setFeatureState(body.sessionId, { konnectSyncEnabled: enabled });
-    return sendJson(res, 200, { enabled });
-  }
-  if (
     url.pathname === "/_admin/features/konnect-entitlement" &&
     req.method === "PUT"
   ) {
@@ -1271,7 +1261,6 @@ function matchDynamic(req, url) {
       features: {
         gitSync: { enabled: featureState.gitSyncEnabled },
         bulkImport: { enabled: true },
-        konnectSync: { enabled: featureState.konnectSyncEnabled },
         orgBasicRbac: { enabled: true },
         aiMockServers: { enabled: true },
         aiCommitMessages: { enabled: true },

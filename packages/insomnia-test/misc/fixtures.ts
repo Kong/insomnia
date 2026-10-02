@@ -159,23 +159,6 @@ export async function setGitSyncStorageRule(enabled: boolean): Promise<void> {
 }
 
 /**
- * Toggles misc/mock-api.js's `features.konnectSync.enabled` flag, which the
- * app reads once at startup to decide whether the Konnect sidebar tab is
- * offered at all. Same pre-launch timing/reset requirements and per-worker
- * scoping as `setGitSyncFeatureFlag()`.
- * @param enabled - Whether the Konnect Sync feature should be enabled
- */
-export async function setKonnectSyncFeatureFlag(
-  enabled: boolean,
-): Promise<void> {
-  await fetch(`${MOCK_API_SERVER}/_admin/features/konnect-sync`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ enabled, sessionId: SESSION_ID }),
-  });
-}
-
-/**
  * Toggles misc/mock-api.js's `GET /v1/user/entitlements` response, which the
  * app reads on startup to decide whether the account holds the Konnect
  * control-planes entitlement — the Konnect organization ("Control Planes")

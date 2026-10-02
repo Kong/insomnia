@@ -4,26 +4,35 @@ import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { BasePage } from "./base.page";
 
 export class KonnectPage extends BasePage {
-  private readonly SIDEBAR = '[data-testid="global-navigation-sidebar"]';
   private readonly PROJECT_TREE =
     '[data-testid="project-navigation-tree-container"]';
+  private readonly KONNECT_ORGANIZATION_NAME = "Control Planes";
 
   /**
-   * Confirms the sidebar is currently visible. There is no separate Konnect
-   * "tab" — the sidebar shows either the pre-configuration intro card or the
-   * normal project tree, based on whether a Konnect PAT is already saved.
+   * Confirms the organization switcher — the entry point into the Konnect
+   * ("Control Planes") organization — is ready.
    */
   async navigate(): Promise<void> {
-    await expect(this.page.locator(this.SIDEBAR)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await expect(
+      this.page.getByRole("button", { name: "Organizations" }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
-   * Reports whether the sidebar is currently visible.
+   * Reports whether the Konnect ("Control Planes") organization is currently
+   * offered in the organization switcher — hidden once the account loses its
+   * Konnect control-planes entitlement (and has no local Konnect projects
+   * left over from a previous version). The option only exists inside the
+   * switcher's popover, so this opens it to check and closes it again
+   * afterwards to leave the page as it found it.
    */
   async isTabVisible(): Promise<boolean> {
-    return this.page.locator(this.SIDEBAR).isVisible();
+    await this.page.getByRole("button", { name: "Organizations" }).click();
+    const isVisible = await this.page
+      .getByRole("option", { name: this.KONNECT_ORGANIZATION_NAME })
+      .isVisible();
+    await this.page.keyboard.press("Escape");
+    return isVisible;
   }
 
   /**
