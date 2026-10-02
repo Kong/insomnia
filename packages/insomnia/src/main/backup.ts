@@ -8,6 +8,7 @@ import { getUpdateUrl } from '~/main/updates';
 
 import { version } from '../../package.json';
 import { getClientString } from '../common/constants';
+import { assertPathWithinDir } from './safe-fs-write';
 
 export async function backupIfNewerVersionAvailable() {
   try {
@@ -62,7 +63,14 @@ export async function backup() {
 export async function restoreBackup(version: string) {
   try {
     const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-    const versionPath = path.join(dataPath, 'backups', version);
+    const backupsDir = path.join(dataPath, 'backups');
+    const versionPath = path.join(backupsDir, version);
+
+    // `version` is renderer-supplied over IPC — a traversal sequence here
+    // (e.g. `../../../../some/dir`) must never let this read/copy `.db`
+    // files from outside the app's own backups directory.
+    await assertPathWithinDir(backupsDir, versionPath);
+
     const files = await readdir(versionPath);
     if (!files.length) {
       console.log('[main] No backup found at:', versionPath);

@@ -8,6 +8,7 @@ import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import type { BlockedWrite } from '~/sync/git/fs-client';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
@@ -128,6 +129,8 @@ interface BaseOpts {
     | (git.PromiseFsClient & {
         startCollectWriteAction?: (oriWriteFileMap: WriteFileMap) => void;
         stopCollectWriteAction?: () => void;
+        startCollectBlockedWrites?: (target: BlockedWrite[]) => void;
+        stopCollectBlockedWrites?: () => void;
       });
   http: git.HttpClient;
   onMessage: (message: string) => void;
@@ -1276,6 +1279,11 @@ export class GitVCS {
     }
 
     const writeFileMap = {};
+    // Collects paths refused by the containment guard during checkout (see
+    // fs-client.ts). Shared across the CheckoutConflictError retry below, so
+    // dedupe by relPath before returning.
+    const blockedWrites: BlockedWrite[] = [];
+    const dedupedBlockedWrites = () => Array.from(new Map(blockedWrites.map(b => [b.relPath, b])).values());
 
     try {
       if (
@@ -1284,6 +1292,12 @@ export class GitVCS {
       ) {
         this._baseOpts.fs.startCollectWriteAction(writeFileMap);
       }
+      if (
+        'startCollectBlockedWrites' in this._baseOpts.fs &&
+        typeof this._baseOpts.fs.startCollectBlockedWrites === 'function'
+      ) {
+        this._baseOpts.fs.startCollectBlockedWrites(blockedWrites);
+      }
       // Try to pull changes from the remote repository
       await git.pull({
         ...this._baseOpts,
@@ -1291,6 +1305,10 @@ export class GitVCS {
         remote: 'origin',
         singleBranch: true,
       });
+
+      if (blockedWrites.length > 0) {
+        return { success: false, blockedWrites: dedupedBlockedWrites() };
+      }
 
       return { success: true };
     } catch (err) {
@@ -1317,6 +1335,11 @@ export class GitVCS {
           });
 
           console.log('[git] Pull successful after resolving checkout conflicts');
+
+          if (blockedWrites.length > 0) {
+            return { success: false, blockedWrites: dedupedBlockedWrites() };
+          }
+
           return { success: true };
         } catch (retryError) {
           console.error('[git] Retry pull failed after resolving checkout conflicts:', retryError);
@@ -1346,6 +1369,12 @@ export class GitVCS {
         typeof this._baseOpts.fs.stopCollectWriteAction === 'function'
       ) {
         this._baseOpts.fs.stopCollectWriteAction();
+      }
+      if (
+        'stopCollectBlockedWrites' in this._baseOpts.fs &&
+        typeof this._baseOpts.fs.stopCollectBlockedWrites === 'function'
+      ) {
+        this._baseOpts.fs.stopCollectBlockedWrites();
       }
     }
   }

@@ -854,3 +854,33 @@ describe('requiresNewWorkspace()', () => {
     ).toBe(true);
   });
 });
+
+describe('sanitizeGitFileNameSegment', () => {
+  it('leaves an ordinary name untouched', () => {
+    expect(importUtil.sanitizeGitFileNameSegment('My API')).toBe('My API');
+  });
+
+  // Regression: gitFilePath (built as `${sanitizeGitFileNameSegment(name)}-${id}.yaml`)
+  // is later joined onto a git repo's working directory by repo-file-watcher.ts
+  // and git-repo-migration.ts. A workspace/collection name straight from an
+  // imported file (Insomnia export, Postman collection, OpenAPI info.title)
+  // must never be able to inject a path separator or traversal sequence into
+  // that joined path.
+  it('strips path separators', () => {
+    expect(importUtil.sanitizeGitFileNameSegment('some-dir/name')).not.toContain('/');
+    expect(importUtil.sanitizeGitFileNameSegment('some-dir\\name')).not.toContain('\\');
+  });
+
+  it('neutralizes traversal sequences', () => {
+    expect(importUtil.sanitizeGitFileNameSegment('../../../some/other/path')).not.toContain('..');
+  });
+
+  it('strips null bytes', () => {
+    expect(importUtil.sanitizeGitFileNameSegment('some\0name')).not.toContain('\0');
+  });
+
+  it('falls back to a default name when nothing remains', () => {
+    expect(importUtil.sanitizeGitFileNameSegment('')).toBe('workspace');
+    expect(importUtil.sanitizeGitFileNameSegment('   ')).toBe('workspace');
+  });
+});

@@ -254,3 +254,80 @@ describe('RepoFileWatcher ruleset import problems', () => {
     expect(getRulesetImportIssue(REPO_ID)).not.toBeNull();
   });
 });
+
+describe('RepoFileWatcher symlink write containment', () => {
+  let repoDir: string;
+  let outsideDir: string;
+  let registry: RepoFileWatcherRegistry;
+  const RULESET_PATH = '.spectral.yaml';
+  const VALID_RULESET = 'extends:\n  - "spectral:oas"\nrules: {}\n';
+
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+    repoDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-repo-watcher-symlink-'));
+    outsideDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-repo-watcher-outside-'));
+    registry = makeRegistry();
+  });
+
+  afterEach(async () => {
+    registry.stopAll();
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    await fs.promises.rm(outsideDir, { recursive: true, force: true });
+    vi.clearAllMocks();
+  });
+
+  // Regression for the Git-Sync symlink write-containment fix: a commit
+  // swaps .spectral.yaml (or a workspace's YAML file) for a symlink escaping
+  // the repo. Once the DB already holds a validated ruleset for the
+  // (now-stale) file, every automatic flush (git-status poll, app restart)
+  // must never write that content through the symlink to whatever it points
+  // at outside the repo.
+  it('never writes the project lint ruleset through a symlink escaping the repo', async () => {
+    const target = path.join(outsideDir, 'outside-file.txt');
+    const originalContent = 'this must never change\n';
+    await fs.promises.writeFile(target, originalContent, 'utf8');
+
+    const absPath = path.join(repoDir, RULESET_PATH);
+    // Simulate a prior valid import (commit 1) followed by the symlink swap
+    // (commit 2): the DB already holds validated content for a path that is
+    // now a symlink pointing outside the repo.
+    await services.projectLintRuleset.upsert(PROJECT_ID, { rulesetContent: VALID_RULESET });
+    await fs.promises.symlink(path.relative(repoDir, target), absPath);
+
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    await registry.flushNow(REPO_ID);
+
+    expect(await fs.promises.readFile(target, 'utf8')).toBe(originalContent);
+    // The symlink itself must be left alone too, not silently deleted/replaced.
+    const stat = await fs.promises.lstat(absPath);
+    expect(stat.isSymbolicLink()).toBe(true);
+  });
+
+  it('never writes a workspace export through a symlink escaping the repo', async () => {
+    const target = path.join(outsideDir, 'outside-workspace-file.txt');
+    const originalContent = 'this must never change either\n';
+    await fs.promises.writeFile(target, originalContent, 'utf8');
+
+    const gitFilePath = 'insomnia.wrk_symlinked.yaml';
+    const absPath = path.join(repoDir, gitFilePath);
+
+    // Simulate the real-world sequence: the workspace file is a normal,
+    // already-tracked file when the watcher starts (first clone) — then, in
+    // a later pull, a commit swaps it for a symlink escaping the repo.
+    // gitStatusAction's flushNow() runs on every status poll/restart WITHOUT
+    // re-running importAllFiles' orphan reconciliation in between, so this
+    // must be safe even though nothing re-scans the file first.
+    await fs.promises.writeFile(absPath, 'name: Original\n', 'utf8');
+    await createWorkspaceWithMeta(gitFilePath, Date.now());
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    await fs.promises.rm(absPath);
+    await fs.promises.symlink(path.relative(repoDir, target), absPath);
+
+    await registry.flushNow(REPO_ID);
+
+    expect(await fs.promises.readFile(target, 'utf8')).toBe(originalContent);
+    const stat = await fs.promises.lstat(absPath);
+    expect(stat.isSymbolicLink()).toBe(true);
+  });
+});
