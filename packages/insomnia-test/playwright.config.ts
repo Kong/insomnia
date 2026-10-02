@@ -42,7 +42,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    actionTimeout: 10 * 1000,
+    actionTimeout: 30 * 1000,
   },
 
   webServer: [

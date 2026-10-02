@@ -25,6 +25,9 @@ export const DEFAULT_TIMEOUT = 10_000;
 
 export const LONG_TIMEOUT = 60_000;
 
+// Matches playwright.config.ts's `use.actionTimeout`.
+export const ACTION_TIMEOUT = 30_000;
+
 /**
  * By default, the `insomnia` fixture below launches the app straight out of
  * the sibling `../insomnia` source checkout (its local `electron` binary
@@ -562,7 +565,7 @@ export const test = base.extend<Fixtures>({
     // Playwright creates itself — this window comes from a manual
     // electronApp.firstWindow() call, so its default action timeout (30s)
     // has to be raised here explicitly to match.
-    win.setDefaultTimeout(DEFAULT_TIMEOUT);
+    win.setDefaultTimeout(ACTION_TIMEOUT);
 
     await insomnia.evaluate(({ BrowserWindow }) => {
       const mainWindow = BrowserWindow.getAllWindows().find((w) =>

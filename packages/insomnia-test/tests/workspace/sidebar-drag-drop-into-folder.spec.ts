@@ -7,6 +7,7 @@ import { expect, HTTP_SERVER, test } from '../../misc/fixtures';
 import { Collection } from '../../models/collection';
 import { Folder } from '../../models/folder';
 import { Project } from '../../models/project';
+import type { TreeNode } from '../../pages/workspace.page';
 
 const WINDOW_WIDTH = 1512;
 const WINDOW_HEIGHT = 859;
@@ -60,21 +61,41 @@ test(
     ))!;
     const populatedFolderChildrenBefore = populatedFolderNode.children.map(c => c._id);
 
+    // destinationFolder starts out empty, so its only visible interior row is
+    // the "folder is empty" placeholder. Expanding it first and dropping onto
+    // that placeholder (rather than the folder's own row) is the only way to
+    // land "before"/"after" boundary-indicator with a readable folderName
+    // badge instead of a plain whole-row "on" highlight (which renders no
+    // name badge at all — see WorkspacePage.getDropIndicator()).
+    await workspacePage.expand(destinationFolderNode);
+    const destinationFolderPlaceholder: TreeNode = {
+      _id: `empty-folder-${destinationFolder.id}`,
+      name: '',
+      type: TreeNodeType.Unknown,
+      children: [],
+    };
+
     await workspacePage.startDrag(standaloneRequestNode);
-    await workspacePage.dragOver(destinationFolderNode, 0.7, 0.95);
+    await workspacePage.dragOver(destinationFolderPlaceholder, 0.7, 0.25);
     const indicatorForStandaloneRequest = await workspacePage.getDropIndicator();
     await workspacePage.releaseDrag();
-    await workspacePage.expand(destinationFolderNode);
     const treeAfterFirstDrag = await workspacePage.getTree();
     const destinationFolderAfterFirstDrag = treeAfterFirstDrag
       .flatten()
       .find(n => n._id === destinationFolderNode._id)!;
 
+    // destinationFolder now has standaloneRequest as a real child, so there's
+    // no placeholder row left to target — drop just above that child instead,
+    // at the same deep xFraction, to land inside the folder again.
     await workspacePage.startDrag(populatedFolderNode);
-    await workspacePage.dragOver(destinationFolderNode, 0.7, 0.95);
+    // The hovered boundary's preferred nesting level only settles after the
+    // drag's first hover re-render, so the very first dragOver() right after
+    // startDrag() can still report the pre-drag (shallower) level — repeat it
+    // once so the indicator reflects the position actually being hovered.
+    await workspacePage.dragOver(standaloneRequestNode, 0.7, 0.05);
+    await workspacePage.dragOver(standaloneRequestNode, 0.7, 0.05);
     const indicatorForPopulatedFolder = await workspacePage.getDropIndicator();
     await workspacePage.releaseDrag();
-    await workspacePage.expand(destinationFolderNode);
     const treeAfterSecondDrag = await workspacePage.getTree();
     const destinationFolderAfterSecondDrag = treeAfterSecondDrag
       .flatten()
