@@ -2,7 +2,7 @@ import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useNavigation } from 'react-router';
+import { useLocation } from 'react-router';
 
 import { useActiveView } from '~/ui/components/project/utils';
 import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
@@ -25,16 +25,32 @@ export const ProjectModal = ({
   project?: Project;
   gitRepository?: GitRepository;
 }) => {
-  // Close the modal when a navigation happens
-  const activeNavigation = useNavigation();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Close the modal once a submission (e.g. creating a project) redirects
+  // to a new URL. Comparing the pathname captured when the modal opened
+  // against the current one — rather than watching `useNavigation().state`
+  // flip away from 'idle' in an effect — because a fast redirect can
+  // resolve within the same render/commit that starts it, so the 'loading'
+  // state is never observed and the effect never fires, leaving the modal
+  // stuck open indefinitely with no error (see insomnia PR #10556).
+  const location = useLocation();
+  const openedAtPathRef = useRef(location.pathname);
   useEffect(() => {
-    if (activeNavigation && activeNavigation.state !== 'idle' && activeNavigation.location && isOpen) {
+    if (isOpen) {
+      openedAtPathRef.current = location.pathname;
+    }
+    // Deliberately only re-capture when the modal opens, not on every
+    // location change while it's open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && location.pathname !== openedAtPathRef.current) {
       onOpenChange(false);
     }
-  }, [activeNavigation, isOpen, onOpenChange]);
+  }, [location, isOpen, onOpenChange]);
 
   const activeViewObj = useActiveView();
 

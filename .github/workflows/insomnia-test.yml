@@ -1,0 +1,285 @@
+name: Insomnia Test
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+concurrency:
+  group: insomnia-test-nonblocking-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build the Insomnia binary once and cache it by commit SHA. All shards
+  # restore the same cached binary instead of each building it.
+  #
+  # continue-on-error: true so a failure here never blocks the PR merge check
+  # and downstream jobs still run instead of being skipped.
+  # ---------------------------------------------------------------------------
+  build:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+
+      - name: Cache Insomnia binary
+        id: binary-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: packages/insomnia/dist/linux-unpacked
+          key: insomnia-linux-unpacked-${{ github.sha }}
+
+      - name: Expand swap space
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=8192 status=none
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+
+      - name: Remove verify-bundle-plugins from postinstall
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          sed -i 's/ && npm run verify-bundle-plugins -w insomnia//' package.json
+
+      - name: Install dependencies
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Insomnia
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        working-directory: packages/insomnia
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: |
+          npm run build:react-router -- --minify=false
+          npx esr --cache ./scripts/build.ts --noErrorTruncation
+          echo "=== build/ contents ==="
+          ls -la build/ 2>/dev/null || echo "ERROR: build/ not found"
+          test -f build/entry.main.min.js || { echo "ERROR: entry.main.min.js missing after build"; exit 1; }
+
+      - name: Package Insomnia (Linux unpacked)
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        working-directory: packages/insomnia
+        env:
+          USE_HARD_LINKS: 'false'
+        run: npx electron-builder build --config electron-builder.config.js --linux --dir --publish never
+
+  # ---------------------------------------------------------------------------
+  # Run the whole suite across N shards in parallel. Each shard restores the
+  # cached binary and runs a slice of the suite, retrying failures in-process
+  # (see playwright.config.ts `retries`).
+  # ---------------------------------------------------------------------------
+  parallel-test:
+    name: Parallel Test
+    needs: build
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # To scale up, add indices here and bump shardTotal to match.
+        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        shardTotal: [16]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+
+      - name: Restore Insomnia binary
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: packages/insomnia/dist/linux-unpacked
+          key: insomnia-linux-unpacked-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Install test dependencies
+        run: |
+          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
+          npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Electron system dependencies
+        working-directory: packages/insomnia-test
+        run: npx playwright install-deps chromium
+
+      - name: Install ffmpeg (required for video recording)
+        working-directory: packages/insomnia-test
+        run: npx playwright install ffmpeg
+
+      - name: Run Playwright tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        working-directory: packages/insomnia-test
+        env:
+          INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
+          COVERAGE: 'true'
+        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Upload coverage (raw)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: coverage-raw-${{ matrix.shardIndex }}
+          path: packages/insomnia-test/coverage/raw/
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.shardIndex }}
+          path: packages/insomnia-test/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload blob report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: ${{ !cancelled() }}
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: packages/insomnia-test/blob-report/blob-report-${{ matrix.shardIndex }}.zip
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # This job doesn't gate the workflow — parallel-test (no continue-on-error)
+  # already fails the run on its own if any shard fails. This job only
+  # merges every shard's raw V8 coverage data (collected on both develop
+  # pushes and PRs — see parallel-test's COVERAGE env) into one coverage
+  # report, and every shard's blob report into one full-suite Playwright
+  # report — both run on every trigger this workflow has (push and
+  # pull_request are the only two, so no `if` gate is needed on either).
+  # Each merge step is its own `continue-on-error: true` so a merge failure
+  # never fails this job. It finishes by deleting every per-shard
+  # intermediate (coverage-raw-*, playwright-report-*, blob-report-*),
+  # leaving only the merged artifact(s).
+  # ---------------------------------------------------------------------------
+  insomnia-test-result:
+    name: Insomnia Test Result
+    needs: parallel-test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      actions: write
+    steps:
+      - name: Checkout repo
+        continue-on-error: true
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Setup Node.js
+        continue-on-error: true
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+
+      # Full install (not just monocart-coverage-reports) so `npx playwright
+      # merge-reports` below is the exact same Playwright version the shards
+      # generated their blob reports with.
+      - name: Install test dependencies
+        continue-on-error: true
+        run: |
+          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
+          npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Coverage raw data can embed `file:` sourcemap URLs pointing into this
+      # build output (see parallel-test's own restore step). Without it
+      # here, sourcemap resolution silently fails for those
+      # scripts during the merge below, deflating line/statement/branch
+      # coverage relative to what each shard reports locally.
+      - name: Restore Insomnia binary
+        continue-on-error: true
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: packages/insomnia/dist/linux-unpacked
+          key: insomnia-linux-unpacked-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Download raw coverage from all shards
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: coverage-raw
+          pattern: coverage-raw-*
+
+      - name: Merge coverage reports
+        continue-on-error: true
+        working-directory: packages/insomnia-test
+        run: node misc/merge-coverage.js ../../coverage-raw
+
+      - name: Upload merged coverage report
+        continue-on-error: true
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: coverage-report
+          path: packages/insomnia-test/coverage-merged/
+          retention-days: 30
+
+      - name: Download blob reports from all shards
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge Playwright reports
+        continue-on-error: true
+        working-directory: packages/insomnia-test
+        run: npx playwright merge-reports --reporter=html ../../all-blob-reports
+
+      - name: Upload merged Playwright report
+        continue-on-error: true
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: playwright-report
+          path: packages/insomnia-test/playwright-report/
+          retention-days: 30
+
+      # coverage-raw-*/playwright-report-[0-9]+/blob-report-[0-9]+ were only a
+      # transport into this job — now that they're merged, delete them so
+      # only the two artifacts uploaded above remain.
+      - name: Delete per-shard intermediate artifacts
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ids=$(gh api --paginate \
+            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.name | test("^playwright-report-[0-9]+$|^coverage-raw-[0-9]+$|^blob-report-[0-9]+$")) | .id')
+          for id in $ids; do
+            echo "Deleting intermediate artifact $id"
+            gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
+          done
