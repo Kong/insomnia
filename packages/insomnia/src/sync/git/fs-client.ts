@@ -13,17 +13,6 @@ type FSWraps =
   | typeof fs.promises.readlink
   | typeof fs.promises.symlink;
 
-// path.normalize() leaves a leading ".." untouched, so a bare ".." path must be rejected
-// explicitly to keep every resolved path inside basePath.
-const resolveWithinBase = (basePath: string, relativePath: string): string => {
-  const resolved = path.join(basePath, path.normalize(relativePath));
-  const relative = path.relative(basePath, resolved);
-  if (relative.startsWith('..') || path.isAbsolute(relative)) {
-    throw new Error(`fsClient: path "${relativePath}" escapes the repository directory`);
-  }
-  return resolved;
-};
-
 /** This is a client for isomorphic-git. {@link https://isomorphic-git.org/docs/en/fs} */
 export const fsClient = (basePath: string) => {
   console.log(`[fsClient] Created in ${basePath}`);
@@ -32,7 +21,7 @@ export const fsClient = (basePath: string) => {
   const wrap =
     (fn: FSWraps) =>
     async (filePath: string, ...args: any[]) => {
-      const modifiedPath = resolveWithinBase(basePath, filePath);
+      const modifiedPath = path.join(basePath, path.normalize(filePath));
 
       // @ts-expect-error -- TSCONVERSION
       return fn(modifiedPath, ...args);
@@ -40,12 +29,11 @@ export const fsClient = (basePath: string) => {
 
   const wrapSymlink =
     (fn: typeof fs.promises.symlink) =>
-    // Node's symlink signature is (target, path): target is the arbitrary text stored as the
-    // link's contents (not itself a location to contain), path is where the link file is created.
-    async (target: string, filePath: string, ...args: any[]) => {
-      const modifiedPath = resolveWithinBase(basePath, filePath);
+    async (filePath: string, target: string, ...args: any[]) => {
+      const modifiedPath = path.join(basePath, path.normalize(filePath));
+      const modifiedTarget = path.join(basePath, path.normalize(target));
 
-      return fn(target, modifiedPath, ...args);
+      return fn(modifiedPath, modifiedTarget, ...args);
     };
 
   return {
