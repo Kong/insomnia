@@ -15,8 +15,16 @@ describe('isPathInsideDir', () => {
     expect(isPathInsideDir('.', dir)).toBe(true);
   });
 
+  it('accepts a legit folder whose name merely starts with two dots', () => {
+    expect(isPathInsideDir('..test', dir)).toBe(true);
+    expect(isPathInsideDir(path.join('..test', 'nested'), dir)).toBe(true);
+    expect(isPathInsideDir(dir, dir)).toBe(true);
+  });
+
   it('rejects a path that escapes the dir', () => {
+    expect(isPathInsideDir('..', dir)).toBe(false);
     expect(isPathInsideDir('../', dir)).toBe(false);
+    expect(isPathInsideDir(path.join('..test', '..', '..', 'x'), dir)).toBe(false);
     expect(isPathInsideDir('../../etc', dir)).toBe(false);
   });
 
