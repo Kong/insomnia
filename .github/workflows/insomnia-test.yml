@@ -141,39 +141,7 @@ jobs:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
           COVERAGE: 'true'
-        run: |
-          # Playwright's --shard always splits tests in sorted-by-path order,
-          # which bunches related/slow suites from the same directory into
-          # the same shard. Shuffle the spec file list instead (seeded by the
-          # run ID, so every shard job in this run computes the identical
-          # ordering independently) and pass this shard's slice as explicit
-          # file args.
-          SHARD_FILES=$(node <<'JS'
-          const fs = require('fs');
-          const files = fs.readdirSync('tests', { recursive: true })
-            .filter(f => f.endsWith('.spec.ts'))
-            .sort();
-          const seed = process.env.GITHUB_RUN_ID || 'local';
-          let h = 1779033703 ^ seed.length;
-          for (let i = 0; i < seed.length; i++) {
-            h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-            h = (h << 13) | (h >>> 19);
-          }
-          const rand = () => {
-            h = Math.imul(h ^ (h >>> 16), 2246822507);
-            h = Math.imul(h ^ (h >>> 13), 3266489909);
-            return ((h ^= h >>> 16) >>> 0) / 4294967296;
-          };
-          for (let i = files.length - 1; i > 0; i--) {
-            const j = Math.floor(rand() * (i + 1));
-            [files[i], files[j]] = [files[j], files[i]];
-          }
-          const total = ${{ matrix.shardTotal }};
-          const idx = ${{ matrix.shardIndex }};
-          console.log(files.filter((_, i) => i % total === idx - 1).join(' '));
-          JS
-          )
-          xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob $SHARD_FILES
+        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       - name: Upload coverage (raw)
         if: ${{ !cancelled() }}
