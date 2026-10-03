@@ -75,7 +75,15 @@ describe('sandbox', () => {
   // Reference-identity check: a gated wrapper that's also reachable bare on globalThis isn't gating anything.
   it('no gated reference leaks onto bare globalThis (alias resolver)', async () => {
     const entries = await getSandboxSurface();
-    expect(findLeakedGatedReferences(entries)).toEqual([]);
+    expect(
+      findLeakedGatedReferences(entries, [
+        // Intentional, not a leak: Buffer is already an ungated ambient global (like atob/URL) with
+        // zero grant needed, so require('buffer').Buffer being === globalThis.Buffer matches real
+        // Node's own identity and grants nothing beyond what every plugin already has. See the
+        // `buffer` entry in PERMISSIONS.md and BUFFER_FACTORY's comment in module-registry.ts.
+        'require("buffer").Buffer aliases globalThis.Buffer',
+      ]),
+    ).toEqual([]);
   }, 20_000);
 
   // Completeness tripwire: any new sandbox-internal global must be added here deliberately, so its
