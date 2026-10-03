@@ -72,8 +72,6 @@
     "packages/insomnia/src/root.tsx -> packages/insomnia/src/ui/modals.tsx -> packages/insomnia/src/ui/components/modals/sync-merge-modal.tsx -> packages/insomnia/src/ui/components/diff-view-editor.tsx -> packages/insomnia/src/ui/hooks/theme.ts",
     "packages/insomnia/src/root.tsx -> packages/insomnia/src/ui/modals.tsx -> packages/insomnia/src/ui/components/modals/upgrade-plan-modal.tsx",
     "packages/insomnia/src/root.tsx -> packages/insomnia/src/ui/modals.tsx -> packages/insomnia/src/ui/components/modals/upgrade-plan-modal.tsx -> packages/insomnia/src/ui/hooks/use-plan.tsx",
-    "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.tsx -> packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar.tsx -> packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/project-node.tsx -> packages/insomnia/src/ui/context/app/insomnia-event-stream-context.tsx",
-    "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.tsx -> packages/insomnia/src/ui/components/sidebar/sync-bar.tsx",
     "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update.tsx -> packages/insomnia/src/ui/components/dropdowns/content-type-dropdown.tsx -> packages/insomnia/src/ui/hooks/use-request.ts",
     "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner.tsx -> packages/insomnia/src/ui/context/app/runner-context.tsx",
     "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner.tsx -> packages/insomnia/src/ui/hooks/use-runner-request-list.tsx",

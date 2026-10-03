@@ -9,6 +9,14 @@ import type { WorkerResponse } from './quickjs-script.worker';
  * `settings.useQuickJsScriptSandbox` and shouldn't pay for a QuickJS-WASM load they never trigger.
  */
 
+/**
+ * Single kill-switch for the QuickJS sandbox proof of concept. Both the settings UI
+ * (whether the toggle is shown) and the network layer (whether it's actually used) gate on
+ * this constant, so pausing or re-enabling the feature only requires flipping it here.
+ * TODO(INS-3890): flip back to true once QuickJS sandbox support is ready to ship again.
+ */
+export const QUICKJS_SANDBOX_ENABLED = false;
+
 let worker: Worker | null = null;
 interface PendingRun {
   resolve: (value: RequestContext) => void;

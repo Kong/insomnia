@@ -29,6 +29,7 @@ import { servicesNodeImpl } from 'insomnia-data/node';
 import { generate } from 'insomnia-testing/src/generate/generate';
 import { runTestsCli } from 'insomnia-testing/src/run/run';
 import orderedJSON from 'json-order';
+import Papa from 'papaparse';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -215,7 +216,7 @@ const pathToIterationData = async (pathOrUrl: string, env: string[]): Promise<Us
   const list = getListFromFileOrUrl(content, fileType).map(data => ({ ...data, ...envAsObject }));
   return transformIterationDataToEnvironmentList(list);
 };
-const getListFromFileOrUrl = (content: string, fileType?: string): Record<string, string>[] => {
+export const getListFromFileOrUrl = (content: string, fileType?: string): Record<string, string>[] => {
   if (fileType === 'json') {
     try {
       const jsonDataContent = JSON.parse(content);
@@ -229,12 +230,8 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
       throw new Error('Upload JSON file can not be parsed');
     }
   } else if (fileType === 'csv') {
-    // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
-    const csvRows = content
-      .replace(/\r\n|\r/g, '\n')
-      .split('\n')
-      .map(row => row.split(','));
-    // at least 2 rows required for csv
+    const csvRows = Papa.parse<string[]>(content, { skipEmptyLines: true, delimiter: ',' }).data;
+    // at least 2 rows required for csv, first row as variable names
     if (csvRows.length > 1) {
       const csvHeaders = csvRows[0];
       const csvContentRows = csvRows.slice(1);

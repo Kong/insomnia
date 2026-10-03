@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import clone from 'clone';
 import type { BaseModel, CloudProviderCredential, PluginData, Request, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
@@ -41,6 +41,7 @@ interface Props {
   workspace: Workspace;
   editorId?: string;
   close: () => void;
+  onRenderingChange: (rendering: boolean) => void;
 }
 
 interface State {
@@ -87,6 +88,15 @@ export const TagEditor: FC<Props> = props => {
     vaultPluginData: [],
   });
   const { handleRender, handleGetRenderContext } = useNunjucks({ renderContext: { purpose: 'preview' } });
+
+  const isEditorMountedRef = useRef(true);
+  useEffect(() => {
+    isEditorMountedRef.current = true;
+    return () => {
+      // Mark the editor as unmounted to prevent state updates on an unmounted component.
+      isEditorMountedRef.current = false;
+    };
+  }, []);
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
@@ -225,6 +235,7 @@ export const TagEditor: FC<Props> = props => {
   ) {
     const start = Date.now();
     setState(state => ({ ...state, rendering: true }));
+    props.onRenderingChange(true);
     let preview = '';
     let error = '';
     let activeTagData: NunjucksParsedTag | null = tagData;
@@ -252,6 +263,11 @@ export const TagEditor: FC<Props> = props => {
       }
     }
 
+    if (!isEditorMountedRef.current) {
+      // Editor is not mounted, abort the onChange
+      return;
+    }
+
     setState(state => ({
       ...state,
       tagDefinitions,
@@ -266,6 +282,7 @@ export const TagEditor: FC<Props> = props => {
     // Make rendering take at least this long so we can see a spinner
     await delay(300 - (Date.now() - start));
     setState(state => ({ ...state, rendering: false, preview }));
+    props.onRenderingChange(false);
   }
 
   const { error, preview, activeTagDefinition, activeTagData, rendering } = state;

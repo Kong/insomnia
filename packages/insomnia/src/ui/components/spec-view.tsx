@@ -32,7 +32,7 @@ import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
 
-import { parseApiSpec } from '~/common/api-specs';
+import { convertApiSpecSyntax, detectApiSpecSyntax, parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
@@ -388,12 +388,7 @@ export const SpecView = ({
     if (!contents) {
       return null;
     }
-    try {
-      JSON.parse(contents);
-      return 'json';
-    } catch {
-      return 'yaml';
-    }
+    return detectApiSpecSyntax(contents);
   }, [apiSpec?.contents]);
 
   const switchFormat = (to: 'json' | 'yaml') => {
@@ -401,10 +396,9 @@ export const SpecView = ({
     if (!editorValue) {
       return;
     }
-    let parsedSpec: string | undefined;
+    let contents: string;
     try {
-      // yaml parses json correctly
-      parsedSpec = YAML.parse(editorValue);
+      contents = convertApiSpecSyntax(editorValue, to);
     } catch {
       showToast({
         title: 'Failed to convert spec format',
@@ -414,7 +408,6 @@ export const SpecView = ({
       });
       return;
     }
-    const contents = to === 'json' ? JSON.stringify(parsedSpec, null, 2) : YAML.stringify(parsedSpec);
     editor.current?.setValue(contents);
     updateApiSpec({ organizationId, projectId, workspaceId, contents });
   };

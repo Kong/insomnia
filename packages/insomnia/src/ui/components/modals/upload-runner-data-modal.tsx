@@ -1,3 +1,4 @@
+import Papa from 'papaparse';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
@@ -45,6 +46,22 @@ export const genPreviewTableData = (uploadData: UploadDataType[]) => {
   return { data: filteredUploadData, headers: uniqueDataHeaders };
 };
 
+export const parseCsvUploadData = (content: string) => {
+  const csvRows = Papa.parse<string[]>(content, { skipEmptyLines: true, delimiter: ',' }).data;
+  // at least 2 rows required for csv, first row as variable names
+  if (csvRows.length < 2) {
+    return null;
+  }
+  const [csvHeaders, ...csvContentRows] = csvRows;
+  const uploadData = csvContentRows.map(contentRow =>
+    csvHeaders.reduce((acc: UploadDataType, cur, idx) => {
+      acc[cur] = contentRow[idx] ?? '';
+      return acc;
+    }, {}),
+  );
+  return { headers: csvHeaders, data: uploadData };
+};
+
 export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: UploadDataModalProps) => {
   const [file, setUploadFile] = useState<File | null>(null);
   const [uploadDataHeaders, setUploadDataHeaders] = useState<string[]>([]);
@@ -72,23 +89,10 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           setInvalidFileReason('Upload JSON file can not be parsed');
         }
       } else if (fileType === 'text/csv') {
-        // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
-        const csvRows = content
-          .replace(/\r\n|\r/g, '\n')
-          .split('\n')
-          .map(row => row.split(','));
-        // at least 2 rows required for csv
-        if (csvRows.length > 1) {
-          const csvHeaders = csvRows[0];
-          const csvContentRows = csvRows.slice(1);
-          const uploadData = csvContentRows.map(contentRow =>
-            csvHeaders.reduce((acc: UploadDataType, cur, idx) => {
-              acc[cur] = contentRow[idx] ?? '';
-              return acc;
-            }, {}),
-          );
-          setUploadDataHeaders(csvHeaders);
-          setUploadData(uploadData);
+        const parsed = parseCsvUploadData(content);
+        if (parsed) {
+          setUploadDataHeaders(parsed.headers);
+          setUploadData(parsed.data);
         } else {
           setInvalidFileReason('CSV file must contain at least two rows with first row as variable names');
         }

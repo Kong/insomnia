@@ -1,4 +1,8 @@
 import { format } from 'date-fns';
+import {
+  convertApiSpecSyntax,
+  detectApiSpecSyntax,
+} from 'insomnia/src/common/api-specs';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
@@ -31,6 +35,7 @@ import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features
 import { usePlanData } from '~/ui/hooks/use-plan';
 
 const VALUE_YAML = 'yaml';
+const VALUE_JSON = 'json';
 const VALUE_HAR = 'har';
 
 export type SelectedFormat = typeof VALUE_HAR | typeof VALUE_YAML;
@@ -90,7 +95,7 @@ const showSaveExportedFileDialog = async ({
   selectedFormat,
 }: {
   exportedFileNamePrefix: string;
-  selectedFormat: SelectedFormat;
+  selectedFormat: SelectedFormat | typeof VALUE_JSON;
 }) => {
   const date = format(Date.now(), 'yyyy-MM-dd-HH-mm-ss');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
@@ -354,6 +359,77 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           message: 'Export failed due to an unexpected error',
         });
         return;
+      }
+    },
+  });
+};
+
+export const exportSpecificationToFile = async (workspace: Workspace) => {
+  const apiSpec = await services.apiSpec.getByParentId(workspace._id);
+  if (!apiSpec?.contents) {
+    showModal(AlertModal, {
+      title: 'Cannot export',
+      message: (
+        <>
+          This <strong>{getWorkspaceLabel(workspace).singular.toLowerCase()}</strong> does not contain an OpenAPI
+          specification to export.
+        </>
+      ),
+    });
+    return;
+  }
+
+  showModal(SelectModal, {
+    title: 'Select Specification Format',
+    value: VALUE_YAML,
+    options: [
+      {
+        name: 'YAML',
+        value: VALUE_YAML,
+      },
+      {
+        name: 'JSON',
+        value: VALUE_JSON,
+      },
+    ],
+    message: 'Which format would you like to export as?',
+    onDone: async selectedFormat => {
+      if (selectedFormat !== VALUE_YAML && selectedFormat !== VALUE_JSON) {
+        return;
+      }
+
+      let specification = apiSpec.contents;
+      if (detectApiSpecSyntax(specification) !== selectedFormat) {
+        try {
+          specification = convertApiSpecSyntax(specification, selectedFormat);
+        } catch {
+          showError({
+            title: 'Export Failed',
+            message: `The specification is not valid, cannot convert to ${selectedFormat.toUpperCase()}`,
+          });
+          return;
+        }
+      }
+
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: workspace.name,
+        selectedFormat,
+      });
+      if (!fileName) {
+        return;
+      }
+
+      try {
+        await writeExportedFileToFileSystem(fileName, specification);
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.dataExport,
+          properties: { type: selectedFormat, scope: workspace.scope },
+        });
+      } catch {
+        showError({
+          title: 'Export Failed',
+          message: 'Export failed due to an unexpected error',
+        });
       }
     },
   });

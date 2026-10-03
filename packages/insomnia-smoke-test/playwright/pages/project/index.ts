@@ -363,7 +363,7 @@ export class ProjectPage extends BasePage {
     await this.workspaceList.openWorkspaceCardDropdown(workspaceName);
 
     // Click Export option
-    await this.page.getByRole('menuitem', { name: 'Export' }).click();
+    await this.page.getByRole('menuitem', { name: 'Export', exact: true }).click();
 
     // Click Export button in the export requests modal (all requests selected by default)
     await this.page.getByRole('dialog').getByRole('button', { name: 'Export' }).click();

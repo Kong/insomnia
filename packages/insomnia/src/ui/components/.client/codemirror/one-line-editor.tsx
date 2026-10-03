@@ -496,13 +496,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
-        if (onChange) {
+        if (onChange && !readOnly) {
           onChange(doc.getValue() || '');
         }
       };
       codeMirror.current?.on('blur', flushOnBlur);
       return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [editorVersion, onChange]);
+    }, [editorVersion, onChange, readOnly]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(

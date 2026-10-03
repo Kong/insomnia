@@ -46,8 +46,8 @@ export const KonnectOrgMigrationModal = ({
 
             <p className="text-sm text-(--hl)">
               Konnect data is now stored once per account in the <strong>Control Planes</strong> organization, but this
-              computer has Konnect data under more than one organization. Pick the one to keep — the others will be
-              deleted along with their collections and requests.
+              computer has Konnect data under more than one organization. Pick the one you want to keep Insomnia
+              connected to.
             </p>
 
             <RadioGroup

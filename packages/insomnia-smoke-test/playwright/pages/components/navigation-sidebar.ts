@@ -145,7 +145,7 @@ export class NavigationSidebar {
     workspaceName: string;
   }): Promise<void> {
     await this.openWorkspaceActionsDropdown(workspaceName);
-    await this.page.getByRole('menuitemradio', { name: actionName }).click();
+    await this.page.getByRole('menuitemradio', { name: actionName, exact: true }).click();
   }
 
   async expandWorkspace(workspaceName: string): Promise<void> {
