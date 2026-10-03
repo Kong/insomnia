@@ -23,7 +23,16 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `string_decoder` (and more via M2).
+    - `string_decoder` is a full reimplementation of `StringDecoder`, buffering incomplete
+      multi-byte sequences across `write()` calls the same way the real module does (verified
+      against `node:string_decoder` for well-formed input across `utf8`/`utf16le`/`ucs2`/`base64`/
+      `latin1`/`binary`/`ascii`/`hex`, split at every byte boundary). `write()` accepts a
+      `Uint8Array` or a plain byte array. The module's full public surface (`new
+      StringDecoder(encoding)`, `.write()`, `.end()`) is implemented; a narrow gap remains for
+      malformed (not well-formed) UTF-8 sequences whose tail crosses a `write()`/`end()` boundary,
+      where the module can emit one fewer `U+FFFD` than real Node — see `SANDBOX-SECURITY-
+      FINDINGS.md`.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
