@@ -28,6 +28,12 @@ describe('isPathInsideDir', () => {
     expect(isPathInsideDir('../../etc', dir)).toBe(false);
   });
 
+  it('is lexical only: a path through a symlink inside the dir is still reported as inside', () => {
+    // Documented limitation (see path-guard.ts): symlinks are not resolved, so a symlink
+    // inside `dir` that points elsewhere passes this check. Symlink-aware checks live in #10560.
+    expect(isPathInsideDir(path.join('link-to-elsewhere', 'file'), dir)).toBe(true);
+  });
+
   it('rejects an absolute path outside the dir', () => {
     expect(isPathInsideDir('/etc/passwd', dir)).toBe(false);
   });
