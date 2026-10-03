@@ -3,7 +3,7 @@ import React, { type FC, useEffect, useLayoutEffect, useRef, useState } from 're
 
 import type { HandleRender } from '~/common/templating/types';
 
-import { markdownToHTML } from '../../common/markdown-to-html';
+import { markdownToHTML, type SafeHTML } from '../../common/markdown-to-html';
 
 interface Props {
   markdown: string;
@@ -14,7 +14,7 @@ interface Props {
 
 export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
   const divRef = useRef<HTMLDivElement>(null);
-  const [compiled, setCompiled] = useState('');
+  const [compiled, setCompiled] = useState<SafeHTML>(markdownToHTML(''));
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
         shouldUpdate && setCompiled(compiled);
         shouldUpdate && setError('');
       } catch (err) {
-        shouldUpdate && setCompiled('');
+        shouldUpdate && setCompiled(markdownToHTML(''));
         shouldUpdate && setError(err.message);
       }
     };
