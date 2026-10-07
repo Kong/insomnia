@@ -645,7 +645,7 @@ export function mergeRequestBody(
       }
     }
   }
-  // Keep the original mimeType unless the script switched the body mode
+  // Keep the original mimeType unless the script switched away from the body mode it was given (params bodies are given as urlencoded)
   if (originalReqBody.mimeType && toScriptRequestBody(originalReqBody).mode === updatedReqBody?.mode) {
     mimeType = originalReqBody.mimeType;
   }

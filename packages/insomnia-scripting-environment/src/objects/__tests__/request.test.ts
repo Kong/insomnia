@@ -135,7 +135,7 @@ describe('test request and response objects', () => {
     });
   });
 
-  it('test script-updated formdata body on a multipart request keeps the original mimeType', () => {
+  it('test script-updated formdata body on a multipart request falls back to the multipart mimeType', () => {
     const scriptReqBody = new RequestBody({
       mode: 'formdata',
       formdata: [
