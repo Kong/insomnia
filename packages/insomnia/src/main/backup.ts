@@ -68,11 +68,11 @@ export async function restoreBackup(version: string) {
       console.log('[main] No backup found at:', versionPath);
       return;
     }
-    files.forEach(async (file: string) => {
+    for (const file of files) {
       if (file.endsWith('.db')) {
         await copyFile(path.join(versionPath, file), path.join(dataPath, file));
       }
-    });
+    }
     console.log('[main] Restored backup from:', versionPath);
   } catch (err) {
     console.log('[main] Error restoring backup:', err);
