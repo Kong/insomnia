@@ -268,9 +268,11 @@ jobs:
           path: packages/insomnia-test/playwright-report/
           retention-days: 30
 
-      # coverage-raw-*/playwright-report-[0-9]+/blob-report-[0-9]+ were only a
-      # transport into this job — now that they're merged, delete them so
-      # only the two artifacts uploaded above remain.
+      # playwright-report-[0-9]+/blob-report-[0-9]+ were only a transport into
+      # this job — now that they're merged, delete them so only the two
+      # artifacts uploaded above remain. coverage-raw-* is kept for now (not
+      # deleted here) so per-shard coverage can still be inspected after the
+      # fact when debugging the merged coverage numbers.
       - name: Delete per-shard intermediate artifacts
         continue-on-error: true
         env:
@@ -278,7 +280,7 @@ jobs:
         run: |
           ids=$(gh api --paginate \
             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-            --jq '.artifacts[] | select(.name | test("^playwright-report-[0-9]+$|^coverage-raw-[0-9]+$|^blob-report-[0-9]+$")) | .id')
+            --jq '.artifacts[] | select(.name | test("^playwright-report-[0-9]+$|^blob-report-[0-9]+$")) | .id')
           for id in $ids; do
             echo "Deleting intermediate artifact $id"
             gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
