@@ -301,12 +301,12 @@ const validateListResult = (method: string, result: unknown): McpListResult => {
     entries.push({ label: labelForListItem(item) || `index ${index}`, reason });
   });
   const cleanedResult = { ...(isRecord(result) ? result : {}), [config.itemsKey]: validItems };
-  if (entries.length === 0) {
-    if (config.resultSchema.safeParse(cleanedResult).success) {
-      return { data: cleanedResult };
-    }
-    // Every entry is individually valid, but some other envelope field (e.g. nextCursor) still fails the schema.
+  // Every entry is individually valid, but some other envelope field (e.g. nextCursor) still fails the schema.
+  if (!config.resultSchema.safeParse(cleanedResult).success) {
     return { error: { title: `The server returned a ${method} response that does not match the MCP schema.` } };
+  }
+  if (entries.length === 0) {
+    return { data: cleanedResult };
   }
   return {
     data: cleanedResult,

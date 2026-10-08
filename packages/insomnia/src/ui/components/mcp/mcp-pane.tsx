@@ -267,7 +267,7 @@ export const McpPane = () => {
         [type]: data,
       },
     }));
-    // Set the error when the refresh failed, clear it when it succeeded - same as updateServerData.
+    // Set the error when the refresh failed, clear it when it succeeded
     setPrimitiveErrors(prev => ({
       ...prev,
       [type]: error,
