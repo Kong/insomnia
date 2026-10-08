@@ -353,7 +353,11 @@ export const findLatestListResult = (mcpEvents: McpEvent[], method: string): Mcp
     return undefined;
   }
   if (incomingEvent.type === 'error') {
-    return { error: { title: incomingEvent.message || `MCP server returned an error for ${method}` } };
+    return {
+      error: {
+        title: `${incomingEvent.message || 'Error'}: ${incomingEvent.error?.message || `MCP server returned an error for ${method}`}`,
+      },
+    };
   }
   if (incomingEvent.type !== 'message') {
     return undefined;

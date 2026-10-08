@@ -69,7 +69,7 @@ const emptyPrimitiveErrors: Partial<Record<McpServerPrimitiveTypes, McpListValid
 const ITEM_ROW_HEIGHT = 32;
 // A whole-response failure has no per-entry breakdown, just a one-line title, so it needs far less
 // room than a partial failure's scrollable list of dropped entries.
-const ERROR_PANEL_HEIGHT_TITLE_ONLY = 80;
+const ERROR_PANEL_HEIGHT_TITLE_ONLY = 100;
 const ERROR_PANEL_HEIGHT_WITH_ENTRIES = 120;
 
 const getErrorPanelHeight = (error: McpListValidationError | undefined): number =>
