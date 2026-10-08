@@ -9,7 +9,7 @@ import { buildGrpcTabs } from './grpc-diff-card';
 import { buildMcpTabs } from './mcp-diff-card';
 import { buildMockRouteTabs } from './mock-route-diff-card';
 import { buildRequestTabs } from './request-diff-card';
-import { buildRequestGroupTabs } from './request-group-diff-card';
+import { buildRequestGroupTabs, folderDiscardConfirmMessage } from './request-group-diff-card';
 import { buildSocketIOTabs } from './socket-io-diff-card';
 import { buildWebSocketTabs } from './websocket-diff-card';
 
@@ -286,5 +286,26 @@ describe('buildCookieJarTabs', () => {
     expect(summary(buildCookieJarTabs(modified('cookie_jar', before, after)))).toEqual([
       { id: 'cookies', status: 'added', count: 1 },
     ]);
+  });
+});
+
+describe('folderDiscardConfirmMessage', () => {
+  const child = { name: 'r', url: 'https://a', meta: { id: 'req_1' } };
+  const folder = (children: unknown[]) => ({ name: 'f', meta: { id: 'fld_1' }, children });
+
+  it('warns when discarding a working-tree-only folder would also delete what is inside it', () => {
+    expect(folderDiscardConfirmMessage(added('request_group', folder([child])))).toBe(
+      'Confirm (discards its contents too)',
+    );
+  });
+
+  it('keeps the plain prompt when nothing inside is affected', () => {
+    expect(folderDiscardConfirmMessage(added('request_group', folder([])))).toBeUndefined();
+    expect(
+      folderDiscardConfirmMessage(modified('request_group', folder([child]), { ...folder([child]), name: 'g' })),
+    ).toBeUndefined();
+    expect(
+      folderDiscardConfirmMessage({ ...added('request_group', folder([child])), status: 'removed' }),
+    ).toBeUndefined();
   });
 });

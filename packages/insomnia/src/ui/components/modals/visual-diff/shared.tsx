@@ -114,6 +114,8 @@ export interface EntityCardActionProps {
   onStage: () => void;
   // Only provided for unstaged changes — staged changes can't be discarded from the index view.
   onDiscard?: () => Promise<void>;
+  // Replaces the Discard button's "Confirm" prompt, eg. to warn that more than this card is affected.
+  discardConfirmMessage?: string;
 }
 
 const CARD_ACTION_BUTTON_CLASS =
@@ -128,6 +130,7 @@ export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardAc
   isDisabled,
   onStage,
   onDiscard,
+  discardConfirmMessage = 'Confirm',
 }) => {
   const isStaging = pendingAction === 'stage';
   return (
@@ -137,7 +140,7 @@ export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardAc
         <PromptButton
           className={CARD_ACTION_BUTTON_CLASS}
           disabled={isDisabled}
-          confirmMessage="Confirm"
+          confirmMessage={discardConfirmMessage}
           loadingMessage="Discarding"
           // On success the card disappears with the refresh; on failure a toast explains — so no "done" text.
           doneMessage=""

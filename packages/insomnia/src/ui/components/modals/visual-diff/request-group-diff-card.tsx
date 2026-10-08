@@ -66,6 +66,14 @@ export function buildRequestGroupTabs(diff: EntityDiff): DiffTabDef[] {
   ]);
 }
 
+// Discarding a folder that only exists in the working tree deletes it — and with it everything
+// nested inside, even though those items have their own cards — so the confirm prompt says so.
+// (Discarding a modified folder only reverts its own fields; a removed one comes back empty.)
+export function folderDiscardConfirmMessage(diff: EntityDiff): string | undefined {
+  const hasContents = (diff.after?.children?.length ?? 0) > 0;
+  return diff.status === 'added' && hasContents ? 'Confirm (discards its contents too)' : undefined;
+}
+
 export const RequestGroupDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const header = buildHeaderLines(diff, { icon: 'folder', watchedPaths: [] });
 
@@ -75,6 +83,7 @@ export const RequestGroupDiffCard: FC<{ diff: EntityDiff } & EntityCardActionPro
       header={<EntityHeader {...header} />}
       tabs={buildRequestGroupTabs(diff)}
       {...actionProps}
+      discardConfirmMessage={folderDiscardConfirmMessage(diff)}
     />
   );
 };
