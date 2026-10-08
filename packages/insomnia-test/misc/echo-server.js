@@ -90,13 +90,16 @@ function readBody(req) {
   });
 }
 
+const MIN_REPLY_DELAY_MS = 1;
 const MAX_REPLY_DELAY_MS = 60_000;
 
 function delayResponse(req) {
-  const requestedDelayMs = Number.parseInt(req.headers['x-reply-delay-ms'], 10);
-  if (!Number.isFinite(requestedDelayMs) || requestedDelayMs <= 0) return Promise.resolve();
-  const safeDelayMs = Math.min(requestedDelayMs, MAX_REPLY_DELAY_MS);
-  return new Promise(resolve => setTimeout(resolve, safeDelayMs));
+  const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
+  if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
+  if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
+    return Promise.resolve();
+  }
+  return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
 }
 
 function parseCookies(header) {
