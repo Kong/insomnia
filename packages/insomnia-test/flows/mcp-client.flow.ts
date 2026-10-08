@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { McpClient } from "../models/mcp-client";
 import type { Project } from "../models/project";
 import type { Response } from "../models/response";
@@ -39,7 +40,7 @@ export class McpClientFlow extends BaseFlow {
     tool: string,
     args: Record<string, string>,
     callback: () => Promise<void> | void = () => {},
-    timeout = 5000,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;

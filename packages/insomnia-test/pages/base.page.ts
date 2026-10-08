@@ -2,6 +2,8 @@ import type { Locator } from "@playwright/test";
 import { type ElectronApplication,expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+
 export abstract class BasePage {
   constructor(
     protected page: Page,
@@ -51,7 +53,7 @@ export abstract class BasePage {
   protected async waitForStableAttribute(
     locator: Locator,
     attribute: string,
-    timeout = 5000,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<string | null> {
     const deadline = Date.now() + timeout;
     let previous = await locator.getAttribute(attribute);
@@ -93,7 +95,7 @@ export abstract class BasePage {
           text,
         );
         expect(await this.readCodeMirror(cmLocator)).toBe(text);
-      }).toPass({ timeout: 10_000 });
+      }).toPass({ timeout: DEFAULT_TIMEOUT });
       if (await this.valueHolds(cmLocator, text, 200)) return;
     }
   }

@@ -7,7 +7,7 @@ import type {
 import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
 import { AuthType } from "../enums/auth-type";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import { TabPanelPage } from "./tab-panel.page";
 
 type OAuth1TextField = keyof Omit<
@@ -85,7 +85,7 @@ export interface OAuth2Tokens {
  * and Implicit grants round-trip through a popup authorization window
  * before the Access Token field populates.
  */
-const OAUTH2_FETCH_TIMEOUT = 15 * 1000;
+const OAUTH2_FETCH_TIMEOUT = ACTION_TIMEOUT;
 
 /**
  * The Auth tab component, shared by any page that renders it — a

@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { ContentType } from "../enums/content-type";
 import type { HttpMethod } from "../enums/http-method";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   GraphQLRequest,
   GraphQLRequestBody,
@@ -118,14 +119,26 @@ export class GraphQLRequestPage extends RequestPage {
       name: /error fetching schema/i,
     });
     await expect(errorButton)
-      .toBeHidden({ timeout: 15_000 })
+      .toBeHidden({ timeout: ACTION_TIMEOUT })
       .catch(() => {});
     if (await errorButton.isVisible().catch(() => false)) return undefined;
 
     await this.page.getByRole("button", { name: /schema/i }).click();
-    await this.page
-      .getByRole("menuitem", { name: /Show Documentation/i })
-      .click();
+    // The item stays disabled while the schema is still being fetched, and
+    // clicking it then is a silent no-op, so wait until it's actionable.
+    const showDocs = this.page.getByRole("menuitem", {
+      name: /Show Documentation/i,
+    });
+    await expect(showDocs).not.toHaveAttribute("aria-disabled", "true", {
+      timeout: ACTION_TIMEOUT,
+    });
+    await showDocs.click();
+    await expect(
+      this.page
+        .locator("#graphql-explorer-container")
+        .getByRole("button")
+        .first(),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
 
     const backButton = this.page.locator(
       ".graphql-explorer__header__back-btn",

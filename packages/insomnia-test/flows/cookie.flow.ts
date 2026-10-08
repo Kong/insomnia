@@ -56,7 +56,20 @@ export class CookieFlow extends BaseFlow {
     await this.pageManager.cookiePage.close();
     await this.waitForPersisted(item, cookies);
 
-    return this.get(item);
+    // The freshly opened list can briefly render pre-edit rows (e.g. the
+    // default `foo=bar`), so poll until it reflects what was just written.
+    let list: Cookie[] = [];
+    await expect(async () => {
+      list = await this.get(item);
+      expect(list).toEqual(
+        expect.arrayContaining(
+          cookies.map((c) =>
+            expect.objectContaining({ key: c.key, value: c.value }),
+          ),
+        ),
+      );
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    return list;
   }
 
   /**

@@ -1,5 +1,6 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import type { Response } from "../models/response";
@@ -52,13 +53,13 @@ export class WebSocketRequestFlow extends BaseFlow {
    * project tree.
    * @param request - The request whose connection should be closed
    * @param callback - Invoked once the disconnect completes; defaults to a no-op
-   * @param timeout - Maximum time in milliseconds to wait for the disconnect; defaults to 5000
+   * @param timeout - Maximum time in milliseconds to wait for the disconnect; defaults to DEFAULT_TIMEOUT
    * @returns The response received after disconnecting
    */
   async disconnect(
     request: WebSocketRequest,
     callback: () => Promise<void> | void = () => {},
-    timeout = 5000,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
@@ -130,14 +131,14 @@ export class WebSocketRequestFlow extends BaseFlow {
    * @param request - The request whose connection the message is sent over
    * @param body - The message body to send
    * @param callback - Invoked once the send completes; defaults to a no-op
-   * @param timeout - Maximum time in milliseconds to wait for the send; defaults to 5000
+   * @param timeout - Maximum time in milliseconds to wait for the send; defaults to DEFAULT_TIMEOUT
    * @returns The response received after sending the message
    */
   async sendMessage(
     request: WebSocketRequest,
     body: WebSocketRequestBody,
     callback: () => Promise<void> | void = () => {},
-    timeout = 5000,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;

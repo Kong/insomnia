@@ -97,7 +97,7 @@ export abstract class RequestPage extends TabPanelPage {
    */
   async disconnect(
     callback: () => Promise<void> | void = () => {},
-    timeout = 5000,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<void> {
     await expect(async () => {
       await callback();
@@ -287,7 +287,7 @@ export abstract class RequestPage extends TabPanelPage {
         .locator(`[role="option"][data-key="${contentType}"]`)
         .dispatchEvent("click");
       await expect(select).toHaveValue(contentType, { timeout: 1000 });
-    }).toPass({ timeout: 10_000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

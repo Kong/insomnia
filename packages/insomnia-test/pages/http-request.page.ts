@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { ContentType } from "../enums/content-type";
 import type { HttpMethod } from "../enums/http-method";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   HttpRequest,
   HttpRequestBody,
@@ -163,7 +164,7 @@ export class HttpRequestPage extends RequestPage {
           const before = await rows.count();
           await addBtn.click();
           await expect(rows).toHaveCount(before + 1, { timeout: 1000 });
-        }).toPass({ timeout: 10_000 });
+        }).toPass({ timeout: DEFAULT_TIMEOUT });
       }
       const row = rows.last();
       await this.setCodeMirrorValue(
@@ -177,7 +178,7 @@ export class HttpRequestPage extends RequestPage {
         const fileModeOption = this.page.locator(
           '[role="menuitemradio"][data-key="file"]',
         );
-        await expect(fileModeOption).toBeVisible({ timeout: 5000 });
+        await expect(fileModeOption).toBeVisible({ timeout: DEFAULT_TIMEOUT });
         await fileModeOption.click();
         await this.stubFileChooser(param.fileName);
         await row.locator('button:has-text("Choose File")').click();

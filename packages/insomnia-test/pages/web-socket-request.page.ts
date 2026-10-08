@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { ContentType } from "../enums/content-type";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   WebSocketRequest,
   WebSocketRequestBody,
@@ -45,7 +46,7 @@ export class WebSocketRequestPage extends RequestPage {
   async sendMessage(
     body: WebSocketRequestBody,
     callback: () => Promise<void> | void = () => {},
-    timeout = 5000,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<void> {
     await this.setBody(body);
     await this.send();

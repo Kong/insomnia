@@ -282,7 +282,7 @@ export class WorkspacePage extends BasePage {
     await this.page
       .getByRole("menuitem", { name: "Add request to current collection" })
       .click();
-    await expect(rows).toHaveCount(before + 1, { timeout: 10_000 });
+    await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
   }
 
   /**

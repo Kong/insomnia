@@ -1,5 +1,7 @@
 import * as fs from "node:fs";
 
+import { ACTION_TIMEOUT } from "./constants";
+
 const POLL_INTERVAL_MS = 200;
 const STABLE_CHECKS_REQUIRED = 3;
 
@@ -14,7 +16,7 @@ const STABLE_CHECKS_REQUIRED = 3;
  */
 export async function waitForExportedFile(
   filePath: string,
-  timeout = 20_000,
+  timeout = ACTION_TIMEOUT,
 ): Promise<string> {
   const deadline = Date.now() + timeout;
   let lastSize = -1;
