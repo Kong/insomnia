@@ -221,7 +221,10 @@ export interface RequestPathParameter {
 export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
 /** Replace `:param` url segments with their URL-encoded values; unmatched or empty params are left unchanged */
-export const applyPathParametersToUrl = (url: string, pathParameters?: RequestPathParameter[]): string => {
+export const applyPathParametersToUrl = (
+  url: string,
+  pathParameters?: RequestPathParameter[],
+): string => {
   if (!pathParameters?.length) {
     return url;
   }
