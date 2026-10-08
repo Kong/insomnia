@@ -86,14 +86,16 @@ app.get('/', (_req, res) => {
   res.status(200).send('mcp-server ok');
 });
 
-const MAX_REPLY_DELAY_MS = 60_000;
+const MIN_REPLY_DELAY_MS = 1;
+const MAX_REPLY_DELAY_MS = 1_000;
 
 function delayResponse(req) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
-  if (!Number.isFinite(requestedDelayMs) || requestedDelayMs <= 0) return Promise.resolve();
-  const safeDelayMs = Math.min(Math.trunc(requestedDelayMs), MAX_REPLY_DELAY_MS);
-  if (safeDelayMs <= 0) return Promise.resolve();
-  return new Promise(resolve => setTimeout(resolve, safeDelayMs));
+  if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
+  if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
+    return Promise.resolve();
+  }
+  return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
 }
 
 app.post('/mcp', async (req, res) => {
