@@ -1498,7 +1498,7 @@ TreeNodeType: Project | Workspace | Request | Folder | Empty | Unknown;
 
 Opt-out paths, both read once at module scope (not per-test):
 
-- Setting `INSOMNIA_BINARY` (CI always does — see `.github/workflows/insomnia-test.yml`) skips dev mode entirely and launches that binary directly, same as before.
+- Setting `INSOMNIA_BINARY` skips dev mode entirely and launches that binary directly.
 - `INSOMNIA_DEV_MODE=false`/`0` (with `INSOMNIA_BINARY` unset) falls back to the packaged `/Applications/Insomnia.app` build locally without pointing at a specific binary.
 
 No spec-facing API changed — this only affects local/CI environment setup, not anything a test calls.
