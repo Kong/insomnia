@@ -221,20 +221,27 @@ export abstract class BasePage {
    * @param rowsOf - Returns the candidate row lists of a document (params, headers, kvPairData, ...)
    * @param name - The row name to look for
    * @param matchesValue - Optional extra check on the named row (its value/disabled state); omit to match on name alone
+   * @param timeout - Overall budget to wait for the row to land
    */
   protected async waitForRowPersisted(
     dbFiles: string[],
     rowsOf: (doc: any) => unknown[],
     name: string,
     matchesValue?: (row: any) => boolean,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<void> {
     if (!name) return;
-    await this.waitForPersisted(dbFiles, (doc) =>
-      rowsOf(doc).some(
-        (rows) =>
-          Array.isArray(rows) &&
-          rows.some((row) => row.name === name && (matchesValue?.(row) ?? true)),
-      ),
+    await this.waitForPersisted(
+      dbFiles,
+      (doc) =>
+        rowsOf(doc).some(
+          (rows) =>
+            Array.isArray(rows) &&
+            rows.some(
+              (row) => row.name === name && (matchesValue?.(row) ?? true),
+            ),
+        ),
+      timeout,
     );
   }
 

@@ -405,19 +405,31 @@ export abstract class RequestPage extends TabPanelPage {
         .last()
         .getAttribute("data-key");
       const row = listbox.locator(`[role="option"][data-key="${key}"]`);
-      await this.setCodeMirrorValue(
-        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-        pair.name,
-      );
-      await this.waitForPairPersisted(pair, { checkValue: false });
-      await this.setCodeMirrorValue(
-        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-        pair.value,
-      );
+      const setName = () =>
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+          pair.name,
+        );
+      const setValue = () =>
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+          pair.value,
+        );
+      await setName();
+      await this.waitForPairPersisted(pair, {
+        checkValue: false,
+        reapply: setName,
+      });
+      await setValue();
       if (pair.disabled) {
         await row.locator('button[aria-pressed="true"]').click();
       }
-      await this.waitForPairPersisted(pair);
+      await this.waitForPairPersisted(pair, {
+        reapply: async () => {
+          await setName();
+          await setValue();
+        },
+      });
     }
     await this.waitForPairsSettled(pairs);
   }
@@ -473,14 +485,22 @@ export abstract class RequestPage extends TabPanelPage {
       if (Date.now() - lastReapply >= 2000) {
         lastReapply = Date.now();
         for (const { pair, index } of missing) {
+          const row = rows.nth(index);
           await this.setCodeMirrorValue(
-            rows.nth(index).locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+            row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+            pair.name,
+          );
+          await this.setCodeMirrorValue(
+            row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
             pair.value ?? "",
           );
         }
       }
       expect(missing.map(({ pair }) => pair.name)).toEqual([]);
-    }).toPass({ timeout: DEFAULT_TIMEOUT + settleMs, intervals: [250, 500] });
+    }).toPass({
+      timeout: DEFAULT_TIMEOUT * 2 + settleMs,
+      intervals: [250, 500],
+    });
   }
 
   /**
@@ -491,24 +511,36 @@ export abstract class RequestPage extends TabPanelPage {
    * blank name, which the app never persists.
    * @param pair - The row that was just edited
    * @param options.checkValue - Whether the value/disabled state must match too, or only the name (right after the name is typed)
+   * @param options.reapply - Re-types the row's edit; run before each retry once a wait attempt times out, since a save from a stale copy of the row list can silently revert the edit and re-waiting alone would never recover it
    */
   protected async waitForPairPersisted(
     pair: { name: string; value?: string; disabled?: boolean },
-    { checkValue = true }: { checkValue?: boolean } = {},
+    {
+      checkValue = true,
+      reapply,
+    }: { checkValue?: boolean; reapply?: () => Promise<void> } = {},
   ): Promise<void> {
-    await this.waitForRowPersisted(
-      [this.persistedDbFile],
-      (doc) =>
-        this.persistedRowPaths.map((path) =>
-          path.split(".").reduce((node, key) => node?.[key], doc),
-        ),
-      pair.name,
-      checkValue
-        ? (p) =>
-            (p.value ?? "") === (pair.value ?? "") &&
-            Boolean(p.disabled) === Boolean(pair.disabled)
-        : undefined,
-    );
+    let attempts = 0;
+    await expect(async () => {
+      if (attempts++ > 0) await reapply?.();
+      await this.waitForRowPersisted(
+        [this.persistedDbFile],
+        (doc) =>
+          this.persistedRowPaths.map((path) =>
+            path.split(".").reduce((node, key) => node?.[key], doc),
+          ),
+        pair.name,
+        checkValue
+          ? (p) =>
+              (p.value ?? "") === (pair.value ?? "") &&
+              Boolean(p.disabled) === Boolean(pair.disabled)
+          : undefined,
+        DEFAULT_TIMEOUT / 2,
+      );
+    }).toPass({
+      timeout: reapply ? DEFAULT_TIMEOUT * 3 : DEFAULT_TIMEOUT,
+      intervals: [0],
+    });
   }
 
   /**

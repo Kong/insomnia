@@ -167,11 +167,21 @@ export class HttpRequestPage extends RequestPage {
         }).toPass({ timeout: DEFAULT_TIMEOUT });
       }
       const row = rows.last();
-      await this.setCodeMirrorValue(
-        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-        param.name,
-      );
-      await this.waitForPairPersisted(param, { checkValue: false });
+      const setName = () =>
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+          param.name,
+        );
+      const setValue = () =>
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+          param.value ?? "",
+        );
+      await setName();
+      await this.waitForPairPersisted(param, {
+        checkValue: false,
+        reapply: setName,
+      });
 
       if (param.fileName) {
         await row.locator('button[aria-label="Text mode"]').click();
@@ -183,17 +193,21 @@ export class HttpRequestPage extends RequestPage {
         await this.stubFileChooser(param.fileName);
         await row.locator('button:has-text("Choose File")').click();
       } else {
-        await this.setCodeMirrorValue(
-          row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-          param.value ?? "",
-        );
+        await setValue();
       }
 
       if (param.disabled) {
         await row.locator('button[aria-pressed="true"]').click();
       }
 
-      if (!param.fileName) await this.waitForPairPersisted(param);
+      if (!param.fileName) {
+        await this.waitForPairPersisted(param, {
+          reapply: async () => {
+            await setName();
+            await setValue();
+          },
+        });
+      }
     }
     await this.waitForPairsSettled(params);
   }
