@@ -345,13 +345,24 @@ export class ResponsePage extends BasePage {
 
   /**
    * Confirms the response pane has loaded by waiting for the "Timeline"
-   * tab to become visible.
+   * tab to become visible. If an error dialog (e.g. "The request failed
+   * due to an unhandled error") appears instead, throws using its text
+   * rather than waiting out the full timeout for a pane that will never
+   * render. This covers dialogs slower than `@throwOnDialog`'s short
+   * wait on `RequestPage.send()`.
    */
   async navigate(): Promise<void> {
     const previewTab = this.page.locator(
       `${this.PANE} [data-key="timeline"][role="tab"]`,
     );
-    await expect(previewTab).toBeVisible({ timeout: LONG_TIMEOUT });
+    const dialog = this.page.getByRole("dialog").first();
+    await previewTab
+      .or(dialog)
+      .first()
+      .waitFor({ state: "visible", timeout: LONG_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
   }
 
   /**
