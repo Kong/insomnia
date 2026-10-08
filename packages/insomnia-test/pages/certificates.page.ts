@@ -1,7 +1,7 @@
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { ClientCertificate } from "../models/certificate";
 import { BasePage } from "./base.page";
 

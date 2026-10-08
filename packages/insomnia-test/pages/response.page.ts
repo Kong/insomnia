@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { SendButtonState } from "../enums/send-button-state";
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from "../misc/constants";
 import type {
   Response,
   ResponseHeader,
@@ -178,8 +178,8 @@ export class ResponsePage extends BasePage {
    */
   async getGrpcMessage(index = 0): Promise<unknown> {
     const tab = this.page
-      .locator(`${this.PANE} [role="tab"]`)
-      .filter({ hasText: new RegExp(`^Response ${index + 1}$`) });
+      .locator(this.PANE)
+      .getByRole("tab", { name: `Response ${index + 1}`, exact: true });
     if ((await tab.count()) === 0) return undefined;
     await tab.click();
     const editor = this.page

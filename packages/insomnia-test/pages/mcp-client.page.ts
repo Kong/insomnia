@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { RequestPage } from "./request.page";
 
 export class McpClientPage extends RequestPage {

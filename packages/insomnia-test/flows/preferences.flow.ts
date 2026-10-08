@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import type { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { GitCredential } from "../models/git-credential";
 import type { AiUrlBackendSettings} from "../models/settings";
 import { Settings } from "../models/settings";

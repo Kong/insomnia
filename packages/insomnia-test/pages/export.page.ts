@@ -2,8 +2,8 @@ import { expect } from "@playwright/test";
 
 import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
 import type { ExportFormat } from "../enums/export-format";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { throwOnDialog } from "../misc/decorators";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {

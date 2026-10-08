@@ -9,6 +9,7 @@ import { CookieFlow } from "./cookie.flow";
 import { EnvironmentFlow } from "./environment.flow";
 import { EventStreamRequestFlow } from "./event-stream-request.flow";
 import { ExportFlow } from "./export.flow";
+import type { AppLaunchConfig, FlowContext } from "./flow-context";
 import { FolderFlow } from "./folder.flow";
 import { GitSyncFlow } from "./git-sync.flow";
 import { GraphQLRequestFlow } from "./graphql-request.flow";
@@ -23,19 +24,7 @@ import { TemplateTagFlow } from "./template-tag.flow";
 import { WebSocketRequestFlow } from "./web-socket-request.flow";
 import { WorkspaceFlow } from "./workspace.flow";
 
-/**
- * The `insomnia` fixture's original launch parameters — kept around so
- * `AppFlow.restart()` can relaunch against the same `dataPath` later
- * without re-deriving them.
- */
-export interface AppLaunchConfig {
-  dataPath: string;
-  skipOnboarding: boolean;
-  vaultKey: string;
-  vaultSalt: string;
-}
-
-export class FlowManager {
+export class FlowManager implements FlowContext {
   private _appFlow?: AppFlow;
   private _certificatesFlow?: CertificatesFlow;
   private _cloudSyncFlow?: CloudSyncFlow;
@@ -91,6 +80,14 @@ export class FlowManager {
     this.insomnia = insomnia;
   }
 
+  /**
+   * Reads the main process's `userData` directory.
+   * @returns The absolute path to the app's data directory
+   */
+  async getDataPath(): Promise<string> {
+    return this.insomnia!.evaluate(({ app }) => app.getPath("userData"));
+  }
+
   get appFlow(): AppFlow {
     return (this._appFlow ??= instrumentWithSteps(
       new AppFlow(this, this.pageManager),
@@ -117,7 +114,7 @@ export class FlowManager {
 
   get environmentFlow(): EnvironmentFlow {
     return (this._environmentFlow ??= instrumentWithSteps(
-      new EnvironmentFlow(this, this.pageManager),
+      new EnvironmentFlow(this, this.pageManager, this.workspaceFlow),
     ));
   }
 
@@ -171,7 +168,7 @@ export class FlowManager {
 
   get mcpClientFlow(): McpClientFlow {
     return (this._mcpClientFlow ??= instrumentWithSteps(
-      new McpClientFlow(this, this.pageManager),
+      new McpClientFlow(this, this.pageManager, this.workspaceFlow),
     ));
   }
 
@@ -207,7 +204,12 @@ export class FlowManager {
 
   get workspaceFlow(): WorkspaceFlow {
     return (this._workspaceFlow ??= instrumentWithSteps(
-      new WorkspaceFlow(this, this.pageManager, this.gitRepoUrl),
+      new WorkspaceFlow(
+        this,
+        this.pageManager,
+        this.preferencesFlow,
+        this.gitRepoUrl,
+      ),
     ));
   }
 }

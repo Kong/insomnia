@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { Collection } from "../models/collection";
 import type { Cookie } from "../models/cookie";
 import type { EventStreamRequest } from "../models/event-stream-request";
@@ -81,7 +81,7 @@ export class CookieFlow extends BaseFlow {
     item: CookieTarget,
     cookies: Cookie[],
   ): Promise<void> {
-    const dataPath = await this.flowManager.appFlow.getDataPath();
+    const dataPath = await this.flowManager.getDataPath();
     const dbPath = path.join(dataPath, "insomnia.CookieJar.db");
 
     const isPersisted = (): boolean => {

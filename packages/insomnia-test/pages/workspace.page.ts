@@ -8,7 +8,7 @@ import { ProjectType } from "../enums/project-types";
 import { RulesetType } from "../enums/ruleset-type";
 import type { SpecFormat } from "../enums/spec-format";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   LintEntry,
   PathItem} from "../models/collection";

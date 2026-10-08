@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { ContextMenuItem } from '../enums/context-menu-items';
 import { ProjectType } from '../enums/project-types';
 import { TreeNodeType } from '../enums/tree-node-types';
-import { DEFAULT_TIMEOUT } from '../misc/fixtures';
+import { DEFAULT_TIMEOUT } from '../misc/constants';
 import { Collection, TestSuite, UnitTest } from '../models/collection';
 import { Environment, isEnvironmentItem } from '../models/environment';
 import type { EventStreamRequest } from '../models/event-stream-request';
@@ -20,7 +20,8 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import type { PageManager } from '../pages/page-manager';
 import type { TreeNode, UnitTestResultRow } from '../pages/workspace.page';
 import { BaseFlow } from './base.flow';
-import type { FlowManager } from './flow-manager';
+import type { FlowContext } from './flow-context';
+import type { PreferencesFlow } from './preferences.flow';
 
 export type WorkspaceItem =
   | (Project & { kind: 'project' })
@@ -43,11 +44,13 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * @param flowManager - The owning FlowManager
    * @param pageManager - The shared PageManager
+   * @param preferencesFlow - Used to enable settings the workspace flows depend on
    * @param gitRepoUrl - The default repo URL to clone from when creating a Git Sync project without an explicit `repo.uri`; injected by the `git-fixtures` `user` fixture
    */
   constructor(
-    flowManager: FlowManager,
+    flowManager: FlowContext,
     pageManager: PageManager,
+    private readonly preferencesFlow: PreferencesFlow,
     private readonly gitRepoUrl?: string,
   ) {
     super(flowManager, pageManager);
@@ -1069,7 +1072,7 @@ export class WorkspaceFlow extends BaseFlow {
    */
   private async ensureLegacyUnitTestsEnabled(): Promise<void> {
     if (this.legacyUnitTestsEnabled) return;
-    await this.flowManager.preferencesFlow.set(new Settings({ showLegacyUnitTests: true }));
+    await this.preferencesFlow.set(new Settings({ showLegacyUnitTests: true }));
     this.legacyUnitTestsEnabled = true;
   }
 

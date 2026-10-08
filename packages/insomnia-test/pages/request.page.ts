@@ -7,8 +7,8 @@ import type {
 import type { Page } from "playwright-core";
 
 import type { HttpMethod } from "../enums/http-method";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { throwOnDialog } from "../misc/decorators";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
 import { AuthTabComponent } from "./auth-tab.page";
 import { ScriptTabComponent } from "./script-tab.page";
 import { TabPanelPage } from "./tab-panel.page";

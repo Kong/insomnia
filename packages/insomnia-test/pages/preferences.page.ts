@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import type { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { GitCredential } from "../models/git-credential";
 import type { CloudCredential } from "../models/settings";
 import { BasePage } from "./base.page";
@@ -214,7 +214,8 @@ export class PreferencesPage extends BasePage {
   async clickExportProject(name: string): Promise<void> {
     await this.dialog
       .getByRole("button")
-      .filter({ hasText: new RegExp(`^Export.*"${name}" Project$`) })
+      .filter({ hasText: "Export" })
+      .filter({ hasText: `"${name}" Project` })
       .click();
   }
 

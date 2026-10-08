@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { SyncStatus } from "../enums/sync-status";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export enum DialogDismissMethod {
@@ -612,7 +612,7 @@ export class CloudSyncPage extends BasePage {
    */
   async waitForFileDeleteFailureToast(name: string): Promise<void> {
     await expect(
-      this.page.getByText(new RegExp(`Failed to delete ${name}`)),
+      this.page.getByText(`Failed to delete ${name}`),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 }

@@ -12,7 +12,9 @@ import { Project } from "../../../../models/project";
 const url = `${HTTP_SERVER}/post`;
 const headerName = "X-Custom";
 const headerValue = `say "${faker.string.alphanumeric(6)}"`;
-const escapedHeaderValue = headerValue.replace(/"/g, '\\"');
+const escapedHeaderValue = headerValue
+  .replace(/\\/g, "\\\\")
+  .replace(/"/g, '\\"');
 const title = `hello "${faker.string.alphanumeric(6)}"`;
 const note = `line1\nline2-${faker.string.alphanumeric(6)}`;
 const body = JSON.stringify({ title, note, userId: 1 });

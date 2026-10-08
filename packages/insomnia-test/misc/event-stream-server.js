@@ -14,11 +14,8 @@ const HTTPS_OPTIONS = {
 const MAX_REPLY_DELAY_MS = 60_000;
 
 function delayResponse(req) {
-  const delayMs = Math.min(
-    Number(req.headers["x-reply-delay-ms"]) || 0,
-    MAX_REPLY_DELAY_MS,
-  );
-  if (delayMs <= 0) return Promise.resolve();
+  const delayMs = Number(req.headers["x-reply-delay-ms"]);
+  if (!Number.isFinite(delayMs) || delayMs <= 0 || delayMs > MAX_REPLY_DELAY_MS) return Promise.resolve();
   return new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 

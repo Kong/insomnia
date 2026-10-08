@@ -88,11 +88,8 @@ app.get("/", (_req, res) => {
 const MAX_REPLY_DELAY_MS = 60_000;
 
 async function delayResponse(req) {
-  const delayMs = Math.min(
-    Number(req.headers["x-reply-delay-ms"]) || 0,
-    MAX_REPLY_DELAY_MS,
-  );
-  if (delayMs <= 0) return;
+  const delayMs = Number(req.headers["x-reply-delay-ms"]);
+  if (!Number.isFinite(delayMs) || delayMs <= 0 || delayMs > MAX_REPLY_DELAY_MS) return;
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 

@@ -1,7 +1,8 @@
 import type { Page } from "playwright-core";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { collectWindowCoverage, startWindowCoverage } from "../misc/coverage";
-import { DEFAULT_TIMEOUT, launchInsomniaElectron } from "../misc/fixtures";
+import { launchInsomniaElectron } from "../misc/launch";
 import { BaseFlow } from "./base.flow";
 
 export class AppFlow extends BaseFlow {

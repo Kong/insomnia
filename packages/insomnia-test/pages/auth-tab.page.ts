@@ -7,7 +7,7 @@ import type {
 import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
 import { AuthType } from "../enums/auth-type";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { TabPanelPage } from "./tab-panel.page";
 
 type OAuth1TextField = keyof Omit<

@@ -240,7 +240,8 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname.startsWith("/_admin")) {
     handleAdmin(req, res, url).catch((err) => {
-      sendJson(res, 400, { error: String(err) });
+      console.error("[git-server]", err);
+      sendJson(res, 400, { error: "Bad request" });
     });
     return;
   }
@@ -261,7 +262,8 @@ const server = http.createServer((req, res) => {
     dir = repoDir(repoName);
   } catch (err) {
     res.writeHead(400, { "Content-Type": "text/plain" });
-    res.end(String(err));
+    console.error("[git-server]", err);
+    res.end("Internal server error");
     return;
   }
   if (!fs.existsSync(dir)) {
@@ -280,7 +282,8 @@ const server = http.createServer((req, res) => {
       backend(req.url, (err, service) => {
         if (err) {
           res.statusCode = 500;
-          res.end(String(err));
+          console.error("[git-server]", err);
+          res.end("Internal server error");
           return;
         }
         res.setHeader("content-type", service.type);

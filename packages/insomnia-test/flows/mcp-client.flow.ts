@@ -3,9 +3,25 @@ import { expect } from "@playwright/test";
 import { McpClient } from "../models/mcp-client";
 import type { Project } from "../models/project";
 import type { Response } from "../models/response";
+import type { PageManager } from "../pages/page-manager";
 import { BaseFlow } from "./base.flow";
+import type { FlowContext } from "./flow-context";
+import type { WorkspaceFlow } from "./workspace.flow";
 
 export class McpClientFlow extends BaseFlow {
+  /**
+   * @param flowManager - The owning FlowManager
+   * @param pageManager - The shared PageManager
+   * @param workspaceFlow - Used to create the workspace an MCP Client is added to
+   */
+  constructor(
+    flowManager: FlowContext,
+    pageManager: PageManager,
+    private readonly workspaceFlow: WorkspaceFlow,
+  ) {
+    super(flowManager, pageManager);
+  }
+
   /**
    * Opens the given MCP Client node, selects `tool`, fills in its arguments,
    * and invokes it. Runs `callback` under a `toPass` retry loop (useful for
@@ -70,7 +86,7 @@ export class McpClientFlow extends BaseFlow {
    * @returns The created MCP Client, with `id` populated
    */
   async create(parent: Project, client: McpClient): Promise<McpClient> {
-    await this.flowManager.workspaceFlow.create(parent, client);
+    await this.workspaceFlow.create(parent, client);
 
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;

@@ -702,9 +702,10 @@ function handleCloudSyncGraphQL(req, res) {
       }
     })
     .catch((err) => {
+      console.error("[mock-api]", err);
       sendJson(res, 400, {
         data: null,
-        errors: [{ message: `GraphQL parse error: ${String(err)}` }],
+        errors: [{ message: "GraphQL parse error" }],
       });
     });
 }
@@ -798,7 +799,8 @@ async function handleVault(req, res, url) {
     if (!m2) return sendJson(res, 400, { error: "SRP M1 mismatch" });
     srpM2 = m2.toString("hex");
   } catch (err) {
-    return sendJson(res, 400, { error: String(err) });
+    console.error("[mock-api]", err);
+    return sendJson(res, 400, { error: "Bad request" });
   }
   return sendJson(res, 200, { srpM2 });
 }
@@ -1405,7 +1407,8 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname.startsWith("/_admin/")) {
     handleAdmin(req, res, url).catch((err) => {
-      sendJson(res, 400, { error: String(err) });
+      console.error("[mock-api]", err);
+      sendJson(res, 400, { error: "Bad request" });
     });
     return;
   }
@@ -1417,14 +1420,16 @@ const server = http.createServer((req, res) => {
 
   if (isCollaboratorsRoute(req.method, url.pathname)) {
     handleCollaborators(req, res, url).catch((err) => {
-      sendJson(res, 400, { error: String(err) });
+      console.error("[mock-api]", err);
+      sendJson(res, 400, { error: "Bad request" });
     });
     return;
   }
 
   if (isVaultRoute(req.method, url.pathname)) {
     handleVault(req, res, url).catch((err) => {
-      sendJson(res, 400, { error: String(err) });
+      console.error("[mock-api]", err);
+      sendJson(res, 400, { error: "Bad request" });
     });
     return;
   }

@@ -3,13 +3,13 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { PageManager } from "../pages/page-manager";
-import type { FlowManager } from "./flow-manager";
+import type { FlowContext } from "./flow-context";
 
 export abstract class BaseFlow {
   constructor(
-    protected readonly flowManager: FlowManager,
+    protected readonly flowManager: FlowContext,
     protected readonly pageManager: PageManager,
   ) {}
 
@@ -75,7 +75,7 @@ export abstract class BaseFlow {
    * @returns The document's latest revision, or `undefined` if `id` has no document yet
    */
   private async readPersistedDoc(dbFile: string, id: string): Promise<any> {
-    const dataPath = await this.flowManager.appFlow.getDataPath();
+    const dataPath = await this.flowManager.getDataPath();
     const dbPath = path.join(dataPath, dbFile);
 
     let latest: any;

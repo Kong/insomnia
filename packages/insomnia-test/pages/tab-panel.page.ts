@@ -1,7 +1,7 @@
 import { type ElectronApplication, expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**

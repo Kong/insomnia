@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import type { ImportSource } from "../enums/import-sources";
-import { DEFAULT_TIMEOUT } from "../misc/fixtures";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export class ImportPage extends BasePage {

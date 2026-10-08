@@ -12,11 +12,27 @@ import type { McpClient } from "../models/mcp-client";
 import type { Project } from "../models/project";
 import type { SocketIORequest } from "../models/socket-io-request";
 import type { WebSocketRequest } from "../models/websocket-request";
+import type { PageManager } from "../pages/page-manager";
 import { BaseFlow } from "./base.flow";
+import type { FlowContext } from "./flow-context";
+import type { WorkspaceFlow } from "./workspace.flow";
 
 const BASE_ENVIRONMENT_NAME = "Base Environment";
 
 export class EnvironmentFlow extends BaseFlow {
+  /**
+   * @param flowManager - The owning FlowManager
+   * @param pageManager - The shared PageManager
+   * @param workspaceFlow - Used to create the workspace an environment is added to
+   */
+  constructor(
+    flowManager: FlowContext,
+    pageManager: PageManager,
+    private readonly workspaceFlow: WorkspaceFlow,
+  ) {
+    super(flowManager, pageManager);
+  }
+
   /**
    * Creates/renames the workspace's Base Environment (when `parent` is a
    * Project), or a sub-environment under it (when `parent` is an
@@ -137,7 +153,7 @@ export class EnvironmentFlow extends BaseFlow {
     parent: Project,
     environment: Environment,
   ): Promise<string> {
-    await this.flowManager.workspaceFlow.create(parent, {
+    await this.workspaceFlow.create(parent, {
       name: environment.name,
       type: ENVIRONMENT_TYPE,
     });
