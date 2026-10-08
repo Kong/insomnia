@@ -8,8 +8,11 @@ import { computeVisualDiff } from './diff-engine';
 import { applyEntityChange } from './entity-splice';
 import { EnvironmentDiffCard } from './environment-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
+import { GrpcDiffCard } from './grpc-diff-card';
 import { RequestDiffCard } from './request-diff-card';
 import type { EntityCardPendingAction } from './shared';
+import { SocketIODiffCard } from './socket-io-diff-card';
+import { WebSocketDiffCard } from './websocket-diff-card';
 
 interface Props {
   before: string;
@@ -156,6 +159,15 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
           switch (diff.type) {
             case 'request': {
               return <RequestDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'websocket_request': {
+              return <WebSocketDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'socketio_request': {
+              return <SocketIODiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'grpc_request': {
+              return <GrpcDiffCard key={diff.id} diff={diff} {...actionProps} />;
             }
             case 'environment': {
               return <EnvironmentDiffCard key={diff.id} diff={diff} {...actionProps} />;

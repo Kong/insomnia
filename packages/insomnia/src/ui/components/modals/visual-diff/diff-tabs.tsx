@@ -27,12 +27,22 @@ export function compactTabs(tabs: (DiffTabDef | null | undefined | false)[]): Di
 
 // Renders a name/value key-value row the same way the app's own header/param
 // editors do, instead of dumping the raw {name, value, disabled} object as JSON.
-// `labelOf` lets rows matched by an opaque key (eg. an id) display a readable name.
-export const KeyValueDiffRows: FC<{
-  title?: string;
-  rows: KeyedDiffRow[];
+// `labelOf` lets rows matched by an opaque key (eg. an id) display a readable name;
+// `getRowValue` picks what an added/removed row shows for items without a `value`.
+// (Not named `valueOf`: an omitted prop would then resolve to Object.prototype.valueOf.)
+export interface KeyValueRowFormat {
   labelOf?: (row: KeyedDiffRow) => string;
-}> = ({ title, rows, labelOf = row => row.key }) => {
+  getRowValue?: (item: any) => string | undefined;
+}
+
+const defaultRowValue = (item: any) => item?.value ?? item?.fileName;
+
+export const KeyValueDiffRows: FC<{ title?: string; rows: KeyedDiffRow[] } & KeyValueRowFormat> = ({
+  title,
+  rows,
+  labelOf = row => row.key,
+  getRowValue = defaultRowValue,
+}) => {
   if (rows.length === 0) {
     return null;
   }
@@ -41,9 +51,7 @@ export const KeyValueDiffRows: FC<{
       {title && <span className="text-xs font-bold text-(--hl) uppercase">{title}</span>}
       <ul className="flex flex-col gap-2">
         {rows.map(row => {
-          const item = (row.after ?? row.before) as
-            | { value?: string; fileName?: string; disabled?: boolean }
-            | undefined;
+          const item = (row.after ?? row.before) as { disabled?: boolean } | undefined;
 
           if (row.status === 'modified') {
             const fieldChanges = computeFieldChanges(row.before, row.after);
@@ -76,7 +84,7 @@ export const KeyValueDiffRows: FC<{
               <span
                 className={`truncate font-mono text-sm ${isAdded ? 'text-(--color-font-success)' : 'text-(--color-font-danger) line-through'}`}
               >
-                {item?.value ?? item?.fileName ?? '(empty)'}
+                {getRowValue(item) ?? '(empty)'}
               </span>
             </li>
           );
@@ -99,13 +107,12 @@ export function keyValueTab({
   id,
   label,
   sections,
-  labelOf,
+  ...format
 }: {
   id: string;
   label: string;
   sections: { title?: string; rows: KeyedDiffRow[] }[];
-  labelOf?: (row: KeyedDiffRow) => string;
-}): DiffTabDef | null {
+} & KeyValueRowFormat): DiffTabDef | null {
   const rows = sections.flatMap(section => section.rows);
   if (rows.length === 0) {
     return null;
@@ -118,7 +125,7 @@ export function keyValueTab({
     content: () => (
       <div className="flex flex-col gap-3">
         {sections.map((section, index) => (
-          <KeyValueDiffRows key={section.title ?? index} title={section.title} rows={section.rows} labelOf={labelOf} />
+          <KeyValueDiffRows key={section.title ?? index} title={section.title} rows={section.rows} {...format} />
         ))}
       </div>
     ),
