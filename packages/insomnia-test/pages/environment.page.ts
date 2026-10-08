@@ -98,9 +98,22 @@ export class EnvironmentPage extends BasePage {
    * @param row - The row locator to delete
    */
   async deleteRow(row: Locator): Promise<void> {
+    const rows = this.page.locator(this.LISTBOX).locator('[role="option"]');
+    const countBefore = await rows.count();
     const button = row.getByRole("button", { name: "Delete Row" });
     await button.click();
     await button.click();
+    await expect(rows).toHaveCount(countBefore - 1);
+  }
+
+  /**
+   * Disables a key/value pair row and waits for the row to flip to its
+   * disabled state (its toggle button becomes "Enable Row").
+   * @param row - The row locator to disable
+   */
+  async disableRow(row: Locator): Promise<void> {
+    await row.getByRole("button", { name: "Disable Row" }).click();
+    await expect(row.getByRole("button", { name: "Enable Row" })).toBeVisible();
   }
 
   /**

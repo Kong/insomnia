@@ -37,10 +37,7 @@ test("Verify Disabling A Row In The Table Editor Is Reflected On Read-Back", asy
     kvPairData: [varA, varB],
   });
 
-  await environmentPage
-    .getRow(varA.name)
-    .getByRole("button", { name: "Disable Row" })
-    .click();
+  await environmentPage.disableRow(environmentPage.getRow(varA.name));
   const variables = await environmentPage.getVariables();
 
   expect(variables).toEqual([
