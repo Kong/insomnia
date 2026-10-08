@@ -99,8 +99,9 @@ const MAX_REPLY_DELAY_MS = 60_000;
 
 function delayResponse(req) {
   const delayMs = Number(req.headers["x-reply-delay-ms"]);
-  if (!Number.isFinite(delayMs) || delayMs <= 0 || delayMs > MAX_REPLY_DELAY_MS) return Promise.resolve();
-  return new Promise((resolve) => setTimeout(resolve, delayMs));
+  if (!Number.isFinite(delayMs) || delayMs <= 0) return Promise.resolve();
+  const clampedDelayMs = Math.min(delayMs, MAX_REPLY_DELAY_MS);
+  return new Promise((resolve) => setTimeout(resolve, clampedDelayMs));
 }
 
 function parseCookies(header) {

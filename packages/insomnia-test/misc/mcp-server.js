@@ -92,8 +92,9 @@ const MAX_REPLY_DELAY_MS = 60_000;
 
 async function delayResponse(req) {
   const delayMs = Number(req.headers["x-reply-delay-ms"]);
-  if (!Number.isFinite(delayMs) || delayMs <= 0 || delayMs > MAX_REPLY_DELAY_MS) return;
-  await new Promise((resolve) => setTimeout(resolve, delayMs));
+  if (!Number.isFinite(delayMs) || delayMs <= 0) return;
+  const clampedDelayMs = Math.min(delayMs, MAX_REPLY_DELAY_MS);
+  await new Promise((resolve) => setTimeout(resolve, clampedDelayMs));
 }
 
 app.post("/mcp", async (req, res) => {
