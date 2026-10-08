@@ -88,13 +88,13 @@ app.get('/', (_req, res) => {
 
 const MAX_REPLY_DELAY_MS = 60_000;
 
-async function delayResponse(req) {
+function delayResponse(req) {
   const delayMs = Number(req.headers['x-reply-delay-ms']);
-  if (!Number.isFinite(delayMs) || delayMs <= 0) return;
+  if (!Number.isFinite(delayMs) || delayMs <= 0) return Promise.resolve();
   if (delayMs > MAX_REPLY_DELAY_MS) {
-    await new Promise(resolve => setTimeout(resolve, MAX_REPLY_DELAY_MS));
+    return new Promise(resolve => setTimeout(resolve, MAX_REPLY_DELAY_MS));
   }
-  await new Promise(resolve => setTimeout(resolve, delayMs));
+  return new Promise(resolve => setTimeout(resolve, delayMs));
 }
 
 app.post('/mcp', async (req, res) => {
