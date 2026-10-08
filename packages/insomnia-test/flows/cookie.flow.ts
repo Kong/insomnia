@@ -82,11 +82,11 @@ export class CookieFlow extends BaseFlow {
    * an in-memory-state-outrunning-disk timing gap; it's a genuinely lost
    * write, the same species of bug `HttpRequestFlow.waitForUrlPersisted()`
    * works around for URLs. The likely cause here: `CookiePage.editCookie()`
-   * only waits `FIELD_SAVE_DELAY` (500ms) after the last field edit before
-   * clicking "Done", which unmounts the edit dialog; under CPU-contended
-   * parallel runs the app's own debounced save can still be pending past
-   * that 500ms, and the unmount cancels it before it ever fires — so the
-   * cookie never lands on its own and the same write has to be repeated.
+   * clicks "Done" right after the last field edit, which unmounts the edit
+   * dialog; under CPU-contended parallel runs the app's own debounced save
+   * can still be pending at that point, and the unmount cancels it before
+   * it ever fires — so the cookie never lands on its own and the same
+   * write has to be repeated.
    * @param item - The Collection/request whose location the Cookie Jar dialog is opened from, for a retry
    * @param cookies - The cookies that must all be present in the persisted jar
    */
