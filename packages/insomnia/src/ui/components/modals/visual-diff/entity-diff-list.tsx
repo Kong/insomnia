@@ -149,15 +149,19 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
       </div>
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
         {entities.map(diff => {
+          // A file's identity (type/name/meta) can't be added or removed on its own: that's the whole
+          // file appearing or disappearing, which the file-level actions handle (and staging a new
+          // file's first entity carries its identity along anyway).
+          const isFileIdentityChange = diff.type === 'workspace' && diff.status !== 'modified';
           const actionProps = {
             staged,
             pendingAction: pending?.entityId === diff.id ? pending.action : null,
             isDisabled: pending !== null,
-            onStage: () => handleStage(diff.id),
+            onStage: isFileIdentityChange ? undefined : () => handleStage(diff.id),
             // No per-entity discard when the working-tree file is gone (deleted
             // workspace): it would resurrect the file with just this one entity.
             // The file-level discard restores it whole.
-            onDiscard: staged || !after ? undefined : () => handleDiscard(diff.id),
+            onDiscard: staged || !after || isFileIdentityChange ? undefined : () => handleDiscard(diff.id),
           };
 
           switch (diff.type) {

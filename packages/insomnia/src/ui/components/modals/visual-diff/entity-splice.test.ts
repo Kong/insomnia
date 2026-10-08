@@ -126,3 +126,57 @@ describe('applyEntityChange - base environment', () => {
     expect(result.environments).toBeUndefined();
   });
 });
+
+describe('applyEntityChange - file-level sections', () => {
+  const mockFile = stringify({
+    type: 'mock.insomnia.rest/5.0',
+    schema_version: '5.1',
+    name: 'Mock',
+    meta: { id: 'wrk_m' },
+    server: { url: 'https://mock', useInsomniaCloud: false },
+    routes: [{ name: '/users', meta: { id: 'mock-route_1' } }],
+  });
+
+  it("stages a brand-new file's mock server on its own, with the file identity carried along", () => {
+    const result = parse(applyEntityChange('', mockFile, 'file:server'));
+
+    expect(Object.keys(result)).toEqual(['type', 'schema_version', 'name', 'meta', 'server']);
+    expect(result.server.url).toBe('https://mock');
+  });
+
+  it('replaces a whole section, or removes it when source has none', () => {
+    const base = collectionFile(BASE_ENV, []);
+    const withSuites = stringify({ ...parse(base), testSuites: [{ name: 's', meta: { id: 'uts_1' }, tests: [] }] });
+    const withCerts = stringify({ ...parse(base), certificates: [{ path: '/ca.pem', meta: { id: 'crt_1' } }] });
+
+    expect(parse(applyEntityChange(base, withSuites, 'file:testSuites')).testSuites).toHaveLength(1);
+    expect(parse(applyEntityChange(withCerts, base, 'file:certificates')).certificates).toBeUndefined();
+  });
+
+  it('changes the workspace identity without touching any entity', () => {
+    const renamed = stringify({ ...parse(mockFile), name: 'Mock v2', routes: [] });
+
+    const result = parse(applyEntityChange(mockFile, renamed, 'file:workspace'));
+
+    expect(result.name).toBe('Mock v2');
+    expect(result.routes).toHaveLength(1);
+  });
+});
+
+describe('applyEntityChange - top-level key order', () => {
+  it('places a newly staged section where source has it, not at the end of the file', () => {
+    const source = stringify({
+      type: 'mock.insomnia.rest/5.0',
+      name: 'Mock',
+      meta: { id: 'wrk_m' },
+      server: { url: 'https://mock', useInsomniaCloud: false },
+      routes: [{ name: '/users', meta: { id: 'mock-route_1' } }],
+    });
+    const baseWithRouteOnly = applyEntityChange('', source, 'mock-route_1');
+
+    const result = applyEntityChange(baseWithRouteOnly, source, 'file:server');
+
+    expect(Object.keys(parse(result))).toEqual(['type', 'name', 'meta', 'server', 'routes']);
+    expect(result).toBe(stringify(parse(source)));
+  });
+});

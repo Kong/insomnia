@@ -21,6 +21,10 @@ import { parse as parseYaml } from 'yaml';
  * - [x] MCP Request        -> McpDiffCard
  * - [x] Mock Route         -> MockRouteDiffCard
  * - [x] Cookie Jar         -> CookieJarDiffCard
+ *
+ * File-level sections (see `FILE_SECTIONS`: workspace identity, mock server,
+ * API spec, unit tests, CA certificates) are each one whole entity and render
+ * via `GenericEntityDiffCard`.
  */
 
 // TODO: Bind type from Insomnia v5 entity definitions (eg. `Request`, `Environment`, etc.) rather than hardcoding strings.
@@ -36,7 +40,23 @@ export type VisualDiffEntityType =
   | 'mock_route'
   | 'mcp_request'
   | 'cookie_jar'
+  | 'workspace'
+  | 'mock_server'
+  | 'api_spec'
+  | 'unit_tests'
+  | 'ca_certificates'
   | 'unknown';
+
+// Top-level parts of a file that aren't entity collections. Each is diffed — and
+// staged/discarded — as one whole entity (eg. every test suite at once), keyed by
+// a fixed id. Together with the entity collections they cover every top-level key.
+export const FILE_SECTIONS: readonly { id: string; type: VisualDiffEntityType; keys: readonly string[] }[] = [
+  { id: 'file:workspace', type: 'workspace', keys: ['type', 'schema_version', 'name', 'meta'] },
+  { id: 'file:server', type: 'mock_server', keys: ['server'] },
+  { id: 'file:spec', type: 'api_spec', keys: ['spec'] },
+  { id: 'file:testSuites', type: 'unit_tests', keys: ['testSuites'] },
+  { id: 'file:certificates', type: 'ca_certificates', keys: ['certificates'] },
+];
 
 export type EntityChangeStatus = 'added' | 'removed' | 'modified';
 
@@ -361,6 +381,25 @@ function collectEntities(file: any): Map<string, CollectedEntity> {
   if (file.cookieJar) {
     const id = file.cookieJar.meta?.id ?? 'cookie-jar';
     map.set(id, { type: 'cookie_jar', name: file.cookieJar.name || 'Cookie Jar', node: file.cookieJar });
+  }
+
+  // Only real Insomnia files: any other YAML in the repo would otherwise surface as a "Workspace".
+  if (typeof file.type === 'string' && file.type.includes('insomnia')) {
+    const workspaceName = file.name || 'Untitled';
+    for (const section of FILE_SECTIONS) {
+      if (section.keys.every(key => file[key] === undefined)) {
+        continue;
+      }
+      // Object sections (eg. `server`) are shown field by field; arrays and multi-key sections are
+      // wrapped so the card reads "Test Suites: old -> new" rather than per-array-index rows.
+      const single = section.keys.length === 1 ? file[section.keys[0]] : undefined;
+      const node =
+        single && typeof single === 'object' && !Array.isArray(single)
+          ? single
+          : Object.fromEntries(section.keys.filter(key => file[key] !== undefined).map(key => [key, file[key]]));
+      const name = section.type === 'mock_server' ? file.server?.url || 'Mock Server' : workspaceName;
+      map.set(section.id, { type: section.type, name, node });
+    }
   }
 
   // TODO: Handle more Insomnia v5 entities in the future

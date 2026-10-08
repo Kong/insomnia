@@ -1,5 +1,7 @@
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
+import { FILE_SECTIONS } from './diff-engine';
+
 /**
  * Builds the YAML content for "stage/unstage just this one entity": start from
  * `baseText` (the side that should stay as-is for every other entity) and graft
@@ -38,7 +40,28 @@ export function applyEntityChange(baseText: string, sourceText: string, entityId
 
   applyChange(merged, sourceFile ?? {}, entityId, location);
 
-  return stringifyYaml(merged);
+  return stringifyYaml(withSourceKeyOrder(merged, sourceFile));
+}
+
+// Orders top-level keys like source (keys only base has keep their place after those), so a
+// section newly added to base sits where the app writes it rather than at the end of the file —
+// otherwise the staged and working-tree files differ by key order alone.
+function withSourceKeyOrder(file: any, sourceFile: any) {
+  if (!sourceFile || typeof sourceFile !== 'object') {
+    return file;
+  }
+  const ordered: Record<string, unknown> = {};
+  for (const key of Object.keys(sourceFile)) {
+    if (key in file) {
+      ordered[key] = file[key];
+    }
+  }
+  for (const key of Object.keys(file)) {
+    if (!(key in ordered)) {
+      ordered[key] = file[key];
+    }
+  }
+  return ordered;
 }
 
 // Parses YAML text into a plain object, returning `undefined` instead of
@@ -55,9 +78,18 @@ function safeParse(text: string): any {
 }
 
 interface EntityLocation {
-  section: 'collection' | 'environments-base' | 'sub-environment' | 'routes' | 'mcp-request' | 'cookie-jar';
+  section:
+    | 'collection'
+    | 'environments-base'
+    | 'sub-environment'
+    | 'routes'
+    | 'mcp-request'
+    | 'cookie-jar'
+    | 'file-section';
   // ids of ancestor folders, root to the entity's direct parent (collection section only)
   folderPath: string[];
+  // top-level keys making up the entity (file-section only)
+  keys?: readonly string[];
 }
 
 // Recursively searches a collection tree for the node matching `entityId`,
@@ -83,6 +115,13 @@ function findInCollection(nodes: any[], entityId: string, path: string[]): Entit
 function locateEntity(file: any, entityId: string): EntityLocation | null {
   if (!file || typeof file !== 'object') {
     return null;
+  }
+
+  const fileSection = FILE_SECTIONS.find(section => section.id === entityId);
+  if (fileSection) {
+    return fileSection.keys.some(key => file[key] !== undefined)
+      ? { section: 'file-section', folderPath: [], keys: fileSection.keys }
+      : null;
   }
 
   if (Array.isArray(file.collection)) {
@@ -292,6 +331,17 @@ function applyChange(baseFile: any, sourceFile: any, entityId: string, location:
     }
     case 'cookie-jar': {
       baseFile.cookieJar = sourceFile.cookieJar;
+      return;
+    }
+    case 'file-section': {
+      // A file-level section is taken from source as a whole, key by key.
+      for (const key of location.keys ?? []) {
+        if (sourceFile[key] === undefined) {
+          delete baseFile[key];
+        } else {
+          baseFile[key] = sourceFile[key];
+        }
+      }
       return;
     }
     default: {

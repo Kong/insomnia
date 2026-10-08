@@ -16,6 +16,11 @@ const ENTITY_TYPE_LABELS: Record<VisualDiffEntityType, string> = {
   mock_route: 'Mock Route',
   mcp_request: 'MCP Request',
   cookie_jar: 'Cookie Jar',
+  workspace: 'Workspace',
+  mock_server: 'Mock Server',
+  api_spec: 'API Spec',
+  unit_tests: 'Unit Tests',
+  ca_certificates: 'CA Certificates',
   unknown: 'Item',
 };
 
@@ -111,7 +116,8 @@ export interface EntityCardActionProps {
   // True while any card's action is in flight: every action computes from the
   // currently loaded diff, so a second one must wait for the refresh.
   isDisabled: boolean;
-  onStage: () => void;
+  // Omitted (along with onDiscard) when the entity can't be acted on independently of its file.
+  onStage?: () => void;
   // Only provided for unstaged changes — staged changes can't be discarded from the index view.
   onDiscard?: () => Promise<void>;
   // Replaces the Discard button's "Confirm" prompt, eg. to warn that more than this card is affected.
@@ -151,14 +157,12 @@ export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardAc
           Discard
         </PromptButton>
       )}
-      <Button
-        isDisabled={isDisabled}
-        onPress={onStage}
-        className={CARD_ACTION_BUTTON_CLASS}
-      >
-        <Icon icon={isStaging ? 'spinner' : staged ? 'minus' : 'plus'} className={isStaging ? 'animate-spin' : ''} />
-        {staged ? 'Unstage' : 'Stage'}
-      </Button>
+      {onStage && (
+        <Button isDisabled={isDisabled} onPress={onStage} className={CARD_ACTION_BUTTON_CLASS}>
+          <Icon icon={isStaging ? 'spinner' : staged ? 'minus' : 'plus'} className={isStaging ? 'animate-spin' : ''} />
+          {staged ? 'Unstage' : 'Stage'}
+        </Button>
+      )}
     </div>
   );
 };
