@@ -47,6 +47,15 @@ function getReport() {
         // to upload per-shard; the final report job merges these together
         // (see `misc/merge-coverage.ts`).
         ["raw", { outputDir: "raw" }],
+        // This shard's own already-correct per-file summary (monocart's
+        // multi-shard merge of raw V8 coverage has a bug where merging a
+        // script's coverage across shards with very different coverage
+        // levels can produce a result *lower* than any individual shard —
+        // see `misc/merge-coverage-union.js`, which reads this file from
+        // every shard and unions them itself instead of relying on that
+        // merge). Written alongside the raw cache so it rides along in the
+        // same `coverage-raw-N` CI artifact.
+        ["v8-json", { outputFile: "raw/v8-report.json" }],
         // A self-contained interactive report for local runs / the final
         // merged CI artifact.
         ["v8"],

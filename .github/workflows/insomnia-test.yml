@@ -234,10 +234,17 @@ jobs:
           path: coverage-raw
           pattern: coverage-raw-*
 
+      # Uses our own line/statement/branch/function union across each shard's
+      # own (already-correct) v8-json report, instead of monocart's built-in
+      # multi-shard raw-coverage merge (misc/merge-coverage.js) — that merge
+      # has a bug where combining a script's coverage across shards with very
+      # different coverage levels can produce a result *lower* than any
+      # individual shard reported on its own. See misc/merge-coverage-union.js
+      # for the full writeup.
       - name: Merge coverage reports
         continue-on-error: true
         working-directory: packages/insomnia-test
-        run: node misc/merge-coverage.js ../../coverage-raw
+        run: node misc/merge-coverage-union.js ../../coverage-raw
 
       - name: Upload merged coverage report
         continue-on-error: true
