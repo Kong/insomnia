@@ -12,8 +12,11 @@ const HTTPS_OPTIONS = {
 };
 
 const MAX_REPLY_DELAY_MS = 60_000;
+const REPLY_DELAY_OPT_IN_HEADER = 'x-allow-reply-delay';
+const REPLY_DELAY_OPT_IN_VALUE = '1';
 
 function delayResponse(req) {
+  if (req.headers[REPLY_DELAY_OPT_IN_HEADER] !== REPLY_DELAY_OPT_IN_VALUE) return Promise.resolve();
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isFinite(requestedDelayMs) || requestedDelayMs <= 0) return Promise.resolve();
   const safeDelayMs = Math.min(Math.trunc(requestedDelayMs), MAX_REPLY_DELAY_MS);
