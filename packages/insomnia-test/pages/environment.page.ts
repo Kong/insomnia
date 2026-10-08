@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from "node:util";
+
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
@@ -334,10 +336,12 @@ export class EnvironmentPage extends BasePage {
         row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
         variable.name,
       );
+      await this.waitForVariablePersisted(variable, { checkValue: false });
       await this.setCodeMirrorValue(
         row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
         variable.value,
       );
+      await this.waitForVariablePersisted(variable);
       if (variable.type) {
         await this.setType(row, variable.type);
       }
@@ -378,6 +382,42 @@ export class EnvironmentPage extends BasePage {
     await this.setCodeMirrorValue(
       this.page.locator(`${this.RAW_EDITOR} .CodeMirror`),
       json,
+    );
+    let parsed: Record<string, unknown> | undefined;
+    try {
+      parsed = JSON.parse(json);
+    } catch {
+      return;
+    }
+    const expected = parsed!;
+    await this.waitForPersisted(["insomnia.Environment.db"], (doc) => {
+      if (isDeepStrictEqual(doc.data, expected)) return true;
+      const names = (doc.kvPairData ?? []).map(
+        (pair: { name: string }) => pair.name,
+      );
+      return isDeepStrictEqual([...names].sort(), Object.keys(expected).sort());
+    });
+  }
+
+  /**
+   * Polls the on-disk environment documents until one lists `variable` in
+   * its key/value pairs, confirming the row's debounced save has landed
+   * (and the row has settled onto its persisted key) before the next edit
+   * builds on it. Skipped for a blank name, which the app never persists.
+   * @param variable - The variable whose row was just edited
+   * @param options.checkValue - Whether the value must match too, or only the name (right after the name is typed)
+   */
+  private async waitForVariablePersisted(
+    variable: EnvironmentKvPairData,
+    { checkValue = true }: { checkValue?: boolean } = {},
+  ): Promise<void> {
+    if (!variable.name) return;
+    await this.waitForPersisted(["insomnia.Environment.db"], (doc) =>
+      (doc.kvPairData ?? []).some(
+        (pair: { name: string; value: string }) =>
+          pair.name === variable.name &&
+          (!checkValue || pair.value === variable.value),
+      ),
     );
   }
 

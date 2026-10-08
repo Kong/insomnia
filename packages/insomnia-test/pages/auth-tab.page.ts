@@ -87,6 +87,10 @@ export interface OAuth2Tokens {
  */
 const OAUTH2_FETCH_TIMEOUT = ACTION_TIMEOUT;
 
+// A request's auth lives on the Request document; a folder's own auth
+// (inherited by its children) on the RequestGroup document.
+const AUTH_DB_FILES = ["insomnia.Request.db", "insomnia.RequestGroup.db"];
+
 /**
  * The Auth tab component, shared by any page that renders it — a
  * request's own pane (`RequestPage`, composing an instance as
@@ -126,6 +130,9 @@ export class AuthTabComponent extends TabPanelPage {
     const button = panel.getByRole("button", { name: "Advanced Options" });
     if ((await button.count()) === 0) return;
     await button.click();
+    await expect(panel.locator("#Scope + .CodeMirror")).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
@@ -138,10 +145,11 @@ export class AuthTabComponent extends TabPanelPage {
    */
   async clearOAuth2Tokens(): Promise<void> {
     await this.switchTab("auth");
-    await this.page
+    const clearButton = this.page
       .locator(this.TABPANEL)
-      .getByRole("button", { name: "Clear", exact: true })
-      .click();
+      .getByRole("button", { name: "Clear", exact: true });
+    await clearButton.click();
+    await expect(clearButton).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -201,16 +209,24 @@ export class AuthTabComponent extends TabPanelPage {
    */
   async setOAuth1Fields(fields: Partial<AuthTypeOAuth1>): Promise<void> {
     await this.setAuthType(AuthType.OAuth1);
+    await expect(
+      this.oAuth1FieldEditor(OAUTH1_FIELD_LABELS.consumerKey),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     for (const [field, label] of Object.entries(OAUTH1_FIELD_LABELS)) {
       const value = fields[field as OAuth1TextField];
       if (value === undefined) continue;
       await this.setCodeMirrorValue(this.oAuth1FieldEditor(label), value);
+      await this.waitForAuthFieldPersisted(field, value);
     }
     if (fields.signatureMethod) {
       await this.page
         .locator(this.TABPANEL)
         .locator("#Signature-Method")
         .selectOption(fields.signatureMethod);
+      await this.waitForAuthFieldPersisted(
+        "signatureMethod",
+        fields.signatureMethod,
+      );
     }
   }
 
@@ -228,12 +244,16 @@ export class AuthTabComponent extends TabPanelPage {
    */
   async setOAuth2Fields(fields: Partial<AuthTypeOAuth2>): Promise<void> {
     await this.setAuthType(AuthType.OAuth2);
+    await expect(this.page.locator(this.TABPANEL).locator("#Grant-Type")).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
 
     if (fields.grantType) {
       await this.page
         .locator(this.TABPANEL)
         .locator("#Grant-Type")
         .selectOption(fields.grantType);
+      await this.waitForAuthFieldPersisted("grantType", fields.grantType);
     }
 
     const needsAdvanced =
@@ -248,6 +268,7 @@ export class AuthTabComponent extends TabPanelPage {
       const editor = this.oauth2FieldEditor(label);
       if ((await editor.count()) === 0) continue;
       await this.setCodeMirrorValue(editor, value);
+      await this.waitForAuthFieldPersisted(field, value);
     }
 
     if (fields.usePkce !== undefined) {
@@ -257,6 +278,7 @@ export class AuthTabComponent extends TabPanelPage {
           .locator(this.TABPANEL)
           .locator("#Code-Challenge-Method")
           .selectOption(fields.pkceMethod);
+        await this.waitForAuthFieldPersisted("pkceMethod", fields.pkceMethod);
       }
     }
     if (fields.useDefaultBrowser !== undefined) {
@@ -266,6 +288,7 @@ export class AuthTabComponent extends TabPanelPage {
       const select = this.page.locator(this.TABPANEL).locator("#Response-Type");
       if (await select.count()) {
         await select.selectOption(fields.responseType);
+        await this.waitForAuthFieldPersisted("responseType", fields.responseType);
       }
     }
     if (fields.credentialsInBody !== undefined) {
@@ -273,6 +296,10 @@ export class AuthTabComponent extends TabPanelPage {
         .locator(this.TABPANEL)
         .locator("#Credentials")
         .selectOption(fields.credentialsInBody ? "true" : "false");
+      await this.waitForAuthFieldPersisted(
+        "credentialsInBody",
+        fields.credentialsInBody,
+      );
     }
   }
 
@@ -300,7 +327,28 @@ export class AuthTabComponent extends TabPanelPage {
   private async setToggle(id: string, enabled: boolean): Promise<void> {
     if ((await this.isToggleOn(id)) !== enabled) {
       await this.page.locator(this.TABPANEL).locator(`#${id}`).click();
+      await expect(async () => {
+        expect(await this.isToggleOn(id)).toBe(enabled);
+      }).toPass({ timeout: DEFAULT_TIMEOUT });
     }
+  }
+
+  /**
+   * Polls the on-disk request/folder documents until one carries
+   * `authentication[field] === value`, confirming the edit has actually
+   * been saved (the editors autosave through a debounce) rather than just
+   * shown in the UI.
+   * @param field - The `authentication` property that was just edited
+   * @param value - The value it must hold
+   */
+  private async waitForAuthFieldPersisted(
+    field: string,
+    value: unknown,
+  ): Promise<void> {
+    await this.waitForPersisted(
+      AUTH_DB_FILES,
+      (doc) => String(doc.authentication?.[field]) === String(value),
+    );
   }
 
   /**

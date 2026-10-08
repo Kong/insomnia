@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from "node:util";
+
 import { expect } from "@playwright/test";
 
 import { ContentType } from "../enums/content-type";
@@ -88,6 +90,28 @@ export class GraphQLRequestPage extends RequestPage {
     if (variablesText !== undefined) {
       await this.setCodeMirrorValue(editors.nth(1), variablesText);
     }
+    // The app stores `variables` as a string, verbatim — which isn't valid
+    // JSON when it holds a template tag — so compare the raw text first and
+    // only fall back to comparing parsed values (key order/whitespace).
+    const sameVariables = (saved: unknown): boolean => {
+      if (!variablesText?.trim() || saved === variablesText) return true;
+      try {
+        return isDeepStrictEqual(
+          typeof saved === "string" ? JSON.parse(saved) : saved,
+          JSON.parse(variablesText),
+        );
+      } catch {
+        return false;
+      }
+    };
+    await this.waitForPersisted(["insomnia.Request.db"], (doc) => {
+      try {
+        const saved = JSON.parse(doc.body?.text ?? "");
+        return saved.query === query && sameVariables(saved.variables);
+      } catch {
+        return false;
+      }
+    });
   }
 
   /**

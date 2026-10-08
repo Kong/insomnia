@@ -118,7 +118,13 @@ export class Tree {
         el.scrollBy(0, el.clientHeight);
         return el.scrollTop === before;
       });
-      await page.waitForTimeout(100);
+      // Let the virtualized list render the rows the scroll just exposed.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
     }
 
     return Tree.fromRows([...collected.values()]);
@@ -292,6 +298,10 @@ export class WorkspacePage extends BasePage {
    */
   async clickTab(name: string): Promise<void> {
     await this.tab(name).click();
+    await expect(this.tab(name)).toHaveAttribute("aria-selected", "true", {
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await this.waitForRendererIdle();
   }
 
   /**
@@ -1032,6 +1042,26 @@ export class WorkspacePage extends BasePage {
    */
   async clearSidebarFilter(): Promise<void> {
     await this.page.locator('[aria-label="Clear search"]').click();
+    await expect(
+      this.page.getByRole("searchbox", { name: "Projects filter" }),
+    ).toHaveValue("", { timeout: DEFAULT_TIMEOUT });
+    await this.waitForTreeSettled();
+  }
+
+  /**
+   * Polls the navigation tree's currently-rendered rows until they stop
+   * changing, i.e. a filter/clear/drop has finished re-rendering the
+   * list. Only reads the rows already in the DOM — unlike `getTree()` it
+   * neither scrolls nor expands anything.
+   */
+  async waitForTreeSettled(): Promise<void> {
+    const rows = this.page
+      .getByRole("grid", { name: "Project Navigation Tree" })
+      .locator('div[role="row"][data-key]');
+    await this.waitForStableValue(
+      () => rows.evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.key)),
+      4,
+    );
   }
 
   /**
@@ -1043,6 +1073,7 @@ export class WorkspacePage extends BasePage {
     await this.page
       .getByRole("searchbox", { name: "Projects filter" })
       .fill(text);
+    await this.waitForTreeSettled();
   }
 
   /**
@@ -1858,8 +1889,9 @@ export class WorkspacePage extends BasePage {
   /**
    * Waits for the spec's CodeMirror editor to become visible, confirming
    * the collection's spec/landing view is ready for interaction.
+   * @param workspaceId - The collection's workspace id, when known, so the wait can tell from its persisted spec whether the Outline or the empty-state landing view should render
    */
-  async navigateSpec(): Promise<void> {
+  async navigateSpec(workspaceId?: string): Promise<void> {
     await expect(this.page.locator(this.SPEC_EDITOR)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -1869,23 +1901,27 @@ export class WorkspacePage extends BasePage {
     // report no specification at all. A collection with no spec authored
     // at all never gets an Outline/Info section though — it shows the
     // empty-state landing heading instead. Either can also flicker through
-    // the other's state for a moment while the pane is still settling, so
-    // require the same outcome on two reads a beat apart before trusting it.
-    const settled = () =>
-      this.page
-        .getByRole("button", { name: "Info" })
-        .or(
-          this.page.getByRole("heading", {
-            name: /Enter your OpenAPI specification/,
-          }),
-        )
-        .isVisible();
-    await expect(async () => {
-      expect(await settled()).toBe(true);
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
-    await expect(async () => {
-      expect(await settled()).toBe(true);
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    // the other's state for a moment while the pane is still settling.
+    const info = this.page.getByRole("button", { name: "Info" });
+    const emptyState = this.page.getByRole("heading", {
+      name: /Enter your OpenAPI specification/,
+    });
+    if (workspaceId) {
+      // Which of the two to wait for is known from the persisted spec, so
+      // a flicker through the other one can't be mistaken for "settled".
+      const hasSpec = (
+        await this.readPersistedDocs("insomnia.ApiSpec.db")
+      ).some((doc) => doc.parentId === workspaceId && doc.contents?.trim());
+      await expect(hasSpec ? info : emptyState).toBeVisible({
+        timeout: DEFAULT_TIMEOUT,
+      });
+      return;
+    }
+    // Without a workspace id there's no way to tell which is expected, so
+    // require the same outcome on consecutive reads before trusting it.
+    await this.waitForStableValue(() =>
+      info.or(emptyState).isVisible(),
+    );
   }
 
   /**
@@ -2010,6 +2046,10 @@ export class WorkspacePage extends BasePage {
    */
   async setSpecification(text: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.SPEC_EDITOR), text);
+    await this.waitForPersisted(
+      ["insomnia.ApiSpec.db"],
+      (doc) => doc.contents === text,
+    );
   }
 
   /**

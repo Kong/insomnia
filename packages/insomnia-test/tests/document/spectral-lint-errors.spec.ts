@@ -31,7 +31,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
       },
     }),
   );
-  const baseline = await workspacePage.getLintSummary();
+  const baseline = await workspaceFlow.getLintState();
 
   await workspacePage.setSpecification(
     JSON.stringify({
@@ -43,7 +43,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
     }),
   );
   const corrupted = await workspaceFlow.getLintState(1);
-  expect(baseline).toBe("none");
+  expect(baseline.errors).toBe(0);
   expect(corrupted.errors).toBe(1);
 
   const error = corrupted.entries

@@ -1,3 +1,6 @@
+import * as fs from "node:fs";
+import path from "node:path";
+
 import type { Locator } from "@playwright/test";
 import { type ElectronApplication,expect } from "@playwright/test";
 import type { Page } from "playwright-core";
@@ -116,7 +119,7 @@ export abstract class BasePage {
     const deadline = Date.now() + durationMs;
     while (Date.now() < deadline) {
       if ((await this.readCodeMirror(locator)) !== expected) return false;
-      await this.page.waitForTimeout(50);
+      await this.waitForRendererIdle();
     }
     return true;
   }
@@ -142,6 +145,81 @@ export abstract class BasePage {
           setTimeout(() => setTimeout(resolve, 0), 0);
         }),
     );
+  }
+
+  /**
+   * Reads the app's on-disk NeDB file `dbFile`, keeping only each
+   * document's latest revision and dropping deleted ones.
+   * @param dbFile - The NeDB filename to read, e.g. `"insomnia.ApiSpec.db"`
+   * @returns The live documents currently persisted in that file
+   */
+  protected async readPersistedDocs(dbFile: string): Promise<any[]> {
+    const dataPath = await this.insomnia!.evaluate(({ app }) =>
+      app.getPath("userData"),
+    );
+    const latest = new Map<string, any>();
+    for (const line of fs
+      .readFileSync(path.join(dataPath, dbFile), "utf8")
+      .split("\n")
+      .filter(Boolean)) {
+      const doc = JSON.parse(line);
+      if (doc.$$deleted) latest.delete(doc._id);
+      else latest.set(doc._id, doc);
+    }
+    return [...latest.values()];
+  }
+
+  /**
+   * Polls the app's on-disk NeDB files until any live document in one of
+   * `dbFiles` satisfies `predicate`. Use in place of a fixed sleep after
+   * an edit the app saves through a debounce: the UI already shows the
+   * new value, but a caller that navigates away or unmounts the editor
+   * before the debounce fires can silently lose the write, and only the
+   * on-disk store the app itself reads from shows it has landed.
+   * @param dbFiles - The NeDB filenames to scan, e.g. `["insomnia.Request.db"]`
+   * @param predicate - Receives each document's latest revision; return `true` when it holds the expected state
+   * @param timeout - Overall budget to wait for a matching document
+   */
+  protected async waitForPersisted(
+    dbFiles: string[],
+    predicate: (doc: any) => boolean,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    await expect(async () => {
+      let matched = false;
+      for (const file of dbFiles) {
+        if ((await this.readPersistedDocs(file)).some(predicate)) matched = true;
+      }
+      expect(matched).toBe(true);
+    }).toPass({ timeout });
+  }
+
+  /**
+   * Polls `read` until it returns the same value (compared by JSON) on
+   * consecutive reads — the poll-based replacement for sleeping while a
+   * debounced/async re-render (a filtered list, a search result set, a
+   * tree after a drop) settles.
+   * @param read - Reads whatever should stop changing
+   * @param stableReads - How many consecutive identical reads count as settled
+   * @param timeout - Overall budget to wait for the value to settle
+   * @returns The settled value
+   */
+  protected async waitForStableValue<T>(
+    read: () => Promise<T>,
+    stableReads = 3,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<T> {
+    let previous = "";
+    let streak = 0;
+    let value!: T;
+    await expect(async () => {
+      value = await read();
+      const serialized = JSON.stringify(value);
+      streak = serialized === previous ? streak + 1 : 1;
+      previous = serialized;
+      expect(streak).toBeGreaterThanOrEqual(stableReads);
+    }).toPass({ timeout, intervals: [100] });
+    return value;
   }
 
   /**

@@ -83,7 +83,7 @@ export class PageManager {
    * @returns The shared CookiePage instance
    */
   get cookiePage(): CookiePage {
-    return this.getOrCreate("cookie", () => new CookiePage(this.page));
+    return this.getOrCreate("cookie", () => new CookiePage(this.page, this.insomnia));
   }
 
   /**
@@ -93,7 +93,7 @@ export class PageManager {
   get environmentPage(): EnvironmentPage {
     return this.getOrCreate(
       "environment",
-      () => new EnvironmentPage(this.page),
+      () => new EnvironmentPage(this.page, this.insomnia),
     );
   }
 
@@ -124,7 +124,7 @@ export class PageManager {
    * @returns The shared FolderPage instance
    */
   get folderPage(): FolderPage {
-    return this.getOrCreate("folder", () => new FolderPage(this.page));
+    return this.getOrCreate("folder", () => new FolderPage(this.page, this.insomnia));
   }
 
   /**
@@ -145,7 +145,7 @@ export class PageManager {
   get graphqlRequestPage(): GraphQLRequestPage {
     return this.getOrCreate(
       "graphqlRequest",
-      () => new GraphQLRequestPage(this.page),
+      () => new GraphQLRequestPage(this.page, this.insomnia),
     );
   }
 
@@ -282,7 +282,7 @@ export class PageManager {
    * @returns The shared WorkspacePage instance
    */
   get workspacePage(): WorkspacePage {
-    return this.getOrCreate("workspace", () => new WorkspacePage(this.page));
+    return this.getOrCreate("workspace", () => new WorkspacePage(this.page, this.insomnia));
   }
 
   private getOrCreate<T extends object>(key: string, factory: () => T): T {

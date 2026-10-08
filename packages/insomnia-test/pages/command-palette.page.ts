@@ -63,13 +63,17 @@ export class CommandPalettePage extends BasePage {
   }
 
   /**
-   * Types into the search input and waits out the search's own 250ms
-   * debounce plus its round trip, so the listed results reflect the
-   * given query.
+   * Types into the search input and polls until the listed results stop
+   * changing, so they reflect the given query once the search's own
+   * 250ms debounce and round trip have run.
    * @param query - The search text to type
    */
   async search(query: string): Promise<void> {
     await this.page.locator(`${this.DIALOG} input`).fill(query);
+    await this.waitForStableValue(
+      () => this.page.locator(this.OPTION).allTextContents(),
+      4,
+    );
   }
 
   /**
@@ -82,5 +86,9 @@ export class CommandPalettePage extends BasePage {
       .locator(this.OPTION, { hasText: name })
       .first()
       .click();
+    await expect(this.page.locator(this.DIALOG)).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await this.waitForRendererIdle();
   }
 }

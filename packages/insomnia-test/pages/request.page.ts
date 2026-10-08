@@ -351,6 +351,7 @@ export abstract class RequestPage extends TabPanelPage {
         row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
         pair.name,
       );
+      await this.waitForPairPersisted(pair, { checkValue: false });
       await this.setCodeMirrorValue(
         row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
         pair.value,
@@ -358,7 +359,37 @@ export abstract class RequestPage extends TabPanelPage {
       if (pair.disabled) {
         await row.locator('button[aria-pressed="true"]').click();
       }
+      await this.waitForPairPersisted(pair);
     }
+  }
+
+  /**
+   * Polls the on-disk request documents until one lists `pair` among its
+   * parameters, headers, or form-body params — confirming the row's
+   * debounced save has landed (and the row has settled onto its
+   * persisted key) before the next edit builds on it. Skipped for a
+   * blank name, which the app never persists.
+   * @param pair - The row that was just edited
+   * @param options.checkValue - Whether the value/disabled state must match too, or only the name (right after the name is typed)
+   */
+  protected async waitForPairPersisted(
+    pair: { name: string; value?: string; disabled?: boolean },
+    { checkValue = true }: { checkValue?: boolean } = {},
+  ): Promise<void> {
+    if (!pair.name) return;
+    await this.waitForPersisted(["insomnia.Request.db"], (doc) =>
+      [doc.parameters, doc.headers, doc.body?.params].some(
+        (list) =>
+          Array.isArray(list) &&
+          list.some(
+            (p) =>
+              p.name === pair.name &&
+              (!checkValue ||
+                ((p.value ?? "") === (pair.value ?? "") &&
+                  Boolean(p.disabled) === Boolean(pair.disabled))),
+          ),
+      ),
+    );
   }
 
   /**
@@ -469,6 +500,11 @@ export abstract class RequestPage extends TabPanelPage {
     await editor.click();
     await this.page.keyboard.press("End");
     await this.page.keyboard.type(text);
+    const typed = await this.readCodeMirror(editor);
+    await this.waitForPersisted(
+      ["insomnia.Request.db"],
+      (doc) => doc.description === typed,
+    );
   }
 
   /**

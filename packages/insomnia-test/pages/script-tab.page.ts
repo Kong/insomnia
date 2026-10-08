@@ -1,3 +1,5 @@
+import type { Locator } from "@playwright/test";
+
 import { ScriptTab } from "../enums/script-tab";
 import { TabPanelPage } from "./tab-panel.page";
 
@@ -91,6 +93,7 @@ export class ScriptTabComponent extends TabPanelPage {
       await editor.click();
       await this.page.keyboard.press("End");
       await this.page.keyboard.type(scripts.preRequest);
+      await this.waitForScriptPersisted("preRequestScript", editor);
     }
     if (scripts.afterResponse) {
       await this.switchScriptTab(ScriptTab.AfterResponse);
@@ -99,7 +102,26 @@ export class ScriptTabComponent extends TabPanelPage {
       await editor.click();
       await this.page.keyboard.press("End");
       await this.page.keyboard.type(scripts.afterResponse);
+      await this.waitForScriptPersisted("afterResponseScript", editor);
     }
+  }
+
+  /**
+   * Polls the on-disk request/folder documents until one holds `editor`'s
+   * current content as its `field` script, confirming the editor's
+   * debounced autosave has landed after typing into it.
+   * @param field - The script property the editor is bound to
+   * @param editor - The `.CodeMirror` element that was just typed into
+   */
+  private async waitForScriptPersisted(
+    field: "preRequestScript" | "afterResponseScript",
+    editor: Locator,
+  ): Promise<void> {
+    const typed = await this.readCodeMirror(editor);
+    await this.waitForPersisted(
+      ["insomnia.Request.db", "insomnia.RequestGroup.db"],
+      (doc) => doc[field] === typed,
+    );
   }
 
   /**

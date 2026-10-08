@@ -517,13 +517,19 @@ export class CloudSyncPage extends BasePage {
    * button *reached* opacity 1, though — reading right after an action
    * that's expected to hide it again (moving hover elsewhere, blurring)
    * can still catch the outgoing transition's stale "1" before it's had
-   * time to animate back down, confirmed live. This waits out the
-   * transition (Tailwind's default 150ms) before taking a single settled
-   * reading, rather than polling toward an assumed target value.
+   * time to animate back down, confirmed live. This polls until the
+   * button has no running transition/animation left before taking a
+   * single settled reading, rather than polling toward an assumed target
+   * value.
    * @param name - The card's name
    */
   async isFileDeleteButtonRevealed(name: string): Promise<boolean> {
     const button = this.fileCard(name).getByLabel("Delete unsynced file");
+    await expect(async () => {
+      expect(
+        await button.evaluate((el) => el.getAnimations().length),
+      ).toBe(0);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
     const opacity = await button.evaluate(
       (el) => getComputedStyle(el).opacity,
     );

@@ -25,6 +25,10 @@ function parseCookieLine(line: string): Cookie {
   return cookie;
 }
 
+// Short enough that a lost write fails the attempt inside the retry loop's
+// own budget, leaving room for another full open-fill-submit cycle.
+const RETRY_CHECK_TIMEOUT = 2000;
+
 export class CookiePage extends BasePage {
   private readonly editDialog = this.page.getByRole("dialog", {
     name: "Manage Cookies",
@@ -63,22 +67,36 @@ export class CookiePage extends BasePage {
 
   /**
    * Reads and parses every cookie row currently shown in the list
-   * dialog. Rows whose visible text doesn't contain a `key=value` line
-   * are skipped.
+   * dialog, once the dialog has finished rendering them (or shows its
+   * empty state).
    * @returns The parsed cookies currently displayed
    */
   async getCookies(): Promise<Cookie[]> {
     const rows = this.rows();
-    const count = await rows.count();
-    const cookies: Cookie[] = [];
-    for (let i = 0; i < count; i++) {
-      const lines = (await rows.nth(i).innerText())
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
-      const cookieLine = lines.find((line) => line.includes("="));
-      if (cookieLine) cookies.push(parseCookieLine(cookieLine));
-    }
+    const empty = this.listDialog.getByText("No cookies found.");
+    let cookies: Cookie[] = [];
+    // A freshly opened dialog renders its rows first and fills in each
+    // row's cookie text afterward (via an async IPC call), so poll until
+    // it either shows the empty state or every row has its text.
+    await expect(async () => {
+      if (await empty.isVisible()) {
+        cookies = [];
+        return;
+      }
+      const count = await rows.count();
+      expect(count).toBeGreaterThan(0);
+      const read: Cookie[] = [];
+      for (let i = 0; i < count; i++) {
+        const lines = (await rows.nth(i).innerText())
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+        const cookieLine = lines.find((line) => line.includes("="));
+        expect(cookieLine).toBeDefined();
+        read.push(parseCookieLine(cookieLine!));
+      }
+      cookies = read;
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
     return cookies;
   }
 
@@ -114,6 +132,7 @@ export class CookiePage extends BasePage {
    */
   async setCookies(cookies: Cookie[]): Promise<void> {
     await this.deleteAll();
+    const saved: Cookie[] = [];
     for (const cookie of cookies) {
       const countBeforeAdd = await this.rows().count();
       await this.listDialog.getByRole("button", { name: "Add Cookie" }).click();
@@ -121,6 +140,20 @@ export class CookiePage extends BasePage {
         timeout: DEFAULT_TIMEOUT,
       });
       await this.editCookie(cookie);
+      saved.push(cookie);
+      // Each add/edit saves the jar as a whole, built from the loader's copy
+      // of it. Starting the next one before this save has landed *and* the
+      // loader has revalidated lets it build on the stale jar and clobber the
+      // cookies set so far — so confirm they're all on disk and let the
+      // revalidation run before moving on.
+      await this.waitForPersisted(["insomnia.CookieJar.db"], (jar) =>
+        saved.every((expected) =>
+          (jar.cookies ?? []).some(
+            (c: Cookie) => c.key === expected.key && c.value === expected.value,
+          ),
+        ),
+      );
+      await this.waitForRendererIdle();
     }
   }
 
@@ -223,6 +256,19 @@ export class CookiePage extends BasePage {
       expect(cookies).toContainEqual(
         expect.objectContaining({ key: cookie.key, value: cookie.value }),
       );
+      await this.waitForCookieSaved(
+        {
+          key: cookie.key,
+          value: cookie.value,
+          ...(cookie.domain && { domain: cookie.domain }),
+          ...(cookie.path && { path: cookie.path }),
+          ...(cookie.secure && { secure: true }),
+          ...(cookie.httpOnly && { httpOnly: true }),
+          ...(cookie.hostOnly && { hostOnly: true }),
+          ...(cookie.expires && { expires: new Date(cookie.expires).getTime() }),
+        },
+        RETRY_CHECK_TIMEOUT,
+      );
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -244,6 +290,34 @@ export class CookiePage extends BasePage {
     await field.locator(".CodeMirror-lines").click();
     await this.setCodeMirrorValue(field.locator(".CodeMirror"), text);
     await this.page.keyboard.press("Tab");
+  }
+
+  /**
+   * Polls the on-disk cookie jar until one cookie carries every given
+   * property, confirming "Done" actually persisted the edit. The dialog
+   * keeps edits in local state behind debounced field handlers and only
+   * writes on "Done", so a field edit still in flight when "Done" is
+   * clicked is silently dropped — callers check this after "Done" and
+   * redo the whole open-fill-submit cycle if it never lands. `expires` is
+   * compared as epoch milliseconds.
+   * @param expected - The cookie properties that must all be saved on a single cookie
+   * @param timeout - How long to wait before giving up (kept short so a caller's retry loop gets another attempt)
+   */
+  private async waitForCookieSaved(
+    expected: Record<string, string | boolean | number>,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    await this.waitForPersisted(["insomnia.CookieJar.db"], (jar) =>
+      (jar.cookies ?? []).some((cookie: Record<string, unknown>) =>
+        Object.entries(expected).every(([property, value]) =>
+          property === "expires"
+            ? cookie.expires != null &&
+              new Date(cookie.expires as string).getTime() === value
+            : cookie[property] === value,
+        ),
+      ),
+      timeout,
+    );
   }
 
   private rows(): Locator {

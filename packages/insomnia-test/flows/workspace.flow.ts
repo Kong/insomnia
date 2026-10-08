@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 
 import { ContextMenuItem } from '../enums/context-menu-items';
+import { LintSeverity } from '../enums/lint-severity';
 import { ProjectType } from '../enums/project-types';
 import { TreeNodeType } from '../enums/tree-node-types';
 import { DEFAULT_TIMEOUT } from '../misc/constants';
@@ -636,7 +637,7 @@ export class WorkspaceFlow extends BaseFlow {
     if (!node) return undefined;
 
     await workspace.clickNode(node);
-    await workspace.navigateSpec();
+    await workspace.navigateSpec(node._id);
 
     const collection = new Collection(identity.name);
     collection.id = node._id;
@@ -744,9 +745,21 @@ export class WorkspaceFlow extends BaseFlow {
       )
       .toBeGreaterThanOrEqual(minLintErrors);
     const summary = await workspace.getLintSummary();
-    const entries = await workspace.getLintEntries();
+    const errors = summary === 'none' ? 0 : summary.errors;
+    // The summary can update a beat before the panel's entry rows do, so
+    // wait for the listed errors to catch up with the count it reports.
+    let entries = await workspace.getLintEntries();
+    await expect
+      .poll(
+        async () => {
+          entries = await workspace.getLintEntries();
+          return entries.filter(entry => entry.severity === LintSeverity.Error).length;
+        },
+        { timeout: DEFAULT_TIMEOUT },
+      )
+      .toBe(errors);
     return {
-      errors: summary === 'none' ? 0 : summary.errors,
+      errors,
       warnings: summary === 'none' ? 0 : summary.warnings,
       entries,
     };

@@ -171,6 +171,7 @@ export class HttpRequestPage extends RequestPage {
         row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
         param.name,
       );
+      await this.waitForPairPersisted(param, { checkValue: false });
 
       if (param.fileName) {
         await row.locator('button[aria-label="Text mode"]').click();
@@ -192,6 +193,7 @@ export class HttpRequestPage extends RequestPage {
         await row.locator('button[aria-pressed="true"]').click();
       }
 
+      if (!param.fileName) await this.waitForPairPersisted(param);
     }
   }
 
