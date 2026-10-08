@@ -230,30 +230,61 @@ export const McpPane = () => {
     }));
   };
 
-  const updatePrimitiveData = (
-    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
-    type: McpServerPrimitiveTypes,
-  ) => {
-    setMcpServerData(prev => ({
-      serverCapabilities: prev['serverCapabilities'],
-      primitives: {
-        ...prev['primitives'],
-        [type]: newData,
-      },
-    }));
+  const METHOD_BY_REFRESHABLE_PRIMITIVE_TYPE: Partial<Record<McpServerPrimitiveTypes, string>> = {
+    tools: METHOD_LIST_TOOLS,
+    resources: METHOD_LIST_RESOURCES,
+    prompts: METHOD_LIST_PROMPTS,
   };
 
-  const loadMorePrimitiveData = (
-    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
+  // Re-derives a single primitive's data/error/nextCursor from the event log
+  const getPrimitiveListResult = async (
     type: McpServerPrimitiveTypes,
-  ) => {
+  ): Promise<{
+    data: McpServerData['primitives'][McpServerPrimitiveTypes];
+    error?: McpListValidationError;
+    nextCursor?: string;
+  }> => {
+    const method = METHOD_BY_REFRESHABLE_PRIMITIVE_TYPE[type];
+    const activeResponseId = activeResponse?._id;
+    if (!method || !activeResponseId) {
+      return { data: [] };
+    }
+    const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
+    const result = findLatestListResult(allEvents, method);
+    return {
+      data: (result?.data?.[type] as McpServerData['primitives'][McpServerPrimitiveTypes]) || [],
+      error: result?.error,
+      nextCursor: result?.data?.nextCursor as string | undefined,
+    };
+  };
+
+  const updatePrimitiveData = async (type: McpServerPrimitiveTypes) => {
+    const { data, error, nextCursor } = await getPrimitiveListResult(type);
     setMcpServerData(prev => ({
       serverCapabilities: prev['serverCapabilities'],
       primitives: {
         ...prev['primitives'],
-        [type]: [...prev['primitives'][type], ...newData],
+        [type]: data,
       },
     }));
+    // Set the error when the refresh failed, clear it when it succeeded - same as updateServerData.
+    setPrimitiveErrors(prev => ({
+      ...prev,
+      [type]: error,
+    }));
+    nextCursor && updatePrimitiveNextCursor(nextCursor, type);
+  };
+
+  const loadMorePrimitiveData = async (type: McpServerPrimitiveTypes) => {
+    const { data, nextCursor } = await getPrimitiveListResult(type);
+    setMcpServerData(prev => ({
+      serverCapabilities: prev['serverCapabilities'],
+      primitives: {
+        ...prev['primitives'],
+        [type]: [...prev['primitives'][type], ...data],
+      },
+    }));
+    nextCursor && updatePrimitiveNextCursor(nextCursor, type);
   };
 
   const handleSubscribe = async (item: ResourceItem) => {
@@ -481,7 +512,6 @@ export const McpPane = () => {
                         activeRequest={activeRequest}
                         item={item}
                         collapsedPrimitives={collapsedPrimitives}
-                        onUpdatePrimitiveNextCursor={updatePrimitiveNextCursor}
                         onRefreshPrimitive={updatePrimitiveData}
                         onLoadMorePrimitive={loadMorePrimitiveData}
                         allowSubscribeResources={allowSubscribeResources}
@@ -537,15 +567,8 @@ const CollectionGridListItem = (props: {
   allowSubscribeResources: boolean;
   subscribeResources: string[];
   handleSubscribe: (item: ResourceItem) => void;
-  onRefreshPrimitive: (
-    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
-    type: McpServerPrimitiveTypes,
-  ) => void;
-  onUpdatePrimitiveNextCursor: (newNextCursor: string, type: McpServerPrimitiveTypes) => void;
-  onLoadMorePrimitive: (
-    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
-    type: McpServerPrimitiveTypes,
-  ) => void;
+  onRefreshPrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
+  onLoadMorePrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
   isSelected: boolean;
 }) => {
   const {

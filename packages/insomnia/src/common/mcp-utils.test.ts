@@ -112,7 +112,7 @@ describe('findLatestListResult', () => {
     const events = [outgoing(METHOD_LIST_TOOLS, 1), incomingResult(METHOD_LIST_TOOLS, 1, result)];
 
     expect(findLatestListResult(events, METHOD_LIST_TOOLS)).toEqual({
-      error: { title: `Server returns ${METHOD_LIST_TOOLS} response that does not meet MCP schema` },
+      error: { title: `The server returned a ${METHOD_LIST_TOOLS} response that does not match the MCP schema.` },
     });
   });
 
@@ -122,7 +122,9 @@ describe('findLatestListResult', () => {
     const outcome = findLatestListResult(events, METHOD_LIST_TOOLS);
 
     expect(outcome?.data).toBeUndefined();
-    expect(outcome?.error?.title).toBe(`Server returns ${METHOD_LIST_TOOLS} response that does not meet MCP schema`);
+    expect(outcome?.error?.title).toBe(
+      `The server returned a ${METHOD_LIST_TOOLS} response that does not match the MCP schema.`,
+    );
   });
 
   it('drops a single malformed entry and keeps the valid ones', () => {
@@ -132,7 +134,7 @@ describe('findLatestListResult', () => {
     const outcome = findLatestListResult(events, METHOD_LIST_TOOLS);
 
     expect(outcome?.data?.tools).toEqual([validTool('a')]);
-    expect(outcome?.error?.title).toBe('Drop 1 entry that fails the MCP schema.');
+    expect(outcome?.error?.title).toBe('1 entry was skipped because they do not match the MCP schema.');
     expect(outcome?.error?.entries).toHaveLength(1);
     expect(outcome?.error?.entries?.[0].label).toBe('b');
   });
@@ -144,7 +146,7 @@ describe('findLatestListResult', () => {
     const outcome = findLatestListResult(events, METHOD_LIST_TOOLS);
 
     expect(outcome?.data?.tools).toEqual([validTool('a')]);
-    expect(outcome?.error?.title).toBe('Drop 2 entries that fail the MCP schema.');
+    expect(outcome?.error?.title).toBe('2 entries were skipped because they do not match the MCP schema.');
     expect(outcome?.error?.entries?.map(entry => entry.label)).toEqual(['b', 'c']);
   });
 
@@ -155,6 +157,27 @@ describe('findLatestListResult', () => {
     const outcome = findLatestListResult(events, METHOD_LIST_TOOLS);
 
     expect(outcome?.error?.entries?.[0]).toEqual({ label: 'index 1', reason: expect.any(String) });
+  });
+
+  it('appends a count of remaining issues when an entry fails more than one schema check', () => {
+    const result = { tools: [{}] };
+    const events = [outgoing(METHOD_LIST_TOOLS, 1), incomingResult(METHOD_LIST_TOOLS, 1, result)];
+
+    const outcome = findLatestListResult(events, METHOD_LIST_TOOLS);
+
+    expect(outcome?.error?.entries?.[0].reason).toMatch(/\(And \d+ more\)$/);
+  });
+
+  it('reports an error when every entry is valid but another envelope field fails the schema', () => {
+    const result = { tools: [], nextCursor: 123 };
+    const events = [outgoing(METHOD_LIST_TOOLS, 1), incomingResult(METHOD_LIST_TOOLS, 1, result)];
+
+    const outcome = findLatestListResult(events, METHOD_LIST_TOOLS);
+
+    expect(outcome?.data).toBeUndefined();
+    expect(outcome?.error?.title).toBe(
+      `The server returned a ${METHOD_LIST_TOOLS} response that does not match the MCP schema.`,
+    );
   });
 
   it('passes the result through untouched for methods without a configured schema', () => {
