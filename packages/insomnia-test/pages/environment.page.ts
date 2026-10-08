@@ -63,6 +63,12 @@ export class EnvironmentPage extends BasePage {
       ? this.ADD_PRIVATE_SUB_ENVIRONMENT_BUTTON
       : this.ADD_SUB_ENVIRONMENT_BUTTON;
     await this.page.locator(button).click();
+    // The button's tooltip stays open while the cursor rests on it and can
+    // overlap the new row's name, intercepting the rename double-click.
+    await this.page.mouse.move(0, 0);
+    await expect(this.page.locator('[role="tooltip"]')).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
 
     await expect(rows).toHaveCount(countBefore + 1, {
       timeout: DEFAULT_TIMEOUT,
