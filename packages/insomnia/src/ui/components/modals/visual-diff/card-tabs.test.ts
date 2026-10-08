@@ -2,8 +2,8 @@ import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from './diff-engine';
 import { buildCookieJarTabs } from './cookie-jar-diff-card';
+import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from './diff-engine';
 import type { DiffTabDef } from './diff-tabs';
 import { buildGrpcTabs } from './grpc-diff-card';
 import { buildMcpTabs } from './mcp-diff-card';
