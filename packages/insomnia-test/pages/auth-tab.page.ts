@@ -96,6 +96,11 @@ const AUTH_DB_FILES = ["insomnia.Request.db", "insomnia.RequestGroup.db"];
 // isn't on disk yet.
 const AUTH_REAPPLY_AFTER_MS = 2000;
 
+// How long the full set of edits must keep holding on disk before the
+// form counts as done — long enough for any still-pending debounced save
+// built from a stale auth config to have fired and landed.
+const AUTH_SETTLE_MS = 2000;
+
 /** One edited `authentication` field, plus how to repeat the edit if it gets lost. */
 interface AuthFieldEdit {
   field: string;
@@ -336,7 +341,7 @@ export class AuthTabComponent extends TabPanelPage {
     // A later edit's debounced save can be built from a stale copy of the
     // auth config and silently drop an earlier field — each per-field wait
     // above passed at the time — so confirm every field holds together.
-    await this.waitForAuthFieldsPersisted(edits);
+    await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
   }
 
   /**
@@ -392,10 +397,15 @@ export class AuthTabComponent extends TabPanelPage {
    * `AUTH_REAPPLY_AFTER_MS` to land on its own, the edits still missing
    * from the closest-matching document are re-applied.
    * @param edits - The edited `authentication` fields and how to repeat each edit
+   * @param settleMs - How long every edit must keep holding before returning, to outlast a late stale save
    */
-  private async waitForAuthFieldsPersisted(edits: AuthFieldEdit[]): Promise<void> {
+  private async waitForAuthFieldsPersisted(
+    edits: AuthFieldEdit[],
+    settleMs = 0,
+  ): Promise<void> {
     const start = Date.now();
     let lastReapply = start;
+    let heldSince = 0;
     await expect(async () => {
       const docs = (
         await Promise.all(AUTH_DB_FILES.map((file) => this.readPersistedDocs(file)))
@@ -407,13 +417,18 @@ export class AuthTabComponent extends TabPanelPage {
         );
         if (docMissing.length < missing.length) missing = docMissing;
       }
-      if (missing.length === 0) return;
+      if (missing.length === 0) {
+        heldSince ||= Date.now();
+        expect(Date.now() - heldSince).toBeGreaterThanOrEqual(settleMs);
+        return;
+      }
+      heldSince = 0;
       if (Date.now() - lastReapply >= AUTH_REAPPLY_AFTER_MS) {
         lastReapply = Date.now();
         for (const edit of missing) await edit.reapply?.();
       }
       expect(missing.map((e) => e.field)).toEqual([]);
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    }).toPass({ timeout: DEFAULT_TIMEOUT + settleMs, intervals: [250, 500] });
   }
 
   /**

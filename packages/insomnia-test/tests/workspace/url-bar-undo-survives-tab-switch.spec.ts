@@ -39,7 +39,7 @@ test("Verify URL bar edits and undo history survive switching tabs away and back
 
   await httpRequestFlow.get(requestB.name);
   await workspacePage.clickTab(requestA.name);
-  const urlAfterSwitchingBack = await httpRequestPage.getUrl();
+  const urlAfterSwitchingBack = await httpRequestPage.waitForUrl(urlAfterTyping);
   const focusedAfterSwitchingBack = await httpRequestPage.hasFocus(
     httpRequestPage.urlBarContainer,
   );
