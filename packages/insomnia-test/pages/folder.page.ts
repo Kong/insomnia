@@ -30,4 +30,16 @@ export class FolderPage extends TabPanelPage {
     this.auth = new AuthTabComponent(page, FOLDER_PANE, insomnia);
     this.scripts = new ScriptTabComponent(page, FOLDER_PANE, insomnia);
   }
+
+  /**
+   * Also rewires the composed Auth/Scripts tab components, whose
+   * persistence checks read the app's on-disk store via `insomnia`.
+   * @param page - The freshly-launched app's main window
+   * @param insomnia - The freshly-launched ElectronApplication, if any
+   */
+  override setContext(page: Page, insomnia?: ElectronApplication): void {
+    super.setContext(page, insomnia);
+    this.auth.setContext(page, insomnia);
+    this.scripts.setContext(page, insomnia);
+  }
 }

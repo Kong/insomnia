@@ -35,6 +35,21 @@ export abstract class RequestPage extends TabPanelPage {
 
   protected abstract readonly urlBarId: string;
 
+  /** The NeDB file this protocol's requests persist to; subclasses of a non-HTTP protocol override it. */
+  protected readonly persistedDbFile: string = "insomnia.Request.db";
+
+  /**
+   * Dotted paths to the name/value row lists on a persisted request
+   * document that a Params/Headers edit lands in. Data rather than a
+   * method on purpose: the step instrumentation wraps page methods into
+   * async ones, which a synchronous per-document read can't be.
+   */
+  protected readonly persistedRowPaths: string[] = [
+    "parameters",
+    "headers",
+    "body.params",
+  ];
+
   /** The Auth tab component for this request's own pane. */
   readonly auth: AuthTabComponent;
 
@@ -45,6 +60,18 @@ export abstract class RequestPage extends TabPanelPage {
     super(page, REQUEST_PANE, insomnia);
     this.auth = new AuthTabComponent(page, REQUEST_PANE, insomnia);
     this.scripts = new ScriptTabComponent(page, REQUEST_PANE, insomnia);
+  }
+
+  /**
+   * Also rewires the composed Auth/Scripts tab components, whose
+   * persistence checks read the app's on-disk store via `insomnia`.
+   * @param page - The freshly-launched app's main window
+   * @param insomnia - The freshly-launched ElectronApplication, if any
+   */
+  override setContext(page: Page, insomnia?: ElectronApplication): void {
+    super.setContext(page, insomnia);
+    this.auth.setContext(page, insomnia);
+    this.scripts.setContext(page, insomnia);
   }
 
   /**
@@ -237,6 +264,37 @@ export abstract class RequestPage extends TabPanelPage {
   }
 
   /**
+   * Polls the URL bar until it reads `expected` and returns that value —
+   * for a read right after navigating to another request (a tab switch,
+   * the command palette), where the URL bar can still show the previous
+   * request's URL until the route settles.
+   * @param expected - The URL the URL bar must settle on
+   * @returns The URL text once it matches
+   */
+  async waitForUrl(expected: string): Promise<string> {
+    let url = "";
+    await expect(async () => {
+      url = await this.getUrl();
+      expect(url).toBe(expected);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    return url;
+  }
+
+  /**
+   * Polls the app's on-disk request store until a request holds `url`,
+   * confirming a URL typed into the URL bar has been saved (the editor
+   * saves through a debounce) before the caller navigates away from it.
+   * @param url - The URL that must have been persisted
+   */
+  async waitForUrlPersisted(url: string): Promise<void> {
+    await this.waitForFieldPersisted(
+      [this.persistedDbFile],
+      (doc) => doc.url,
+      url,
+    );
+  }
+
+  /**
    * Reads back all key/value pairs currently shown on the given tab,
    * including each row's enabled/disabled toggle state. Rows with no
    * toggle button are treated as always enabled.
@@ -377,8 +435,11 @@ export abstract class RequestPage extends TabPanelPage {
     { checkValue = true }: { checkValue?: boolean } = {},
   ): Promise<void> {
     await this.waitForRowPersisted(
-      ["insomnia.Request.db"],
-      (doc) => [doc.parameters, doc.headers, doc.body?.params],
+      [this.persistedDbFile],
+      (doc) =>
+        this.persistedRowPaths.map((path) =>
+          path.split(".").reduce((node, key) => node?.[key], doc),
+        ),
       pair.name,
       checkValue
         ? (p) =>
@@ -498,7 +559,7 @@ export abstract class RequestPage extends TabPanelPage {
     await this.page.keyboard.type(text);
     const typed = await this.readCodeMirror(editor);
     await this.waitForFieldPersisted(
-      ["insomnia.Request.db"],
+      [this.persistedDbFile],
       (doc) => doc.description,
       typed,
     );

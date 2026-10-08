@@ -118,6 +118,25 @@ export class GrpcRequestFlow extends BaseFlow {
   }
 
   /**
+   * Replaces `request`'s message body and waits until it has landed both
+   * on disk and in the request pane's loader data, so a following
+   * `send()` can't go out with the previous body.
+   * @param request - The request to update — must carry `id` (set by `create()`/`get()`)
+   * @param body - The new message body
+   */
+  async setBody(request: GrpcRequest, body: string): Promise<void> {
+    if (!request.id) {
+      throw new Error(
+        "setBody(): request.id is required to confirm the body persisted",
+      );
+    }
+    const grpcRequestPage = await this.openRequest(request);
+    await grpcRequestPage.setBody(body);
+    await this.waitForBodyPersisted(request.id, body);
+    await grpcRequestPage.waitForBodyInLoaderData(body);
+  }
+
+  /**
    * Sends one message over `request`'s open client-streaming or
    * bidi-streaming call. Can be called repeatedly with different bodies
    * before calling `commit()`.

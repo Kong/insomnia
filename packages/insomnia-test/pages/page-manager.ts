@@ -104,7 +104,7 @@ export class PageManager {
   get eventStreamRequestPage(): EventStreamRequestPage {
     return this.getOrCreate(
       "eventStreamRequest",
-      () => new EventStreamRequestPage(this.page),
+      () => new EventStreamRequestPage(this.page, this.insomnia),
     );
   }
 
@@ -156,7 +156,7 @@ export class PageManager {
   get grpcRequestPage(): GrpcRequestPage {
     return this.getOrCreate(
       "grpcRequest",
-      () => new GrpcRequestPage(this.page),
+      () => new GrpcRequestPage(this.page, this.insomnia),
     );
   }
 
@@ -200,7 +200,7 @@ export class PageManager {
    * @returns The shared McpClientPage instance
    */
   get mcpClientPage(): McpClientPage {
-    return this.getOrCreate("mcpClient", () => new McpClientPage(this.page));
+    return this.getOrCreate("mcpClient", () => new McpClientPage(this.page, this.insomnia));
   }
 
   /**
@@ -251,7 +251,7 @@ export class PageManager {
   get socketIoRequestPage(): SocketIORequestPage {
     return this.getOrCreate(
       "socketIoRequest",
-      () => new SocketIORequestPage(this.page),
+      () => new SocketIORequestPage(this.page, this.insomnia),
     );
   }
 
@@ -273,7 +273,7 @@ export class PageManager {
   get webSocketRequestPage(): WebSocketRequestPage {
     return this.getOrCreate(
       "webSocketRequest",
-      () => new WebSocketRequestPage(this.page),
+      () => new WebSocketRequestPage(this.page, this.insomnia),
     );
   }
 

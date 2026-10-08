@@ -35,6 +35,7 @@ test("Verify URL bar edits and undo history survive switching tabs away and back
   await httpRequestPage.typeUrl("?foo=bar");
   await user.page.keyboard.press("Tab");
   const urlAfterTyping = await httpRequestPage.getUrl();
+  await httpRequestPage.waitForUrlPersisted(urlAfterTyping);
 
   await httpRequestFlow.get(requestB.name);
   await workspacePage.clickTab(requestA.name);

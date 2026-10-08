@@ -3,6 +3,7 @@ import { RequestPage } from "./request.page";
 
 export class SocketIORequestPage extends RequestPage {
   protected readonly urlBarId = "websocket-url-bar";
+  protected readonly persistedDbFile = "insomnia.SocketIORequest.db";
 
   /**
    * Reads the full Socket.IO request state from the UI (url, headers, and

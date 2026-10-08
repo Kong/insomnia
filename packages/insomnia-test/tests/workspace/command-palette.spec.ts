@@ -38,7 +38,7 @@ test("Verify command palette fuzzy-jumps between requests and collections", asyn
 
   const requestResults = await workspaceFlow.search(requestB.name);
   await commandPalettePage.selectResult(requestB.name);
-  const urlAfterRequestJump = await httpRequestPage.getUrl();
+  const urlAfterRequestJump = await httpRequestPage.waitForUrl(requestB.url);
   const methodAfterRequestJump = await httpRequestPage.getMethod();
 
   const collectionResults = await workspaceFlow.search(collectionA.name);

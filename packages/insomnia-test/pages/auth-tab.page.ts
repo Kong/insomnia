@@ -91,6 +91,18 @@ const OAUTH2_FETCH_TIMEOUT = ACTION_TIMEOUT;
 // (inherited by its children) on the RequestGroup document.
 const AUTH_DB_FILES = ["insomnia.Request.db", "insomnia.RequestGroup.db"];
 
+// How long an edit gets to land on its own before it's re-applied: the
+// Auth editors save through a debounce, so a just-made edit legitimately
+// isn't on disk yet.
+const AUTH_REAPPLY_AFTER_MS = 2000;
+
+/** One edited `authentication` field, plus how to repeat the edit if it gets lost. */
+interface AuthFieldEdit {
+  field: string;
+  value: unknown;
+  reapply?: () => Promise<void>;
+}
+
 /**
  * The Auth tab component, shared by any page that renders it — a
  * request's own pane (`RequestPage`, composing an instance as
@@ -165,6 +177,10 @@ export class AuthTabComponent extends TabPanelPage {
   async fetchOAuth2Tokens(): Promise<void> {
     await this.switchTab("auth");
     const panel = this.page.locator(this.TABPANEL);
+    // The button acts on the auth config in the request's loader data,
+    // which refreshes a moment after the last edit lands on disk — drain
+    // the renderer first so a fetch can't go out with the previous config.
+    await this.waitForRendererIdle();
     await panel
       .getByRole("button", { name: /^(Fetch Tokens|Refresh Token)$/ })
       .click();
@@ -248,12 +264,28 @@ export class AuthTabComponent extends TabPanelPage {
       timeout: DEFAULT_TIMEOUT,
     });
 
+    const edits: AuthFieldEdit[] = [];
+    const selectOnTab = async (id: string, value: string) => {
+      await this.page.locator(this.TABPANEL).locator(`#${id}`).selectOption(value);
+    };
+    const applySelect = async (
+      field: string,
+      id: string,
+      value: string,
+      stored: unknown = value,
+    ) => {
+      const edit: AuthFieldEdit = {
+        field,
+        value: stored,
+        reapply: () => selectOnTab(id, value),
+      };
+      await edit.reapply!();
+      await this.waitForAuthFieldsPersisted([edit]);
+      edits.push(edit);
+    };
+
     if (fields.grantType) {
-      await this.page
-        .locator(this.TABPANEL)
-        .locator("#Grant-Type")
-        .selectOption(fields.grantType);
-      await this.waitForAuthFieldPersisted("grantType", fields.grantType);
+      await applySelect("grantType", "Grant-Type", fields.grantType);
     }
 
     const needsAdvanced =
@@ -267,40 +299,44 @@ export class AuthTabComponent extends TabPanelPage {
       if (value === undefined) continue;
       const editor = this.oauth2FieldEditor(label);
       if ((await editor.count()) === 0) continue;
-      await this.setCodeMirrorValue(editor, value);
-      await this.waitForAuthFieldPersisted(field, value);
+      const edit: AuthFieldEdit = {
+        field,
+        value,
+        reapply: () => this.setCodeMirrorValue(editor, value),
+      };
+      await edit.reapply!();
+      await this.waitForAuthFieldsPersisted([edit]);
+      edits.push(edit);
     }
 
     if (fields.usePkce !== undefined) {
       await this.setToggle("Use-PKCE", fields.usePkce);
       if (fields.usePkce && fields.pkceMethod) {
-        await this.page
-          .locator(this.TABPANEL)
-          .locator("#Code-Challenge-Method")
-          .selectOption(fields.pkceMethod);
-        await this.waitForAuthFieldPersisted("pkceMethod", fields.pkceMethod);
+        await applySelect("pkceMethod", "Code-Challenge-Method", fields.pkceMethod);
       }
     }
     if (fields.useDefaultBrowser !== undefined) {
       await this.setToggle("Using-default-browser", fields.useDefaultBrowser);
     }
-    if (fields.responseType) {
-      const select = this.page.locator(this.TABPANEL).locator("#Response-Type");
-      if (await select.count()) {
-        await select.selectOption(fields.responseType);
-        await this.waitForAuthFieldPersisted("responseType", fields.responseType);
-      }
+    if (
+      fields.responseType &&
+      (await this.page.locator(this.TABPANEL).locator("#Response-Type").count())
+    ) {
+      await applySelect("responseType", "Response-Type", fields.responseType);
     }
     if (fields.credentialsInBody !== undefined) {
-      await this.page
-        .locator(this.TABPANEL)
-        .locator("#Credentials")
-        .selectOption(fields.credentialsInBody ? "true" : "false");
-      await this.waitForAuthFieldPersisted(
+      await applySelect(
         "credentialsInBody",
+        "Credentials",
+        fields.credentialsInBody ? "true" : "false",
         fields.credentialsInBody,
       );
     }
+
+    // A later edit's debounced save can be built from a stale copy of the
+    // auth config and silently drop an earlier field — each per-field wait
+    // above passed at the time — so confirm every field holds together.
+    await this.waitForAuthFieldsPersisted(edits);
   }
 
   /**
@@ -345,11 +381,39 @@ export class AuthTabComponent extends TabPanelPage {
     field: string,
     value: unknown,
   ): Promise<void> {
-    await this.waitForFieldPersisted(
-      AUTH_DB_FILES,
-      (doc) => String(doc.authentication?.[field]),
-      String(value),
-    );
+    await this.waitForAuthFieldsPersisted([{ field, value }]);
+  }
+
+  /**
+   * Polls the on-disk request/folder documents until a single one holds
+   * every edit in `edits` at once. The app's debounced editors can save
+   * from a stale copy of the auth config, so a write may never land, or
+   * may drop a field persisted earlier; once an edit has had
+   * `AUTH_REAPPLY_AFTER_MS` to land on its own, the edits still missing
+   * from the closest-matching document are re-applied.
+   * @param edits - The edited `authentication` fields and how to repeat each edit
+   */
+  private async waitForAuthFieldsPersisted(edits: AuthFieldEdit[]): Promise<void> {
+    const start = Date.now();
+    let lastReapply = start;
+    await expect(async () => {
+      const docs = (
+        await Promise.all(AUTH_DB_FILES.map((file) => this.readPersistedDocs(file)))
+      ).flat();
+      let missing = edits;
+      for (const doc of docs) {
+        const docMissing = edits.filter(
+          (e) => String(doc.authentication?.[e.field]) !== String(e.value),
+        );
+        if (docMissing.length < missing.length) missing = docMissing;
+      }
+      if (missing.length === 0) return;
+      if (Date.now() - lastReapply >= AUTH_REAPPLY_AFTER_MS) {
+        lastReapply = Date.now();
+        for (const edit of missing) await edit.reapply?.();
+      }
+      expect(missing.map((e) => e.field)).toEqual([]);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

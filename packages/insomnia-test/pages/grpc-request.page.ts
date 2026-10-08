@@ -18,6 +18,8 @@ export class GrpcRequestPage extends RequestPage {
   /** Unary reads "Send"; server/client/bidi streaming methods read "Start" until running, then "Cancel". */
   protected readonly SEND_BUTTON = `${this.PANE} button:has-text("Send"), ${this.PANE} button:has-text("Start")`;
   protected readonly urlBarId = "grpc-url";
+  protected readonly persistedDbFile = "insomnia.GrpcRequest.db";
+  protected readonly persistedRowPaths = ["metadata"];
 
   /**
    * Cancels the in-flight call: a still-in-flight unary/server-streaming
