@@ -29,7 +29,7 @@ export const baseMockRouteSchema = z.object({
 export type BaseMockRoute = z.infer<typeof baseMockRouteSchema>;
 
 export const schema = createModelSchema(type, prefix).extend(baseMockRouteSchema.shape);
-export type MockRoute = BaseModel & BaseMockRoute;
+export type MockRoute = z.infer<typeof schema>;
 
 export function init(): BaseMockRoute {
   return {
