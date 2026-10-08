@@ -290,17 +290,26 @@ const validateListResult = (method: string, result: unknown): McpListResult => {
       validItems.push(parsed.data);
       return;
     }
-    const [issue] = parsed.error?.issues || [];
+    // Only show first issue for each invalid item, with a count of any remaining issues
+    const issues = parsed.error?.issues || [];
+    const [issue] = issues;
     const reason = issue
-      ? `${issue.path.length > 0 ? `${issue.path.join('.')}: ` : ''}${issue.message}`
+      ? `${issue.path.length > 0 ? `${issue.path.join('.')}: ` : ''}${issue.message}${
+          issues.length > 1 ? ` (And ${issues.length - 1} more)` : ''
+        }`
       : 'did not match the expected shape';
     entries.push({ label: labelForListItem(item) || `index ${index}`, reason });
   });
+  const cleanedResult = { ...(isRecord(result) ? result : {}), [config.itemsKey]: validItems };
   if (entries.length === 0) {
-    return { data: { ...(isRecord(result) ? result : {}), [config.itemsKey]: validItems } };
+    if (config.resultSchema.safeParse(cleanedResult).success) {
+      return { data: cleanedResult };
+    }
+    // Every entry is individually valid, but some other envelope field (e.g. nextCursor) still fails the schema.
+    return { error: { title: `The server returned a ${method} response that does not match the MCP schema.` } };
   }
   return {
-    data: { ...(isRecord(result) ? result : {}), [config.itemsKey]: validItems },
+    data: cleanedResult,
     error: {
       title: `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} ${
         entries.length === 1 ? 'was' : 'were'
