@@ -70,7 +70,6 @@ export class CommandPalettePage extends BasePage {
    */
   async search(query: string): Promise<void> {
     await this.page.locator(`${this.DIALOG} input`).fill(query);
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -83,6 +82,5 @@ export class CommandPalettePage extends BasePage {
       .locator(this.OPTION, { hasText: name })
       .first()
       .click();
-    await this.page.waitForTimeout(500);
   }
 }

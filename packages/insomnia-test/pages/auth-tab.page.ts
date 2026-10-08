@@ -126,7 +126,6 @@ export class AuthTabComponent extends TabPanelPage {
     const button = panel.getByRole("button", { name: "Advanced Options" });
     if ((await button.count()) === 0) return;
     await button.click();
-    await this.page.waitForTimeout(300);
   }
 
   /**
@@ -143,7 +142,6 @@ export class AuthTabComponent extends TabPanelPage {
       .locator(this.TABPANEL)
       .getByRole("button", { name: "Clear", exact: true })
       .click();
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -203,19 +201,16 @@ export class AuthTabComponent extends TabPanelPage {
    */
   async setOAuth1Fields(fields: Partial<AuthTypeOAuth1>): Promise<void> {
     await this.setAuthType(AuthType.OAuth1);
-    await this.page.waitForTimeout(500);
     for (const [field, label] of Object.entries(OAUTH1_FIELD_LABELS)) {
       const value = fields[field as OAuth1TextField];
       if (value === undefined) continue;
       await this.setCodeMirrorValue(this.oAuth1FieldEditor(label), value);
-      await this.page.waitForTimeout(500);
     }
     if (fields.signatureMethod) {
       await this.page
         .locator(this.TABPANEL)
         .locator("#Signature-Method")
         .selectOption(fields.signatureMethod);
-      await this.page.waitForTimeout(500);
     }
   }
 
@@ -233,14 +228,12 @@ export class AuthTabComponent extends TabPanelPage {
    */
   async setOAuth2Fields(fields: Partial<AuthTypeOAuth2>): Promise<void> {
     await this.setAuthType(AuthType.OAuth2);
-    await this.page.waitForTimeout(500);
 
     if (fields.grantType) {
       await this.page
         .locator(this.TABPANEL)
         .locator("#Grant-Type")
         .selectOption(fields.grantType);
-      await this.page.waitForTimeout(500);
     }
 
     const needsAdvanced =
@@ -255,7 +248,6 @@ export class AuthTabComponent extends TabPanelPage {
       const editor = this.oauth2FieldEditor(label);
       if ((await editor.count()) === 0) continue;
       await this.setCodeMirrorValue(editor, value);
-      await this.page.waitForTimeout(500);
     }
 
     if (fields.usePkce !== undefined) {
@@ -265,7 +257,6 @@ export class AuthTabComponent extends TabPanelPage {
           .locator(this.TABPANEL)
           .locator("#Code-Challenge-Method")
           .selectOption(fields.pkceMethod);
-        await this.page.waitForTimeout(500);
       }
     }
     if (fields.useDefaultBrowser !== undefined) {
@@ -275,7 +266,6 @@ export class AuthTabComponent extends TabPanelPage {
       const select = this.page.locator(this.TABPANEL).locator("#Response-Type");
       if (await select.count()) {
         await select.selectOption(fields.responseType);
-        await this.page.waitForTimeout(500);
       }
     }
     if (fields.credentialsInBody !== undefined) {
@@ -283,7 +273,6 @@ export class AuthTabComponent extends TabPanelPage {
         .locator(this.TABPANEL)
         .locator("#Credentials")
         .selectOption(fields.credentialsInBody ? "true" : "false");
-      await this.page.waitForTimeout(500);
     }
   }
 
@@ -311,7 +300,6 @@ export class AuthTabComponent extends TabPanelPage {
   private async setToggle(id: string, enabled: boolean): Promise<void> {
     if ((await this.isToggleOn(id)) !== enabled) {
       await this.page.locator(this.TABPANEL).locator(`#${id}`).click();
-      await this.page.waitForTimeout(300);
     }
   }
 

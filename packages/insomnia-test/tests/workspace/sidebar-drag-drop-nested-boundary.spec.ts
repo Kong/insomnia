@@ -93,7 +93,6 @@ test("Verify the drop indicator's depth and the actual landing spot agree at a n
   );
   await workspacePage.dragOverPixels(lastChildNode, shallowScan!.px, 0.9);
   await workspacePage.releaseDrag();
-  await user.page.waitForTimeout(300);
 
   const treeAfterShallowDrop = await workspacePage.getTree();
   const collectionChildrenAfterShallowDrop = treeAfterShallowDrop
@@ -115,7 +114,6 @@ test("Verify the drop indicator's depth and the actual landing spot agree at a n
   await workspacePage.startDrag(deepDragItemNode);
   await workspacePage.dragOverPixels(lastChildNode, deepScan!.px, 0.9);
   await workspacePage.releaseDrag();
-  await user.page.waitForTimeout(300);
 
   const treeAfterDeepDrop = await workspacePage.getTree();
   const outerFolderAfterDeepDrop = treeAfterDeepDrop

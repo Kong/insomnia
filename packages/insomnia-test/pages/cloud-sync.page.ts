@@ -524,7 +524,6 @@ export class CloudSyncPage extends BasePage {
    */
   async isFileDeleteButtonRevealed(name: string): Promise<boolean> {
     const button = this.fileCard(name).getByLabel("Delete unsynced file");
-    await this.page.waitForTimeout(300);
     const opacity = await button.evaluate(
       (el) => getComputedStyle(el).opacity,
     );

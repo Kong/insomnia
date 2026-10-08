@@ -292,7 +292,6 @@ export class WorkspacePage extends BasePage {
    */
   async clickTab(name: string): Promise<void> {
     await this.tab(name).click();
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -1033,7 +1032,6 @@ export class WorkspacePage extends BasePage {
    */
   async clearSidebarFilter(): Promise<void> {
     await this.page.locator('[aria-label="Clear search"]').click();
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -1045,7 +1043,6 @@ export class WorkspacePage extends BasePage {
     await this.page
       .getByRole("searchbox", { name: "Projects filter" })
       .fill(text);
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -1886,7 +1883,6 @@ export class WorkspacePage extends BasePage {
     await expect(async () => {
       expect(await settled()).toBe(true);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
-    await this.page.waitForTimeout(300);
     await expect(async () => {
       expect(await settled()).toBe(true);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
@@ -2014,7 +2010,6 @@ export class WorkspacePage extends BasePage {
    */
   async setSpecification(text: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.SPEC_EDITOR), text);
-    await this.page.waitForTimeout(1000);
   }
 
   /**

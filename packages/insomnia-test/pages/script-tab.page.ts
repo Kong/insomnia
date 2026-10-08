@@ -91,7 +91,6 @@ export class ScriptTabComponent extends TabPanelPage {
       await editor.click();
       await this.page.keyboard.press("End");
       await this.page.keyboard.type(scripts.preRequest);
-      await this.page.waitForTimeout(500);
     }
     if (scripts.afterResponse) {
       await this.switchScriptTab(ScriptTab.AfterResponse);
@@ -100,7 +99,6 @@ export class ScriptTabComponent extends TabPanelPage {
       await editor.click();
       await this.page.keyboard.press("End");
       await this.page.keyboard.type(scripts.afterResponse);
-      await this.page.waitForTimeout(500);
     }
   }
 

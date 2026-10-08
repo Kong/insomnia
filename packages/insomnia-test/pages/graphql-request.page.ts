@@ -88,7 +88,6 @@ export class GraphQLRequestPage extends RequestPage {
     if (variablesText !== undefined) {
       await this.setCodeMirrorValue(editors.nth(1), variablesText);
     }
-    await this.page.waitForTimeout(1500);
   }
 
   /**

@@ -334,12 +334,10 @@ export class EnvironmentPage extends BasePage {
         row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
         variable.name,
       );
-      await this.page.waitForTimeout(500);
       await this.setCodeMirrorValue(
         row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
         variable.value,
       );
-      await this.page.waitForTimeout(500);
       if (variable.type) {
         await this.setType(row, variable.type);
       }
@@ -381,7 +379,6 @@ export class EnvironmentPage extends BasePage {
       this.page.locator(`${this.RAW_EDITOR} .CodeMirror`),
       json,
     );
-    await this.page.waitForTimeout(1000);
   }
 
   private async getType(row: Locator): Promise<EnvironmentKvPairDataType> {

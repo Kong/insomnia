@@ -351,7 +351,6 @@ export abstract class RequestPage extends TabPanelPage {
         row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
         pair.name,
       );
-      await this.page.waitForTimeout(500);
       await this.setCodeMirrorValue(
         row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
         pair.value,
@@ -359,7 +358,6 @@ export abstract class RequestPage extends TabPanelPage {
       if (pair.disabled) {
         await row.locator('button[aria-pressed="true"]').click();
       }
-      await this.page.waitForTimeout(500);
     }
   }
 
@@ -471,7 +469,6 @@ export abstract class RequestPage extends TabPanelPage {
     await editor.click();
     await this.page.keyboard.press("End");
     await this.page.keyboard.type(text);
-    await this.page.waitForTimeout(500);
   }
 
   /**

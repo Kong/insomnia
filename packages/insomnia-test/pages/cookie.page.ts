@@ -5,8 +5,6 @@ import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { Cookie } from "../models/cookie";
 import { BasePage } from "./base.page";
 
-const FIELD_SAVE_DELAY = 500;
-
 function parseCookieLine(line: string): Cookie {
   const [pair, ...attrs] = line.split("; ");
   const separator = pair.indexOf("=");
@@ -160,7 +158,6 @@ export class CookiePage extends BasePage {
       await this.editDialog
         .getByLabel("Raw Cookie String")
         .fill(rawCookieString);
-      await this.page.waitForTimeout(FIELD_SAVE_DELAY);
 
       await this.editDialog.getByRole("button", { name: "Done" }).click();
       await this.editDialog.waitFor({
@@ -204,19 +201,16 @@ export class CookiePage extends BasePage {
         await this.editDialog
           .getByRole("checkbox", { name: "Secure" })
           .check();
-        await this.page.waitForTimeout(FIELD_SAVE_DELAY);
       }
       if (cookie.httpOnly) {
         await this.editDialog
           .getByRole("checkbox", { name: "HttpOnly" })
           .check();
-        await this.page.waitForTimeout(FIELD_SAVE_DELAY);
       }
       if (cookie.hostOnly) {
         await this.editDialog
           .getByRole("checkbox", { name: "HostOnly" })
           .check();
-        await this.page.waitForTimeout(FIELD_SAVE_DELAY);
       }
 
       await this.editDialog.getByRole("button", { name: "Done" }).click();
@@ -243,7 +237,6 @@ export class CookiePage extends BasePage {
     );
     await input.fill(value);
     await this.page.keyboard.press("Tab");
-    await this.page.waitForTimeout(FIELD_SAVE_DELAY);
   }
 
   private async fillField(testId: string, text: string): Promise<void> {
@@ -251,7 +244,6 @@ export class CookiePage extends BasePage {
     await field.locator(".CodeMirror-lines").click();
     await this.setCodeMirrorValue(field.locator(".CodeMirror"), text);
     await this.page.keyboard.press("Tab");
-    await this.page.waitForTimeout(FIELD_SAVE_DELAY);
   }
 
   private rows(): Locator {
