@@ -32,11 +32,11 @@ const incomingResult = (method: string, id: number, result: unknown): McpEvent =
     data: { jsonrpc: '2.0', id, result },
   }) as McpEvent;
 
-const incomingErrorEvent = (id: number, message: string): McpEvent =>
+const incomingErrorEvent = (id: number, title: string, message: string): McpEvent =>
   ({
     ...BASE,
     type: 'error',
-    message,
+    message: title,
     error: { code: -32_601, requestId: id, message },
   }) as McpEvent;
 
@@ -87,17 +87,9 @@ describe('findLatestListResult', () => {
   });
 
   it('surfaces a JSON-RPC error response as an error', () => {
-    const events = [outgoing(METHOD_LIST_TOOLS, 1), incomingErrorEvent(1, 'Method not found')];
+    const events = [outgoing(METHOD_LIST_TOOLS, 1), incomingErrorEvent(1, 'Error', 'Method not found')];
 
-    expect(findLatestListResult(events, METHOD_LIST_TOOLS)).toEqual({ error: { title: 'Method not found' } });
-  });
-
-  it('falls back to a default message when the error event carries none', () => {
-    const events = [outgoing(METHOD_LIST_TOOLS, 1), incomingErrorEvent(1, '')];
-
-    expect(findLatestListResult(events, METHOD_LIST_TOOLS)).toEqual({
-      error: { title: `MCP server returned an error for ${METHOD_LIST_TOOLS}` },
-    });
+    expect(findLatestListResult(events, METHOD_LIST_TOOLS)).toEqual({ error: { title: 'Error: Method not found' } });
   });
 
   it('returns the result untouched when it matches the schema', () => {
