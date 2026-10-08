@@ -20,7 +20,7 @@ import { parse as parseYaml } from 'yaml';
  * - [x] Socket.IO Request    -> SocketIODiffCard
  * - [x] MCP Request        -> McpDiffCard
  * - [x] Mock Route         -> MockRouteDiffCard
- * - [ ] Cookie Jar
+ * - [x] Cookie Jar         -> CookieJarDiffCard
  */
 
 // TODO: Bind type from Insomnia v5 entity definitions (eg. `Request`, `Environment`, etc.) rather than hardcoding strings.

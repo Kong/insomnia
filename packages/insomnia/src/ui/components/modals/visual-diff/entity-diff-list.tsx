@@ -4,6 +4,7 @@ import { useGitProjectDiscardPartialContentActionFetcher } from '~/routes/git.di
 import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stage-entity';
 
 import { showToast } from '../../toast-notification';
+import { CookieJarDiffCard } from './cookie-jar-diff-card';
 import { computeVisualDiff } from './diff-engine';
 import { applyEntityChange } from './entity-splice';
 import { EnvironmentDiffCard } from './environment-diff-card';
@@ -180,6 +181,9 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
             }
             case 'mock_route': {
               return <MockRouteDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'cookie_jar': {
+              return <CookieJarDiffCard key={diff.id} diff={diff} {...actionProps} />;
             }
             case 'environment': {
               return <EnvironmentDiffCard key={diff.id} diff={diff} {...actionProps} />;

@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from './diff-engine';
+import { buildCookieJarTabs } from './cookie-jar-diff-card';
 import type { DiffTabDef } from './diff-tabs';
 import { buildGrpcTabs } from './grpc-diff-card';
 import { buildMcpTabs } from './mcp-diff-card';
@@ -263,6 +264,27 @@ describe('buildMockRouteTabs', () => {
     expect(summary(buildMockRouteTabs(modified('mock_route', before, after)))).toEqual([
       { id: 'body', status: 'modified', count: undefined },
       { id: 'headers', status: 'added', count: 1 },
+    ]);
+  });
+});
+
+describe('buildCookieJarTabs', () => {
+  const session = { id: 'c1', key: 'session', value: 'a', domain: 'example.com', path: '/' };
+  const before = { name: 'Default Jar', meta: { id: 'jar_1' }, cookies: [session] };
+
+  it('matches cookies by name + domain + path, so a value change is one modification', () => {
+    const after = { ...before, cookies: [{ ...session, id: 'c-regenerated', value: 'b' }] };
+
+    expect(summary(buildCookieJarTabs(modified('cookie_jar', before, after)))).toEqual([
+      { id: 'cookies', status: 'modified', count: 1 },
+    ]);
+  });
+
+  it('treats a same-named cookie on another domain as a different cookie', () => {
+    const after = { ...before, cookies: [session, { ...session, id: 'c2', domain: 'other.com' }] };
+
+    expect(summary(buildCookieJarTabs(modified('cookie_jar', before, after)))).toEqual([
+      { id: 'cookies', status: 'added', count: 1 },
     ]);
   });
 });
