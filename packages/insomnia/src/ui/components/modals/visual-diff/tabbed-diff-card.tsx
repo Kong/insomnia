@@ -43,7 +43,7 @@ export function buildHeaderLines(
   }: {
     badgeOf?: (node: any) => EntityHeaderBadge;
     icon?: IconProp;
-    detailOf: (node: any) => string;
+    detailOf?: (node: any) => string;
     watchedPaths: string[];
   },
 ): { current: EntityHeaderLine; previous?: EntityHeaderLine } {
@@ -51,12 +51,12 @@ export function buildHeaderLines(
   const nameChange = diff.fieldChanges.find(change => change.path === 'name');
   const showPrevious = Boolean(nameChange) || diff.fieldChanges.some(change => watchedPaths.includes(change.path));
   return {
-    current: { badge: badgeOf?.(node), icon, name: diff.name, detail: detailOf(node) },
+    current: { badge: badgeOf?.(node), icon, name: diff.name, detail: detailOf?.(node) },
     previous: showPrevious
       ? {
           badge: badgeOf?.(diff.before),
           name: nameChange ? String(nameChange.before ?? '') : undefined,
-          detail: detailOf(diff.before),
+          detail: detailOf?.(diff.before),
         }
       : undefined,
   };

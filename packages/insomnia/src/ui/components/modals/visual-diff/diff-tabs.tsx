@@ -10,7 +10,7 @@ import {
   sideStatus,
   valuesEqual,
 } from './diff-engine';
-import { FieldDiffRow, StatusBadge } from './shared';
+import { FieldDiffRow, StatusBadge, ValueChange } from './shared';
 
 // One changed section of an entity, rendered as a tab (expanded card) or a chip (collapsed card).
 export interface DiffTabDef {
@@ -91,6 +91,27 @@ export const KeyValueDiffRows: FC<{ title?: string; rows: KeyedDiffRow[] } & Key
         })}
       </ul>
     </div>
+  );
+};
+
+// Rows for a plain `{ key: value }` record (eg. folder environment variables). Unlike
+// KeyValueDiffRows, values are shown whole rather than broken down field by field.
+export const RecordDiffRows: FC<{ rows: KeyedDiffRow[] }> = ({ rows }) => {
+  if (rows.length === 0) {
+    return null;
+  }
+  return (
+    <ul className="flex flex-col gap-2">
+      {rows.map(row => (
+        <li key={row.key} className="flex flex-col gap-1 rounded-xs bg-(--color-bg) p-2">
+          <div className="flex items-center gap-2">
+            <StatusBadge status={row.status} />
+            <span className="font-mono text-sm">{row.key}</span>
+          </div>
+          <ValueChange before={row.before} after={row.after} />
+        </li>
+      ))}
+    </ul>
   );
 };
 

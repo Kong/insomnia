@@ -6,6 +6,7 @@ import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from 
 import type { DiffTabDef } from './diff-tabs';
 import { buildGrpcTabs } from './grpc-diff-card';
 import { buildRequestTabs } from './request-diff-card';
+import { buildRequestGroupTabs } from './request-group-diff-card';
 import { buildSocketIOTabs } from './socket-io-diff-card';
 import { buildWebSocketTabs } from './websocket-diff-card';
 
@@ -158,5 +159,49 @@ describe('buildGrpcTabs', () => {
       { id: 'reflection', status: 'modified', count: 1 },
       { id: 'docs', status: 'added', count: undefined },
     ]);
+  });
+});
+
+describe('buildRequestGroupTabs', () => {
+  const before = {
+    name: 'f',
+    meta: { id: 'fld_1' },
+    environment: { host: 'old', port: 80 },
+    environmentPropertyOrder: { '&': ['host', 'port'] },
+    children: [{ name: 'r', url: 'https://a', meta: { id: 'req_1' } }],
+  };
+
+  it("shows the folder's own sections, with environment variables compared by name", () => {
+    const after = {
+      ...before,
+      headers: [{ name: 'X-Folder', value: '1' }],
+      authentication: { type: 'bearer', token: 't' },
+      scripts: { preRequest: 'console.log(1)' },
+      environment: { host: 'new', port: 80, debug: true },
+      environmentPropertyOrder: { '&': ['host', 'port', 'debug'] },
+      meta: { id: 'fld_1', description: 'docs' },
+    };
+
+    expect(summary(buildRequestGroupTabs(modified('request_group', before, after)))).toEqual([
+      { id: 'auth', status: 'added', count: undefined },
+      { id: 'headers', status: 'added', count: 1 },
+      { id: 'scripts', status: 'added', count: undefined },
+      { id: 'environment', status: 'modified', count: 2 },
+      { id: 'docs', status: 'added', count: undefined },
+    ]);
+  });
+
+  it('still surfaces a variable reorder on its own', () => {
+    const after = { ...before, environmentPropertyOrder: { '&': ['port', 'host'] } };
+
+    expect(summary(buildRequestGroupTabs(modified('request_group', before, after)))).toEqual([
+      { id: 'environment', status: 'modified', count: 0 },
+    ]);
+  });
+
+  it('ignores changes to child requests, which have their own cards', () => {
+    const after = { ...before, children: [{ ...before.children[0], url: 'https://b' }] };
+
+    expect(buildRequestGroupTabs(modified('request_group', before, after))).toEqual([]);
   });
 });

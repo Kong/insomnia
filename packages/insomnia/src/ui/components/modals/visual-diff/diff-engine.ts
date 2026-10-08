@@ -14,7 +14,7 @@ import { parse as parseYaml } from 'yaml';
  *
  * - [x] Request (HTTP)      -> RequestDiffCard
  * - [x] Environment          -> EnvironmentDiffCard
- * - [ ] Request Group (folder)
+ * - [x] Request Group (folder) -> RequestGroupDiffCard
  * - [x] WebSocket Request    -> WebSocketDiffCard
  * - [x] gRPC Request         -> GrpcDiffCard
  * - [x] Socket.IO Request    -> SocketIODiffCard

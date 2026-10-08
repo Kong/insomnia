@@ -10,6 +10,7 @@ import { EnvironmentDiffCard } from './environment-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
 import { GrpcDiffCard } from './grpc-diff-card';
 import { RequestDiffCard } from './request-diff-card';
+import { RequestGroupDiffCard } from './request-group-diff-card';
 import type { EntityCardPendingAction } from './shared';
 import { SocketIODiffCard } from './socket-io-diff-card';
 import { WebSocketDiffCard } from './websocket-diff-card';
@@ -159,6 +160,9 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
           switch (diff.type) {
             case 'request': {
               return <RequestDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'request_group': {
+              return <RequestGroupDiffCard key={diff.id} diff={diff} {...actionProps} />;
             }
             case 'websocket_request': {
               return <WebSocketDiffCard key={diff.id} diff={diff} {...actionProps} />;
