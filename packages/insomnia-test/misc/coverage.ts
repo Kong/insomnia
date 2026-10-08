@@ -53,9 +53,13 @@ function getReport() {
         // levels can produce a result *lower* than any individual shard —
         // see `misc/merge-coverage-union.js`, which reads this file from
         // every shard and unions them itself instead of relying on that
-        // merge). Written alongside the raw cache so it rides along in the
-        // same `coverage-raw-N` CI artifact.
-        ["v8-json", { outputFile: "raw/v8-report.json" }],
+        // merge). Must NOT be written inside the "raw" report's own
+        // `raw/` output dir: that report unconditionally deletes and
+        // regenerates its whole directory on every run, and (per monocart's
+        // fixed report-group ordering) always runs after `v8-json` — so
+        // anything written under `raw/` here gets silently wiped. Written as
+        // a sibling of `raw/` instead; the CI upload step picks up both.
+        ["v8-json", { outputFile: "v8-report.json" }],
         // A self-contained interactive report for local runs / the final
         // merged CI artifact.
         ["v8"],

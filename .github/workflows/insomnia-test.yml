@@ -143,12 +143,18 @@ jobs:
           COVERAGE: 'true'
         run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
+      # Two paths here (not just coverage/raw/) because v8-report.json (see
+      # misc/coverage.ts) must live as a sibling of raw/, not inside it — the
+      # upload computes a common ancestor across both, so raw/'s own
+      # contents now land one level deeper in the artifact, under `raw/`.
       - name: Upload coverage (raw)
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: coverage-raw-${{ matrix.shardIndex }}
-          path: packages/insomnia-test/coverage/raw/
+          path: |
+            packages/insomnia-test/coverage/raw/
+            packages/insomnia-test/coverage/v8-report.json
           retention-days: 1
           if-no-files-found: ignore
 
