@@ -123,6 +123,26 @@ export class GrpcRequestPage extends RequestPage {
   }
 
   /**
+   * Waits until the request's loader-backed in-memory state — what the
+   * "Stream" button actually reads — reflects `content`. The on-disk
+   * check in `GrpcRequestFlow.waitForBodyPersisted()` can pass before the
+   * save fetcher's loader revalidation lands, so the Stream click would
+   * still send the previous message. The Body editor seeds itself from
+   * that loader data (`defaultValue`) every time its tab remounts, so
+   * bouncing to the Headers tab and back and reading the fresh editor
+   * proves the loader data has caught up. Retried until it does.
+   * @param content - The body text the remounted editor must show
+   */
+  async waitForBodyInLoaderData(content: string): Promise<void> {
+    await expect(async () => {
+      await this.switchTab("headers");
+      await this.switchTab(MESSAGE_TAB_KEY);
+      const editor = this.page.locator(`${this.TABPANEL} .CodeMirror`).first();
+      expect(await this.readCodeMirror(editor)).toBe(content);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Clicks "Stream" to push the Body tab's current content over an open
    * client-streaming or bidi-streaming call, appending a new read-only
    * "Stream N" tab. Can be called repeatedly after each `setBody()` to

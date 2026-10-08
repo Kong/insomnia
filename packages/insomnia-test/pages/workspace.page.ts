@@ -764,7 +764,15 @@ export class WorkspacePage extends BasePage {
     // ensures the re-render `waitForSelectionSettled()` just waited out has
     // actually finished before the keypress is sent.
     await this.waitForRendererIdle();
-    await this.page.keyboard.press("ControlOrMeta+n");
+    // The shortcut listener is bound to the sidebar container, not the
+    // window, so the keypress must originate inside it. Pressing on the
+    // row itself (like `pressArrowOnNode()`) guarantees that, whereas
+    // `page.keyboard.press()` goes to whatever holds focus — which can
+    // have moved into the main pane after the click opened the item's tab.
+    await this.page
+      .getByTestId("project-navigation-tree-container")
+      .locator(`div[role="row"][data-key="${node._id}"]`)
+      .press("ControlOrMeta+n");
     await expect(this.page.getByRole("menu")).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });

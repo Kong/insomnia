@@ -133,6 +133,7 @@ export class GrpcRequestFlow extends BaseFlow {
     const grpcRequestPage = await this.openRequest(request);
     await grpcRequestPage.setBody(body);
     await this.waitForBodyPersisted(request.id, body);
+    await grpcRequestPage.waitForBodyInLoaderData(body);
     await grpcRequestPage.clickStream();
   }
 
