@@ -419,6 +419,68 @@ export abstract class RequestPage extends TabPanelPage {
       }
       await this.waitForPairPersisted(pair);
     }
+    await this.waitForPairsSettled(pairs);
+  }
+
+  /**
+   * Polls the on-disk request documents until a single row list holds
+   * every pair in `pairs` at once, and keeps holding for `settleMs`. Each
+   * row's own save is confirmed as it's made, but the editors save from a
+   * copy of the row list that can be stale, so a later row's save can
+   * silently revert an earlier row's value; matching by name alone also
+   * can't tell apart rows that share one (e.g. repeated `key` params).
+   * Pairs still missing after a while are re-typed into their row, which
+   * sits at the same index as the pair in `pairs`.
+   * @param pairs - The rows just set, in row order; pairs with a `fileName` are skipped
+   * @param settleMs - How long all pairs must keep holding
+   */
+  protected async waitForPairsSettled(
+    pairs: { name: string; value?: string; disabled?: boolean; fileName?: string }[],
+    settleMs = 1500,
+  ): Promise<void> {
+    const wanted = pairs
+      .map((pair, index) => ({ pair, index }))
+      .filter(({ pair }) => pair.name && !pair.fileName);
+    if (wanted.length === 0) return;
+    const rows = this.page.locator(`${this.TABPANEL} [role="listbox"] [role="option"]`);
+    const holds = (list: unknown, pair: (typeof pairs)[number]) =>
+      Array.isArray(list) &&
+      list.some(
+        (p) =>
+          p.name === pair.name &&
+          (p.value ?? "") === (pair.value ?? "") &&
+          Boolean(p.disabled) === Boolean(pair.disabled),
+      );
+    const start = Date.now();
+    let lastReapply = start;
+    let heldSince = 0;
+    await expect(async () => {
+      const docs = await this.readPersistedDocs(this.persistedDbFile);
+      let missing = wanted;
+      for (const doc of docs) {
+        for (const path of this.persistedRowPaths) {
+          const list = path.split(".").reduce((node, key) => node?.[key], doc);
+          const docMissing = wanted.filter(({ pair }) => !holds(list, pair));
+          if (docMissing.length < missing.length) missing = docMissing;
+        }
+      }
+      if (missing.length === 0) {
+        heldSince ||= Date.now();
+        expect(Date.now() - heldSince).toBeGreaterThanOrEqual(settleMs);
+        return;
+      }
+      heldSince = 0;
+      if (Date.now() - lastReapply >= 2000) {
+        lastReapply = Date.now();
+        for (const { pair, index } of missing) {
+          await this.setCodeMirrorValue(
+            rows.nth(index).locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+            pair.value ?? "",
+          );
+        }
+      }
+      expect(missing.map(({ pair }) => pair.name)).toEqual([]);
+    }).toPass({ timeout: DEFAULT_TIMEOUT + settleMs, intervals: [250, 500] });
   }
 
   /**

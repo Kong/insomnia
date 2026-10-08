@@ -195,6 +195,7 @@ export class HttpRequestPage extends RequestPage {
 
       if (!param.fileName) await this.waitForPairPersisted(param);
     }
+    await this.waitForPairsSettled(params);
   }
 
   private async typeBody(text: string): Promise<void> {
