@@ -1,6 +1,5 @@
 import type { Virtualizer } from '@tanstack/react-virtual';
 import { database, models, type Workspace } from 'insomnia-data';
-import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import type { NavigationResources } from '~/ui/hooks/use-insomnia-navigation';
@@ -25,13 +24,11 @@ const getSelectedItemId = (resources?: NavigationResources) => {
 };
 
 export const useProjectNavigationSidebarNavigation = ({
-  setActiveTab,
   toggleRequestGroups,
   expandProjectOrWorkspaces,
   visibleFlatItems,
   virtualizer,
 }: {
-  setActiveTab: Dispatch<SetStateAction<'projects' | 'konnect' | undefined>>;
   toggleRequestGroups: (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => Promise<void>;
   expandProjectOrWorkspaces: (ids: string[]) => void;
   visibleFlatItems: FlatItem[];
@@ -42,10 +39,8 @@ export const useProjectNavigationSidebarNavigation = ({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const lastHandledScrollKeyRef = useRef<string | null>(null);
 
-  const setActiveTabRef = useRef(setActiveTab);
   const toggleRequestGroupsRef = useRef(toggleRequestGroups);
   const expandProjectOrWorkspacesRef = useRef(expandProjectOrWorkspaces);
-  setActiveTabRef.current = setActiveTab;
   toggleRequestGroupsRef.current = toggleRequestGroups;
   expandProjectOrWorkspacesRef.current = expandProjectOrWorkspaces;
 
@@ -68,9 +63,6 @@ export const useProjectNavigationSidebarNavigation = ({
       if (!resources?.project || !nextSelectedItemId) {
         return;
       }
-
-      // update active tab
-      setActiveTabRef.current(resources.project.konnectControlPlaneId != null ? 'konnect' : 'projects');
 
       const idsToExpand = [resources.project._id];
       if (resources.workspace && models.workspace.isCollection(resources.workspace)) {

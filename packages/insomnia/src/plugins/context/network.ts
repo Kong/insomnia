@@ -1,4 +1,5 @@
 import { services } from 'insomnia-data';
+import { ProxyScopes } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
@@ -56,6 +57,10 @@ export function init(): {
       async sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType> {
         const requestId = uuidv4();
         const settings = await services.settings.get();
+        if (settings.proxyScope !== ProxyScopes.all) {
+          // Disable proxying unless user chooses "All traffic sent by Insomnia" (all).
+          settings.proxyEnabled = false;
+        }
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
         const curlRequest = __IS_RENDERER__

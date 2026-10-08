@@ -1,4 +1,4 @@
-import type { UnitTestSuite } from 'insomnia-data';
+import type { Query, UnitTestSuite } from 'insomnia-data';
 import { database as db, models } from 'insomnia-data';
 
 const { type } = models.unitTestSuite;
@@ -31,4 +31,8 @@ export const getById = (_id: string) => db.findOne<UnitTestSuite>(type, { _id })
 
 export function all() {
   return db.find<UnitTestSuite>(type);
+}
+
+export function count(query?: Query<UnitTestSuite>) {
+  return db.count(type, query);
 }

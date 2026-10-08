@@ -397,21 +397,46 @@ const closeCurlConnection = (_event: Electron.IpcMainInvokeEvent, options: { req
 
 const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
 
+/**
+ * A streamed Event Stream response stores its NDJSON event log in `bodyPath`, but the same field holds
+ * the raw body of a plain HTTP response, so what an event is has to be decided by the content: a JSON
+ * object carrying the fields every curl event has. Anything else (a JSON response body, a pretty
+ * printed one, a half written line) is not an event.
+ */
+const isCurlEvent = (value: unknown): value is CurlEvent => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const { _id, requestId, type } = value as Partial<CurlEvent>;
+  return (
+    typeof _id === 'string' &&
+    typeof requestId === 'string' &&
+    (type === 'open' || type === 'message' || type === 'close' || type === 'error')
+  );
+};
+
 const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
   const response = await services.response.getById(options.responseId);
-  if (!response || !response.bodyPath) {
+  if (!response?.bodyPath) {
     return [];
   }
   const body = await insecureReadFile(response.bodyPath);
-  return (
-    body
-      .split('\n')
-      .filter(e => e?.trim())
-      // Parse the message
-      .map(e => JSON.parse(e))
-      // Reverse the list of messages so that we get the latest message first
-      .reverse() || []
-  );
+  const events: CurlEvent[] = [];
+  for (const line of body.split('\n')) {
+    if (!line.trim()) {
+      continue;
+    }
+    try {
+      const parsed: unknown = JSON.parse(line);
+      if (isCurlEvent(parsed)) {
+        events.push(parsed);
+      }
+    } catch {
+      // Not an event: the body of a request that was never streamed, or a line still being written.
+    }
+  }
+  // Reverse the list of messages so that we get the latest message first
+  return events.reverse();
 };
 
 export interface CurlBridgeAPI {

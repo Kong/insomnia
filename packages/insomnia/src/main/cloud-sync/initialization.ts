@@ -2,7 +2,7 @@ import { models, services } from 'insomnia-data';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 import { invariant } from '~/common/utils/invariant';
-import { getMainVCS } from '~/main/cloud-sync/vcs';
+import { getVCSForWorkspace } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -22,7 +22,7 @@ export const initializeWorkspaceBackendProject = async ({ workspaceId }: { works
     return;
   }
 
-  const vcs = getMainVCS();
+  const vcs = getVCSForWorkspace(workspaceId);
   await initializeLocalBackendProjectAndMarkForSync({
     vcs,
     workspace,
@@ -53,7 +53,7 @@ export const syncNewWorkspaceIfNeeded = async ({ workspaceId }: { workspaceId: s
   await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   try {
-    const vcs = getMainVCS();
+    const vcs = getVCSForWorkspace(workspaceId);
     await initializeLocalBackendProjectAndMarkForSync({
       vcs,
       workspace,

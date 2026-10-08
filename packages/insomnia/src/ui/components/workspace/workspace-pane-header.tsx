@@ -40,6 +40,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   }, [breadcrumbs]);
 
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
+  const [isProjectEnvironmentPickerOpen, setIsProjectEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
@@ -47,6 +48,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   useDocBodyKeyboardShortcuts({
     environment_showEditor: () => setEnvironmentModalOpen(true),
     environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
+    environment_showSwitchProjectMenu: () => setIsProjectEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
   });
 
@@ -71,6 +73,15 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
               isOpen={isEnvironmentPickerOpen}
               onOpenChange={isOpen => {
                 setIsEnvironmentPickerOpen(isOpen);
+                if (isOpen) {
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.requestEnvironmentClicked,
+                  });
+                }
+              }}
+              isProjectPickerOpen={isProjectEnvironmentPickerOpen}
+              onProjectPickerOpenChange={isOpen => {
+                setIsProjectEnvironmentPickerOpen(isOpen);
                 if (isOpen) {
                   window.main.trackAnalyticsEvent({
                     event: AnalyticsEvent.requestEnvironmentClicked,

@@ -160,7 +160,7 @@ test.describe('Cloud Sync', () => {
 
     // delete workspace locally
     await page.getByLabel('My Collection R1').getByTestId('DropdownButton').click();
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     await page.getByText('Remove Local Copy').click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted locally
@@ -174,10 +174,76 @@ test.describe('Cloud Sync', () => {
 
     // delete workspace both locally and remotely
     await page.getByTestId('workspace-grid').getByLabel('My Collection R1').getByTestId('DropdownButton').click();
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     await page.getByRole('button', { name: 'Delete Workspace' }).click();
     // check workspace is deleted remotely
     await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('My Collection R1')).toBeHidden();
     await expect.soft(insomnia.navigationSidebar.workspaceRow('My Collection R1')).toBeHidden();
+  });
+
+  test('Delete an unsynced remote file from the project dashboard', async ({ page, insomnia }) => {
+    // "Design Project" is only ever remote in this suite, so it is never pulled locally first.
+    const unsyncedCard = page.getByTestId('workspace-grid').getByLabel('Design Project');
+    await expect.soft(unsyncedCard).toBeVisible();
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('Design Project')).toBeVisible();
+
+    await unsyncedCard.hover();
+    await unsyncedCard.getByLabel('Delete unsynced file').click();
+
+    await expect.soft(page.getByRole('heading', { name: 'Delete file' })).toBeVisible();
+    await page.getByRole('button', { name: 'Delete unsynced file permanently' }).click();
+
+    await expect.soft(unsyncedCard).toBeHidden();
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('Design Project')).toBeHidden();
+    await expect.soft(insomnia.navigationSidebar.workspaceRow('Design Project')).toBeHidden();
+
+    // The other remote files must be untouched.
+    await expect.soft(insomnia.navigationSidebar.unsyncedWorkspaceRow('My Collection R1')).toBeVisible();
+  });
+
+  // Regression test for the main-process VCS singleton mutable-state bug: a single `_backendProject`
+  // field shared across every workspace meant that activating one workspace's backend project while
+  // another workspace's activation was still in flight could make the second call "win" for both,
+  // so the loser ended up reading/writing the wrong workspace's local sync data. Each workspace now
+  // gets its own VCS instance, so concurrently activating two different workspaces must never let
+  // one clobber the other's active backend project. Uses synthetic workspace ids (not part of the
+  // mock server's fixtures) since this only exercises local VCS state, no network calls involved.
+  test('keeps concurrently-activated workspaces on their own backend project', async ({ page }) => {
+    const workspaceA = { id: 'wrk_concurrency_test_a', name: 'Concurrency Test A' };
+    const workspaceB = { id: 'wrk_concurrency_test_b', name: 'Concurrency Test B' };
+
+    const result = await page.evaluate(
+      async ({ a, b }) => {
+        const sync = (window as any).main.sync;
+        // Fire both workspaces' activation concurrently, the way two open workspaces being
+        // synced around the same time would on the main process side.
+        await Promise.all([
+          sync.switchAndCreateBackendProjectIfNotExist(a.id, a.id, a.name),
+          sync.switchAndCreateBackendProjectIfNotExist(b.id, b.id, b.name),
+        ]);
+
+        const [activeA, activeB] = await Promise.all([
+          sync.getActiveBackendProject(a.id),
+          sync.getActiveBackendProject(b.id),
+        ]);
+
+        return { activeA, activeB };
+      },
+      { a: workspaceA, b: workspaceB },
+    );
+
+    expect.soft(result.activeA?.rootDocumentId).toBe(workspaceA.id);
+    expect.soft(result.activeB?.rootDocumentId).toBe(workspaceB.id);
+    expect.soft(result.activeA?.id).not.toBe(result.activeB?.id);
+
+    // Clean up the local backend projects created for this test's synthetic workspace ids.
+    await page.evaluate(
+      async ({ a, b }) => {
+        const sync = (window as any).main.sync;
+        await sync.removeBackendProjectsForRoot(a.id);
+        await sync.removeBackendProjectsForRoot(b.id);
+      },
+      { a: workspaceA, b: workspaceB },
+    );
   });
 });

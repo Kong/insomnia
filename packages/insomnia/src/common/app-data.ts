@@ -248,6 +248,16 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
 
     if (doc.type === models.project.type) {
       organizationIdsToRevalidate.add(doc.parentId);
+      // The project may have moved from a different, already-cached organization (e.g. the Konnect
+      // migration re-parents projects across organizations) — find and revalidate its old one too,
+      // since `doc.parentId` alone only ever points at the new one.
+      for (const [queryKey, data] of queryClient.getQueriesData<OrganizationData>({
+        queryKey: organizationDataKeys.all,
+      })) {
+        if (data?.projects.some(p => p._id === doc._id)) {
+          organizationIdsToRevalidate.add(queryKey[1] as string);
+        }
+      }
       continue;
     }
 

@@ -102,7 +102,7 @@ export const McpRequestPane: FC<Props> = ({
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData()! as McpRequestLoaderData;
   const latestRequestPayloadRef = useLatest(requestPayload);
 
-  const { activeProject } = useWorkspaceLoaderData()!;
+  const { activeProject, activeGlobalEnvironment } = useWorkspaceLoaderData()!;
 
   const [mcpParams, setMcpParams] = useState<Record<string, any>>(getParamsFromPayload(requestPayload?.params));
 
@@ -123,7 +123,7 @@ export const McpRequestPane: FC<Props> = ({
 
   // Reset the response pane state when we switch requests, the environment gets modified
   // Some of the UI(tokens) depends on the readyState, so we include it here as well
-  const uniqueKey = `${environment?.modified}::${requestId}::${activeRequestMeta?.activeResponseId}::${readyState}`;
+  const uniqueKey = `${environment?._id}::${environment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}::${requestId}::${activeRequestMeta?.activeResponseId}::${readyState}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
   const jsonSchema = useMemo(() => {

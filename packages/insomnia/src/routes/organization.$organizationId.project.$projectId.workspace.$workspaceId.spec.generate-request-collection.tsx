@@ -9,9 +9,13 @@ import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 
-export async function clientAction({ params }: Route.ClientActionArgs) {
-  const { organizationId, projectId, workspaceId } = params;
-
+export async function generateRequestCollection({
+  projectId,
+  workspaceId,
+}: {
+  projectId: string;
+  workspaceId: string;
+}) {
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
@@ -56,6 +60,12 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       count_requests: scannedResources.map(r => r.requests?.length ?? 0).reduce((a, b) => a + b, 0),
     },
   });
+}
+
+export async function clientAction({ params }: Route.ClientActionArgs) {
+  const { organizationId, projectId, workspaceId } = params;
+
+  await generateRequestCollection({ projectId, workspaceId });
 
   return redirect(
     href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {

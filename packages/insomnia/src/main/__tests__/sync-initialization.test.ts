@@ -2,7 +2,7 @@ import { models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { getMainVCS } from '~/main/cloud-sync/vcs';
+import { getVCSForWorkspace } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -43,7 +43,7 @@ vi.mock('insomnia-data', () => ({
 }));
 
 vi.mock('~/main/cloud-sync/vcs', () => ({
-  getMainVCS: vi.fn(),
+  getVCSForWorkspace: vi.fn(),
 }));
 
 vi.mock('~/sync/vcs/initialize-backend-project', () => ({
@@ -77,7 +77,7 @@ describe('sync-initialization', () => {
     vi.mocked(fetchAndCacheOrganizationStorageRule).mockResolvedValue({
       enableCloudSync: true,
     } as any);
-    vi.mocked(getMainVCS).mockReturnValue(mockVcs);
+    vi.mocked(getVCSForWorkspace).mockReturnValue(mockVcs);
     vi.mocked(initializeLocalBackendProjectAndMarkForSync).mockResolvedValue();
     vi.mocked(pushSnapshotOnInitialize).mockResolvedValue();
   });
@@ -88,7 +88,7 @@ describe('sync-initialization', () => {
     await initializeWorkspaceBackendProject({ workspaceId: workspace._id });
 
     expect(services.workspaceMeta.getOrCreateByParentId).not.toHaveBeenCalled();
-    expect(getMainVCS).not.toHaveBeenCalled();
+    expect(getVCSForWorkspace).not.toHaveBeenCalled();
     expect(initializeLocalBackendProjectAndMarkForSync).not.toHaveBeenCalled();
   });
 
@@ -97,7 +97,7 @@ describe('sync-initialization', () => {
 
     await initializeWorkspaceBackendProject({ workspaceId: workspace._id });
 
-    expect(getMainVCS).not.toHaveBeenCalled();
+    expect(getVCSForWorkspace).not.toHaveBeenCalled();
     expect(initializeLocalBackendProjectAndMarkForSync).not.toHaveBeenCalled();
   });
 
@@ -107,7 +107,7 @@ describe('sync-initialization', () => {
     await syncNewWorkspaceIfNeeded({ workspaceId: workspace._id });
 
     expect(fetchAndCacheOrganizationStorageRule).not.toHaveBeenCalled();
-    expect(getMainVCS).not.toHaveBeenCalled();
+    expect(getVCSForWorkspace).not.toHaveBeenCalled();
     expect(initializeLocalBackendProjectAndMarkForSync).not.toHaveBeenCalled();
     expect(pushSnapshotOnInitialize).not.toHaveBeenCalled();
   });
@@ -121,7 +121,7 @@ describe('sync-initialization', () => {
 
     expect(services.environment.getOrCreateForParentId).not.toHaveBeenCalled();
     expect(services.cookieJar.getOrCreateForParentId).not.toHaveBeenCalled();
-    expect(getMainVCS).not.toHaveBeenCalled();
+    expect(getVCSForWorkspace).not.toHaveBeenCalled();
     expect(initializeLocalBackendProjectAndMarkForSync).not.toHaveBeenCalled();
     expect(pushSnapshotOnInitialize).not.toHaveBeenCalled();
   });
@@ -132,7 +132,7 @@ describe('sync-initialization', () => {
     expect(services.environment.getOrCreateForParentId).toHaveBeenCalledWith(workspace._id);
     expect(services.cookieJar.getOrCreateForParentId).toHaveBeenCalledWith(workspace._id);
     expect(services.workspaceMeta.getOrCreateByParentId).toHaveBeenCalledWith(workspace._id);
-    expect(getMainVCS).toHaveBeenCalled();
+    expect(getVCSForWorkspace).toHaveBeenCalled();
     expect(initializeLocalBackendProjectAndMarkForSync).toHaveBeenCalledWith({
       vcs: mockVcs,
       workspace,

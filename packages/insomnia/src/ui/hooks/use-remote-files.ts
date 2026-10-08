@@ -1,4 +1,5 @@
 import type { Project } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { useEffect, useMemo } from 'react';
 
 import { type InsomniaFile } from '~/common/project';
@@ -40,10 +41,13 @@ export function useRemoteBackendProjectsInvalidation(organizationId: string): vo
  * CLOUD_SYNC_FILE_CHANGE, which invalidates the query.
  */
 export function useRemoteBackendProjects(organizationId: string) {
+  // Local-only organizations (Scratchpad, Konnect) never have remote/cloud-backed projects.
+  const isEnabled = !!organizationId && !models.organization.isLocalOrganizationId(organizationId);
+
   const { data, error } = useServerQuery({
     queryKey: remoteBackendProjectsKey(organizationId),
     queryFn: () => getAllRemoteBackendProjectsOfOrg({ organizationId }),
-    enabled: !!organizationId,
+    enabled: isEnabled,
   });
 
   useEffect(() => {

@@ -19,6 +19,14 @@ describe('parseDeepLinkUrl', () => {
     expect(parseDeepLinkUrl('insomniadev://app/import', true)?.urlWithoutParams).toBe('insomnia://app/import');
     expect(parseDeepLinkUrl('insomniadev://app/import', false)?.urlWithoutParams).toBe('insomniadev://app/import');
   });
+
+  it('preserves param names verbatim', () => {
+    expect(parseDeepLinkUrl('insomnia://app/import?CuRl=x&operationId=listPets&sourceUrl=https://x')?.params).toEqual({
+      CuRl: 'x',
+      operationId: 'listPets',
+      sourceUrl: 'https://x',
+    });
+  });
 });
 
 describe('sanitizeUrlAndExtractOrigin', () => {
@@ -53,8 +61,35 @@ describe('resolveImportDeepLink', () => {
     expect(resolveImportDeepLink({ mcp: 'https://x/mcp', curl: 'curl https://x' })?.type).toBe('mcp');
   });
 
-  it('returns null when no resource param is present', () => {
-    expect(resolveImportDeepLink({ origin: 'https://app.insomnia.rest' })).toBeNull();
-    expect(resolveImportDeepLink({ mcp: '   ' })).toBeNull();
+  it('selects the tab with an empty value for a bare param', () => {
+    expect(resolveImportDeepLink({ clipboard: '' })).toEqual({ type: 'clipboard', defaultValue: '', origin: '' });
+    expect(resolveImportDeepLink({ curl: '' })).toEqual({ type: 'curl', defaultValue: '', origin: '' });
+    expect(resolveImportDeepLink({})).toBeNull();
+  });
+
+  it('prefers value-bearing params over bare ones', () => {
+    expect(resolveImportDeepLink({ uri: '', curl: 'curl https://x' })).toEqual({
+      type: 'curl',
+      defaultValue: 'curl https://x',
+      origin: '',
+    });
+    expect(resolveImportDeepLink({ curl: '', clipboard: '' })?.type).toBe('curl');
+  });
+
+  it('matches source selector names case-insensitively but metadata params case-sensitively', () => {
+    expect(resolveImportDeepLink({ CuRl: 'curl https://x', mCp: '' })?.type).toBe('curl');
+    expect(resolveImportDeepLink({ CLIPBOARD: '' })?.type).toBe('clipboard');
+    // camelCase metadata params must not be shadowed by lowercasing
+    expect(
+      resolveImportDeepLink({ uri: 'https://x/spec.yaml', operationId: 'listPets' }),
+    ).toMatchObject({ type: 'uri', operationId: 'listPets' });
+  });
+
+  it('ignores a value on a valueless source', () => {
+    expect(resolveImportDeepLink({ clipboard: 'ignored' })).toEqual({ type: 'clipboard', defaultValue: '', origin: '' });
+  });
+
+  it('treats a whitespace-only value as bare', () => {
+    expect(resolveImportDeepLink({ mcp: '   ' })).toEqual({ type: 'mcp', defaultValue: '', origin: '' });
   });
 });

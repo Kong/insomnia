@@ -3,7 +3,7 @@ import 'codemirror/addon/mode/overlay';
 import CodeMirror, { type EnvironmentAutocompleteOptions, type Hint, type ShowHintOptions } from 'codemirror';
 import { getPlatformKeyCombinations } from 'insomnia-data/common';
 
-import { escapeRegex, fnOrString, isNotNullOrUndefined } from '~/common/misc';
+import { fnOrString, isNotNullOrUndefined } from '~/common/misc';
 import type { NunjucksParsedTag } from '~/common/templating/types';
 import { getDefaultFill } from '~/common/templating/utils';
 
@@ -510,44 +510,64 @@ function getCompletionHints(
 }
 
 /**
- * Replace all occurrences of string
+ * Wraps every case-insensitive occurrence of `find` in `text` with a <strong> element.
  */
-function replaceWithSurround(text: string, find: string, prefix: string, suffix: string) {
-  const escapedString = escapeRegex(find);
-  const re = new RegExp(escapedString, 'gi');
-  return text.replace(re, matched => prefix + matched + suffix);
-}
+function markMatchedSegment(text: string, find: string): DocumentFragment {
+  const fragment = document.createDocumentFragment();
 
-function escapeHTML(unsafeText: string) {
-  const div = document.createElement('div');
-  div.innerText = unsafeText;
-  return div.innerHTML;
-}
-/**
- * Render the autocomplete list entry
- */
-function renderHintMatch(li: HTMLElement, _allHints: CodeMirror.Hints, hint: Hint) {
-  // Bold the matched text
-  const { displayText, segment, type, displayValue } = hint;
-  const escapedDisplayText = escapeHTML(displayText || '');
-  const escapedSegment = escapeHTML(segment);
-  const markedName = replaceWithSurround(escapedDisplayText, escapedSegment, '<strong>', '</strong>');
-  const { char, title } = ICONS[type];
-  let safeValue = '';
-
-  if (isNotNullOrUndefined<string>(displayValue)) {
-    const escaped = escapeHTML(displayValue);
-    safeValue = `
-      <div class="value" title=${escaped}>
-        ${escaped}
-      </div>
-    `;
+  if (!find) {
+    fragment.append(document.createTextNode(text));
+    return fragment;
   }
 
+  const lowerText = text.toLowerCase();
+  const lowerFind = find.toLowerCase();
+  let lastIndex = 0;
+  let matchIndex = lowerText.indexOf(lowerFind, lastIndex);
+
+  while (matchIndex !== -1) {
+    fragment.append(document.createTextNode(text.slice(lastIndex, matchIndex)));
+    const strong = document.createElement('strong');
+    strong.textContent = text.slice(matchIndex, matchIndex + find.length);
+    fragment.append(strong);
+    lastIndex = matchIndex + find.length;
+    matchIndex = lowerText.indexOf(lowerFind, lastIndex);
+  }
+
+  fragment.append(document.createTextNode(text.slice(lastIndex)));
+  return fragment;
+}
+
+/**
+ * Renders the autocomplete list entry: icon label, matched name, and optional value row.
+ */
+function renderHintMatch(li: HTMLElement, _allHints: CodeMirror.Hints, hint: Hint) {
+  const { displayText, segment, type, displayValue } = hint;
+  const { char, title } = ICONS[type];
+
+  // Row-level class driving the CSS icon/color per hint type (constant/snippet/variable/tag)
   li.className += ` fancy-hint type--${type}`;
-  li.innerHTML = `
-    <label class="label" title="${title}">${char}</label>
-    <div class="name">${markedName}</div>
-    ${safeValue}
-  `;
+  li.replaceChildren();
+
+  // Left-hand icon glyph (e.g. 𝑥, ƒ) with its type name as a tooltip
+  const label = document.createElement('label');
+  label.className = 'label';
+  label.title = title;
+  label.textContent = char;
+  li.append(label);
+
+  // Hint name (variable/tag/snippet name), with the already-typed prefix ("segment") bolded
+  const name = document.createElement('div');
+  name.className = 'name';
+  name.append(markMatchedSegment(displayText || '', segment));
+  li.append(name);
+
+  // Right-hand preview of the hint's current value, shown for variables/constants with a resolvable value
+  if (isNotNullOrUndefined<string>(displayValue)) {
+    const value = document.createElement('div');
+    value.className = 'value';
+    value.title = displayValue;
+    value.textContent = displayValue;
+    li.append(value);
+  }
 }

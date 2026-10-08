@@ -442,7 +442,7 @@ const Root = () => {
           },
         });
       }
-      // Supports params: uri, curl, origin
+      // Supports params: uri, mcp, curl, clipboard, file, origin, endpoint, operationId
       if (urlWithoutParams === 'insomnia://app/import') {
         // Clean up the flag set during deep-link replay so it never leaks
         // into later modal evaluations within the same session.
@@ -470,8 +470,13 @@ const Root = () => {
         if (!resource) {
           return;
         }
-        // Only cURL gates auto-scan on async validation
-        const autoScan = resource.type === 'curl' ? (await validateCurl(resource.defaultValue)).isValid : true;
+        // Only value-bearing uri/mcp/cURL resources auto-scan; bare params
+        // (e.g. `?clipboard`) just open the modal with the tab selected.
+        const autoScan =
+          !!resource.defaultValue &&
+          (resource.type === 'curl'
+            ? (await validateCurl(resource.defaultValue)).isValid
+            : resource.type === 'uri' || resource.type === 'mcp');
         return setImportObject({
           ...resource,
           autoScan,
@@ -745,7 +750,7 @@ const Root = () => {
       <Modals />
       <AppHooks />
       {/* triggered by insomnia://app/import */}
-      {importObject.defaultValue && (
+      {importObject.startedAt && (
         <ImportModal
           key={importObject.startedAt}
           onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}

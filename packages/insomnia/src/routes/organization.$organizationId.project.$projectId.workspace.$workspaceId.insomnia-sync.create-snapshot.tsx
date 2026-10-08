@@ -20,13 +20,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof data.message === 'string', 'Message is required');
 
   try {
-    await window.main.sync.takeSnapshot(data.message);
+    await window.main.sync.takeSnapshot(workspaceId, data.message);
     if (data.push) {
       const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       invariant(project.remoteId, 'Project is not remote');
 
-      await window.main.sync.push({
+      await window.main.sync.push(workspaceId, {
         teamId: project.parentId,
         teamProjectId: project.remoteId,
       });

@@ -582,7 +582,7 @@ export const FirstRequestCreation = ({
             <SelectPopover
               isOpen={selectOpen}
               onOpenChange={isOpen => setSelectOpen(isOpen)}
-              ariaLabel="Select target collection"
+              ariaLabel="Select target API collection"
               placement="bottom end"
               items={collectionItems}
               selectedKey={selectedCollectionId}
@@ -593,10 +593,10 @@ export const FirstRequestCreation = ({
                 });
               }}
               title="Where should we put your request?"
-              emptyState="You have no collections, so a new one will be created for you by default."
+              emptyState="You have no API collections, so a new one will be created for you by default."
               footer={
                 <Button onPress={onCreateCollection} size="sm">
-                  New Collection
+                  New API Collection
                 </Button>
               }
               triggerClassName="h-full rounded-md px-3 text-[12px]/[18px] font-[590] data-[focus-visible=true]:!ring-0"

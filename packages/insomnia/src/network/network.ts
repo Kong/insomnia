@@ -424,10 +424,14 @@ export async function savePatchesMadeByScript(patches: {
 
   // persist updated cookieJar if needed
   if (mutatedContext.cookieJar) {
-    // merge cookies from response to the cookiejar, or cookies from response will not be persisted
-    await services.cookieJar.update(mutatedContext.cookieJar, {
-      cookies: [...(responseCookies || []), ...mutatedContext.cookieJar.cookies],
-    });
+    // merge cookies from response to the cookiejar, or cookies from response will not be persisted.
+    // responseCookies already carry their own 'manual'/'response' tag; anything in
+    // mutatedContext.cookieJar.cookies without one was created/edited directly by the script,
+    // which is trusted like a manual edit.
+    const cookies = [...(responseCookies || []), ...mutatedContext.cookieJar.cookies].map(cookie =>
+      cookie.source ? cookie : { ...cookie, source: 'manual' as const },
+    );
+    await services.cookieJar.update(mutatedContext.cookieJar, { cookies });
   }
   // when base environment is activated, `mutatedContext.environment` points to it
   const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;

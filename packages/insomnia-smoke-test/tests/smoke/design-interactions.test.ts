@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('Design interactions', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('Unit Test interactions', async ({ app, page }) => {
+  test('Unit Test interactions', async ({ app, page, insomnia }) => {
     // Setup
     const text = await loadFixture('unit-test.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -14,8 +14,12 @@ test.describe('Design interactions', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    // Show test suite in settings
+    await insomnia.statusbar.openPreferences();
+    await page.locator('input[name="enableLegacyUnitTests"]').click();
+    await insomnia.preferencesPage.closePreferences();
     // Switch to Test tab
-    await page.click('a:has-text("Test")');
+    await page.getByTestId('api-collection-tab-tests').click();
 
     // Run tests and check results
     await page.getByLabel('Run all tests').click();

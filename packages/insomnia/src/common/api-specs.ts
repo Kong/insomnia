@@ -39,6 +39,29 @@ export function parseApiSpec(rawDocument: string) {
   return result;
 }
 
+/**
+ * Detects the serialization syntax of an API spec by probing it with JSON.parse.
+ * JSON is valid YAML, so anything that fails to parse as JSON is treated as YAML.
+ */
+export function detectApiSpecSyntax(contents: string): 'json' | 'yaml' {
+  try {
+    JSON.parse(contents);
+    return 'json';
+  } catch {
+    return 'yaml';
+  }
+}
+
+/**
+ * Re-serializes an API spec into the requested syntax. Throws if the spec cannot
+ * be parsed (invalid YAML or JSON).
+ */
+export function convertApiSpecSyntax(contents: string, to: 'json' | 'yaml'): string {
+  // YAML parses JSON as well
+  const parsed = YAML.parse(contents);
+  return to === 'json' ? JSON.stringify(parsed, null, 2) : YAML.stringify(parsed);
+}
+
 export function resolveComponentSchemaRefs(spec: ParsedApiSpec, methodInfo: Record<string, any>) {
   const schemas = spec.contents?.components?.schemas;
   if (!schemas) {

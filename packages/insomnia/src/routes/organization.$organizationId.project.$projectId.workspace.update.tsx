@@ -58,7 +58,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     });
   }
 
-  patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+  patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My API Collection' : 'my-spec.yaml');
 
   await services.workspace.update(workspace, patch);
 

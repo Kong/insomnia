@@ -255,25 +255,22 @@ table.json-diff-viewer {
   margin: 0;
 }
 
-::view-transition-new(toast):only-child {
-  animation: slideIn 400ms ease-out;
+/* Toasts animate through the View Transition API, and while such a transition is running the
+   ::view-transition overlay captures every click on top of the document. Together with the
+   spec rule that elements captured by a transition skip hit-testing, that made clicks
+   anywhere in the app resolve to <html>, which read as a click outside an open modal and
+   closed it (e.g. clicking Check for updates in Settings repeatedly).
+   Both rules are required: `pointer-events: none` alone still leaves the page unclickable
+   because the captured root's contents skip hit-testing, while excluding the root alone
+   still leaves the overlay swallowing the clicks.
+   Note that the root rule opts the root out of every view transition in the app; revisit it
+   if transitions other than toasts are ever introduced. */
+::view-transition {
+  pointer-events: none;
 }
 
-::view-transition-old(toast):only-child {
-  animation: slideOut 400ms ease-in;
-}
-
-@keyframes slideIn {
-  from {
-    translate: 100% 0;
-    opacity: 0;
-  }
-}
-@keyframes slideOut {
-  to {
-    translate: 100% 0;
-    opacity: 0;
-  }
+:root {
+  view-transition-name: none;
 }
 
 .CodeMirror-merge {

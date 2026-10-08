@@ -13,7 +13,6 @@ import {
   MenuItem,
   MenuTrigger,
   Popover,
-  Text,
   ToggleButton,
   useDragAndDrop,
 } from 'react-aria-components';
@@ -42,6 +41,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
+import { Tooltip } from '~/ui/components/tooltip';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
@@ -154,8 +154,8 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   }[] = [
     {
       id: 'shared',
-      name: 'Shared environment',
-      description: `${isUsingGitSync ? 'Synced with Git Sync and exportable' : isUsingInsomniaCloudSync ? 'Synced with Insomnia Sync and exportable' : 'Exportable'}`,
+      name: 'Add Sub Environment',
+      description: `Sub environments are additional nested environments that ${isUsingGitSync ? 'sync with Git Sync' : isUsingInsomniaCloudSync ? 'sync with Insomnia Sync' : 'can be exported'} and are shared with your team.`,
       icon: isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down',
       action: async () => {
         createEnvironmentFetcher.submit({
@@ -171,8 +171,8 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
     },
     {
       id: 'private',
-      name: 'Private environment',
-      description: 'Local and not exportable',
+      name: 'Add Private Sub Environment',
+      description: 'Private sub environments stay local to your machine and are never exported, synced, or committed.',
       icon: 'lock',
       action: async () => {
         createEnvironmentFetcher.submit({
@@ -291,6 +291,21 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
           minSize={10}
           collapsible
         >
+          <div className="flex shrink-0 flex-col gap-1 border-b border-solid border-(--hl-sm) p-1">
+            {createEnvironmentActionsList.map(action => (
+              <Tooltip key={action.id} position="bottom" message={action.description}>
+                <Button
+                  aria-label={action.name}
+                  data-testid={action.id === 'private' ? 'AddPrivateSubEnvironment' : 'AddSubEnvironment'}
+                  onPress={() => action.action(baseEnvironment)}
+                  className="flex w-full items-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-4 py-2 text-sm whitespace-nowrap text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                >
+                  <Icon className="w-3.5" icon={action.icon} />
+                  <span className="truncate">{action.name}</span>
+                </Button>
+              </Tooltip>
+            ))}
+          </div>
           <GridList
             aria-label="Environments"
             items={[baseEnvironment, ...subEnvironments]}
@@ -379,45 +394,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                               >
                                 <Icon className="w-5" icon={item.icon} />
                                 <span>{item.name}</span>
-                              </MenuItem>
-                            )}
-                          </Menu>
-                        </Popover>
-                      </MenuTrigger>
-                    )}
-                    {item.parentId === workspaceId && (
-                      <MenuTrigger>
-                        <Button
-                          aria-label="Create Environment"
-                          data-testid="CreateEnvironmentDropdown"
-                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)"
-                        >
-                          <Icon icon="plus-circle" />
-                        </Button>
-                        <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                          <Menu
-                            aria-label="New Environment"
-                            selectionMode="single"
-                            onAction={key => {
-                              createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
-                            }}
-                            items={createEnvironmentActionsList}
-                            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
-                          >
-                            {item => (
-                              <MenuItem
-                                key={item.id}
-                                id={item.id}
-                                className="flex w-full flex-col gap-1 bg-transparent px-(--padding-md) py-2 whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                                aria-label={item.name}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Icon className="w-5" icon={item.icon} />
-                                  <span>{item.name}</span>
-                                </div>
-                                <Text slot="description" className="text-xs text-(--hl)">
-                                  {item.description}
-                                </Text>
                               </MenuItem>
                             )}
                           </Menu>

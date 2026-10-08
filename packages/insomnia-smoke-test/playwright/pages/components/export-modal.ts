@@ -11,7 +11,7 @@ export class ExportModal {
    * Handles the export type selection modal (Insomnia v5 or HAR).
    * @param format - The format to select ('yaml' for Insomnia v5, 'har' for HAR)
    */
-  async selectExportFormat(format: 'yaml' | 'har'): Promise<void> {
+  async selectExportFormat(format: 'yaml' | 'har' | 'json'): Promise<void> {
     await this.page.getByText('Which format would you like to export as?').waitFor({ state: 'visible' });
 
     // The modal uses a <select> element, so we need to use selectOption

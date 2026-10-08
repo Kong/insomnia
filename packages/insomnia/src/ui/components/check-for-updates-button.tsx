@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { allowUpdatesInDev, isDevelopment, type UpdateStatus } from '../../common/constants';
 import { Icon } from './icon';
+import { showToast } from './toast-notification';
 import { Tooltip } from './tooltip';
 
 const STATUS_LABELS: Record<UpdateStatus, string> = {
@@ -38,9 +39,13 @@ export const CheckForUpdatesButton = () => {
 
   const button = (
     <button
-      className={`btn btn--outlined btn--super-compact flex items-center gap-2${updatesDisabledInDev ? ' pointer-events-none' : ''}`}
-      disabled={isBusy || updatesDisabledInDev}
+      className="btn btn--outlined btn--super-compact flex items-center gap-2"
+      disabled={isBusy}
       onClick={() => {
+        if (updatesDisabledInDev) {
+          showToast({ title: 'Updates are disabled in development mode', status: 'info' });
+          return;
+        }
         if (isReadyToRestart) {
           window.main.applyUpdateAndRestart();
           return;

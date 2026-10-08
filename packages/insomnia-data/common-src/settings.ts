@@ -40,6 +40,7 @@ export type KeyboardShortcut =
   | 'request_showOptions'
   | 'environment_showEditor'
   | 'environment_showSwitchMenu'
+  | 'environment_showSwitchProjectMenu'
   | 'request_toggleHttpMethodMenu'
   | 'request_toggleHistory'
   | 'request_focusUrl'
@@ -204,4 +205,6 @@ export interface Settings {
   disabledBlockedRoots: string[];
   /** Custom npm registry URL for plugin installation (e.g., corporate mirror). Empty string uses the default https://registry.npmjs.org/. */
   npmRegistryUrl: string;
+  // Forces the test tab to show. Otherwise, only show it if the collection already has legacy tests.
+  enableLegacyUnitTests: boolean;
 }
