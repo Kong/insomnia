@@ -55,7 +55,7 @@
     "@connectrpc/connect": "^1.6.1",
     "@connectrpc/connect-node": "^1.6.1",
     "@customerio/cdp-analytics-browser": "^0.5.9",
-    "@faker-js/faker": "9.7.0",
+    "@faker-js/faker": "^10.6.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
