@@ -3,6 +3,7 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 
 import { ProjectType } from "../../enums/project-types";
+import { certPath } from "../../misc/certs";
 import { expect, GRPC_SERVER_MTLS,test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
@@ -38,8 +39,8 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For gRPC Reques
 
   await certificatesFlow.addClientCertificate(collection, {
     host: "localhost",
-    cert: path.join(__dirname, "../../misc/fixtures/mtls-client-cert.pem"),
-    key: path.join(__dirname, "../../misc/fixtures/mtls-client-key.pem"),
+    cert: certPath("mtls-client-cert.pem"),
+    key: certPath("mtls-client-key.pem"),
   });
 
   const greeting = faker.person.firstName();

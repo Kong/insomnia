@@ -4,15 +4,15 @@
 const { createServer } = require("node:http");
 const { createServer: createHttpsServer } = require("node:https");
 const fs = require("node:fs");
-const path = require("node:path");
 const { WebSocketServer } = require("ws");
+const { certPath } = require("./certs");
 
 const PORT = process.env.WS_PORT || 4040;
 const SECURE_PORT = process.env.WS_SECURE_PORT || 4041;
 
 const HTTPS_OPTIONS = {
-  key: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-cert.pem")),
+  key: fs.readFileSync(certPath("localhost-key.pem")),
+  cert: fs.readFileSync(certPath("localhost-cert.pem")),
 };
 
 function handleRequest(req, res) {

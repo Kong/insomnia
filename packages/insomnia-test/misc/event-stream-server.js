@@ -4,11 +4,11 @@
 const http = require("node:http");
 const https = require("node:https");
 const fs = require("node:fs");
-const path = require("node:path");
+const { certPath } = require("./certs");
 
 const HTTPS_OPTIONS = {
-  key: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-cert.pem")),
+  key: fs.readFileSync(certPath("localhost-key.pem")),
+  cert: fs.readFileSync(certPath("localhost-cert.pem")),
 };
 
 const MAX_REPLY_DELAY_MS = 60_000;

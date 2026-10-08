@@ -6,6 +6,7 @@ const https = require("node:https");
 const fs = require("node:fs");
 const path = require("node:path");
 const { graphql, buildSchema } = require("graphql");
+const { certPath } = require("./certs");
 
 const PETSTORE_SWAGGER = fs.readFileSync(
   path.join(__dirname, "fixtures", "petstore-swagger.json"),
@@ -66,14 +67,14 @@ const GRAPHQL_ROOT = {
 };
 
 const HTTPS_OPTIONS = {
-  key: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-cert.pem")),
+  key: fs.readFileSync(certPath("localhost-key.pem")),
+  cert: fs.readFileSync(certPath("localhost-cert.pem")),
 };
 
-const MTLS_CA = fs.readFileSync(path.join(__dirname, "fixtures", "mtls-ca.pem"));
+const MTLS_CA = fs.readFileSync(certPath("mtls-ca.pem"));
 const MTLS_SERVER_OPTIONS = {
-  key: fs.readFileSync(path.join(__dirname, "fixtures", "mtls-server-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "fixtures", "mtls-server-cert.pem")),
+  key: fs.readFileSync(certPath("mtls-server-key.pem")),
+  cert: fs.readFileSync(certPath("mtls-server-cert.pem")),
 };
 
 const CUSTOM_CA_HTTPS_OPTIONS = { ...MTLS_SERVER_OPTIONS };

@@ -6,22 +6,23 @@ const path = require("node:path");
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const { ReflectionService } = require("@grpc/reflection");
+const { certPath } = require("./certs");
 
 const PROTO_PATH = path.join(__dirname, "protos", "hello.proto");
 
 const TLS_KEY = fs.readFileSync(
-  path.join(__dirname, "fixtures", "localhost-key.pem"),
+  certPath("localhost-key.pem"),
 );
 const TLS_CERT = fs.readFileSync(
-  path.join(__dirname, "fixtures", "localhost-cert.pem"),
+  certPath("localhost-cert.pem"),
 );
 
-const MTLS_CA = fs.readFileSync(path.join(__dirname, "fixtures", "mtls-ca.pem"));
+const MTLS_CA = fs.readFileSync(certPath("mtls-ca.pem"));
 const MTLS_KEY = fs.readFileSync(
-  path.join(__dirname, "fixtures", "mtls-server-key.pem"),
+  certPath("mtls-server-key.pem"),
 );
 const MTLS_CERT = fs.readFileSync(
-  path.join(__dirname, "fixtures", "mtls-server-cert.pem"),
+  certPath("mtls-server-cert.pem"),
 );
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {

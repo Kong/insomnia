@@ -2,6 +2,8 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
+import { ensureCerts } from "./misc/certs";
+
 // By default, misc/fixtures.ts launches the app straight out of the
 // sibling ../insomnia source checkout (its local `electron` binary against
 // packages/insomnia) instead of a packaged build — so the app under test
@@ -21,6 +23,10 @@ const isDevMode =
   process.env.INSOMNIA_DEV_MODE !== "false" &&
   process.env.INSOMNIA_DEV_MODE !== "0";
 const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "insomnia");
+
+// The mock servers' TLS/mTLS key pairs are generated rather than committed.
+// Do it here, once, before any webServer below starts reading them.
+ensureCerts();
 
 export default defineConfig({
   timeout: 90 * 1000,

@@ -27,6 +27,7 @@
     "git-http-backend": "^1.1.2",
     "graphql": "^17.0.2",
     "monocart-coverage-reports": "^2.13.0",
+    "node-forge": "^1.4.0",
     "socket.io": "^4.8.3",
     "ws": "^8.21.1",
     "zod": "^4.4.3"

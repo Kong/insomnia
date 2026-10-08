@@ -11,6 +11,9 @@ const CLIENT_SECRET = "test-client-secret";
 const USERNAME = "testuser";
 const PASSWORD = "testpass";
 
+// A loopback-only mock with no cookies or sessions, so there is no ambient
+// credential for a cross-site request to ride on and CSRF tokens don't apply.
+// nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

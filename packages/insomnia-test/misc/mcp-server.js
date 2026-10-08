@@ -3,17 +3,17 @@
 
 const https = require("node:https");
 const fs = require("node:fs");
-const path = require("node:path");
 const express = require("express");
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const {
   StreamableHTTPServerTransport,
 } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const z = require("zod/v4");
+const { certPath } = require("./certs");
 
 const HTTPS_OPTIONS = {
-  key: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-cert.pem")),
+  key: fs.readFileSync(certPath("localhost-key.pem")),
+  cert: fs.readFileSync(certPath("localhost-cert.pem")),
 };
 
 function getServer() {
@@ -78,6 +78,9 @@ function getServer() {
   return server;
 }
 
+// A loopback-only mock with no cookies or sessions, so there is no ambient
+// credential for a cross-site request to ride on and CSRF tokens don't apply.
+// nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
 const app = express();
 app.use(express.json());
 

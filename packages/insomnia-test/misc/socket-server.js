@@ -4,15 +4,15 @@
 const { createServer } = require("node:http");
 const { createServer: createHttpsServer } = require("node:https");
 const fs = require("node:fs");
-const path = require("node:path");
 const { Server } = require("socket.io");
+const { certPath } = require("./certs");
 
 const PORT = process.env.SOCKET_PORT || 3000;
 const SECURE_PORT = process.env.SOCKET_SECURE_PORT || 3001;
 
 const HTTPS_OPTIONS = {
-  key: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "fixtures", "localhost-cert.pem")),
+  key: fs.readFileSync(certPath("localhost-key.pem")),
+  cert: fs.readFileSync(certPath("localhost-cert.pem")),
 };
 
 const httpServer = createServer();

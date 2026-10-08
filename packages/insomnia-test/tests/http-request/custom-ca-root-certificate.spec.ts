@@ -1,9 +1,9 @@
-import path from "node:path";
 
 import { faker } from "@faker-js/faker";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
+import { certPath } from "../../misc/certs";
 import {
   DEFAULT_TIMEOUT,
   expect,
@@ -41,7 +41,7 @@ test("Verify Custom CA Root Certificate Establishes Trust For HTTPS Request", as
 
   await certificatesFlow.setCaCertificate(
     collection,
-    path.join(__dirname, "../../misc/fixtures/mtls-ca.pem"),
+    certPath("mtls-ca.pem"),
   );
 
   const requestAfterCa = await httpRequestFlow.create(collection, {
