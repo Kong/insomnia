@@ -12,12 +12,14 @@
  * - Handle different workspace scopes and request types
  *
  */
-
+import { models } from 'insomnia-data';
 import { z } from 'zod/v4';
 
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
+
+const { environment } = models;
 
 // Basic literal types that can appear in JSON data
 export const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -103,23 +105,11 @@ export const CookieJarSchema = z.object({
   cookies: z.array(CookieSchema).optional(),
 });
 
-export const EnvironmentSchema = z.object({
-  name: z.string().optional(),
+const baseEnvironmentSchema = environment.baseEnvironmentSchema.omit({ metaSortKey: true }).extend({
   meta: MetaSchema.optional(),
-  data: JsonSchema.optional(),
-  color: z.string().optional().nullable(),
-  subEnvironments: z
-    .array(
-      z.object({
-        name: z.string(),
-        meta: MetaSchema.optional(),
-        data: JsonSchema.optional(),
-        dataPropertyOrder: JsonSchema.optional(),
-        color: z.string().optional().nullable(),
-      }),
-    )
-    .optional(),
-  dataPropertyOrder: JsonSchema.optional(),
+});
+export const EnvironmentSchema = baseEnvironmentSchema.extend({
+  subEnvironments: z.array(baseEnvironmentSchema).optional(),
 });
 
 export const GRPCRequestSchema = z.object({
