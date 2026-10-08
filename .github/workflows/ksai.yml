@@ -80,7 +80,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LOGIN: ${{ github.event.comment.user.login || github.event.review.user.login }}
         run: |
-          level=$(gh api "repos/${GITHUB_REPOSITORY}/collaborators/${LOGIN}/permission" --jq .permission 2>/dev/null || echo none)
+          level=$(gh api "repos/${GITHUB_REPOSITORY}/collaborators/${LOGIN}/permission" --jq .permission)
           case "$level" in admin|write) writes=true ;; *) writes=false ;; esac
           echo "writes=${writes}" >> "$GITHUB_OUTPUT"
 
