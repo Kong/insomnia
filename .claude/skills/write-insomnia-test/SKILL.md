@@ -179,9 +179,9 @@ Rules that apply to every test:
 - Already-settled state (response body, status code, header list): assert directly with `expect(x).toBe/toEqual/toMatchObject(...)`.
 - **UI state that may lag** (a node not yet gone/appeared, a stream event not yet arrived): always poll, never a bare fixed `waitForTimeout` used as a wait-for-result mechanism:
   ```ts
-  await expect.poll(async () => { ... }, { timeout: 10000 }).toEqual(...);
+  await expect.poll(async () => { ... }, { timeout: DEFAULT_TIMEOUT }).toEqual(...);
   ```
-  or `await expect(async () => { ... }).toPass({ timeout: 10000 });` when the check itself is a multi-step callback rather than a single value.
+  or `await expect(async () => { ... }).toPass({ timeout: DEFAULT_TIMEOUT });` when the check itself is a multi-step callback rather than a single value. `DEFAULT_TIMEOUT` (10s) / `ACTION_TIMEOUT` (30s) / `LONG_TIMEOUT` (60s) come from `misc/constants.ts` (re-exported by `misc/fixtures.ts`) — never a literal like `10000`. Debounced-save races (URL, params/headers rows, auth fields, scripts, cookies, environment variables) are already waited out inside the Page/Flow methods (see "Timing & persistence" in `reference.md`), so don't add a sleep or retry for them in a spec.
 - **A dialog popped by an action that's expected to fail** (e.g. an unresolvable environment variable, an unreachable server, a business-error status) is not something you poll for — the Page method that triggers it is decorated with `@throwOnDialog` (`misc/decorators.ts`), so the call itself rejects with an `Error` whose message is the dialog's trimmed text. Assert with `.rejects.toThrow(...)`, not by reading dialog text after the fact:
   ```ts
   await expect(httpRequestFlow.send(request)).rejects.toThrow(

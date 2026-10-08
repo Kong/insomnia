@@ -375,15 +375,14 @@ get(item: string | { name: string; id?: string }, parent?: Collection): Promise<
 // reproducible for a URL containing a `{% %}` tag (its inline widget decoration re-renders the editor
 // around the same time), the value can be silently reverted and never recover on its own, on disk as
 // well as on screen; typing the same text via real keystrokes instead of setUrl() never hits this.
-// HttpRequestFlow.create() now verifies the URL actually landed in the on-disk `Request` NeDB file
-// right after setUrl() (private waitForUrlPersisted(), built on BaseFlow's shared protected
-// waitForFieldPersisted()/private readPersistedDoc()), re-issuing setUrl() once if not.
-// GrpcRequestFlow's own setUrl()/setBody() waits go through the same shared
-// BaseFlow.waitForFieldPersisted() (passively, with no re-issued write —
-// see BaseFlow for why the two differ). A spec creating a request whose URL embeds a template tag
-// doesn't need to do anything extra — this is handled inside create() — but keep it in mind if you're
-// calling HttpRequestPage.setUrl() directly, outside a Flow, on a request that might still be
-// mid-creation.
+// So BaseFlow has one shared protected waitForUrlPersisted(dbFile, page, id, url) that re-issues
+// page.setUrl() until the on-disk request document holds the URL; HttpRequestFlow/WebSocketRequestFlow/
+// EventStreamRequestFlow/GrpcRequestFlow.create() all call it right after setUrl() (passing their own
+// NeDB file, e.g. "insomnia.Request.db"/"insomnia.GrpcRequest.db"/"insomnia.WebSocketRequest.db"), built
+// on BaseFlow.waitForFieldPersisted(). A spec creating a request whose URL embeds a template tag doesn't
+// need to do anything extra — keep it in mind only when calling setUrl() directly on a Page, outside a
+// Flow, on a request that might still be mid-creation (RequestPage.waitForUrlPersisted(url) polls the
+// same on-disk store for that case).
 
 // GraphQLRequestFlow — identical shape
 create(parent: Collection | Folder, request: GraphQLRequest): Promise<GraphQLRequest>
@@ -395,6 +394,7 @@ get(item, parent?: Collection): Promise<GraphQLRequest | undefined>
 create(parent: Collection | Folder, request: GrpcRequest): Promise<GrpcRequest>
 send(request: GrpcRequest): Promise<GrpcResponse>   // GrpcResponse = { status?: { code, message }, message?: unknown, messages?: unknown[] } — NOT the shared Response type. Covers unary AND server-streaming (waits for the whole call to complete); `message` is `messages[0]`.
 get(item, parent?: Collection): Promise<GrpcRequest | undefined>
+setBody(request: GrpcRequest, body: string): Promise<void>   // replaces the message body of an already-created request (request.id required) and waits until it is on disk and in the pane's loader data, so a following send() can't go out with the previous body
 // Client-streaming / bidi-streaming (methodType "client"/"bidi" — the method-type tab reads "Client Streaming"/"Bi-directional Streaming"): use start()/streamMessage()/commit() instead of send(), since no response arrives until the client half of the stream is closed.
 start(request: GrpcRequest): Promise<void>                                  // clicks "Start"; does NOT wait for a response
 streamMessage(request: GrpcRequest, body: string): Promise<void>            // streams one message over the open call; call repeatedly with different bodies
@@ -408,16 +408,16 @@ cancel(request: GrpcRequest): Promise<GrpcResponse>                         // c
 // WebSocketRequestFlow
 create(parent: Collection | Folder, request: WebSocketRequest): Promise<WebSocketRequest>
 send(request: WebSocketRequest): Promise<Response>          // opens the connection
-sendMessage(request: WebSocketRequest, body: WebSocketRequestBody, callback = () => {}, timeout = 5000): Promise<Response>
+sendMessage(request: WebSocketRequest, body: WebSocketRequestBody, callback = () => {}, timeout = DEFAULT_TIMEOUT): Promise<Response>
   // sends one message over an already-open connection; call repeatedly with different bodies to send several messages of different content types (body.contentType accepts any ContentType value — see tests/web-socket-request/send-multiple-message-types.spec.ts for an example using two of them)
-disconnect(request: WebSocketRequest, callback: () => Promise<void> | void = () => {}, timeout = 5000): Promise<Response>
+disconnect(request: WebSocketRequest, callback: () => Promise<void> | void = () => {}, timeout = DEFAULT_TIMEOUT): Promise<Response>
 get(item, parent?: Collection): Promise<WebSocketRequest | undefined>
 
 // SocketIORequestFlow
 create(parent: Collection | Folder, request: SocketIORequest): Promise<SocketIORequest>
 connect(request: SocketIORequest): Promise<void>
 sendMessage(request: SocketIORequest): Promise<Response>
-disconnect(request: SocketIORequest, callback = () => {}, timeout = 5000): Promise<Response>
+disconnect(request: SocketIORequest, callback = () => {}, timeout = DEFAULT_TIMEOUT): Promise<Response>
 get(item, parent?: Collection): Promise<SocketIORequest | undefined>
 
 // EventStreamRequestFlow
@@ -536,7 +536,7 @@ create(parent: Project, client: McpClient): Promise<McpClient>     // McpClient 
 get(item: string | { name: string; id?: string }): Promise<McpClient | undefined>
 connect(client: McpClient): Promise<void>
 getTools(client: McpClient): Promise<string[]>
-callTool(client: McpClient, tool: string, args: Record<string, string>, callback: () => Promise<void> | void = () => {}, timeout = 5000): Promise<Response>
+callTool(client: McpClient, tool: string, args: Record<string, string>, callback: () => Promise<void> | void = () => {}, timeout = DEFAULT_TIMEOUT): Promise<Response>
 ```
 
 Real example with the live mock MCP server: `tests/mcp-client/happy-path.spec.ts`.
@@ -620,7 +620,7 @@ link<T extends CookieTarget>(item: T, cookies: Cookie[]): Promise<Cookie[]>  // 
 
 **`link()` resets the whole jar, not just the target's cookies**: `CookiePage.setCookies()` calls `deleteAll()` before adding its list, so calling `link()` a second time (even against a _different_ request) wipes out cookies added by an earlier `link()` call in the same test. If a test needs more than one cookie present at once, pass them all in a single `link(target, [cookieA, cookieB, ...])` call rather than linking separately — the target passed in only matters for _where the Cookie Jar dialog gets opened from_, since the jar itself is shared workspace-wide.
 
-**Confirmed real bug, fixed in place**: `link()`'s internal `waitForPersisted()` used to just poll the on-disk `insomnia.CookieJar.db` NeDB file and time out after 60s if a just-set cookie never showed up — under CPU-contended parallel runs (10 workers) that timeout was hit for real, at roughly a 1-in-10 rate on `tests/data/import/url/import-swagger-api.spec.ts`. A diagnostic probe (logging every poll's elapsed time and the file's mtime) proved this isn't a slow write that eventually lands — the file's mtime stops moving entirely the moment the write is lost, confirmed across 50+ polls spanning almost a minute. Root cause: `CookiePage.editCookie()` only waits `FIELD_SAVE_DELAY` (500ms) after the last field edit before clicking "Done", which unmounts the edit dialog; under contention the app's own debounced save can still be pending past 500ms, and the unmount cancels it — the cookie then never lands on its own. Fixed the same way `HttpRequestFlow.waitForUrlPersisted()` fixes the analogous URL-drop bug: `waitForPersisted()` now re-runs the whole open→setCookies→close write once per mismatch instead of passively waiting. Verified stable at `--workers=10 --repeat-each=15` across every spec that calls `cookieFlow.link()` (0 failures, vs. reproducible failures before the fix).
+**Persistence handling is built in — don't add sleeps or retries in a spec.** `CookiePage` confirms each add/edit against the on-disk `insomnia.CookieJar.db` (`waitForCookieSaved()`/`waitForPersisted()`, then a renderer-idle drain) before starting the next one, since each save is built from the loader's copy of the jar and a premature next edit would clobber earlier cookies; "Done" unmounts the edit dialog and can cancel a still-pending debounced save, so `CookieFlow.link()` additionally repeats the whole open→setCookies→close write if a cookie never lands on disk. `link()` then polls the freshly opened list until it shows every cookie just written (it can briefly render pre-edit rows such as the default `foo=bar`), and `CookiePage.getCookies()` itself polls until every row has its text or the "No cookies found." empty state shows.
 
 **Confirmed real behavior of the flags** (verified live against Insomnia 13.1.0, not assumed from spec text alone):
 
@@ -631,7 +631,6 @@ link<T extends CookieTarget>(item: T, cookies: Cookie[]): Promise<Cookie[]>  // 
 
 `pageManager.cookiePage.editCookieRaw(existingKey: string, rawCookieString: string): Promise<void>` — edits an already-listed cookie via the edit dialog's "Raw" tab in one shot (e.g. `"foo=bar; Domain=example.com; Path=/"`), instead of the structured per-attribute fields `setCookies()`/`editCookie()` use. No `CookieFlow` wrapper — the cookie list dialog must already be open (`cookiePage.open()`) since `cookieFlow.link()` closes it before returning. Real example: `tests/cookie/raw-cookie-string-editor.spec.ts`.
 
-**Confirmed real bug, fixed in place**: `editCookieRaw()` used to click "Done" immediately after `.fill(rawCookieString)` with no `FIELD_SAVE_DELAY` wait at all (unlike `editCookie()`'s `fillField()`, which always waits one) — same debounce-cancelled-by-unmount race as the `link()` bug above, but with zero protection instead of a too-short 500ms window. Reproduced at a ~1-in-4 rate on `raw-cookie-string-editor.spec.ts` under `--workers=10 --repeat-each=15`: the read-back cookie silently kept its pre-edit value. Fixed by adding the same `FIELD_SAVE_DELAY` wait `fillField()` uses, right after the `.fill()` and before "Done" is clicked. Verified stable at the same `--workers=10 --repeat-each=15` load (0/15 failures after the fix).
 
 ## `organizationFlow`
 
@@ -1656,6 +1655,17 @@ openAiAdvancedOptions() / setAiAdvancedOptionValue(label, value) / clickActivate
 ```
 
 Legacy-unit-tests default state specs: `tests/document/legacy-unit-tests-default-off.spec.ts`, `tests/migration/legacy-db-migration/legacy-unit-tests-default-on.spec.ts`.
+
+## Timing & persistence — already handled in the Page/Flow layer (don't add sleeps)
+
+The app saves most editors through a debounce, so the UI can show a value that isn't on disk yet (and a later stale save can drop it). The Page/Flow layer already waits for the on-disk NeDB store to hold each edit — **a spec never needs `page.waitForTimeout()` or its own retry loop for these**; always poll with `expect.poll`/`toPass` if you must wait on something else.
+
+- **Timeout constants** (`misc/constants.ts`, also re-exported by `misc/fixtures.ts`): `DEFAULT_TIMEOUT` = 10s (the default for any poll/`toPass`/Flow-callback timeout, e.g. `disconnect()`/`sendMessage()`/`callTool()`), `ACTION_TIMEOUT` = 30s (matches `use.actionTimeout`; slow fetches like OAuth2 token or GraphQL schema), `LONG_TIMEOUT` = 60s. Use these instead of literals like `10_000`.
+- **`BasePage` (protected, inherited by every Page)** — `readPersistedDocs(dbFile)`, `waitForPersisted(dbFiles, predicate, timeout?)`, `waitForFieldPersisted(dbFiles, read, expected)`, `waitForRowPersisted(dbFiles, rowsOf, name, matchesValue?)` (name/value rows; skipped for a blank name), `waitForStableValue(read, stableReads = 3, timeout?)` (poll until consecutive reads are identical), `waitForRendererIdle()` (drains pending renderer timers/revalidation; replaces fixed sleeps). Used by Page methods internally — specs don't call them. Note `BaseFlow.waitForFieldPersisted(dbFile, id, read, expected, reapply)` is a separate Flow-level helper that re-issues the write.
+- **`BaseFlow.waitForUrlPersisted(dbFile, page, id, url)`** — shared by the HTTP/WebSocket/Event-Stream/gRPC `create()`; see the URL race comment under "Per-domain request flows".
+- **`RequestPage`** (every protocol's request page): `waitForUrl(expected): Promise<string>` polls the URL bar until it reads `expected` (use right after navigating to another request/tab/command-palette jump, where the bar can still show the previous URL); `waitForUrlPersisted(url)` polls the on-disk request store for a URL typed via `typeUrl()`. Params/Headers/form-body `setParams`/`setHeaders` etc. confirm every row against disk and then require the whole set to hold together for ~1.5s (`waitForPairsSettled()`, re-typing a row that got reverted by a stale save); a gRPC/WebSocket/Socket.IO page overrides `persistedDbFile`/`persistedRowPaths` for its own NeDB file.
+- **Auth tab** (`AuthTabPage`, composed into `RequestPage`): every field edit is confirmed on disk against both `insomnia.Request.db` and `insomnia.RequestGroup.db` (a folder's own auth), and the whole edited set must keep holding for `AUTH_SETTLE_MS` (2s) with missing edits re-applied after `AUTH_REAPPLY_AFTER_MS` (2s); OAuth2 "Fetch Tokens" drains the renderer first so it can't use the previous config. **Scripts tab**: typing into the pre-request/after-response editor waits for the script to land on disk. **Environment editor**: each variable row (and a raw-JSON edit) is confirmed against `insomnia.Environment.db`. **GraphQL `setBody()`** waits until query + variables are persisted; "Show Documentation" waits for the schema to finish loading (menu item no longer `aria-disabled`).
+- **`WorkspacePage`**: `waitForTreeSettled()` polls the already-rendered navigation-tree rows until stable (used after filter/clear/drop); `navigateSpec(workspaceId?)` — pass the collection's workspace id when known so it waits for the Outline (spec present) or the empty-state heading (no spec) deterministically (`WorkspaceFlow` already passes it). `WorkspaceFlow.getLintState()` additionally waits until the listed error entries match the error count the summary reports.
 
 ## Existing spec files worth reading as patterns
 
