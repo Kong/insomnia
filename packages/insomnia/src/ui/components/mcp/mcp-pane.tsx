@@ -223,7 +223,8 @@ export const McpPane = () => {
   const allowSubscribeResources =
     isConnected && serverCapabilities.resources.enabled && serverCapabilities.resources.subscribe;
 
-  const updatePrimitiveNextCursor = (newNextCursor: string, type: McpServerPrimitiveTypes) => {
+  // An undefined cursor means the last page has been reached, so it must overwrite the previous
+  const updatePrimitiveNextCursor = (newNextCursor: string | undefined, type: McpServerPrimitiveTypes) => {
     setPrimitiveNextCursor(prev => ({
       ...prev,
       [type]: newNextCursor,
@@ -272,7 +273,7 @@ export const McpPane = () => {
       ...prev,
       [type]: error,
     }));
-    nextCursor && updatePrimitiveNextCursor(nextCursor, type);
+    updatePrimitiveNextCursor(nextCursor, type);
   };
 
   const loadMorePrimitiveData = async (type: McpServerPrimitiveTypes) => {
@@ -284,7 +285,7 @@ export const McpPane = () => {
         [type]: [...prev['primitives'][type], ...data],
       },
     }));
-    nextCursor && updatePrimitiveNextCursor(nextCursor, type);
+    updatePrimitiveNextCursor(nextCursor, type);
   };
 
   const handleSubscribe = async (item: ResourceItem) => {
