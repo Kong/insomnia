@@ -9,6 +9,8 @@ import { applyEntityChange } from './entity-splice';
 import { EnvironmentDiffCard } from './environment-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
 import { GrpcDiffCard } from './grpc-diff-card';
+import { McpDiffCard } from './mcp-diff-card';
+import { MockRouteDiffCard } from './mock-route-diff-card';
 import { RequestDiffCard } from './request-diff-card';
 import { RequestGroupDiffCard } from './request-group-diff-card';
 import type { EntityCardPendingAction } from './shared';
@@ -172,6 +174,12 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
             }
             case 'grpc_request': {
               return <GrpcDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'mcp_request': {
+              return <McpDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'mock_route': {
+              return <MockRouteDiffCard key={diff.id} diff={diff} {...actionProps} />;
             }
             case 'environment': {
               return <EnvironmentDiffCard key={diff.id} diff={diff} {...actionProps} />;

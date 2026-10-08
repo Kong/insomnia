@@ -18,8 +18,8 @@ import { parse as parseYaml } from 'yaml';
  * - [x] WebSocket Request    -> WebSocketDiffCard
  * - [x] gRPC Request         -> GrpcDiffCard
  * - [x] Socket.IO Request    -> SocketIODiffCard
- * - [ ] MCP Request
- * - [ ] Mock Route
+ * - [x] MCP Request        -> McpDiffCard
+ * - [x] Mock Route         -> MockRouteDiffCard
  * - [ ] Cookie Jar
  */
 

@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from './diff-engine';
 import type { DiffTabDef } from './diff-tabs';
 import { buildGrpcTabs } from './grpc-diff-card';
+import { buildMcpTabs } from './mcp-diff-card';
+import { buildMockRouteTabs } from './mock-route-diff-card';
 import { buildRequestTabs } from './request-diff-card';
 import { buildRequestGroupTabs } from './request-group-diff-card';
 import { buildSocketIOTabs } from './socket-io-diff-card';
@@ -203,5 +205,64 @@ describe('buildRequestGroupTabs', () => {
     const after = { ...before, children: [{ ...before.children[0], url: 'https://b' }] };
 
     expect(buildRequestGroupTabs(modified('request_group', before, after))).toEqual([]);
+  });
+});
+
+describe('buildMcpTabs', () => {
+  const variable = { id: 'envPair_1', name: 'API_KEY', value: 'a', type: 'str', enabled: true };
+  const before = {
+    name: 'mcp',
+    url: 'npx server',
+    transportType: 'stdio',
+    meta: { id: 'mcp-req_1' },
+    env: [variable],
+    roots: [{ name: 'repo', uri: 'file:///repo' }],
+  };
+
+  it('matches env vars by id and roots by uri, keeping connection fields out of the tabs', () => {
+    const after = {
+      ...before,
+      url: 'https://mcp.example.com',
+      transportType: 'streamable-http',
+      headers: [{ name: 'X-Key', value: '1' }],
+      env: [{ ...variable, name: 'TOKEN' }],
+      roots: [
+        { name: 'repo', uri: 'file:///repo' },
+        { name: 'docs', uri: 'file:///docs' },
+      ],
+    };
+
+    expect(summary(buildMcpTabs(modified('mcp_request', before, after)))).toEqual([
+      { id: 'headers', status: 'added', count: 1 },
+      { id: 'env', status: 'modified', count: 1 },
+      { id: 'roots', status: 'added', count: 1 },
+    ]);
+  });
+});
+
+describe('buildMockRouteTabs', () => {
+  const before = {
+    name: '/users',
+    method: 'GET',
+    statusCode: 200,
+    mimeType: 'application/json',
+    body: '[]',
+    meta: { id: 'mock-route_1' },
+  };
+
+  it('shows body and headers, leaving status and method to the header', () => {
+    const after = {
+      ...before,
+      method: 'POST',
+      statusCode: 201,
+      statusText: 'Created',
+      body: '[{ "id": 1 }]',
+      headers: [{ name: 'Location', value: '/users/1' }],
+    };
+
+    expect(summary(buildMockRouteTabs(modified('mock_route', before, after)))).toEqual([
+      { id: 'body', status: 'modified', count: undefined },
+      { id: 'headers', status: 'added', count: 1 },
+    ]);
   });
 });
