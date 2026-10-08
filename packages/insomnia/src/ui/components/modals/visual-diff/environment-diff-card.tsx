@@ -6,12 +6,7 @@ import { CardHeaderActions, DiffCardShell, type EntityCardActionProps, formatVal
 
 const { vaultEnvironmentPath, vaultEnvironmentMaskValue } = models.environment;
 
-export const EnvironmentDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({
-  diff,
-  staged,
-  isPending,
-  onStage,
-}) => {
+export const EnvironmentDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const environment = diff.after ?? diff.before;
 
   const beforeData = diff.before?.data ?? {};
@@ -39,7 +34,7 @@ export const EnvironmentDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProp
           )}
           <span className="font-semibold">{diff.name}</span>
         </div>
-        <CardHeaderActions status={diff.status} staged={staged} isPending={isPending} onStage={onStage} />
+        <CardHeaderActions status={diff.status} {...actionProps} />
       </div>
 
       {diff.status !== 'modified' && Object.keys(afterData || beforeData).length > 0 && (

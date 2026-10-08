@@ -1,12 +1,15 @@
-import { type FC, useCallback, useMemo, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useGitProjectDiscardPartialContentActionFetcher } from '~/routes/git.discard-entity';
 import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stage-entity';
 
+import { showToast } from '../../toast-notification';
 import { computeVisualDiff } from './diff-engine';
 import { applyEntityChange } from './entity-splice';
 import { EnvironmentDiffCard } from './environment-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
 import { RequestDiffCard } from './request-diff-card';
+import type { EntityCardPendingAction } from './shared';
 
 interface Props {
   before: string;
@@ -18,31 +21,90 @@ interface Props {
   // INDEX..WORKDIR (unstaged, `before`=stage/`after`=workdir) — determines the
   // direction of "stage"/"unstage" and which side each entity's action pulls from.
   staged: boolean;
-  onEntityStaged?: () => void;
+  // Called after any per-entity action (stage/unstage/discard) finishes, so the
+  // parent can refresh the file list and this file's diff. Actions stay locked
+  // until the returned promise settles, since the next one must compute from the
+  // refreshed `before`/`after`.
+  onEntityChanged?: () => Promise<unknown> | void;
 }
 
-export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceId, filepath, staged, onEntityStaged }) => {
+export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceId, filepath, staged, onEntityChanged }) => {
   const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
   const stagePartialContentFetcher = useGitProjectStagePartialContentActionFetcher();
-  const [pendingEntityId, setPendingEntityId] = useState<string | null>(null);
+  const discardPartialContentFetcher = useGitProjectDiscardPartialContentActionFetcher();
+  const [pending, setPending] = useState<{ entityId: string; action: NonNullable<EntityCardPendingAction> } | null>(null);
 
-  const handleStage = useCallback(async (entityId: string) => {
-    setPendingEntityId(entityId);
-    try {
-      // Unstaged view: graft the entity's workdir state onto the current index.
-      // Staged view: graft the entity's HEAD state back onto the index (ie. unstage it).
-      const content = staged ? applyEntityChange(after, before, entityId) : applyEntityChange(before, after, entityId);
-      await stagePartialContentFetcher.submit({
-        filepath,
-        content,
-        projectId,
-        workspaceId,
+  const stageErrors = stagePartialContentFetcher.state === 'idle' ? stagePartialContentFetcher.data?.errors : undefined;
+  useEffect(() => {
+    if (stageErrors?.length) {
+      showToast({
+        status: 'error',
+        title: staged ? 'Failed to unstage changes' : 'Failed to stage changes',
+        description: stageErrors.join('\n'),
       });
-      onEntityStaged?.();
-    } finally {
-      setPendingEntityId(null);
     }
-  }, [staged, before, after, filepath, projectId, workspaceId, stagePartialContentFetcher, onEntityStaged]);
+    // `staged` deliberately omitted: only a new action result should toast, not a view switch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageErrors]);
+
+  const discardErrors = discardPartialContentFetcher.state === 'idle' ? discardPartialContentFetcher.data?.errors : undefined;
+  useEffect(() => {
+    if (discardErrors?.length) {
+      showToast({ status: 'error', title: 'Failed to discard changes', description: discardErrors.join('\n') });
+    }
+  }, [discardErrors]);
+
+  // Synchronous guard on top of `pending`: two clicks landing before the re-render
+  // that disables the buttons would otherwise both compute from the same diff.
+  const isBusyRef = useRef(false);
+
+  const runAction = useCallback(
+    async (entityId: string, action: NonNullable<EntityCardPendingAction>, perform: () => Promise<unknown>) => {
+      if (isBusyRef.current) {
+        return;
+      }
+      isBusyRef.current = true;
+      setPending({ entityId, action });
+      try {
+        await perform();
+        await onEntityChanged?.();
+      } finally {
+        isBusyRef.current = false;
+        setPending(null);
+      }
+    },
+    [onEntityChanged],
+  );
+
+  const handleStage = useCallback(
+    (entityId: string) =>
+      runAction(entityId, 'stage', () =>
+        stagePartialContentFetcher.submit({
+          filepath,
+          // Unstaged view: graft the entity's workdir state onto the current index.
+          // Staged view: graft the entity's HEAD state back onto the index (ie. unstage it).
+          content: staged ? applyEntityChange(after, before, entityId) : applyEntityChange(before, after, entityId),
+          projectId,
+          workspaceId,
+        }),
+      ),
+    [runAction, staged, before, after, filepath, projectId, workspaceId, stagePartialContentFetcher],
+  );
+
+  // Unstaged view only: graft the entity's index/HEAD state (`before`) onto the
+  // workdir file (`after`), throwing away just this entity's unstaged edits.
+  const handleDiscard = useCallback(
+    (entityId: string) =>
+      runAction(entityId, 'discard', () =>
+        discardPartialContentFetcher.submit({
+          filepath,
+          content: applyEntityChange(after, before, entityId),
+          projectId,
+          workspaceId,
+        }),
+      ),
+    [runAction, before, after, filepath, projectId, workspaceId, discardPartialContentFetcher],
+  );
 
   if (unparseable) {
     return (
@@ -82,8 +144,13 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
         {entities.map(diff => {
           const actionProps = {
             staged,
-            isPending: pendingEntityId === diff.id,
+            pendingAction: pending?.entityId === diff.id ? pending.action : null,
+            isDisabled: pending !== null,
             onStage: () => handleStage(diff.id),
+            // No per-entity discard when the working-tree file is gone (deleted
+            // workspace): it would resurrect the file with just this one entity.
+            // The file-level discard restores it whole.
+            onDiscard: staged || !after ? undefined : () => handleDiscard(diff.id),
           };
 
           switch (diff.type) {

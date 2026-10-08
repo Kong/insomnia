@@ -238,6 +238,7 @@ const git: GitServiceAPI = {
   stageChanges: options => invokeWithNormalizedError('git.stageChanges', options),
   unstageChanges: options => invokeWithNormalizedError('git.unstageChanges', options),
   stagePartialContent: options => invokeWithNormalizedError('git.stagePartialContent', options),
+  discardPartialContent: options => invokeWithNormalizedError('git.discardPartialContent', options),
   diffFileLoader: options => invokeWithNormalizedError('git.diffFileLoader', options),
   getRepositoryDirectoryTree: options => invokeWithNormalizedError('git.getRepositoryDirectoryTree', options),
   migrateLegacyInsomniaFolderToFile: options =>

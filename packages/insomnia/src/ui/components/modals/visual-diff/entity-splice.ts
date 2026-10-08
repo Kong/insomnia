@@ -41,6 +41,8 @@ export function applyEntityChange(baseText: string, sourceText: string, entityId
   return stringifyYaml(merged);
 }
 
+// Parses YAML text into a plain object, returning `undefined` instead of
+// throwing when `text` is empty or not valid YAML.
 function safeParse(text: string): any {
   if (!text) {
     return undefined;
@@ -58,6 +60,8 @@ interface EntityLocation {
   folderPath: string[];
 }
 
+// Recursively searches a collection tree for the node matching `entityId`,
+// returning the chain of ancestor folder ids (root-first) it was found under.
 function findInCollection(nodes: any[], entityId: string, path: string[]): EntityLocation | null {
   for (const node of nodes ?? []) {
     if (node?.meta?.id === entityId) {
@@ -73,6 +77,9 @@ function findInCollection(nodes: any[], entityId: string, path: string[]): Entit
   return null;
 }
 
+// Finds which section of a parsed Insomnia v5 file (`collection`,
+// `environments`/its sub-environments, `routes`, `mcpRequest`, `cookieJar`)
+// an entity id lives in, so `applyChange` knows how to graft it.
 function locateEntity(file: any, entityId: string): EntityLocation | null {
   if (!file || typeof file !== 'object') {
     return null;
@@ -133,61 +140,135 @@ function spliceById(baseArray: any[] = [], sourceArray: any[] = [], entityId: st
   return result;
 }
 
-// Walks `folderPath` inside the base tree being mutated, creating minimal
-// folder shells (cloned from the source tree, with empty children) for any
-// ancestor that doesn't exist in base yet — otherwise there'd be nowhere to
-// graft a newly-added nested entity into.
-function descendToContainer(baseFile: any, sourceFile: any, folderPath: string[]): { parent: any; key: string; sourceArray: any[] } {
+// Finds the node with `id` anywhere in a collection tree, along with the array
+// that contains it.
+function findNodeWithContainer(nodes: any[], id: string): { node: any; container: any[] } | null {
+  for (const node of nodes ?? []) {
+    if (node?.meta?.id === id) {
+      return { node, container: nodes };
+    }
+    if (Array.isArray(node?.children)) {
+      const found = findNodeWithContainer(node.children, id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return null;
+}
+
+// Returns the children array found by walking `folderPath` (root-first folder ids) down a collection tree.
+function childrenAtPath(collection: any[], folderPath: string[]): any[] {
+  let nodes: any[] = Array.isArray(collection) ? collection : [];
+  for (const folderId of folderPath) {
+    nodes = nodes.find((node: any) => node?.meta?.id === folderId)?.children ?? [];
+  }
+  return nodes;
+}
+
+// Resolves the base-tree array a source entity at `folderPath` should be grafted
+// into. The deepest ancestor that already exists in base is reused wherever it
+// currently sits (it may have been moved in source — duplicating it would leave
+// two folders with the same id); any deeper ancestors missing from base are
+// created as shells cloned from source with empty children, otherwise there'd
+// be nowhere to graft a newly-added nested entity into.
+function descendToContainer(baseFile: any, sourceFile: any, folderPath: string[]): { container: any[]; sourceArray: any[] } {
   if (!Array.isArray(baseFile.collection)) {
     baseFile.collection = [];
   }
-  let parent: any = baseFile;
-  let key = 'collection';
-  let sourceArray: any[] = Array.isArray(sourceFile.collection) ? sourceFile.collection : [];
+  const sourceCollection = Array.isArray(sourceFile.collection) ? sourceFile.collection : [];
 
-  for (const folderId of folderPath) {
-    const baseArray: any[] = parent[key];
-    let folderNode = baseArray.find((node: any) => node?.meta?.id === folderId);
-    const sourceFolderNode = sourceArray.find((node: any) => node?.meta?.id === folderId);
-
-    if (!folderNode) {
-      const shell = sourceFolderNode
-        ? { ...sourceFolderNode, children: [] }
-        : { meta: { id: folderId }, name: 'Untitled Folder', children: [] };
-      const sourceIndex = sourceArray.findIndex((node: any) => node?.meta?.id === folderId);
-      const insertAt = sourceIndex === -1 ? baseArray.length : Math.min(sourceIndex, baseArray.length);
-      baseArray.splice(insertAt, 0, shell);
-      folderNode = shell;
+  let container: any[] = baseFile.collection;
+  let depth = 0;
+  for (let i = folderPath.length; i > 0; i--) {
+    const existing = findNodeWithContainer(baseFile.collection, folderPath[i - 1]);
+    if (existing) {
+      if (!Array.isArray(existing.node.children)) {
+        existing.node.children = [];
+      }
+      container = existing.node.children;
+      depth = i;
+      break;
     }
-    if (!Array.isArray(folderNode.children)) {
-      folderNode.children = [];
-    }
+  }
 
-    parent = folderNode;
-    key = 'children';
+  let sourceArray = childrenAtPath(sourceCollection, folderPath.slice(0, depth));
+  for (const folderId of folderPath.slice(depth)) {
+    const sourceIndex = sourceArray.findIndex((node: any) => node?.meta?.id === folderId);
+    const sourceFolderNode = sourceArray[sourceIndex];
+    const shell = sourceFolderNode
+      ? { ...sourceFolderNode, children: [] }
+      : { meta: { id: folderId }, name: 'Untitled Folder', children: [] };
+    container.splice(sourceIndex === -1 ? container.length : Math.min(sourceIndex, container.length), 0, shell);
+    container = shell.children;
     sourceArray = sourceFolderNode?.children ?? [];
   }
 
-  return { parent, key, sourceArray };
+  return { container, sourceArray };
 }
 
+// Grafts a collection-tree entity (request or folder) from source into base,
+// wherever source has it — moving it if it sits elsewhere in base, and removing
+// it if source no longer has it. A folder only carries its own fields: its
+// `children` are separate entities, so base's children are kept as-is.
+function applyCollectionChange(baseFile: any, sourceFile: any, entityId: string) {
+  if (!Array.isArray(baseFile.collection)) {
+    baseFile.collection = [];
+  }
+
+  const existing = findNodeWithContainer(baseFile.collection, entityId);
+  let existingIndex = -1;
+  if (existing) {
+    existingIndex = existing.container.indexOf(existing.node);
+    existing.container.splice(existingIndex, 1);
+  }
+
+  const sourceLocation = findInCollection(sourceFile.collection, entityId, []);
+  if (!sourceLocation) {
+    return;
+  }
+
+  const { container, sourceArray } = descendToContainer(baseFile, sourceFile, sourceLocation.folderPath);
+  const sourceIndex = sourceArray.findIndex((node: any) => node?.meta?.id === entityId);
+  const sourceNode = sourceArray[sourceIndex];
+  const node = Array.isArray(sourceNode.children) ? { ...sourceNode, children: existing?.node?.children ?? [] } : sourceNode;
+
+  // Staying in the same container keeps its original position to avoid reorder noise.
+  const insertAt = existing?.container === container ? existingIndex : Math.min(sourceIndex, container.length);
+  container.splice(insertAt, 0, node);
+}
+
+// Mutates `baseFile` in place, grafting `entityId`'s version from
+// `sourceFile` into the section `location` points at (or removing it, if
+// `sourceFile` no longer has it) — one branch per `EntityLocation.section`.
 function applyChange(baseFile: any, sourceFile: any, entityId: string, location: EntityLocation) {
   switch (location.section) {
     case 'collection': {
-      const { parent, key, sourceArray } = descendToContainer(baseFile, sourceFile, location.folderPath);
-      parent[key] = spliceById(parent[key], sourceArray, entityId);
+      applyCollectionChange(baseFile, sourceFile, entityId);
       return;
     }
     case 'environments-base': {
-      const sourceEnv = sourceFile.environments ?? {};
+      // The base environment is the container of the sub-environments, so
+      // removing it removes them too.
+      if (!sourceFile.environments) {
+        delete baseFile.environments;
+        return;
+      }
+      const sourceEnv = sourceFile.environments;
       const baseEnv = baseFile.environments ?? {};
-      baseFile.environments = {
-        ...baseEnv,
-        ...sourceEnv,
+      // Take every field from source — including dropping fields source doesn't
+      // have (eg. `data` added in base but absent in source), which a plain
+      // spread would silently keep. Base key order is kept to avoid YAML noise.
+      const merged: Record<string, unknown> = {};
+      for (const key of new Set([...Object.keys(baseEnv), ...Object.keys(sourceEnv)])) {
         // Sub-environments are staged as their own entities — don't let a base
         // environment stage pull in unrelated sub-environment changes.
-        subEnvironments: baseEnv.subEnvironments,
-      };
+        const value = key === 'subEnvironments' ? baseEnv[key] : sourceEnv[key];
+        if (value !== undefined) {
+          merged[key] = value;
+        }
+      }
+      baseFile.environments = merged;
       return;
     }
     case 'sub-environment': {

@@ -1042,11 +1042,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         )}
         {pushFailedError ? (
           <PushFailedAfterCommitBanner
-          error={pushFailedError}
-          isRetrying={isRetryingPush}
-          onRetry={retryPush}
-          projectId={projectId}
-        />
+            error={pushFailedError}
+            isRetrying={isRetryingPush}
+            onRetry={retryPush}
+            projectId={projectId}
+          />
         ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
@@ -1368,7 +1368,12 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 // that was renamed, moved, or deleted outside Insomnia.
                 const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
                 if ('errors' in result && result.errors) {
-                  showToast({ icon: 'exclamation-triangle', title: 'Folder not found', description: result.errors.join(', '), status: 'error' });
+                  showToast({
+                    icon: 'exclamation-triangle',
+                    title: 'Folder not found',
+                    description: result.errors.join(', '),
+                    status: 'error',
+                  });
                   return;
                 }
                 if (result.path) {
@@ -1619,18 +1624,19 @@ const OriginalGitProjectStagingModal: FC<
     }
   }
 
-  // After staging/unstaging a single entity out of the currently-previewed file,
-  // refresh both the file list (staged/unstaged buckets) and the diff itself so
+  // After staging/unstaging/discarding a single entity out of the currently-previewed
+  // file, refresh both the file list (staged/unstaged buckets) and the diff itself so
   // the entity's card disappears/updates without switching away from this view.
-  function afterEntityStage() {
-    gitChangesFetcher.load({ projectId });
-    if (fileToDiff) {
-      diffChangesFetcherLoad({
-        projectId,
-        filePath: fileToDiff.path,
-        staged: fileToDiff.staged,
-      });
-    }
+  function afterEntityChange() {
+    return Promise.all([
+      gitChangesFetcher.load({ projectId }),
+      fileToDiff &&
+        diffChangesFetcherLoad({
+          projectId,
+          filePath: fileToDiff.path,
+          staged: fileToDiff.staged,
+        }),
+    ]);
   }
 
   async function stageChanges(paths: string[]) {
@@ -1829,7 +1835,7 @@ const OriginalGitProjectStagingModal: FC<
                             className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'visual' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
                             onPress={() => setDiffViewMode('visual')}
                           >
-                            Visual [Preview]
+                            Visual (Beta)
                           </Button>
                         </div>
                       </Heading>
@@ -1856,7 +1862,7 @@ const OriginalGitProjectStagingModal: FC<
                           projectId={projectId}
                           filepath={previewDiffItem.filepath}
                           staged={previewDiffItem.staged}
-                          onEntityStaged={afterEntityStage}
+                          onEntityChanged={afterEntityChange}
                         />
                       )}
                     </div>
@@ -2071,7 +2077,7 @@ const CreateBranchAndPushModal = ({
                 <Button
                   type="submit"
                   isDisabled={isCreating || !branchName.trim()}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80 disabled:opacity-50"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:opacity-80"
                 >
                   <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
                   Create branch &amp; push

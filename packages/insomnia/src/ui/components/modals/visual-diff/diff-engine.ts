@@ -23,6 +23,9 @@ import { parse as parseYaml } from 'yaml';
  * - [ ] Cookie Jar
  */
 
+// TODO: Bind type from Insomnia v5 entity definitions (eg. `Request`, `Environment`, etc.) rather than hardcoding strings.
+// TODO: What if the type changes for an existing entity? How should the diff engine handle it?
+
 export type VisualDiffEntityType =
   | 'request'
   | 'grpc_request'
@@ -66,12 +69,18 @@ interface CollectedEntity {
   node: any;
 }
 
+// Recursively sorts object keys (and maps over arrays) so two structurally
+// equal values serialize to the same JSON string regardless of key order.
 function sortDeep(value: any): any {
   if (Array.isArray(value)) {
     return value.map(sortDeep);
   }
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.keys(value).sort().map(key => [key, sortDeep(value[key])]));
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map(key => [key, sortDeep(value[key])]),
+    );
   }
   return value;
 }
@@ -84,10 +93,16 @@ function emptyValueReplacer(_key: string, value: any) {
   return value;
 }
 
+// Deep-equality check used throughout the diff engine: key order doesn't
+// matter (via sortDeep) and null/undefined/'' are treated as equivalent
+// (via emptyValueReplacer).
 export function valuesEqual(a: unknown, b: unknown): boolean {
   return JSON.stringify(sortDeep(a), emptyValueReplacer) === JSON.stringify(sortDeep(b), emptyValueReplacer);
 }
 
+// Strips volatile/structural meta fields (modified/created/sortKey/id) before
+// comparing two entities' meta blocks, so only user-visible fields (eg.
+// description) are treated as a meaningful change.
 function cleanMeta(meta: any) {
   if (!meta || typeof meta !== 'object') {
     return meta;
@@ -99,6 +114,17 @@ function cleanMeta(meta: any) {
 // Keys that are structural (handled by entity matching itself) rather than displayable fields
 const STRUCTURAL_KEYS = new Set(['children', 'subEnvironments']);
 
+// An entity node minus its nested entities (eg. a folder's `children`), which get their own cards.
+export function ownFields(node: any): any {
+  if (!node || typeof node !== 'object') {
+    return node;
+  }
+  return Object.fromEntries(Object.entries(node).filter(([key]) => !STRUCTURAL_KEYS.has(key)));
+}
+
+// Compares two entity nodes field-by-field and returns one FieldChange per
+// differing key, skipping structural keys (handled by entity matching) and
+// reporting `meta` per sub-field (eg. `meta.description`), minus volatile ones.
 export function computeFieldChanges(before: any, after: any): FieldChange[] {
   const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})]);
   const changes: FieldChange[] = [];
@@ -109,15 +135,17 @@ export function computeFieldChanges(before: any, after: any): FieldChange[] {
     }
 
     if (key === 'meta') {
-      const beforeMeta = cleanMeta(before?.meta);
-      const afterMeta = cleanMeta(after?.meta);
-      if (!valuesEqual(beforeMeta, afterMeta)) {
-        changes.push({
-          path: 'meta.description',
-          label: 'Description',
-          before: beforeMeta?.description,
-          after: afterMeta?.description,
-        });
+      const beforeMeta = cleanMeta(before?.meta) ?? {};
+      const afterMeta = cleanMeta(after?.meta) ?? {};
+      for (const metaKey of new Set([...Object.keys(beforeMeta), ...Object.keys(afterMeta)])) {
+        if (!valuesEqual(beforeMeta[metaKey], afterMeta[metaKey])) {
+          changes.push({
+            path: `meta.${metaKey}`,
+            label: humanizeKey(metaKey),
+            before: beforeMeta[metaKey],
+            after: afterMeta[metaKey],
+          });
+        }
       }
       continue;
     }
@@ -132,6 +160,8 @@ export function computeFieldChanges(before: any, after: any): FieldChange[] {
   return changes;
 }
 
+// Turns a camelCase/snake_case/kebab-case field name into a human-readable
+// label (eg. `pathParameters` -> "Path parameters") for display in a card.
 export function humanizeKey(key: string): string {
   return key
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -233,6 +263,9 @@ export function diffRecord(before: Record<string, any> = {}, after: Record<strin
   return rows;
 }
 
+// Determines a collection tree node's entity type from its `meta.id` prefix
+// (eg. `req_` -> request, `fld_` -> folder), falling back to shape-sniffing
+// (`children` array / `method` string) if the id is missing or unrecognized.
 function classifyCollectionNode(node: any): VisualDiffEntityType {
   const id: string = node?.meta?.id ?? '';
   if (id.startsWith('ws-req')) {
@@ -260,12 +293,17 @@ function classifyCollectionNode(node: any): VisualDiffEntityType {
   return 'unknown';
 }
 
+// Walks a parsed Insomnia v5 file (collection tree, environments, mock
+// routes, MCP request, cookie jar) and flattens every entity it finds into a
+// single `id -> CollectedEntity` map, so both sides of a diff can be matched
+// up by id regardless of where in the tree they live.
 function collectEntities(file: any): Map<string, CollectedEntity> {
   const map = new Map<string, CollectedEntity>();
   if (!file || typeof file !== 'object') {
     return map;
   }
 
+  // Recursively registers a collection-tree node (request/folder/etc.) and its children.
   const addCollectionNode = (node: any) => {
     if (!node || typeof node !== 'object') {
       return;
@@ -279,6 +317,7 @@ function collectEntities(file: any): Map<string, CollectedEntity> {
     }
   };
 
+  // Registers a base environment and each of its sub-environments as separate entities.
   const addEnvironmentTree = (env: any, fallbackName: string) => {
     if (!env || typeof env !== 'object') {
       return;
@@ -324,9 +363,14 @@ function collectEntities(file: any): Map<string, CollectedEntity> {
     map.set(id, { type: 'cookie_jar', name: file.cookieJar.name || 'Cookie Jar', node: file.cookieJar });
   }
 
+  // TODO: Handle more Insomnia v5 entities in the future
+
   return map;
 }
 
+// Parses YAML text into a plain object, swallowing parse errors and
+// returning `undefined` instead so a malformed/empty side of the diff
+// degrades gracefully rather than throwing.
 function safeParseYaml(text: string): any {
   if (!text) {
     return undefined;
@@ -338,6 +382,10 @@ function safeParseYaml(text: string): any {
   }
 }
 
+// Entry point of the diff engine: parses both sides of a git-tracked file as
+// YAML, collects every entity on each side, matches them up by id, and
+// returns the added/removed/modified `EntityDiff` list the UI renders cards
+// from.
 export function computeVisualDiff(beforeText: string, afterText: string): VisualDiffResult {
   const beforeFile = safeParseYaml(beforeText);
   const afterFile = safeParseYaml(afterText);
@@ -396,8 +444,16 @@ export function computeVisualDiff(beforeText: string, afterText: string): Visual
     });
   });
 
+  // A side with content that doesn't parse (eg. merge-conflict markers) can't be
+  // reasoned about per entity — every entity would look added/removed, and
+  // acting on one would rewrite the whole file from a partial view.
+  const sideUnparseable = (text: string, file: unknown) => Boolean(text) && (file === undefined || file === null || typeof file !== 'object');
+
   return {
     entities,
-    unparseable: beforeFile === undefined && afterFile === undefined,
+    unparseable:
+      (beforeFile === undefined && afterFile === undefined) ||
+      sideUnparseable(beforeText, beforeFile) ||
+      sideUnparseable(afterText, afterFile),
   };
 }

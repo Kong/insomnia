@@ -112,7 +112,7 @@ interface RequestTabDef {
 const TAB_CLASS =
   'flex h-full shrink-0 cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-sm) hover:text-(--color-font) aria-selected:bg-(--color-bg) aria-selected:text-(--color-font) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset';
 
-export const RequestDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, staged, isPending, onStage }) => {
+export const RequestDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
 
@@ -267,15 +267,21 @@ export const RequestDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> =
               <span className={`shrink-0 rounded-xs px-1.5 py-0.5 text-xs font-bold ${getRequestBadgeClassName(formatMethodName(method))}`}>
                 {formatMethodName(method)}
               </span>
+              <span className="shrink-0 font-semibold">{diff.name}</span>
               <span className="truncate font-mono text-sm text-(--hl)">{request?.url || '(no url)'}</span>
             </div>
-            {(urlChanged || methodChanged) && (
+            {(urlChanged || methodChanged || nameChanged) && (
               <div className="flex items-center gap-2 overflow-hidden opacity-60">
                 <span
                   className={`shrink-0 rounded-xs px-1.5 py-0.5 text-[10px] font-bold line-through ${getRequestBadgeClassName(formatMethodName(diff.before?.method || method))}`}
                 >
                   {formatMethodName(diff.before?.method || method)}
                 </span>
+                {nameChanged && (
+                  <span className="shrink-0 text-xs font-normal text-(--hl) line-through">
+                    {String(nameChanged.before ?? '')}
+                  </span>
+                )}
                 <span className="truncate font-mono text-xs text-(--color-font-danger) line-through">
                   {diff.before?.url || '(no url)'}
                 </span>
@@ -283,15 +289,8 @@ export const RequestDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> =
             )}
           </div>
         </div>
-        <CardHeaderActions status={diff.status} staged={staged} isPending={isPending} onStage={onStage} />
+        <CardHeaderActions status={diff.status} {...actionProps} />
       </div>
-
-      <span className="pl-7 font-semibold">
-        {diff.name}
-        {nameChanged && (
-          <span className="ml-2 text-xs font-normal text-(--hl) line-through">{String(nameChanged.before ?? '')}</span>
-        )}
-      </span>
 
       {!isExpanded && tabs.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pl-7">

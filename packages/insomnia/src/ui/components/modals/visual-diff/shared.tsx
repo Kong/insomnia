@@ -2,6 +2,7 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { FC, ReactNode } from 'react';
 import { Button } from 'react-aria-components';
 
+import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import type { EntityChangeStatus, VisualDiffEntityType } from './diff-engine';
 
@@ -100,33 +101,64 @@ export const CollapseToggleButton: FC<{ isExpanded: boolean; onPress: () => void
   </Button>
 );
 
-// Props every visual diff card accepts for its per-entity stage/unstage button.
+export type EntityCardPendingAction = 'stage' | 'discard' | null;
+
+// Props every visual diff card accepts for its per-entity stage/unstage/discard actions.
 export interface EntityCardActionProps {
   staged: boolean;
-  isPending: boolean;
+  // This card's own in-flight action, if any (drives its spinner).
+  pendingAction: EntityCardPendingAction;
+  // True while any card's action is in flight: every action computes from the
+  // currently loaded diff, so a second one must wait for the refresh.
+  isDisabled: boolean;
   onStage: () => void;
+  // Only provided for unstaged changes — staged changes can't be discarded from the index view.
+  onDiscard?: () => Promise<void>;
 }
 
-// Groups the status badge with the per-entity stage/unstage action, shown at
-// the top-right of every visual diff card.
+const CARD_ACTION_BUTTON_CLASS =
+  'flex items-center gap-1 rounded-xs bg-(--hl-xs) px-2 py-1 text-xs font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50';
+
+// Groups the status badge with the per-entity discard/stage/unstage actions,
+// shown at the top-right of every visual diff card.
 export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardActionProps> = ({
   status,
   staged,
-  isPending,
+  pendingAction,
+  isDisabled,
   onStage,
-}) => (
-  <div className="flex shrink-0 items-center gap-2">
-    <StatusBadge status={status} />
-    <Button
-      isDisabled={isPending}
-      onPress={onStage}
-      className="flex items-center gap-1 rounded-xs bg-(--hl-xs) px-2 py-1 text-xs font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50"
-    >
-      <Icon icon={isPending ? 'spinner' : staged ? 'minus' : 'plus'} className={isPending ? 'animate-spin' : ''} />
-      {staged ? 'Unstage' : 'Stage'}
-    </Button>
-  </div>
-);
+  onDiscard,
+}) => {
+  const isStaging = pendingAction === 'stage';
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <StatusBadge status={status} />
+      {!staged && onDiscard && (
+        <PromptButton
+          className={CARD_ACTION_BUTTON_CLASS}
+          disabled={isDisabled}
+          confirmMessage="Confirm"
+          loadingMessage="Discarding"
+          // On success the card disappears with the refresh; on failure a toast explains — so no "done" text.
+          doneMessage=""
+          referToOnClickReturnValue
+          onClick={onDiscard}
+        >
+          <Icon icon="rotate-left" />
+          Discard
+        </PromptButton>
+      )}
+      <Button
+        isDisabled={isDisabled}
+        onPress={onStage}
+        className={CARD_ACTION_BUTTON_CLASS}
+      >
+        <Icon icon={isStaging ? 'spinner' : staged ? 'minus' : 'plus'} className={isStaging ? 'animate-spin' : ''} />
+        {staged ? 'Unstage' : 'Stage'}
+      </Button>
+    </div>
+  );
+};
 
 export const DiffCardShell: FC<{ status: EntityChangeStatus; children: ReactNode }> = ({ status, children }) => {
   const borderColor =

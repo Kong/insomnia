@@ -2079,6 +2079,14 @@ export class GitVCS {
     await git.updateIndex({ ...this._baseOpts, filepath: normalizedFilepath, oid, add: true });
   }
 
+  // Overwrites the working-directory copy of `filepath` with `content`, leaving
+  // the index untouched. Used to discard a single entity's unstaged changes out
+  // of a file that bundles many entities.
+  async discardPartialContent(filepath: string, content: string) {
+    // @ts-expect-error -- TSCONVERSION
+    await this._baseOpts.fs.promises.writeFile(filepath, content, 'utf8');
+  }
+
   async discardChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
       // If the file didn't exist in HEAD, handle based on staging status

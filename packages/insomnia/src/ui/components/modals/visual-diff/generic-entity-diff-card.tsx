@@ -1,16 +1,11 @@
 import type { FC } from 'react';
 
-import type { EntityDiff } from './diff-engine';
+import { type EntityDiff, ownFields } from './diff-engine';
 import { CardHeaderActions, DiffCardShell, type EntityCardActionProps, entityTypeLabel, FieldDiffRow, formatValue } from './shared';
 
 // Fallback card for entity types that don't have a dedicated visual layout yet.
 // Renders a bullet list of raw field changes rather than a purpose-built layout.
-export const GenericEntityDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({
-  diff,
-  staged,
-  isPending,
-  onStage,
-}) => {
+export const GenericEntityDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   return (
     <DiffCardShell status={diff.status}>
       <div className="flex items-center justify-between gap-2">
@@ -18,18 +13,18 @@ export const GenericEntityDiffCard: FC<{ diff: EntityDiff } & EntityCardActionPr
           <span className="font-semibold">{diff.name}</span>
           <span className="text-xs text-(--hl)">{entityTypeLabel(diff.type)}</span>
         </div>
-        <CardHeaderActions status={diff.status} staged={staged} isPending={isPending} onStage={onStage} />
+        <CardHeaderActions status={diff.status} {...actionProps} />
       </div>
 
       {diff.status === 'added' && (
         <pre className="overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-success)">
-          {formatValue(diff.after)}
+          {formatValue(ownFields(diff.after))}
         </pre>
       )}
 
       {diff.status === 'removed' && (
         <pre className="overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-danger)">
-          {formatValue(diff.before)}
+          {formatValue(ownFields(diff.before))}
         </pre>
       )}
 

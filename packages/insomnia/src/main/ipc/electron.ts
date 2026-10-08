@@ -92,6 +92,7 @@ export type HandleChannels =
   | 'git.stageChanges'
   | 'git.unstageChanges'
   | 'git.stagePartialContent'
+  | 'git.discardPartialContent'
   | 'git.updateGitRepo'
   | 'git.listGitProviders'
   | 'git.initSignInToGitProvider'
