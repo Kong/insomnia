@@ -54,7 +54,7 @@ export const fakerFunctions = {
   randomImageDataUri: () => faker.image.dataUri(),
   randomBankAccount: () => faker.finance.accountNumber(),
   randomBankAccountName: () => faker.finance.accountName(),
-  randomCreditCardMask: () => faker.string.numeric(4),
+  randomCreditCardMask: () => faker.finance.creditCardNumber().replaceAll(/(?<=.{4}).(?=.{2})/g, '*'),
   randomBankAccountBic: () => faker.finance.bic(),
   randomBankAccountIban: () => faker.finance.iban(),
   randomTransactionType: () => faker.finance.transactionType(),
