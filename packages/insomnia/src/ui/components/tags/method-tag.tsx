@@ -45,15 +45,15 @@ export const getMethodShortHand = (doc: Request) => {
   }
   return formatMethodName(doc.method);
 };
-export function formatMethodName(method: string) {
+export function formatMethodName(method?: string) {
   let methodName = method || '';
 
   if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
     methodName = method.slice(0, 3);
   } else if (method === METHOD_QUERY) {
     methodName = 'QRY';
-  } else if (method.length > 4) {
-    methodName = removeVowels(method).slice(0, 4);
+  } else if (methodName.length > 4) {
+    methodName = removeVowels(methodName).slice(0, 4);
   }
 
   return methodName;
