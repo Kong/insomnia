@@ -1600,6 +1600,63 @@ Real example: `tests/workspace/url-bar-undo-survives-tab-switch.spec.ts` — typ
 
 `tests/workspace/request-pane-tab-order.spec.ts` — a freshly created request (via the raw `workspacePage.resolveNode()`/`rightClick()`/`clickContextMenu(ContextMenuItem.HttpRequest)` path, not `httpRequestFlow.create()`, which sets extra fields that blur the URL bar before a test could check it) focuses the URL bar, then Tab order flows Send → its dropdown → the Params tab (`data-focus-visible="true"`) → ArrowRight → the Body tab. Wait for `hasFocus(urlBarContainer)` to settle via `expect(...).toPass()` before pressing Tab — the URL bar's own initial-load remount (see `docs/undo-redo-baseline.md` in the insomnia monorepo) can otherwise steal focus back mid-sequence. `tests/workspace/auto-focus-rules.spec.ts` — two `test.fail()`-documented app bugs found while porting the rest of insomnia-smoke-test's `focus-and-keyboard.test.ts`: clicking "Add" on the Params/Headers tab never focuses the new row's Name cell (**INS-3587**), and selecting a brand-new empty environment never focuses its key/value editor's blank row Name cell (**INS-3588**) — both contradict `key-value-editor.tsx`'s own `autoFocus={pair.id === pendingFocusLastRowId}` intent, which has been in source since 2026-07-01 (predates the 2026-07-23 test binary), so unlike the undo bug above this looks like a genuine regression, not a stale-binary artifact.
 
+## Additional Page-level helpers (no Flow wrapper — call via `pageManager.<xxx>Page` only when no Flow method covers the action)
+
+```ts
+// pageManager.workspacePage — sidebar tree
+clickNode(node: TreeNode): Promise<void> / openRequestNode(node: TreeNode): Promise<void>
+findNode(name: string, type?: TreeNodeType): Promise<TreeNode | undefined>      // polls
+resolveNode(parent: TreeNode | { name: string; id?: string }): Promise<TreeNode>
+getTree(): Promise<Tree> / getNodes(): Promise<TreeNode[]>
+getRequestTypeLabel(node: TreeNode): Promise<string>
+getWorkspaceItemKind(node: TreeNode): Promise<"collection" | "mcpClient">
+waitForNodeRemoved(node: TreeNode): Promise<void>
+// sidebar drag-and-drop (tests/workspace/sidebar-drag-drop-*.spec.ts)
+startDrag(node: TreeNode): Promise<void>
+dragOver(node: TreeNode, xFraction: number, yFraction: number): Promise<void>        // fractions of the target row's bounding box
+dragOverPixels(node: TreeNode, xPixels: number, yFraction: number): Promise<void>
+releaseDrag(): Promise<void>
+dragAndDrop(source: TreeNode, target: TreeNode, xFraction = 0.5, yFraction = 0.5): Promise<void>   // startDrag + dragOver + releaseDrag
+getDropIndicator(): Promise<DropIndicator | undefined>                              // the mid-drag indicator: { isValid, isInto, folderName: string | null, insertBetween: { before, after } | null }
+// WorkspaceFlow.openSettings(project) / renameProject(project, newName): Promise<Project> wrap ProjectSettingsPage below
+
+// pageManager.projectSettingsPage (pages/project-settings.page.ts)
+navigate() / setName(name) / clickUpdate() / getBannerText(label): Promise<string | undefined>
+// Git project clone / open-folder / relocate dialogs
+selectCredential(name) / setRepositoryUrl(url) / selectBranch(branch) / chooseCloneLocation(folderPath) / submitScanForFiles() / confirmClone()
+selectGitOpenMode() / chooseOpenFolderLocation(folderPath) / confirmOpenFolder() / getOpenFolderCollisionError(): Promise<string | undefined>
+getRepositoryPath(): Promise<string> / relocateRepository(destinationDir: string) / getRelocationError(): Promise<string | undefined>
+
+// pageManager.environmentPage (beyond the methods listed in the environmentFlow section)
+createSubEnvironment(name: string, isPrivate = false) / renameEnvironment(oldName, newName) / selectEnvironment(name)
+getEnvironmentId(name): Promise<string | undefined> / getEnvironmentNames(): Promise<string[]> / navigate()
+linkProjectEnvironment(containerName: string, environmentName = "Base Environment") / selectCollectionEnvironment(name)
+getVariables(): Promise<EnvironmentKvPairData[]> / setVariables(variables: EnvironmentKvPairData[])
+
+// pageManager.cookiePage
+navigate() / open() ("Add Cookies") / close() / getCookies(): Promise<Cookie[]> / setCookies(cookies: Cookie[]) / editCookieRaw(existingKey, rawCookieString)
+
+// pageManager.<domain>RequestPage (shared pages/request.page.ts)
+importParamsFromUrl(): Promise<void> / getParams(): Promise<RequestParameter[]> / getHeaders(): Promise<RequestHeader[]>
+// getMethod()/setMethod()/typeUrl()/undoUrl()/getUrlPreview()/docs helpers/addParam()/addHeader(): see "pageManager helpers used directly from specs" above
+
+// pageManager.preferencesPage — every method below is called by PreferencesFlow.set(); prefer set()
+openPluginsTab() / openScriptingTab() / openProxyTab() / openDataTab()
+setTemplateTagSandbox(enabled) / setScriptSandboxRule(group: ScriptSandboxRuleGroup, enabled)
+openNewPlugin() / setNewPluginName(name) / clickGenerateNewPlugin() / waitForNewPluginOutcome(): Promise<string | null> / closeNewPluginModal()
+setProxyEnabled(enabled) / setHttpProxy(v) / setHttpsProxy(v) / setNoProxy(v) / setRequestTimeout(ms)
+setFilterResponsesByEnvironment(enabled) / isFilterResponsesByEnvironmentEnabled(): Promise<boolean>
+setSidebarFocusForCollections(enabled) / isSidebarFocusForCollectionsEnabled(): Promise<boolean>
+setShowLegacyUnitTests(enabled) / isShowLegacyUnitTestsEnabled(): Promise<boolean>
+addDataFolder(path) / clickExportAllData() / clickExportProject(name)
+// AI Settings form primitives
+clickAiBackendNav(name) / setAiUrlBackendUrl(url) / setAiUrlBackendApiToken(token) / clickLoadAiModels() / selectAiModel(modelId)
+openAiAdvancedOptions() / setAiAdvancedOptionValue(label, value) / clickActivateAiBackend() / clickDeactivateAiBackend()
+// PreferencesFlow.addGitCredential(credential: GitCredential): Promise<void> — Credentials tab, adds a custom username/PAT credential, closes
+```
+
+Legacy-unit-tests default state specs: `tests/document/legacy-unit-tests-default-off.spec.ts`, `tests/migration/legacy-db-migration/legacy-unit-tests-default-on.spec.ts`.
+
 ## Existing spec files worth reading as patterns
 
 Domain-specific facts already have their own "Real example: ..." pointer inline in the section above that covers them — this list is only for generic, cross-domain _techniques_ worth knowing before writing any new spec, regardless of which domain it's in.
