@@ -645,6 +645,22 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
+   * Clicks a request's tree node and waits until its tab is the active
+   * one. Without this, a request page's `navigate()` can resolve against
+   * the previously open request's still-mounted editor, so a following
+   * Send/Connect click acts on the wrong request.
+   * @param node - The request's tree node
+   */
+  async openRequestNode(node: TreeNode): Promise<void> {
+    await this.clickNode(node);
+    await expect(
+      this.page.locator(
+        `${this.TAB_ROW}[data-key="${node._id}"][aria-selected="true"]`,
+      ),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Focuses the given folder's row and presses the Right arrow key,
    * expanding it (a no-op if it's already expanded). Waits for the row's
    * "Collapse {name}" toggle to actually render before returning —

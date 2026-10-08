@@ -54,7 +54,7 @@ export class HttpRequestFlow extends BaseFlow {
     const node = await workspace.findItemNode(identity, TreeNodeType.Request);
     if (!node) return undefined;
 
-    await workspace.clickNode(node);
+    await workspace.openRequestNode(node);
     await httpRequestPage.navigate();
 
     const data = await httpRequestPage.get();
@@ -73,7 +73,7 @@ export class HttpRequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await httpRequestPage.navigate();
 
     await httpRequestPage.send();
@@ -96,7 +96,7 @@ export class HttpRequestFlow extends BaseFlow {
     const httpRequestPage = this.pageManager.httpRequestPage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await httpRequestPage.navigate();
 
     await httpRequestPage.auth.fetchOAuth2Tokens();

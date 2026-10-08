@@ -55,7 +55,7 @@ export class EventStreamRequestFlow extends BaseFlow {
     const node = await workspace.findItemNode(identity, TreeNodeType.Request);
     if (!node) return undefined;
 
-    await workspace.clickNode(node);
+    await workspace.openRequestNode(node);
     await eventStreamRequestPage.waitForPane();
 
     const data = await eventStreamRequestPage.get();
@@ -78,7 +78,7 @@ export class EventStreamRequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await eventStreamRequestPage.navigate();
 
     await eventStreamRequestPage.connect();

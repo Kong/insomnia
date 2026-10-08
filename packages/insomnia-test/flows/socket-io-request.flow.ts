@@ -18,7 +18,7 @@ export class SocketIORequestFlow extends BaseFlow {
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await socketIoRequestPage.navigate();
     await socketIoRequestPage.connect();
   }
@@ -72,7 +72,7 @@ export class SocketIORequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await socketIoRequestPage.navigate();
 
     await socketIoRequestPage.disconnect(callback, timeout);
@@ -100,7 +100,7 @@ export class SocketIORequestFlow extends BaseFlow {
     const node = await workspace.findItemNode(identity, TreeNodeType.Request);
     if (!node) return undefined;
 
-    await workspace.clickNode(node);
+    await workspace.openRequestNode(node);
     await socketIoRequestPage.navigate();
 
     const data = await socketIoRequestPage.get();
@@ -120,7 +120,7 @@ export class SocketIORequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await socketIoRequestPage.navigate();
 
     await socketIoRequestPage.sendMessage();

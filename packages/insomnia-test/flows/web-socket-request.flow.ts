@@ -61,7 +61,7 @@ export class WebSocketRequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.disconnect(callback, timeout);
@@ -89,7 +89,7 @@ export class WebSocketRequestFlow extends BaseFlow {
     const node = await workspace.findItemNode(identity, TreeNodeType.Request);
     if (!node) return undefined;
 
-    await workspace.clickNode(node);
+    await workspace.openRequestNode(node);
     await webSocketRequestPage.navigate();
 
     const data = await webSocketRequestPage.get();
@@ -108,7 +108,7 @@ export class WebSocketRequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.connect();
@@ -140,7 +140,7 @@ export class WebSocketRequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.sendMessage(body, callback, timeout);

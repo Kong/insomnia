@@ -55,7 +55,7 @@ export class GraphQLRequestFlow extends BaseFlow {
     const node = await workspace.findItemNode(identity, TreeNodeType.Request);
     if (!node) return undefined;
 
-    await workspace.clickNode(node);
+    await workspace.openRequestNode(node);
     await graphqlRequestPage.navigate();
 
     const data = await graphqlRequestPage.get();
@@ -74,7 +74,7 @@ export class GraphQLRequestFlow extends BaseFlow {
     const responsePage = this.pageManager.responsePage;
 
     const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.clickNode(node!);
+    await workspace.openRequestNode(node!);
     await graphqlRequestPage.navigate();
 
     await graphqlRequestPage.send();
