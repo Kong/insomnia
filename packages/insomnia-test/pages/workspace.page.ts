@@ -2046,9 +2046,10 @@ export class WorkspacePage extends BasePage {
    */
   async setSpecification(text: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.SPEC_EDITOR), text);
-    await this.waitForPersisted(
+    await this.waitForFieldPersisted(
       ["insomnia.ApiSpec.db"],
-      (doc) => doc.contents === text,
+      (doc) => doc.contents,
+      text,
     );
   }
 

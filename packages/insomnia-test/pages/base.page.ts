@@ -195,6 +195,50 @@ export abstract class BasePage {
   }
 
   /**
+   * Polls the on-disk NeDB files until any live document in one of
+   * `dbFiles` holds `expected` at the value `read` extracts from it — the
+   * single-field form of `waitForPersisted()`. Use after an edit the app
+   * autosaves through a debounce (a script, an auth field, docs, a spec).
+   * @param dbFiles - The NeDB filenames to scan, e.g. `["insomnia.Request.db"]`
+   * @param read - Extracts the value under test from a document
+   * @param expected - The value it must settle on
+   */
+  protected async waitForFieldPersisted(
+    dbFiles: string[],
+    read: (doc: any) => unknown,
+    expected: unknown,
+  ): Promise<void> {
+    await this.waitForPersisted(dbFiles, (doc) => read(doc) === expected);
+  }
+
+  /**
+   * Polls the on-disk NeDB files until any live document in one of
+   * `dbFiles` lists a row named `name` in one of the arrays `rowsOf`
+   * returns — confirming a name/value row's debounced save has landed
+   * (and the row has settled onto its persisted key) before the next edit
+   * builds on it. Skipped for a blank name, which the app never persists.
+   * @param dbFiles - The NeDB filenames to scan
+   * @param rowsOf - Returns the candidate row lists of a document (params, headers, kvPairData, ...)
+   * @param name - The row name to look for
+   * @param matchesValue - Optional extra check on the named row (its value/disabled state); omit to match on name alone
+   */
+  protected async waitForRowPersisted(
+    dbFiles: string[],
+    rowsOf: (doc: any) => unknown[],
+    name: string,
+    matchesValue?: (row: any) => boolean,
+  ): Promise<void> {
+    if (!name) return;
+    await this.waitForPersisted(dbFiles, (doc) =>
+      rowsOf(doc).some(
+        (rows) =>
+          Array.isArray(rows) &&
+          rows.some((row) => row.name === name && (matchesValue?.(row) ?? true)),
+      ),
+    );
+  }
+
+  /**
    * Polls `read` until it returns the same value (compared by JSON) on
    * consecutive reads — the poll-based replacement for sleeping while a
    * debounced/async re-render (a filtered list, a search result set, a

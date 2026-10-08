@@ -411,13 +411,11 @@ export class EnvironmentPage extends BasePage {
     variable: EnvironmentKvPairData,
     { checkValue = true }: { checkValue?: boolean } = {},
   ): Promise<void> {
-    if (!variable.name) return;
-    await this.waitForPersisted(["insomnia.Environment.db"], (doc) =>
-      (doc.kvPairData ?? []).some(
-        (pair: { name: string; value: string }) =>
-          pair.name === variable.name &&
-          (!checkValue || pair.value === variable.value),
-      ),
+    await this.waitForRowPersisted(
+      ["insomnia.Environment.db"],
+      (doc) => [doc.kvPairData],
+      variable.name,
+      checkValue ? (pair) => pair.value === variable.value : undefined,
     );
   }
 

@@ -110,7 +110,7 @@ export class HttpRequestFlow extends BaseFlow {
   ): Promise<void> {
     await page.setMethod(request.method);
     await page.setUrl(request.url);
-    await this.waitForUrlPersisted(page, id, request.url);
+    await this.waitForUrlPersisted("insomnia.Request.db", page, id, request.url);
     if (request.params && request.params.length > 0) {
       await page.setParams(request.params);
     }
@@ -129,39 +129,6 @@ export class HttpRequestFlow extends BaseFlow {
         afterResponse: request.afterResponseScript,
       });
     }
-  }
-
-  /**
-   * Confirms `id`'s URL actually persisted as `url`, re-issuing
-   * `page.setUrl()` if not. Confirmed live: on a request whose backing
-   * document is still mid-creation, `HttpRequestPage.setUrl()`'s direct
-   * `CodeMirror.setValue()` can be silently reverted by the app's own
-   * background patch of that still-initializing document — reliably
-   * reproducible for a URL containing a `{% %}` tag, since the tag's inline
-   * widget decoration re-renders the editor around the same time. Passively
-   * waiting for that in-flight patch to settle (the fix already used by
-   * `GrpcRequestFlow`'s URL/body waits) doesn't help here: the value never
-   * lands on its own, only once the write is repeated after the initial
-   * patch has already landed. Typing the same text via real keystrokes
-   * instead never hits this — only the direct `setValue()` bypass does —
-   * so this re-sends the same write `page.setUrl()` already made, once the
-   * on-disk store the app itself reads from shows it was lost.
-   * @param page - The request page `url` was just set on
-   * @param id - The `_id` of the HTTP request whose URL was just set
-   * @param url - The URL that must be the persisted value
-   */
-  private async waitForUrlPersisted(
-    page: HttpRequestPage,
-    id: string,
-    url: string,
-  ): Promise<void> {
-    await this.waitForFieldPersisted(
-      "insomnia.Request.db",
-      id,
-      (doc) => doc?.url,
-      url,
-      () => page.setUrl(url),
-    );
   }
 
   /**

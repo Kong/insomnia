@@ -376,19 +376,15 @@ export abstract class RequestPage extends TabPanelPage {
     pair: { name: string; value?: string; disabled?: boolean },
     { checkValue = true }: { checkValue?: boolean } = {},
   ): Promise<void> {
-    if (!pair.name) return;
-    await this.waitForPersisted(["insomnia.Request.db"], (doc) =>
-      [doc.parameters, doc.headers, doc.body?.params].some(
-        (list) =>
-          Array.isArray(list) &&
-          list.some(
-            (p) =>
-              p.name === pair.name &&
-              (!checkValue ||
-                ((p.value ?? "") === (pair.value ?? "") &&
-                  Boolean(p.disabled) === Boolean(pair.disabled))),
-          ),
-      ),
+    await this.waitForRowPersisted(
+      ["insomnia.Request.db"],
+      (doc) => [doc.parameters, doc.headers, doc.body?.params],
+      pair.name,
+      checkValue
+        ? (p) =>
+            (p.value ?? "") === (pair.value ?? "") &&
+            Boolean(p.disabled) === Boolean(pair.disabled)
+        : undefined,
     );
   }
 
@@ -501,9 +497,10 @@ export abstract class RequestPage extends TabPanelPage {
     await this.page.keyboard.press("End");
     await this.page.keyboard.type(text);
     const typed = await this.readCodeMirror(editor);
-    await this.waitForPersisted(
+    await this.waitForFieldPersisted(
       ["insomnia.Request.db"],
-      (doc) => doc.description === typed,
+      (doc) => doc.description,
+      typed,
     );
   }
 

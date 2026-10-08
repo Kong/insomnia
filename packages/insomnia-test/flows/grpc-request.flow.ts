@@ -143,7 +143,7 @@ export class GrpcRequestFlow extends BaseFlow {
     id: string,
   ): Promise<void> {
     await page.setUrl(request.url);
-    await this.waitForUrlPersisted(page, id, request.url);
+    await this.waitForUrlPersisted("insomnia.GrpcRequest.db", page, id, request.url);
     if (request.method) {
       await page.fetchServerReflection();
       await page.setMethod(request.method);
@@ -177,34 +177,6 @@ export class GrpcRequestFlow extends BaseFlow {
       id,
       (doc) => doc?.body?.text,
       content,
-    );
-  }
-
-  /**
-   * Waits until `id`'s persisted `url` settles on `url`, re-issuing
-   * `page.setUrl()` if a read still disagrees. `setCodeMirrorValue()` only
-   * confirms the live CodeMirror instance reflects the new address, not
-   * that the debounced save actually landed, so a request created (or
-   * sent) right after `setUrl()` can otherwise still carry the previous
-   * server address. Passively waiting is not always enough: when the
-   * app's own background patch of a still-initializing request document
-   * reverts the write, the persisted URL stays empty until it is set again
-   * (same race `HttpRequestFlow`'s URL wait handles).
-   * @param page - The gRPC request page the URL was just set on
-   * @param id - The `_id` of the gRPC request whose URL was just set
-   * @param url - The server address that must be the persisted value
-   */
-  private async waitForUrlPersisted(
-    page: GrpcRequestPage,
-    id: string,
-    url: string,
-  ): Promise<void> {
-    await this.waitForFieldPersisted(
-      "insomnia.GrpcRequest.db",
-      id,
-      (doc) => doc?.url,
-      url,
-      () => page.setUrl(url),
     );
   }
 

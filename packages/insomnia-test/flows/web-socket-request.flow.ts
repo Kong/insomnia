@@ -161,7 +161,7 @@ export class WebSocketRequestFlow extends BaseFlow {
     id: string,
   ): Promise<void> {
     await page.setUrl(request.url);
-    await this.waitForUrlPersisted(page, id, request.url);
+    await this.waitForUrlPersisted("insomnia.WebSocketRequest.db", page, id, request.url);
     if (request.params && request.params.length > 0) {
       await page.setParams(request.params);
     }
@@ -171,31 +171,5 @@ export class WebSocketRequestFlow extends BaseFlow {
     if (request.body) {
       await page.setBody(request.body);
     }
-  }
-
-  /**
-   * Confirms `id`'s URL actually persisted as `url`, re-issuing
-   * `page.setUrl()` if not. `setUrl()` only confirms the live CodeMirror
-   * value; the app's own background patch of a still-initializing request
-   * document can silently revert it to empty, and connecting afterwards
-   * fails with a "URL is required" error. Passive waiting never recovers
-   * from that, so the write is repeated (same race `HttpRequestFlow` and
-   * `GrpcRequestFlow` handle).
-   * @param page - The request page the URL was just set on
-   * @param id - The `_id` of the request whose URL was just set
-   * @param url - The URL that must be the persisted value
-   */
-  private async waitForUrlPersisted(
-    page: WebSocketRequestPage,
-    id: string,
-    url: string,
-  ): Promise<void> {
-    await this.waitForFieldPersisted(
-      "insomnia.WebSocketRequest.db",
-      id,
-      (doc) => doc?.url,
-      url,
-      () => page.setUrl(url),
-    );
   }
 }

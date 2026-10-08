@@ -68,6 +68,37 @@ export abstract class BaseFlow {
   }
 
   /**
+   * Confirms `id`'s URL actually persisted as `url`, re-issuing
+   * `page.setUrl()` if not. `setUrl()` only confirms the live CodeMirror
+   * value; the app's own background patch of a still-initializing request
+   * document can silently revert it (reliably reproducible for a URL
+   * containing a `{% %}` tag, whose inline widget re-renders the editor
+   * around the same time), and a later connect/send then fails with a
+   * "URL is required" error or hits the previous address. Passive waiting
+   * never recovers from that — the value only lands once the write is
+   * repeated after the initial patch has landed — so this re-sends the
+   * same write once the on-disk store shows it was lost.
+   * @param dbFile - The NeDB filename holding the request, e.g. `"insomnia.Request.db"`
+   * @param page - The request page `url` was just set on
+   * @param id - The `_id` of the request whose URL was just set
+   * @param url - The URL that must be the persisted value
+   */
+  protected async waitForUrlPersisted(
+    dbFile: string,
+    page: { setUrl(url: string): Promise<void> },
+    id: string,
+    url: string,
+  ): Promise<void> {
+    await this.waitForFieldPersisted(
+      dbFile,
+      id,
+      (doc) => doc?.url,
+      url,
+      () => page.setUrl(url),
+    );
+  }
+
+  /**
    * Reads the on-disk `dbFile` NeDB file directly for `id`'s
    * currently-persisted document, keeping only its latest revision.
    * @param dbFile - The NeDB filename to read, e.g. `"insomnia.GrpcRequest.db"`

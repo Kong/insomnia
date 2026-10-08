@@ -345,9 +345,10 @@ export class AuthTabComponent extends TabPanelPage {
     field: string,
     value: unknown,
   ): Promise<void> {
-    await this.waitForPersisted(
+    await this.waitForFieldPersisted(
       AUTH_DB_FILES,
-      (doc) => String(doc.authentication?.[field]) === String(value),
+      (doc) => String(doc.authentication?.[field]),
+      String(value),
     );
   }
 

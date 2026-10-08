@@ -118,9 +118,10 @@ export class ScriptTabComponent extends TabPanelPage {
     editor: Locator,
   ): Promise<void> {
     const typed = await this.readCodeMirror(editor);
-    await this.waitForPersisted(
+    await this.waitForFieldPersisted(
       ["insomnia.Request.db", "insomnia.RequestGroup.db"],
-      (doc) => doc[field] === typed,
+      (doc) => doc[field],
+      typed,
     );
   }
 
