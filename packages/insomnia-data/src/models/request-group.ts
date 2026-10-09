@@ -24,15 +24,15 @@ export const optionalKeys: (keyof BaseRequestGroup)[] = [
 export const baseRequestGroupSchema = z.object({
   name: z.string().optional().default(''),
   description: z.string().optional().default(''),
+  authentication: AuthenticationSchema.optional(),
   environment: z.record(z.string(), z.any()).optional().default({}),
   environmentPropertyOrder: z.record(z.string(), z.any()).nullable().optional(),
+  headers: HeadersSchema.optional(),
   kvPairData: z.array(EnvironmentKvPairDataSchema).optional(),
   environmentType: environmentTypeSchema.optional(),
   metaSortKey: z.number(),
   preRequestScript: z.string().optional(),
   afterResponseScript: z.string().optional(),
-  authentication: AuthenticationSchema.optional(),
-  headers: HeadersSchema.optional(),
   konnectRouteId: z.string().nullable().optional(),
 });
 export type BaseRequestGroup = z.infer<typeof baseRequestGroupSchema>;

@@ -18,8 +18,11 @@ import {
   RequestCollectionSchema,
   RequestGroupSchema,
   RequestSchema,
+  RequestSettingsSchema,
   SocketIORequestSchema,
+  SocketIORequestSettingsSchema,
   WebsocketRequestSchema,
+  WebSocketRequestSettingsSchema,
 } from '../import-v5-parser';
 import { JsonSchema, KeyLiteralSchema, LiteralSchema } from '../zod/base-schemas';
 
@@ -114,7 +117,7 @@ const makeSocketIORequest = (overrides: Record<string, unknown> = {}) => ({
 const makeGroup = (overrides: Record<string, unknown> = {}) => ({
   name: 'Root Group',
   meta: {
-    id: 'group-1',
+    id: 'fld_group-1',
   },
   headers: [makeHeader()],
   ...overrides,
@@ -223,6 +226,16 @@ describe('EnvironmentSchema', () => {
   });
 });
 
+describe('CACertificateSchema key order', () => {
+  it('keeps path, disabled, meta', () => {
+    const file = CollectionSchema.parse({
+      type: 'collection.insomnia.rest/5.0',
+      certificates: [{ meta: makeMeta(), disabled: false, path: '/path/to/ca.pem' }],
+    });
+    expect(Object.keys(file.certificates![0])).toEqual(['path', 'disabled', 'meta']);
+  });
+});
+
 // -----------------------------
 // Authentication (union) deep coverage
 // -----------------------------
@@ -284,17 +297,18 @@ describe('Authentication discriminated union', () => {
     expect(a.type).toBe('netrc');
   });
 
-  it('asap (note: addintionalClaims spelling respected)', () => {
+  it('asap', () => {
     const a = fromReq({
       type: 'asap',
       issuer: 'iss',
       subject: 'sub',
       audience: 'aud',
-      addintionalClaims: '{"role":"admin"}',
+      additionalClaims: '{"role":"admin"}',
       keyId: 'kid',
+      privateKey: '-----BEGIN PRIVATE KEY-----\nkeys\n-----END PRIVATE KEY-----',
     });
     expect(a.type).toBe('asap');
-    expect(a.addintionalClaims).toBe('{"role":"admin"}');
+    expect(a.additionalClaims).toBe('{"role":"admin"}');
   });
 
   it('none', () => {
@@ -351,6 +365,148 @@ describe('RequestSchema settings & scripts', () => {
     );
     expect(r.body?.params?.[0].name).toBe('');
     expect(r.body?.params?.[0].value).toBeUndefined();
+  });
+});
+
+// -----------------------------
+// Settings schemas
+// -----------------------------
+describe('RequestSettingsSchema', () => {
+  it('fills per-field defaults when a settings block is partial', () => {
+    const s = RequestSettingsSchema.parse({ cookies: {} });
+    expect(s).toEqual({
+      renderRequestBody: true,
+      encodeUrl: true,
+      followRedirects: 'global',
+      rebuildPath: true,
+      cookies: { send: true, store: true },
+    });
+  });
+
+  it('respects explicit values', () => {
+    const s = RequestSettingsSchema.parse({
+      renderRequestBody: false,
+      encodeUrl: false,
+      followRedirects: 'off',
+      rebuildPath: false,
+      cookies: { send: false, store: false },
+    });
+    expect(s).toEqual({
+      renderRequestBody: false,
+      encodeUrl: false,
+      followRedirects: 'off',
+      rebuildPath: false,
+      cookies: { send: false, store: false },
+    });
+  });
+
+  // renderRequestBody is the positive form of the model's settingDisableRenderRequestBody,
+  // so it must default to true rather than inheriting the model field's `false`.
+  it('defaults renderRequestBody to true', () => {
+    expect(RequestSettingsSchema.parse({ cookies: {} }).renderRequestBody).toBe(true);
+  });
+});
+
+describe('WebSocketRequestSettingsSchema', () => {
+  it('fills per-field defaults when a settings block is partial', () => {
+    const s = WebSocketRequestSettingsSchema.parse({ cookies: {} });
+    expect(s).toEqual({
+      encodeUrl: true,
+      followRedirects: 'global',
+      cookies: { send: true, store: true },
+      // settingUseProxy has no model-level default
+      useProxy: undefined,
+    });
+  });
+
+  it('respects explicit values including useProxy', () => {
+    const s = WebSocketRequestSettingsSchema.parse({
+      encodeUrl: false,
+      followRedirects: 'on',
+      cookies: { send: false, store: false },
+      useProxy: true,
+    });
+    expect(s).toEqual({
+      encodeUrl: false,
+      followRedirects: 'on',
+      cookies: { send: false, store: false },
+      useProxy: true,
+    });
+  });
+
+  it('requires the cookies block', () => {
+    expect(() => WebSocketRequestSettingsSchema.parse({ encodeUrl: false })).toThrow();
+  });
+});
+
+describe('SocketIORequestSettingsSchema', () => {
+  it('fills per-field defaults when a settings block is partial', () => {
+    const s = SocketIORequestSettingsSchema.parse({ cookies: {} });
+    expect(s).toEqual({
+      encodeUrl: true,
+      cookies: { send: true, store: true },
+      // settingPath has no model-level default
+      path: undefined,
+    });
+  });
+
+  it('respects explicit values including path', () => {
+    const s = SocketIORequestSettingsSchema.parse({
+      encodeUrl: false,
+      cookies: { send: false, store: false },
+      path: '/custom-socket',
+    });
+    expect(s).toEqual({
+      encodeUrl: false,
+      cookies: { send: false, store: false },
+      path: '/custom-socket',
+    });
+  });
+
+  it('requires the cookies block', () => {
+    expect(() => SocketIORequestSettingsSchema.parse({ encodeUrl: false })).toThrow();
+  });
+});
+
+describe('settings parsing through the request schemas', () => {
+  it('RequestSchema fills defaults for a partial settings block', () => {
+    const r = RequestSchema.parse(makeHttpRequest({ settings: { encodeUrl: false, cookies: {} } }));
+    expect(r.settings?.encodeUrl).toBe(false);
+    expect(r.settings?.renderRequestBody).toBe(true);
+    expect(r.settings?.followRedirects).toBe('global');
+    expect(r.settings?.cookies?.send).toBe(true);
+  });
+
+  it('WebsocketRequestSchema respects explicit settings', () => {
+    const r = WebsocketRequestSchema.parse(
+      makeWsRequest({
+        settings: {
+          encodeUrl: false,
+          followRedirects: 'off',
+          cookies: { send: false, store: false },
+          useProxy: true,
+        },
+      }),
+    );
+    expect(r.settings?.encodeUrl).toBe(false);
+    expect(r.settings?.followRedirects).toBe('off');
+    expect(r.settings?.cookies?.store).toBe(false);
+    expect(r.settings?.useProxy).toBe(true);
+  });
+
+  it('SocketIORequestSchema respects explicit settings', () => {
+    const r = SocketIORequestSchema.parse(
+      makeSocketIORequest({
+        settings: {
+          encodeUrl: false,
+          cookies: { send: false, store: false },
+          path: '/custom-socket',
+        },
+      }),
+    );
+    expect(r.settings?.encodeUrl).toBe(false);
+    expect(r.settings?.cookies?.send).toBe(false);
+    expect(r.settings?.path).toBe('/custom-socket');
   });
 });
 
