@@ -170,7 +170,7 @@ export const MockRouteSchema = z.object({
   meta: MetaSchema.optional(),
   ...mockRouteShapeRest,
 });
-// parentId do not need to be included in the MockServerSchema
+// parentId and name do not need to be included in the MockServerSchema
 const {
   name: mockServerNameShape,
   parentId: mockServerParentIdShape,
