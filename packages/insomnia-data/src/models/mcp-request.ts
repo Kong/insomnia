@@ -25,7 +25,6 @@ export const rootSchema = z.object({
 export type Root = z.infer<typeof rootSchema>;
 
 export const baseMcpRequestSettingsSchema = z.object({
-  // settings
   mcpStdioAccess: z.boolean().optional().default(false),
   connected: z.boolean().optional().default(false),
   subscribeResources: z.array(z.string()).optional().default([]),
