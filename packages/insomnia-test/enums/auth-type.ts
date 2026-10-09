@@ -1,0 +1,16 @@
+export enum AuthType {
+  None = "None",
+  Inherit = "Inherit from parent",
+  ApiKey = "API Key",
+  Basic = "Basic",
+  Digest = "Digest",
+  Ntlm = "NTLM",
+  OAuth1 = "OAuth 1.0",
+  OAuth2 = "OAuth 2.0",
+  AwsIam = "AWS IAM",
+  Bearer = "Bearer Token",
+  Hawk = "Hawk",
+  Asap = "Atlassian ASAP",
+  Netrc = "Netrc",
+  Token = "token",
+}
