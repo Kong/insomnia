@@ -12,7 +12,7 @@ import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 
 test(
-  "Verify discarding all unstaged changes removes the uncommitted collection",
+  "Verify discarding all unstaged changes removes the uncommitted collection and keeps the committed one",
   async ({ user }) => {
     const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;
@@ -22,6 +22,13 @@ test(
       new Project(faker.string.alphanumeric(10), ProjectType.Git),
       GIT_CREDENTIAL.name,
     );
+    const committedCollection = await workspaceFlow.create(
+      project,
+      new Collection(faker.string.alphanumeric(10)),
+      faker.string.alphanumeric(10),
+    );
+    await gitSyncFlow.commit(faker.string.alphanumeric(10));
+
     const collection = await workspaceFlow.create(
       project,
       new Collection(faker.string.alphanumeric(10)),
@@ -35,8 +42,10 @@ test(
       })
       .toBeUndefined();
 
+    const committedNode = await workspacePage.findItemNode(committedCollection);
     const serverCommits = await getServerCommits();
 
+    expect(committedNode).toBeDefined();
     expect(serverCommits).toHaveLength(1);
   },
 );

@@ -80,6 +80,49 @@ export async function getServerCommits(
   return (await res.json()).commits;
 }
 
+/**
+ * Commits a file onto `branch` of the bare repo on misc/git-server.js, as if
+ * a second client had pushed it — so the app under test sees the remote
+ * move ahead without doing anything itself. `branch` is created from master
+ * if it doesn't exist yet.
+ * @param file - The file path, content, and optional commit message and branch (default "master")
+ * @param gitRepo - The repo name; defaults to the one created by the `gitRepo` fixture
+ */
+export async function pushServerFile(
+  file: { path: string; content: string; message?: string; branch?: string },
+  gitRepo = currentGitRepo,
+): Promise<void> {
+  await fetch(
+    `${GIT_SERVER_URL}/_admin/repos/${requireGitRepo(gitRepo)}/files`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(file),
+    },
+  );
+}
+
+/**
+ * Builds the YAML for a minimal, empty Insomnia collection file, suitable
+ * for `pushServerFile()` to make the app see a new collection on the remote.
+ * @param name - The collection's display name
+ * @returns The file content
+ */
+export function buildCollectionFile(name: string): string {
+  const id = crypto.randomUUID().replaceAll("-", "");
+  return [
+    "type: collection.insomnia.rest/5.0",
+    'schema_version: "5.1"',
+    `name: ${name}`,
+    "meta:",
+    `  id: wrk_${id}`,
+    "  created: 1700000000000",
+    "  modified: 1700000000000",
+    "collection: []",
+    "",
+  ].join("\n");
+}
+
 // Shared custom credential used to authenticate against misc/git-server.js,
 // whose default Basic auth is testuser/testpass. `name` is the app's own
 // hardcoded display name for any custom (username/PAT) credential (see

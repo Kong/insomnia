@@ -104,6 +104,39 @@ function seedRepo(name) {
   }
 }
 
+/**
+ * Commits `content` at `filePath` on `branch` of a bare repo, via a
+ * throwaway working clone, creating `branch` from master when it doesn't
+ * exist yet. Simulates a second client pushing to the remote.
+ */
+function pushFile(name, { branch, filePath, content, message }) {
+  const dir = repoDir(name);
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-git-push-"));
+  const git = (...args) => execFileSync("git", args, { cwd: workDir });
+  try {
+    execFileSync("git", ["clone", dir, workDir]);
+    if (listBranches(name).includes(branch)) {
+      git("checkout", branch);
+    } else {
+      git("checkout", "-b", branch);
+    }
+    fs.writeFileSync(path.join(workDir, filePath), content);
+    git("add", filePath);
+    git(
+      "-c",
+      "user.name=Mock Remote",
+      "-c",
+      "user.email=remote@example.com",
+      "commit",
+      "-m",
+      message,
+    );
+    git("push", "origin", `HEAD:refs/heads/${branch}`);
+  } finally {
+    fs.rmSync(workDir, { recursive: true, force: true });
+  }
+}
+
 /** Lists local branch names in a bare repo, e.g. ["master", "branch1"]. */
 function listBranches(name) {
   const dir = repoDir(name);
@@ -224,6 +257,23 @@ async function handleAdmin(req, res, url) {
     const name = decodeURIComponent(segments[2]);
     const branch = url.searchParams.get("branch") || "master";
     return sendJson(res, 200, { commits: listCommits(name, branch) });
+  }
+
+  if (
+    req.method === "POST" &&
+    segments[1] === "repos" &&
+    segments.length === 4 &&
+    segments[3] === "files"
+  ) {
+    const name = decodeURIComponent(segments[2]);
+    const body = await readJsonBody(req);
+    pushFile(name, {
+      branch: body.branch || "master",
+      filePath: body.path,
+      content: body.content,
+      message: body.message || "Remote commit",
+    });
+    return sendJson(res, 201, { ok: true });
   }
 
   sendJson(res, 404, { error: "not found" });
