@@ -28,7 +28,9 @@ export const useOpenVariableSource = () => {
 
   const open = async (source: VariableSourceMeta) => {
     const { workspaceId, environmentId, requestGroupId } = source;
-    if (!workspaceId) {
+    // Editors can mount outside the organization route (e.g. CodePromptModal); without
+    // route params the URLs below cannot be built.
+    if (!workspaceId || !organizationId || !projectId) {
       return;
     }
 

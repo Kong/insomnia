@@ -114,6 +114,11 @@ export function showVariableSourceTooltip(options: VariableSourceTooltipState) {
     hideVariableSourceTooltip();
     return;
   }
+  // A stale hover render for a chip the pointer already left must not clobber the
+  // pending show for the chip now under the pointer.
+  if (options.target !== hoveredTarget) {
+    return;
+  }
   // A new hover means the pointer is over a chip, not inside the bubble.
   pointerInBubble = false;
   clearHideTimeout();

@@ -240,7 +240,9 @@ const buildTabFromNavigation = async (
     workspaceName: workspace.name,
   });
 
-  if (tab && tabId) {
+  // Only the environment route needs the override; an MCP workspace builds its tab
+  // id from the MCP request, not the workspace id.
+  if (tab && tabId && routeInfo.routeId === 'workspace:environment') {
     tab.id = tabId;
     if (tabUrl) {
       tab.url = tabUrl;

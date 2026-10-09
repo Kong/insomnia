@@ -16,8 +16,8 @@ import {
   ToggleButton,
   useDragAndDrop,
 } from 'react-aria-components';
-import { useSearchParams } from 'react-router';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { useSearchParams } from 'react-router';
 
 import { debounce } from '~/common/misc';
 import { getDataFromKVPair } from '~/common/utils/environment-utils';

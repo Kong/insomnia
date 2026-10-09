@@ -40,15 +40,20 @@ export const RequestGroupPane: FC = () => {
   // Unknown values (stale/renamed deep links) fall back to the default tab instead of
   // leaving the controlled Tabs without a selection.
   const FOLDER_TAB_IDS = ['auth', 'headers', 'scripts', 'environment', 'docs'];
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const isValidRequestedTab = requestedTab !== null && FOLDER_TAB_IDS.includes(requestedTab);
   const [selectedTab, setSelectedTab] = useState<string>(isValidRequestedTab ? requestedTab : 'auth');
   useEffect(() => {
     if (isValidRequestedTab) {
       setSelectedTab(requestedTab);
+      // Consume the param: the sidebar forwards current search params to the next
+      // folder navigation, and a stale tab=environment would override its tab choice.
+      const next = new URLSearchParams(searchParams);
+      next.delete('tab');
+      setSearchParams(next, { replace: true });
     }
-  }, [isValidRequestedTab, requestedTab]);
+  }, [isValidRequestedTab, requestedTab, searchParams, setSearchParams]);
 
   const saveChanges = () => {
     if (environmentEditorRef.current?.isValid()) {

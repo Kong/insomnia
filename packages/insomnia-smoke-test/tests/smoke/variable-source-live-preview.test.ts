@@ -78,7 +78,6 @@ const SCENARIOS = [
     sourceType: 'environment' as const,
     envPageRow: 'Base Environment',
     extraFixtures: [] as string[],
-    slow: false,
   },
   {
     id: 'collection sub environment overriding base',
@@ -93,7 +92,6 @@ const SCENARIOS = [
     sourceType: 'environment' as const,
     envPageRow: 'SubEnvA',
     extraFixtures: [] as string[],
-    slow: false,
   },
   {
     id: 'folder environment winning over base/sub',
@@ -108,7 +106,6 @@ const SCENARIOS = [
     sourceType: 'folder' as const,
     envPageRow: '',
     extraFixtures: [] as string[],
-    slow: false,
   },
   {
     id: 'nested folder environment overriding the outer folder',
@@ -123,7 +120,6 @@ const SCENARIOS = [
     sourceType: 'folder' as const,
     envPageRow: '',
     extraFixtures: [] as string[],
-    slow: false,
   },
   {
     id: 'project environment',
@@ -140,7 +136,6 @@ const SCENARIOS = [
     // The global environment lives in its own fixtures, imported on top of the
     // cascade collection from beforeEach.
     extraFixtures: ['collection-for-global-environments.yaml', 'global-environment.yaml'],
-    slow: true,
   },
 ];
 
@@ -157,14 +152,8 @@ const assertOpenLandedOnSourceEditor = async (page: Page, scenario: (typeof SCEN
   await expect.soft(page.getByRole('tab', { name: 'Environment' })).toHaveAttribute('aria-selected', 'true');
 };
 
-// Timing and fixture setup that vary per scenario; kept out of the test bodies to
-// stay within the playwright/no-conditional-in-test lint rule.
-const applyScenarioTiming = (scenario: (typeof SCENARIOS)[number]) => {
-  if (scenario.slow) {
-    test.slow();
-  }
-};
-
+// Fixture setup that varies per scenario; kept out of the test bodies to stay
+// within the playwright/no-conditional-in-test lint rule.
 const importScenarioFixtures = async (page: Page, insomnia: InsomniaApp, scenario: (typeof SCENARIOS)[number]) => {
   if (scenario.extraFixtures.length === 0) {
     return;
@@ -176,6 +165,8 @@ const importScenarioFixtures = async (page: Page, insomnia: InsomniaApp, scenari
 };
 
 test.describe('Variable source and live preview across environment levels', () => {
+  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
   test.beforeEach(async ({ app, page, insomnia }) => {
     await insomnia.projectPage.importFixture('environment-cascade-collection.yaml');
   });
@@ -185,8 +176,6 @@ test.describe('Variable source and live preview across environment levels', () =
       page,
       insomnia,
     }) => {
-      applyScenarioTiming(scenario);
-
       await importScenarioFixtures(page, insomnia, scenario);
 
       await insomnia.navigationSidebar.clickRequestOrFolder(scenario.request);
@@ -206,8 +195,6 @@ test.describe('Variable source and live preview across environment levels', () =
     });
 
     test(`${scenario.id}: hover tooltip shows value and source`, async ({ page, insomnia }) => {
-      applyScenarioTiming(scenario);
-
       await importScenarioFixtures(page, insomnia, scenario);
 
       await insomnia.navigationSidebar.clickRequestOrFolder(scenario.request);
@@ -230,8 +217,6 @@ test.describe('Variable source and live preview across environment levels', () =
       page,
       insomnia,
     }) => {
-      applyScenarioTiming(scenario);
-
       await importScenarioFixtures(page, insomnia, scenario);
 
       await insomnia.navigationSidebar.clickRequestOrFolder(scenario.request);
@@ -293,9 +278,13 @@ test.describe('Variable source and live preview across environment levels', () =
     const tooltip = page.getByTestId('variable-source-tooltip');
     await expect.soft(tooltip).toBeVisible();
 
-    // Hover the tooltip's own content (the value area)
+    // Hover the tooltip's own content (the value area); it must stay visible
+    // past the 350ms grace period instead of hiding.
     await tooltip.hover();
-    await page.waitForTimeout(700); // > grace period
+    const hoverStartedAt = Date.now();
+    await expect
+      .poll(() => Date.now() - hoverStartedAt >= 700, { timeout: 1000, intervals: [250] })
+      .toBe(true);
     await expect.soft(tooltip).toBeVisible();
   });
 });
