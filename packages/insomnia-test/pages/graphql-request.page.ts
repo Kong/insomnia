@@ -150,6 +150,9 @@ export class GraphQLRequestPage extends RequestPage {
     // schema is still being fetched, and clicking it then is a silent no-op
     // (the menu just closes), so retry opening the menu until the explorer
     // actually appears.
+    await expect(this.page.getByText(/Schema fetched/i)).toBeVisible({
+      timeout: ACTION_TIMEOUT,
+    });
     const explorerButton = this.page
       .locator("#graphql-explorer-container")
       .getByRole("button")
