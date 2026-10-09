@@ -362,10 +362,20 @@ export class CloudSyncPage extends BasePage {
    * @returns Whether it's currently listed
    */
   async isLocalBranchListed(branch: string): Promise<boolean> {
-    return this.branchesDialog
-      .getByLabel("Branches list", { exact: true })
+    const list = this.branchesDialog.getByLabel("Branches list", {
+      exact: true,
+    });
+    await expect(list).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    // `isVisible()` doesn't auto-wait, and the list can still be rendering
+    // right after the modal opens — wait briefly for the row to appear
+    // before concluding it isn't listed.
+    return list
       .getByLabel(branch, { exact: true })
-      .isVisible();
+      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT })
+      .then(
+        () => true,
+        () => false,
+      );
   }
 
   /**
