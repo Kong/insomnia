@@ -16,6 +16,7 @@ import {
   ToggleButton,
   useDragAndDrop,
 } from 'react-aria-components';
+import { useSearchParams } from 'react-router';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { debounce } from '~/common/misc';
@@ -73,7 +74,18 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const [searchParams] = useSearchParams();
+  const requestedEnvironmentId = searchParams.get('environmentId');
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(
+    requestedEnvironmentId || activeEnvironment._id,
+  );
+  // Follow the ?environmentId= query param when it changes (e.g. "Open" from the
+  // variable live preview jumps straight to the source environment).
+  useEffect(() => {
+    if (requestedEnvironmentId) {
+      setSelectedEnvironmentId(requestedEnvironmentId);
+    }
+  }, [requestedEnvironmentId]);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );

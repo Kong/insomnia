@@ -38,6 +38,7 @@ import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
+import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
@@ -46,6 +47,7 @@ import { jsonPrettify } from '~/ui/utils/prettify/json';
 import { queryXPath } from '~/ui/utils/xpath/query';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
+import { hideVariableSourceTooltip } from './extensions/variable-source-tooltip';
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
@@ -292,6 +294,7 @@ export const CodeEditor = memo(
         [indentChars],
       );
       const { handleRender, handleGetRenderContext } = useNunjucks();
+      const openVariableSource = useOpenVariableSource();
       const isNunjucksEnabled = enableNunjucks && handleRender;
       const shouldTruncateLongLines = !!readOnly && !!truncateLongLines;
 
@@ -578,6 +581,7 @@ export const CodeEditor = memo(
             handleGetRenderContext,
             settings.showVariableSourceAndValue,
             id,
+            openVariableSource,
           );
         }
         // Make URLs clickable
@@ -646,6 +650,7 @@ export const CodeEditor = memo(
         indentWithTabs,
         extraKeys,
         handleRender,
+        openVariableSource,
         mode,
         getAutocompleteConstants,
         getAutocompleteSnippets,
@@ -662,6 +667,7 @@ export const CodeEditor = memo(
       ]);
 
       const cleanUpEditor = useCallback(() => {
+        hideVariableSourceTooltip();
         codeMirror.current?.toTextArea();
         codeMirror.current?.closeHintDropdown();
         codeMirror.current = null;

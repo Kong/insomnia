@@ -2,7 +2,7 @@ import type { Organization } from 'insomnia-api';
 import type { Project, Request, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -209,6 +209,10 @@ const buildTabFromResource = async (params: AddTabParams): Promise<BaseTab | nul
 const buildTabFromNavigation = async (
   routeInfo: InsomniaNavigationRouteInfo,
   getNavigationResources: () => Promise<NavigationResources>,
+  // Routes whose tab id differs from the resource id (e.g. a collection's environment
+  // page) pass it here, along with the URL the tab should reopen.
+  tabId?: string,
+  tabUrl?: string,
 ): Promise<BaseTab | null> => {
   const { project, workspace, resource } = await getNavigationResources();
 
@@ -227,7 +231,7 @@ const buildTabFromNavigation = async (
     });
   }
 
-  return await buildTabFromResource({
+  const tab = await buildTabFromResource({
     resource,
     organizationId: routeInfo.organizationId,
     projectId: project._id,
@@ -235,11 +239,32 @@ const buildTabFromNavigation = async (
     projectName: project.name,
     workspaceName: workspace.name,
   });
+
+  if (tab && tabId) {
+    tab.id = tabId;
+    if (tabUrl) {
+      tab.url = tabUrl;
+    }
+  }
+
+  return tab;
 };
 
 const getNavigationTabId = async (routeInfo?: InsomniaNavigationRouteInfo | null) => {
   if (!routeInfo || !routeInfo.workspaceId || !routeInfo.resourceId) {
     return null;
+  }
+
+  if (routeInfo.routeId === 'workspace:environment') {
+    // A collection's environment page is a view of the collection workspace, whose
+    // debug tab shares the same workspaceId. Give the page a stable tab id of its own
+    // so repeated navigation activates the same tab instead of churning the
+    // workspace's temporary tab. Project environments are environment workspaces and
+    // keep the workspace id as their tab id.
+    const workspace = await services.workspace.getById(routeInfo.workspaceId);
+    if (workspace && !models.workspace.isEnvironment(workspace)) {
+      return `${routeInfo.workspaceId}-env`;
+    }
   }
 
   return routeInfo.routeId === 'runner'
@@ -314,6 +339,7 @@ export const useTabNavigate = () => {
 
 export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
   const { appTabsRef, changeActiveTab, closeTabById, addTemporaryTab } = useInsomniaTabContext();
+  const location = useLocation();
   const { routeInfo, getNavigationResources } = useInsomniaNavigation();
 
   // Sync active tab with current route (only activates existing tabs, or creates/updates temporary tab if no match)
@@ -327,7 +353,12 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
       const matchingTab = (routeTabId && currentTabList?.find(tab => tab.id === routeTabId)) || null;
 
       if (!matchingTab && routeInfo) {
-        const newTemporaryTab = await buildTabFromNavigation(routeInfo, getNavigationResources);
+        const newTemporaryTab = await buildTabFromNavigation(
+          routeInfo,
+          getNavigationResources,
+          routeTabId ?? undefined,
+          location.pathname + location.search,
+        );
 
         if (newTemporaryTab) {
           addTemporaryTab(newTemporaryTab, { setActive: true });
@@ -339,7 +370,16 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
         changeActiveTab(matchingTab?.id ?? '');
       }
     })();
-  }, [addTemporaryTab, appTabsRef, changeActiveTab, getNavigationResources, organizationId, routeInfo]);
+  }, [
+    addTemporaryTab,
+    appTabsRef,
+    changeActiveTab,
+    getNavigationResources,
+    location.pathname,
+    location.search,
+    organizationId,
+    routeInfo,
+  ]);
 
   // Keyboard shortcut to close current tab
   useDocBodyKeyboardShortcuts({

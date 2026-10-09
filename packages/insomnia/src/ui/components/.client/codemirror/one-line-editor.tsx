@@ -33,12 +33,14 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { Tooltip } from '~/ui/components/tooltip';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
+import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
+import { hideVariableSourceTooltip } from './extensions/variable-source-tooltip';
 
 // Replace the editor's entire value while PRESERVING undo/redo history and the
 // cursor. Unlike cm.setValue(), which clears history, replaceRange records the
@@ -113,6 +115,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
+    const openVariableSource = useOpenVariableSource();
     const isPasswordEditor = type?.toLowerCase() === 'password';
 
     // Update the tooltip value, including rendering the value of a nunjucks tag if necessary
@@ -306,6 +309,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           handleGetRenderContext,
           settings.showVariableSourceAndValue,
           id,
+          openVariableSource,
         );
       }
       setEditorVersion(version => version + 1);
@@ -317,6 +321,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       onBlur,
       onKeyDown,
       onPaste,
+      openVariableSource,
       placeholder,
       readOnly,
       settings.autocompleteDelay,
@@ -337,6 +342,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [historyKey]);
 
     const cleanUpEditor = useCallback(() => {
+      hideVariableSourceTooltip();
       codeMirror.current?.toTextArea();
       codeMirror.current?.closeHintDropdown();
       codeMirror.current = null;

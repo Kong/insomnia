@@ -23,6 +23,7 @@ import type {
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
+  VariableSourceMeta,
 } from '~/common/templating/types';
 import * as templatingUtils from '~/common/templating/utils';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
@@ -410,11 +411,27 @@ export async function getRenderContext({
     : await services.environment.getById('n/a');
 
   const keySource: Record<string, string> = {};
+  const keySourceMeta: Record<string, VariableSourceMeta> = {};
   // Function that gets Keys and stores their Source location
-  function getKeySource(subObject: string | Record<string, any>, inKey: string, inSource: string) {
+  function getKeySource(
+    subObject: string | Record<string, any>,
+    inKey: string,
+    inSource: string,
+    inMeta?: VariableSourceMeta,
+  ) {
     // Add key to map if it's not root
     if (inKey) {
-      keySource[templatingUtils.normalizeToDotAndBracketNotation(inKey)] = inSource;
+      const normalizedKey = templatingUtils.normalizeToDotAndBracketNotation(inKey);
+      keySource[normalizedKey] = inSource;
+
+      if (inMeta) {
+        keySourceMeta[normalizedKey] = inMeta;
+      } else {
+        // Sources without meta (runner upload data, script-local variables) override
+        // earlier environments for the value; drop the stale source so consumers
+        // don't point at an environment that no longer supplies the value.
+        delete keySourceMeta[normalizedKey];
+      }
     }
 
     // Recurse down for Objects and Arrays
@@ -423,11 +440,11 @@ export async function getRenderContext({
     if (typeStr === '[object Object]') {
       for (const key of Object.keys(subObject)) {
         // @ts-expect-error -- mapping unsoundness
-        getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource);
+        getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource, inMeta);
       }
     } else if (typeStr === '[object Array]' && Array.isArray(subObject)) {
       for (const [i, element] of subObject.entries()) {
-        getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), inSource);
+        getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), inSource, inMeta);
       }
     }
   }
@@ -435,33 +452,49 @@ export async function getRenderContext({
   const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
 
   if (rootGlobalEnvironment) {
-    getKeySource(rootGlobalEnvironment.data || {}, inKey, rootGlobalEnvironment.name || 'Base Environment (Project)');
+    getKeySource(rootGlobalEnvironment.data || {}, inKey, rootGlobalEnvironment.name || 'Base Environment (Project)', {
+      label: rootGlobalEnvironment.name || 'Base Environment (Project)',
+      workspaceId: rootGlobalEnvironment.parentId,
+      environmentId: rootGlobalEnvironment._id,
+    });
   }
 
   if (subGlobalEnvironment) {
-    getKeySource(
-      subGlobalEnvironment.data || {},
-      inKey,
-      `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`,
-    );
+    const subGlobalLabel = `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`;
+    getKeySource(subGlobalEnvironment.data || {}, inKey, subGlobalLabel, {
+      label: subGlobalLabel,
+      workspaceId: rootGlobalEnvironment?.parentId,
+      environmentId: subGlobalEnvironment._id,
+    });
   }
 
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment (API Collection)');
+  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment (API Collection)', {
+    label: rootEnvironment?.name || 'Base Environment (API Collection)',
+    workspaceId: workspace._id,
+    environmentId: rootEnvironment?._id,
+  });
 
   if (subEnvironment && subEnvironment._id !== rootEnvironment?._id) {
-    getKeySource(
-      subEnvironment.data || {},
-      inKey,
-      `${subEnvironment.name || 'Environment'} (API Collection Sub-Environment)`,
-    );
+    const subLabel = `${subEnvironment.name || 'Environment'} (API Collection Sub-Environment)`;
+    getKeySource(subEnvironment.data || {}, inKey, subLabel, {
+      label: subLabel,
+      workspaceId: workspace._id,
+      environmentId: subEnvironment._id,
+    });
   }
 
   // Get Keys from ancestors (e.g. Folders)
+  // Iterate innermost-first to match the merge order in buildRenderContext, where
+  // the closest folder's value wins; otherwise an outer folder would claim the key.
   if (ancestors) {
-    for (const ancestor of ancestors) {
+    for (const ancestor of [...ancestors].reverse()) {
       if (isRequestGroup(ancestor) && 'environment' in ancestor && 'name' in ancestor) {
-        getKeySource(ancestor.environment || {}, inKey, ancestor.name || '');
+        getKeySource(ancestor.environment || {}, inKey, ancestor.name || '', {
+          label: ancestor.name || '',
+          workspaceId: workspace._id,
+          requestGroupId: ancestor._id,
+        });
       }
     }
   }
@@ -485,6 +518,7 @@ export async function getRenderContext({
     }),
     getKeysContext: () => ({
       keyContext: keySource,
+      keyContextMeta: keySourceMeta,
     }),
     getPurpose: () => purpose,
     getExtraInfo: () => extraInfo,
