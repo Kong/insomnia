@@ -159,11 +159,26 @@ export const GRPCRequestSchema = z.object({
   }),
 });
 
-export const MockRouteSchema = mockRoute.baseMockRouteSchema.omit({ parentId: true }).extend({
+// parentId do not need to be included in the MockRouteSchema
+const {
+  name: mockRouteNameShape,
+  parentId: mockRouteParentIdShape,
+  ...mockRouteShapeRest
+} = mockRoute.baseMockRouteSchema.shape;
+export const MockRouteSchema = z.object({
+  name: mockRouteNameShape,
   meta: MetaSchema.optional(),
+  ...mockRouteShapeRest,
 });
-const baseMockServerSchema = mockServer.baseMockServerSchema.omit({ parentId: true, name: true }).extend({
+// parentId do not need to be included in the MockServerSchema
+const {
+  name: mockServerNameShape,
+  parentId: mockServerParentIdShape,
+  ...mockServerShapeRest
+} = mockServer.baseMockServerSchema.shape;
+const baseMockServerSchema = z.object({
   meta: MetaSchema.optional(),
+  ...mockServerShapeRest,
 });
 
 const BasicAuthenticationSchema = z.object({
