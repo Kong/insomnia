@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
+import { extractFile } from "@electron/asar";
 import type { Page } from "@playwright/test";
 import { CoverageReport } from "monocart-coverage-reports";
 
@@ -88,6 +89,45 @@ export function coverageLaunchEnv(): Record<string, string> {
   return { NODE_V8_COVERAGE: NODE_COVERAGE_DIR };
 }
 
+const APP_ORIGIN = "https://insomnia-app.local/";
+
+/**
+ * Renderer scripts are served through Electron's custom `https://insomnia-app.local`
+ * protocol (see `api.protocol.ts` in the app), which monocart can't fetch, so
+ * the `//# sourceMappingURL=` comment never resolves and the report falls back
+ * to the compiled bundles. Read the `.map` from the packaged app (or the dev
+ * build dir) ourselves and hand it over via `entry.sourceMap` instead.
+ */
+function loadRendererSourceMap(entryUrl: string): object | undefined {
+  if (!entryUrl.startsWith(`${APP_ORIGIN}assets/`)) {
+    return undefined;
+  }
+  const relPath = `client/${entryUrl.slice(APP_ORIGIN.length).split(/[?#]/)[0]}.map`;
+  const binary = process.env.INSOMNIA_BINARY;
+  const asarCandidates = binary
+    ? [
+        path.join(path.dirname(binary), "resources", "app.asar"), // linux/windows
+        path.join(path.dirname(binary), "..", "Resources", "app.asar"), // macOS
+      ]
+    : [];
+  for (const asarPath of asarCandidates) {
+    try {
+      if (fs.existsSync(asarPath)) {
+        return JSON.parse(extractFile(asarPath, relPath).toString("utf8"));
+      }
+    } catch {
+      // map not packaged — fall through
+    }
+  }
+  // Dev mode / unpackaged build output
+  const devMap = path.resolve(__dirname, "..", "..", "insomnia", "build", relPath);
+  try {
+    return JSON.parse(fs.readFileSync(devMap, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
 /** Starts JS coverage collection on a renderer window — pair with `collectWindowCoverage()` before the window closes. */
 export async function startWindowCoverage(win: Page): Promise<void> {
   if (!COVERAGE_ENABLED) {
@@ -114,6 +154,12 @@ export async function collectWindowCoverage(win: Page): Promise<void> {
     const appCoverage = jsCoverage.filter((entry) =>
       /^(https?|file):/.test(entry.url),
     );
+    for (const entry of appCoverage) {
+      const sourceMap = loadRendererSourceMap(entry.url);
+      if (sourceMap) {
+        (entry as { sourceMap?: object }).sourceMap = sourceMap;
+      }
+    }
     if (appCoverage.length) {
       await getReport().add(appCoverage);
     }
