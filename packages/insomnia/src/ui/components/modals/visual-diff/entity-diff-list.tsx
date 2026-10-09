@@ -1,4 +1,5 @@
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
 
 import { useGitProjectDiscardPartialContentActionFetcher } from '~/routes/git.discard-entity';
 import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stage-entity';
@@ -33,9 +34,33 @@ interface Props {
   // until the returned promise settles, since the next one must compute from the
   // refreshed `before`/`after`.
   onEntityChanged?: () => Promise<unknown> | void;
+  // Switches the preview to the Text view, which shows exactly what git will commit.
+  onShowTextView: () => void;
 }
 
-export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceId, filepath, staged, onEntityChanged }) => {
+// Shown instead of cards when there are none to show; the Text view still has the full diff.
+const TextViewHint: FC<{ message: string; onShowTextView: () => void }> = ({ message, onShowTextView }) => (
+  <div className="flex h-full flex-1 items-center justify-center p-4 text-center text-(--hl)">
+    <span>
+      {message}{' '}
+      <Button onPress={onShowTextView} className="cursor-pointer text-(--color-font) underline hover:brightness-125">
+        Open the Text view
+      </Button>{' '}
+      to see the raw diff.
+    </span>
+  </div>
+);
+
+export const EntityDiffList: FC<Props> = ({
+  before,
+  after,
+  projectId,
+  workspaceId,
+  filepath,
+  staged,
+  onEntityChanged,
+  onShowTextView,
+}) => {
   const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
   const stagePartialContentFetcher = useGitProjectStagePartialContentActionFetcher();
   const discardPartialContentFetcher = useGitProjectDiscardPartialContentActionFetcher();
@@ -114,19 +139,11 @@ export const EntityDiffList: FC<Props> = ({ before, after, projectId, workspaceI
   );
 
   if (unparseable) {
-    return (
-      <div className="flex h-full flex-1 items-center justify-center p-4 text-center text-(--hl)">
-        Unable to parse this file for a visual diff. Try the Text view instead.
-      </div>
-    );
+    return <TextViewHint message="Unable to parse this file for a visual diff." onShowTextView={onShowTextView} />;
   }
 
   if (entities.length === 0) {
-    return (
-      <div className="flex h-full flex-1 items-center justify-center p-4 text-center text-(--hl)">
-        No structured changes detected in this file. Try the Text view to see the raw diff.
-      </div>
-    );
+    return <TextViewHint message="No structured changes detected in this file." onShowTextView={onShowTextView} />;
   }
 
   const summary = entities.reduce(

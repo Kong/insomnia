@@ -1863,6 +1863,7 @@ const OriginalGitProjectStagingModal: FC<
                           filepath={previewDiffItem.filepath}
                           staged={previewDiffItem.staged}
                           onEntityChanged={afterEntityChange}
+                          onShowTextView={() => setDiffViewMode('text')}
                         />
                       )}
                     </div>
