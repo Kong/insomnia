@@ -1,9 +1,25 @@
+import { expect } from "@playwright/test";
+
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { RequestHeader,SocketIOMessage } from "../models/socket-io-request";
 import { RequestPage } from "./request.page";
 
 export class SocketIORequestPage extends RequestPage {
   protected readonly urlBarId = "websocket-url-bar";
   protected readonly persistedDbFile = "insomnia.SocketIORequest.db";
+
+  /**
+   * Clicks Connect and waits for the button to flip to "Disconnect", so a
+   * following send doesn't race the handshake and get dropped.
+   */
+  async connect(): Promise<void> {
+    await super.connect();
+    await expect(
+      this.page
+        .locator(this.PANE)
+        .getByRole("button", { name: "Disconnect", exact: true }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
 
   /**
    * Reads the full Socket.IO request state from the UI (url, headers, and

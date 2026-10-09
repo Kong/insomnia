@@ -244,23 +244,26 @@ export class AuthTabComponent extends TabPanelPage {
         reapply: () => this.setCodeMirrorValue(editor, value),
       };
       await edit.reapply!();
-      await this.waitForAuthFieldsPersisted([edit]);
+      // Verify every field written so far, not just this one: its save can
+      // overwrite an earlier field from a stale copy of the auth config.
+      await this.waitForAuthFieldsPersisted([...edits, edit]);
       edits.push(edit);
     }
     if (fields.signatureMethod) {
       const signatureMethod = fields.signatureMethod;
-      const selectMethod = () =>
-        this.page
+      const selectMethod = async () => {
+        await this.page
           .locator(this.TABPANEL)
           .locator("#Signature-Method")
           .selectOption(signatureMethod);
+      };
       await selectMethod();
       const edit: AuthFieldEdit = {
         field: "signatureMethod",
         value: signatureMethod,
         reapply: selectMethod,
       };
-      await this.waitForAuthFieldsPersisted([edit]);
+      await this.waitForAuthFieldsPersisted([...edits, edit]);
       edits.push(edit);
     }
     // A later field's debounced save can overwrite an earlier one from a

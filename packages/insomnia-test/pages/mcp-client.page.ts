@@ -38,15 +38,25 @@ export class McpClientPage extends RequestPage {
    */
   async getTools(): Promise<string[]> {
     // The sidebar is populated asynchronously once the server answers
-    // tools/list, so wait for the first row before reading the list.
-    await expect(this.page.locator(this.TOOL_ROW).first()).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-    return this.page
-      .locator(this.TOOL_ROW)
-      .evaluateAll((rows) =>
-        rows.map((row) => row.getAttribute("aria-label") ?? ""),
-      );
+    // tools/list, and it can re-render (briefly empty) while it settles,
+    // so poll until a non-empty list of names has been read.
+    let tools: string[] = [];
+    await expect
+      .poll(
+        async () => {
+          tools = (
+            await this.page
+              .locator(this.TOOL_ROW)
+              .evaluateAll((rows) =>
+                rows.map((row) => row.getAttribute("aria-label") ?? ""),
+              )
+          ).filter(Boolean);
+          return tools.length;
+        },
+        { timeout: DEFAULT_TIMEOUT },
+      )
+      .toBeGreaterThan(0);
+    return tools;
   }
 
   /**

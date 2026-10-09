@@ -317,11 +317,13 @@ export class CloudSyncPage extends BasePage {
    * @param branch - The local branch to delete
    */
   async deleteLocalBranch(branch: string): Promise<void> {
-    await this.branchesDialog
+    const row = this.branchesDialog
       .getByLabel("Branches list", { exact: true })
-      .getByLabel(branch, { exact: true })
-      .getByRole("button", { name: "Delete" })
-      .dblclick();
+      .getByLabel(branch, { exact: true });
+    await row.getByRole("button", { name: "Delete" }).click();
+    // A dblclick can fire its 2nd click before React re-renders the
+    // button into its "Confirm" state, so wait for it explicitly.
+    await row.getByRole("button", { name: "Confirm" }).click();
   }
 
   /**
@@ -347,11 +349,13 @@ export class CloudSyncPage extends BasePage {
    * @param branch - The local branch to merge in
    */
   async mergeBranch(branch: string): Promise<void> {
-    await this.branchesDialog
+    const row = this.branchesDialog
       .getByLabel("Branches list", { exact: true })
-      .getByLabel(branch, { exact: true })
-      .getByRole("button", { name: "Merge" })
-      .dblclick();
+      .getByLabel(branch, { exact: true });
+    await row.getByRole("button", { name: "Merge" }).click();
+    // A dblclick can fire its 2nd click before React re-renders the
+    // button into its "Confirm" state, so wait for it explicitly.
+    await row.getByRole("button", { name: "Confirm" }).click();
   }
 
   /**
