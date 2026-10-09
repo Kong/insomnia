@@ -83,6 +83,8 @@ jobs:
         working-directory: packages/insomnia
         env:
           USE_HARD_LINKS: 'false'
+          # Package .map files so coverage reports show original (pre-compile) sources
+          KEEP_SOURCEMAPS: 'true'
         run: npx electron-builder build --config electron-builder.config.js --linux --dir --publish never
 
   # ---------------------------------------------------------------------------
