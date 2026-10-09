@@ -42,6 +42,8 @@ function getReport() {
       dataDir: NODE_COVERAGE_DIR,
       entryFilter: {
         "**/node_modules/**": false,
+        // Throwaway plugins the tests install into `os.tmpdir()/insomnia-test/<id>/plugins`.
+        "**/insomnia-test/*/plugins/**": false,
         "**/*": true,
       },
       // `entryFilter` only sees the bundled script URLs, so it can't drop
@@ -49,6 +51,10 @@ function getReport() {
       // sourcemaps are resolved, this filters on the original source paths.
       sourceFilter: {
         "**/node_modules/**": false,
+        "**/insomnia-test/*/plugins/**": false,
+        // Third-party sources (cheerio, css-select, ...) whose sourcemaps
+        // point at GitHub URLs instead of `node_modules` paths.
+        "**/raw.githubusercontent.com/**": false,
         "**/*": true,
       },
       reports: [
