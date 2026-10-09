@@ -13,9 +13,6 @@ export const canDuplicate = true;
 
 export const canSync = false;
 
-// export interface Cookie {
-//   expires: Date | string | number | null;
-// }
 export const CookieSchema = z.object({
   id: z
     .string()
@@ -23,18 +20,24 @@ export const CookieSchema = z.object({
     .default(() => crypto.randomUUID()),
   key: z.string().optional().default(''),
   value: z.string().optional().default(''),
-  expires: z.preprocess(val => {
-    // Handle 'Infinity' string
-    if (val === 'Infinity') return null;
+  expires: z.preprocess(
+    val => {
+      // Handle 'Infinity' string
+      if (val === 'Infinity') return null;
 
-    // If it's already a Date, check if it's valid
-    if (val instanceof Date) {
-      return Number.isNaN(val.getTime()) ? null : val;
-    }
+      // If it's already a Date, check if it's valid
+      if (val instanceof Date) {
+        return Number.isNaN(val.getTime()) ? null : val;
+      }
 
-    // Let other values pass through to z.coerce.date()
-    return val;
-  }, z.union([z.coerce.date(), z.literal('Infinity')]).nullable().default(null)),
+      // Let other values pass through to z.coerce.date()
+      return val;
+    },
+    z
+      .union([z.coerce.date(), z.literal('Infinity')])
+      .nullable()
+      .default(null),
+  ),
   domain: z.string().optional().default(''),
   path: z.string().optional().default('/'),
   secure: z.boolean().optional().default(false),

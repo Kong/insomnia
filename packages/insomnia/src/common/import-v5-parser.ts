@@ -65,12 +65,18 @@ export const HeadersSchema = z.array(
 
 export type Meta = z.infer<typeof MetaSchema>;
 
-const CACertificateSchema = caCertificate.baseCACertificateSchema.omit({ parentId: true }).extend({
+const { parentId: caCertificateParentIdShape, ...restCaCertificateSchemaShape } =
+  caCertificate.baseCACertificateSchema.shape;
+const CACertificateSchema = z.object({
+  ...restCaCertificateSchemaShape,
   meta: MetaSchema.optional(),
 });
 
-export const CookieJarSchema = cookieJar.baseCookieJarSchema.extend({
+const { name: cookieJarNameShape, ...restCookieJarSchemaShape } = cookieJar.baseCookieJarSchema.shape;
+export const CookieJarSchema = z.object({
+  name: cookieJarNameShape,
   meta: MetaSchema.optional(),
+  ...restCookieJarSchemaShape,
 });
 
 // Keep the key order consistent so that export to YAML maintains the same order as the model's shape
@@ -98,15 +104,26 @@ export const EnvironmentSchema = z.object({
   ...rest,
 });
 
-export const GRPCRequestSchema = grpcRequest.baseGrpcRequestSchema
-  .omit({ description: true, metaSortKey: true })
-  .extend({
-    meta: MetaSchema.extend({
-      id: z.string().startsWith('greq'),
-    }).optional(),
-    body: grpcRequest.baseGrpcRequestSchema.shape.body.optional(),
-    metadata: grpcRequest.baseGrpcRequestSchema.shape.metadata.optional(),
-  });
+const {
+  url: grpcRequestUrlShape,
+  name: grpcRequestNameShape,
+  body: grpcRequestBodyShape,
+  metadata: grpcRequestMetadataShape,
+  // description and metaSortKey are not needed in the GRPCRequestSchema
+  description: _grpcRequestDescriptionShape,
+  metaSortKey: _grpcRequestMetaSortKeyShape,
+  ...restGrpcRequestSchemaShape
+} = grpcRequest.baseGrpcRequestSchema.shape;
+export const GRPCRequestSchema = z.object({
+  url: grpcRequestUrlShape,
+  name: grpcRequestNameShape,
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('greq'),
+  }).optional(),
+  body: grpcRequestBodyShape.optional(),
+  metadata: grpcRequestMetadataShape.optional(),
+  ...restGrpcRequestSchemaShape,
+});
 
 // parentId do not need to be included in the MockRouteSchema
 const {
@@ -130,114 +147,147 @@ const baseMockServerSchema = z.object({
   ...mockServerShapeRest,
 });
 
-export const RequestSettingsSchema = request.baseRequestSettingsSchema.transform(data => ({
-  renderRequestBody: !data.settingDisableRenderRequestBody,
-  encodeUrl: data.settingEncodeUrl,
-  followRedirects: data.settingFollowRedirects,
-  cookies: {
-    send: data.settingSendCookies,
-    store: data.settingStoreCookies,
-  },
-  rebuildPath: data.settingRebuildPath,
-}));
+const requestSettingsShape = request.baseRequestSettingsSchema.shape;
+export const RequestSettingsSchema = z.object({
+  renderRequestBody: z.boolean().default(true),
+  encodeUrl: requestSettingsShape.settingEncodeUrl,
+  followRedirects: requestSettingsShape.settingFollowRedirects,
+  cookies: z.object({
+    send: requestSettingsShape.settingSendCookies,
+    store: requestSettingsShape.settingStoreCookies,
+  }),
+  rebuildPath: requestSettingsShape.settingRebuildPath,
+});
 
-export const WebSocketRequestSettingsSchema = webSocketRequest.baseWebSocketRequestSettingsSchema.transform(data => ({
-  encodeUrl: data.settingEncodeUrl,
-  cookies: {
-    send: data.settingSendCookies,
-    store: data.settingStoreCookies,
-  },
-  followRedirects: data.settingFollowRedirects,
+const webSocketRequestSettingsShape = webSocketRequest.baseWebSocketRequestSettingsSchema.shape;
+export const WebSocketRequestSettingsSchema = z.object({
+  encodeUrl: webSocketRequestSettingsShape.settingEncodeUrl,
+  cookies: z.object({
+    store: webSocketRequestSettingsShape.settingStoreCookies,
+    send: webSocketRequestSettingsShape.settingSendCookies,
+  }),
+  followRedirects: webSocketRequestSettingsShape.settingFollowRedirects,
   // TODO add this settings support
-  useProxy: data.settingUseProxy,
-}));
+  useProxy: webSocketRequestSettingsShape.settingUseProxy,
+});
 
-export const SocketIORequestSettingsSchema = socketIORequest.baseSocketIORequestSettingsSchema.transform(data => ({
-  encodeUrl: data.settingEncodeUrl,
-  cookies: {
-    send: data.settingSendCookies,
-    store: data.settingStoreCookies,
-  },
-  path: data.settingPath,
-}));
+const socketIORequestSettingsShape = socketIORequest.baseSocketIORequestSettingsSchema.shape;
+export const SocketIORequestSettingsSchema = z.object({
+  encodeUrl: socketIORequestSettingsShape.settingEncodeUrl,
+  cookies: z.object({
+    store: socketIORequestSettingsShape.settingStoreCookies,
+    send: socketIORequestSettingsShape.settingSendCookies,
+  }),
+  path: socketIORequestSettingsShape.settingPath,
+});
 
-export const RequestGroupSchema = requestGroup.baseRequestGroupSchema
-  .omit({ description: true, metaSortKey: true, preRequestScript: true, afterResponseScript: true })
-  .extend({
-    meta: MetaGroupSchema.extend({
-      id: z.string().startsWith('fld'),
-    }).optional(),
-    children: z.array(z.any()).optional(),
-    scripts: z
-      .object({
-        preRequest: requestGroup.baseRequestGroupSchema.shape.preRequestScript,
-        afterResponse: requestGroup.baseRequestGroupSchema.shape.afterResponseScript,
-      })
-      .optional(),
-  });
+const {
+  name: requestGroupNameShape,
+  description: requestGroupDescriptionShape,
+  metaSortKey: requestGroupMetaSortKeyShape,
+  preRequestScript: requestGroupPreRequestScriptShape,
+  afterResponseScript: requestGroupAfterResponseScriptShape,
+  ...restRequestGroupSchemaShape
+} = requestGroup.baseRequestGroupSchema.shape;
+export const RequestGroupSchema = z.object({
+  name: requestGroupNameShape,
+  meta: MetaGroupSchema.extend({
+    id: z.string().startsWith('fld'),
+  }).optional(),
+  children: z.array(z.any()).optional(),
+  scripts: z
+    .object({
+      preRequest: requestGroupPreRequestScriptShape,
+      afterResponse: requestGroupAfterResponseScriptShape,
+    })
+    .optional(),
+  ...restRequestGroupSchemaShape,
+});
 
-export const RequestSchema = request.baseRequestSchema
-  .omit({ description: true, metaSortKey: true, preRequestScript: true, afterResponseScript: true })
-  .extend({
-    meta: MetaSchema.extend({
-      id: z.string().startsWith('req'),
-    }).optional(),
-    scripts: z
-      .object({
-        preRequest: request.schema.shape.preRequestScript,
-        afterResponse: request.schema.shape.afterResponseScript,
-      })
-      .optional(),
-    settings: RequestSettingsSchema.optional().default({
-      renderRequestBody: true,
-      encodeUrl: true,
-      followRedirects: 'global',
-      rebuildPath: true,
-      cookies: {
-        send: true,
-        store: true,
-      },
-    }),
-  });
+const {
+  url: requestUrlShape,
+  name: requestNameShape,
+  description: requestDescriptionShape,
+  metaSortKey: requestMetaSortKeyShape,
+  pathParameters: requestPathParametersShape,
+  preRequestScript: requestPreRequestScriptShape,
+  afterResponseScript: requestAfterResponseScriptShape,
+  ...restRequestSchemaShape
+} = request.baseRequestSchema.shape;
+export const RequestSchema = z.object({
+  url: requestUrlShape,
+  name: requestNameShape,
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('req'),
+  }).optional(),
+  ...restRequestSchemaShape,
+  scripts: z
+    .object({
+      preRequest: requestPreRequestScriptShape,
+      afterResponse: requestAfterResponseScriptShape,
+    })
+    .optional(),
+  settings: RequestSettingsSchema.optional().default({
+    renderRequestBody: true,
+    encodeUrl: true,
+    followRedirects: 'global',
+    rebuildPath: true,
+    cookies: {
+      send: true,
+      store: true,
+    },
+  }),
+  pathParameters: requestPathParametersShape,
+});
 
-export const WebsocketRequestSchema = webSocketRequest.baseWebSocketRequestSchema
-  .omit({
-    description: true,
-    metaSortKey: true,
-  })
-  .extend({
-    meta: MetaSchema.extend({
-      id: z.string().startsWith('ws-req'),
-    }).optional(),
-    settings: WebSocketRequestSettingsSchema.optional().default({
-      encodeUrl: true,
-      followRedirects: 'global',
-      cookies: {
-        send: true,
-        store: true,
-      },
-      useProxy: false,
-    }),
-  });
+const {
+  url: webSocketRequestUrlShape,
+  name: webSocketRequestNameShape,
+  description: webSocketRequestDescriptionShape,
+  metaSortKey: webSocketRequestMetaSortKeyShape,
+  ...restWebSocketRequestSchemaShape
+} = webSocketRequest.baseWebSocketRequestSchema.shape;
+export const WebsocketRequestSchema = z.object({
+  url: webSocketRequestUrlShape,
+  name: webSocketRequestNameShape,
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('ws-req'),
+  }).optional(),
+  settings: WebSocketRequestSettingsSchema.optional().default({
+    encodeUrl: true,
+    followRedirects: 'global',
+    cookies: {
+      send: true,
+      store: true,
+    },
+    useProxy: false,
+  }),
+  ...restWebSocketRequestSchemaShape,
+});
 
-export const SocketIORequestSchema = socketIORequest.baseSocketIORequestSchema
-  .omit({
-    description: true,
-    metaSortKey: true,
-  })
-  .extend({
-    meta: MetaSchema.extend({
-      id: z.string().startsWith('socketio-req'),
-    }).optional(),
-    settings: SocketIORequestSettingsSchema.optional().default({
-      encodeUrl: true,
-      cookies: {
-        send: true,
-        store: true,
-      },
-      path: undefined,
-    }),
-  });
+const {
+  url: socketIORequestUrlShape,
+  name: socketIORequestNameShape,
+  description: socketIORequestDescriptionShape,
+  metaSortKey: socketIORequestMetaSortKeyShape,
+  ...restSocketIORequestSchemaShape
+} = socketIORequest.baseSocketIORequestSchema.shape;
+export const SocketIORequestSchema = z.object({
+  url: socketIORequestUrlShape,
+  name: socketIORequestNameShape,
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('socketio-req'),
+  }).optional(),
+  settings: SocketIORequestSettingsSchema.optional().default({
+    encodeUrl: true,
+    cookies: {
+      send: true,
+      store: true,
+    },
+    path: undefined,
+  }),
+  ...restSocketIORequestSchemaShape,
+});
 
 // Keep the key order consistent so that export to YAML maintains the same order as before: meta sits after authentication
 const {
