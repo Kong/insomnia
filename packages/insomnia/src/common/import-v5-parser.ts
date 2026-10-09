@@ -237,7 +237,7 @@ export const RequestSchema = z.object({
       store: true,
     },
   }),
-  pathParameters: requestPathParametersShape,
+  pathParameters: requestPathParametersShape.nullable(),
 });
 
 const {
@@ -245,6 +245,7 @@ const {
   name: webSocketRequestNameShape,
   description: webSocketRequestDescriptionShape,
   metaSortKey: webSocketRequestMetaSortKeyShape,
+  pathParameters: webSocketRequestPathParametersShape,
   ...restWebSocketRequestSchemaShape
 } = webSocketRequest.baseWebSocketRequestSchema.shape;
 export const WebsocketRequestSchema = z.object({
@@ -263,6 +264,7 @@ export const WebsocketRequestSchema = z.object({
     useProxy: false,
   }),
   ...restWebSocketRequestSchemaShape,
+  pathParameters: webSocketRequestPathParametersShape.nullable(),
 });
 
 const {

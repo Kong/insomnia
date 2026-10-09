@@ -28,7 +28,7 @@ export const baseWebSocketRequestSchema = z.object({
   description: z.string().optional().default(''),
   metaSortKey: z.number(),
   authentication: AuthenticationSchema.optional().default({}),
-  headers: HeadersSchema,
+  headers: HeadersSchema.optional().default([]),
   parameters: RequestParametersSchema.optional().default([]),
   pathParameters: RequestPathParametersSchema.optional(),
   disableUserAgentHeader: z.boolean().optional(),
