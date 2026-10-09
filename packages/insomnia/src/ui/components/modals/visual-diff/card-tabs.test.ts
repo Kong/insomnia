@@ -1,3 +1,4 @@
+import { models } from 'insomnia-data';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -5,6 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { buildCookieJarTabs } from './cookie-jar-diff-card';
 import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from './diff-engine';
 import type { DiffTabDef } from './diff-tabs';
+import { buildEnvironmentTabs } from './environment-diff-card';
+import { buildGenericTabs } from './generic-entity-diff-card';
 import { buildGrpcTabs } from './grpc-diff-card';
 import { buildMcpTabs } from './mcp-diff-card';
 import { buildMockRouteTabs } from './mock-route-diff-card';
@@ -285,6 +288,67 @@ describe('buildCookieJarTabs', () => {
 
     expect(summary(buildCookieJarTabs(modified('cookie_jar', before, after)))).toEqual([
       { id: 'cookies', status: 'added', count: 1 },
+    ]);
+  });
+});
+
+describe('buildEnvironmentTabs', () => {
+  const vault = models.environment.vaultEnvironmentPath;
+  const before = {
+    name: 'Base Environment',
+    meta: { id: 'env_1' },
+    data: { host: 'a', timeout: 30, [vault]: { apiKey: 'secret-old' } },
+  };
+
+  it('compares variables by name, masks secrets and leaves other fields to the Settings catch-all', () => {
+    const after = {
+      ...before,
+      color: '#ff0000',
+      data: { host: 'b', pageSize: 50, [vault]: { apiKey: 'secret-new', token: 'secret-added' } },
+    };
+
+    const tabs = buildEnvironmentTabs(modified('environment', before, after));
+
+    expect(summary(tabs)).toEqual([
+      { id: 'variables', status: 'modified', count: 3 },
+      { id: 'secrets', status: 'modified', count: 2 },
+      { id: 'settings', status: 'modified', count: 1 },
+    ]);
+    const secretsMarkup = renderToStaticMarkup(React.createElement(tabs[1].content));
+    expect(secretsMarkup).not.toContain('secret-');
+  });
+
+  it('still surfaces a variable reorder on its own', () => {
+    const after = { ...before, dataPropertyOrder: { '&': ['timeout', 'host'] } };
+
+    expect(summary(buildEnvironmentTabs(modified('environment', before, after)))).toEqual([
+      { id: 'variables', status: 'modified', count: 0 },
+    ]);
+  });
+
+  it('lists every variable as added for a new environment', () => {
+    expect(summary(buildEnvironmentTabs(added('environment', before)))).toEqual([
+      { id: 'variables', status: 'added', count: 2 },
+      { id: 'secrets', status: 'added', count: 1 },
+    ]);
+  });
+});
+
+describe('buildGenericTabs', () => {
+  const server = { url: 'https://mock', useInsomniaCloud: false, meta: { id: 'mock_1' } };
+
+  it('puts every changed field except the name (shown in the header) into one tab', () => {
+    const before = { type: 'collection.insomnia.rest/5.0', name: 'A', meta: { id: 'wrk_1', description: '' } };
+    const after = { ...before, name: 'B', meta: { id: 'wrk_1', description: 'docs' } };
+
+    expect(summary(buildGenericTabs(modified('workspace', before, after)))).toEqual([
+      { id: 'fields', status: 'modified', count: 1 },
+    ]);
+  });
+
+  it('lists every field of an added entity', () => {
+    expect(summary(buildGenericTabs(added('mock_server', server)))).toEqual([
+      { id: 'fields', status: 'added', count: 2 },
     ]);
   });
 });

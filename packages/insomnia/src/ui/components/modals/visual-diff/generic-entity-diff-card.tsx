@@ -1,42 +1,41 @@
 import type { FC } from 'react';
 
 import { type EntityDiff, ownFields } from './diff-engine';
-import { CardHeaderActions, DiffCardShell, type EntityCardActionProps, entityTypeLabel, FieldDiffRow, formatValue } from './shared';
+import { compactTabs, type DiffTabDef, fieldChangesTab } from './diff-tabs';
+import { type EntityCardActionProps, entityTypeLabel } from './shared';
+import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
-// Fallback card for entity types that don't have a dedicated visual layout yet.
-// Renders a bullet list of raw field changes rather than a purpose-built layout.
+function withoutName(node: any) {
+  if (!node || typeof node !== 'object') {
+    return node;
+  }
+  return Object.fromEntries(Object.entries(ownFields(node)).filter(([key]) => key !== 'name'));
+}
+
+// No editor to mirror, so every field goes into one tab: the changed ones for a modified entity,
+// all of them for an added/removed one. The name is left to the header.
+export function buildGenericTabs(diff: EntityDiff): DiffTabDef[] {
+  return compactTabs([
+    fieldChangesTab({
+      id: 'fields',
+      label: 'Fields',
+      before: withoutName(diff.before),
+      after: withoutName(diff.after),
+    }),
+  ]);
+}
+
+// Fallback card for entity types without a purpose-built layout (eg. file-level sections).
 export const GenericEntityDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
+  const header = buildHeaderLines(diff, { watchedPaths: [] });
+  const typeBadge = { label: entityTypeLabel(diff.type), className: 'bg-(--hl-sm) text-(--hl)' };
+
   return (
-    <DiffCardShell status={diff.status}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-col">
-          <span className="font-semibold">{diff.name}</span>
-          <span className="text-xs text-(--hl)">{entityTypeLabel(diff.type)}</span>
-        </div>
-        <CardHeaderActions status={diff.status} {...actionProps} />
-      </div>
-
-      {diff.status === 'added' && (
-        <pre className="overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-success)">
-          {formatValue(ownFields(diff.after))}
-        </pre>
-      )}
-
-      {diff.status === 'removed' && (
-        <pre className="overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 text-sm whitespace-pre-wrap text-(--color-font-danger)">
-          {formatValue(ownFields(diff.before))}
-        </pre>
-      )}
-
-      {diff.status === 'modified' && (
-        <ul className="flex flex-col gap-2">
-          {diff.fieldChanges.map(change => (
-            <li key={change.path}>
-              <FieldDiffRow label={change.label} before={change.before} after={change.after} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </DiffCardShell>
+    <TabbedDiffCard
+      diff={diff}
+      header={<EntityHeader current={{ ...header.current, badge: typeBadge }} previous={header.previous} />}
+      tabs={buildGenericTabs(diff)}
+      {...actionProps}
+    />
   );
 };
