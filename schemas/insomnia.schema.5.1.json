@@ -141,6 +141,32 @@
             "name": {
               "type": "string"
             },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
             "data": {
               "type": "object",
               "propertyNames": {
@@ -157,6 +183,113 @@
                   "type": "null"
                 }
               ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "dataPropertyOrder": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
+                  }
+                }
+              }
             },
             "dataPropertyOrder": {
               "anyOf": [
@@ -210,139 +343,6 @@
                 "json",
                 "kv"
               ]
-            },
-            "meta": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "created": {
-                  "type": "number"
-                },
-                "modified": {
-                  "type": "number"
-                },
-                "isPrivate": {
-                  "type": "boolean"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "sortKey": {
-                  "type": "number"
-                }
-              },
-              "required": [
-                "id"
-              ]
-            },
-            "subEnvironments": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "data": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "dataPropertyOrder": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "propertyNames": {
-                          "type": "string"
-                        },
-                        "additionalProperties": {}
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "kvPairData": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "type": "string"
-                        },
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "json",
-                            "str",
-                            "secret"
-                          ]
-                        },
-                        "enabled": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "type"
-                      ]
-                    }
-                  },
-                  "environmentType": {
-                    "type": "string",
-                    "enum": [
-                      "json",
-                      "kv"
-                    ]
-                  },
-                  "meta": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "created": {
-                        "type": "number"
-                      },
-                      "modified": {
-                        "type": "number"
-                      },
-                      "isPrivate": {
-                        "type": "boolean"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "sortKey": {
-                        "type": "number"
-                      }
-                    },
-                    "required": [
-                      "id"
-                    ]
-                  }
-                }
-              }
             }
           }
         },
@@ -690,6 +690,32 @@
             "name": {
               "type": "string"
             },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
             "data": {
               "type": "object",
               "propertyNames": {
@@ -706,6 +732,113 @@
                   "type": "null"
                 }
               ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "dataPropertyOrder": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
+                  }
+                }
+              }
             },
             "dataPropertyOrder": {
               "anyOf": [
@@ -759,139 +892,6 @@
                 "json",
                 "kv"
               ]
-            },
-            "meta": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "created": {
-                  "type": "number"
-                },
-                "modified": {
-                  "type": "number"
-                },
-                "isPrivate": {
-                  "type": "boolean"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "sortKey": {
-                  "type": "number"
-                }
-              },
-              "required": [
-                "id"
-              ]
-            },
-            "subEnvironments": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "data": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "dataPropertyOrder": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "propertyNames": {
-                          "type": "string"
-                        },
-                        "additionalProperties": {}
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "kvPairData": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "type": "string"
-                        },
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "json",
-                            "str",
-                            "secret"
-                          ]
-                        },
-                        "enabled": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "type"
-                      ]
-                    }
-                  },
-                  "environmentType": {
-                    "type": "string",
-                    "enum": [
-                      "json",
-                      "kv"
-                    ]
-                  },
-                  "meta": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "created": {
-                        "type": "number"
-                      },
-                      "modified": {
-                        "type": "number"
-                      },
-                      "isPrivate": {
-                        "type": "boolean"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "sortKey": {
-                        "type": "number"
-                      }
-                    },
-                    "required": [
-                      "id"
-                    ]
-                  }
-                }
-              }
             }
           }
         },
@@ -1307,6 +1307,32 @@
             "name": {
               "type": "string"
             },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
             "data": {
               "type": "object",
               "propertyNames": {
@@ -1323,6 +1349,113 @@
                   "type": "null"
                 }
               ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "dataPropertyOrder": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
+                  }
+                }
+              }
             },
             "dataPropertyOrder": {
               "anyOf": [
@@ -1376,139 +1509,6 @@
                 "json",
                 "kv"
               ]
-            },
-            "meta": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "created": {
-                  "type": "number"
-                },
-                "modified": {
-                  "type": "number"
-                },
-                "isPrivate": {
-                  "type": "boolean"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "sortKey": {
-                  "type": "number"
-                }
-              },
-              "required": [
-                "id"
-              ]
-            },
-            "subEnvironments": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "data": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "dataPropertyOrder": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "propertyNames": {
-                          "type": "string"
-                        },
-                        "additionalProperties": {}
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "kvPairData": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "type": "string"
-                        },
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "json",
-                            "str",
-                            "secret"
-                          ]
-                        },
-                        "enabled": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "type"
-                      ]
-                    }
-                  },
-                  "environmentType": {
-                    "type": "string",
-                    "enum": [
-                      "json",
-                      "kv"
-                    ]
-                  },
-                  "meta": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "created": {
-                        "type": "number"
-                      },
-                      "modified": {
-                        "type": "number"
-                      },
-                      "isPrivate": {
-                        "type": "boolean"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "sortKey": {
-                        "type": "number"
-                      }
-                    },
-                    "required": [
-                      "id"
-                    ]
-                  }
-                }
-              }
             }
           }
         }
@@ -2095,6 +2095,32 @@
             "name": {
               "type": "string"
             },
+            "meta": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "isPrivate": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sortKey": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            },
             "data": {
               "type": "object",
               "propertyNames": {
@@ -2111,6 +2137,113 @@
                   "type": "null"
                 }
               ]
+            },
+            "subEnvironments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "data": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "dataPropertyOrder": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
+                  }
+                }
+              }
             },
             "dataPropertyOrder": {
               "anyOf": [
@@ -2164,139 +2297,6 @@
                 "json",
                 "kv"
               ]
-            },
-            "meta": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "created": {
-                  "type": "number"
-                },
-                "modified": {
-                  "type": "number"
-                },
-                "isPrivate": {
-                  "type": "boolean"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "sortKey": {
-                  "type": "number"
-                }
-              },
-              "required": [
-                "id"
-              ]
-            },
-            "subEnvironments": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "data": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "dataPropertyOrder": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "propertyNames": {
-                          "type": "string"
-                        },
-                        "additionalProperties": {}
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "kvPairData": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "type": "string"
-                        },
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "json",
-                            "str",
-                            "secret"
-                          ]
-                        },
-                        "enabled": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "type"
-                      ]
-                    }
-                  },
-                  "environmentType": {
-                    "type": "string",
-                    "enum": [
-                      "json",
-                      "kv"
-                    ]
-                  },
-                  "meta": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "created": {
-                        "type": "number"
-                      },
-                      "modified": {
-                        "type": "number"
-                      },
-                      "isPrivate": {
-                        "type": "boolean"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "sortKey": {
-                        "type": "number"
-                      }
-                    },
-                    "required": [
-                      "id"
-                    ]
-                  }
-                }
-              }
             }
           }
         }
