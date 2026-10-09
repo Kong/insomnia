@@ -13,6 +13,7 @@ import {
   CurlHttpVersion,
   CurlInfoDebug,
   CurlNetrc,
+  CurlProtocol,
   CurlProxy,
   CurlSslOpt,
 } from '@getinsomnia/node-libcurl';
@@ -29,6 +30,7 @@ import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../co
 import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
+import { filterHeadersForRedirect, getRedirectDecision, isSameOrigin } from './redirect-policy';
 export interface CurlRequestOptions {
   requestId: string; // for cancellation
   req: RequestUsedHere;
@@ -124,157 +126,305 @@ export const curlRequest = (options: CurlRequestOptions) =>
       invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
-      const { curl, debugTimeline } = await createConfiguredCurlInstance({
-        req: { ...req, url: finalUrl },
-        settings,
-        caCert,
-        certificates,
-        socketPath,
-        noDecompress,
-      });
-      const { method, body } = req;
-      // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
-      // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
-      // This is how you tell Curl to send a HEAD request
-      if (method.toUpperCase() === 'HEAD') {
-        curl.setOpt(Curl.option.NOBODY, 1);
-      } else if (method.toUpperCase() === 'POST') {
-        // This is how you tell Curl to send a POST request
-        curl.setOpt(Curl.option.POST, 1);
-      } else {
-        // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
-        curl.setOpt(Curl.option.CUSTOMREQUEST, method);
-      }
-
-      const requestBodyPath = await parseRequestBodyPath(body);
-      const requestBody = parseRequestBody({ body, method });
-      const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
-      let requestFileDescriptor: number | undefined;
-      const { authentication } = req;
-      if (requestBodyPath) {
-        const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
-        invariant(isAllowed, cannotAccessPathError(securedPath));
-
-        // AWS IAM file upload not supported
-        const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
-        invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
-        const { size: contentLength } = fs.statSync(securedPath);
-        curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
-        curl.setOpt(Curl.option.UPLOAD, 1);
-        // We need this, otherwise curl will send it as a POST
-        curl.setOpt(Curl.option.CUSTOMREQUEST, method);
-        // read file into request and close file descriptor
-        requestFileDescriptor = fs.openSync(securedPath, 'r');
-        curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
-        curl.on('end', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
-        curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
-      } else if (requestBody !== undefined) {
-        curl.setOpt(Curl.option.POSTFIELDS, requestBody);
-      }
+      // Redirects are followed one hop at a time instead of letting libcurl
+      // follow them internally. libcurl replays every custom HTTPHEADER to
+      // each redirect target, so only manual hops can drop sensitive headers
+      // before crossing origins.
+      const followRedirects =
+        {
+          off: false,
+          on: true,
+          global: settings.followRedirects,
+        }[req.settingFollowRedirects] ?? true;
+      // Mirror libcurl's own default ceiling (30 since curl 8.3.0) when unset.
+      const maxRedirects = followRedirects ? (settings.maxRedirects > 0 ? settings.maxRedirects : 30) : 0;
 
       // NOTE: temporary workaround for testing mockbin api
       if (process.env.PLAYWRIGHT_TEST) {
         req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
       }
 
-      const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
-      curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
+      const { body } = req;
+      const { authentication } = req;
+      const requestBodyPath = await parseRequestBodyPath(body);
+      const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
+      // Multipart bodies are staged in a temp file. Unlinking waits until all
+      // hops finish because a preserved body may be re-sent after a redirect.
+      const tempUploadPaths: string[] = isMultipart && requestBodyPath ? [requestBodyPath] : [];
 
-      // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
-      // cancel request by id map
-      cancelCurlRequestHandlers[requestId] = () => {
-        if (requestFileDescriptor && responseBodyPath) {
-          closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath);
+      const allHeaderResults: HeaderResult[] = [];
+      const debugTimeline: ResponseTimelineEntry[] = [];
+      const harvestedCookieRows: string[] = [];
+      let elapsedTime = 0;
+      let hopCount = 0;
+      let hopUrl = finalUrl;
+      let hopMethod = req.method;
+      let preserveHopBody = true;
+      let currentFd: number | undefined;
+      const closeCurrentFd = () => {
+        if (currentFd !== undefined) {
+          try {
+            fs.closeSync(currentFd);
+          } catch {
+            // Already closed; abandoning a request must not throw.
+          }
+          currentFd = undefined;
         }
-        curl.isOpen && curl.close();
       };
-
-      // set up response writer
-      let responseBodyBytes = 0;
-      curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
-        responseBodyBytes += buffer.length;
-        responseBodyWriteStream.write(buffer);
-        return buffer.length;
-      });
-
-      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
-        const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
-        const isEmpty = buffer.length === 0;
-        // Don't show cookie setting because this will display every domain in the jar
-        const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
-        if (isSSLData || isEmpty || isAddCookie) {
-          return 0;
+      const unlinkTempUploads = () => {
+        for (const tempPath of tempUploadPaths.splice(0)) {
+          fs.unlink(tempPath, () => {});
         }
+      };
+      let activeCloser: (() => void) | null = null;
+      cancelCurlRequestHandlers[requestId] = () => activeCloser?.();
 
-        // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
-        let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
-        let timelineMessage;
-        const isRequestData = infoType === CurlInfoDebug.DataOut;
-        if (isRequestData) {
-          // Ignore large post data messages
-          const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
-          timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
-        }
-        const isResponseData = infoType === CurlInfoDebug.DataIn;
-        if (isResponseData) {
-          timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
-          name = 'Text';
-        }
-        const value = timelineMessage || buffer.toString('utf8');
-        debugTimeline.push({ name, value, timestamp: Date.now() });
-        return 0;
-      });
-      // returns "rawHeaders" string in a buffer, rather than HeaderInfo[] type which is an object with deduped keys
-      // this provides support for multiple set-cookies and duplicated headers
-      curl.enable(CurlFeature.Raw);
-      // NOTE: legacy write end callback
-      curl.on('end', () => responseBodyWriteStream.end());
-      curl.on('end', async (_1: any, _2: any, rawHeaders: Buffer) => {
-        const patch = {
-          bytesContent: responseBodyBytes,
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
-          elapsedTime: (curl.getInfo(Curl.info.TOTAL_TIME) as number) * 1000,
-          url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
-        };
-        curl.isOpen && curl.close();
+      const cleanup = () => {
         delete cancelCurlRequestHandlers[requestId];
-        await waitForStreamToFinish(responseBodyWriteStream);
-
-        const headerResults = _parseHeaders(rawHeaders);
+        closeCurrentFd();
+        unlinkTempUploads();
+      };
+      const finish = (patch: ResponsePatch, headerResults: HeaderResult[]) => {
+        cleanup();
         resolve({ patch, debugTimeline, headerResults, responseBodyPath });
-      });
-      // NOTE: legacy write end callback
-      curl.on('error', () => responseBodyWriteStream.end());
-      curl.on('error', async (err, code) => {
-        const elapsedTime = (curl.getInfo(Curl.info.TOTAL_TIME) as number) * 1000;
-        curl.isOpen && curl.close();
-        delete cancelCurlRequestHandlers[requestId];
-        await waitForStreamToFinish(responseBodyWriteStream);
+      };
+      const runHop = (hopCurl: Curl): Promise<Buffer> =>
+        new Promise((hopResolve, hopReject) => {
+          hopCurl.on('end', (_1: any, _2: any, rawHeaders: Buffer) => hopResolve(rawHeaders));
+          hopCurl.on('error', (err: any, code: any) => hopReject({ err, code }));
+          hopCurl.perform();
+        });
 
-        // If libcurl can't decompress the response, retry without decompression
-        if (code === CurlCode.CURLE_BAD_CONTENT_ENCODING && !noDecompress) {
-          resolve(curlRequest({ ...options, noDecompress: true }));
+      while (true) {
+        const { curl, debugTimeline: hopTimeline } = await createConfiguredCurlInstance({
+          req: { ...req, url: hopUrl },
+          settings,
+          caCert,
+          certificates,
+          socketPath,
+          noDecompress,
+        });
+        debugTimeline.push(...hopTimeline);
+        // Redirects are driven by the loop below, not by libcurl.
+        curl.setOpt(Curl.option.FOLLOWLOCATION, false);
+        // Re-seed cookies libcurl stored on earlier hops.
+        for (const row of harvestedCookieRows) {
+          curl.setOpt(Curl.option.COOKIELIST, row);
+        }
+
+        const crossOrigin = !isSameOrigin(finalUrl, hopUrl);
+        const hopReq = {
+          ...req,
+          url: hopUrl,
+          method: hopMethod,
+          // Credentials are origin-bound. A cross-origin hop starts anonymous;
+          // same-origin hops keep digest, NTLM, and netrc handling.
+          authentication: crossOrigin ? {} : authentication,
+        };
+        const upperHopMethod = hopMethod.toUpperCase();
+        let hopRequestBody: string | undefined;
+        // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
+        // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
+        // This is how you tell Curl to send a HEAD request
+        if (upperHopMethod === 'HEAD') {
+          curl.setOpt(Curl.option.NOBODY, 1);
+        } else if (upperHopMethod === 'POST') {
+          // This is how you tell Curl to send a POST request
+          curl.setOpt(Curl.option.POST, 1);
+        } else {
+          // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
+          curl.setOpt(Curl.option.CUSTOMREQUEST, hopMethod);
+        }
+        if (preserveHopBody && requestBodyPath) {
+          const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
+          invariant(isAllowed, cannotAccessPathError(securedPath));
+
+          // AWS IAM file upload not supported
+          const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
+          invariant(!isAWSIAM, 'AWS authentication not supported for provided body type');
+          const { size: contentLength } = fs.statSync(securedPath);
+          curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
+          curl.setOpt(Curl.option.UPLOAD, 1);
+          // We need this, otherwise curl will send it as a POST
+          curl.setOpt(Curl.option.CUSTOMREQUEST, hopMethod);
+          // The descriptor is reopened per hop because the previous hop closed it.
+          currentFd = fs.openSync(securedPath, 'r');
+          curl.setOpt(Curl.option.READDATA, currentFd);
+        } else if (preserveHopBody) {
+          hopRequestBody = parseRequestBody({ body, method: hopMethod });
+        }
+        // A hop that downgraded to GET keeps the GET setup above and sends no body.
+        if (hopRequestBody !== undefined) {
+          curl.setOpt(Curl.option.POSTFIELDS, hopRequestBody);
+        }
+
+        const headerStrings = parseHeaderStrings({
+          req: hopReq,
+          requestBody: hopRequestBody,
+          requestBodyPath: preserveHopBody ? requestBodyPath : undefined,
+          finalUrl: hopUrl,
+          authHeader,
+        });
+        const { headers: hopHeaders, stripped } = filterHeadersForRedirect(headerStrings, {
+          crossOrigin,
+          preserveBody: preserveHopBody,
+        });
+        curl.setOpt(Curl.option.HTTPHEADER, hopHeaders);
+        if (crossOrigin && stripped.length > 0) {
+          debugTimeline.push({
+            value: `Stripped ${stripped.join(', ')} on cross-origin redirect to ${hopUrl}`,
+            name: 'Text',
+            timestamp: Date.now(),
+          });
+        }
+
+        // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
+        const hopStream = fs.createWriteStream(responseBodyPath);
+        activeCloser = () => {
+          closeCurrentFd();
+          unlinkTempUploads();
+          curl.isOpen && curl.close();
+        };
+
+        // set up response writer
+        let hopBytes = 0;
+        curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
+          hopBytes += buffer.length;
+          hopStream.write(buffer);
+          return buffer.length;
+        });
+
+        curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+          const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
+          const isEmpty = buffer.length === 0;
+          // Don't show cookie setting because this will display every domain in the jar
+          const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
+          if (isSSLData || isEmpty || isAddCookie) {
+            return 0;
+          }
+
+          // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
+          let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
+          let timelineMessage;
+          const isRequestData = infoType === CurlInfoDebug.DataOut;
+          if (isRequestData) {
+            // Ignore large post data messages
+            const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
+            timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
+          }
+          const isResponseData = infoType === CurlInfoDebug.DataIn;
+          if (isResponseData) {
+            timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
+            name = 'Text';
+          }
+          const value = timelineMessage || buffer.toString('utf8');
+          debugTimeline.push({ name, value, timestamp: Date.now() });
+          return 0;
+        });
+        curl.enable(CurlFeature.Raw);
+        let rawHeaders: Buffer;
+        try {
+          rawHeaders = await runHop(curl);
+        } catch (failure: any) {
+          const { err, code } = failure;
+          hopStream.end();
+          await waitForStreamToFinish(hopStream);
+
+          // If libcurl can't decompress the response, retry without decompression
+          if (code === CurlCode.CURLE_BAD_CONTENT_ENCODING && hopCount === 0 && !noDecompress) {
+            cleanup();
+            resolve(curlRequest({ ...options, noDecompress: true }));
+            return;
+          }
+
+          let error = err + '';
+          let statusMessage = 'Error';
+
+          if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
+            error = 'Request aborted';
+            statusMessage = 'Abort';
+          }
+          const patch = {
+            statusMessage,
+            error: error || 'Something went wrong inside libcurl',
+            elapsedTime,
+          };
+
+          // NOTE: legacy, default headerResults
+          finish(patch, [{ version: '', code: 0, reason: '', headers: [] }]);
           return;
         }
+        hopStream.end();
+        await waitForStreamToFinish(hopStream);
 
-        let error = err + '';
-        let statusMessage = 'Error';
+        const hopTime = curl.getInfo(Curl.info.TOTAL_TIME) as number;
+        const hopBytesRead = curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number;
+        elapsedTime += hopTime * 1000;
+        try {
+          const rows = curl.getInfo(Curl.info.COOKIELIST) as unknown as string[];
+          if (Array.isArray(rows)) {
+            harvestedCookieRows.push(...rows);
+          }
+        } catch {
+          // Cookie harvest is best-effort; a hop without a cookie engine changes nothing.
+        }
+        curl.isOpen && curl.close();
+        closeCurrentFd();
 
-        if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-          error = 'Request aborted';
-          statusMessage = 'Abort';
+        // returns "rawHeaders" string in a buffer, rather than HeaderInfo[] type which is an object with deduped keys
+        // this provides support for multiple set-cookies and duplicated headers
+        const hopResults = _parseHeaders(rawHeaders);
+        allHeaderResults.push(...hopResults);
+        const lastBlock = hopResults[hopResults.length - 1];
+        const location = lastBlock?.headers.find(header => header.name.toLowerCase() === 'location')?.value ?? null;
+        const decision = getRedirectDecision({
+          statusCode: lastBlock?.code ?? 0,
+          location,
+          method: hopMethod,
+          currentUrl: hopUrl,
+        });
+
+        if (decision.action === 'follow' && hopCount < maxRedirects) {
+          hopCount += 1;
+          debugTimeline.push({
+            value: `Following redirect ${hopCount}: ${hopMethod} ${hopUrl} → ${decision.method} ${decision.url}`,
+            name: 'Text',
+            timestamp: Date.now(),
+          });
+          hopUrl = decision.url;
+          hopMethod = decision.method;
+          preserveHopBody = !decision.dropBody;
+          continue;
+        }
+        if (decision.action === 'blocked') {
+          const patch = {
+            statusMessage: 'Error',
+            error: `Redirect to ${decision.location} is blocked: only http and https targets are supported`,
+            elapsedTime,
+            url: hopUrl,
+          };
+          finish(patch, allHeaderResults);
+          return;
+        }
+        if (decision.action === 'follow') {
+          const patch = {
+            statusMessage: 'Error',
+            error: `Maximum redirects (${maxRedirects}) followed`,
+            elapsedTime,
+            url: hopUrl,
+          };
+          finish(patch, allHeaderResults);
+          return;
         }
         const patch = {
-          statusMessage,
-          error: error || 'Something went wrong inside libcurl',
+          bytesContent: hopBytes,
+          bytesRead: hopBytesRead,
           elapsedTime,
+          url: hopUrl,
         };
-
-        // NOTE: legacy, default headerResults
-        resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
-      });
-      curl.perform();
+        finish(patch, allHeaderResults);
+        return;
+      }
     } catch (error) {
       console.error(error);
       const patch = {
@@ -477,6 +627,11 @@ export const createConfiguredCurlInstance = async ({
 
   curl.setOpt(Curl.option.FOLLOWLOCATION, followRedirects);
 
+  // Redirects stay within HTTP(S). The entry file:// guard only covers the
+  // initial URL, so without this a malicious redirect target could point at
+  // file://, gopher://, dict://, or ftp:// instead.
+  curl.setOpt(Curl.option.REDIR_PROTOCOLS, CurlProtocol.HTTP | CurlProtocol.HTTPS);
+
   // Don't rebuild dot sequences in path
   if (!req.settingRebuildPath) {
     curl.setOpt(Curl.option.PATH_AS_IS, true);
@@ -536,17 +691,6 @@ export const createConfiguredCurlInstance = async ({
     }
   }
   return { curl, debugTimeline };
-};
-
-const closeReadFunction = (isMultipart: boolean, fd?: number, path?: string) => {
-  if (fd) {
-    fs.closeSync(fd);
-  }
-  // NOTE: multipart files are combined before sending, so this file is deleted after
-  // alt implementation to send one part at a time https://github.com/JCMais/node-libcurl/blob/develop/examples/04-multi.js
-  if (isMultipart && path) {
-    fs.unlink(path, () => {});
-  }
 };
 
 export interface HeaderResult {
