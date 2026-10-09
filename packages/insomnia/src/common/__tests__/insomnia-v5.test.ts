@@ -538,6 +538,240 @@ collection: []
       expect(Object.keys(mcpRequest.roots[0])).toEqual(['uri']);
     });
 
+    it('exports collection items and cookie jar with a stable key order', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_items_order',
+        name: 'Items Order Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_items_order',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const auth = { type: 'basic', username: 'user', password: 'pass' } as const;
+      const headers = [{ name: 'X-Order', value: '1', description: 'header', disabled: false }];
+      const parameters = [
+        { name: 'q', value: '1', description: 'param', disabled: false, type: 'text', multiline: false },
+      ];
+      const pathParameters = [{ name: 'id', value: '1' }];
+
+      const folder = await services.requestGroup.create({
+        _id: 'fld_order',
+        name: 'folder-order',
+        parentId: workspace._id,
+        authentication: auth,
+        environment: { foo: 'bar' },
+        environmentPropertyOrder: { '&': ['foo'] },
+        headers,
+        preRequestScript: 'pre',
+        afterResponseScript: 'after',
+        metaSortKey: 1,
+      });
+      await services.request.create({
+        _id: 'req_order',
+        name: 'request-order',
+        parentId: folder._id,
+        url: 'https://example.com',
+        method: 'POST',
+        body: {
+          mimeType: 'multipart/form-data',
+          text: 'text',
+          fileName: 'file.txt',
+          params: [
+            {
+              name: 'p',
+              value: 'v',
+              description: 'body param',
+              disabled: false,
+              multiline: false,
+              fileName: 'f.txt',
+              type: 'file',
+            },
+          ],
+        },
+        parameters,
+        headers,
+        authentication: auth,
+        preRequestScript: 'pre',
+        afterResponseScript: 'after',
+        pathParameters,
+        metaSortKey: 2,
+      });
+      await services.grpcRequest.create({
+        _id: 'greq_order',
+        name: 'grpc-order',
+        parentId: workspace._id,
+        url: 'grpcb.in:9000',
+        protoFileId: 'pf_order',
+        protoMethodName: '/hello.HelloService/SayHello',
+        body: { text: '{}' },
+        metadata: [{ name: 'X-Order', value: '1' }],
+        reflectionApi: { enabled: true, url: 'http://reflection', apiKey: 'key', module: 'module' },
+        metaSortKey: 3,
+      });
+      await services.webSocketRequest.create({
+        _id: 'ws-req_order',
+        name: 'websocket-order',
+        parentId: workspace._id,
+        url: 'wss://example.com',
+        authentication: auth,
+        headers,
+        parameters,
+        pathParameters,
+        metaSortKey: 4,
+      });
+      await services.socketIORequest.create({
+        _id: 'socketio-req_order',
+        name: 'socketio-order',
+        parentId: workspace._id,
+        url: 'https://example.com',
+        settingPath: '/socket',
+        authentication: auth,
+        headers,
+        parameters,
+        pathParameters,
+        eventListeners: [{ id: 'listener1', eventName: 'join', desc: 'on join', isOpen: true }],
+        metaSortKey: 5,
+      });
+
+      const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+      await services.cookieJar.update(cookieJar, {
+        cookies: [
+          {
+            id: 'cookie1',
+            key: 'k',
+            value: 'v',
+            expires: null,
+            domain: 'example.com',
+            path: '/',
+            secure: true,
+            httpOnly: true,
+          },
+        ],
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      const findItem = (name: string) => parsed.collection.find((item: { name: string }) => item.name === name);
+
+      const exportedFolder = findItem('folder-order');
+      expect(Object.keys(exportedFolder)).toEqual([
+        'name',
+        'meta',
+        'children',
+        'scripts',
+        'authentication',
+        'environment',
+        'environmentPropertyOrder',
+        'headers',
+      ]);
+      expect(Object.keys(exportedFolder.scripts)).toEqual(['preRequest', 'afterResponse']);
+
+      const exportedRequest = exportedFolder.children[0];
+      expect(Object.keys(exportedRequest)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'method',
+        'body',
+        'parameters',
+        'headers',
+        'authentication',
+        'scripts',
+        'settings',
+        'pathParameters',
+      ]);
+      expect(Object.keys(exportedRequest.body)).toEqual(['mimeType', 'text', 'fileName', 'params']);
+      expect(Object.keys(exportedRequest.body.params[0])).toEqual([
+        'name',
+        'value',
+        'description',
+        'disabled',
+        'multiline',
+        'fileName',
+        'type',
+      ]);
+      expect(Object.keys(exportedRequest.parameters[0])).toEqual([
+        'name',
+        'value',
+        'description',
+        'disabled',
+        'type',
+        'multiline',
+      ]);
+      expect(Object.keys(exportedRequest.settings)).toEqual([
+        'renderRequestBody',
+        'encodeUrl',
+        'followRedirects',
+        'cookies',
+        'rebuildPath',
+      ]);
+      expect(Object.keys(exportedRequest.settings.cookies)).toEqual(['send', 'store']);
+
+      const exportedGrpc = findItem('grpc-order');
+      expect(Object.keys(exportedGrpc)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'body',
+        'metadata',
+        'protoFileId',
+        'protoMethodName',
+        'reflectionApi',
+      ]);
+      expect(Object.keys(exportedGrpc.reflectionApi)).toEqual(['enabled', 'url', 'apiKey', 'module']);
+
+      const exportedWebSocket = findItem('websocket-order');
+      expect(Object.keys(exportedWebSocket)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'settings',
+        'authentication',
+        'headers',
+        'parameters',
+        'pathParameters',
+      ]);
+      expect(Object.keys(exportedWebSocket.settings)).toEqual(['encodeUrl', 'cookies', 'followRedirects']);
+      expect(Object.keys(exportedWebSocket.settings.cookies)).toEqual(['store', 'send']);
+
+      const exportedSocketIO = findItem('socketio-order');
+      expect(Object.keys(exportedSocketIO)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'settings',
+        'authentication',
+        'headers',
+        'parameters',
+        'pathParameters',
+        'eventListeners',
+      ]);
+      expect(Object.keys(exportedSocketIO.settings)).toEqual(['encodeUrl', 'cookies', 'path']);
+      expect(Object.keys(exportedSocketIO.settings.cookies)).toEqual(['store', 'send']);
+      expect(Object.keys(exportedSocketIO.eventListeners[0])).toEqual(['id', 'eventName', 'desc', 'isOpen']);
+
+      expect(Object.keys(parsed.cookieJar)).toEqual(['name', 'meta', 'cookies']);
+      expect(Object.keys(parsed.cookieJar.cookies[0])).toEqual([
+        'id',
+        'key',
+        'value',
+        'domain',
+        'path',
+        'secure',
+        'httpOnly',
+      ]);
+    });
+
     it('returns empty string for unknown workspace', async () => {
       const result = await getInsomniaV5DataExport({
         workspaceId: 'missing',
