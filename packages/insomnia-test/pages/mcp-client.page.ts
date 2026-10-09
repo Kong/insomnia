@@ -37,6 +37,11 @@ export class McpClientPage extends RequestPage {
    * @returns The list of tool names
    */
   async getTools(): Promise<string[]> {
+    // The sidebar is populated asynchronously once the server answers
+    // tools/list, so wait for the first row before reading the list.
+    await expect(this.page.locator(this.TOOL_ROW).first()).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
     return this.page
       .locator(this.TOOL_ROW)
       .evaluateAll((rows) =>

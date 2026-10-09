@@ -233,22 +233,39 @@ export class AuthTabComponent extends TabPanelPage {
     await expect(
       this.oAuth1FieldEditor(OAUTH1_FIELD_LABELS.consumerKey),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    const edits: AuthFieldEdit[] = [];
     for (const [field, label] of Object.entries(OAUTH1_FIELD_LABELS)) {
       const value = fields[field as OAuth1TextField];
       if (value === undefined) continue;
-      await this.setCodeMirrorValue(this.oAuth1FieldEditor(label), value);
-      await this.waitForAuthFieldPersisted(field, value);
+      const editor = this.oAuth1FieldEditor(label);
+      const edit: AuthFieldEdit = {
+        field,
+        value,
+        reapply: () => this.setCodeMirrorValue(editor, value),
+      };
+      await edit.reapply!();
+      await this.waitForAuthFieldsPersisted([edit]);
+      edits.push(edit);
     }
     if (fields.signatureMethod) {
-      await this.page
-        .locator(this.TABPANEL)
-        .locator("#Signature-Method")
-        .selectOption(fields.signatureMethod);
-      await this.waitForAuthFieldPersisted(
-        "signatureMethod",
-        fields.signatureMethod,
-      );
+      const signatureMethod = fields.signatureMethod;
+      const selectMethod = () =>
+        this.page
+          .locator(this.TABPANEL)
+          .locator("#Signature-Method")
+          .selectOption(signatureMethod);
+      await selectMethod();
+      const edit: AuthFieldEdit = {
+        field: "signatureMethod",
+        value: signatureMethod,
+        reapply: selectMethod,
+      };
+      await this.waitForAuthFieldsPersisted([edit]);
+      edits.push(edit);
     }
+    // A later field's debounced save can overwrite an earlier one from a
+    // stale copy of the auth config, so confirm they all hold together.
+    await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
   }
 
   /**

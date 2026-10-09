@@ -1902,7 +1902,7 @@ export class WorkspacePage extends BasePage {
     // at all never gets an Outline/Info section though — it shows the
     // empty-state landing heading instead. Either can also flicker through
     // the other's state for a moment while the pane is still settling.
-    const info = this.page.getByRole("button", { name: "Info" });
+    const info = this.page.getByRole("button", { name: "Info", exact: true });
     const emptyState = this.page.getByRole("heading", {
       name: /Enter your OpenAPI specification/,
     });
