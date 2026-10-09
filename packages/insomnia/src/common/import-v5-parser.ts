@@ -487,11 +487,25 @@ export const SocketIORequestSchema = z.object({
   eventListeners: SocketIOEventListenerSchema.array().optional(),
 });
 
-export const McpRequestSchema = mcpRequest.baseMcpRequestSchema.omit({ description: true }).extend({
+// Keep the key order consistent so that export to YAML maintains the same order as before: meta sits after authentication
+const {
+  description: mcpRequestDescription,
+  url: mcpRequestUrl,
+  transportType: mcpRequestTransportType,
+  headers: mcpRequestHeaders,
+  authentication: mcpRequestAuthentication,
+  ...restMcpRequestShape
+} = mcpRequest.baseMcpRequestSchema.shape;
+export const McpRequestSchema = z.object({
   name: z.string().optional().default(''),
+  url: mcpRequestUrl,
+  transportType: mcpRequestTransportType,
+  headers: mcpRequestHeaders,
+  authentication: mcpRequestAuthentication,
   meta: MetaSchema.extend({
     id: z.string().startsWith('mcp-req'),
   }).optional(),
+  ...restMcpRequestShape,
 });
 
 type Request = z.infer<typeof RequestSchema>;
