@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { extractFile } from "@electron/asar";
 import type { Page } from "@playwright/test";
@@ -169,10 +170,81 @@ export async function collectWindowCoverage(win: Page): Promise<void> {
   }
 }
 
+/**
+ * The packaged app's main-process bundles live inside `app.asar`, which plain
+ * Node (where monocart runs) can't `fs.readFileSync` into — so monocart finds
+ * no source for those scripts and silently drops them from the report. Before
+ * generating, pull each such script's source (and its `.map`) out of the asar
+ * ourselves: sources go in `source-*.json` files and maps into the coverage
+ * file's `source-map-cache`, both of which monocart's `dataDir` reader already
+ * understands.
+ */
+function prepareAsarMainCoverage(): void {
+  if (!fs.existsSync(NODE_COVERAGE_DIR)) {
+    return;
+  }
+  const seen = new Set<string>();
+  for (const filename of fs.readdirSync(NODE_COVERAGE_DIR)) {
+    if (!filename.endsWith(".json") || filename.startsWith("source-")) {
+      continue;
+    }
+    const filePath = path.join(NODE_COVERAGE_DIR, filename);
+    let json: {
+      result?: { url?: string }[];
+      "source-map-cache"?: Record<string, { data?: unknown }>;
+    };
+    try {
+      json = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(json.result)) {
+      continue;
+    }
+    let changed = false;
+    for (const { url } of json.result) {
+      if (!url?.startsWith("file:")) {
+        continue;
+      }
+      const scriptPath = fileURLToPath(url);
+      const asarIndex = scriptPath.indexOf(".asar/");
+      if (asarIndex === -1 || scriptPath.includes("node_modules")) {
+        continue;
+      }
+      const asarPath = scriptPath.slice(0, asarIndex + ".asar".length);
+      const innerPath = scriptPath.slice(asarIndex + ".asar/".length);
+      try {
+        if (!seen.has(url)) {
+          seen.add(url);
+          const source = extractFile(asarPath, innerPath).toString("utf8");
+          fs.writeFileSync(
+            path.join(NODE_COVERAGE_DIR, `source-asar-${seen.size}.json`),
+            JSON.stringify({ url, source }),
+          );
+        }
+        const cache = (json["source-map-cache"] ??= {});
+        if (!cache[url]?.data) {
+          const map = JSON.parse(
+            extractFile(asarPath, `${innerPath}.map`).toString("utf8"),
+          );
+          cache[url] = { ...cache[url], data: map };
+          changed = true;
+        }
+      } catch {
+        // script or map not in the asar — monocart skips it as before
+      }
+    }
+    if (changed) {
+      fs.writeFileSync(filePath, JSON.stringify(json));
+    }
+  }
+}
+
 /** Generates the merged report from every window's/every Electron main process's coverage collected so far — call once, after all tests finish (see `misc/coverage-global-teardown.ts`). */
 export async function generateCoverageReport(): Promise<void> {
   if (!COVERAGE_ENABLED) {
     return;
   }
+  prepareAsarMainCoverage();
   await getReport().generate();
 }
