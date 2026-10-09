@@ -44,6 +44,13 @@ function getReport() {
         "**/node_modules/**": false,
         "**/*": true,
       },
+      // `entryFilter` only sees the bundled script URLs, so it can't drop
+      // third-party code that was bundled into the app's own scripts. Once
+      // sourcemaps are resolved, this filters on the original source paths.
+      sourceFilter: {
+        "**/node_modules/**": false,
+        "**/*": true,
+      },
       reports: [
         // Raw merged coverage data — the only thing a sharded CI run needs
         // to upload per-shard; the final report job merges these together
