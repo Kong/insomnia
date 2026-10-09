@@ -462,6 +462,10 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           inputType: maskText ? 'password' : 'text',
         });
 
+        if (value === null) {
+          throw new Error(`Prompt ${title} cancelled`);
+        }
+
         if (storageKey && value !== null) {
           console.log(`[prompt] Stored value under ${storageKey}`);
           await context.store.setItem(storageKey, value);
