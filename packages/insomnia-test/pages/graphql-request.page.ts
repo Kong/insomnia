@@ -146,22 +146,21 @@ export class GraphQLRequestPage extends RequestPage {
       .catch(() => {});
     if (await errorButton.isVisible().catch(() => false)) return undefined;
 
-    await this.page.getByRole("button", { name: /schema/i }).click();
-    // The item stays disabled while the schema is still being fetched, and
-    // clicking it then is a silent no-op, so wait until it's actionable.
-    const showDocs = this.page.getByRole("menuitem", {
-      name: /Show Documentation/i,
-    });
-    await expect(showDocs).not.toHaveAttribute("aria-disabled", "true", {
-      timeout: ACTION_TIMEOUT,
-    });
-    await showDocs.click();
-    await expect(
-      this.page
-        .locator("#graphql-explorer-container")
-        .getByRole("button")
-        .first(),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    // The "Show Documentation" item has no DOM disabled signal while the
+    // schema is still being fetched, and clicking it then is a silent no-op
+    // (the menu just closes), so retry opening the menu until the explorer
+    // actually appears.
+    const explorerButton = this.page
+      .locator("#graphql-explorer-container")
+      .getByRole("button")
+      .first();
+    await expect(async () => {
+      await this.page.getByRole("button", { name: /schema/i }).click();
+      await this.page
+        .getByRole("menuitem", { name: /Show Documentation/i })
+        .click();
+      await expect(explorerButton).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
 
     const backButton = this.page.locator(
       ".graphql-explorer__header__back-btn",
