@@ -205,6 +205,7 @@ export class HttpRequestPage extends RequestPage {
           reapply: async () => {
             await setName();
             await setValue();
+            await this.syncRowToggle(row, param);
           },
         });
       }

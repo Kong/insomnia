@@ -428,6 +428,7 @@ export abstract class RequestPage extends TabPanelPage {
         reapply: async () => {
           await setName();
           await setValue();
+          await this.syncRowToggle(row, pair);
         },
       });
     }
@@ -484,6 +485,8 @@ export abstract class RequestPage extends TabPanelPage {
       heldSince = 0;
       if (Date.now() - lastReapply >= 2000) {
         lastReapply = Date.now();
+        // One row at a time, waiting for each save to land: re-typing every
+        // missing row back-to-back would recreate the stale-row-list race.
         for (const { pair, index } of missing) {
           const row = rows.nth(index);
           await this.setCodeMirrorValue(
@@ -494,6 +497,8 @@ export abstract class RequestPage extends TabPanelPage {
             row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
             pair.value ?? "",
           );
+          await this.syncRowToggle(row, pair);
+          await this.waitForPairPersisted(pair).catch(() => undefined);
         }
       }
       expect(missing.map(({ pair }) => pair.name)).toEqual([]);
@@ -501,6 +506,22 @@ export abstract class RequestPage extends TabPanelPage {
       timeout: DEFAULT_TIMEOUT * 2 + settleMs,
       intervals: [250, 500],
     });
+  }
+
+  /**
+   * Flips a row's enable toggle if it doesn't match `pair.disabled`. Rows
+   * without a toggle are left alone.
+   * @param row - The key/value row locator
+   * @param pair - The pair whose disabled state the row should show
+   */
+  protected async syncRowToggle(
+    row: Locator,
+    pair: { disabled?: boolean },
+  ): Promise<void> {
+    const toggle = row.locator("button[aria-pressed]");
+    if ((await toggle.count()) === 0) return;
+    const enabled = (await toggle.getAttribute("aria-pressed")) === "true";
+    if (enabled === Boolean(pair.disabled)) await toggle.click();
   }
 
   /**
