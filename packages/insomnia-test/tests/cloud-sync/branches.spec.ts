@@ -21,11 +21,7 @@ test("Verify fetching a remote branch, checking out, deleting a local branch, an
   await cloudSyncPage.checkoutLocalBranch("master");
   await cloudSyncPage.deleteLocalBranch("develop");
 
-  await expect
-    .poll(() => cloudSyncPage.isLocalBranchListed("develop"), {
-      timeout: DEFAULT_TIMEOUT,
-    })
-    .toBe(false);
+  await cloudSyncPage.waitForLocalBranchRemoved("develop");
 
   const newBranch = faker.git.branch();
   await cloudSyncPage.createBranch(newBranch);

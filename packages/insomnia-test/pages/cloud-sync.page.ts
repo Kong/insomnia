@@ -383,6 +383,22 @@ export class CloudSyncPage extends BasePage {
   }
 
   /**
+   * Waits for `branch` to disappear from the Branches modal's local
+   * "Branches list" (e.g. after deleting it). Unlike
+   * `isLocalBranchListed()`, which blocks up to the timeout while a row is
+   * absent, this returns as soon as the row is gone. Requires
+   * `openBranchesDialog()` to have been called first.
+   * @param branch - The local branch expected to be gone
+   */
+  async waitForLocalBranchRemoved(branch: string): Promise<void> {
+    await expect(
+      this.branchesDialog
+        .getByLabel("Branches list", { exact: true })
+        .getByLabel(branch, { exact: true }),
+    ).toHaveCount(0, { timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Creates a new local branch from the Branches modal's "New branch
    * name" field. Requires `openBranchesDialog()` to have been called
    * first.
