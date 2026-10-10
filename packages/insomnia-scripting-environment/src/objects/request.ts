@@ -645,7 +645,8 @@ export function mergeRequestBody(
       }
     }
   }
-  if (originalReqBody.mimeType) {
+  // Keep the original mimeType unless the script switched away from the body mode it was given (params bodies are given as urlencoded)
+  if (originalReqBody.mimeType && toScriptRequestBody(originalReqBody).mode === updatedReqBody?.mode) {
     mimeType = originalReqBody.mimeType;
   }
 
@@ -657,20 +658,36 @@ export function mergeRequestBody(
           ? JSON.stringify(updatedReqBody?.graphql)
           : undefined;
 
+    const params =
+      updatedReqBody?.mode === 'formdata'
+        ? updatedReqBody?.formdata?.map((param: FormParam) => {
+            const isFile = param.type === 'file';
+            return {
+              name: param.key,
+              value: isFile ? '' : param.value,
+              type: param.type,
+              fileName: isFile ? param.value : undefined,
+              disabled: param.disabled,
+            };
+          }, {})
+        : updatedReqBody?.mode === 'urlencoded'
+          ? updatedReqBody?.urlencoded?.map((param: QueryParam) => {
+              return {
+                name: param.key,
+                value: param.value,
+                type: param.type,
+                fileName: param.fileName,
+                multiline: param.multiline,
+                disabled: param.disabled,
+              };
+            }, {})
+          : undefined;
+
     return {
       mimeType: mimeType,
       text: textContent,
       fileName: updatedReqBody?.file,
-      params: updatedReqBody?.urlencoded?.map((param: QueryParam) => {
-        return {
-          name: param.key,
-          value: param.value,
-          type: param.type,
-          fileName: param.fileName,
-          multiline: param.multiline,
-          disabled: param.disabled,
-        };
-      }, {}),
+      params,
     };
   } catch (e) {
     throw new Error(`failed to update body: ${e}`);
