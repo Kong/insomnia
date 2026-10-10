@@ -61,9 +61,10 @@ async function enableShowVariableSourceAndValue(page: Page) {
 // preview), the hover tooltip (value + source), and the inline display when
 // "Show variable source and value" is enabled.
 //
-// sourceType drives how "Open" is asserted: environment sources open the environment
-// page with the env selected; folder sources open the folder pane with its
-// Environment tab selected.
+// openSurface drives how "Open" is asserted: collection environments open the
+// workspace's Manage Environments modal with the env preselected; project
+// environments open the environment workspace page with the env selected; folder
+// sources open the folder pane with its Environment tab selected.
 const SCENARIOS = [
   {
     id: 'collection base environment',
@@ -75,7 +76,7 @@ const SCENARIOS = [
     chipName: '_.cascadeVar',
     value: 'fromBase',
     source: 'Base Environment',
-    sourceType: 'environment' as const,
+    openSurface: 'environments-modal' as const,
     envPageRow: 'Base Environment',
     extraFixtures: [] as string[],
   },
@@ -89,7 +90,7 @@ const SCENARIOS = [
     chipName: '_.cascadeVar',
     value: 'fromSubA',
     source: 'SubEnvA (API Collection Sub-Environment)',
-    sourceType: 'environment' as const,
+    openSurface: 'environments-modal' as const,
     envPageRow: 'SubEnvA',
     extraFixtures: [] as string[],
   },
@@ -103,7 +104,7 @@ const SCENARIOS = [
     chipName: '_.cascadeVar',
     value: 'fromFolder',
     source: 'cascadeFolder',
-    sourceType: 'folder' as const,
+    openSurface: 'folder-pane' as const,
     envPageRow: '',
     extraFixtures: [] as string[],
   },
@@ -117,7 +118,7 @@ const SCENARIOS = [
     chipName: '_.folderOverride',
     value: 'fromInnerFolder',
     source: 'innerFolder',
-    sourceType: 'folder' as const,
+    openSurface: 'folder-pane' as const,
     envPageRow: '',
     extraFixtures: [] as string[],
   },
@@ -131,7 +132,7 @@ const SCENARIOS = [
     chipName: "_['global-base']",
     value: '4444',
     source: 'Base Environment',
-    sourceType: 'environment' as const,
+    openSurface: 'environment-page' as const,
     envPageRow: 'Base Environment',
     // The global environment lives in its own fixtures, imported on top of the
     // cascade collection from beforeEach.
@@ -139,16 +140,25 @@ const SCENARIOS = [
   },
 ];
 
-// Environment sources open the environment page with the env selected; folder sources
-// open the folder pane with its Environment tab selected.
 const assertOpenLandedOnSourceEditor = async (page: Page, scenario: (typeof SCENARIOS)[number]) => {
-  if (scenario.sourceType === 'environment') {
+  if (scenario.openSurface === 'environments-modal') {
+    const modal = page.getByRole('dialog').filter({ hasText: 'Manage Environments' });
+    await expect.soft(modal).toBeVisible();
+    await expect
+      .soft(page.getByRole('grid', { name: 'Environments' }).getByRole('row', { name: scenario.envPageRow }))
+      .toHaveAttribute('aria-selected', 'true');
+    return;
+  }
+  if (scenario.openSurface === 'environment-page') {
     await expect.soft(page).toHaveURL(/\/environment\?environmentId=/);
     await page.getByRole('row', { name: scenario.envPageRow }).waitFor({ state: 'visible' });
     return;
   }
   await expect.soft(page).toHaveURL(/debug\/request-group\//);
-  await page.getByLabel('Insomnia Tabs').getByLabel(`tab-${scenario.request}`, { exact: true }).waitFor({ state: 'visible' });
+  await page
+    .getByLabel('Insomnia Tabs')
+    .getByLabel(`tab-${scenario.request}`, { exact: true })
+    .waitFor({ state: 'visible' });
   await expect.soft(page.getByRole('tab', { name: 'Environment' })).toHaveAttribute('aria-selected', 'true');
 };
 
@@ -172,10 +182,7 @@ test.describe('Variable source and live preview across environment levels', () =
   });
 
   for (const scenario of SCENARIOS) {
-    test(`${scenario.id}: send value, modal source and preview, and navigation`, async ({
-      page,
-      insomnia,
-    }) => {
+    test(`${scenario.id}: send value, modal source and preview, and navigation`, async ({ page, insomnia }) => {
       await importScenarioFixtures(page, insomnia, scenario);
 
       await insomnia.navigationSidebar.clickRequestOrFolder(scenario.request);
@@ -213,10 +220,7 @@ test.describe('Variable source and live preview across environment levels', () =
       await expect.soft(variableChip).toHaveText(scenario.chipName);
     });
 
-    test(`${scenario.id}: show variable source and value renders the source inline`, async ({
-      page,
-      insomnia,
-    }) => {
+    test(`${scenario.id}: show variable source and value renders the source inline`, async ({ page, insomnia }) => {
       await importScenarioFixtures(page, insomnia, scenario);
 
       await insomnia.navigationSidebar.clickRequestOrFolder(scenario.request);
@@ -232,16 +236,11 @@ test.describe('Variable source and live preview across environment levels', () =
       // With the source inline, no interactive tooltip appears on hover — poll past
       // the tooltip dwell delay (400ms) and assert it never showed up.
       await variableChip.hover();
-      await expect
-        .poll(async () => page.getByTestId('variable-source-tooltip').count(), { timeout: 1000 })
-        .toBe(0);
+      await expect.poll(async () => page.getByTestId('variable-source-tooltip').count(), { timeout: 1000 }).toBe(0);
     });
   }
 
-  test('hovering an undefined variable shows the render error instead of vanishing', async ({
-    page,
-    insomnia,
-  }) => {
+  test('hovering an undefined variable shows the render error instead of vanishing', async ({ page, insomnia }) => {
     // The global env is NOT activated here, so 'New Request' has neighboring
     // defined chips (exampleString -> collection base env) and error chips
     // (global-base / global-sub are undefined).
@@ -282,9 +281,7 @@ test.describe('Variable source and live preview across environment levels', () =
     // past the 350ms grace period instead of hiding.
     await tooltip.hover();
     const hoverStartedAt = Date.now();
-    await expect
-      .poll(() => Date.now() - hoverStartedAt >= 700, { timeout: 1000, intervals: [250] })
-      .toBe(true);
+    await expect.poll(() => Date.now() - hoverStartedAt >= 700, { timeout: 1000, intervals: [250] }).toBe(true);
     await expect.soft(tooltip).toBeVisible();
   });
 });

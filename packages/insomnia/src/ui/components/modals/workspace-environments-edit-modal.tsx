@@ -41,7 +41,16 @@ import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
 
-export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => void }) => {
+export const WorkspaceEnvironmentsEditModal = ({
+  onClose,
+  // Environment preselected on open, e.g. when opened for a specific variable's
+  // source. Only the current workspace's environments can appear here; unknown
+  // ids fall back to the active environment.
+  initialEnvironmentId,
+}: {
+  onClose: () => void;
+  initialEnvironmentId?: string;
+}) => {
   const { organizationId, projectId, workspaceId } = useParams<{
     organizationId: string;
     projectId: string;
@@ -64,7 +73,9 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(
+    initialEnvironmentId || activeEnvironment._id,
+  );
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );

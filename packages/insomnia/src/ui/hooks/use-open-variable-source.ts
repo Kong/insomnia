@@ -1,26 +1,34 @@
 import { models, services } from 'insomnia-data';
 import { useCallback } from 'react';
-import { href, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
 import type { OpenVariableSource, VariableSourceMeta } from '~/common/templating/types';
-import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import uiEventBus, { OPEN_ENVIRONMENTS_MODAL } from '~/ui/event-bus';
+
+import { buildResourceUrl } from './use-insomnia-navigation';
 
 /**
  * Opens the editor that owns a variable's source:
  * - folder environment → the folder pane with its Environment tab selected
  * - project environment → the environment workspace page with the env selected
- * - collection environment → the collection's environment page with the env selected
+ * - collection environment → the workspace environments modal (the picker's
+ *   manage dialog), opened in place via the workspace pane header
  *
  * Returns a stable callback so CodeMirror widgets can capture it at creation time.
- * Callers must live under the organization layout (where tab context and route
- * params exist); collection environments fall back to plain navigation because
- * buildResourceUrl maps a collection workspace to its debug tab, not its
- * environment page.
+ * Callers must live under the organization route (where route params exist).
+ *
+ * URLs come from the navigation registry (buildResourceUrl) and navigation is
+ * plain: this hook is reachable from root-mounted modals (CodePromptModal →
+ * MarkdownEditor → CodeEditor), so it must not statically import the tab system —
+ * that edge closes a circular reference back to root.tsx. The tab-list route sync
+ * (useInsomniaTab) activates the matching tab or creates a temporary one for the
+ * landed URL. The collection modal is likewise reached through the event bus: the
+ * modal embeds the same editors that consume this hook, so a static import would
+ * close a cycle.
  */
 export const useOpenVariableSource = () => {
   const navigate = useNavigate();
-  const tabNavigate = useTabNavigate();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -35,54 +43,48 @@ export const useOpenVariableSource = () => {
     }
 
     if (requestGroupId) {
-      const [workspace, requestGroup] = await Promise.all([
-        services.workspace.getById(workspaceId),
-        services.requestGroup.getById(requestGroupId),
-      ]);
-      const project = workspace ? await services.project.getById(workspace.parentId) : null;
+      const requestGroup = await services.requestGroup.getById(requestGroupId);
 
-      if (workspace && requestGroup && project) {
-        await tabNavigate(
-          {
-            organization: organizationId,
-            project,
-            workspace,
-            item: requestGroup,
-          },
-          {
-            withTab: true,
-            shouldNavigate: true,
-            // Land on the folder's Environment tab, where its env editor lives.
+      if (requestGroup) {
+        // Land on the folder's Environment tab, where its env editor lives.
+        navigate(
+          buildResourceUrl({
+            organizationId,
+            projectId,
+            workspaceId,
+            resource: requestGroup,
             searchParams: new URLSearchParams({ tab: 'environment' }),
-          },
+          }),
         );
         return;
       }
     }
 
-    const environmentTabUrl = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment', {
-      organizationId,
-      projectId,
-      workspaceId,
-    });
-    const searchParams = environmentId ? new URLSearchParams({ environmentId }) : undefined;
-
     const workspace = await services.workspace.getById(workspaceId);
-    const project = workspace ? await services.project.getById(workspace.parentId) : null;
+    if (!workspace) {
+      return;
+    }
 
-    // Project environments are environment workspaces — proper tab resources.
-    if (workspace && project && models.workspace.isEnvironment(workspace)) {
-      await tabNavigate(
-        { organization: organizationId, project, workspace, item: workspace },
-        { withTab: true, shouldNavigate: true, searchParams },
+    // Project environments are environment workspaces — navigate to their page,
+    // which is the workspace's home route.
+    if (models.workspace.isEnvironment(workspace)) {
+      navigate(
+        buildResourceUrl({
+          organizationId,
+          projectId,
+          workspaceId,
+          resource: workspace,
+          searchParams: environmentId ? new URLSearchParams({ environmentId }) : undefined,
+        }),
       );
       return;
     }
 
-    // A collection workspace has no tab resource for its environment page
-    // (buildResourceUrl maps it to the debug tab), so plain navigation is the
-    // only way to land on it; the tab system creates a temporary tab for the route.
-    navigate(searchParams ? `${environmentTabUrl}?${searchParams}` : environmentTabUrl);
+    // A collection environment has no page of its own; open the workspace's
+    // environments modal in place. A render context only contains the current
+    // workspace's collection environments, so the pane header's modal (bound to
+    // the current route's workspace) always holds the requested environment.
+    uiEventBus.emit(OPEN_ENVIRONMENTS_MODAL, environmentId ?? '');
   };
 
   // Keep a stable identity: CodeMirror widgets capture this callback when they are
