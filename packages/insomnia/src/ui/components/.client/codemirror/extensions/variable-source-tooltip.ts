@@ -70,6 +70,15 @@ export function getVariableSourceTooltipState(): VariableSourceTooltipState | nu
   return displayed;
 }
 
+// Whether the displayed tooltip is anchored inside the given element. Callers that
+// hide the module-global tooltip on their own lifecycle events (editor unmount or
+// mark refresh) use this to limit the hide to their own tooltips, so one editor
+// cannot kill a tooltip displayed for a chip in another editor.
+export function isVariableSourceTooltipInside(element: HTMLElement | null): boolean {
+  const state = getVariableSourceTooltipState();
+  return Boolean(state && element?.contains(state.target));
+}
+
 export function setHoveredVariableSourceTarget(target: HTMLElement | null) {
   hoveredTarget = target;
 }

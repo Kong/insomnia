@@ -485,8 +485,8 @@ export async function getRenderContext({
   }
 
   // Get Keys from ancestors (e.g. Folders)
-  // Iterate innermost-first to match the merge order in buildRenderContext, where
-  // the closest folder's value wins; otherwise an outer folder would claim the key.
+  // Iterate outermost-first (ancestors are innermost-first) so the closest folder's
+  // assignment lands last and wins, matching buildRenderContext's merge order.
   if (ancestors) {
     for (const ancestor of [...ancestors].reverse()) {
       if (isRequestGroup(ancestor) && 'environment' in ancestor && 'name' in ancestor) {

@@ -233,10 +233,22 @@ test.describe('Variable source and live preview across environment levels', () =
       const variableChip = page.locator(`[data-template*="${scenario.varSnippet}"]`);
       await expect.soft(variableChip).toHaveText(`${scenario.value} {${scenario.source}}`);
 
-      // With the source inline, no interactive tooltip appears on hover — poll past
-      // the tooltip dwell delay (400ms) and assert it never showed up.
+      // With the source inline, no interactive tooltip appears on hover — outlast
+      // the tooltip dwell delay (400ms), then assert it never showed up. While the
+      // chip stays hovered a shown tooltip would remain visible, so one post-dwell
+      // observation is enough.
       await variableChip.hover();
-      await expect.poll(async () => page.getByTestId('variable-source-tooltip').count(), { timeout: 1000 }).toBe(0);
+      const hoverStartedAt = Date.now();
+      await expect
+        .poll(
+          async () =>
+            Date.now() - hoverStartedAt >= 700 && (await page.getByTestId('variable-source-tooltip').count()) === 0,
+          {
+            timeout: 2000,
+            intervals: [250],
+          },
+        )
+        .toBe(true);
     });
   }
 

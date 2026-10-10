@@ -47,7 +47,7 @@ import { jsonPrettify } from '~/ui/utils/prettify/json';
 import { queryXPath } from '~/ui/utils/xpath/query';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
-import { hideVariableSourceTooltip } from './extensions/variable-source-tooltip';
+import { hideVariableSourceTooltip, isVariableSourceTooltipInside } from './extensions/variable-source-tooltip';
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
@@ -667,7 +667,10 @@ export const CodeEditor = memo(
       ]);
 
       const cleanUpEditor = useCallback(() => {
-        hideVariableSourceTooltip();
+        // Hide only a tooltip anchored inside this editor; another editor's tooltip survives.
+        if (isVariableSourceTooltipInside(codeMirror.current?.getWrapperElement() ?? null)) {
+          hideVariableSourceTooltip();
+        }
         codeMirror.current?.toTextArea();
         codeMirror.current?.closeHintDropdown();
         codeMirror.current = null;

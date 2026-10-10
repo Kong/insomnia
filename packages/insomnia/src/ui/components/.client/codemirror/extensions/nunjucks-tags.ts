@@ -1,7 +1,12 @@
 import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '~/common/misc';
-import type { HandleRender, OpenVariableSource, RenderContextAndKeys, VariableSourceMeta } from '~/common/templating/types';
+import type {
+  HandleRender,
+  OpenVariableSource,
+  RenderContextAndKeys,
+  VariableSourceMeta,
+} from '~/common/templating/types';
 import { tokenizeTag } from '~/common/templating/utils';
 import { showModal } from '~/ui/components/modals/index';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
@@ -9,6 +14,7 @@ import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 import {
   hideVariableSourceTooltip,
+  isVariableSourceTooltipInside,
   scheduleHideVariableSourceTooltip,
   setHoveredVariableSourceTarget,
   showVariableSourceTooltip,
@@ -72,8 +78,11 @@ async function _highlightNunjucksTags(
   const renderContextWithCacheKey = () => renderContext(renderCacheKey);
 
   // Marks (and their DOM elements with the mouseleave listeners) get rebuilt on every
-  // refresh; drop any open tooltip so it cannot outlive the element it is anchored to.
-  hideVariableSourceTooltip();
+  // refresh; drop only a tooltip anchored inside this editor, so a refresh in one
+  // editor cannot kill another editor's tooltip.
+  if (isVariableSourceTooltipInside(this.getWrapperElement())) {
+    hideVariableSourceTooltip();
+  }
 
   const activeMarks: CodeMirror.TextMarker[] = [];
   const doc: CodeMirror.Doc = this.getDoc();
@@ -398,9 +407,7 @@ async function _updateElementText(
             ? {
                 label: sourceMeta.label,
                 onOpen:
-                  sourceMeta.workspaceId && onOpenVariableSource
-                    ? () => onOpenVariableSource(sourceMeta)
-                    : undefined,
+                  sourceMeta.workspaceId && onOpenVariableSource ? () => onOpenVariableSource(sourceMeta) : undefined,
               }
             : undefined,
         });

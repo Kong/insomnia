@@ -40,7 +40,7 @@ import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
-import { hideVariableSourceTooltip } from './extensions/variable-source-tooltip';
+import { hideVariableSourceTooltip, isVariableSourceTooltipInside } from './extensions/variable-source-tooltip';
 
 // Replace the editor's entire value while PRESERVING undo/redo history and the
 // cursor. Unlike cm.setValue(), which clears history, replaceRange records the
@@ -342,7 +342,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [historyKey]);
 
     const cleanUpEditor = useCallback(() => {
-      hideVariableSourceTooltip();
+      // Hide only a tooltip anchored inside this editor; another editor's tooltip survives.
+      if (isVariableSourceTooltipInside(codeMirror.current?.getWrapperElement() ?? null)) {
+        hideVariableSourceTooltip();
+      }
       codeMirror.current?.toTextArea();
       codeMirror.current?.closeHintDropdown();
       codeMirror.current = null;
