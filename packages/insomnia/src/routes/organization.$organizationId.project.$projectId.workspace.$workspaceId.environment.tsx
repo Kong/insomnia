@@ -17,6 +17,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { useSearchParams } from 'react-router';
 
 import { debounce } from '~/common/misc';
 import { getDataFromKVPair } from '~/common/utils/environment-utils';
@@ -73,15 +74,33 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const allEnvironment = useMemo(() => {
+    return [baseEnvironment, ...subEnvironments];
+  }, [baseEnvironment, subEnvironments]);
+
+  // Deep-linkable environment selection, e.g. /environment?environmentId= (used by
+  // the variable live preview "Open" action). Validated against this workspace's
+  // environments; consumed after applying so forwarded search params cannot
+  // re-select it on later navigations (same pattern as the folder pane's ?tab=).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedEnvironmentId = searchParams.get('environmentId');
+  const isValidRequestedEnvironment =
+    requestedEnvironmentId !== null && allEnvironment.some(env => env._id === requestedEnvironmentId);
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(
+    isValidRequestedEnvironment ? requestedEnvironmentId : activeEnvironment._id,
+  );
+  useEffect(() => {
+    if (isValidRequestedEnvironment && requestedEnvironmentId) {
+      setSelectedEnvironmentId(requestedEnvironmentId);
+      const next = new URLSearchParams(searchParams);
+      next.delete('environmentId');
+      setSearchParams(next, { replace: true });
+    }
+  }, [isValidRequestedEnvironment, requestedEnvironmentId, searchParams, setSearchParams]);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
-
-  const allEnvironment = useMemo(() => {
-    return [baseEnvironment, ...subEnvironments];
-  }, [baseEnvironment, subEnvironments]);
 
   // Keep selectedEnvironmentId in sync when navigating between different environment workspaces/tabs.
   useEffect(() => {

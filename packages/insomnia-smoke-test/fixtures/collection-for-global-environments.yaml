@@ -34,6 +34,31 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Global Var Request
+    meta:
+      id: req_5f4e6d7c8b9a0f1e2d3c4b5a69788779
+      created: 1736618909374
+      modified: 1736618909374
+      isPrivate: false
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "global-base": "{{ _['global-base'] }}"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:

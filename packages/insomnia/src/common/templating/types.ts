@@ -259,9 +259,28 @@ export type PluginArgument =
   | PluginArgumentFile
   | PluginArgumentNumber;
 
+export interface VariableSourceMeta {
+  // Display name of the source; also the value the "Show variable source and value"
+  // setting renders inline (the keySource entry).
+  label: string;
+  // Workspace whose UI owns the source; absence means the source is not navigable
+  // (e.g. transient variables set by scripts or user-uploaded runner data).
+  workspaceId?: string;
+  // Specific environment to select after navigation, when the source is an environment.
+  environmentId?: string;
+  // Folder whose pane hosts the environment editor, when the source is a folder environment.
+  requestGroupId?: string;
+}
+
+// Opens the editor that owns a variable's source. Implemented by `useOpenVariableSource`.
+export type OpenVariableSource = (source: VariableSourceMeta) => void;
+
 export interface BaseRenderContext {
   getMeta: () => { requestId?: string; workspaceId?: string };
-  getKeysContext: () => { keyContext: Record<string, string> }; // { keyContext: { 'env var name': 'Base Env' } };
+  getKeysContext: () => {
+    keyContext: Record<string, string>; // { keyContext: { 'env var name': 'Base Env' } };
+    keyContextMeta?: Record<string, VariableSourceMeta>;
+  };
   getPurpose: () => RenderPurpose | undefined;
   getExtraInfo: () => { requestChain: string[] } | undefined;
   getEnvironmentId: () => string | undefined;

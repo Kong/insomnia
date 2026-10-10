@@ -46,6 +46,7 @@ import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
+import { VariableSourceTooltipHost } from '~/ui/components/variable-source-tooltip-host';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
@@ -748,6 +749,7 @@ const Root = () => {
         <Toaster />
       </div>
       <Modals />
+      <VariableSourceTooltipHost />
       <AppHooks />
       {/* triggered by insomnia://app/import */}
       {importObject.startedAt && (
