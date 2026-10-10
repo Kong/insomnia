@@ -48,6 +48,7 @@ import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
+import { isUndiscardableChange } from '../sync/git/canonical-file';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -3383,6 +3384,8 @@ export type GitDiffResult =
       filepath: string;
       scope: WorkspaceScope;
       staged: boolean;
+      /** True when the unstaged change reappears after every discard and can only be resolved by committing it */
+      undiscardable?: boolean;
     }
   | {
       errors: string[];
@@ -3415,12 +3418,26 @@ export const diffFileLoader = async ({
 
     const { name, scope } = getPreviewItemNameAndScope(diff);
 
+    let undiscardable = false;
+    if (!staged) {
+      try {
+        // `diff.before` is migrated and reordered for display, but discard restores the raw index/HEAD content
+        undiscardable = await isUndiscardableChange({
+          committedContent: fileStatus.rawStage || fileStatus.rawHead,
+          workingCopyContent: fileStatus.workdir,
+        });
+      } catch (err) {
+        console.warn('[git] Failed to check whether the change can be discarded', filepath, err);
+      }
+    }
+
     return {
       name: name || filepath,
       diff,
       filepath,
       scope,
       staged,
+      undiscardable,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';

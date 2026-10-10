@@ -467,6 +467,8 @@ export class GitVCS {
       head: cleanedHead, // Content from HEAD (last commit)
       workdir: blobs[2], // Content from working directory
       stage: cleanedStage, // Content from staging area (index)
+      rawHead: blobs[1], // Content from HEAD exactly as committed, before migration/normalization
+      rawStage: blobs[3], // Content from staging area exactly as staged, before migration/normalization
     };
 
     return diff;

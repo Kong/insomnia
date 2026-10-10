@@ -1644,6 +1644,11 @@ const OriginalGitProjectStagingModal: FC<
     return false;
   })();
 
+  const undiscardableFilePath =
+    previewDiffItem?.undiscardable && !previewDiffItem.staged && isPreviewDiffItemInChangesList
+      ? previewDiffItem.filepath
+      : null;
+
   return (
     <>
       <ModalOverlay
@@ -1803,6 +1808,7 @@ const OriginalGitProjectStagingModal: FC<
                           </BasicButton>
                         )}
                       </Heading>
+                      {undiscardableFilePath && <UndiscardableChangeWarning />}
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
@@ -1842,6 +1848,7 @@ const OriginalGitProjectStagingModal: FC<
       {showConfirmDiscardAndPullModal && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          showUndiscardableWarning={Boolean(undiscardableFilePath)}
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1857,6 +1864,7 @@ const OriginalGitProjectStagingModal: FC<
       {discardData && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          showUndiscardableWarning={undiscardableFilePath !== null && discardData.paths.includes(undiscardableFilePath)}
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1884,14 +1892,23 @@ const OriginalGitProjectStagingModal: FC<
   );
 };
 
+const UndiscardableChangeWarning = () => (
+  <p className="rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm) text-base">
+    <Icon icon="exclamation-triangle" className="mr-2" />
+    The changes in this file can&apos;t be discarded. The committed file isn&apos;t in the format Insomnia generates,
+    so Insomnia rewrites it every time it&apos;s restored. Commit this file once to resolve it.
+  </p>
+);
+
 interface ConfirmModalProps {
   message: string;
+  showUndiscardableWarning?: boolean;
   onConfirm?: () => void;
   onClose?: () => void;
 }
 
 // TODO - refactor this to use the new modal system
-const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps) => {
+const ConfirmDiscardModal = ({ message, showUndiscardableWarning, onConfirm, onClose }: ConfirmModalProps) => {
   return (
     <ModalOverlay
       isOpen
@@ -1923,6 +1940,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 </Button>
               </div>
               <div className="">{message}</div>
+              {showUndiscardableWarning && <UndiscardableChangeWarning />}
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
