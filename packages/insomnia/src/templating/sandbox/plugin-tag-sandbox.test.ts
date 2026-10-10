@@ -485,6 +485,40 @@ describe('manifest-declared module grants (C3)', () => {
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
+
+  const assertTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var assert = require('assert'); assert.strictEqual(1, 1); return 'ok'; } }];";
+
+  it('a plugin granted "assert" can use it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: assertTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['assert'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('ok');
+  });
+
+  it('a plugin declaring the node:assert alias can use it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: assertTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:assert'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('ok');
+  });
+
+  it('a plugin without the grant is denied "assert" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: assertTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'assert' not permitted by manifest");
+  });
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
