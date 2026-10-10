@@ -38,6 +38,7 @@ jobs:
           upload-sbom-release-assets: false
   build-and-upload-release-artifacts:
     if: startsWith(github.ref_name, 'release/')
+    environment: release
     timeout-minutes: 45
     runs-on: ${{ matrix.os }}
     permissions:
