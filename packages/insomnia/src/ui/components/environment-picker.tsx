@@ -1,7 +1,18 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { models } from 'insomnia-data';
-import { Fragment, useState } from 'react';
-import { Button, Dialog, DialogTrigger, Heading, ListBox, ListBoxItem, Popover, Text } from 'react-aria-components';
+import { Fragment, useEffect, useState } from 'react';
+import {
+  Button,
+  Dialog,
+  DialogTrigger,
+  Heading,
+  Input,
+  ListBox,
+  ListBoxItem,
+  Popover,
+  SearchField,
+  Text,
+} from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
@@ -13,6 +24,7 @@ import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import uiEventBus from '../event-bus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { filterProjectEnvironmentItems, type ProjectEnvironmentItem } from './environment-picker-utils';
 import { Icon } from './icon';
 
 const triggerButtonClassName =
@@ -100,6 +112,14 @@ export const EnvironmentPicker = ({
   const navigate = useNavigate();
 
   const [isNewProjectEnvironmentModalOpen, setIsNewProjectEnvironmentModalOpen] = useState(false);
+  const [projectEnvironmentFilter, setProjectEnvironmentFilter] = useState('');
+
+  // Start from the full list every time the dropdown is reopened.
+  useEffect(() => {
+    if (!isProjectPickerOpen) {
+      setProjectEnvironmentFilter('');
+    }
+  }, [isProjectPickerOpen]);
 
   const getEnvironmentIcon = (isPrivate?: boolean): IconProp =>
     isPrivate
@@ -112,14 +132,7 @@ export const EnvironmentPicker = ({
 
   // Flattened list of every project environment file plus its sub-environments, so picking
   // one is a single action instead of choosing a file first and then a sub-environment.
-  const projectEnvironmentItems: {
-    id: string;
-    name: string;
-    icon: IconProp;
-    color?: string | null;
-    isBase: boolean;
-    workspaceId?: string;
-  }[] = [
+  const projectEnvironmentItems: ProjectEnvironmentItem[] = [
     { id: '', name: 'No Project Environment', icon: 'cancel', isBase: true },
     ...globalBaseEnvironments.flatMap(baseEnv => [
       {
@@ -138,9 +151,15 @@ export const EnvironmentPicker = ({
           icon: getEnvironmentIcon(subEnv.isPrivate),
           color: subEnv.color,
           isBase: false,
+          parentId: baseEnv._id,
         })),
     ]),
   ];
+
+  const filteredProjectEnvironmentItems = filterProjectEnvironmentItems(
+    projectEnvironmentItems,
+    projectEnvironmentFilter,
+  );
 
   return (
     <div className="flex items-center gap-1">
@@ -189,12 +208,37 @@ export const EnvironmentPicker = ({
                   <InheritanceTooltip />
                 </div>
               </Heading>
+              <div className="shrink-0 px-2 pt-1">
+                <SearchField
+                  aria-label="Filter project environments"
+                  className="group relative"
+                  value={projectEnvironmentFilter}
+                  onChange={setProjectEnvironmentFilter}
+                >
+                  <Input
+                    placeholder="Filter"
+                    autoComplete="off"
+                    className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                  />
+                  <div className="absolute top-0 right-0 flex h-full items-center px-2">
+                    <Button
+                      aria-label="Clear filter"
+                      className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                    >
+                      <Icon icon="close" />
+                    </Button>
+                  </div>
+                </SearchField>
+              </div>
               <ListBox
                 aria-label="Select a Project Environment"
                 selectionMode="single"
                 disallowEmptySelection
                 key={activeGlobalEnvironment?._id || 'none'}
-                items={projectEnvironmentItems}
+                items={filteredProjectEnvironmentItems}
+                renderEmptyState={() => (
+                  <div className="px-(--padding-sm) py-1 text-(--hl-md) italic">No matching environments</div>
+                )}
                 selectedKeys={[activeGlobalEnvironment?._id || activeGlobalBaseEnvironment?._id || '']}
                 onSelectionChange={keys => {
                   if (keys === 'all' || !keys) {
