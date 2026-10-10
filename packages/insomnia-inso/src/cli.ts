@@ -230,16 +230,18 @@ export const getListFromFileOrUrl = (content: string, fileType?: string): Record
       throw new Error('Upload JSON file can not be parsed');
     }
   } else if (fileType === 'csv') {
-    const csvRows = Papa.parse<string[]>(content, { skipEmptyLines: true, delimiter: ',' }).data;
+    const { data: csvRows, errors } = Papa.parse<string[]>(content, { skipEmptyLines: true, delimiter: ',' });
+    // short rows are supported, only structural errors invalidate the file
+    const structural = errors.find(error => error.code !== 'TooFewFields' && error.code !== 'TooManyFields');
+    if (structural) {
+      throw new Error(`CSV file can not be parsed: ${structural.message ?? structural.code}`);
+    }
     // at least 2 rows required for csv, first row as variable names
     if (csvRows.length > 1) {
       const csvHeaders = csvRows[0];
       const csvContentRows = csvRows.slice(1);
       return csvContentRows.map(contentRow =>
-        csvHeaders.reduce((acc: Record<string, any>, cur, idx) => {
-          acc[cur] = contentRow[idx] ?? '';
-          return acc;
-        }, {}),
+        Object.fromEntries(csvHeaders.map((header, idx) => [header, contentRow[idx] ?? ''])),
       );
     }
     throw new Error('CSV file must contain at least two rows with first row as variable names');
