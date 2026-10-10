@@ -16,6 +16,7 @@
 import { getOperationAST, OperationTypeNode, parse } from 'graphql';
 import type { OAuth1SignatureMethod } from 'insomnia-data/common';
 import { CONTENT_TYPE_GRAPHQL, METHOD_GET } from 'insomnia-data/common';
+import { z } from 'zod/v4';
 
 import type { BaseModel } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
@@ -181,13 +182,15 @@ export type RequestAuthentication =
 
 export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
 
-export interface RequestHeader {
-  name: string;
-  id?: string;
-  value: string;
-  description?: string;
-  disabled?: boolean;
-}
+export const requestHeaderSchema = z.object({
+  name: z.string(),
+  id: z.string().optional(),
+  value: z.string(),
+  description: z.string().optional(),
+  disabled: z.boolean().optional(),
+});
+export const HeadersSchema = z.array(requestHeaderSchema);
+export type RequestHeader = z.infer<typeof requestHeaderSchema>;
 
 export interface RequestParameter {
   name: string;
