@@ -2069,6 +2069,24 @@ export class GitVCS {
     }
   }
 
+  // Sets the git index entry for `filepath` to `content` directly, independent of
+  // whatever is currently on disk in the working directory. Used to stage/unstage a
+  // single entity out of a file that bundles many entities (eg. a whole workspace
+  // export) without staging the rest of that file's changes.
+  async stagePartialContent(filepath: string, content: string) {
+    const normalizedFilepath = convertToPosixSep(path.join('.', filepath));
+    const oid = await git.writeBlob({ ...this._baseOpts, blob: new TextEncoder().encode(content) });
+    await git.updateIndex({ ...this._baseOpts, filepath: normalizedFilepath, oid, add: true });
+  }
+
+  // Overwrites the working-directory copy of `filepath` with `content`, leaving
+  // the index untouched. Used to discard a single entity's unstaged changes out
+  // of a file that bundles many entities.
+  async discardPartialContent(filepath: string, content: string) {
+    // @ts-expect-error -- TSCONVERSION
+    await this._baseOpts.fs.promises.writeFile(filepath, content, 'utf8');
+  }
+
   async discardChanges(changes: { path: string; status: Status }[]) {
     for (const change of changes) {
       // If the file didn't exist in HEAD, handle based on staging status

@@ -91,6 +91,8 @@ export type HandleChannels =
   | 'git.getBranchRemoteInfo'
   | 'git.stageChanges'
   | 'git.unstageChanges'
+  | 'git.stagePartialContent'
+  | 'git.discardPartialContent'
   | 'git.updateGitRepo'
   | 'git.listGitProviders'
   | 'git.initSignInToGitProvider'
