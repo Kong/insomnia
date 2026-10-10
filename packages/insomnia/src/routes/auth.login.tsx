@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { href, redirect, useNavigate } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { getLoginUrl } from '~/ui/auth-session-provider.client';
+import { ensureSessionKeyPair, getLoginUrl } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
 import { Tooltip } from '~/ui/components/tooltip';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
@@ -37,7 +38,12 @@ const GoogleIcon = (props: React.ReactSVGElement['props']) => {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = await request.formData();
   const provider = data.get('provider');
-  const url = new URL(getLoginUrl());
+
+  await ensureSessionKeyPair();
+  const loginUrl = getLoginUrl();
+  invariant(loginUrl, 'Login keys are not ready yet. Please wait a moment and try again.');
+
+  const url = new URL(loginUrl);
 
   if (typeof provider === 'string' && provider) {
     url.searchParams.set('provider', provider);
