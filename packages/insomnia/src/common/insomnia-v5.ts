@@ -824,18 +824,48 @@ export async function getInsomniaV5DataExport({
   includePrivateEnvironments: boolean;
   requestIds?: string[];
 }) {
+  let workspace: Workspace | undefined;
+  let workspaceDescendants: BaseModel[];
   try {
-    const workspace = await services.workspace.getById(workspaceId);
+    workspace = await services.workspace.getById(workspaceId);
 
     if (!workspace) {
       throw new Error('Workspace not found');
     }
 
+    // Fetch all descendants of the workspace (requests, folders, environments, etc.)
+    workspaceDescendants = await database.getWithDescendants(workspace, Object.values(MODELS_BY_EXPORT_TYPE));
+  } catch (err) {
+    console.error('Failed to export Insomnia v5 data', err);
+    return '';
+  }
+
+  return serializeInsomniaV5Export({ workspace, workspaceDescendants, includePrivateEnvironments, requestIds });
+}
+
+/**
+ * Converts a workspace and its descendants to v5 YAML format without touching the database
+ *
+ * @param workspace - The workspace to export
+ * @param workspaceDescendants - The workspace and its descendants, in the order returned by `database.getWithDescendants`
+ * @param includePrivateEnvironments - Whether to include private environment data
+ * @param requestIds - Optional array of specific request IDs to export (if not provided, exports all)
+ * @returns YAML string containing the exported workspace data, or an empty string if the export fails
+ */
+export function serializeInsomniaV5Export({
+  workspace,
+  workspaceDescendants,
+  includePrivateEnvironments,
+  requestIds,
+}: {
+  workspace: Workspace;
+  workspaceDescendants: BaseModel[];
+  includePrivateEnvironments: boolean;
+  requestIds?: string[];
+}) {
+  try {
     // Get all model types that can be exported
     const exportableTypes = Object.values(MODELS_BY_EXPORT_TYPE);
-
-    // Fetch all descendants of the workspace (requests, folders, environments, etc.)
-    const workspaceDescendants = await database.getWithDescendants(workspace, exportableTypes);
 
     // Filter to only include resources that are exportable
     const exportableResources = workspaceDescendants.filter(resource => {
