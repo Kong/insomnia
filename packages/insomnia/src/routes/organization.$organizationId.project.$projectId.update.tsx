@@ -1,13 +1,15 @@
 import { createTeamProject, deleteTeamProject, isApiError, updateTeamProject } from 'insomnia-api';
-import { models, services } from 'insomnia-data';
+import { models, services, type Workspace } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { projectLock } from '~/common/project';
+import { projectLock, regenerateProjectDocIds } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
+import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
+import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.update';
@@ -20,6 +22,27 @@ interface UpdateProjectInputData {
   ref?: string;
   connectRepositoryLater?: boolean;
   selectedAuthorEmail?: string | null;
+}
+
+/**
+ * Clear stale workspace-level git state (legacy workspace git sync wrote
+ * gitRepositoryId; project-scoped git wrote gitFilePath) after a project leaves
+ * git storage, so cards stop showing git status and cloud sync initialization
+ * is not skipped. Returns the project's workspaces for further processing.
+ */
+async function clearWorkspaceGitState(projectId: string): Promise<Workspace[]> {
+  const projectWorkspaces = await services.workspace.listByParentId(projectId);
+  for (const workspace of projectWorkspaces) {
+    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await services.workspaceMeta.update(workspaceMeta, {
+      gitRepositoryId: null,
+      gitFilePath: null,
+      gitFileLastSyncTime: null,
+      hasUncommittedChanges: false,
+      hasUnpushedChanges: false,
+    });
+  }
+  return projectWorkspaces;
 }
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
@@ -143,6 +166,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         throw error;
       }
 
+      // Re-key docs so ids owned by the previous storage cannot be hijacked by a later re-import.
+      await regenerateProjectDocIds(project);
+
       await services.project.update(project, { name, remoteId: null });
 
       showToast({
@@ -174,10 +200,36 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         if (models.project.isConnectedGitProject(project)) {
           const gitRepository = await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '');
 
-          gitRepository && (await services.gitRepository.remove(gitRepository));
+          if (gitRepository) {
+            // Stop the FS watcher and clean up the managed repo folder before touching
+            // DB docs — an active watcher would flush the re-keyed docs back into the
+            // repo files. User-chosen folders are left untouched.
+            await window.main.git.cleanupGitRepoStorage({ gitRepositoryId: gitRepository._id });
+            await services.gitRepository.remove(gitRepository);
+          }
         }
 
-        await services.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
+        // Re-key docs so ids owned by the previous storage cannot be hijacked by a later re-import.
+        await regenerateProjectDocIds(project);
+
+        const updatedProject = await services.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
+
+        if (models.project.isGitProject(project)) {
+          const projectWorkspaces = await clearWorkspaceGitState(project._id);
+
+          for (const workspace of projectWorkspaces) {
+            try {
+              const vcs = syncVCSLikeForWorkspace(workspace._id);
+              await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
+              await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
+            } catch (e) {
+              console.warn(
+                'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
+                e,
+              );
+            }
+          }
+        }
 
         project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
 
@@ -260,6 +312,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           throw error;
         }
       }
+
+      // Re-key docs so ids owned by the previous storage cannot be hijacked by a later re-import.
+      await regenerateProjectDocIds(project);
 
       if (projectData.connectRepositoryLater) {
         await services.project.update(project, { name, gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
@@ -353,6 +408,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         await window.main.git.cleanupGitRepoStorage({ gitRepositoryId: gitRepository._id });
         await services.gitRepository.remove(gitRepository);
       }
+
+      await regenerateProjectDocIds(project);
+      await clearWorkspaceGitState(project._id);
+
       await services.project.update(project, { name, gitRepositoryId: null });
 
       reportGitProjectCount(organizationId, sessionId);
