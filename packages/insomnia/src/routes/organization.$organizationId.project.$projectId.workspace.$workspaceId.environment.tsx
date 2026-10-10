@@ -74,26 +74,33 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
-  const [searchParams] = useSearchParams();
+  const allEnvironment = useMemo(() => {
+    return [baseEnvironment, ...subEnvironments];
+  }, [baseEnvironment, subEnvironments]);
+
+  // Deep-linkable environment selection, e.g. /environment?environmentId= (used by
+  // the variable live preview "Open" action). Validated against this workspace's
+  // environments; consumed after applying so forwarded search params cannot
+  // re-select it on later navigations (same pattern as the folder pane's ?tab=).
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedEnvironmentId = searchParams.get('environmentId');
+  const isValidRequestedEnvironment =
+    requestedEnvironmentId !== null && allEnvironment.some(env => env._id === requestedEnvironmentId);
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(
-    requestedEnvironmentId || activeEnvironment._id,
+    isValidRequestedEnvironment ? requestedEnvironmentId : activeEnvironment._id,
   );
-  // Follow the ?environmentId= query param when it changes (e.g. "Open" from the
-  // variable live preview jumps straight to the source environment).
   useEffect(() => {
-    if (requestedEnvironmentId) {
+    if (isValidRequestedEnvironment && requestedEnvironmentId) {
       setSelectedEnvironmentId(requestedEnvironmentId);
+      const next = new URLSearchParams(searchParams);
+      next.delete('environmentId');
+      setSearchParams(next, { replace: true });
     }
-  }, [requestedEnvironmentId]);
+  }, [isValidRequestedEnvironment, requestedEnvironmentId, searchParams, setSearchParams]);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
-
-  const allEnvironment = useMemo(() => {
-    return [baseEnvironment, ...subEnvironments];
-  }, [baseEnvironment, subEnvironments]);
 
   // Keep selectedEnvironmentId in sync when navigating between different environment workspaces/tabs.
   useEffect(() => {

@@ -117,9 +117,19 @@ export function setPointerInBubble(inBubble: boolean) {
   }
 }
 
+// Never surface a hover tooltip for content covered by an open modal — e.g. the
+// async hover render of a chip that opens the live-preview modal must not pop a
+// bubble over it. Chips inside the modal itself still get tooltips: the bubble
+// portal is appended after the modal's, so it stacks above it. Only legacy base
+// modals carry the Modal label; react-aria modals never match, so their editors
+// are unaffected.
+function isTargetCoveredByOpenModal(target: HTMLElement) {
+  const modals = document.querySelectorAll(MODAL_SELECTOR);
+  return modals.length > 0 && !Array.from(modals).some(modal => modal.contains(target));
+}
+
 export function showVariableSourceTooltip(options: VariableSourceTooltipState) {
-  // Never surface a hover tooltip on top of an open modal.
-  if (document.querySelector(MODAL_SELECTOR)) {
+  if (isTargetCoveredByOpenModal(options.target)) {
     hideVariableSourceTooltip();
     return;
   }
@@ -144,7 +154,7 @@ export function showVariableSourceTooltip(options: VariableSourceTooltipState) {
       if (!next || !next.target.isConnected) {
         return;
       }
-      if (document.querySelector(MODAL_SELECTOR)) {
+      if (isTargetCoveredByOpenModal(next.target)) {
         return;
       }
       // The pointer may have moved on (or off) during the async hover render.

@@ -413,25 +413,16 @@ export async function getRenderContext({
   const keySource: Record<string, string> = {};
   const keySourceMeta: Record<string, VariableSourceMeta> = {};
   // Function that gets Keys and stores their Source location
-  function getKeySource(
-    subObject: string | Record<string, any>,
-    inKey: string,
-    inSource: string,
-    inMeta?: VariableSourceMeta,
-  ) {
+  function getKeySource(subObject: string | Record<string, any>, inKey: string, meta: VariableSourceMeta) {
     // Add key to map if it's not root
     if (inKey) {
       const normalizedKey = templatingUtils.normalizeToDotAndBracketNotation(inKey);
-      keySource[normalizedKey] = inSource;
-
-      if (inMeta) {
-        keySourceMeta[normalizedKey] = inMeta;
-      } else {
-        // Sources without meta (runner upload data, script-local variables) override
-        // earlier environments for the value; drop the stale source so consumers
-        // don't point at an environment that no longer supplies the value.
-        delete keySourceMeta[normalizedKey];
-      }
+      // The label doubles as the keySource entry the "Show variable source and value"
+      // setting renders. Transient sources (runner upload data, script-local
+      // variables) carry no workspaceId, so overwriting an environment's metadata
+      // with one of these keeps consumers honest without becoming navigable.
+      keySource[normalizedKey] = meta.label;
+      keySourceMeta[normalizedKey] = meta;
     }
 
     // Recurse down for Objects and Arrays
@@ -440,11 +431,11 @@ export async function getRenderContext({
     if (typeStr === '[object Object]') {
       for (const key of Object.keys(subObject)) {
         // @ts-expect-error -- mapping unsoundness
-        getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource, inMeta);
+        getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), meta);
       }
     } else if (typeStr === '[object Array]' && Array.isArray(subObject)) {
       for (const [i, element] of subObject.entries()) {
-        getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), inSource, inMeta);
+        getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), meta);
       }
     }
   }
@@ -452,7 +443,7 @@ export async function getRenderContext({
   const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
 
   if (rootGlobalEnvironment) {
-    getKeySource(rootGlobalEnvironment.data || {}, inKey, rootGlobalEnvironment.name || 'Base Environment (Project)', {
+    getKeySource(rootGlobalEnvironment.data || {}, inKey, {
       label: rootGlobalEnvironment.name || 'Base Environment (Project)',
       workspaceId: rootGlobalEnvironment.parentId,
       environmentId: rootGlobalEnvironment._id,
@@ -460,25 +451,23 @@ export async function getRenderContext({
   }
 
   if (subGlobalEnvironment) {
-    const subGlobalLabel = `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`;
-    getKeySource(subGlobalEnvironment.data || {}, inKey, subGlobalLabel, {
-      label: subGlobalLabel,
+    getKeySource(subGlobalEnvironment.data || {}, inKey, {
+      label: `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`,
       workspaceId: rootGlobalEnvironment?.parentId,
       environmentId: subGlobalEnvironment._id,
     });
   }
 
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, rootEnvironment?.name || 'Base Environment (API Collection)', {
+  getKeySource((rootEnvironment || {}).data, inKey, {
     label: rootEnvironment?.name || 'Base Environment (API Collection)',
     workspaceId: workspace._id,
     environmentId: rootEnvironment?._id,
   });
 
   if (subEnvironment && subEnvironment._id !== rootEnvironment?._id) {
-    const subLabel = `${subEnvironment.name || 'Environment'} (API Collection Sub-Environment)`;
-    getKeySource(subEnvironment.data || {}, inKey, subLabel, {
-      label: subLabel,
+    getKeySource(subEnvironment.data || {}, inKey, {
+      label: `${subEnvironment.name || 'Environment'} (API Collection Sub-Environment)`,
       workspaceId: workspace._id,
       environmentId: subEnvironment._id,
     });
@@ -490,7 +479,7 @@ export async function getRenderContext({
   if (ancestors) {
     for (const ancestor of [...ancestors].reverse()) {
       if (isRequestGroup(ancestor) && 'environment' in ancestor && 'name' in ancestor) {
-        getKeySource(ancestor.environment || {}, inKey, ancestor.name || '', {
+        getKeySource(ancestor.environment || {}, inKey, {
           label: ancestor.name || '',
           workspaceId: workspace._id,
           requestGroupId: ancestor._id,
@@ -501,11 +490,15 @@ export async function getRenderContext({
 
   // Get Keys from user upload environment
   if (userUploadEnvironment) {
-    getKeySource(userUploadEnvironment.data || {}, inKey, userUploadEnvironment.name || 'uploadData');
+    getKeySource(userUploadEnvironment.data || {}, inKey, {
+      label: userUploadEnvironment.name || 'uploadData',
+    });
   }
 
   if (transientVariables) {
-    getKeySource(transientVariables.data || {}, inKey, transientVariables.name || 'scriptLocalVariables');
+    getKeySource(transientVariables.data || {}, inKey, {
+      label: transientVariables.name || 'scriptLocalVariables',
+    });
   }
 
   const settings = await services.settings.get();

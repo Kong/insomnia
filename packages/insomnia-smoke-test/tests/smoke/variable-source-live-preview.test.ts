@@ -150,7 +150,9 @@ const assertOpenLandedOnSourceEditor = async (page: Page, scenario: (typeof SCEN
     return;
   }
   if (scenario.openSurface === 'environment-page') {
-    await expect.soft(page).toHaveURL(/\/environment\?environmentId=/);
+    // The ?environmentId= deep link is consumed after applying, so assert the final
+    // URL and the preselected row.
+    await expect.soft(page).toHaveURL(/\/environment\/?$/);
     await page.getByRole('row', { name: scenario.envPageRow }).waitFor({ state: 'visible' });
     return;
   }

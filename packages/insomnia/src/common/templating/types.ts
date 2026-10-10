@@ -260,6 +260,8 @@ export type PluginArgument =
   | PluginArgumentNumber;
 
 export interface VariableSourceMeta {
+  // Display name of the source; also the value the "Show variable source and value"
+  // setting renders inline (the keySource entry).
   label: string;
   // Workspace whose UI owns the source; absence means the source is not navigable
   // (e.g. transient variables set by scripts or user-uploaded runner data).

@@ -76,8 +76,10 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   const { workspace } = props;
   const { template, isTag, variableSource, onOpenSource } = state;
   const title = isTag ? 'Tag' : 'Variable';
+  // Null-checks only; the Open button's own render guard decides when the action is
+  // offered, and the hook validates the source is navigable.
   const openSource = () => {
-    if (!variableSource?.workspaceId || !onOpenSource) {
+    if (!variableSource || !onOpenSource) {
       return;
     }
     modalRef.current?.hide();
@@ -98,7 +100,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       onChange={handleTemplateChange}
       defaultValue={template}
       variableSource={variableSource}
-      onOpenSource={variableSource?.workspaceId ? openSource : undefined}
+      onOpenSource={openSource}
     />
   );
 
