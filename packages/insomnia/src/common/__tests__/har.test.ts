@@ -470,7 +470,7 @@ describe('export', () => {
         modified: 123,
         created: 123,
         parentId: workspace._id,
-        type: models.response.type,
+        type: models.request.type,
         headers: [
           {
             name: 'Content-Type',
@@ -541,7 +541,7 @@ describe('export', () => {
       const request: Request = {
         ...models.request.init(),
         _id: 'req_123',
-        type: models.response.type,
+        type: models.request.type,
         modified: 123,
         created: 123,
         parentId: workspace._id,
