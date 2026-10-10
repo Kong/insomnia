@@ -323,12 +323,24 @@ async function flushWorkspacesToDisk(baseDir: string, projectId: string, logger?
 
       if (!fileAlreadyExists) {
         try {
-          const yamlContent = await getInsomniaV5DataExport({
+          const { yaml: yamlContent, errors: exportErrors } = await getInsomniaV5DataExport({
             workspaceId: workspace._id,
             includePrivateEnvironments: false,
           });
 
-          if (!yamlContent?.trim()) {
+          // Never write a partial export into the repo: an entity missing from the file
+          // would be treated as deleted by deleteOrphans on the next import.
+          if (exportErrors.length > 0) {
+            console.warn(
+              '[git-migration] Skipping flush, export could not cover the whole workspace:',
+              workspace._id,
+              exportErrors.map(error => `${error.name} (${error.entityType})`),
+            );
+            logger?.('warn', `Skipping flush for workspace ${workspace._id}: export incomplete`);
+            return;
+          }
+
+          if (!yamlContent.trim()) {
             console.warn('[git-migration] Empty export for workspace', workspace._id, '— skipping');
             logger?.('warn', `Empty export for workspace ${workspace._id} — skipping`);
             return;

@@ -6,6 +6,7 @@ import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
 import { invariant } from '~/common/utils/invariant';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
+import { showError } from '~/ui/components/modals';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.move';
@@ -27,10 +28,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     // duplicate the workspace to the new project
     const newProject = (await services.project.getById(newProjectId)) as Project;
-    const workspaceExport = await getInsomniaV5DataExport({
+    const { yaml: workspaceExport, errors: exportErrors } = await getInsomniaV5DataExport({
       workspaceId: oldWorkspace._id,
       includePrivateEnvironments: true,
     });
+
+    // The export feeds the import below, so anything missing from it is lost for good.
+    // Refuse the move instead of quietly moving an incomplete workspace.
+    invariant(
+      exportErrors.length === 0 && workspaceExport,
+      `workspace export failed schema validation: ${exportErrors
+        .map(error => `${error.name} (${error.entityType})`)
+        .join(', ')}`,
+    );
 
     const data = importInsomniaV5Data(workspaceExport);
 
@@ -58,6 +68,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       workspaceScope: newWorkspace.scope,
     };
   } catch (error) {
+    // Nothing consumes this action's error, and a rejected duplicate has to be visible.
+    showError({
+      title: 'Duplicate Workspace Failed',
+      error: error instanceof Error ? error : new Error(String(error)),
+    });
     return {
       error: 'Failed to duplicate workspace: ' + (error instanceof Error ? error.message : String(error)),
     };

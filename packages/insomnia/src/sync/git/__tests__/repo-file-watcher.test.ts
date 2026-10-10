@@ -6,10 +6,13 @@ import { services } from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { database as db } from '../../../common/database';
+import { getInsomniaV5DataExport } from '../../../common/insomnia-v5';
 import { RepoFileWatcherRegistry } from '../repo-file-watcher';
 
 vi.mock('../../../common/insomnia-v5', () => ({
-  getInsomniaV5DataExport: vi.fn().mockResolvedValue('type: collection.insomnia.rest/5.0\nname: Preserved\n'),
+  getInsomniaV5DataExport: vi
+    .fn()
+    .mockResolvedValue({ yaml: 'type: collection.insomnia.rest/5.0\nname: Preserved\n', errors: [] }),
   tryImportV5Data: vi.fn().mockReturnValue({ data: undefined, error: undefined }),
 }));
 
@@ -252,5 +255,65 @@ describe('RepoFileWatcher ruleset import problems', () => {
     expect(await exists()).toBe(true);
     expect(await services.projectLintRuleset.getByParentId(PROJECT_ID)).toBeFalsy();
     expect(getRulesetImportIssue(REPO_ID)).not.toBeNull();
+  });
+});
+
+describe('RepoFileWatcher incomplete exports', () => {
+  let repoDir: string;
+  let registry: RepoFileWatcherRegistry;
+
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+    repoDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-repo-watcher-partial-'));
+    registry = makeRegistry();
+  });
+
+  afterEach(async () => {
+    registry.stopAll();
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    vi.clearAllMocks();
+    vi.mocked(getInsomniaV5DataExport).mockResolvedValue({
+      yaml: 'type: collection.insomnia.rest/5.0\nname: Preserved\n',
+      errors: [],
+    });
+  });
+
+  const fileExists = (name: string) =>
+    fs.promises
+      .access(path.join(repoDir, name))
+      .then(() => true)
+      .catch(() => false);
+
+  // Regression: a partial export must never reach the repo. An entity missing from the
+  // file is deleted by deleteOrphans on the next import, and one workspace whose export
+  // is incomplete must not stop the remaining ones from being written.
+  it('skips the workspaces it cannot export completely and still writes the others', async () => {
+    const incomplete = await createWorkspaceWithMeta('insomnia.wrk_incomplete.yaml', null);
+    await createWorkspaceWithMeta('insomnia.wrk_complete.yaml', null);
+
+    // Both workspaces flush cleanly first, so both files exist on disk.
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    expect(await fileExists('insomnia.wrk_incomplete.yaml')).toBe(true);
+    expect(await fileExists('insomnia.wrk_complete.yaml')).toBe(true);
+
+    // Now the first workspace cannot be exported completely, the second still can.
+    vi.mocked(getInsomniaV5DataExport).mockImplementation(async ({ workspaceId }) =>
+      workspaceId === incomplete._id
+        ? {
+            yaml: 'type: collection.insomnia.rest/5.0\nname: Incomplete\n',
+            errors: [{ entityType: 'Request', name: 'Broken Request', path: 'collection[0]', issues: [] }],
+          }
+        : { yaml: 'type: collection.insomnia.rest/5.0\nname: Complete\n', errors: [] },
+    );
+
+    await registry.flushNow(REPO_ID);
+
+    // The incomplete workspace keeps the file it already had instead of a partial one …
+    const incompleteContent = await fs.promises.readFile(path.join(repoDir, 'insomnia.wrk_incomplete.yaml'), 'utf8');
+    expect(incompleteContent).not.toContain('Incomplete');
+    // … and the workspace flushed after it is written anyway.
+    const completeContent = await fs.promises.readFile(path.join(repoDir, 'insomnia.wrk_complete.yaml'), 'utf8');
+    expect(completeContent).toContain('Complete');
+    expect(await services.workspace.getById(incomplete._id)).not.toBeNull();
   });
 });
