@@ -105,11 +105,29 @@ export const CookieJarSchema = z.object({
   cookies: z.array(CookieSchema).optional(),
 });
 
-const baseEnvironmentSchema = environment.baseEnvironmentSchema.omit({ metaSortKey: true }).extend({
+// Keep the key order consistent so that export to YAML maintains the same order as the model's shape
+const { name, data, color, dataPropertyOrder, ...rest } = environment.baseEnvironmentSchema.omit({
+  metaSortKey: true,
+}).shape;
+export const EnvironmentSchema = z.object({
+  name,
   meta: MetaSchema.optional(),
-});
-export const EnvironmentSchema = baseEnvironmentSchema.extend({
-  subEnvironments: z.array(baseEnvironmentSchema).optional(),
+  data,
+  color,
+  subEnvironments: z
+    .array(
+      z.object({
+        name,
+        meta: MetaSchema.optional(),
+        data,
+        dataPropertyOrder,
+        color,
+        ...rest,
+      }),
+    )
+    .optional(),
+  dataPropertyOrder,
+  ...rest,
 });
 
 export const GRPCRequestSchema = z.object({
