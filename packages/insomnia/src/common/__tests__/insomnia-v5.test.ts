@@ -491,6 +491,53 @@ collection: []
       expect(parsed.mcpRequest.roots).toHaveLength(1);
     });
 
+    it('exports mcp request with a stable key order', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_mcp_order',
+        name: 'MCP Order Workspace',
+        parentId: 'proj_test',
+        scope: 'mcp',
+      });
+
+      await services.environment.create({
+        _id: 'env_mcp_order',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.mcpRequest.create({
+        _id: 'mcp-request_order',
+        name: 'Order MCP client',
+        parentId: workspace._id,
+        url: 'npx mcp-client stdio',
+        transportType: 'stdio',
+        headers: [{ name: 'X-MCP', value: '1' }],
+        authentication: { type: 'basic', username: 'user', password: 'pass' },
+        env: [{ id: 'var1', name: 'foo', value: 'bar', type: EnvironmentKvPairDataType.STRING, enabled: true }],
+        roots: [{ uri: 'file:///workspace' }],
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const { mcpRequest } = YAML.parse(result);
+      expect(Object.keys(mcpRequest)).toEqual([
+        'name',
+        'url',
+        'transportType',
+        'headers',
+        'authentication',
+        'meta',
+        'env',
+        'roots',
+      ]);
+      expect(Object.keys(mcpRequest.env[0])).toEqual(['id', 'name', 'value', 'type', 'enabled']);
+      expect(Object.keys(mcpRequest.roots[0])).toEqual(['uri']);
+    });
+
     it('returns empty string for unknown workspace', async () => {
       const result = await getInsomniaV5DataExport({
         workspaceId: 'missing',
