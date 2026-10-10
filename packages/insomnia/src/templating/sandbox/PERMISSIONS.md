@@ -23,7 +23,15 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
 
 - **Baseline (no manifest needed):** `path`, `crypto`.
 - **Grantable:** any other module in the sandbox registry. Declaring one adds it to your grant.
-  - Pure-JS reimplementations: `events` (and more via M2).
+  - Pure-JS reimplementations: `events`, `querystring` (and more via M2).
+    - `querystring`'s `parse()` returns an `Object.create(null)` result (like real Node), so a crafted
+      `__proto__`/`toString` key is just an own data property, never the `Object.prototype` accessor.
+      `unescape()` falls back to the original input unchanged if it contains any malformed
+      percent-encoding; real Node partially decodes valid escapes and passes through only the invalid
+      segment, which this shim does not replicate. `parse()`'s own per-key/value decoding has the same
+      all-or-nothing fallback, scoped to the individual key or value: a malformed escape anywhere in
+      one key/value leaves that whole token undecoded (e.g. `"a=100%zzhello%20"` stays `"100%zzhello%20"`
+      instead of real Node's `"100%zzhello "`), even though the rest of the query string decodes normally.
   - **Vetted npm libraries** (pinned + pre-bundled by Insomnia): `uuid`, `ajv`. These are real
     libraries bundled to run inside the sandbox; they're only loaded when a plugin declares them.
     Each is sourced from an isolated, exact-pinned install at
