@@ -2,6 +2,7 @@ import { parseDate } from '@internationalized/date';
 import type { ThemeProps } from '@rjsf/core';
 import {
   ADDITIONAL_PROPERTY_FLAG,
+  type ArrayFieldItemTemplateProps,
   type ArrayFieldTemplateProps,
   type BaseInputTemplateProps,
   type FieldTemplateProps,
@@ -174,7 +175,7 @@ const BaseInputTemplate = (props: BaseInputTemplateProps) => {
 };
 
 const WrapIfAdditionalTemplate = (props: WrapIfAdditionalTemplateProps) => {
-  const { id, label, onKeyChange, onDropPropertyClick, schema, children, classNames, style } = props;
+  const { id, label, onKeyRenameBlur, onRemoveProperty, schema, children, classNames, style } = props;
   const additional = ADDITIONAL_PROPERTY_FLAG in schema;
 
   if (!additional) {
@@ -190,7 +191,7 @@ const WrapIfAdditionalTemplate = (props: WrapIfAdditionalTemplateProps) => {
       <TextField
         className="grow"
         aria-label="rjsf-input"
-        onBlur={e => onKeyChange(e.currentTarget.value)}
+        onBlur={onKeyRenameBlur}
         defaultValue={label}
       >
         <Label className={labelClasses}>{label}</Label>
@@ -203,7 +204,7 @@ const WrapIfAdditionalTemplate = (props: WrapIfAdditionalTemplateProps) => {
           bg="default"
           variant="contained"
           className="border-none"
-          onClick={onDropPropertyClick(label)}
+          onClick={onRemoveProperty}
         >
           <Icon icon="trash" />
         </Button>
@@ -276,9 +277,9 @@ const FieldTemplate = (props: FieldTemplateProps) => {
 };
 
 const ObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
-  const { title, description, properties, required, schema, idSchema, onAddClick } = props;
+  const { title, description, properties, required, schema, fieldPathId, onAddProperty } = props;
 
-  const level = idSchema.$id.split('_').length;
+  const level = fieldPathId.$id.split('_').length;
 
   const canExpand = schema.additionalItems || schema.additionalProperties;
 
@@ -306,7 +307,7 @@ const ObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
       </div>
       {canExpand && (
         <div className="px-4">
-          <Button bg="surprise" variant="contained" onClick={onAddClick(schema)}>
+          <Button bg="surprise" variant="contained" onClick={onAddProperty}>
             + Add Item
           </Button>
         </div>
@@ -315,8 +316,35 @@ const ObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
   );
 };
 
+const ArrayFieldItemTemplate = (props: ArrayFieldItemTemplateProps) => {
+  const { children, buttonsProps, index, totalItems } = props;
+  const { disabled, readonly, onRemoveItem } = buttonsProps;
+
+  return (
+    <div
+      className={cn('flex items-start gap-4 rounded-sm px-4', {
+        'border-b border-solid border-(--hl-sm)': index < totalItems - 1,
+      })}
+    >
+      <div className="flex-1">{children}</div>
+      <div className="flex gap-1">
+        <Button
+          size="small"
+          bg="default"
+          variant="contained"
+          className="border-none"
+          disabled={disabled || readonly}
+          onClick={onRemoveItem}
+        >
+          <Icon icon="trash" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
-  const { title, items, canAdd, onAddClick, disabled, readonly, required, schema } = props;
+  const { title, items, canAdd, onAddClick, required, schema } = props;
 
   return (
     <div className="rounded-md bg-(--color-bg)">
@@ -330,28 +358,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
       {schema.description && <div className={descriptionClasses}>{schema.description}</div>}
 
       <div className="space-y-2 rounded-sm border border-solid border-(--hl-sm) py-2">
-        {items.map(item => (
-          <div
-            key={item.key}
-            className={cn('flex items-start gap-4 rounded-sm px-4', {
-              'border-b border-solid border-(--hl-sm)': item.index < items.length - 1,
-            })}
-          >
-            <div className="flex-1">{item.children}</div>
-            <div className="flex gap-1">
-              <Button
-                size="small"
-                bg="default"
-                variant="contained"
-                className="border-none"
-                disabled={disabled || readonly}
-                onClick={item.buttonsProps.onDropIndexClick(item.index)}
-              >
-                <Icon icon="trash" />
-              </Button>
-            </div>
-          </div>
-        ))}
+        {items}
         {canAdd && (
           <div className="px-4">
             <Button bg="surprise" variant="contained" onClick={onAddClick}>
@@ -378,6 +385,7 @@ const themeTemplates = {
   FieldTemplate,
   ObjectFieldTemplate,
   ArrayFieldTemplate,
+  ArrayFieldItemTemplate,
   WrapIfAdditionalTemplate,
   MultiSchemaFieldTemplate,
 };
