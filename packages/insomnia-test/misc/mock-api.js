@@ -10,26 +10,6 @@ const ACCOUNT_ID = "acct_64a477e6b59d43a5a607f84b4f73e3ce";
 const ORG_ID = "org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
 const PROJECT_ID = "proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
 
-// Regenerated 2026-08-31 — the previous PUBLIC_KEY_N/ENC_KEY_D pair below
-// were from two different, unrelated RSA keypairs (n mismatched entirely),
-// so any real RSA-OAEP-256 unwrap the app performed against
-// CLOUD_SYNC_ENCRYPTED_SYMMETRIC_KEY below (e.g. `_VCS.customFetch` during
-// a Cloud Sync "Fetch unsynced workspace") failed with "Invalid RSAES-OAEP
-// padding" — deterministically, not just under parallel load. This pair is
-// now a single self-consistent keypair; round-trip verified: decrypt
-// `enc_private_key` below with CLOUD_SYNC_SYMMETRIC_KEY, then RSA-OAEP
-// decrypt CLOUD_SYNC_ENCRYPTED_SYMMETRIC_KEY with the recovered private key
-// yields CLOUD_SYNC_SYMMETRIC_KEY.k exactly. Keep `publicKey.n` in
-// misc/fixtures.ts's INSOMNIA_SESSION in sync with this value.
-const PUBLIC_KEY_N =
-  "5h0z0z5R_0oxtdzFGAeVAie9T3HdnQ9U1oIo5PjK-nM3HD2heYDVD_RX6uSwxGy6Mt21aNyC6rAq5sQAh1_uIcf1pifeLqOH0TaN0g2iA2JfRqqO37Tzv5AVQQavdeqKOQCpDQiRM_fP1FzQVcgE4YGUGtbVUGt7FO_XvbHhp-ScZLrLC4AplrJeykxAKq7_qMX3hJGbURXtNWu36pyXpFV87QAxMBdpU-ZmnxSFcKrJAv0Y6WcfkFITgn8bmxFTliFhNPvpAk4AP2ltNlp-Vy63BI_ddt35yNnkKhZyboeW_VfMPypw2Ar5TkH314Qkl9psamkkBVmUdAyiE9YvcQ";
-// AES-256-GCM ciphertext of the matching private key JWK (URL-encoded
-// JSON), encrypted with CLOUD_SYNC_SYMMETRIC_KEY — iv/tag are inlined at
-// each call site below (`enc_private_key`'s "iv"/"t") since both call
-// sites need to agree; keep them in sync if this changes.
-const ENC_KEY_D =
-  "0a46ee78889a1478add7efe116d4d30bd7e361a9bb0417605989fd7b96a90fcf81ce46e9ed706f311fb44c351536832ace1da3b62c866f1ed9d2e2be627d1e0a426b338ece60d753b3143bf60802665a2317834482dbb2287f3f1117274d4740b84e8c642b3f5665db46422da0b2ffdd18cf1f19519ebe7ff2dd532f735633439229d3b4238b936b70e2372ba2a989693a752c292d93ed858cc71cb659dfe4801b46d910318b0b938345b6fc22c5c8721ccc951a3a4f45db525e57b499c156d8faed364d9bbd983f047559a130f8cff3c640b750196041db473030fdc4a86557987bfbf58013447ad7395f20f333c493f5fc55481a1b4c987ff34ced6d6c87358948e808449cda3920c410db0cc471ca40e5a6772ded0b37a234dd22dd1a896954fb53e9086ca231ed1e47fd03579543521e169f834ac364fd0045b529c93f0759af8ecdc95973ee5dfb05a10e05158717f85ec714423d54baae0d584a5c22f3d04240b853ee2fb67401c765549b29b8e1b9742247148d16fe23b5bcaa6c8a039a74936626cd0396313ed56a9c32ae631599ffdce90355385aada2d64edd09fcb4c820d6ff671bd9511f275410d89d8c3f94c7e0946767ebcdcb1930d358068574e71b31935e02259f314fcd7f3a8c0c8bbfa81a2ba7480e8a299227d8ac9899ad3098399b61aa3fd0e9e0811f10bd2adab59153f0604b596d240dccfbee526d1ded57641cc741bb9106f73d347b031194b6006f74ca005fc6b8145e53a6eb13c396b1f9bb3e6e357879a36cee68fa1c84fe4ec9c703232952eb775d94fd01c06247af58993ebe5d9c8e42a5c293f51122d434eadadd3c40533a82e26ce3fffcc656020a75596b0b593bc2d59ada41457e7e4cf527e0a16b63132db83e210d2c00e81eff1e69d9914c6fdebd2cf36dc688aa4ca7e46c668bd2b830f17f897802c0b7a749ad54091e33b467d5bcfbb6644bea4f41ddb08abda513c2aac52fa787d9af7cf8543aacc3c6f5b606f56cdd735059ca5de71b08d9e5e45214659e79575f37c7cd64741759af8acbf9eadbd2e2039737ce2081b688029d0b607a4402b7b66121fc0101bcbd2f3caf171a3c486c02c3db1a5ec2ed7392bc9b1190c95177a2a1b69f3f904d1d0a02bb411bc9613d87f47b86fa1a7289b9385820301e0c77e2a724f090f9220276490af49a18a2c7eb8067b1ea2dadbb9d08c18e30cc40ceffa5558801957f90d0513c6b83cc1829c592e5d9c955d24d543669b395e8fafd5c6b7ae661664b8791d6e4746e72c39feb80efb83205f34c83fa854db8c55d3c2db3d7baded8f5968a4ec9eeb2dc8a4d9260c75f44c82688110b6c2983c2b966be19b4d7fd6f20387d7b491004deb4389e376e60fc4123872d34979f86917ff77c63393b8519d02c13453068a4fd01a5ce77c563da1dc73347e29b575b9fbe7fd91b100ebfa8896a1df27923817f353c9484a9c0984626dc48951c99e6ed9771cbcff70c9626249c51443db852e69043ecbd62f4b79d83f6ae183e6987bf1de48bb814fc71002f22bc85d9fc58068af8dc5323c35160e662df6bb9741f5484a7c3713f2fa758c17fe62223f3988562662c25af1256cb446f5be717bbf48b97ffb25e3bc0673b95e67943083194f07b2f192de763367e2e77c524307d57ec8c14954f1a20e18a45f12f8c38b7950742e4a4905b89f7492e899c05c6a512f36366461aa9f86bc338896eee2d0f078116d982c66c8b88be80740f2fb1fe82a1cb8ee2fab9130f2ebb8b0a1ce4d43979b02b40f6391cd25dbe81c32241e9aeb5e2a1f99bbaed4dff490bc46638b76b1540475ef95e7e0351931aa9c4c29682ee762b797289259bb8dc46f5c193408f71b9a91fe85f3a7a9858078a554dd9ef5a42193f30ad24f2df16ca87c517e63aed30bed60383e4426a15ae806064cd978a68560c067d648ac0ed6672e7e74c3452894878eca95ba3102ed9c1b58300492b79bbcde14b86267179082af0a3c2c85e0bd7e49563071c5ac1e5de72add19bd2d8773b4fa983f10e2650b19bc3f25a50e738d084b07a0a60373c6fcfab070fa0a98fc7a87d1c8e3b671e6204d51264ba1baea6e99c0719bcd59749ceebc43309ac42b3e424ec9088973a4b03239426fb9c47e89021ca5515af87929fcf299730247565092ba5a39180d26d11e80439fb2b4f716ee2a33a7fde39a6af06598ce8079163a44d3c444f879f68119186d2b21cf59ea0f3e39341e70c789300bf3597b41370829d23a671dbe3b87a28b0871d31f4a7dd4682218122cf7ca9362253f5a826fcfba46e8613f71647e7097f25fb67e74ef7c5c6a4cf5aece0ad28927c1d96e2a23bc6ab2a20593f253e509e850ee6b40470d5f7ff478c7c1e58a94d54a5812f7e072e37f084ebd23e2d9897ee6dd54945fb87c7eea23e1c401a3eca01e993373ea7154846d96677139720a8457e601b858c61f58e61cbb7658389290423af81cc3bf5dfe69f12b8edd94eb3aa1d93b0f2125546d848b7e76954b3a79d3c38e96f97a2c8298a27c6101fe1b51cd2764e60b83378b035f6";
-
 // Feature-flag / storage-rule state, isolated per Electron instance via the
 // `x-session-id` header every request carries (sourced from
 // misc/fixtures.ts's INSOMNIA_SESSION.id, unique per Playwright worker slot).
@@ -59,22 +39,18 @@ function setFeatureState(sessionId, patch) {
 // from insomnia-smoke-test's server/cloud-sync-api.ts: same account/org ids
 // and the same symmetricKey misc/fixtures.ts's INSOMNIA_SESSION already
 // injects, so the client can decrypt blobs with no real key exchange.
+// Test-only credentials, generated fresh every time this process starts so no
+// key material is committed to the repo. misc/launch.ts fetches them from
+// GET /_admin/session-keys before each Electron launch and injects them as
+// INSOMNIA_SESSION, so the app and this mock always agree on the same keys.
 const CLOUD_SYNC_SYMMETRIC_KEY = {
   alg: "A256GCM",
   ext: true,
-  k: "w62OJNWF4G8iWA8ZrTpModiY8dICyHI7ko1vMLb877g=",
+  // Padded base64url, matching the format the app's own session JWK uses.
+  k: `${crypto.randomBytes(32).toString("base64url")}=`,
   key_ops: ["encrypt", "decrypt"],
   kty: "oct",
 };
-// Plaintext (before RSA-OAEP-256) is the *full symmetric-key JWK*, URL-
-// encoded JSON — same convention as `enc_private_key`'s plaintext below, not
-// the raw 32 key bytes (an earlier version of this fix RSA-encrypted the
-// raw bytes directly, which decrypted fine but then failed downstream:
-// `JSON.parse(decodeURIComponent(<raw AES key bytes>))` on garbage,
-// "Unexpected token ... is not valid JSON"). `k` is unpadded base64url (no
-// trailing "=") to fit the 2048-bit/SHA-256 OAEP 190-byte plaintext limit.
-const CLOUD_SYNC_ENCRYPTED_SYMMETRIC_KEY =
-  "ce2a6be097233148d827a1939f99fbdbb665de2058ac45e727328aa6d238d15acdf0a972a6f25c252764694a9d9f4a1e9234b1984cd29b481954c800388c339bc8c77f45c0a76a9350f950f2b07a6d1b6f3f269623025fd4b8ccd22a004cf6917e3bb1adb15a9112323b19fd4ff438c7712b9ace59919ab6d9cf7089c3d1c0193654500575008c08786e76140904179e4ae2a921ed001bdec7e3cd6614e43ef86c6dbf19d7825497d2df6e9651475787120f3edd3841578ed40954b66213f98eabd8596587fe891e07c7fe48d71bf03d5da45d8c255da611b9cd699625cb1ed86a77fcce9dadfc83f2f9a4399f50f7552384dfe9351079e3cb443456af96fce8";
 
 function cloudSyncKeyBuf(jwk) {
   return Buffer.from(jwk.k, "base64url");
@@ -110,6 +86,47 @@ function encryptCloudSyncBlob(buf) {
     d: d.toString("hex"),
   };
 }
+
+
+// A single self-consistent keypair: `enc_private_key` (AES-GCM under
+// CLOUD_SYNC_SYMMETRIC_KEY) and CLOUD_SYNC_ENCRYPTED_SYMMETRIC_KEY (RSA-OAEP-
+// 256 under the public key) must both round-trip through the app's real
+// decryptAES / decryptRSAWithJWK. Plaintexts are URL-encoded JSON, the same
+// convention as encryptAES / encryptRSAWithJWK in insomnia-vcs's crypt.ts.
+const { publicKey: RSA_PUBLIC_KEY, privateKey: RSA_PRIVATE_KEY } =
+  crypto.generateKeyPairSync("rsa", {
+    modulusLength: 2048,
+    publicExponent: 65_537,
+  });
+const PUBLIC_KEY_N = RSA_PUBLIC_KEY.export({ format: "jwk" }).n;
+const ENC_PRIVATE_KEY = encryptCloudSyncBlob(
+  Buffer.from(
+    encodeURIComponent(JSON.stringify(RSA_PRIVATE_KEY.export({ format: "jwk" }))),
+  ),
+);
+// AES-GCM of the symmetric-key JWK, served as `enc_symmetric_key`.
+const ENC_SYMMETRIC_KEY = encryptCloudSyncBlob(
+  Buffer.from(encodeURIComponent(JSON.stringify(CLOUD_SYNC_SYMMETRIC_KEY))),
+);
+// RSA-OAEP-256 caps the plaintext at 190 bytes for a 2048-bit key, so `k` is
+// unpadded here to fit.
+const CLOUD_SYNC_ENCRYPTED_SYMMETRIC_KEY = crypto
+  .publicEncrypt(
+    {
+      key: RSA_PUBLIC_KEY,
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    Buffer.from(
+      encodeURIComponent(
+        JSON.stringify({
+          ...CLOUD_SYNC_SYMMETRIC_KEY,
+          k: CLOUD_SYNC_SYMMETRIC_KEY.k.replace(/=+$/, ""),
+        }),
+      ),
+    ),
+  )
+  .toString("hex");
 
 const CLOUD_SYNC_TEAMS = [{ id: "team_001", name: "Test Team" }];
 
@@ -830,6 +847,20 @@ function sendJson(res, status, body) {
 }
 
 async function handleAdmin(req, res, url) {
+  if (url.pathname === "/_admin/session-keys" && req.method === "GET") {
+    return sendJson(res, 200, {
+      publicKey: {
+        alg: "RSA-OAEP-256",
+        e: "AQAB",
+        ext: true,
+        key_ops: ["encrypt"],
+        kty: "RSA",
+        n: PUBLIC_KEY_N,
+      },
+      encPrivateKey: ENC_PRIVATE_KEY,
+      symmetricKey: CLOUD_SYNC_SYMMETRIC_KEY,
+    });
+  }
   if (url.pathname === "/_admin/features/git-sync" && req.method === "PUT") {
     const body = await readJsonBody(req);
     const enabled = body.enabled !== false;
@@ -951,22 +982,8 @@ const ROUTES = {
       kty: "RSA",
       n: PUBLIC_KEY_N,
     }),
-    enc_private_key: JSON.stringify({
-      iv: "ee5a6e16693b3b61ae2cf07d",
-      t: "d0a8c3b2ff15771e56ba890907ea6bc7",
-      d: ENC_KEY_D,
-      ad: "",
-    }),
-    // Was a byte-for-byte copy of enc_private_key above (wrong plaintext
-    // entirely — this must decrypt to the account's raw symmetric key, not
-    // its RSA private key JWK). Now its own distinct ciphertext, same
-    // CLOUD_SYNC_SYMMETRIC_KEY-keyed AES-256-GCM scheme.
-    enc_symmetric_key: JSON.stringify({
-      iv: "4d2f0b5c78aefeb98c95ffd5",
-      t: "ac78bd5e8a8c7874b681e037c41013fa",
-      d: "41a9d66f79ccb3d4c5ffe51da8a4b308e3bbdc271683cf012b00597ea869d9fc4b96105a4ad71b3d69fa8b9cf2c354cfbd4fd2eeb9edcdfe95df1350b39cadbb05233797e1c445b1fea58c794eb5c39ae41ab9253476872ad6a99179642c9586b60d0568e328fa0a03fa79947d23e0305c18ef78f484f84ab6f8859f4493af837ae08d2144f7079b7f904e65c450e7e71ea0d08cb750e33763b14c7baa7971efd1c552ec74b11c4f3495d1bfa507d15286b216a560586976e0d8c61a2b6fd8eebd",
-      ad: "",
-    }),
+    enc_private_key: JSON.stringify(ENC_PRIVATE_KEY),
+    enc_symmetric_key: JSON.stringify(ENC_SYMMETRIC_KEY),
     salt_enc: "",
     enc_driver_key: null,
   },
