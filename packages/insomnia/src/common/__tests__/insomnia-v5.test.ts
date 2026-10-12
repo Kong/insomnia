@@ -201,6 +201,51 @@ collection: []
       });
     });
 
+    // Check zod exported key order for environments
+    it.each(['collection', 'design', 'environment'] as const)(
+      'exports environments with a stable key order for %s scope',
+      async scope => {
+        const workspace = await services.workspace.create({
+          _id: `wrk_env_order_${scope}`,
+          name: 'Env Order Workspace',
+          parentId: 'proj_test',
+          scope,
+        });
+
+        const baseEnvironment = await services.environment.create({
+          _id: `env_base_${scope}`,
+          name: 'Base Environment',
+          parentId: workspace._id,
+          data: { api_url: 'https://api.example.com' },
+          color: '#ff0000',
+        });
+        await services.environment.create({
+          _id: `env_sub_${scope}`,
+          name: 'Sub Environment',
+          parentId: baseEnvironment._id,
+          data: { api_url: 'https://sub.example.com' },
+          color: '#00ff00',
+        });
+
+        if (scope === 'design') {
+          await services.apiSpec.getOrCreateForParentId(workspace._id, {
+            _id: 'spec_env_order',
+            contents: '{"openapi": "3.0.0"}',
+            contentType: 'json',
+          });
+        }
+
+        const result = await getInsomniaV5DataExport({
+          workspaceId: workspace._id,
+          includePrivateEnvironments: false,
+        });
+
+        const { environments } = YAML.parse(result);
+        expect(Object.keys(environments)).toEqual(['name', 'meta', 'data', 'color', 'subEnvironments']);
+        expect(Object.keys(environments.subEnvironments[0])).toEqual(['name', 'meta', 'data', 'color']);
+      },
+    );
+
     it('handles empty workspace gracefully', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_empty_test',
