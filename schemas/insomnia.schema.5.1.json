@@ -3,7 +3,7 @@
   "$id": "https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json",
   "title": "Insomnia File",
   "description": "JSON Schema for Insomnia v5.1 files (.insomnia / .yaml). Validates collections, API specs, mock servers, global environments and MCP clients. Generated from the Insomnia source of truth — do not edit by hand.",
-  "anyOf": [
+  "oneOf": [
     {
       "type": "object",
       "properties": {
@@ -129,8 +129,7 @@
                     "type": "boolean"
                   },
                   "lastAccessed": {}
-                },
-                "required": []
+                }
               }
             }
           }
@@ -175,13 +174,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -240,13 +235,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -455,13 +446,9 @@
                       ]
                     },
                     "requestId": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "code": {
@@ -678,8 +665,7 @@
                     "type": "boolean"
                   },
                   "lastAccessed": {}
-                },
-                "required": []
+                }
               }
             }
           }
@@ -724,13 +710,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -789,13 +771,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -1039,13 +1017,9 @@
                       ]
                     },
                     "requestId": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "code": {
@@ -1341,13 +1315,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -1406,13 +1376,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -1599,7 +1565,7 @@
             "authentication": {
               "anyOf": [
                 {
-                  "anyOf": [
+                  "oneOf": [
                     {
                       "type": "object",
                       "properties": {
@@ -2129,13 +2095,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -2194,13 +2156,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -2375,13 +2333,9 @@
                 }
               },
               "protoFileId": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "protoMethodName": {
@@ -2453,13 +2407,9 @@
                 "type": "object",
                 "properties": {
                   "mimeType": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "text": {
@@ -2486,13 +2436,9 @@
                           "type": "boolean"
                         },
                         "multiline": {
-                          "anyOf": [
-                            {
-                              "type": "boolean"
-                            },
-                            {
-                              "type": "string"
-                            }
+                          "type": [
+                            "boolean",
+                            "string"
                           ]
                         },
                         "fileName": {
@@ -2559,7 +2505,7 @@
               "authentication": {
                 "anyOf": [
                   {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -3067,6 +3013,7 @@
                 "properties": {
                   "id": {
                     "type": "string",
+                    "format": "starts_with",
                     "pattern": "^ws-req.*"
                   },
                   "created": {
@@ -3122,7 +3069,7 @@
               "authentication": {
                 "anyOf": [
                   {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -3631,6 +3578,7 @@
                 "properties": {
                   "id": {
                     "type": "string",
+                    "format": "starts_with",
                     "pattern": "^socketio-req.*"
                   },
                   "created": {
@@ -3681,7 +3629,7 @@
               "authentication": {
                 "anyOf": [
                   {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -4255,7 +4203,7 @@
                   {
                     "anyOf": [
                       {
-                        "anyOf": [
+                        "oneOf": [
                           {
                             "type": "object",
                             "properties": {
@@ -4722,19 +4670,11 @@
     "__schema1": {
       "anyOf": [
         {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
           ]
         },
         {
@@ -4746,13 +4686,9 @@
         {
           "type": "object",
           "propertyNames": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
+            "type": [
+              "string",
+              "number"
             ]
           },
           "additionalProperties": {
