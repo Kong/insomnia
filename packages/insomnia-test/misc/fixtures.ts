@@ -12,8 +12,10 @@ import { FlowManager } from "../flows/flow-manager";
 import { PageManager } from "../pages/page-manager";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT, MOCK_API_SERVER } from "./constants";
 import {
+  collectHiddenWindowCoverage,
   collectWindowCoverage,
   startWindowCoverage,
+  trackHiddenWindowCoverage,
 } from "./coverage";
 import { launchInsomniaElectron, SESSION_ID } from "./launch";
 import { closeOpenStepGroup } from "./step-instrumentation";
@@ -306,6 +308,8 @@ export const test = base.extend<Fixtures>({
       vaultSalt,
     });
 
+    trackHiddenWindowCoverage(app);
+
     const mainProcessLog: string[] = [];
     app
       .process()
@@ -323,6 +327,7 @@ export const test = base.extend<Fixtures>({
       });
     }
 
+    await collectHiddenWindowCoverage(app);
     await app.close();
   },
 

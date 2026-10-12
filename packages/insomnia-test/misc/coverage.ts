@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { extractFile } from "@electron/asar";
-import type { Page } from "@playwright/test";
+import type { ElectronApplication, Page } from "@playwright/test";
 import { CoverageReport } from "monocart-coverage-reports";
 
 /**
@@ -180,6 +180,58 @@ export async function collectWindowCoverage(win: Page): Promise<void> {
   } catch {
     // Window already closed (e.g. after `AppFlow.restart()` tore down the
     // previous one) — nothing left to collect.
+  }
+}
+
+const HIDDEN_WINDOW_TITLE = "Hidden Browser Window";
+
+const hiddenWindows = new WeakMap<ElectronApplication, Set<Page>>();
+
+/**
+ * Pre-request/after-response scripts — and so everything under
+ * `insomnia-scripting-environment/src/objects` — execute in the app's hidden
+ * `BrowserWindow`, not the main window the fixtures normally start coverage
+ * on. Playwright only hands out `Page`s for windows it sees, so this hooks
+ * every window (existing and future, since the app re-creates the hidden one
+ * if it dies) and starts coverage on the ones titled "Hidden Browser Window".
+ * Pair with `collectHiddenWindowCoverage()` before closing the app.
+ */
+export function trackHiddenWindowCoverage(app: ElectronApplication): void {
+  if (!COVERAGE_ENABLED || hiddenWindows.has(app)) {
+    return;
+  }
+  const tracked = new Set<Page>();
+  hiddenWindows.set(app, tracked);
+
+  const maybeTrack = async (win: Page) => {
+    try {
+      await win.waitForLoadState("domcontentloaded");
+      if ((await win.title()) !== HIDDEN_WINDOW_TITLE || tracked.has(win)) {
+        return;
+      }
+      tracked.add(win);
+      await startWindowCoverage(win);
+    } catch {
+      // Window closed before it finished loading — best-effort, like the rest of coverage.
+    }
+  };
+  app.windows().forEach((win) => void maybeTrack(win));
+  app.on("window", (win) => void maybeTrack(win));
+}
+
+/** Folds every still-open hidden window's coverage into the shared report — call before `app.close()`. */
+export async function collectHiddenWindowCoverage(
+  app: ElectronApplication,
+): Promise<void> {
+  const tracked = hiddenWindows.get(app);
+  if (!tracked) {
+    return;
+  }
+  hiddenWindows.delete(app);
+  for (const win of tracked) {
+    if (!win.isClosed()) {
+      await collectWindowCoverage(win);
+    }
   }
 }
 

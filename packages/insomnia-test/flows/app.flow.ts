@@ -1,7 +1,12 @@
 import type { Page } from "playwright-core";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { collectWindowCoverage, startWindowCoverage } from "../misc/coverage";
+import {
+  collectHiddenWindowCoverage,
+  collectWindowCoverage,
+  startWindowCoverage,
+  trackHiddenWindowCoverage,
+} from "../misc/coverage";
 import { launchInsomniaElectron } from "../misc/launch";
 import { BaseFlow } from "./base.flow";
 
@@ -27,8 +32,10 @@ export class AppFlow extends BaseFlow {
         timeout: DEFAULT_TIMEOUT,
       }),
     );
+    await collectHiddenWindowCoverage(this.flowManager.electronApp!);
     await this.flowManager.electronApp!.close();
     const app = await launchInsomniaElectron(config);
+    trackHiddenWindowCoverage(app);
 
     const win = await app.firstWindow({ timeout: DEFAULT_TIMEOUT });
     await win.waitForLoadState(undefined, { timeout: DEFAULT_TIMEOUT });
