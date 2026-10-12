@@ -132,6 +132,9 @@ const getMethodsFromReflectionServer = async (
   disableUserAgentHeader: boolean,
 ): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
+  if (apiKey && new URL(url).protocol !== 'https:') {
+    throw new Error('Reflection API key requires an https:// reflection URL');
+  }
   const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
     { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
