@@ -59,7 +59,15 @@ export function checkNestedKeys(obj: Record<string, any>, isRoot = true): string
   return null;
 }
 
-export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: Record<string, any> | null) {
+// originalKvPairData: when provided, pairs whose name was confidential there keep isConfidential: true.
+export function getKVPairFromData(
+  data: Record<string, any>,
+  dataPropertyOrder: Record<string, any> | null,
+  originalKvPairData?: EnvironmentKvPairData[],
+) {
+  // mirror getDataFromKVPair: only the last enabled item with the same name takes effect
+  const isConfidential = (name: string) =>
+    originalKvPairData?.findLast(p => p.enabled && p.name === name)?.isConfidential ?? false;
   const ordered = orderedJSON.order(data, dataPropertyOrder, JSON_ORDER_SEPARATOR);
   const kvPair: EnvironmentKvPairData[] = [];
   Object.keys(ordered).forEach(key => {
@@ -73,7 +81,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
           value: val[secretKey],
           type: EnvironmentKvPairDataType.SECRET,
           enabled: true,
-          isConfidential: false,
+          isConfidential: isConfidential(secretKey),
         });
       });
     } else {
@@ -84,7 +92,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
         value: isValidObject ? JSON.stringify(val) : String(val),
         type: isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
         enabled: true,
-        isConfidential: false,
+        isConfidential: isConfidential(key),
       });
     }
   });

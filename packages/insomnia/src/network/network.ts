@@ -446,10 +446,7 @@ export async function savePatchesMadeByScript(patches: {
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null).map(pair => {
-          const original = originalKvPairData?.find(p => p.name === pair.name);
-          return original?.isConfidential ? { ...pair, isConfidential: true } : pair;
-        }),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null, originalKvPairData),
       }),
     });
   };
@@ -478,7 +475,11 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
+          kvPairData: getKVPairFromData(
+            mutatedFolder.environment,
+            originalFolder.environmentPropertyOrder ?? null,
+            originalFolder.kvPairData,
+          ),
         }),
       });
     }
