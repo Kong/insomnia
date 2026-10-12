@@ -114,7 +114,7 @@ const APP_ORIGIN = "https://insomnia-app.local/";
  */
 function loadRendererSourceMap(entryUrl: string): object | undefined {
   if (!entryUrl.startsWith(`${APP_ORIGIN}assets/`)) {
-    return undefined;
+    return loadAsarFileSourceMap(entryUrl);
   }
   const relPath = `client/${entryUrl.slice(APP_ORIGIN.length).split(/[?#]/)[0]}.map`;
   const binary = process.env.INSOMNIA_BINARY;
@@ -137,6 +137,32 @@ function loadRendererSourceMap(entryUrl: string): object | undefined {
   const devMap = path.resolve(__dirname, "..", "..", "insomnia", "build", relPath);
   try {
     return JSON.parse(fs.readFileSync(devMap, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The hidden script-runner window is loaded with `loadFile()`, so in a
+ * packaged build its bundle's URL is `file:///…/app.asar/entry.hidden-window.min.js`.
+ * Monocart can't read through the asar to find the sibling `.map`, so without
+ * this the hidden window's coverage (all of `insomnia-scripting-environment`)
+ * stays attributed to the minified bundle instead of the original sources.
+ * Unpackaged (dev) builds resolve the on-disk `.map` themselves.
+ */
+function loadAsarFileSourceMap(entryUrl: string): object | undefined {
+  if (!entryUrl.startsWith("file:")) {
+    return undefined;
+  }
+  try {
+    const scriptPath = fileURLToPath(entryUrl);
+    const asarIndex = scriptPath.indexOf(".asar/");
+    if (asarIndex === -1) {
+      return undefined;
+    }
+    const asarPath = scriptPath.slice(0, asarIndex + ".asar".length);
+    const innerPath = scriptPath.slice(asarIndex + ".asar/".length);
+    return JSON.parse(extractFile(asarPath, `${innerPath}.map`).toString("utf8"));
   } catch {
     return undefined;
   }
