@@ -26,7 +26,7 @@ const pasteCurl = async (app: ElectronApplication, page: Page, { blur = true }: 
 test.describe('paste cURL import', () => {
   const waitForAppShell = async (page: Page) => {
     // The logged-in app shell has a banner; the scratchpad variant below
-    // starts on the logged-out onboarding screen which has none.
+    // starts on the logged-out login screen which has none.
     await page.getByRole('banner').waitFor();
   };
 
@@ -92,9 +92,9 @@ test.describe('paste cURL import', () => {
     await expect.soft(insomnia.page.getByRole('dialog').getByPlaceholder('Enter project name')).toBeVisible();
   });
 
-  // Fresh data dir + no session makes the app open in the Scratchpad (the
-  // logged-in app redirects away from scratchpad routes, so this is the only
-  // way to exercise the real scratchpad context).
+  // skipOnboarding seeds hasUserLoggedInBefore, so the session-less app opens
+  // on the login screen; 'Use local Scratch Pad' there enters the real
+  // scratchpad context.
   const scratchpadTest = test.extend({
     userConfig: async ({ userConfig }, use) => {
       await use({ ...userConfig, session: undefined });

@@ -372,7 +372,6 @@ const Root = () => {
       defaultValue: curl,
       autoScan: true,
       startedAt: Date.now(),
-      defaultWorkspaceId: workspaceId,
     });
   };
   // Only Root's own import modal state is tracked; Import modals opened from
@@ -790,7 +789,9 @@ const Root = () => {
           defaultProjectId={projectId}
           organizationId={organizationId}
           workspaceName={workspaceName}
-          defaultWorkspaceId={importObject.defaultWorkspaceId}
+          // Only the paste flow carries the current workspace context;
+          // deep-link imports must keep defaulting to a new collection.
+          defaultWorkspaceId={importObject.type === 'curl' ? workspaceId : undefined}
           from={importObject}
         />
       )}

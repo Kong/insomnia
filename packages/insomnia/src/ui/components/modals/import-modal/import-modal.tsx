@@ -188,10 +188,6 @@ export interface ImportSource {
   operationId?: string;
   autoScan?: boolean;
   startedAt?: number;
-  // Preselects this API Collection as the import target in the scan-results
-  // form. Set when the import is triggered from inside a workspace (e.g.
-  // pasting a cURL with no focus).
-  defaultWorkspaceId?: string;
 }
 
 interface ImportModalProps extends ModalProps {
@@ -383,7 +379,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
             defaultProjectId={defaultProjectId}
-            defaultWorkspaceId={from.defaultWorkspaceId}
+            defaultWorkspaceId={defaultWorkspaceId}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -691,8 +687,8 @@ const ImportResourcesForm = ({
       });
     }
   }, [organizationId, selectedProjectId, workspacesFetcher]);
-  // Preselect the current API Collection when the import was triggered from
-  // inside one (e.g. pasting a cURL). Waits for the workspace list so the
+  // Preselect the API Collection the modal was opened from (e.g. pasting a
+  // cURL inside a workspace). Waits for the workspace list so the
   // preselect only applies to collections the select actually offers, and
   // applies exactly once so revalidation cannot override the user's choice.
   const didPreselectRef = useRef(false);
