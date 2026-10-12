@@ -32,7 +32,7 @@ export class GraphQLRequestFlow extends BaseFlow {
 
     const graphqlRequestPage = this.pageManager.graphqlRequestPage;
     await graphqlRequestPage.navigate();
-    await this.applyRequestFields(graphqlRequestPage, request);
+    await this.applyRequestFields(graphqlRequestPage, request, requestNode._id);
 
     return this.assertCreated(await this.get(request.name), request.name);
   }
@@ -87,9 +87,11 @@ export class GraphQLRequestFlow extends BaseFlow {
   private async applyRequestFields(
     page: GraphQLRequestPage,
     request: GraphQLRequest,
+    id: string,
   ): Promise<void> {
     await page.setMethod(request.method);
     await page.setUrl(request.url);
+    await this.waitForUrlPersisted("insomnia.Request.db", page, id, request.url);
     if (request.params && request.params.length > 0) {
       await page.setParams(request.params);
     }
