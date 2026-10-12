@@ -1263,6 +1263,120 @@ function isCollaboratorsRoute(method, pathname) {
   return false;
 }
 
+const KONNECT_ORGANIZATION_ID = "konnect-org-e2e";
+const KONNECT_CONTROL_PLANE = {
+  id: "cp-e2e-1",
+  name: "E2E Control Plane",
+  description: "Control plane served by the mock API",
+  config: {
+    cluster_type: "CLUSTER_TYPE_CONTROL_PLANE",
+    control_plane_endpoint: "https://cp-e2e-1.us.cp0.konghq.com",
+    cloud_gateway: false,
+  },
+  proxy_urls: [{ host: "proxy.e2e.example.com", port: 443, protocol: "https" }],
+};
+const KONNECT_SERVICES = [
+  {
+    id: "svc-http",
+    name: "E2E HTTP Service",
+    protocol: "https",
+    host: "upstream.example.com",
+    port: 443,
+    path: null,
+    enabled: true,
+    tags: null,
+  },
+  {
+    id: "svc-realtime",
+    name: "E2E Realtime Service",
+    protocol: "http",
+    host: "upstream.example.com",
+    port: 80,
+    path: null,
+    enabled: true,
+    tags: null,
+  },
+];
+const KONNECT_ROUTES = {
+  "svc-http": [
+    {
+      id: "route-traditional",
+      name: "users",
+      methods: ["GET", "POST"],
+      paths: ["/users", "/users/{id}"],
+      protocols: ["https"],
+      hosts: ["api.example.com"],
+      headers: { "x-env": ["prod"] },
+      snis: null,
+      expression: null,
+      service: { id: "svc-http" },
+    },
+    {
+      id: "route-multi-protocol",
+      name: "health",
+      methods: ["GET"],
+      paths: ["/health"],
+      protocols: ["http", "https"],
+      hosts: null,
+      headers: null,
+      snis: null,
+      expression: null,
+      service: { id: "svc-http" },
+    },
+    {
+      id: "route-expression",
+      name: "orders-expression",
+      methods: null,
+      paths: null,
+      protocols: ["https"],
+      hosts: null,
+      headers: null,
+      snis: null,
+      expression:
+        'http.method == "DELETE" && http.path ^= "/orders" && http.host == "orders.example.com"',
+      service: { id: "svc-http" },
+    },
+    {
+      id: "route-expression-sni",
+      name: "sni-expression",
+      methods: null,
+      paths: null,
+      protocols: ["https"],
+      hosts: null,
+      headers: null,
+      snis: null,
+      expression: 'tls.sni == "secure.example.com"',
+      service: { id: "svc-http" },
+    },
+  ],
+  "svc-realtime": [
+    {
+      id: "route-grpc",
+      name: "greeter",
+      methods: null,
+      paths: ["/helloworld.Greeter/SayHello"],
+      protocols: ["grpc"],
+      hosts: null,
+      headers: { "x-trace": ["1"] },
+      snis: null,
+      expression: null,
+      service: { id: "svc-realtime" },
+    },
+    {
+      id: "route-ws",
+      name: "events",
+      methods: null,
+      paths: ["/ws/events"],
+      protocols: ["ws", "wss"],
+      hosts: null,
+      headers: null,
+      snis: null,
+      expression: null,
+      service: { id: "svc-realtime" },
+    },
+  ],
+};
+
 function matchDynamic(req, url) {
   const { method } = req;
   const pathname = url.pathname;
@@ -1384,7 +1498,26 @@ function matchDynamic(req, url) {
   ) {
     return { roleId: "role_owner", name: "owner", description: "Owner" };
   }
+  if (method === "GET" && pathname === "/v3/organizations/me") {
+    return { id: KONNECT_ORGANIZATION_ID };
+  }
   if (method === "GET" && pathname.startsWith("/v2/control-planes")) {
+    const konnectSegs = segs.slice(2);
+    // /v2/control-planes
+    if (konnectSegs.length === 0) {
+      return {
+        data: [KONNECT_CONTROL_PLANE],
+        meta: { page: { number: 1, size: 100, total: 1 } },
+      };
+    }
+    // /v2/control-planes/:cpId/core-entities/services
+    if (konnectSegs.length === 3 && konnectSegs[2] === "services") {
+      return { data: KONNECT_SERVICES, offset: null };
+    }
+    // /v2/control-planes/:cpId/core-entities/services/:serviceId/routes
+    if (konnectSegs.length === 5 && konnectSegs[4] === "routes") {
+      return { data: KONNECT_ROUTES[konnectSegs[3]] ?? [], offset: null };
+    }
     return { data: [] };
   }
 

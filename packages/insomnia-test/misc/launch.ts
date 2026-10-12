@@ -115,6 +115,9 @@ export async function launchInsomniaElectron(options: {
       INSOMNIA_AI_URL: `${MOCK_API_SERVER}/ai`,
       INSOMNIA_UPDATES_URL: MOCK_API_SERVER,
       KONNECT_API_URL: MOCK_API_SERVER,
+      // The mock serves a single regional endpoint; without this the app
+      // fans out to all five default regions against the same URL.
+      KONNECT_API_REGIONS: "us",
       PLAYWRIGHT: "true",
       // Seeds `userSession.vaultSalt`/`.vaultKey` directly at startup
       // (see `common/account/session.ts`'s `setVaultSessionData()`),

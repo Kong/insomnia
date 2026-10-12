@@ -120,4 +120,29 @@ export class KonnectPage extends BasePage {
       .getByRole("button", { name: "Sync Konnect" })
       .isVisible();
   }
+
+  /**
+   * Reports whether a synced control-plane project node is present in the
+   * sidebar project tree.
+   * @param name - The control plane (project) name
+   */
+  async isControlPlaneVisible(name: string): Promise<boolean> {
+    return this.page.getByTestId(`project-node-${name}`).isVisible();
+  }
+
+  /**
+   * Reports whether a synced gateway-service collection node is present in
+   * the sidebar project tree.
+   * @param name - The gateway service (workspace) name
+   */
+  async isServiceVisible(name: string): Promise<boolean> {
+    return this.page.getByTestId(`workspace-node-${name}`).isVisible();
+  }
+
+  /**
+   * Clicks the sidebar's "Sync Konnect" button to trigger another sync.
+   */
+  async clickSync(): Promise<void> {
+    await this.page.getByRole("button", { name: "Sync Konnect" }).click();
+  }
 }
