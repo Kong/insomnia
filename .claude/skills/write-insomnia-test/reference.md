@@ -1327,15 +1327,17 @@ Confirming a delete calls `archiveBackendProject(backendProjectId)` (`insomnia-v
 fetch(name: string): Promise<void>                        // pulls the named backend workspace into the local sidebar and navigates into it; backs out of sidebar collection-focus mode first if needed
 discardAllChanges(): Promise<void>                        // via the sync dropdown's "Discard all changes" — see gotcha below
 commitAndPush(requestName: string, message: string): Promise<void> // stages requestName's own row, commits + pushes
+commit(requestName: string, message: string): Promise<void>        // stages requestName's own row and commits locally without pushing; closes the Commit modal itself if leftover unstaged changes keep it open
 restoreSnapshot(message: string): Promise<void>           // opens History, restores the snapshot whose row shows `message` — see gotcha below
 createBranch(branch: string): Promise<void>                // opens Branches, creates + switches to it, closes Branches
 mergeBranch(branch: string): Promise<void>                 // opens Branches, merges branch into the current one, closes Branches
+mergeBranchResolvingConflicts(branch: string, version: "Current" | "Incoming"): Promise<string[]> // merges expecting conflicts, picks the same side for every conflicted file, returns their names
 delete(name: string, mode: DeleteMode): Promise<void>
   // DeleteMode.Local removes only the local copy; DeleteMode.Full deletes it everywhere
   // "local" = "Remove Local Copy" (stays fetchable as unsynced afterward); "full" = "Delete Permanently" (gone everywhere)
 ```
 
-**Coverage gap, flagged (not just a doc fix):** a commit-without-push (`commit(requestName, message)`, Flow + underlying `cloudSyncPage.commit()`) and a standalone, non-modal push (`cloudSyncPage.push()`/`waitForPushSettled()`) were both added then removed again as dead code during an exploration that ended up not needing them (see the race-condition section below) — no test currently calls either. If a future test needs commit-without-push or a standalone push, that Page/Flow method needs to be written back in — it does not currently exist anywhere in this codebase. An **actual pull**, unlike those two, is now exercised: `cloudSyncPage.clickPull()` (companion to the pre-existing `waitForPullAvailable()`) clicks the sync dropdown's "Pull" action and lets a real pull run to completion — see `tests/cloud-sync/concurrent-workspace-creation-race.spec.ts` below. `tests/cloud-sync/pull-remote-changes.spec.ts` still only asserts the "Pull" action becomes **enabled**; it doesn't click it.
+**Coverage gap, flagged (not just a doc fix):** `commit(requestName, message)` (commit-without-push) now exists again — used by `tests/cloud-sync/merge-conflict-resolution.spec.ts` and `restore-snapshot-removes-added-request.spec.ts` — but a standalone, non-modal push (`cloudSyncPage.push()`/`waitForPushSettled()`) were both added then removed again as dead code during an exploration that ended up not needing them (see the race-condition section below) — no test currently calls either. If a future test needs commit-without-push or a standalone push, that Page/Flow method needs to be written back in — it does not currently exist anywhere in this codebase. An **actual pull**, unlike those two, is now exercised: `cloudSyncPage.clickPull()` (companion to the pre-existing `waitForPullAvailable()`) clicks the sync dropdown's "Pull" action and lets a real pull run to completion — see `tests/cloud-sync/concurrent-workspace-creation-race.spec.ts` below. `tests/cloud-sync/pull-remote-changes.spec.ts` still only asserts the "Pull" action becomes **enabled**; it doesn't click it.
 
 A handful of `pageManager.cloudSyncPage` methods have no Flow wrapper at all and get called directly even outside the Branches modal, because a test needs to read a live value back rather than just fire an action: `reselect(name)` (re-clicks a workspace's sidebar row without going through the "unsynced" fetch path — see the pull gotcha below), `backToAllProjects()` (exits sidebar collection-focus mode so another project's "unsynced" row becomes visible again — needed between `fetch()` calls in the same test), `isCommitDisabled()` (opens the sync menu, reads the "Commit" action's `aria-disabled`, closes the menu again), `waitForPullAvailable()` and `closeSyncMenu()` (see the pull gotcha below).
 
@@ -1353,6 +1355,8 @@ createBranch(branch: string): Promise<void>               // switches to it imme
 isLocalBranchListed(branch: string): Promise<boolean>
 waitForLocalBranchRemoved(branch: string): Promise<void>   // returns as soon as the local branch row is gone (e.g. after delete) — prefer over `isLocalBranchListed()` for asserting absence, which blocks up to the timeout while a row is missing
 isLocalBranchDeleteDisabled(branch: string): Promise<boolean>
+waitForBranchCreationError(message: string): Promise<void> // waits for the inline error under "Branch name" to read exactly `message` (invalid / already-used name)
+resolveMergeConflicts(version: "Current" | "Incoming"): Promise<string[]> // in the open "Resolve conflicts" modal: picks that side for each conflicted file, submits, returns their names
 closeBranchesDialog(): Promise<void>
 ```
 

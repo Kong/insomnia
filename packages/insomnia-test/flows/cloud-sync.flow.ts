@@ -48,6 +48,17 @@ export class CloudSyncFlow extends BaseFlow {
   }
 
   /**
+   * Stages `requestName` and commits with `message`, without pushing.
+   * @param requestName - The single unstaged row to stage before committing
+   * @param message - The commit message
+   */
+  async commit(requestName: string, message: string): Promise<void> {
+    const { cloudSyncPage } = this.pageManager;
+    await cloudSyncPage.openCommitDialog();
+    await cloudSyncPage.commit(requestName, message);
+  }
+
+  /**
    * Restores the snapshot with commit message `message` from the current
    * workspace's History.
    * @param message - The snapshot's commit message, as shown in its History row
@@ -81,6 +92,25 @@ export class CloudSyncFlow extends BaseFlow {
     await cloudSyncPage.openBranchesDialog();
     await cloudSyncPage.mergeBranch(branch);
     await cloudSyncPage.closeBranchesDialog();
+  }
+
+  /**
+   * Merges `branch` into whichever branch is currently checked out,
+   * expecting conflicts, and resolves all of them by taking the same side.
+   * @param branch - The branch to merge in
+   * @param version - "Current" keeps the local change, "Incoming" takes `branch`'s
+   * @returns The names of the conflicted files that were resolved
+   */
+  async mergeBranchResolvingConflicts(
+    branch: string,
+    version: "Current" | "Incoming",
+  ): Promise<string[]> {
+    const { cloudSyncPage } = this.pageManager;
+    await cloudSyncPage.openBranchesDialog();
+    await cloudSyncPage.mergeBranch(branch);
+    const conflicts = await cloudSyncPage.resolveMergeConflicts(version);
+    await cloudSyncPage.closeBranchesDialog();
+    return conflicts;
   }
 
   /**

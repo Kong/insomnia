@@ -30,6 +30,9 @@ export class CloudSyncPage extends BasePage {
   private readonly historyDialog = this.page
     .getByRole("dialog")
     .filter({ has: this.page.getByRole("heading", { name: "History" }) });
+  private readonly mergeConflictsDialog = this.page.getByRole("dialog", {
+    name: "Resolve conflicts",
+  });
   private readonly deleteFileDialog = this.page
     .getByRole("dialog")
     .filter({ has: this.page.getByRole("heading", { name: "Delete file" }) });
@@ -199,6 +202,40 @@ export class CloudSyncPage extends BasePage {
       .getByRole("row", { name })
       .locator('[data-icon="plus"]')
       .click();
+  }
+
+  /**
+   * Stages `name`, fills the commit message, and commits locally without
+   * pushing, then closes the Commit modal. Requires `openCommitDialog()` to
+   * have been called first.
+   *
+   * The modal only closes itself once nothing is left to commit — adding a
+   * request also leaves a sibling's own automatic update unstaged — so it is
+   * closed explicitly when it stays open after `name`'s row is committed.
+   * @param name - The single unstaged row to stage before committing
+   * @param message - The commit message
+   */
+  async commit(name: string, message: string): Promise<void> {
+    await this.stageChange(name);
+    await this.commitDialog
+      .getByRole("textbox", { name: "Message" })
+      .fill(message);
+    await this.commitDialog
+      .getByRole("button", { name: "Commit", exact: true })
+      .click();
+    await expect(this.commitDialog.getByRole("row", { name })).toHaveCount(0, {
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const closedItself = await this.commitDialog
+      .waitFor({ state: "hidden", timeout: 3000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    if (!closedItself) {
+      await this.commitDialog.locator('[data-icon="x"]').click();
+    }
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -411,6 +448,57 @@ export class CloudSyncPage extends BasePage {
     await this.branchesDialog
       .getByRole("button", { name: "Create", exact: true })
       .click();
+  }
+
+  /**
+   * Waits for the inline error under the Branches modal's "Branch name"
+   * field to read exactly `message` — shown when creating a branch fails
+   * (an invalid or already-used name). Requires `openBranchesDialog()` to
+   * have been called first.
+   * @param message - The expected error text
+   */
+  async waitForBranchCreationError(message: string): Promise<void> {
+    await expect(
+      this.branchesDialog
+        .locator('[data-icon="triangle-exclamation"]')
+        .locator("xpath=following-sibling::span"),
+    ).toHaveText(message, { timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Resolves every conflicted file listed in the "Resolve conflicts" modal
+   * by choosing the same side for each, then submits and waits for the
+   * modal to close. Call after `mergeBranch()` hit conflicts.
+   * @param version - "Current" keeps the local change, "Incoming" takes the merged-in one
+   * @returns The names of the conflicted files that were resolved
+   */
+  async resolveMergeConflicts(
+    version: "Current" | "Incoming",
+  ): Promise<string[]> {
+    await expect(this.mergeConflictsDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const rows = this.mergeConflictsDialog
+      .getByRole("grid", { name: "Conflicted changes" })
+      .getByRole("row");
+    const count = await rows.count();
+    const names: string[] = [];
+    for (let i = 0; i < count; i++) {
+      names.push(
+        (await rows.nth(i).locator("span.truncate").first().innerText()).trim(),
+      );
+      await rows
+        .nth(i)
+        .locator("label", { hasText: version })
+        .click();
+    }
+    await this.mergeConflictsDialog
+      .getByRole("button", { name: "Resolve conflicts" })
+      .click();
+    await expect(this.mergeConflictsDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    return names;
   }
 
   /**
