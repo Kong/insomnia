@@ -28,9 +28,9 @@
 //
 // WebSocket/SocketIO timeline redaction is deferred to a follow-up phase (T10).
 
+import type { SendActionRuntime } from '~/common/network/send-action-runtime';
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import type { SensitiveValueCollector } from '~/common/templating/types';
-import type { SendActionRuntime } from '~/network/network';
 
 
 export type { SensitiveValueCollector };

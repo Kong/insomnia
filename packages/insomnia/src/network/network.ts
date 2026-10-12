@@ -24,6 +24,7 @@ import { EnvironmentType, models, services } from 'insomnia-data';
 import { invariant, serializeNDJSON } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 
+import type { SendActionRuntime } from '~/common/network/send-action-runtime';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
 import { RenderError } from '~/common/templating/render-error';
 import type { RenderedRequest, RenderPurpose, SensitiveValueCollector } from '~/common/templating/types';
@@ -47,10 +48,7 @@ import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
-export interface SendActionRuntime {
-  appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
-  appendTimelineOnError: (timelinePath: string, data: string) => Promise<void>;
-}
+export type { SendActionRuntime };
 
 export const getOrInheritAuthentication = ({
   request,
