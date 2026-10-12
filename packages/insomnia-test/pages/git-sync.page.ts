@@ -14,6 +14,9 @@ export class GitSyncPage extends BasePage {
   private readonly branchesDialog = this.page.getByRole("dialog", {
     name: "Branches",
   });
+  private readonly stageAllPrompt = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Stage All Changes" });
   private readonly mergeConflictsDialog = this.page.getByRole("dialog", {
     name: "Resolve conflicts",
   });
@@ -111,7 +114,11 @@ export class GitSyncPage extends BasePage {
    * (the item stays disabled until the dropdown's git status reflects an
    * uncommitted change, so the menu is reopened to force a refresh until it
    * enables) and waits for its initial git-status fetch to settle (`data-loading`
-   * clears). Interacting with the modal while it's still loading is
+   * clears, and at least one change row is listed — `data-loading` is not yet
+   * set in the instant before the fetch starts, so on its own it lets a
+   * read of the still-empty staged/unstaged lists through; the item only
+   * enables when something is uncommitted, so a row always appears).
+   * Interacting with the modal while it's still loading is
    * unreliable — a background re-render at the wrong moment can silently
    * wipe a just-filled Message field or leave "Stage all changes" acting
    * on an empty list.
@@ -139,6 +146,9 @@ export class GitSyncPage extends BasePage {
         timeout: DEFAULT_TIMEOUT,
       },
     );
+    await expect(
+      this.commitDialog.locator('[role="row"][data-key]').first(),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -290,31 +300,18 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
-   * Whether the Commit modal's "Commit" button is currently disabled (it
-   * is whenever nothing is staged). Requires `openCommitDialog()` to have
-   * been called first.
-   * @returns true if the Commit button is disabled
-   */
-  async isCommitDisabled(): Promise<boolean> {
-    return this.commitDialog
-      .getByRole("button", { name: "Commit", exact: true })
-      .isDisabled();
-  }
-
-  /**
-   * Fills `message` (if given) and clicks "Commit" on whatever is
+   * Fills `message` (clearing the field when omitted, since it keeps its
+   * previous text between attempts) and clicks "Commit" on whatever is
    * currently staged, without staging anything first. Waits for the staged
    * list to empty rather than for the modal to close, since the modal
    * stays open while unstaged changes remain. Requires `openCommitDialog()`
    * to have been called first.
-   * @param message - The commit message; omit to submit the empty form
+   * @param message - The commit message; omit to submit with an empty message
    */
   async commitStaged(message?: string): Promise<void> {
-    if (message !== undefined) {
-      await this.commitDialog
-        .getByRole("textbox", { name: "Message" })
-        .fill(message);
-    }
+    await this.commitDialog
+      .getByRole("textbox", { name: "Message" })
+      .fill(message ?? "");
     await this.commitDialog
       .getByRole("button", { name: "Commit", exact: true })
       .click();
@@ -326,6 +323,34 @@ export class GitSyncPage extends BasePage {
    */
   async isCommitDialogOpen(): Promise<boolean> {
     return this.commitDialog.isVisible();
+  }
+
+  /**
+   * Reads the text of the "Stage All Changes" prompt the Commit modal opens
+   * when Commit is clicked with nothing staged. Waits for it to appear.
+   * @returns The prompt's text
+   */
+  async getStageAllPromptText(): Promise<string> {
+    await expect(this.stageAllPrompt).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await this.stageAllPrompt.innerText()).replaceAll("\n", " ");
+  }
+
+  /**
+   * Dismisses the "Stage All Changes" prompt with "Cancel", leaving the
+   * Commit modal open and nothing committed.
+   */
+  async cancelStageAllPrompt(): Promise<void> {
+    await this.stageAllPrompt.getByRole("button", { name: "Cancel" }).click();
+    await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Accepts the "Stage All Changes" prompt with "Yes", which stages every
+   * change and commits it, then waits for the Commit modal to close.
+   */
+  async confirmStageAllPrompt(): Promise<void> {
+    await this.stageAllPrompt.getByRole("button", { name: "Yes" }).click();
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
