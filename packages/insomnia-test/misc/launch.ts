@@ -15,7 +15,7 @@ import { coverageLaunchEnv } from "./coverage";
  * packaged build — so the app under test always reflects whatever's
  * currently checked out there, not whichever build happened to get
  * installed last. Opts out automatically whenever `INSOMNIA_BINARY` is set
- * (CI always sets it — see `.github/workflows/playwright.yml`), or
+ * (CI always sets it — see `.github/workflows/insomnia-test.yml`), or
  * explicitly via `INSOMNIA_DEV_MODE=false`/`0` to fall back to the packaged
  * `/Applications/Insomnia.app` build locally without pointing at a specific
  * binary.
