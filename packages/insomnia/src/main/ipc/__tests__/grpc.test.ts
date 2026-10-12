@@ -1,5 +1,5 @@
 // @ts-nocheck
-import type { AnyMessage, MethodInfo, PartialMessage, ServiceType } from '@bufbuild/protobuf';
+import { type DescMessage, type DescMethodUnary, fromJsonString, type MessageInitShape } from '@bufbuild/protobuf';
 import type { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import * as grpcReflection from 'grpc-reflection-js';
@@ -193,23 +193,22 @@ describe('loadMethodsFromReflection', () => {
         expect(options.baseUrl).toStrictEqual('https://buf.build');
         return {
           async unary(
-            service: ServiceType,
-            method: MethodInfo,
+            method: DescMethodUnary,
             _: AbortSignal | undefined,
             __: number | undefined,
             header: HeadersInit | undefined,
-            input: PartialMessage<AnyMessage>,
+            input: MessageInitShape<DescMessage>,
           ): Promise<UnaryResponse> {
             expect(new Headers(header).get('Authorization')).toStrictEqual('Bearer TEST_KEY');
             expect(input).toStrictEqual({ module: 'buf.build/connectrpc/eliza' });
             return {
-              service: service,
               method: method,
               header: new Headers(),
               trailer: new Headers(),
               stream: false,
               // Output of running `buf curl https://buf.build/buf.reflect.v1beta1.FileDescriptorSetService/GetFileDescriptorSet --data '{"module": "buf.build/connectrpc/eliza"}' --schema buf.build/bufbuild/reflect -H 'Authorization: Bearer buf-token'`
-              message: method.O.fromJsonString(
+              message: fromJsonString(
+                method.output,
                 '{"fileDescriptorSet":{"file":[{"name":"connectrpc/eliza/v1/eliza.proto","package":"connectrpc.eliza.v1","messageType":[{"name":"SayRequest","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"SayResponse","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"ConverseRequest","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"ConverseResponse","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"IntroduceRequest","field":[{"name":"name","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"name"}]},{"name":"IntroduceResponse","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]}],"service":[{"name":"ElizaService","method":[{"name":"Say","inputType":".connectrpc.eliza.v1.SayRequest","outputType":".connectrpc.eliza.v1.SayResponse","options":{"idempotencyLevel":"NO_SIDE_EFFECTS"}},{"name":"Converse","inputType":".connectrpc.eliza.v1.ConverseRequest","outputType":".connectrpc.eliza.v1.ConverseResponse","options":{},"clientStreaming":true,"serverStreaming":true},{"name":"Introduce","inputType":".connectrpc.eliza.v1.IntroduceRequest","outputType":".connectrpc.eliza.v1.IntroduceResponse","options":{},"serverStreaming":true}]}],"syntax":"proto3"}]},"version":"233fca715f49425581ec0a1b660be886"}',
               ),
             };
