@@ -19,6 +19,7 @@ import type {
   Environment,
   EnvironmentKvPairData,
   GrpcRequest,
+  IDatabase,
   McpRequest,
   MockRoute,
   MockServer,
@@ -34,7 +35,7 @@ import type {
   Workspace,
   WorkspaceScope,
 } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
@@ -813,59 +814,34 @@ export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
  * @param workspaceId - ID of the workspace to export
  * @param includePrivateEnvironments - Whether to include private environment data
  * @param requestIds - Optional array of specific request IDs to export (if not provided, exports all)
+ * @param db - Database to read from (defaults to the app database)
  * @returns YAML string containing the exported workspace data
  */
 export async function getInsomniaV5DataExport({
   workspaceId,
   includePrivateEnvironments,
   requestIds,
+  db = database,
 }: {
   workspaceId: string;
   includePrivateEnvironments: boolean;
   requestIds?: string[];
+  db?: IDatabase;
 }) {
-  let workspace: Workspace | undefined;
-  let workspaceDescendants: BaseModel[];
   try {
-    workspace = await services.workspace.getById(workspaceId);
+    // Read through `db` rather than `services.workspace.getById`: services always use the app database,
+    // so they would miss the workspace when exporting from another database (e.g. a scratch in-memory one)
+    const workspace = await db.findOne<Workspace>(models.workspace.type, { _id: workspaceId });
 
     if (!workspace) {
       throw new Error('Workspace not found');
     }
 
-    // Fetch all descendants of the workspace (requests, folders, environments, etc.)
-    workspaceDescendants = await database.getWithDescendants(workspace, Object.values(MODELS_BY_EXPORT_TYPE));
-  } catch (err) {
-    console.error('Failed to export Insomnia v5 data', err);
-    return '';
-  }
-
-  return serializeInsomniaV5Export({ workspace, workspaceDescendants, includePrivateEnvironments, requestIds });
-}
-
-/**
- * Converts a workspace and its descendants to v5 YAML format without touching the database
- *
- * @param workspace - The workspace to export
- * @param workspaceDescendants - The workspace and its descendants, in the order returned by `database.getWithDescendants`
- * @param includePrivateEnvironments - Whether to include private environment data
- * @param requestIds - Optional array of specific request IDs to export (if not provided, exports all)
- * @returns YAML string containing the exported workspace data, or an empty string if the export fails
- */
-export function serializeInsomniaV5Export({
-  workspace,
-  workspaceDescendants,
-  includePrivateEnvironments,
-  requestIds,
-}: {
-  workspace: Workspace;
-  workspaceDescendants: BaseModel[];
-  includePrivateEnvironments: boolean;
-  requestIds?: string[];
-}) {
-  try {
     // Get all model types that can be exported
     const exportableTypes = Object.values(MODELS_BY_EXPORT_TYPE);
+
+    // Fetch all descendants of the workspace (requests, folders, environments, etc.)
+    const workspaceDescendants = await db.getWithDescendants(workspace, exportableTypes);
 
     // Filter to only include resources that are exportable
     const exportableResources = workspaceDescendants.filter(resource => {

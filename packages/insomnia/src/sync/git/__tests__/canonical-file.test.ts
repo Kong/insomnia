@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type { BaseModel } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
@@ -112,6 +113,20 @@ describe('canonical-file', () => {
     it('is stable for content Insomnia generated itself', async () => {
       const canonicalContent = await getCanonicalInsomniaFileContent(reorderedCollection);
       expect(await getCanonicalInsomniaFileContent(canonicalContent!)).toBe(canonicalContent);
+    });
+
+    it('does not read from, write to or notify the app database', async () => {
+      await db.update({ _id: 'req_app', type: models.request.type, parentId: 'wrk_app' } as BaseModel);
+      const appChanges: unknown[] = [];
+      db.onChange(changes => {
+        appChanges.push(changes);
+      });
+
+      expect(await getCanonicalInsomniaFileContent(reorderedCollection)).not.toBeNull();
+
+      expect(await db.find(models.workspace.type)).toEqual([]);
+      expect((await db.find(models.request.type)).map(doc => doc._id)).toEqual(['req_app']);
+      expect(appChanges).toEqual([]);
     });
 
     it('returns null for files that are not Insomnia files', async () => {
