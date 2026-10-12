@@ -348,7 +348,13 @@ const Root = () => {
     workspaceId?: string;
   };
 
-  const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
+  // One record per import trigger: the source plus the context the trigger
+  // knows. Deep-link imports carry no workspace context; pasting a cURL
+  // inside a workspace carries its workspaceId.
+  const [importTrigger, setImportTrigger] = useState<{
+    source: ImportSource;
+    workspaceId?: string;
+  } | null>(null);
 
   // INS-3544: pasting a cURL while no editable surface has focus starts the
   // import flow. Inside a workspace the current collection is offered as the
@@ -367,16 +373,19 @@ const Root = () => {
     if (!isValid) {
       return;
     }
-    setImportObject({
-      type: 'curl',
-      defaultValue: curl,
-      autoScan: true,
-      startedAt: Date.now(),
+    setImportTrigger({
+      source: {
+        type: 'curl',
+        defaultValue: curl,
+        autoScan: true,
+        startedAt: Date.now(),
+      },
+      workspaceId,
     });
   };
   // Only Root's own import modal state is tracked; Import modals opened from
   // other entry points are not, so pasting then can stack one more modal.
-  useGlobalCurlPasteImport({ enabled: !importObject.startedAt, onCurlPaste: handleCurlPaste });
+  useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
@@ -509,10 +518,12 @@ const Root = () => {
           (resource.type === 'curl'
             ? (await validateCurl(resource.defaultValue)).isValid
             : resource.type === 'uri' || resource.type === 'mcp');
-        return setImportObject({
-          ...resource,
-          autoScan,
-          startedAt: Date.now(),
+        return setImportTrigger({
+          source: {
+            ...resource,
+            autoScan,
+            startedAt: Date.now(),
+          },
         });
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
@@ -782,17 +793,15 @@ const Root = () => {
       <Modals />
       <AppHooks />
       {/* triggered by insomnia://app/import and pasting a cURL with no focus */}
-      {importObject.startedAt && (
+      {importTrigger && (
         <ImportModal
-          key={importObject.startedAt}
-          onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
+          key={importTrigger.source.startedAt}
+          onHide={() => setImportTrigger(null)}
           defaultProjectId={projectId}
           organizationId={organizationId}
           workspaceName={workspaceName}
-          // Only the paste flow carries the current workspace context;
-          // deep-link imports must keep defaulting to a new collection.
-          defaultWorkspaceId={importObject.type === 'curl' ? workspaceId : undefined}
-          from={importObject}
+          defaultWorkspaceId={importTrigger.workspaceId}
+          from={importTrigger.source}
         />
       )}
     </ServerDataCacheProvider>
