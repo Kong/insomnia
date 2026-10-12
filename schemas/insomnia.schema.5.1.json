@@ -3013,7 +3013,6 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "format": "starts_with",
                     "pattern": "^ws-req.*"
                   },
                   "created": {
@@ -3578,7 +3577,6 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "format": "starts_with",
                     "pattern": "^socketio-req.*"
                   },
                   "created": {
