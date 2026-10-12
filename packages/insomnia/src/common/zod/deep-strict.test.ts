@@ -269,9 +269,11 @@ describe('deepStrict on a request-like composite schema', () => {
     }
     // The discriminated union has no matching discriminator, and the permissive `z.object({})`
     // fallback is strict too now, so it rejects the unrecognized `type`/`apiKey` keys instead of
-    // silently stripping them -- both branches fail, surfacing as one `invalid_union` issue.
+    // silently stripping them. Zod 4 reports the fallback branch's `unrecognized_keys` issue
+    // (rather than a wrapping `invalid_union`) for this input.
     const authIssue = result.error.issues.find(issue => issue.path[0] === 'authentication');
-    expect(authIssue?.code).toBe('invalid_union');
+    expect(authIssue?.code).toBe('unrecognized_keys');
+    expect(authIssue && 'keys' in authIssue ? authIssue.keys : []).toEqual(['type', 'apiKey']);
   });
 
   it('omit and extend should preserve strictness', () => {
