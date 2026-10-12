@@ -125,7 +125,7 @@
     "isbot": "^5",
     "isomorphic-git": "1.25.7",
     "js-yaml": "^4.1.0",
-    "jsdom": "^25.0.1",
+    "jsdom": "^30.1.2",
     "jshint": "^2.13.6",
     "json-bigint": "^1.0.0",
     "json-order": "^1.1.3",
