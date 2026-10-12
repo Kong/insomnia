@@ -215,14 +215,19 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
-   * Closes the Commit modal via Escape. The dialog is focused first: after
-   * a commit the focused button becomes disabled and focus falls back to
-   * the page body, where Escape no longer reaches the modal.
+   * Closes the Commit modal with its close (x) button. Escape is not used
+   * because it only reaches the modal while focus is inside it, and focus
+   * can fall back to the page body after a stage/unstage/commit re-render,
+   * leaving the modal open. The click is retried in case the modal's
+   * content is still re-rendering when it lands.
    */
   async closeCommitDialog(): Promise<void> {
-    await this.commitDialog.focus();
-    await this.page.keyboard.press("Escape");
-    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await expect(async () => {
+      if (await this.commitDialog.isVisible()) {
+        await this.commitDialog.locator('[data-icon="x"]').click();
+      }
+      await expect(this.commitDialog).toBeHidden({ timeout: 3000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

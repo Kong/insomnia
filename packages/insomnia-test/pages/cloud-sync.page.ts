@@ -198,10 +198,13 @@ export class CloudSyncPage extends BasePage {
    * @param name - The unstaged row's visible name
    */
   private async stageChange(name: string): Promise<void> {
-    await this.commitDialog
-      .getByRole("row", { name })
-      .locator('[data-icon="plus"]')
-      .click();
+    const row = this.commitDialog.getByRole("row", { name });
+    await row.locator('[data-icon="plus"]').click();
+    // Staging is an async action: committing before the row has moved to
+    // the staged list (its button turns into a "minus") commits nothing.
+    await expect(row.locator('[data-icon="minus"]')).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
