@@ -101,6 +101,7 @@ export abstract class BasePage {
       }).toPass({ timeout: DEFAULT_TIMEOUT });
       if (await this.valueHolds(cmLocator, text, 200)) return;
     }
+    throw new Error(`CodeMirror value "${text}" did not hold after 3 attempts`);
   }
 
   /**

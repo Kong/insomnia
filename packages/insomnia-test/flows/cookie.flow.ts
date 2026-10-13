@@ -75,19 +75,9 @@ export class CookieFlow extends BaseFlow {
   /**
    * Polls the on-disk `CookieJar` NeDB file directly until it contains
    * every one of `cookies` by key/value, re-running the whole
-   * open→setCookies→close write once per mismatch. Confirmed live via a
-   * diagnostic probe: a cookie missing right after `setCookies()` doesn't
-   * arrive later no matter how long this waits — the file's mtime never
-   * moves again, across 50+ polls spanning almost a minute. So this isn't
-   * an in-memory-state-outrunning-disk timing gap; it's a genuinely lost
-   * write, the same species of bug `HttpRequestFlow.waitForUrlPersisted()`
-   * works around for URLs. The likely cause here: clicking "Done" unmounts
-   * the edit dialog, and under CPU-contended parallel runs the app's own
-   * debounced save can still be pending at that point, so the unmount
-   * cancels it before it ever fires — so the cookie never lands on its own
-   * and the same write has to be repeated. `CookiePage` now polls the
-   * on-disk jar after each field edit to narrow that window, but this
-   * stays as the backstop.
+   * open→setCookies→close write once per mismatch. The dialog's unmount
+   * can cancel the app's debounced save, so a lost cookie write has to be
+   * repeated, not only waited for.
    * @param item - The Collection/request whose location the Cookie Jar dialog is opened from, for a retry
    * @param cookies - The cookies that must all be present in the persisted jar
    */
