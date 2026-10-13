@@ -30,6 +30,29 @@ const METHOD_LABELS: Record<string, HttpMethod> = {
   OPTIONS: HttpMethod.Options,
 };
 
+export type OutlineSection =
+  | "info"
+  | "servers"
+  | "paths"
+  | "requestBodies"
+  | "responses"
+  | "parameters"
+  | "headers"
+  | "schemas"
+  | "securitySchemes";
+
+const OUTLINE_SECTIONS: Record<OutlineSection, { label: string; prefix: string }> = {
+  info: { label: "Info", prefix: "info." },
+  servers: { label: "Servers", prefix: "servers." },
+  paths: { label: "Paths", prefix: "paths." },
+  requestBodies: { label: "Request bodies", prefix: "components.requestBodies." },
+  responses: { label: "Responses", prefix: "components.responses." },
+  parameters: { label: "Parameters", prefix: "components.parameters." },
+  headers: { label: "Headers", prefix: "components.headers." },
+  schemas: { label: "Schemas", prefix: "components.schemas." },
+  securitySchemes: { label: "Security", prefix: "components.securitySchemes." },
+};
+
 /** A single row read back from the "Tests passed/failed" result screen. */
 export interface UnitTestResultRow {
   title: string;
@@ -2091,6 +2114,56 @@ export class WorkspacePage extends BasePage {
     });
     await expect(success.or(invalid)).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await invalid.isVisible()) ? "invalid" : "success";
+  }
+
+  /**
+   * Expands an outline section (if collapsed) and reads the `data-key` of
+   * every entry under it, in panel order.
+   * @param section - Which outline section to read
+   * @returns The entries' keys, e.g. `"servers.0"`, `"components.schemas.Pet"`
+   */
+  async getOutlineEntryKeys(section: OutlineSection): Promise<string[]> {
+    const prefix = OUTLINE_SECTIONS[section].prefix;
+    await this.expandOutlineSection(
+      this.page.getByRole("button", { name: OUTLINE_SECTIONS[section].label, exact: true }),
+      `[data-key^="${prefix}"]`,
+    );
+    return this.page
+      .locator(`[data-key^="${prefix}"]`)
+      .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.key!));
+  }
+
+  /**
+   * Expands an outline section (if collapsed) and clicks one entry, which
+   * makes the editor select the matching line. For a `paths` entry, pass
+   * `method` to click that method's badge instead of the path row.
+   * @param section - The outline section the entry lives in
+   * @param name - The entry's name: `"title"`/`"description"`/`"version"`/`"license"` for info, a zero-based index for servers, the path for paths, the component name otherwise
+   * @param method - For `paths` only, the HTTP method badge to click instead of the row
+   */
+  async clickOutlineEntry(
+    section: OutlineSection,
+    name: string | number,
+    method?: HttpMethod,
+  ): Promise<void> {
+    const key = `${OUTLINE_SECTIONS[section].prefix}${name}`;
+    await this.getOutlineEntryKeys(section);
+    const entry = this.page.locator(`[data-key="${key}"]`);
+    await (method
+      ? entry.locator(`button.http-method-${method}`).click()
+      : entry.click());
+  }
+
+  /**
+   * Reads where the spec editor's selection currently sits.
+   * @returns The 1-based line number of the selection's start and that line's trimmed text
+   */
+  async getEditorSelection(): Promise<{ line: number; text: string }> {
+    return this.page.locator(this.SPEC_EDITOR).evaluate((el) => {
+      const cm = (el as any).CodeMirror;
+      const { line } = cm.getCursor("from");
+      return { line: line + 1, text: String(cm.getLine(line)).trim() };
+    });
   }
 
   private async expandOutlineSection(

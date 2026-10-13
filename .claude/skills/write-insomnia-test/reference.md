@@ -1023,6 +1023,20 @@ getCollectionSpec(item: string | { name: string; id?: string }): Promise<Collect
 
 `workspacePage.getFormat()` / `.selectFormat(format: SpecFormat)` — `SpecFormat.JSON | SpecFormat.YAML`. The structured `getSpecification()` below is the only way to read a spec's content back — `selectFormat()` has no committed spec exercising it yet; re-probe (§5) before relying on its exact selectors if you write one.
 
+### Spec outline sidebar — read entries, click to jump, read the editor selection
+
+```ts
+// pageManager.workspacePage — OutlineSection = "info" | "servers" | "paths" | "requestBodies" | "responses" | "parameters" | "headers" | "schemas" | "securitySchemes" (exported from pages/workspace.page.ts; no Flow wrapper exists — call the Page directly)
+getOutlineEntryKeys(section: OutlineSection): Promise<string[]>
+  // expands the section if collapsed, returns each entry's data-key in panel order, e.g. "info.title" | "servers.0" | "paths./pets" | "components.schemas.Pet"
+  // the Info section always renders title, description, version and license rows, even when the spec omits one
+clickOutlineEntry(section: OutlineSection, name: string | number, method?: HttpMethod): Promise<void>
+  // name: "title" | "description" | "version" | "license" for info, a zero-based index for servers, the path for paths, the component name otherwise; method (paths only) clicks that method's badge instead of the row
+getEditorSelection(): Promise<{ line: number; text: string }>  // 1-based line of the spec editor's selection start and that line's trimmed text — assert on `text` (stable), use `line` only for relative ordering
+```
+
+Real example: `tests/document/spec-outline-navigation.spec.ts` (JSON and YAML, every section; the YAML scalar-Info case is `test.fail(true, "INS-4007")` — clicking Title/Version in a YAML spec selects the line above because `navigateToPath` subtracts one line for every non-`servers` section, which is right for object values and wrong for scalars on the key's own line).
+
 ### Spec toolbar — Generate menu / format switch / docs preview
 
 ```ts
