@@ -38,8 +38,8 @@ export async function renderInWorker({ input, context, path, ignoreUndefinedEnvV
 
   // Id to avoid race conditions
   const id = window.crypto.randomUUID();
-  // Embed render ID in the context so the worker can include it in sensitiveValue messages.
-  newContext._renderId = id;
+  // Carry the render ID via serializedFunctions (not a scope variable) so the worker can include it in sensitiveValue messages.
+  newContext.serializedFunctions.renderId = id;
   const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable, authToken });
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {

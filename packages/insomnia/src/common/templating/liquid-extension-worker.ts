@@ -195,9 +195,9 @@ export function createLiquidTagWorker(
       // Register external vault tag results for timeline redaction when purpose='send'.
       // The collector cannot cross the structured-clone Worker boundary, so we postMessage
       // the value back to the renderer which holds the real collector.
-      // renderContext._renderId is embedded by renderInWorker to correlate the message.
+      // renderContext.getRenderId() is set by renderInWorker to correlate the message.
       if (isExternalVaultTag(plugin.name, ext.name) && resultStr.length > 0) {
-        const renderId = (renderContext as any)._renderId;
+        const renderId = (renderContext as any).getRenderId?.();
         if (renderId) {
           (globalThis as any).postMessage({ type: 'sensitiveValue', id: renderId, value: resultStr });
         }
