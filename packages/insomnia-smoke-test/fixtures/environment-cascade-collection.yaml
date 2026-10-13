@@ -66,8 +66,45 @@ collection:
             send: true
             store: true
           rebuildPath: true
+      - name: innerFolder
+        meta:
+          id: fld_9d4e8f0a1b2c3d4e5f6a7b8c9d0e1f22
+          created: 1668533312226
+          modified: 1668533312226
+          sortKey: -1668533312224
+        children:
+          - url: http://127.0.0.1:4010/echo
+            name: inner request
+            meta:
+              id: req_0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c23
+              created: 1636141014554
+              modified: 1636707449232
+              isPrivate: false
+              sortKey: -1636141014554
+            method: POST
+            body:
+              mimeType: application/json
+              text: |-
+                {
+                  "cascadeVar": "{{ _.cascadeVar }}",
+                  "folderOverride": "{{ _.folderOverride }}"
+                }
+            headers:
+              - name: Content-Type
+                value: application/json
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+        environment:
+          folderOverride: fromInnerFolder
     environment:
       cascadeVar: fromFolder
+      folderOverride: fromOuterFolder
 cookieJar:
   name: Default Jar
   meta:
