@@ -119,7 +119,7 @@ jobs:
     name: Shard Matrix
     runs-on: ubuntu-latest
     env:
-      SHARD_TOTAL: 64
+      SHARD_TOTAL: 32
     outputs:
       indices: ${{ steps.matrix.outputs.indices }}
       total: ${{ env.SHARD_TOTAL }}
