@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
 import type { Environment, Workspace } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
@@ -734,6 +734,30 @@ describe('render tests', () => {
           },
         }),
       );
+    });
+  });
+
+  describe('getRenderContext()', () => {
+    it('keys source from the closest folder when nested folders define the same variable', async () => {
+      const workspace = { _id: 'wrk_render_source_test', type: models.workspace.type, parentId: 'proj_test' };
+      const outerFolder = reqGroupBuilder.environment({ foo: 'outer' }).name('outer').build();
+      const innerFolder = reqGroupBuilder.environment({ foo: 'inner' }).name('inner').build();
+      const request = { _id: 'req_render_source_test', type: models.request.type, parentId: innerFolder._id };
+      // withAncestors order: the request first, then ancestors outwards
+      const ancestors = [request, innerFolder, outerFolder, workspace];
+
+      const context = await renderUtils.getRenderContext({
+        request: request as unknown as Request,
+        environment: envBuilder.data({}).build(),
+        baseEnvironment: envBuilder.data({}).build(),
+        ancestors: ancestors as unknown as RenderContextAncestor[],
+        purpose: 'send',
+      });
+
+      const { keyContext, keyContextMeta } = context.getKeysContext();
+      // The value is rendered from the closest folder; the source label must match it
+      expect(keyContext['_.foo']).toBe('inner');
+      expect(keyContextMeta?.['_.foo']?.label).toBe('inner');
     });
   });
 });
