@@ -19,7 +19,7 @@ import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/sch
 
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
 
-const { environment } = models;
+const { environment, mockServer, mockRoute } = models;
 
 // Basic literal types that can appear in JSON data
 export const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -105,11 +105,29 @@ export const CookieJarSchema = z.object({
   cookies: z.array(CookieSchema).optional(),
 });
 
-const baseEnvironmentSchema = environment.baseEnvironmentSchema.omit({ metaSortKey: true }).extend({
+// Keep the key order consistent so that export to YAML maintains the same order as the model's shape
+const { name, data, color, dataPropertyOrder, ...rest } = environment.baseEnvironmentSchema.omit({
+  metaSortKey: true,
+}).shape;
+export const EnvironmentSchema = z.object({
+  name,
   meta: MetaSchema.optional(),
-});
-export const EnvironmentSchema = baseEnvironmentSchema.extend({
-  subEnvironments: z.array(baseEnvironmentSchema).optional(),
+  data,
+  color,
+  subEnvironments: z
+    .array(
+      z.object({
+        name,
+        meta: MetaSchema.optional(),
+        data,
+        dataPropertyOrder,
+        color,
+        ...rest,
+      }),
+    )
+    .optional(),
+  dataPropertyOrder,
+  ...rest,
 });
 
 export const GRPCRequestSchema = z.object({
@@ -141,24 +159,26 @@ export const GRPCRequestSchema = z.object({
   }),
 });
 
+// parentId do not need to be included in the MockRouteSchema
+const {
+  name: mockRouteNameShape,
+  parentId: mockRouteParentIdShape,
+  ...mockRouteShapeRest
+} = mockRoute.baseMockRouteSchema.shape;
 export const MockRouteSchema = z.object({
-  name: z.string().optional(),
+  name: mockRouteNameShape,
   meta: MetaSchema.optional(),
-  body: z.string().optional(),
-  headers: z
-    .array(
-      z.object({
-        name: z.string(),
-        value: z.string(),
-        description: z.string().optional(),
-        disabled: z.boolean().optional(),
-      }),
-    )
-    .optional(),
-  method: z.string().optional(),
-  mimeType: z.string().optional(),
-  statusCode: z.number().optional().default(200),
-  statusText: z.string().optional(),
+  ...mockRouteShapeRest,
+});
+// parentId and name do not need to be included in the MockServerSchema
+const {
+  name: mockServerNameShape,
+  parentId: mockServerParentIdShape,
+  ...mockServerShapeRest
+} = mockServer.baseMockServerSchema.shape;
+const baseMockServerSchema = z.object({
+  meta: MetaSchema.optional(),
+  ...mockServerShapeRest,
 });
 
 const BasicAuthenticationSchema = z.object({
@@ -592,13 +612,7 @@ export const MockServerSchema = z.object({
   schema_version: z.string().optional().default(INSOMNIA_SCHEMA_VERSION),
   name: z.string().optional(),
   meta: MetaSchema.optional(),
-  server: z
-    .object({
-      meta: MetaSchema.optional(),
-      url: z.string(),
-      useInsomniaCloud: z.boolean().default(true),
-    })
-    .optional(),
+  server: baseMockServerSchema.optional(),
   routes: z.array(MockRouteSchema).optional(),
 });
 
