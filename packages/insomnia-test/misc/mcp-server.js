@@ -87,7 +87,7 @@ app.get('/', (_req, res) => {
 });
 
 const MIN_REPLY_DELAY_MS = 1;
-const MAX_REPLY_DELAY_MS = 1_000;
+const MAX_REPLY_DELAY_MS = 1000;
 
 function delayResponse(req) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
