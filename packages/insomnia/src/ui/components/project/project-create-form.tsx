@@ -5,6 +5,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { Button, Form, Input, Label, TextField } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
+import { getUnknownFieldsWarningMessage } from '~/common/constants';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';
@@ -95,6 +96,7 @@ export const ProjectCreateForm: FC<Props> = ({
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
       : [];
+  const insomniaFilesContainUnknownFields = insomniaFiles?.filter(file => file.hasUnknownFields) || [];
 
   const changedFieldCount = [
     projectData.name !== defaultProjectName,
@@ -365,6 +367,12 @@ export const ProjectCreateForm: FC<Props> = ({
             insomniaFiles={insomniaFiles}
             repoURI={projectData.uri}
           />
+          {initCloneGitRepositoryFetcher.state === 'idle' && insomniaFilesContainUnknownFields.length > 0 && (
+            <div className="mt-4 flex items-start gap-2 rounded-xs border border-solid border-(--color-warning) px-3 py-2 text-left text-sm text-(--color-font)">
+              <Icon icon="triangle-exclamation" className="mt-0.5 shrink-0 text-(--color-warning)" />
+              <span>{getUnknownFieldsWarningMessage(insomniaFilesContainUnknownFields.map(f => f.path))}</span>
+            </div>
+          )}
         </div>
       </div>
 

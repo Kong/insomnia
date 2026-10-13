@@ -554,3 +554,9 @@ export const REALTIME_EVENTS_CHANNELS = {
   NEW_EVENT: 'newEventReceived',
   MCP_NOTIFICATION: 'mcpNotification',
 };
+
+// warning message for files with unknown fields
+export const getUnknownFieldsWarningMessage = (fileNames: string[] = []) => {
+  const fileNamesList = fileNames.length === 0 ? 'File' : fileNames?.join(', ');
+  return `${fileNamesList} ${fileNamesList.length <= 1 ? 'contains' : 'contain'} fields not recognized by this version of Insomnia (i.e. fields that were added by a newer version of Insomnia, or manual file edits). You can safely open these files, but committing any changes to them from here may break or remove functionality for your collaborators. We recommend upgrading.`;
+};

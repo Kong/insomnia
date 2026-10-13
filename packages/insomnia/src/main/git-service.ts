@@ -48,6 +48,8 @@ import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
+import { checkStrictSchemaMatch } from '../common/zod/check-schema-mismatch';
+import { findUnknownFieldRanges, type UnknownFieldRange } from '../common/zod/find-unknown-field-ranges';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -982,6 +984,7 @@ export interface GitChangesLoaderData {
       status: Status;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
+      originHasUnknownFields?: boolean;
     }[];
     unstaged: {
       name: string;
@@ -989,6 +992,7 @@ export interface GitChangesLoaderData {
       status: Status;
       type: GitFileStatus;
       symbol: GitFileStatusSymbol;
+      originHasUnknownFields?: boolean;
     }[];
   };
   branch: string;
@@ -1015,9 +1019,36 @@ export const gitChangesLoader = async ({
       hasUncommittedChanges,
     });
 
+    // Check HEAD version of YAML files containing unknown fields.
+    const addUnknownFieldsCheck = async <T extends { path: string }>(entries: T[]) =>
+      Promise.all(
+        entries.map(async entry => {
+          if (!entry.path.endsWith('.yaml')) {
+            return entry;
+          }
+          const originContents = await GitVCS.readFileAtHead(entry.path);
+          let originHasUnknownFields = false;
+          if (originContents) {
+            try {
+              const document = parse(migrateToLatestYaml(originContents));
+              originHasUnknownFields = checkStrictSchemaMatch(InsomniaFileSchema, document).mismatch;
+            } catch {
+              originHasUnknownFields = false;
+            }
+          }
+          return {
+            ...entry,
+            originHasUnknownFields,
+          };
+        }),
+      );
+
     return {
       branch,
-      changes,
+      changes: {
+        staged: await addUnknownFieldsCheck(changes.staged),
+        unstaged: await addUnknownFieldsCheck(changes.unstaged),
+      },
       gitRepository,
     };
   } catch {
@@ -1121,7 +1152,13 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
  * @param projectId - The project ID to associate migrated workspaces with
  * @returns Object containing changes made during migration or errors
  */
-export async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
+export async function importLegacyInsomniaFolder({
+  fsClient,
+  projectId,
+}: {
+  fsClient: PromiseFsClient;
+  projectId: string;
+}) {
   const changes: { path: string; status: Status }[] = [];
   try {
     // Check if the legacy .insomnia directory exists
@@ -1294,6 +1331,7 @@ export const initGitRepoCloneAction = async ({
         scope: WorkspaceScope;
         name: string;
         path: string;
+        hasUnknownFields?: boolean;
       }[];
       legacyInsomniaFile?: {
         scope: WorkspaceScope;
@@ -1340,6 +1378,7 @@ export const initGitRepoCloneAction = async ({
     scope: WorkspaceScope;
     name: string;
     path: string;
+    hasUnknownFields?: boolean;
   }[] = [];
 
   for (const file of insomniaFiles) {
@@ -1355,6 +1394,7 @@ export const initGitRepoCloneAction = async ({
         scope: insomniaSchemaTypeToScope(insomniaFile.type),
         name: insomniaFile.name || 'Untitled',
         path: file,
+        hasUnknownFields: checkStrictSchemaMatch(InsomniaFileSchema, yamlDocument).mismatch,
       });
     }
   }
@@ -3380,6 +3420,8 @@ export type GitDiffResult =
         before: string;
         after: string;
       };
+      // Lines of `diff.before` holding fields this version of Insomnia doesn't recognize.
+      unknownFieldRanges: UnknownFieldRange[];
       filepath: string;
       scope: WorkspaceScope;
       staged: boolean;
@@ -3418,6 +3460,8 @@ export const diffFileLoader = async ({
     return {
       name: name || filepath,
       diff,
+      // Unknown fields live on the original side: saving from this version drops them from the modified side.
+      unknownFieldRanges: diff.before ? findUnknownFieldRanges(diff.before, InsomniaFileSchema) : [],
       filepath,
       scope,
       staged,
