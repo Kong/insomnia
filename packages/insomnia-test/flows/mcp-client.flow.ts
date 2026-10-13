@@ -130,10 +130,15 @@ export class McpClientFlow extends BaseFlow {
     await workspace.clickNode(node!);
     await mcpClientPage.navigate();
     await mcpClientPage.setUrl(client.url);
+    // The tree node is the MCP workspace; the URL lives on its McpRequest child.
+    const requestId = await this.waitForChildDocId(
+      "insomnia.McpRequest.db",
+      node!._id,
+    );
     await this.waitForUrlPersisted(
       "insomnia.McpRequest.db",
       mcpClientPage,
-      node!._id,
+      requestId,
       client.url,
     );
     if (client.authentication) {

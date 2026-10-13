@@ -132,6 +132,37 @@ export abstract class BaseFlow {
   }
 
   /**
+   * Polls the on-disk `dbFile` NeDB file until a document whose `parentId`
+   * is `parentId` exists, and returns its `_id`. For models created by the
+   * app as a hidden child of a node the UI exposes (e.g. an MCP Client's
+   * McpRequest under its workspace), so the tree node's id is the parent's
+   * rather than the document's own.
+   * @param dbFile - The NeDB filename to read, e.g. `"insomnia.McpRequest.db"`
+   * @param parentId - The `parentId` of the document to find
+   * @returns The `_id` of the child document
+   */
+  protected async waitForChildDocId(
+    dbFile: string,
+    parentId: string,
+  ): Promise<string> {
+    const dataPath = await this.flowManager.getDataPath();
+    const dbPath = path.join(dataPath, dbFile);
+
+    let id: string | undefined;
+    await expect(async () => {
+      for (const line of fs
+        .readFileSync(dbPath, "utf8")
+        .split("\n")
+        .filter(Boolean)) {
+        const doc = JSON.parse(line);
+        if (doc.parentId === parentId) id = doc._id;
+      }
+      expect(id).toBeDefined();
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    return id!;
+  }
+
+  /**
    * Reads the on-disk `dbFile` NeDB file directly for `id`'s
    * currently-persisted document, keeping only its latest revision.
    * @param dbFile - The NeDB filename to read, e.g. `"insomnia.GrpcRequest.db"`
