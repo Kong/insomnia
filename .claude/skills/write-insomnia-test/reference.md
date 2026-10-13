@@ -383,6 +383,12 @@ get(item: string | { name: string; id?: string }, parent?: Collection): Promise<
 // need to do anything extra — keep it in mind only when calling setUrl() directly on a Page, outside a
 // Flow, on a request that might still be mid-creation (RequestPage.waitForUrlPersisted(url) polls the
 // same on-disk store for that case).
+// The `id` passed to waitForUrlPersisted must be the DOCUMENT's own `_id` in `dbFile`, not just any tree node
+// id — a mismatch reads `undefined` and times out after 10s with `Expected: "<url>" / Received: undefined`.
+// McpClientFlow.create() is the case to watch: an MCP Client's tree node is its *workspace*, and the URL lives
+// on the McpRequest the app auto-creates as that workspace's child, so it first resolves the real id with
+// BaseFlow.waitForChildDocId("insomnia.McpRequest.db", node._id) (polls the NeDB file by `parentId`) and
+// passes that. Use the same helper for any other model the app creates as a hidden child of a tree node.
 
 // GraphQLRequestFlow — identical shape
 create(parent: Collection | Folder, request: GraphQLRequest): Promise<GraphQLRequest>
