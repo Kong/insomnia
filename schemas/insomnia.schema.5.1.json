@@ -168,7 +168,11 @@
               ]
             },
             "data": {
-              "$ref": "#/$defs/__schema1"
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
             },
             "color": {
               "anyOf": [
@@ -215,10 +219,25 @@
                     ]
                   },
                   "data": {
-                    "$ref": "#/$defs/__schema1"
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
                   },
                   "dataPropertyOrder": {
-                    "$ref": "#/$defs/__schema1"
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "color": {
                     "anyOf": [
@@ -229,15 +248,101 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
                   }
-                },
-                "required": [
-                  "name"
-                ]
+                }
               }
             },
             "dataPropertyOrder": {
-              "$ref": "#/$defs/__schema1"
+              "anyOf": [
+                {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kvPairData": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "str",
+                      "secret"
+                    ]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ]
+              }
+            },
+            "environmentType": {
+              "type": "string",
+              "enum": [
+                "json",
+                "kv"
+              ]
             }
           }
         },
@@ -612,7 +717,11 @@
               ]
             },
             "data": {
-              "$ref": "#/$defs/__schema1"
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
             },
             "color": {
               "anyOf": [
@@ -659,10 +768,25 @@
                     ]
                   },
                   "data": {
-                    "$ref": "#/$defs/__schema1"
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
                   },
                   "dataPropertyOrder": {
-                    "$ref": "#/$defs/__schema1"
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "color": {
                     "anyOf": [
@@ -673,15 +797,101 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
                   }
-                },
-                "required": [
-                  "name"
-                ]
+                }
               }
             },
             "dataPropertyOrder": {
-              "$ref": "#/$defs/__schema1"
+              "anyOf": [
+                {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kvPairData": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "str",
+                      "secret"
+                    ]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ]
+              }
+            },
+            "environmentType": {
+              "type": "string",
+              "enum": [
+                "json",
+                "kv"
+              ]
             }
           }
         },
@@ -1124,7 +1334,11 @@
               ]
             },
             "data": {
-              "$ref": "#/$defs/__schema1"
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
             },
             "color": {
               "anyOf": [
@@ -1171,10 +1385,25 @@
                     ]
                   },
                   "data": {
-                    "$ref": "#/$defs/__schema1"
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
                   },
                   "dataPropertyOrder": {
-                    "$ref": "#/$defs/__schema1"
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "color": {
                     "anyOf": [
@@ -1185,15 +1414,101 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
                   }
-                },
-                "required": [
-                  "name"
-                ]
+                }
               }
             },
             "dataPropertyOrder": {
-              "$ref": "#/$defs/__schema1"
+              "anyOf": [
+                {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kvPairData": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "str",
+                      "secret"
+                    ]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ]
+              }
+            },
+            "environmentType": {
+              "type": "string",
+              "enum": [
+                "json",
+                "kv"
+              ]
             }
           }
         }
@@ -1807,7 +2122,11 @@
               ]
             },
             "data": {
-              "$ref": "#/$defs/__schema1"
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
             },
             "color": {
               "anyOf": [
@@ -1854,10 +2173,25 @@
                     ]
                   },
                   "data": {
-                    "$ref": "#/$defs/__schema1"
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
                   },
                   "dataPropertyOrder": {
-                    "$ref": "#/$defs/__schema1"
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "color": {
                     "anyOf": [
@@ -1868,15 +2202,101 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "kvPairData": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "json",
+                            "str",
+                            "secret"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ]
+                    }
+                  },
+                  "environmentType": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "kv"
+                    ]
                   }
-                },
-                "required": [
-                  "name"
-                ]
+                }
               }
             },
             "dataPropertyOrder": {
-              "$ref": "#/$defs/__schema1"
+              "anyOf": [
+                {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kvPairData": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "json",
+                      "str",
+                      "secret"
+                    ]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ]
+              }
+            },
+            "environmentType": {
+              "type": "string",
+              "enum": [
+                "json",
+                "kv"
+              ]
             }
           }
         }
