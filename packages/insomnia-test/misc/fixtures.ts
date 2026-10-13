@@ -252,6 +252,7 @@ export const test = base.extend<Fixtures>({
       crypto.randomUUID(),
     );
     await use(dataPath);
+    fs.rmSync(dataPath, { recursive: true, force: true });
   },
 
   // Its own fixture so a spec that needs the real v13 onboarding/login
