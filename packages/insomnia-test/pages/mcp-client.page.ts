@@ -12,6 +12,31 @@ export class McpClientPage extends RequestPage {
   protected readonly urlBarId = "mcp-url-bar";
 
   /**
+   * Clicks Disconnect and waits for the button to flip back to "Connect".
+   * While connected the whole URL form is `aria-disabled`, which makes
+   * Playwright treat the Disconnect button inside it as not enabled even
+   * though it is clickable, so the click has to be forced.
+   * @param callback - A callback retried via expect().toPass() before disconnecting
+   * @param timeout - The maximum time to retry the callback, in milliseconds
+   */
+  override async disconnect(
+    callback: () => Promise<void> | void = () => {},
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    await expect(async () => {
+      await callback();
+    }).toPass({ timeout });
+
+    const connectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: /^(Connect|Disconnect)$/ });
+    await connectButton.click({ force: true });
+    await expect(connectButton).toHaveText("Connect", {
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
    * Switches to the "params" tab and clicks "Call Tool" to invoke the
    * currently selected tool with its configured arguments.
    */

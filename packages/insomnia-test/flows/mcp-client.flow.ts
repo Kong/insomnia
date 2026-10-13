@@ -67,6 +67,21 @@ export class McpClientFlow extends BaseFlow {
   }
 
   /**
+   * Opens the given MCP Client node and clicks its disconnect action,
+   * waiting for the connection to close.
+   * @param client - The MCP Client to disconnect
+   */
+  async disconnect(client: McpClient): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const mcpClientPage = this.pageManager.mcpClientPage;
+
+    const node = await workspace.findItemNode(client);
+    await workspace.clickNode(node!);
+    await mcpClientPage.navigate();
+    await mcpClientPage.disconnect();
+  }
+
+  /**
    * Opens `client`, clicks its Auth tab's token-fetch button and reads the
    * resulting tokens back.
    * @param client - The MCP Client whose OAuth 2.0 tokens to fetch

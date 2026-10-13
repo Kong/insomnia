@@ -542,6 +542,7 @@ Real examples: `tests/http-request/oauth1-authentication.spec.ts` (OAuth 1.0 —
 create(parent: Project, client: McpClient): Promise<McpClient>     // McpClient = new McpClient(name, url = "", authentication?: RequestAuthentication) — applied after the URL is set
 get(item: string | { name: string; id?: string }): Promise<McpClient | undefined>
 connect(client: McpClient): Promise<void>
+disconnect(client: McpClient): Promise<void>   // clicks Disconnect (McpClientPage.disconnect force-clicks it: the URL form is aria-disabled while connected, so a normal click times out as "not enabled")
 getTools(client: McpClient): Promise<string[]>
 callTool(client: McpClient, tool: string, args: Record<string, string>, callback: () => Promise<void> | void = () => {}, timeout = DEFAULT_TIMEOUT): Promise<Response>
 ```
