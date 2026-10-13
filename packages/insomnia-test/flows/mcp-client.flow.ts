@@ -130,6 +130,12 @@ export class McpClientFlow extends BaseFlow {
     await workspace.clickNode(node!);
     await mcpClientPage.navigate();
     await mcpClientPage.setUrl(client.url);
+    await this.waitForUrlPersisted(
+      "insomnia.McpRequest.db",
+      mcpClientPage,
+      node!._id,
+      client.url,
+    );
     if (client.authentication) {
       await this.applyAuthentication(mcpClientPage.auth, client.authentication);
     }
