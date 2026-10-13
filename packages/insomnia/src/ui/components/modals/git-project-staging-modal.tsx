@@ -1895,8 +1895,9 @@ const OriginalGitProjectStagingModal: FC<
 const UndiscardableChangeWarning = () => (
   <p className="rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm) text-base">
     <Icon icon="exclamation-triangle" className="mr-2" />
-    The changes in this file can&apos;t be discarded. The committed file isn&apos;t in the format Insomnia generates,
-    so Insomnia rewrites it every time it&apos;s restored. Commit this file once to resolve it.
+    The changes in this file can&apos;t be discarded. Insomnia reformats this file to keep it working, so the changes
+    come back after every discard. Often this comes from manual edits, or changes made in other versions of
+    Insomnia. Commit this file once to resolve it.
   </p>
 );
 
