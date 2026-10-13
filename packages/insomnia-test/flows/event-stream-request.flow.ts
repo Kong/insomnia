@@ -6,6 +6,7 @@ import type { Collection } from "../models/collection";
 import { EventStreamRequest } from "../models/event-stream-request";
 import type { Folder } from "../models/folder";
 import type { Response } from "../models/response";
+import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { EventStreamRequestPage } from "../pages/event-stream-request.page";
 import { BaseFlow } from "./base.flow";
 
@@ -70,6 +71,24 @@ export class EventStreamRequestFlow extends BaseFlow {
       id: node._id,
       ...data,
     });
+  }
+
+  /**
+   * Opens `request`, clicks its Auth tab's token-fetch button and reads
+   * the resulting tokens back.
+   * @param request - The Event Stream request whose OAuth 2.0 tokens to fetch
+   * @returns The refresh, identity and access tokens now stored
+   */
+  async fetchOAuth2Tokens(request: EventStreamRequest): Promise<OAuth2Tokens> {
+    const workspace = this.pageManager.workspacePage;
+    const page = this.pageManager.eventStreamRequestPage;
+
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
+    await page.navigate();
+
+    await page.auth.fetchOAuth2Tokens();
+    return page.auth.getOAuth2Tokens();
   }
 
   /**

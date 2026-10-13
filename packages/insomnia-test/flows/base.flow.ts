@@ -17,7 +17,8 @@ export abstract class BaseFlow {
 
   /**
    * Applies `authentication` to a request pane's Auth tab. Only None,
-   * Bearer Token and the single-token type are wired up here.
+   * Basic, API Key, Bearer Token, OAuth 2.0 and the single-token type are
+   * wired up here.
    * @param auth - The request page's Auth tab component
    * @param authentication - The authentication config to apply
    */
@@ -30,6 +31,15 @@ export abstract class BaseFlow {
     }
     if (authentication.type === "bearer") {
       await auth.setBearerFields(authentication);
+    }
+    if (authentication.type === "basic") {
+      await auth.setBasicFields(authentication);
+    }
+    if (authentication.type === "apikey") {
+      await auth.setApiKeyFields(authentication);
+    }
+    if (authentication.type === "oauth2") {
+      await auth.setOAuth2Fields(authentication);
     }
     if (authentication.type === "singleToken") {
       await auth.setSingleTokenFields(authentication);

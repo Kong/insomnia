@@ -6,6 +6,7 @@ import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import { GraphQLRequest } from "../models/graphql-request";
 import type { Response } from "../models/response";
+import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { GraphQLRequestPage } from "../pages/graphql-request.page";
 import { BaseFlow } from "./base.flow";
 
@@ -62,6 +63,24 @@ export class GraphQLRequestFlow extends BaseFlow {
 
     const data = await graphqlRequestPage.get();
     return new GraphQLRequest({ name: identity.name, id: node._id, ...data });
+  }
+
+  /**
+   * Opens `request`, clicks its Auth tab's token-fetch button and reads
+   * the resulting tokens back.
+   * @param request - The GraphQL request whose OAuth 2.0 tokens to fetch
+   * @returns The refresh, identity and access tokens now stored
+   */
+  async fetchOAuth2Tokens(request: GraphQLRequest): Promise<OAuth2Tokens> {
+    const workspace = this.pageManager.workspacePage;
+    const page = this.pageManager.graphqlRequestPage;
+
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
+    await page.navigate();
+
+    await page.auth.fetchOAuth2Tokens();
+    return page.auth.getOAuth2Tokens();
   }
 
   /**

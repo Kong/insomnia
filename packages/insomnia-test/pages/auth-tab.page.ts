@@ -1,6 +1,8 @@
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
+  AuthTypeAPIKey,
+  AuthTypeBasic,
   AuthTypeBearer,
   AuthTypeOAuth1,
   AuthTypeOAuth2,
@@ -263,17 +265,58 @@ export class AuthTabComponent extends TabPanelPage {
     );
   }
 
+  /**
+   * Sets the Basic auth username and password, switching the auth type
+   * to Basic first.
+   * @param fields - The Basic auth fields to set
+   */
+  async setBasicFields(fields: Partial<AuthTypeBasic>): Promise<void> {
+    await this.setAuthType(AuthType.Basic);
+    await this.setAuthTextFields([
+      { field: "username", label: "Username", value: fields.username },
+      { field: "password", label: "Password", value: fields.password },
+    ]);
+  }
+
+  /**
+   * Sets the API Key auth key and value, switching the auth type to
+   * API Key first. The "Add to" select is left at its default (Header).
+   * @param fields - The API Key fields to set
+   */
+  async setApiKeyFields(fields: Partial<AuthTypeAPIKey>): Promise<void> {
+    await this.setAuthType(AuthType.ApiKey);
+    await this.setAuthTextFields([
+      { field: "key", label: "Key", value: fields.key },
+      { field: "value", label: "Value", value: fields.value },
+    ]);
+  }
+
   private async setTokenField(token: string | undefined): Promise<void> {
-    if (token === undefined) return;
-    const editor = this.page.locator(`${this.TABPANEL} #Token + .CodeMirror`);
-    await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    const edit: AuthFieldEdit = {
-      field: "token",
-      value: token,
-      reapply: () => this.setCodeMirrorValue(editor, token),
-    };
-    await edit.reapply!();
-    await this.waitForAuthFieldsPersisted([edit], AUTH_SETTLE_MS);
+    await this.setAuthTextFields([
+      { field: "token", label: "Token", value: token },
+    ]);
+  }
+
+  private async setAuthTextFields(
+    fields: { field: string; label: string; value: string | undefined }[],
+  ): Promise<void> {
+    const edits: AuthFieldEdit[] = [];
+    for (const { field, label, value } of fields) {
+      if (value === undefined) continue;
+      const editor = this.page.locator(
+        `${this.TABPANEL} #${label.replace(/ /g, "-")} + .CodeMirror`,
+      );
+      await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+      const edit: AuthFieldEdit = {
+        field,
+        value,
+        reapply: () => this.setCodeMirrorValue(editor, value),
+      };
+      await edit.reapply!();
+      await this.waitForAuthFieldsPersisted([...edits, edit]);
+      edits.push(edit);
+    }
+    await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
   }
 
   /**

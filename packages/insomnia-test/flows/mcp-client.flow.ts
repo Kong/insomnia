@@ -4,6 +4,7 @@ import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { McpClient } from "../models/mcp-client";
 import type { Project } from "../models/project";
 import type { Response } from "../models/response";
+import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { PageManager } from "../pages/page-manager";
 import { BaseFlow } from "./base.flow";
 import type { FlowContext } from "./flow-context";
@@ -63,6 +64,24 @@ export class McpClientFlow extends BaseFlow {
     await responsePage.navigate();
     const data = await responsePage.get();
     return data;
+  }
+
+  /**
+   * Opens `client`, clicks its Auth tab's token-fetch button and reads the
+   * resulting tokens back.
+   * @param client - The MCP Client whose OAuth 2.0 tokens to fetch
+   * @returns The refresh, identity and access tokens now stored
+   */
+  async fetchOAuth2Tokens(client: McpClient): Promise<OAuth2Tokens> {
+    const workspace = this.pageManager.workspacePage;
+    const mcpClientPage = this.pageManager.mcpClientPage;
+
+    const node = await workspace.findItemNode(client);
+    await workspace.clickNode(node!);
+    await mcpClientPage.navigate();
+
+    await mcpClientPage.auth.fetchOAuth2Tokens();
+    return mcpClientPage.auth.getOAuth2Tokens();
   }
 
   /**
