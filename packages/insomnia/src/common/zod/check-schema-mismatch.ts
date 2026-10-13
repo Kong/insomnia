@@ -89,7 +89,6 @@ function collectIssues(issues: readonly z.core.$ZodIssue[], basePath: PropertyKe
     const code = issue.code ?? 'unknown';
     const issueMessage = issue.message ?? 'unknown cause';
     const parsedErrorMessage = `Parse document error: ${issueMessage} at path ${path}`;
-    console.log(parsedErrorMessage);
     out.push({
       path,
       pathSegments: fullPath,
