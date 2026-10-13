@@ -19,6 +19,7 @@ import { ImportPage } from "./import.page";
 import { InvitePage } from "./invite.page";
 import { KonnectPage } from "./konnect.page";
 import { McpClientPage } from "./mcp-client.page";
+import { MockServerPage } from "./mock-server.page";
 import { PreferencesPage } from "./preferences.page";
 import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
@@ -201,6 +202,17 @@ export class PageManager {
    */
   get mcpClientPage(): McpClientPage {
     return this.getOrCreate("mcpClient", () => new McpClientPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the MockServerPage instance.
+   * @returns The shared MockServerPage instance
+   */
+  get mockServerPage(): MockServerPage {
+    return this.getOrCreate(
+      "mockServer",
+      () => new MockServerPage(this.page, this.insomnia),
+    );
   }
 
   /**

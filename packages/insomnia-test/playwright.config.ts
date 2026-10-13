@@ -108,6 +108,12 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
+    {
+      command: "node misc/mock-bin-server.js",
+      url: "http://localhost:4090/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 10 * 1000,
+    },
     ...(isDevMode
       ? [
           {

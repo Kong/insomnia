@@ -17,6 +17,7 @@ import { GrpcRequestFlow } from "./grpc-request.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { ImportFlow } from "./import.flow";
 import { McpClientFlow } from "./mcp-client.flow";
+import { MockServerFlow } from "./mock-server.flow";
 import { OrganizationFlow } from "./organization.flow";
 import { PreferencesFlow } from "./preferences.flow";
 import { SocketIORequestFlow } from "./socket-io-request.flow";
@@ -39,6 +40,7 @@ export class FlowManager implements FlowContext {
   private _httpRequestFlow?: HttpRequestFlow;
   private _importFlow?: ImportFlow;
   private _mcpClientFlow?: McpClientFlow;
+  private _mockServerFlow?: MockServerFlow;
   private _organizationFlow?: OrganizationFlow;
   private _preferencesFlow?: PreferencesFlow;
   private _socketIoRequestFlow?: SocketIORequestFlow;
@@ -169,6 +171,12 @@ export class FlowManager implements FlowContext {
   get mcpClientFlow(): McpClientFlow {
     return (this._mcpClientFlow ??= instrumentWithSteps(
       new McpClientFlow(this, this.pageManager, this.workspaceFlow),
+    ));
+  }
+
+  get mockServerFlow(): MockServerFlow {
+    return (this._mockServerFlow ??= instrumentWithSteps(
+      new MockServerFlow(this, this.pageManager),
     ));
   }
 

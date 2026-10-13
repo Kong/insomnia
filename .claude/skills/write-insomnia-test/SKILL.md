@@ -1,6 +1,6 @@
 ---
 name: write-insomnia-test
-description: Use when writing, adding, or modifying a Playwright E2E test case (tests/**/*.spec.ts) for the Insomnia desktop app in this repo. Converts a short plain-language scenario ("test that X happens when Y", "write a test that verifies...") into an accurate spec file built from the existing Model/Flow/Page/enum layers. Trigger whenever the user asks to add/write a test case, a happy-path, or an edge-case spec for any protocol (http/graphql/grpc/websocket/socket.io/event-stream/mcp-client), the Collection Runner, cookie, environment, import, export, template tags, git sync, cloud sync, plugins/script sandbox, organization/invite collaborators, legacy database migration, or preferences (vault key, cloud/vault-provider credentials).
+description: Use when writing, adding, or modifying a Playwright E2E test case (tests/**/*.spec.ts) for the Insomnia desktop app in this repo. Converts a short plain-language scenario ("test that X happens when Y", "write a test that verifies...") into an accurate spec file built from the existing Model/Flow/Page/enum layers. Trigger whenever the user asks to add/write a test case, a happy-path, or an edge-case spec for any protocol (http/graphql/grpc/websocket/socket.io/event-stream/mcp-client), API Mock servers and routes (self-hosted), the Collection Runner, cookie, environment, import, export, template tags, git sync, cloud sync, plugins/script sandbox, organization/invite collaborators, legacy database migration, or preferences (vault key, cloud/vault-provider credentials).
 ---
 
 # Writing an Insomnia E2E Test Case
@@ -51,7 +51,7 @@ test("...", async ({ user }) => {
 
 User prompts are often short ("test environment variable overrides", "add a test for gRPC error handling"). Before writing anything, pin down:
 
-- **Domain**: which protocol/feature (http / graphql / grpc / websocket / socket.io / event-stream / mcp-client / runner / cookie / environment / import / export — and if import, which source: file/url/curl/clipboard/mcp)?
+- **Domain**: which protocol/feature (http / graphql / grpc / websocket / socket.io / event-stream / mcp-client / mock-server / runner / cookie / environment / import / export — and if import, which source: file/url/curl/clipboard/mcp)?
 - **Preconditions**: what entities must exist first (Project, Collection, Environment, linked Cookie, ...) and in what state?
 - **Action**: what does the user actually do (send, connect, disconnect, duplicate, import, call a tool, link an environment/cookie...)?
 - **Expected outcome**: what gets asserted (response body/status/headers, a UI node appearing/disappearing, dialog text, a stream event, a deleted node)?

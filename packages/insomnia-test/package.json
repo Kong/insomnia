@@ -10,7 +10,8 @@
     "mcp-server": "node misc/mcp-server.js",
     "grpc-server": "node misc/grpc-server.js",
     "git-server": "node misc/git-server.js",
-    "oauth2-server": "node misc/oauth2-server.js"
+    "oauth2-server": "node misc/oauth2-server.js",
+    "mock-bin-server": "node misc/mock-bin-server.js"
   },
   "license": "Apache-2.0",
   "type": "commonjs",

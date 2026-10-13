@@ -44,6 +44,18 @@ export const GRPC_SERVER_MTLS = "grpcs://localhost:9002";
 
 export const GIT_SERVER = "http://localhost:4070";
 
+export const MOCK_BIN_SERVER = "http://localhost:4090";
+/**
+ * `GET` this on `MOCK_BIN_SERVER` for a fixed response to turn into a mock
+ * route — mirror any change here into `misc/mock-bin-server.js`.
+ */
+export const MOCK_BIN_SOURCE_RESPONSE = {
+  url: `${MOCK_BIN_SERVER}/source`,
+  statusCode: 202,
+  body: { source: "mock-bin-server" },
+  header: { name: "x-mock-source", value: "mock-bin-server" },
+};
+
 /**
  * Fixed test credentials `misc/oauth2-server.js` accepts for its
  * Authorization Code / Implicit / Client Credentials / Resource Owner
