@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { useIsLightTheme } from '~/ui/hooks/theme';
+import { useIsLightTheme } from '~/ui/hooks/use-is-light-theme';
 
 import { monaco } from '../../monaco.client';
 
