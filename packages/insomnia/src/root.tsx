@@ -33,6 +33,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import { isLoggedIn } from '~/ui/account/session';
 import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
@@ -50,6 +51,7 @@ import { VariableSourceTooltipHost } from '~/ui/components/variable-source-toolt
 import { AppHooks } from '~/ui/containers/app-hooks';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
+import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
@@ -341,12 +343,51 @@ export const HydrateFallback = () => {
 };
 
 const Root = () => {
-  const { organizationId, projectId } = useParams() as {
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
+    workspaceId?: string;
   };
 
-  const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
+  // One record per import trigger: the source plus the context the trigger
+  // knows. Deep-link imports carry no workspace context; pasting a cURL
+  // inside a workspace carries its workspaceId.
+  const [importTrigger, setImportTrigger] = useState<{
+    source: ImportSource;
+    workspaceId?: string;
+  } | null>(null);
+
+  // INS-3544: pasting a cURL while no editable surface has focus starts the
+  // import flow. Inside a workspace the current collection is offered as the
+  // default import target, which needs the workspace name for the modal header.
+  const workspaceName = useWorkspaceLoaderData()?.activeWorkspace?.name;
+  const handleCurlPaste = async (curl: string) => {
+    // The Scratchpad project holds a single collection; keep the import flow
+    // out of it so a paste cannot create extra collections there.
+    if (
+      !organizationId ||
+      (projectId && models.project.isScratchpadProject({ _id: projectId }))
+    ) {
+      return;
+    }
+    const { isValid } = await validateCurl(curl);
+    if (!isValid) {
+      return;
+    }
+    setImportTrigger({
+      source: {
+        type: 'curl',
+        defaultValue: curl,
+        autoScan: true,
+        startedAt: Date.now(),
+      },
+      workspaceId,
+    });
+  };
+  // Only Root's own import modal state is tracked; Import modals opened from
+  // other entry points are not, so pasting then can stack one more modal.
+  useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
+
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
@@ -478,10 +519,12 @@ const Root = () => {
           (resource.type === 'curl'
             ? (await validateCurl(resource.defaultValue)).isValid
             : resource.type === 'uri' || resource.type === 'mcp');
-        return setImportObject({
-          ...resource,
-          autoScan,
-          startedAt: Date.now(),
+        return setImportTrigger({
+          source: {
+            ...resource,
+            autoScan,
+            startedAt: Date.now(),
+          },
         });
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
@@ -751,14 +794,16 @@ const Root = () => {
       <Modals />
       <VariableSourceTooltipHost />
       <AppHooks />
-      {/* triggered by insomnia://app/import */}
-      {importObject.startedAt && (
+      {/* triggered by insomnia://app/import and pasting a cURL with no focus */}
+      {importTrigger && (
         <ImportModal
-          key={importObject.startedAt}
-          onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
+          key={importTrigger.source.startedAt}
+          onHide={() => setImportTrigger(null)}
           defaultProjectId={projectId}
           organizationId={organizationId}
-          from={importObject}
+          workspaceName={workspaceName}
+          defaultWorkspaceId={importTrigger.workspaceId}
+          from={importTrigger.source}
         />
       )}
     </ServerDataCacheProvider>

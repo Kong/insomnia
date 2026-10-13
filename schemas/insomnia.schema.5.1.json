@@ -273,6 +273,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -328,6 +331,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
@@ -822,6 +828,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -877,6 +886,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
@@ -1226,6 +1238,9 @@
                     "name": {
                       "type": "string"
                     },
+                    "id": {
+                      "type": "string"
+                    },
                     "value": {
                       "type": "string"
                     },
@@ -1439,6 +1454,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -1494,6 +1512,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
@@ -2227,6 +2248,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -2282,6 +2306,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
