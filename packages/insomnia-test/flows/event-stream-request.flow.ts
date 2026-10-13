@@ -1,3 +1,5 @@
+import type { RequestAuthentication } from "insomnia-data";
+
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
 import type { Collection } from "../models/collection";
@@ -71,6 +73,24 @@ export class EventStreamRequestFlow extends BaseFlow {
   }
 
   /**
+   * Opens `request` and applies `authentication` on its Auth tab.
+   * @param request - The Event Stream request whose Auth tab to edit
+   * @param authentication - The authentication config to apply
+   */
+  async setAuthentication(
+    request: EventStreamRequest,
+    authentication: RequestAuthentication,
+  ): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const page = this.pageManager.eventStreamRequestPage;
+
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
+    await page.navigate();
+    await this.applyAuthentication(page.auth, authentication);
+  }
+
+  /**
    * Connects the event stream for `request` and reads back the resulting
    * response via the standalone project tree.
    * @param request - The request to connect
@@ -105,6 +125,9 @@ export class EventStreamRequestFlow extends BaseFlow {
     }
     if (request.headers && request.headers.length > 0) {
       await page.setHeaders(request.headers);
+    }
+    if (request.authentication) {
+      await this.applyAuthentication(page.auth, request.authentication);
     }
     if (request.body) {
       await page.setBody(request.body);

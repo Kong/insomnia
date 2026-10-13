@@ -1,3 +1,5 @@
+import type { RequestAuthentication } from "insomnia-data";
+
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
@@ -124,6 +126,24 @@ export class WebSocketRequestFlow extends BaseFlow {
   }
 
   /**
+   * Opens `request` and applies `authentication` on its Auth tab.
+   * @param request - The WebSocket request whose Auth tab to edit
+   * @param authentication - The authentication config to apply
+   */
+  async setAuthentication(
+    request: WebSocketRequest,
+    authentication: RequestAuthentication,
+  ): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const page = this.pageManager.webSocketRequestPage;
+
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
+    await page.navigate();
+    await this.applyAuthentication(page.auth, authentication);
+  }
+
+  /**
    * Sends `body` as a message over the request's open WebSocket
    * connection, invoking `callback` once the send completes (or after
    * `timeout` ms elapses), and returns the resulting response, locating it
@@ -167,6 +187,9 @@ export class WebSocketRequestFlow extends BaseFlow {
     }
     if (request.headers && request.headers.length > 0) {
       await page.setHeaders(request.headers);
+    }
+    if (request.authentication) {
+      await this.applyAuthentication(page.auth, request.authentication);
     }
     if (request.body) {
       await page.setBody(request.body);

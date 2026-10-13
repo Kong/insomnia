@@ -22,6 +22,18 @@ const io = new Server(httpServer, {
 });
 io.attach(httpsServer, { cors: { origin: "*" } });
 
+const AUTH_TOKEN = "test-socket-io-token";
+io.of("/protected").use((socket, next) => {
+  if (socket.handshake.auth && socket.handshake.auth.token === AUTH_TOKEN) {
+    next();
+  } else {
+    next(new Error("unauthorized"));
+  }
+});
+io.of("/protected").on("connection", (socket) => {
+  socket.onAny((event, ...args) => socket.emit(event, ...args));
+});
+
 io.on("connection", (socket) => {
   process.stdout.write(`client connected: ${socket.id}\n`);
 

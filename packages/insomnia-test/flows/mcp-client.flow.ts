@@ -96,6 +96,9 @@ export class McpClientFlow extends BaseFlow {
     await workspace.clickNode(node!);
     await mcpClientPage.navigate();
     await mcpClientPage.setUrl(client.url);
+    if (client.authentication) {
+      await this.applyAuthentication(mcpClientPage.auth, client.authentication);
+    }
 
     return this.assertCreated(await this.get(client.name), client.name);
   }

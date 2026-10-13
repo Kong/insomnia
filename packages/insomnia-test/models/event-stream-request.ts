@@ -1,5 +1,6 @@
 import type {
   Request as AppRequest,
+  RequestAuthentication,
   RequestHeader,
   RequestParameter,
 } from "insomnia-data";
@@ -15,6 +16,7 @@ export interface EventStreamRequestInit extends Pick<
   body?: HttpRequestBody;
   params?: RequestParameter[];
   headers?: RequestHeader[];
+  authentication?: RequestAuthentication;
   id?: string;
 }
 
@@ -25,6 +27,7 @@ export class EventStreamRequest implements EventStreamRequestInit {
   body?: HttpRequestBody;
   params?: RequestParameter[];
   headers?: RequestHeader[];
+  authentication?: RequestAuthentication;
   preRequestScript?: string;
   afterResponseScript?: string;
   id?: string;
@@ -36,6 +39,7 @@ export class EventStreamRequest implements EventStreamRequestInit {
     this.body = init.body;
     this.params = init.params;
     this.headers = init.headers;
+    this.authentication = init.authentication;
     this.preRequestScript = init.preRequestScript;
     this.afterResponseScript = init.afterResponseScript;
     this.id = init.id;

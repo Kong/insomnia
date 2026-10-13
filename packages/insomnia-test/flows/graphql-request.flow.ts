@@ -1,3 +1,5 @@
+import type { RequestAuthentication } from "insomnia-data";
+
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
 import type { Collection } from "../models/collection";
@@ -63,6 +65,24 @@ export class GraphQLRequestFlow extends BaseFlow {
   }
 
   /**
+   * Opens `request` and applies `authentication` on its Auth tab.
+   * @param request - The GraphQL request whose Auth tab to edit
+   * @param authentication - The authentication config to apply
+   */
+  async setAuthentication(
+    request: GraphQLRequest,
+    authentication: RequestAuthentication,
+  ): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const page = this.pageManager.graphqlRequestPage;
+
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
+    await page.navigate();
+    await this.applyAuthentication(page.auth, authentication);
+  }
+
+  /**
    * Sends `request` and reads back the resulting response via the
    * standalone project tree.
    * @param request - The request to send
@@ -97,6 +117,9 @@ export class GraphQLRequestFlow extends BaseFlow {
     }
     if (request.headers && request.headers.length > 0) {
       await page.setHeaders(request.headers);
+    }
+    if (request.authentication) {
+      await this.applyAuthentication(page.auth, request.authentication);
     }
     if (request.body) {
       await page.setBody(request.body);

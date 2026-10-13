@@ -1,4 +1,5 @@
 import type {
+  RequestAuthentication,
   RequestHeader,
   RequestParameter,
   WebSocketRequest as AppWebSocketRequest,
@@ -18,6 +19,7 @@ export interface WebSocketRequestInit extends Pick<
   body?: WebSocketRequestBody;
   params?: RequestParameter[];
   headers?: RequestHeader[];
+  authentication?: RequestAuthentication;
   id?: string;
 }
 
@@ -27,6 +29,7 @@ export class WebSocketRequest implements WebSocketRequestInit {
   body?: WebSocketRequestBody;
   params?: RequestParameter[];
   headers?: RequestHeader[];
+  authentication?: RequestAuthentication;
   id?: string;
 
   constructor(init: WebSocketRequestInit) {
@@ -35,6 +38,7 @@ export class WebSocketRequest implements WebSocketRequestInit {
     this.body = init.body;
     this.params = init.params;
     this.headers = init.headers;
+    this.authentication = init.authentication;
     this.id = init.id;
   }
 }

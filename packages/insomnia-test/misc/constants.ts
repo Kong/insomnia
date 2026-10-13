@@ -27,6 +27,13 @@ export const WS_SERVER_WSS = "wss://localhost:4041";
 
 export const SOCKET_SERVER = "ws://localhost:3000";
 export const SOCKET_SERVER_WSS = "wss://localhost:3001";
+/**
+ * The namespace on `misc/socket-server.js` that only accepts connections
+ * whose handshake auth token equals `SOCKET_SERVER_AUTH_TOKEN` — mirror any
+ * change here into that file.
+ */
+export const SOCKET_SERVER_PROTECTED = `${SOCKET_SERVER}/protected`;
+export const SOCKET_SERVER_AUTH_TOKEN = "test-socket-io-token";
 
 export const MCP_SERVER = "http://localhost:4020/mcp";
 export const MCP_SERVER_HTTPS = "https://localhost:4021/mcp";

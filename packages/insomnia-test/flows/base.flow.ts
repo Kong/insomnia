@@ -2,8 +2,10 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { expect } from "@playwright/test";
+import type { RequestAuthentication } from "insomnia-data";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { AuthTabComponent } from "../pages/auth-tab.page";
 import type { PageManager } from "../pages/page-manager";
 import type { FlowContext } from "./flow-context";
 
@@ -12,6 +14,27 @@ export abstract class BaseFlow {
     protected readonly flowManager: FlowContext,
     protected readonly pageManager: PageManager,
   ) {}
+
+  /**
+   * Applies `authentication` to a request pane's Auth tab. Only None,
+   * Bearer Token and the single-token type are wired up here.
+   * @param auth - The request page's Auth tab component
+   * @param authentication - The authentication config to apply
+   */
+  protected async applyAuthentication(
+    auth: AuthTabComponent,
+    authentication: RequestAuthentication,
+  ): Promise<void> {
+    if (authentication.type === "none") {
+      await auth.setNoAuthentication();
+    }
+    if (authentication.type === "bearer") {
+      await auth.setBearerFields(authentication);
+    }
+    if (authentication.type === "singleToken") {
+      await auth.setSingleTokenFields(authentication);
+    }
+  }
 
   /**
    * Narrows a possibly-`undefined` lookup result, throwing if the item

@@ -139,6 +139,9 @@ export class SocketIORequestFlow extends BaseFlow {
     if (request.headers && request.headers.length > 0) {
       await page.setHeaders(request.headers);
     }
+    if (request.authentication) {
+      await this.applyAuthentication(page.auth, request.authentication);
+    }
     if (request.message) {
       await page.setMessage(request.message);
     }

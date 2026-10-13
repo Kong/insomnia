@@ -1,8 +1,10 @@
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
+  AuthTypeBearer,
   AuthTypeOAuth1,
   AuthTypeOAuth2,
+  AuthTypeSingleToken,
 } from "insomnia-data";
 import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
@@ -89,7 +91,13 @@ const OAUTH2_FETCH_TIMEOUT = ACTION_TIMEOUT;
 
 // A request's auth lives on the Request document; a folder's own auth
 // (inherited by its children) on the RequestGroup document.
-const AUTH_DB_FILES = ["insomnia.Request.db", "insomnia.RequestGroup.db"];
+const AUTH_DB_FILES = [
+  "insomnia.Request.db",
+  "insomnia.RequestGroup.db",
+  "insomnia.WebSocketRequest.db",
+  "insomnia.SocketIORequest.db",
+  "insomnia.McpRequest.db",
+];
 
 // How long an edit gets to land on its own before it's re-applied: the
 // Auth editors save through a debounce, so a just-made edit legitimately
@@ -220,6 +228,52 @@ export class AuthTabComponent extends TabPanelPage {
       await this.page.locator(`[role="option"][aria-label="${type}"]`).click();
       await expect(button).toContainText(type, { timeout: 2000 });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Sets the Bearer Token's token, switching the auth type to Bearer
+   * Token first.
+   * @param fields - The Bearer Token fields to set; `token` is the only one written
+   */
+  async setBearerFields(fields: Partial<AuthTypeBearer>): Promise<void> {
+    await this.setAuthType(AuthType.Bearer);
+    await this.setTokenField(fields.token);
+  }
+
+  /**
+   * Sets the single token's value, switching the auth type to the
+   * single-token type (Socket.IO's only auth option) first.
+   * @param fields - The single-token fields to set
+   */
+  async setSingleTokenFields(
+    fields: Partial<AuthTypeSingleToken>,
+  ): Promise<void> {
+    await this.setAuthType(AuthType.Token);
+    await this.setTokenField(fields.token);
+  }
+
+  /**
+   * Switches the auth type to None and waits for it to be saved.
+   */
+  async setNoAuthentication(): Promise<void> {
+    await this.setAuthType(AuthType.None);
+    await this.waitForAuthFieldsPersisted(
+      [{ field: "type", value: "none" }],
+      AUTH_SETTLE_MS,
+    );
+  }
+
+  private async setTokenField(token: string | undefined): Promise<void> {
+    if (token === undefined) return;
+    const editor = this.page.locator(`${this.TABPANEL} #Token + .CodeMirror`);
+    await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    const edit: AuthFieldEdit = {
+      field: "token",
+      value: token,
+      reapply: () => this.setCodeMirrorValue(editor, token),
+    };
+    await edit.reapply!();
+    await this.waitForAuthFieldsPersisted([edit], AUTH_SETTLE_MS);
   }
 
   /**
