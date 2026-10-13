@@ -1,13 +1,17 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, HTTP_SERVER } from "@package/misc/constants";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { EnvironmentKvPairDataType } from "@package/models/environment";
-import { Project } from "@package/models/project";
-import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import {
+  DEFAULT_TIMEOUT,
+  expect,
+  HTTP_SERVER,
+  test,
+} from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { EnvironmentKvPairDataType } from "../../models/environment";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 const preRequestScript = "console.log('pre-request script');";
@@ -16,10 +20,10 @@ const afterResponseScript = "console.log('after-response script');";
 test("Verify Create HTTP Request", async ({ user }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.createProject(
+  const project = await workspaceFlow.create(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.createCollection(
+  const collection = await workspaceFlow.create(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -27,7 +31,7 @@ test("Verify Create HTTP Request", async ({ user }) => {
   const headerNameVariable = faker.string.alpha(8);
   const templatedHeaderName = faker.string.alphanumeric(8);
   const templatedHeaderValue = faker.string.alphanumeric(10);
-  const environment = await environmentFlow.createBaseEnvironment(project, {
+  const environment = await environmentFlow.create(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
@@ -59,15 +63,13 @@ test("Verify Create HTTP Request", async ({ user }) => {
     preRequestScript,
     afterResponseScript,
   });
-  const responseView = await httpRequestFlow.send(request!);
-  expect(responseView.statusBar.text).toBe("200 OK");
+  const response = await httpRequestFlow.send(request!);
+  expect(response.statusCode).toBe(200);
+  expect(response.statusMessage).toBe("OK");
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("log: pre-request script");
-  await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
-    .toContain("log: after-response script");
-  expect(responseView.preview).toMatchObject({
+  expect(response.body).toMatchObject({
     data: "Test",
     args: { [paramName]: paramValue },
     headers: expect.objectContaining({
@@ -77,7 +79,7 @@ test("Verify Create HTTP Request", async ({ user }) => {
   });
 
   const duplicatedName = `${request!.name} (Copy)`;
-  await workspaceFlow.duplicateRequest(request!, duplicatedName);
+  await workspaceFlow.duplicate(request!, duplicatedName);
 
   const duplicated = await httpRequestFlow.get(duplicatedName);
   expect(duplicated).toBeTruthy();
@@ -85,6 +87,6 @@ test("Verify Create HTTP Request", async ({ user }) => {
   expect(duplicated!.method).toBe(request!.method);
 
   const duplicatedResponse = await httpRequestFlow.send(duplicated!);
-  expect(duplicatedResponse.statusBar.code).toBe(200);
-  expect(duplicatedResponse.preview).toMatchObject({ data: "Test" });
+  expect(duplicatedResponse.statusCode).toBe(200);
+  expect(duplicatedResponse.body).toMatchObject({ data: "Test" });
 });

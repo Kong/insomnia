@@ -1,7 +1,7 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { RequestHeader,SocketIOMessage } from "@package/models/socket-io-request";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { RequestHeader,SocketIOMessage } from "../models/socket-io-request";
 import { RequestPage } from "./request.page";
 
 export class SocketIORequestPage extends RequestPage {
@@ -9,8 +9,22 @@ export class SocketIORequestPage extends RequestPage {
   protected readonly persistedDbFile = "insomnia.SocketIORequest.db";
 
   /**
+   * Clicks Connect and waits for the button to flip to "Disconnect", so a
+   * following send doesn't race the handshake and get dropped.
+   */
+  async connect(): Promise<void> {
+    await super.connect();
+    await expect(
+      this.page
+        .locator(this.PANE)
+        .getByRole("button", { name: "Disconnect", exact: true }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Reads the full Socket.IO request state from the UI (url, headers, and
    * the composed message).
+   * @returns the request's url, headers, and message
    */
   async get(): Promise<{
     url: string;
@@ -26,6 +40,7 @@ export class SocketIORequestPage extends RequestPage {
 
   /**
    * Reads the currently composed event name and payload from the body tab.
+   * @returns the event name and payload, or `undefined` if both are empty
    */
   private async getMessage(): Promise<SocketIOMessage | undefined> {
     await this.switchTab("body");
@@ -51,13 +66,15 @@ export class SocketIORequestPage extends RequestPage {
   }
 
   /**
-   * Composes a Socket.IO message: switches to the body tab, sets the
-   * payload of the existing first argument directly on the CodeMirror
+   * Composes a Socket.IO message: switches to the body tab, adds a new
+   * argument row via "+ Arg", sets its payload directly on the CodeMirror
    * instance, and fills in the event name.
+   * @param message - the event name and payload to set
    */
   async setMessage(message: SocketIOMessage): Promise<void> {
     await this.switchTab("body");
     const panel = this.page.locator(this.TABPANEL);
+    await panel.locator('button:has-text("+ Arg")').click();
 
     const editor = panel.locator(".CodeMirror").first();
     await editor.evaluate((el, value) => {
@@ -67,18 +84,5 @@ export class SocketIORequestPage extends RequestPage {
     await panel
       .getByRole("textbox", { name: "Event Name" })
       .fill(message.eventName);
-  }
-
-  /**
-   * Clicks Connect and waits for the button to flip to "Disconnect", so a
-   * following send doesn't race the handshake and get dropped.
-   */
-  async connect(): Promise<void> {
-    await super.connect();
-    await expect(
-      this.page
-        .locator(this.PANE)
-        .getByRole("button", { name: "Disconnect", exact: true }),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 }

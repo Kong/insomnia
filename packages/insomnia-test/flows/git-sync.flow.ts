@@ -1,15 +1,11 @@
-import { GitChangeList } from "@package/enums/git-change-list";
-import { GitDiffView } from "@package/enums/git-diff-view";
-import { step } from "@package/misc/step";
-import { Commit } from "@package/models/commit";
-
+import { Commit } from "../models/commit";
 import { BaseFlow } from "./base.flow";
 
 export class GitSyncFlow extends BaseFlow {
   /**
    * Checks out `branch` directly from the Git Sync dropdown's branch list.
+   * @param branch - The branch to check out
    */
-  @step()
   async switchBranch(branch: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
     await gitSyncPage.switchBranch(branch);
@@ -18,16 +14,17 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Stages all changes, commits with `message` (no push), and reads back
    * the resulting commit's id from History.
+   * @param message - The commit message
+   * @returns The created Commit, with `id` populated
    */
-  @step()
   async commit(message: string): Promise<Commit> {
-    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitCommitDialogPage.commit(message);
+    await gitSyncPage.commit(message);
 
     await gitSyncPage.openHistory();
-    const latest = await gitHistoryDialogPage.getLatestCommit();
-    await gitHistoryDialogPage.closeHistory();
+    const latest = await gitSyncPage.getLatestCommit();
+    await gitSyncPage.closeHistory();
 
     return this.assertCreated(
       latest
@@ -40,16 +37,17 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Stages all changes, commits with `message`, then pushes, and reads
    * back the resulting commit's id from History.
+   * @param message - The commit message
+   * @returns The created Commit, with `id` populated
    */
-  @step()
   async commitAndPush(message: string): Promise<Commit> {
-    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitCommitDialogPage.commitAndPush(message);
+    await gitSyncPage.commitAndPush(message);
 
     await gitSyncPage.openHistory();
-    const latest = await gitHistoryDialogPage.getLatestCommit();
-    await gitHistoryDialogPage.closeHistory();
+    const latest = await gitSyncPage.getLatestCommit();
+    await gitSyncPage.closeHistory();
 
     return this.assertCreated(
       latest
@@ -62,63 +60,64 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Reads the file names currently listed as staged and unstaged in the
    * Commit modal, then closes it.
+   * @returns The staged and unstaged file names
    */
-  @step()
   async getChanges(): Promise<{ staged: string[]; unstaged: string[] }> {
-    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    const staged = await gitCommitDialogPage.getStagedChanges();
-    const unstaged = await gitCommitDialogPage.getUnstagedChanges();
-    await gitCommitDialogPage.closeCommitDialog();
+    const staged = await gitSyncPage.getStagedChanges();
+    const unstaged = await gitSyncPage.getUnstagedChanges();
+    await gitSyncPage.closeCommitDialog();
     return { staged, unstaged };
   }
 
   /**
    * Stages each of `fileNames` individually from the Commit modal, then
    * closes it.
+   * @param fileNames - File names as listed in the modal, e.g. "foo.yaml"
    */
-  @step()
   async stageChanges(fileNames: string[]): Promise<void> {
-    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
     for (const fileName of fileNames) {
-      await gitCommitDialogPage.stageChange(fileName);
+      await gitSyncPage.stageChange(fileName);
     }
-    await gitCommitDialogPage.closeCommitDialog();
+    await gitSyncPage.closeCommitDialog();
   }
 
   /**
    * Unstages each of `fileNames` individually from the Commit modal, then
    * closes it.
+   * @param fileNames - File names as listed in the modal, e.g. "foo.yaml"
    */
-  @step()
   async unstageChanges(fileNames: string[]): Promise<void> {
-    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
     for (const fileName of fileNames) {
-      await gitCommitDialogPage.unstageChange(fileName);
+      await gitSyncPage.unstageChange(fileName);
     }
-    await gitCommitDialogPage.closeCommitDialog();
+    await gitSyncPage.closeCommitDialog();
   }
 
   /**
    * Commits only what is already staged (nothing is staged for you),
    * closes the Commit modal if it's still open, and reads the resulting
    * commit back from History.
+   * @param message - The commit message
+   * @returns The created Commit, with `id` populated
    */
-  @step()
   async commitStaged(message: string): Promise<Commit> {
-    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitCommitDialogPage.commitStaged(message);
-    await gitCommitDialogPage.waitForNothingStaged();
-    if (await gitCommitDialogPage.isCommitDialogOpen()) {
-      await gitCommitDialogPage.closeCommitDialog();
+    await gitSyncPage.commitStaged(message);
+    await gitSyncPage.waitForNothingStaged();
+    if (await gitSyncPage.isCommitDialogOpen()) {
+      await gitSyncPage.closeCommitDialog();
     }
 
     await gitSyncPage.openHistory();
-    const latest = await gitHistoryDialogPage.getLatestCommit();
-    await gitHistoryDialogPage.closeHistory();
+    const latest = await gitSyncPage.getLatestCommit();
+    await gitSyncPage.closeHistory();
 
     return this.assertCreated(
       latest
@@ -131,69 +130,68 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Discards every uncommitted local change.
    */
-  @step()
   async discardAllChanges(): Promise<void> {
-    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitCommitDialogPage.discardAllChanges();
+    await gitSyncPage.discardAllChanges();
   }
 
   /**
    * Creates `branch` from the current branch, which switches to it
    * immediately.
+   * @param branch - The new branch's name
    */
-  @step()
   async createBranch(branch: string): Promise<void> {
-    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitBranchesDialogPage.createBranch(branch);
-    await gitBranchesDialogPage.closeBranchesDialog();
+    await gitSyncPage.createBranch(branch);
+    await gitSyncPage.closeBranchesDialog();
   }
 
   /**
    * Attempts to create `branch` from the Branches modal and reads back the
    * validation error the app shows instead, then closes the modal.
+   * @param branch - A branch name expected to be rejected
+   * @returns The error text shown under the "New branch name" field
    */
-  @step()
   async createBranchExpectingError(branch: string): Promise<string> {
-    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitBranchesDialogPage.submitNewBranch(branch);
-    const error = await gitBranchesDialogPage.getNewBranchError();
-    await gitBranchesDialogPage.closeBranchesDialog();
+    await gitSyncPage.submitNewBranch(branch);
+    const error = await gitSyncPage.getNewBranchError();
+    await gitSyncPage.closeBranchesDialog();
     return error;
   }
 
   /**
    * Reads the local and remote-only branch lists from the Branches modal,
    * then closes it.
+   * @returns The local branch names and the remote-only branch names
    */
-  @step()
   async getBranches(): Promise<{ local: string[]; remote: string[] }> {
-    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    const local = await gitBranchesDialogPage.getLocalBranches();
-    const remote = await gitBranchesDialogPage.getRemoteBranches();
-    await gitBranchesDialogPage.closeBranchesDialog();
+    const local = await gitSyncPage.getLocalBranches();
+    const remote = await gitSyncPage.getRemoteBranches();
+    await gitSyncPage.closeBranchesDialog();
     return { local, remote };
   }
 
   /**
    * Fetches `branch` (a branch that exists only on the remote) and checks
    * it out via the Branches modal.
+   * @param branch - The remote-only branch to check out
    */
-  @step()
   async checkoutRemoteBranch(branch: string): Promise<void> {
-    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitBranchesDialogPage.checkoutRemoteBranch(branch);
-    await gitBranchesDialogPage.closeBranchesDialog();
+    await gitSyncPage.checkoutRemoteBranch(branch);
+    await gitSyncPage.closeBranchesDialog();
   }
 
   /**
    * Fetches from the remote via the Git Sync dropdown.
    */
-  @step()
   async fetch(): Promise<void> {
     const { gitSyncPage } = this.pageManager;
     await gitSyncPage.fetch();
@@ -202,7 +200,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Pulls the current branch from the remote via the Git Sync dropdown.
    */
-  @step()
   async pull(): Promise<void> {
     const { gitSyncPage } = this.pageManager;
     await gitSyncPage.pull();
@@ -212,7 +209,6 @@ export class GitSyncFlow extends BaseFlow {
    * Pushes the current branch's commits to the remote via the Git Sync
    * dropdown's standalone "Push" action.
    */
-  @step()
   async push(): Promise<void> {
     const { gitSyncPage } = this.pageManager;
     await gitSyncPage.push();
@@ -220,130 +216,43 @@ export class GitSyncFlow extends BaseFlow {
 
   /**
    * Merges `branch` into whichever branch is currently checked out.
+   * @param branch - The branch to merge in
    */
-  @step()
   async mergeBranch(branch: string): Promise<void> {
-    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitBranchesDialogPage.mergeBranch(branch);
-    await gitBranchesDialogPage.closeBranchesDialog();
+    await gitSyncPage.mergeBranch(branch);
+    await gitSyncPage.closeBranchesDialog();
   }
 
   /**
    * Merges `branch` into the current branch, expecting conflicts, and
    * resolves all of them by taking the same side.
+   * @param branch - The branch to merge in
+   * @param version - "Current" keeps the local change, "Incoming" takes `branch`'s
    */
-  @step()
   async mergeBranchResolvingConflicts(
     branch: string,
     version: "Current" | "Incoming",
   ): Promise<void> {
-    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitBranchesDialogPage.mergeBranch(branch);
-    await gitBranchesDialogPage.resolveMergeConflicts(version);
-    await gitBranchesDialogPage.closeBranchesDialog();
+    await gitSyncPage.mergeBranch(branch);
+    await gitSyncPage.resolveMergeConflicts(version);
+    await gitSyncPage.closeBranchesDialog();
   }
 
   /**
    * Checks out `switchToBranch` (since a branch can't be deleted while
    * checked out) and deletes `branch`.
+   * @param branch - The branch to delete
+   * @param switchToBranch - The branch to check out first; defaults to "master"
    */
-  @step()
   async deleteBranch(branch: string, switchToBranch = "master"): Promise<void> {
-    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
+    const { gitSyncPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitBranchesDialogPage.checkoutBranch(switchToBranch);
-    await gitBranchesDialogPage.deleteBranch(branch);
-    await gitBranchesDialogPage.closeBranchesDialog();
-  }
-
-  /**
-   * Like `commitStaged()`, but for staged files with unknown fields: after
-   * clicking Commit, continues past the "Unrecognized Fields" confirmation
-   * before reading the resulting commit back from History.
-   */
-  @step()
-  async commitStagedConfirmingUnknownFields(message: string): Promise<Commit> {
-    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
-    await gitSyncPage.openCommitDialog();
-    await gitCommitDialogPage.commitStaged(message);
-    await gitCommitDialogPage.confirmUnknownFieldsCommit();
-    await gitCommitDialogPage.waitForCommitToFinish();
-    if (await gitCommitDialogPage.isCommitDialogOpen()) {
-      await gitCommitDialogPage.closeCommitDialog();
-    }
-
-    await gitSyncPage.openHistory();
-    const latest = await gitHistoryDialogPage.getLatestCommit();
-    await gitHistoryDialogPage.closeHistory();
-
-    return this.assertCreated(
-      latest
-        ? Object.assign(new Commit(latest.message), { id: latest.id })
-        : undefined,
-      message,
-    );
-  }
-
-  /**
-   * Opens a file's diff and discards it, confirming the dialog, without
-   * waiting for the file to leave the unstaged list (so it also works for a
-   * change that comes straight back), then closes the modal.
-   */
-  @step()
-  async discardChangeAfterReview(fileName: string): Promise<void> {
-    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
-    await gitSyncPage.openCommitDialog();
-    await gitCommitDialogPage.openChangeDiff(GitChangeList.Unstaged, fileName);
-    await gitCommitDialogPage.openDiscardConfirmation(fileName);
-    await gitCommitDialogPage.confirmDiscard();
-    await gitCommitDialogPage.closeCommitDialog();
-  }
-
-  /**
-   * Opens the Commit modal (if it isn't already open), selects a file in
-   * the given list and switches its diff pane to the Visual (Beta) view.
-   */
-  @step()
-  async openVisualDiff(list: GitChangeList, fileName: string): Promise<void> {
-    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
-    if (!(await gitCommitDialogPage.isCommitDialogOpen())) {
-      await gitSyncPage.openCommitDialog();
-    }
-    await gitCommitDialogPage.openChangeDiff(list, fileName);
-    await gitCommitDialogPage.switchDiffView(GitDiffView.Visual);
-  }
-
-  /**
-   * Stages one entity from its card in the Visual view of an unstaged file.
-   */
-  @step()
-  async stageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitCommitDialogPage } = this.pageManager;
-    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
-    await gitCommitDialogPage.stageEntity(entityName, typeLabel);
-  }
-
-  /**
-   * Unstages one entity from its card in the Visual view of a staged file.
-   */
-  @step()
-  async unstageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitCommitDialogPage } = this.pageManager;
-    await this.openVisualDiff(GitChangeList.Staged, fileName);
-    await gitCommitDialogPage.unstageEntity(entityName, typeLabel);
-  }
-
-  /**
-   * Discards one entity from its card in the Visual view of an unstaged
-   * file, confirming the prompt.
-   */
-  @step()
-  async discardEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitCommitDialogPage } = this.pageManager;
-    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
-    await gitCommitDialogPage.startEntityDiscard(entityName, typeLabel);
-    await gitCommitDialogPage.confirmEntityDiscard(entityName, typeLabel);
+    await gitSyncPage.checkoutBranch(switchToBranch);
+    await gitSyncPage.deleteBranch(branch);
+    await gitSyncPage.closeBranchesDialog();
   }
 }

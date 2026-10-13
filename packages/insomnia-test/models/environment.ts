@@ -1,24 +1,12 @@
 import type {
   Environment as AppEnvironment,
   EnvironmentKvPairData,
-  EnvironmentKvPairDataType as AppEnvironmentKvPairDataType,
 } from "insomnia-data";
+import { EnvironmentKvPairDataType, models } from "insomnia-data";
 
-// Mirrors `models.environment.type`; a runtime import of insomnia-data would drag the whole data package into the CJS framework.
-const ENVIRONMENT_TYPE = "Environment";
+const ENVIRONMENT_TYPE = models.environment.type;
 
-// Mirrors the app's enum. insomnia-data is ESM-only, so only the type is imported and the values are inlined here.
-export type EnvironmentKvPairDataType = AppEnvironmentKvPairDataType;
-// eslint-disable-next-line @typescript-eslint/no-redeclare -- type and value intentionally share a name, like an enum
-export const EnvironmentKvPairDataType = {
-  JSON: "json",
-  STRING: "str",
-  SECRET: "secret",
-} as unknown as {
-  JSON: AppEnvironmentKvPairDataType.JSON;
-  STRING: AppEnvironmentKvPairDataType.STRING;
-  SECRET: AppEnvironmentKvPairDataType.SECRET;
-};
+export { EnvironmentKvPairDataType };
 export type { EnvironmentKvPairData };
 export { ENVIRONMENT_TYPE };
 
@@ -47,4 +35,12 @@ export class Environment implements EnvironmentInit {
     this.containerName = init.containerName;
     this.id = init.id;
   }
+}
+
+export function isEnvironmentItem(item: unknown): item is Environment {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    (item as { type?: unknown }).type === ENVIRONMENT_TYPE
+  );
 }

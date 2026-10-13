@@ -1,5 +1,7 @@
-import { TabsComponent } from "@package/components/tabs.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
+
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   RunnerIterationResult,
   RunnerLiveStatus,
@@ -8,10 +10,7 @@ import type {
   RunnerResultsByFilter,
   RunnerTestResult,
   RunnerTestResultCount,
-} from "@package/models/runner";
-import type { Locator } from "@playwright/test";
-import { expect } from "@playwright/test";
-
+} from "../models/runner";
 import { BasePage } from "./base.page";
 
 export type RunnerRequestTab = "request-order" | "advanced";
@@ -26,29 +25,15 @@ const RUNNER_RESULT_FILTERS: RunnerResultFilter[] = [
 export class RunnerPage extends BasePage {
   private readonly REQUEST_PANE = '[data-testid="request-pane"]';
   private readonly RESULT_PANE = "#pane-two";
+  // Renamed from "Request Collection" — INS-3528.
+  private readonly REQUEST_LIST = `[data-testid="request-pane"] [role="grid"][aria-label="Request API Collection"]`;
   private readonly ITERATIONS_INPUT = `${this.REQUEST_PANE} input[name="Iterations"]`;
   private readonly DELAY_INPUT = `${this.REQUEST_PANE} input[name="Delay"]`;
+  private readonly UPLOAD_DATA_BUTTON = `${this.REQUEST_PANE} button:has-text("Upload Data")`;
+  private readonly RUN_BUTTON = `${this.REQUEST_PANE} button:has-text("Run")`;
   private readonly KEEP_LOGS_CHECKBOX = `${this.REQUEST_PANE} input[name="enable-log"]`;
   private readonly BAIL_CHECKBOX = `${this.REQUEST_PANE} input[name="bail"]`;
-
-  private get uploadDataButton(): Locator {
-    return this.page
-      .locator(this.REQUEST_PANE)
-      .getByRole("button", { name: "Upload Data", exact: true });
-  }
-
-  // `exact` keeps this off the neighbouring "Run Options" dropdown trigger.
-  private get runButton(): Locator {
-    return this.page
-      .locator(this.REQUEST_PANE)
-      .getByRole("button", { name: "Run", exact: true });
-  }
-
-  private get cancelAllButton(): Locator {
-    return this.page
-      .locator(this.RESULT_PANE)
-      .getByRole("button", { name: "Cancel all", exact: true });
-  }
+  private readonly CANCEL_ALL_BUTTON = `${this.RESULT_PANE} button:has-text("Cancel all")`;
 
   /**
    * Waits for the "Run" button to become visible and the request-order
@@ -56,27 +41,29 @@ export class RunnerPage extends BasePage {
    * list renders asynchronously slightly after the button itself appears.
    */
   async navigate(): Promise<void> {
-    await expect(this.runButton).toBeVisible({
+    await expect(this.page.locator(this.RUN_BUTTON)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
     await expect(
-      this.page.locator(this.REQUEST_PANE).getByTestId(/^runner-request-list-/).first(),
+      this.page.locator(`${this.REQUEST_LIST} [role="row"]`).first(),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
    * Switches between the "Request Order" and "Advanced" tabs on the left
    * (request configuration) pane.
+   * @param tab - The tab to switch to
    */
   async switchRequestTab(tab: RunnerRequestTab): Promise<void> {
-    await new TabsComponent(this.page, this.page.locator(this.REQUEST_PANE))
-      .tab(tab)
+    await this.page
+      .locator(`${this.REQUEST_PANE} [role="tab"][data-key="${tab}"]`)
       .click();
   }
 
   /**
    * Checks/unchecks "Keep logs after run" on the "Advanced" tab, switching
    * to that tab first since its checkboxes only render while active.
+   * @param enabled - Whether logs should be kept after the run completes
    */
   async setKeepLogs(enabled: boolean): Promise<void> {
     await this.switchRequestTab("advanced");
@@ -87,23 +74,16 @@ export class RunnerPage extends BasePage {
    * Checks/unchecks "Stop run if an error occurs" on the "Advanced" tab,
    * switching to that tab first since its checkboxes only render while
    * active.
+   * @param enabled - Whether the run should bail on the first error
    */
   async setBail(enabled: boolean): Promise<void> {
     await this.switchRequestTab("advanced");
-    const checkbox = this.page.locator(this.BAIL_CHECKBOX);
-    // Bail defaults to on and the checkbox is controlled by per-runner state
-    // that can re-render after the tab switch, so Playwright's `setChecked`
-    // can read stale state and throw. Re-evaluate and click until it settles.
-    await expect(async () => {
-      if ((await checkbox.isChecked()) !== enabled) {
-        await checkbox.click({ timeout: 2000 });
-      }
-      await expect(checkbox).toBeChecked({ checked: enabled, timeout: 2000 });
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    await this.page.locator(this.BAIL_CHECKBOX).setChecked(enabled);
   }
 
   /**
    * Fills the "Iterations" input and verifies the value stuck.
+   * @param count - The number of iterations to run
    */
   async setIterations(count: number): Promise<void> {
     const input = this.page.locator(this.ITERATIONS_INPUT);
@@ -113,6 +93,7 @@ export class RunnerPage extends BasePage {
 
   /**
    * Reads the current value of the "Iterations" input.
+   * @returns The configured number of iterations
    */
   async getIterations(): Promise<number> {
     return Number(
@@ -122,6 +103,7 @@ export class RunnerPage extends BasePage {
 
   /**
    * Fills the "Delay (ms)" input and verifies the value stuck.
+   * @param ms - The delay between requests, in milliseconds
    */
   async setDelay(ms: number): Promise<void> {
     const input = this.page.locator(this.DELAY_INPUT);
@@ -134,9 +116,10 @@ export class RunnerPage extends BasePage {
    * (JSON/CSV) file input, waits for the parsed preview to render, then
    * confirms via the modal's own "Upload" button. Uploading data with N
    * rows overrides the Iterations input to N.
+   * @param filePath - Absolute path to the .json/.csv data file to upload
    */
   async uploadData(filePath: string): Promise<void> {
-    await this.uploadDataButton.click();
+    await this.page.locator(this.UPLOAD_DATA_BUTTON).click();
     const dialog = this.page.locator('[role="dialog"]');
     await dialog.locator('input[type="file"]').setInputFiles(filePath);
     const uploadButton = dialog.getByRole("button", {
@@ -153,7 +136,7 @@ export class RunnerPage extends BasePage {
    * selected requests.
    */
   async clickRun(): Promise<void> {
-    await this.runButton.click();
+    await this.page.locator(this.RUN_BUTTON).click();
   }
 
   /**
@@ -161,12 +144,13 @@ export class RunnerPage extends BasePage {
    * flight, canceling the rest of the run.
    */
   async cancelRun(): Promise<void> {
-    await this.cancelAllButton.click();
+    await this.page.locator(this.CANCEL_ALL_BUTTON).click();
   }
 
   /**
    * Clicks the "Skip" button on a specific request's live progress card,
    * available only while that item is still "pending" or "running".
+   * @param name - The exact request name shown on the live progress card
    */
   async skipItem(name: string): Promise<void> {
     await this.page
@@ -180,11 +164,13 @@ export class RunnerPage extends BasePage {
    * Reads the live progress pane's summary line (e.g. "Running 2 / 6
    * requests (1 skipped, 0 canceled)"), available only while a run is in
    * flight or was just canceled.
+   * @returns The parsed live-run status, or undefined if the live progress
+   * pane isn't currently shown
    */
   async getStatus(): Promise<RunnerLiveStatus | undefined> {
     const label = this.page
-      .locator(this.RESULT_PANE)
-      .getByText(/^(Running|Finished) \d+ \/ \d+ requests/)
+      .locator(`${this.RESULT_PANE} span`)
+      .filter({ hasText: /^(Running|Finished) \d+ \/ \d+ requests/ })
       .first();
     if ((await label.count()) === 0) return undefined;
     const text = (await label.innerText()).trim();
@@ -206,6 +192,8 @@ export class RunnerPage extends BasePage {
    * "RUNNING", "200 OK") off its live progress card. If the same request
    * name appears in more than one iteration, reads the earliest (first in
    * DOM order) occurrence — the same one `skipItem()` targets.
+   * @param name - The exact request name shown on the live progress card
+   * @returns The badge's trimmed text, or undefined if no such card exists
    */
   async getItemStatus(name: string): Promise<string | undefined> {
     const card = this.page
@@ -213,31 +201,26 @@ export class RunnerPage extends BasePage {
       .first();
     if ((await card.count()) === 0) return undefined;
     return (
-      await card.getByTestId("runner-result-status").innerText()
+      await card.locator("div.text-center.font-semibold").first().innerText()
     ).trim();
   }
 
   /**
    * Reads the request-order list as currently rendered: each request's
    * name, HTTP method, and whether it's selected to run.
+   * @returns The request-order list, top to bottom
    */
   async getRequestOrder(): Promise<RunnerRequestItem[]> {
-    const rows = this.page.locator(this.REQUEST_PANE).getByTestId(/^runner-request-list-/);
+    const rows = this.page.locator(`${this.REQUEST_LIST} [role="row"]`);
     const count = await rows.count();
     const items: RunnerRequestItem[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      // The row's data-testid carries the request name; the method is the
-      // text rendered just before it.
-      const name = (
-        (await row.getAttribute("data-testid")) ?? ""
-      ).replace(/^runner-request-list-/, "");
-      const text = (await row.innerText()).trim();
       items.push({
-        name,
-        method: text.endsWith(name)
-          ? text.slice(0, text.length - name.length).trim()
-          : "",
+        name: (await row.locator("span").last().innerText()).trim(),
+        method: (
+          await row.locator('span[class*="http-method-"]').innerText()
+        ).trim(),
         selected: (await row.getAttribute("aria-selected")) === "true",
       });
     }
@@ -246,23 +229,21 @@ export class RunnerPage extends BasePage {
 
   /**
    * Reads the "passed / total" count badge shown on the "Results" tab.
+   * @returns The passed and total test counts
    */
   async getTestResultCount(): Promise<RunnerTestResultCount> {
     const text = (
-      await new TabsComponent(this.page, this.page.locator(this.RESULT_PANE))
-        .tabByName(/^Results/)
+      await this.page.locator(`${this.RESULT_PANE} .test-result-count`)
         .innerText()
     ).trim();
-    const [passed, total] = text
-      .replace(/^Results/, "")
-      .split("/")
-      .map((n) => Number(n.trim()));
+    const [passed, total] = text.split("/").map((n) => Number(n.trim()));
     return { passed, total };
   }
 
   /**
    * Clicks one of the "All" / "Passed" / "Failed" / "Skipped" filter
    * buttons above the results list.
+   * @param filter - The filter to apply
    */
   private async setResultFilter(filter: RunnerResultFilter): Promise<void> {
     await this.page
@@ -274,6 +255,7 @@ export class RunnerPage extends BasePage {
   /**
    * Reads every iteration block from the "Results" tab, each with its
    * per-request status, name, elapsed time, and byte size.
+   * @returns The results grouped by iteration, in run order
    */
   async getIterationResults(): Promise<RunnerIterationResult[]> {
     const blocks = this.page.locator(
@@ -284,7 +266,7 @@ export class RunnerPage extends BasePage {
     for (let i = 0; i < count; i++) {
       const block = blocks.nth(i);
       const label = (
-        await block.getByText(/^\s*Iteration \d+\s*$/).innerText()
+        await block.locator(".font-bold.uppercase").innerText()
       ).trim();
       const rows = block.locator('[data-testid^="request-test-result-"]');
       const rowCount = await rows.count();
@@ -305,6 +287,7 @@ export class RunnerPage extends BasePage {
    * clicking each filter button in turn via `setResultFilter()` before
    * re-scraping with `getIterationResults()`. Leaves the "All" filter
    * active afterward.
+   * @returns The iteration results scraped under each filter, keyed by filter name
    */
   async getIterationResultsByFilter(): Promise<RunnerResultsByFilter> {
     const results: RunnerResultsByFilter = new Map();
@@ -318,11 +301,15 @@ export class RunnerPage extends BasePage {
 
   private async parseResultRow(row: Locator): Promise<RunnerTestResult> {
     const status = (
-      await row.getByTestId("runner-result-status").innerText()
+      await row.locator("div.text-center.font-semibold").first().innerText()
     ).trim();
-    const name = (await row.getByTestId("runner-result-name").innerText()).trim();
-    const stats = row.getByTestId("runner-result-stats");
-    const meta = (await stats.count()) > 0 ? (await stats.innerText()).trim() : "";
+    const detail = row.locator(".min-w-0.flex-1 > div");
+    const name = (
+      await detail.nth(0).locator("span").first().innerText()
+    ).trim();
+    const detailCount = await detail.count();
+    const meta =
+      detailCount > 1 ? (await detail.nth(1).innerText()).trim() : "";
     const match = meta.match(/^(\d+)ms - (\d+) bytes$/);
     return {
       name,

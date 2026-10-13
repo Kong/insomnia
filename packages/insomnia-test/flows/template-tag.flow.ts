@@ -1,9 +1,4 @@
-import { TreeNodeType } from "@package/enums/tree-node-types";
-import { step } from "@package/misc/step";
-import type { HttpRequest } from "@package/models/http-request";
-import type { ResponseView } from "@package/models/response";
-import type { TemplateTag, TemplateTagName } from "@package/models/template-tag";
-
+import type { TemplateTag, TemplateTagName } from "../models/template-tag";
 import { BaseFlow } from "./base.flow";
 
 export class TemplateTagFlow extends BaseFlow {
@@ -17,8 +12,10 @@ export class TemplateTagFlow extends BaseFlow {
    * for a `hash` tag specifically, its Algorithm/Digest Encoding/Input
    * arguments too, since those have dedicated getters), and confirms via
    * "Done".
+   * @param template - The raw template tag text, e.g. `"{% uuid 'v4' %}"`
+   * @returns The tag's function name, its resolved Live Preview, and (for
+   * `hash` only) its Algorithm/Digest Encoding/Input arguments
    */
-  @step()
   async get(template: string): Promise<TemplateTag> {
     const templateTag = this.pageManager.templateTagPage;
     const tag = template.match(/\{%.*?%\}/)?.[0] ?? template;
@@ -49,8 +46,12 @@ export class TemplateTagFlow extends BaseFlow {
    * .selectVaultCredential`) to an already-created cloud credential (see
    * `PreferencesFlow.addCloudCredentials()`). No other tag is supported
    * today, since these are the only two with dedicated argument setters.
+   * @param template - The tag's current raw text, used to find and open it
+   * @param target - The desired new arguments for the tag's own
+   * `functionName` (`algorithm`/`digestEncoding`/`input` for `hash`,
+   * `credentialName` for `vault`); `target.preview` is ignored as input
+   * @returns The tag's new arguments and resolved Live Preview
    */
-  @step()
   async edit(template: string, target: TemplateTag): Promise<TemplateTag> {
     const templateTag = this.pageManager.templateTagPage;
     const tag = template.match(/\{%.*?%\}/)?.[0] ?? template;
@@ -77,46 +78,5 @@ export class TemplateTagFlow extends BaseFlow {
       input: target.input,
       preview,
     };
-  }
-
-  /**
-   * Opens a `prompt` tag already rendered on the current request's page,
-   * clicks "Clear" to wipe the value cached under its storage key, and
-   * confirms via "Done".
-   */
-  @step()
-  async clearCachedPrompt(template: string): Promise<void> {
-    const templateTag = this.pageManager.templateTagPage;
-    const tag = template.match(/\{%.*?%\}/)?.[0] ?? template;
-    await templateTag.openTagByTemplate(tag);
-    await templateTag.clearCachedValue();
-    await templateTag.done();
-  }
-
-  /**
-   * Sends `request` (whose body holds a `prompt` tag with no cached
-   * value), answers the resulting prompt dialog, and reads back the
-   * response.
-   */
-  @step()
-  async sendAnsweringPrompt(
-    request: HttpRequest,
-    label: string,
-    value: string,
-  ): Promise<{ promptInputType: string; response: ResponseView }> {
-    const workspace = this.pageManager.workspacePage;
-    const httpRequestPage = this.pageManager.httpRequestPage;
-    const templateTag = this.pageManager.templateTagPage;
-    const responsePage = this.pageManager.responsePage;
-
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
-    await httpRequestPage.navigate();
-
-    await templateTag.clickSend();
-    const promptInputType = await templateTag.answerPrompt(label, value);
-    await responsePage.navigate();
-
-    return { promptInputType, response: await responsePage.get() };
   }
 }

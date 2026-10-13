@@ -1,16 +1,13 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TableComponent } from "@package/components/table.component";
-import { EnabledLabelToggleComponent } from "@package/components/toggle.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { ClientCertificate } from "@package/models/client-certificate";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { ClientCertificate } from "../models/certificate";
 import { BasePage } from "./base.page";
 
 export class CertificatesPage extends BasePage {
   /**
-   * The "Manage Certificates" overlay is actually two
+   * Confirmed live: the "Manage Certificates" overlay is actually two
    * nested `role="dialog"` elements — an inner, named section holding
    * only the header/CA-cert-picker/buttons, and an outer, unnamed one
    * that also contains the (virtualized, non-descendant-queryable)
@@ -18,14 +15,10 @@ export class CertificatesPage extends BasePage {
    * that outer element, matching how every row lookup below needs to see
    * the grid's rendered content.
    */
-  private readonly modal = new ModalComponent(
-    this.page,
-    this.page
-      .getByRole("dialog")
-      .filter({ hasText: "Manage Certificates" })
-      .first(),
-  );
-  private readonly dialog = this.modal.root;
+  private readonly dialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Manage Certificates" })
+    .first();
 
   /**
    * Waits for the "Manage Certificates" dialog to become visible,
@@ -48,16 +41,17 @@ export class CertificatesPage extends BasePage {
    * Closes the "Manage Certificates" dialog via its "Done" button.
    */
   async close(): Promise<void> {
-    await this.modal.clickButton("Done", false);
-    await this.modal.waitForHidden();
+    await this.dialog.getByRole("button", { name: "Done" }).click();
+    await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
    * Uploads a PEM file as the workspace's single CA Certificate via its
    * hidden native file input (not an Electron `dialog.showOpenDialog` —
-   * this control is a plain `<input type="file">`, so no
+   * confirmed live this control is a plain `<input type="file">`, so no
    * `stubFileChooser()` is needed here). Overwrites any CA certificate
    * already set.
+   * @param path - Absolute path to a PEM-format CA certificate file
    */
   async addCaCertificate(path: string): Promise<void> {
     await this.dialog
@@ -71,20 +65,19 @@ export class CertificatesPage extends BasePage {
   /**
    * Adds a client certificate via "Add client certificate" -> the
    * "Add Client Certificate" form's default "Certificate" tab (PEM cert +
-   * key files, not the "PFX or PKCS12" tab — not covered
+   * key files, not the "PFX or PKCS12" tab — unconfirmed live, not covered
    * here). Both file fields are plain native `<input type="file">`
    * elements, set directly via `setInputFiles()` with no dialog stubbing.
+   * @param certificate - The client certificate to add
    */
   async addClientCertificate(certificate: ClientCertificate): Promise<void> {
     await this.dialog
       .getByRole("button", { name: "Add client certificate" })
       .click();
-    const formModal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", { name: "Add Client Certificate" }),
-    );
-    const form = formModal.root;
-    await formModal.expectOpen();
+    const form = this.page.getByRole("dialog", {
+      name: "Add Client Certificate",
+    });
+    await expect(form).toBeVisible({ timeout: DEFAULT_TIMEOUT });
 
     await form.locator('input[name="host"]').fill(certificate.host);
     const fileInputs = form.locator('input[type="file"]');
@@ -93,7 +86,8 @@ export class CertificatesPage extends BasePage {
     if (certificate.passphrase !== undefined) {
       await form.locator('input[name="passphrase"]').fill(certificate.passphrase);
     }
-    await formModal.confirm("Add certificate");
+    await form.getByRole("button", { name: "Add certificate", exact: true }).click();
+    await expect(form).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     await expect(this.clientCertificateRow(certificate.host)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -102,6 +96,8 @@ export class CertificatesPage extends BasePage {
   /**
    * Toggles a client certificate's Enabled/Disabled state, identified by
    * its `host`. A no-op if it already matches `enabled`.
+   * @param host - The client certificate's configured host
+   * @param enabled - Whether the client certificate should be enabled
    */
   async setClientCertificateEnabled(
     host: string,
@@ -111,17 +107,27 @@ export class CertificatesPage extends BasePage {
   }
 
   private async setRowEnabled(row: Locator, enabled: boolean): Promise<void> {
-    await new EnabledLabelToggleComponent(this.page, row).set(enabled);
+    const toggle = row.getByRole("button", { name: /^(Enabled|Disabled)$/ });
+    const current = (await toggle.innerText()) === "Enabled";
+    if (current !== enabled) {
+      await toggle.click();
+      await expect(toggle).toHaveText(enabled ? "Enabled" : "Disabled", {
+        timeout: DEFAULT_TIMEOUT,
+      });
+    }
   }
 
   /**
-   * The CA Certificate's own row. Unlike the (host-keyed,
+   * The CA Certificate's own row. Confirmed live: unlike the (host-keyed,
    * possibly-multiple) Client Certificates list below it, the single CA
-   * Certificate is NOT a `role="row"` grid item, so it is located by its
-   * test id.
+   * Certificate is NOT a `role="row"` grid item — it's a plain `<div>`
+   * sibling immediately following the section's own description
+   * paragraph, so it's located structurally rather than by role.
    */
   private caCertificateRow(): Locator {
-    return this.dialog.getByTestId("ca-certificate-row");
+    return this.dialog.locator(
+      'p:has-text("PEM format certificates") + div',
+    );
   }
 
   /**
@@ -131,32 +137,6 @@ export class CertificatesPage extends BasePage {
    * unique per test, so no further disambiguation is needed.
    */
   private clientCertificateRow(host: string): Locator {
-    return new TableComponent(this.page, this.dialog).rowByText(host);
-  }
-
-  /**
-   * Toggles the workspace CA Certificate's Enabled/Disabled state. A no-op
-   * if it already matches `enabled`.
-   */
-  async setCaCertificateEnabled(enabled: boolean): Promise<void> {
-    await this.setRowEnabled(this.caCertificateRow(), enabled);
-  }
-
-  /**
-   * Toggles the MCP Client "Manage Certificates" dialog's "SSL Certificate
-   * Validation" switch (`McpRequest.sslValidation`). A no-op if it already
-   * matches `enabled`.
-   */
-  async setSslValidationEnabled(enabled: boolean): Promise<void> {
-    const toggle = this.dialog.locator(
-      '[data-test-id="mcp-reject-unauthorized-toggle"]',
-    );
-    const current = (await toggle.innerText()) === "Enabled";
-    if (current !== enabled) {
-      await toggle.click();
-      await expect(toggle).toHaveText(enabled ? "Enabled" : "Disabled", {
-        timeout: DEFAULT_TIMEOUT,
-      });
-    }
+    return this.dialog.locator('[role="row"]').filter({ hasText: host });
   }
 }

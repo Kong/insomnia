@@ -1,6 +1,6 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export class KonnectPage extends BasePage {
@@ -81,6 +81,7 @@ export class KonnectPage extends BasePage {
   /**
    * Fills the Kong Konnect settings modal's "Personal Access Token" field.
    * Must be called with the modal already open (see `clickConfigure()`).
+   * @param pat - The Personal Access Token to enter
    */
   async setPat(pat: string): Promise<void> {
     await this.page.getByLabel("Personal Access Token").fill(pat);
@@ -89,7 +90,7 @@ export class KonnectPage extends BasePage {
   /**
    * Clicks "Connect & Sync" in the open Kong Konnect settings modal,
    * validating the entered PAT and triggering an initial sync on success,
-   * then waits for the modal to close — validating the PAT
+   * then waits for the modal to close — confirmed live: validating the PAT
    * and fetching the Konnect organization id both happen asynchronously
    * before the modal closes itself, so a caller reading `isSettingsModalOpen()`
    * immediately after this click would still see it open.
@@ -123,6 +124,7 @@ export class KonnectPage extends BasePage {
   /**
    * Reports whether a synced control-plane project node is present in the
    * sidebar project tree.
+   * @param name - The control plane (project) name
    */
   async isControlPlaneVisible(name: string): Promise<boolean> {
     return this.page.getByTestId(`project-node-${name}`).isVisible();
@@ -131,6 +133,7 @@ export class KonnectPage extends BasePage {
   /**
    * Reports whether a synced gateway-service collection node is present in
    * the sidebar project tree.
+   * @param name - The gateway service (workspace) name
    */
   async isServiceVisible(name: string): Promise<boolean> {
     return this.page.getByTestId(`workspace-node-${name}`).isVisible();

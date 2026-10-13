@@ -1,15 +1,4 @@
-import { AuthTabComponent } from "@package/components/auth-tab.component";
-import { DropdownComponent } from "@package/components/dropdown.component";
-import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
-import { ScriptTabComponent } from "@package/components/script-tab.component";
-import { SelectComponent } from "@package/components/select.component";
-import { TabPanelComponent } from "@package/components/tab-panel.component";
-import { TabsComponent } from "@package/components/tabs.component";
-import { PressedToggleComponent } from "@package/components/toggle.component";
-import type { HttpMethod } from "@package/enums/http-method";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import { throwOnDialog } from "@package/misc/decorators";
-import type { Locator } from "@playwright/test";
+import type { ElectronApplication, Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
   RequestHeader,
@@ -17,7 +6,12 @@ import type {
 } from "insomnia-data";
 import type { Page } from "playwright-core";
 
-import { BasePage } from "./base.page";
+import type { HttpMethod } from "../enums/http-method";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { throwOnDialog } from "../misc/decorators";
+import { AuthTabComponent } from "./auth-tab.page";
+import { ScriptTabComponent } from "./script-tab.page";
+import { TabPanelPage } from "./tab-panel.page";
 
 const REQUEST_PANE = '[data-testid="request-pane"]';
 
@@ -32,24 +26,12 @@ export interface RequestBody {
   content: string;
 }
 
-export abstract class RequestPage extends BasePage {
-  protected readonly PANE = REQUEST_PANE;
-
+export abstract class RequestPage extends TabPanelPage {
   protected readonly METHOD_BUTTON =
     '[data-testid="request-pane"] button[aria-label="Request Method"]';
-  /** The key/value row editor in the active tab panel (params, headers, body params…). */
-  protected get keyValue(): KeyValueEditorComponent {
-    return new KeyValueEditorComponent(
-      this.page,
-      this.page.locator(this.TABPANEL),
-      this.hasTrailingBlankRow,
-    );
-  }
-  protected get sendButtonLocator(): Locator {
-    return this.page
-      .locator(this.PANE)
-      .getByRole("button", { name: "Send", exact: true });
-  }
+  protected readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
+  protected readonly SEND_BUTTON: string =
+    '[data-testid="request-pane"] button:has-text("Send")';
 
   protected abstract readonly urlBarId: string;
 
@@ -62,59 +44,41 @@ export abstract class RequestPage extends BasePage {
    * method on purpose: the step instrumentation wraps page methods into
    * async ones, which a synchronous per-document read can't be.
    */
-  /** Whether the key/value editor keeps a blank row appended after the persisted rows (gRPC's doesn't). */
-  protected readonly hasTrailingBlankRow: boolean = true;
   protected readonly persistedRowPaths: string[] = [
     "parameters",
     "headers",
     "body.params",
   ];
 
-  // Getters, not fields: the components are bound to the current window, so
-  // building them on access keeps them following `this.page`.
-  /** The tab-bar pane of this request. */
-  protected get panel(): TabPanelComponent {
-    return new TabPanelComponent(this.page, this.PANE);
-  }
-
-  protected get TABPANEL(): string {
-    return this.panel.TABPANEL;
-  }
-
-  /** The tab bar of this request's pane. */
-  protected get tabs(): TabsComponent {
-    return this.panel.tabs;
-  }
-
   /** The Auth tab component for this request's own pane. */
-  get auth(): AuthTabComponent {
-    return new AuthTabComponent(this.page, this.PANE);
-  }
+  readonly auth: AuthTabComponent;
 
   /** The Scripts tab component for this request's own pane. */
-  get scripts(): ScriptTabComponent {
-    return new ScriptTabComponent(this.page, this.PANE);
+  readonly scripts: ScriptTabComponent;
+
+  constructor(page: Page, insomnia?: ElectronApplication) {
+    super(page, REQUEST_PANE, insomnia);
+    this.auth = new AuthTabComponent(page, REQUEST_PANE, insomnia);
+    this.scripts = new ScriptTabComponent(page, REQUEST_PANE, insomnia);
   }
 
   /**
-   * Waits for this request's pane to become visible, confirming it's open
-   * and active.
+   * Also rewires the composed Auth/Scripts tab components, whose
+   * persistence checks read the app's on-disk store via `insomnia`.
+   * @param page - The freshly-launched app's main window
+   * @param insomnia - The freshly-launched ElectronApplication, if any
    */
-  async navigate(): Promise<void> {
-    await this.panel.waitUntilVisible();
-  }
-
-  /**
-   * Clicks the tab within this request's pane identified by its data-key.
-   */
-  protected async switchTab(tab: string): Promise<void> {
-    await this.panel.switchTab(tab);
+  override setContext(page: Page, insomnia?: ElectronApplication): void {
+    super.setContext(page, insomnia);
+    this.auth.setContext(page, insomnia);
+    this.scripts.setContext(page, insomnia);
   }
 
   /**
    * Builds the CSS selector for this request type's URL bar CodeMirror
    * editor, using the subclass-provided urlBarId to disambiguate between
    * request protocols.
+   * @returns The CSS selector for the URL bar's CodeMirror editor
    */
   protected get URL_BAR(): string {
     return `${this.PANE} #${this.urlBarId} + .CodeMirror`;
@@ -126,10 +90,9 @@ export abstract class RequestPage extends BasePage {
    * to BasePage's hasFocus() to check whether the URL bar is focused.
    */
   get urlBarContainer(): Locator {
-    return this.page
-      .locator(this.PANE)
-      .getByTestId("one-line-editor-container")
-      .filter({ has: this.page.locator(`#${this.urlBarId}`) });
+    return this.page.locator(
+      `${this.PANE} .editor__container:has(#${this.urlBarId})`,
+    );
   }
 
   /**
@@ -137,36 +100,18 @@ export abstract class RequestPage extends BasePage {
    * pass this to BasePage's isFocused() (not hasFocus()) to check focus.
    */
   get sendButton(): Locator {
-    return this.sendButtonLocator;
+    return this.page.locator(this.SEND_BUTTON);
   }
 
   /**
    * Clicks the Connect/Disconnect button to open a connection (for
    * streaming request types) and waits for it to flip to "Disconnect".
-   * If an error dialog (e.g. "Failed to Render Request") appears instead,
-   * throws using its text rather than waiting out the full timeout for a
-   * button that will never appear.
    */
-  async connect({
-    expectConnected = true,
-  }: { expectConnected?: boolean } = {}): Promise<void> {
+  async connect(): Promise<void> {
     const connectButton = this.page
       .locator(this.PANE)
       .getByRole("button", { name: /^(Connect|Disconnect)$/ });
     await connectButton.click();
-    if (!expectConnected) return;
-
-    const disconnectButton = this.page
-      .locator(this.PANE)
-      .getByRole("button", { name: "Disconnect", exact: true });
-    const dialog = this.page.getByRole("dialog").first();
-    await disconnectButton
-      .or(dialog)
-      .first()
-      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
-    if (await dialog.isVisible()) {
-      throw new Error((await dialog.innerText()).trim());
-    }
   }
 
   /**
@@ -174,6 +119,8 @@ export abstract class RequestPage extends BasePage {
    * connected) until it passes within the timeout, then clicks the
    * Connect/Disconnect button to close the connection and waits for it
    * to flip back to "Connect".
+   * @param callback - A callback retried via expect().toPass() before disconnecting
+   * @param timeout - The maximum time to retry the callback, in milliseconds
    */
   async disconnect(
     callback: () => Promise<void> | void = () => {},
@@ -196,13 +143,19 @@ export abstract class RequestPage extends BasePage {
    * Reads back the currently selected body content type and its
    * content. Returns undefined when no body type is selected or the
    * selected type matches the given "no body" sentinel value.
+   * @param noBodyValue - The select value representing "no body" for this request type
+   * @returns The current content type and content, or undefined if there is no body
    */
   protected async getContentTypeBody(
     noBodyValue: string,
   ): Promise<RequestBody | undefined> {
-    await this.switchTab("content-type");
+    await this.page
+      .locator(`${this.PANE} [data-key="content-type"][role="tab"]`)
+      .click();
     const panel = this.page.locator(this.TABPANEL);
-    const raw = await new SelectComponent(this.page, panel).nativeValue(panel);
+    const raw = await panel
+      .locator('[data-testid="hidden-select-container"] select')
+      .inputValue();
     if (!raw || raw === noBodyValue) return undefined;
     const editor = panel.locator(".CodeMirror").first();
     if ((await editor.count()) === 0) return undefined;
@@ -212,6 +165,7 @@ export abstract class RequestPage extends BasePage {
 
   /**
    * Reads back the request's current headers.
+   * @returns The current headers
    */
   async getHeaders(): Promise<RequestHeader[]> {
     return this.readKeyValuePairs("headers");
@@ -220,6 +174,7 @@ export abstract class RequestPage extends BasePage {
   /**
    * Switches to the params tab and clicks its "Add" button, appending a
    * new blank row.
+   * @returns The new row's Name editor container — pass to hasFocus() to check whether it auto-focused
    */
   async addParam(): Promise<Locator> {
     return this.clickAddButton("params");
@@ -228,6 +183,7 @@ export abstract class RequestPage extends BasePage {
   /**
    * Switches to the headers tab and clicks its "Add" button, appending a
    * new blank row.
+   * @returns The new row's Name editor container — pass to hasFocus() to check whether it auto-focused
    */
   async addHeader(): Promise<Locator> {
     return this.clickAddButton("headers");
@@ -236,13 +192,15 @@ export abstract class RequestPage extends BasePage {
   /**
    * Switches to the given tab and clicks its key/value editor's "Add"
    * button, appending a new blank row.
+   * @param tab - The data-key of the tab containing the key/value editor
+   * @returns The new row's Name editor container element
    */
   private async clickAddButton(tab: string): Promise<Locator> {
     await this.switchTab(tab);
     const panel = this.page.locator(this.TABPANEL);
     await panel.getByRole("button", { name: "Add", exact: true }).click();
     const rows = panel.locator('[role="listbox"] [role="option"]');
-    return rows.last().getByTestId("one-line-editor-container").first();
+    return rows.last().locator(".editor__container").first();
   }
 
   /**
@@ -273,6 +231,7 @@ export abstract class RequestPage extends BasePage {
 
   /**
    * Reads the currently selected request method from the method button.
+   * @returns The current method text
    */
   async getMethod(): Promise<string> {
     return this.page.locator(this.METHOD_BUTTON).innerText();
@@ -280,6 +239,7 @@ export abstract class RequestPage extends BasePage {
 
   /**
    * Reads back the request's current query parameters.
+   * @returns The current parameters
    */
   async getParams(): Promise<RequestParameter[]> {
     return this.readKeyValuePairs("params");
@@ -292,6 +252,7 @@ export abstract class RequestPage extends BasePage {
    * instance can still be mid-remount — reading through immediately can
    * race that and observe no instance at all, not merely a stale value —
    * so this polls until an instance is actually attached before reading it.
+   * @returns The current URL text
    */
   async getUrl(): Promise<string> {
     const urlBar = this.page.locator(this.URL_BAR);
@@ -307,6 +268,8 @@ export abstract class RequestPage extends BasePage {
    * for a read right after navigating to another request (a tab switch,
    * the command palette), where the URL bar can still show the previous
    * request's URL until the route settles.
+   * @param expected - The URL the URL bar must settle on
+   * @returns The URL text once it matches
    */
   async waitForUrl(expected: string): Promise<string> {
     let url = "";
@@ -321,6 +284,7 @@ export abstract class RequestPage extends BasePage {
    * Polls the app's on-disk request store until a request holds `url`,
    * confirming a URL typed into the URL bar has been saved (the editor
    * saves through a debounce) before the caller navigates away from it.
+   * @param url - The URL that must have been persisted
    */
   async waitForUrlPersisted(url: string): Promise<void> {
     await this.waitForFieldPersisted(
@@ -334,26 +298,53 @@ export abstract class RequestPage extends BasePage {
    * Reads back all key/value pairs currently shown on the given tab,
    * including each row's enabled/disabled toggle state. Rows with no
    * toggle button are treated as always enabled.
+   * @param tab - The data-key of the tab containing the key/value editor
+   * @returns The pairs currently present, skipping rows with an empty name and value
    */
   protected async readKeyValuePairs(tab: string): Promise<KeyValuePair[]> {
-    await this.switchTab(tab);
-    return this.keyValue.read();
+    await this.page
+      .locator(`${this.PANE} [data-key="${tab}"][role="tab"]`)
+      .click();
+    const panel = this.page.locator(this.TABPANEL);
+    const rows = panel.locator('[role="listbox"] [role="option"]');
+    const count = await rows.count();
+    const pairs: KeyValuePair[] = [];
+    for (let i = 0; i < count; i++) {
+      const row = rows.nth(i);
+      const name = await this.readCodeMirror(
+        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+      );
+      const value = await this.readCodeMirror(
+        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+      );
+      const toggle = row.locator("button[aria-pressed]");
+      const enabled =
+        (await toggle.count()) === 0
+          ? true
+          : (await toggle.getAttribute("aria-pressed")) === "true";
+      if (name || value) pairs.push({ name, value, disabled: !enabled });
+    }
+    return pairs;
   }
 
   /**
    * Switches to the content-type tab and selects the given body type
    * from the "Change Body Type" dropdown.
+   * @param contentType - The data-key of the body type option to select
    */
   protected async selectBodyType(contentType: string): Promise<void> {
     await this.switchTab("content-type");
     const panel = this.page.locator(this.TABPANEL);
-    const select = new SelectComponent(
-      this.page,
-      panel.locator('button[aria-label="Change Body Type"]'),
+    const select = panel.locator(
+      '[data-testid="hidden-select-container"] select',
     );
     await expect(async () => {
-      await select.select(contentType);
-      expect(await select.nativeValue(panel)).toBe(contentType);
+      const button = panel.locator('button[aria-label="Change Body Type"]');
+      await button.click();
+      await this.page
+        .locator(`[role="option"][data-key="${contentType}"]`)
+        .dispatchEvent("click");
+      await expect(select).toHaveValue(contentType, { timeout: 1000 });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -362,13 +353,14 @@ export abstract class RequestPage extends BasePage {
    */
   @throwOnDialog()
   async send(): Promise<void> {
-    await this.sendButtonLocator.click();
+    await this.page.locator(this.SEND_BUTTON).click();
   }
 
   /**
    * Sets the request body: selects the given content type, then writes
    * the body content into the CodeMirror editor if one is present for
    * that body type (some body types, e.g. "No Body", have no editor).
+   * @param body - The content type and content to set
    */
   protected async setContentTypeBody(body: RequestBody): Promise<void> {
     await this.selectBodyType(body.contentType);
@@ -381,6 +373,7 @@ export abstract class RequestPage extends BasePage {
 
   /**
    * Sets the request's headers.
+   * @param headers - The headers to set
    */
   async setHeaders(headers: RequestHeader[]): Promise<void> {
     await this.setKeyValuePairs("headers", headers);
@@ -392,6 +385,8 @@ export abstract class RequestPage extends BasePage {
    * all" if enabled, then adds a new row per pair, filling its name and
    * value editors and toggling it off if marked disabled. Waits between
    * edits since new rows are appended asynchronously.
+   * @param tab - The data-key of the tab containing the key/value editor
+   * @param pairs - The pairs to set, replacing any existing ones
    */
   protected async setKeyValuePairs(
     tab: string,
@@ -399,42 +394,35 @@ export abstract class RequestPage extends BasePage {
   ): Promise<void> {
     await this.switchTab(tab);
     const panel = this.page.locator(this.TABPANEL);
-    await this.keyValue.deleteAll();
-    const options = this.keyValue.rows;
-    for (const [index, pair] of pairs.entries()) {
-      // Without a trailing blank row the only blank row is the initial one
-      // shown while the list is empty; later rows must be added explicitly.
-      if (!this.hasTrailingBlankRow && index > 0) {
-        await this.keyValue.addButton.click();
-      }
-      // Locate the row by its fixed position: once it is persisted a new
-      // trailing blank row is appended, so `.last()` would no longer be it.
-      const rowIndex = (await options.count()) - 1;
-      const row = options.nth(rowIndex);
+    const deleteAllBtn = panel.locator('button:has-text("Delete all")');
+    if (await deleteAllBtn.isEnabled()) {
+      await deleteAllBtn.click();
+    }
+    const listbox = panel.locator('[role="listbox"]');
+    for (const pair of pairs) {
+      const key = await listbox
+        .locator('[role="option"]')
+        .last()
+        .getAttribute("data-key");
+      const row = listbox.locator(`[role="option"][data-key="${key}"]`);
       const setName = () =>
-        this.keyValue.nameEditor(row).setValue(pair.name);
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+          pair.name,
+        );
       const setValue = () =>
-        this.keyValue.valueEditor(row).setValue(pair.value);
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+          pair.value,
+        );
       await setName();
       await this.waitForPairPersisted(pair, {
         checkValue: false,
         reapply: setName,
       });
-      // The disk write lands before the editor's props catch up with it.
-      // A row keeps its `pair-blank_*` id once persisted, and the editor
-      // only mints a fresh trailing blank row after it has re-rendered
-      // from the persisted data. Typing the value earlier lets that late
-      // re-render reset the value editor back to its stale default.
-      await expect(options).toHaveCount(
-        rowIndex + (this.hasTrailingBlankRow ? 2 : 1),
-        { timeout: DEFAULT_TIMEOUT },
-      );
       await setValue();
       if (pair.disabled) {
-        await new PressedToggleComponent(
-          this.page,
-          row.locator("button[aria-pressed]"),
-        ).set(false);
+        await row.locator('button[aria-pressed="true"]').click();
       }
       await this.waitForPairPersisted(pair, {
         reapply: async () => {
@@ -456,6 +444,8 @@ export abstract class RequestPage extends BasePage {
    * can't tell apart rows that share one (e.g. repeated `key` params).
    * Pairs still missing after a while are re-typed into their row, which
    * sits at the same index as the pair in `pairs`.
+   * @param pairs - The rows just set, in row order; pairs with a `fileName` are skipped
+   * @param settleMs - How long all pairs must keep holding
    */
   protected async waitForPairsSettled(
     pairs: { name: string; value?: string; disabled?: boolean; fileName?: string }[],
@@ -499,32 +489,16 @@ export abstract class RequestPage extends BasePage {
         // missing row back-to-back would recreate the stale-row-list race.
         for (const { pair, index } of missing) {
           const row = rows.nth(index);
-          // The editor can already show the right text while the saved row
-          // list lacks it; re-setting identical text fires no save, so
-          // detour through a different value to force a fresh save.
-          const nameEditor = this.keyValue.nameEditor(row).codeMirror;
-          const valueEditor = this.keyValue.valueEditor(row).codeMirror;
-          // Each step of the detour must land on disk before the next one:
-          // firing the detour value and its restore back-to-back lets the
-          // editor's late re-render swallow the restore, stranding the row
-          // on the detour text (e.g. `key-`).
-          await this.setCodeMirrorValue(nameEditor, `${pair.name}-`);
-          await this.waitForPairPersisted(
-            { name: `${pair.name}-` },
-            { checkValue: false },
-          ).catch(() => {});
-          await this.setCodeMirrorValue(nameEditor, pair.name);
-          await this.waitForPairPersisted(pair, { checkValue: false }).catch(
-            () => {},
+          await this.setCodeMirrorValue(
+            row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+            pair.name,
           );
-          await this.setCodeMirrorValue(valueEditor, `${pair.value ?? ""}-`);
-          await this.waitForPairPersisted({
-            ...pair,
-            value: `${pair.value ?? ""}-`,
-          }).catch(() => {});
-          await this.setCodeMirrorValue(valueEditor, pair.value ?? "");
+          await this.setCodeMirrorValue(
+            row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+            pair.value ?? "",
+          );
           await this.syncRowToggle(row, pair);
-          await this.waitForPairPersisted(pair).catch(() => {});
+          await this.waitForPairPersisted(pair).catch(() => undefined);
         }
       }
       expect(missing.map(({ pair }) => pair.name)).toEqual([]);
@@ -537,6 +511,8 @@ export abstract class RequestPage extends BasePage {
   /**
    * Flips a row's enable toggle if it doesn't match `pair.disabled`. Rows
    * without a toggle are left alone.
+   * @param row - The key/value row locator
+   * @param pair - The pair whose disabled state the row should show
    */
   protected async syncRowToggle(
     row: Locator,
@@ -544,7 +520,8 @@ export abstract class RequestPage extends BasePage {
   ): Promise<void> {
     const toggle = row.locator("button[aria-pressed]");
     if ((await toggle.count()) === 0) return;
-    await new PressedToggleComponent(this.page, toggle).set(!pair.disabled);
+    const enabled = (await toggle.getAttribute("aria-pressed")) === "true";
+    if (enabled === Boolean(pair.disabled)) await toggle.click();
   }
 
   /**
@@ -553,6 +530,9 @@ export abstract class RequestPage extends BasePage {
    * debounced save has landed (and the row has settled onto its
    * persisted key) before the next edit builds on it. Skipped for a
    * blank name, which the app never persists.
+   * @param pair - The row that was just edited
+   * @param options.checkValue - Whether the value/disabled state must match too, or only the name (right after the name is typed)
+   * @param options.reapply - Re-types the row's edit; run before each retry once a wait attempt times out, since a save from a stale copy of the row list can silently revert the edit and re-waiting alone would never recover it
    */
   protected async waitForPairPersisted(
     pair: { name: string; value?: string; disabled?: boolean },
@@ -587,39 +567,22 @@ export abstract class RequestPage extends BasePage {
   /**
    * Opens the request method dropdown and selects the given method,
    * then waits for the method button to reflect the new selection.
+   * @param method - The HTTP method name to select
    */
   async setMethod(method: HttpMethod): Promise<void> {
-    await new DropdownComponent(
-      this.page,
-      this.page.locator(this.METHOD_BUTTON),
-    ).select(method);
+    await this.page.locator(this.METHOD_BUTTON).click();
+    await this.page
+      .getByRole("menuitem", { name: method, exact: true })
+      .click();
     await expect(this.page.locator(this.METHOD_BUTTON)).toHaveText(method);
   }
 
   /**
    * Sets the request's query parameters.
+   * @param params - The parameters to set
    */
   async setParams(params: RequestParameter[]): Promise<void> {
     await this.setKeyValuePairs("params", params);
-  }
-
-  /**
-   * Sets the request's query parameters through the Params tab's "Bulk
-   * Edit" text editor (one `name: value` line per pair) instead of
-   * per-row key/value editors, which sidesteps the stale-row-list save
-   * race that many separately saved rows can trigger. The pane stays in
-   * bulk mode afterwards, since that is an app-wide setting.
-   */
-  async setParamsBulk(params: RequestParameter[]): Promise<void> {
-    await this.switchTab("params");
-    const panel = this.page.locator(this.TABPANEL);
-    const toggle = panel.getByRole("button", { name: "Bulk Edit" });
-    if ((await toggle.count()) > 0) await toggle.click();
-    await this.setCodeMirrorValue(
-      panel.locator(".CodeMirror").first(),
-      params.map(({ name, value }) => `${name}: ${value ?? ""}`).join("\n"),
-    );
-    await this.waitForPairsSettled(params);
   }
 
   /**
@@ -634,6 +597,7 @@ export abstract class RequestPage extends BasePage {
    * This only confirms the live editor value, not that it has been
    * persisted to disk — see `HttpRequestFlow`/`GrpcRequestFlow`'s
    * `waitForUrlPersisted()` for that separate, stricter check.
+   * @param url - The URL value to set
    */
   async setUrl(url: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.URL_BAR), url);
@@ -644,6 +608,7 @@ export abstract class RequestPage extends BasePage {
    * given text via real keystrokes (rather than replacing the value
    * outright like setUrl()), so it builds genuine CodeMirror undo
    * history the way a user's typing would.
+   * @param text - The text to type at the end of the current URL
    */
   async typeUrl(text: string): Promise<void> {
     const urlBar = this.page.locator(this.URL_BAR);
@@ -664,25 +629,28 @@ export abstract class RequestPage extends BasePage {
    * Reads the resolved-value tooltip (`title`) off the first environment
    * variable tag rendered inline in the URL bar, e.g. `{{ _.exampleString }}`.
    * Empty string if no tag is currently rendered there.
+   * @returns The tag's currently rendered preview text
    */
   async getUrlPreview(): Promise<string> {
-    const tag = this.page.locator(`${this.URL_BAR} [data-nunjucks-tag]`).first();
+    const tag = this.page.locator(`${this.URL_BAR} .nunjucks-tag`).first();
     return (await tag.count()) === 0 ? "" : (await tag.getAttribute("title")) ?? "";
   }
 
   /**
    * Switches to the Docs tab and clicks the Markdown editor's Write or
    * Preview sub-tab.
+   * @param mode - The sub-tab to switch to
    */
   async setDocsMode(mode: "write" | "preview"): Promise<void> {
     await this.switchTab("docs");
-    await new TabsComponent(this.page, this.page.locator(this.TABPANEL))
-      .tab(mode)
+    await this.page
+      .locator(`${this.TABPANEL} [data-key="${mode}"][role="tab"]`)
       .click();
   }
 
   /**
    * Reads the current value of the Docs tab's Markdown editor.
+   * @returns The current docs text, or an empty string if the editor instance is not found
    */
   async getDocs(): Promise<string> {
     await this.switchTab("docs");
@@ -696,6 +664,7 @@ export abstract class RequestPage extends BasePage {
    * editor, moves the cursor to the end, and types the given text via
    * real keystrokes (rather than replacing the value outright), so it
    * builds genuine CodeMirror undo history the way a user's typing would.
+   * @param text - The text to type at the end of the current docs content
    */
   async typeDocs(text: string): Promise<void> {
     await this.setDocsMode("write");

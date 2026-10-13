@@ -1,18 +1,17 @@
-import { ContextMenuItem } from "@package/enums/context-menu-items";
-import { ImportSource } from "@package/enums/import-sources";
-import { step } from "@package/misc/step";
-import type { Collection } from "@package/models/collection";
-import type { CurlCommand } from "@package/models/curl-command";
-import type { Project } from "@package/models/project";
-
+import { ContextMenuItem } from "../enums/context-menu-items";
+import { ImportSource } from "../enums/import-sources";
+import type { Collection } from "../models/collection";
+import type { CurlCommand } from "../models/curl-command";
+import type { Project } from "../models/project";
 import { BaseFlow } from "./base.flow";
 
 export class ImportFlow extends BaseFlow {
   /**
    * Opens the Import dialog from `project`'s context menu, scans clipboard
    * content pasted into the import source, then imports it into the project.
+   * @param project - The project to right-click and import into
+   * @param content - The clipboard content to paste and scan
    */
-  @step()
   async importClipboard(project: Project, content: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())
@@ -34,8 +33,10 @@ export class ImportFlow extends BaseFlow {
   /**
    * Opens the Import dialog from `project`'s context menu, scans a raw curl
    * command, then imports it into the given collection within that project.
+   * @param project - The project to right-click and import into
+   * @param collection - The collection to select as the import target
+   * @param curl - The curl command to scan and import
    */
-  @step()
   async importCurl(
     project: Project,
     collection: Collection,
@@ -63,8 +64,9 @@ export class ImportFlow extends BaseFlow {
   /**
    * Opens the Import dialog from `project`'s context menu, scans a local
    * file, then imports it into the project.
+   * @param project - The project to right-click and import into
+   * @param filePath - The path of the file to scan and import
    */
-  @step()
   async importFile(project: Project, filePath: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())
@@ -86,8 +88,9 @@ export class ImportFlow extends BaseFlow {
   /**
    * Opens the Import dialog from `project`'s context menu, scans an MCP
    * server URL, then imports it into the project.
+   * @param project - The project to right-click and import into
+   * @param url - The MCP server URL to scan and import from
    */
-  @step()
   async importMcp(project: Project, url: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())
@@ -109,8 +112,9 @@ export class ImportFlow extends BaseFlow {
   /**
    * Opens the Import dialog from `project`'s context menu, scans content
    * fetched from a URL, then imports it into the project.
+   * @param project - The project to right-click and import into
+   * @param url - The URL to scan and import from
    */
-  @step()
   async importUrl(project: Project, url: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())

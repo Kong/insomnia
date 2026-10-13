@@ -1,20 +1,21 @@
-import { ContextMenuItem } from "@package/enums/context-menu-items";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import { step } from "@package/misc/step";
-import type { MockRoute, MockRouteHistoryEntry } from "@package/models/mock-route";
-import { MockServer } from "@package/models/mock-server";
-import type { Project } from "@package/models/project";
-import type { ResponseView } from "@package/models/response";
 import { expect } from "@playwright/test";
 
+import { ContextMenuItem } from "../enums/context-menu-items";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { MockRoute, MockRouteHistoryEntry } from "../models/mock-route";
+import { MockServer } from "../models/mock-server";
+import type { Project } from "../models/project";
+import type { Response } from "../models/response";
 import { BaseFlow } from "./base.flow";
 
 export class MockServerFlow extends BaseFlow {
   /**
    * Creates a self-hosted Mock Server under `parent` through the project's
    * create menu and the create dialog, then re-reads it from the tree.
+   * @param parent - The project to create the Mock Server under
+   * @param server - The Mock Server to create, including its self-hosted URL
+   * @returns The created Mock Server, with `id` populated
    */
-  @step()
   async create(parent: Project, server: MockServer): Promise<MockServer> {
     const workspace = this.pageManager.workspacePage;
     const mockServerPage = this.pageManager.mockServerPage;
@@ -31,8 +32,9 @@ export class MockServerFlow extends BaseFlow {
 
   /**
    * Finds a Mock Server's tree node by name/id and returns it as a model.
+   * @param item - The Mock Server's name, or an object with `name`/`id`
+   * @returns The found Mock Server (its `url` isn't shown in the tree, so it's left empty), with `id` populated
    */
-  @step()
   async get(item: string | { name: string; id?: string }): Promise<MockServer> {
     const identity = typeof item === "string" ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
@@ -43,8 +45,11 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Duplicates `server` through its context menu's "Duplicate / Move"
    * dialog.
+   * @param server - The Mock Server to duplicate
+   * @param newName - The name to give the copy
+   * @param targetProject - The project to put the copy in; the source's own project if omitted
+   * @returns The copy, with `id` populated
    */
-  @step()
   async duplicate(
     server: MockServer,
     newName: string,
@@ -65,22 +70,23 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Exports `server` (as an Insomnia v5 YAML file) through its context
    * menu's "Export" item, writing it to `path`.
+   * @param server - The Mock Server to export
+   * @param path - Absolute path the exported file should be written to
    */
-  @step()
   async export(server: MockServer, path: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const exportPage = this.pageManager.exportPage;
 
     const node = await workspace.resolveNode(server);
-    await this.context.stubSaveDialog(path);
+    await exportPage.stubSaveFileLocation(path);
     await workspace.rightClick(node);
     await workspace.clickContextMenu(ContextMenuItem.Export);
   }
 
   /**
    * Opens `server`'s Mock Server view.
+   * @param server - The Mock Server to open
    */
-  @step()
   async open(server: MockServer): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const mockServerPage = this.pageManager.mockServerPage;
@@ -94,8 +100,10 @@ export class MockServerFlow extends BaseFlow {
    * Opens `server`, creates `route` through the "New Mock Route" dialog and
    * then, if it carries any, configures its response (status code/text,
    * body type, body and headers).
+   * @param server - The Mock Server to add the route to
+   * @param route - The route to create
+   * @returns The created route, with `id` populated
    */
-  @step()
   async createRoute(server: MockServer, route: MockRoute): Promise<MockRoute> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -111,8 +119,8 @@ export class MockServerFlow extends BaseFlow {
    * Opens `route` and fills in whichever response fields it carries —
    * status code, status text, body type, body and headers — then moves
    * focus off the last edited editor so it pushes to the server.
+   * @param route - The route (with `id`) whose response to configure
    */
-  @step()
   async setResponse(route: MockRoute): Promise<void> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -147,8 +155,10 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Opens `route` and edits its path and/or method through its action
    * menu's "Edit" dialog.
+   * @param route - The route (with `id`) to edit
+   * @param changes - The new path and/or method
+   * @returns The route with the changes applied
    */
-  @step()
   async editRoute(
     route: MockRoute,
     changes: Pick<MockRoute, "path" | "method">,
@@ -161,16 +171,17 @@ export class MockServerFlow extends BaseFlow {
 
   /**
    * Deletes `route` through its action menu and the confirmation dialog.
+   * @param route - The route (with `id`) to delete
    */
-  @step()
   async deleteRoute(route: MockRoute): Promise<void> {
     await this.pageManager.mockServerPage.deleteRoute(route.id!);
   }
 
   /**
    * Opens `server` and lists the paths of the routes in its sidebar.
+   * @param server - The Mock Server to read
+   * @returns The route paths currently listed
    */
-  @step()
   async getRoutePaths(server: MockServer): Promise<string[]> {
     await this.open(server);
     return this.pageManager.mockServerPage.getRoutePaths();
@@ -178,8 +189,9 @@ export class MockServerFlow extends BaseFlow {
 
   /**
    * Opens `route` and reads the method and path its URL bar shows.
+   * @param route - The route (with `id`) to open
+   * @returns The method and path shown
    */
-  @step()
   async getRoute(route: MockRoute): Promise<{ method: string; path: string }> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -190,8 +202,9 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Opens `route` and reads its full URL on the mock server out of the
    * "Show URL" dialog.
+   * @param route - The route (with `id`) to read
+   * @returns The route's full mock URL
    */
-  @step()
   async getUrl(route: MockRoute): Promise<string> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -202,9 +215,10 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Opens `route`, clicks "Test" and reads the response the mock server
    * answered with.
+   * @param route - The route (with `id`) to test
+   * @returns The response shown in the response pane
    */
-  @step()
-  async test(route: MockRoute): Promise<ResponseView> {
+  async test(route: MockRoute): Promise<Response> {
     const mockServerPage = this.pageManager.mockServerPage;
     const responsePage = this.pageManager.responsePage;
 
@@ -217,8 +231,10 @@ export class MockServerFlow extends BaseFlow {
   /**
    * On the response `request` currently shows, opens the "→ Mock" tab and
    * creates a new Mock Route on `server` from it.
+   * @param server - The Mock Server to add the route to
+   * @param path - The route path to use instead of the one pre-filled from the response URL
+   * @returns The created route, with `id` and `path` populated
    */
-  @step()
   async createRouteFromResponse(
     server: MockServer,
     path?: string,
@@ -236,8 +252,9 @@ export class MockServerFlow extends BaseFlow {
   /**
    * On the response the request currently shows, opens the "→ Mock" tab
    * and overwrites `route` with it.
+   * @param server - The Mock Server holding `route`
+   * @param route - The route (with `id`) to overwrite
    */
-  @step()
   async overwriteRouteFromResponse(
     server: MockServer,
     route: MockRoute,
@@ -251,8 +268,9 @@ export class MockServerFlow extends BaseFlow {
 
   /**
    * Opens `route` and reads the hits its History tab has logged.
+   * @param route - The route (with `id`) to read
+   * @returns The logged requests, newest first
    */
-  @step()
   async getHistory(route: MockRoute): Promise<MockRouteHistoryEntry[]> {
     const mockServerPage = this.pageManager.mockServerPage;
 

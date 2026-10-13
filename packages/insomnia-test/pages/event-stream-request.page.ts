@@ -1,12 +1,12 @@
-import { ContentType } from "@package/enums/content-type";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { expect } from "@playwright/test";
+
+import { ContentType } from "../enums/content-type";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   EventStreamMethod,
   EventStreamRequest,
   EventStreamRequestBody,
-} from "@package/models/event-stream-request";
-import { expect } from "@playwright/test";
-
+} from "../models/event-stream-request";
 import { RequestPage } from "./request.page";
 
 export class EventStreamRequestPage extends RequestPage {
@@ -14,7 +14,9 @@ export class EventStreamRequestPage extends RequestPage {
 
   /**
    * Reads the full event-stream request state from the UI (method, url,
-   * headers, params, body, and scripts).
+   * params, body, and scripts). Headers are always returned empty since
+   * event-stream requests don't expose a headers tab.
+   * @returns the event-stream request fields, excluding `name`
    */
   async get(): Promise<Omit<EventStreamRequest, "name">> {
     const scripts = await this.scripts.getScripts();
@@ -22,7 +24,7 @@ export class EventStreamRequestPage extends RequestPage {
       method: (await this.getMethod()).trim() as EventStreamMethod,
       url: await this.getUrl(),
       params: await this.getParams(),
-      headers: await this.getHeaders(),
+      headers: [],
       body: await this.getBody(),
       preRequestScript: scripts?.preRequest,
       afterResponseScript: scripts?.afterResponse,
@@ -31,6 +33,7 @@ export class EventStreamRequestPage extends RequestPage {
 
   /**
    * Reads the current body from the content-type body editor.
+   * @returns the body's mime type and text, or `undefined` if no body is set
    */
   private async getBody(): Promise<EventStreamRequestBody | undefined> {
     const body = await this.getContentTypeBody(ContentType.NoBody);
@@ -40,17 +43,14 @@ export class EventStreamRequestPage extends RequestPage {
 
   /**
    * Navigates to the event-stream request pane, then installs a
-   * `db.changes` listener (once per window) that increments
-   * `window.__saveCount` each time a "Request" document is saved — used by
-   * tests to assert save behavior without polling the UI. Repeat calls
-   * only reset the counter.
+   * `db.changes` listener that increments `window.__saveCount` each time a
+   * "Request" document is saved — used by tests to assert save behavior
+   * without polling the UI.
    */
   async navigate(): Promise<void> {
     await super.navigate();
     await this.page.evaluate(() => {
       (window as any).__saveCount = 0;
-      if ((window as any).__saveCountListenerInstalled) return;
-      (window as any).__saveCountListenerInstalled = true;
       (window as any).main.on(
         "db.changes",
         (_: unknown, changes: [string, { type: string }][]) => {
@@ -67,6 +67,7 @@ export class EventStreamRequestPage extends RequestPage {
   /**
    * Sets the request body via the content-type body editor. No-ops if the
    * body has no `mimeType`.
+   * @param body - the event-stream request body to apply
    */
   async setBody(body: EventStreamRequestBody): Promise<void> {
     if (body.mimeType == null) return;

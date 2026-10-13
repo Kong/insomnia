@@ -1,33 +1,23 @@
-import { ModalComponent } from "@package/components/modal.component";
-import type { ApiSpecExportFormat } from "@package/enums/api-spec-export-format";
-import type { ExportFormat } from "@package/enums/export-format";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import { throwOnDialog } from "@package/misc/decorators";
 import { expect } from "@playwright/test";
 
+import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
+import type { ExportFormat } from "../enums/export-format";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { throwOnDialog } from "../misc/decorators";
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {
-  private readonly exportRequestsModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Export requests" }),
-  );
+  private readonly exportRequestsDialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Export requests" });
 
-  private readonly selectExportTypeModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }),
-  );
+  private readonly selectExportTypeDialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Select Export Type" });
 
-  private readonly selectSpecFormatModal = new ModalComponent(
-    this.page,
-    this.page
-      .getByRole("dialog")
-      .filter({ hasText: "Select Specification Format" }),
-  );
-
-  private readonly exportRequestsDialog = this.exportRequestsModal.root;
-  private readonly selectExportTypeDialog = this.selectExportTypeModal.root;
-  private readonly selectSpecFormatDialog = this.selectSpecFormatModal.root;
+  private readonly selectSpecFormatDialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Select Specification Format" });
 
   /**
    * Confirms either the "Export requests" or "Select Export Type" dialog
@@ -50,7 +40,9 @@ export class ExportPage extends BasePage {
    */
   async confirmRequestSelection(): Promise<void> {
     if (!(await this.exportRequestsDialog.isVisible())) return;
-    await this.exportRequestsModal.clickButton("Export");
+    await this.exportRequestsDialog
+      .getByRole("button", { name: "Export", exact: true })
+      .click();
     await expect(this.selectExportTypeDialog).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -58,10 +50,11 @@ export class ExportPage extends BasePage {
 
   /**
    * Chooses the export file format on the "Select Export Type" dialog.
+   * @param format - The format to export as
    */
   async selectFormat(format: ExportFormat): Promise<void> {
     await this.selectExportTypeDialog
-      .getByTestId("select-modal-select")
+      .locator("select")
       .selectOption({ label: format });
   }
 
@@ -70,7 +63,9 @@ export class ExportPage extends BasePage {
    * file via the stubbed native save/open dialog.
    */
   async confirmFormat(): Promise<void> {
-    await this.selectExportTypeModal.clickButton("Done", false);
+    await this.selectExportTypeDialog
+      .getByRole("button", { name: "Done" })
+      .click();
     await expect(this.selectExportTypeDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -84,6 +79,7 @@ export class ExportPage extends BasePage {
    * have appeared instead (the spec was empty/missing), so this is a
    * no-op — the alert is left open, and `@throwOnDialog` (below) then
    * rejects with its trimmed text once this method returns.
+   * @param format - The format to export the spec as
    */
   @throwOnDialog()
   async exportOpenApiSpec(format: ApiSpecExportFormat): Promise<void> {
@@ -93,9 +89,11 @@ export class ExportPage extends BasePage {
     if (!(await this.selectSpecFormatDialog.isVisible())) return;
 
     await this.selectSpecFormatDialog
-      .getByTestId("select-modal-select")
+      .locator("select")
       .selectOption({ label: format });
-    await this.selectSpecFormatModal.clickButton("Done", false);
+    await this.selectSpecFormatDialog
+      .getByRole("button", { name: "Done" })
+      .click();
     await expect(this.selectSpecFormatDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -107,17 +105,33 @@ export class ExportPage extends BasePage {
    * not consistently, so this polls briefly rather than requiring it.
    */
   async dismissCompletionIfShown(): Promise<void> {
-    const completeModal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog").filter({ hasText: "Export Complete" }),
-    );
-    const completeDialog = completeModal.root;
+    const completeDialog = this.page
+      .getByRole("dialog")
+      .filter({ hasText: "Export Complete" });
     if (
       await completeDialog
         .isVisible({ timeout: 2000 })
         .catch(() => false)
     ) {
-      await completeModal.clickButton("Ok", false);
+      await completeDialog.getByRole("button", { name: "Ok" }).click();
     }
+  }
+
+  /**
+   * Stubs the native save-file dialog so a single-file (Collection)
+   * export writes to `filePath` instead of prompting.
+   * @param filePath - Absolute path the export should be written to
+   */
+  async stubSaveFileLocation(filePath: string): Promise<void> {
+    await this.stubSaveDialog(filePath);
+  }
+
+  /**
+   * Stubs the native folder-picker dialog so a multi-file (Project/
+   * all-data) export writes into `directoryPath` instead of prompting.
+   * @param directoryPath - Absolute directory path the export should be written into
+   */
+  async stubSaveDirectoryLocation(directoryPath: string): Promise<void> {
+    await this.stubFileChooser(directoryPath);
   }
 }

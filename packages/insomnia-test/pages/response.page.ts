@@ -1,11 +1,8 @@
-import { ResponseViewerComponent } from '@package/components/response-viewer.component';
-import { TabsComponent } from "@package/components/tabs.component";
-import { RequestState } from '@package/enums/request-state';
-import type { ResponseExportOption } from '@package/enums/response-export-option';
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '@package/misc/constants';
-import type { ResponseHeader, ResponseStatusBar, ResponseTestResult, ResponseView, StreamEvent } from '@package/models/response';
-import { expect, type Locator } from '@playwright/test';
+import { expect } from '@playwright/test';
 
+import { RequestState } from '../enums/request-state';
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../misc/constants';
+import type { Response, ResponseHeader, ResponseTestResult, StreamEvent } from '../models/response';
 import { BasePage } from './base.page';
 
 export type ResponseTab = 'preview' | 'headers' | 'cookies' | 'test-results' | 'mock-response' | 'timeline' | 'events';
@@ -31,31 +28,25 @@ function parseByteSize(raw: string): number | undefined {
 }
 
 export class ResponsePage extends BasePage {
+  private readonly CANCEL_REQUEST_BUTTON = '[data-testid="response-pane"] button:has-text("Cancel Request")';
   private readonly EVENT_PREVIEW_EDITOR = '[data-testid="response-pane"] #mcp-data-preview + .CodeMirror';
-  private readonly HEADER_TAGS = '[data-testid="response-pane"] [aria-live="polite"]';
-  private readonly EVENT_ROWS = '[data-testid="response-pane"] [data-testid="event-row"]';
+  private readonly EVENT_ROWS = '[data-testid="response-pane"] [role="tabpanel"] table tbody tr';
+  private readonly HEADER_TAGS = '[data-testid="response-pane"] [aria-live="polite"] .tag';
   private readonly NBSP = / /g;
   private readonly PANE = '[data-testid="response-pane"]';
-
-  private get viewer(): ResponseViewerComponent {
-    return new ResponseViewerComponent(this.page);
-  }
   private readonly TABPANEL = '[data-testid="response-pane"] [role="tabpanel"]';
-
-  private get cancelRequestButton(): Locator {
-    return this.page.locator(this.PANE).getByRole('button', { name: 'Cancel Request' });
-  }
 
   /**
    * Assembles the full response state currently shown in the response
-   * pane — status bar, preview, headers, console log, streamed events and
-   * script test results.
+   * pane — summary stats, streamed events, headers, console log, and
+   * body.
+   * @returns The complete response data
    */
-  async get(): Promise<ResponseView> {
+  async get(): Promise<Response> {
     return {
-      statusBar: await this.getStatusBar(),
+      ...(await this.getSummary()),
       headers: (await this.getHeaders()) ?? [],
-      preview: await this.getPreview(),
+      body: await this.getBody(),
       events: async () => (await this.getEvents()) ?? [],
       console: async () => (await this.getConsole()) ?? '',
       tests: async () => this.getTestResults(),
@@ -63,10 +54,12 @@ export class ResponsePage extends BasePage {
   }
 
   /**
-   * Reads the content shown on the "preview" tab, parsing it as JSON when
-   * possible and falling back to the raw text otherwise.
+   * Reads the response body shown on the "preview" tab, parsing it as
+   * JSON when possible and falling back to the raw text otherwise.
+   * @returns The parsed (or raw) response body, or undefined when the
+   * "preview" tab or its editor isn't available
    */
-  private async getPreview(): Promise<unknown> {
+  private async getBody(): Promise<unknown> {
     if (!(await this.switchTab('preview'))) return undefined;
     const editor = this.page.locator(`${this.TABPANEL} .CodeMirror`).first();
     if ((await editor.count()) === 0) return undefined;
@@ -82,9 +75,11 @@ export class ResponsePage extends BasePage {
 
   /**
    * Reads the response's size tag and converts it to bytes.
+   * @returns The response size in bytes, or undefined when the tag is
+   * missing or unparseable
    */
   private async getBytesContent(): Promise<number | undefined> {
-    const tag = this.page.locator(this.HEADER_TAGS).getByTestId('response-size-tag');
+    const tag = this.page.locator(this.HEADER_TAGS).nth(2);
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     return parseByteSize(raw);
@@ -92,6 +87,8 @@ export class ResponsePage extends BasePage {
 
   /**
    * Reads the request/response console log shown on the "timeline" tab.
+   * @returns The console log text, or undefined when the "timeline" tab
+   * isn't available
    */
   async getConsole(): Promise<string | undefined> {
     if (!(await this.switchTab('timeline'))) return undefined;
@@ -103,9 +100,11 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the response's elapsed-time tag and converts it to
    * milliseconds.
+   * @returns The elapsed time in milliseconds, or undefined when the tag
+   * is missing or unparseable
    */
   private async getElapsedTime(): Promise<number | undefined> {
-    const tag = this.page.locator(this.HEADER_TAGS).getByTestId('response-time-tag');
+    const tag = this.page.locator(this.HEADER_TAGS).nth(1);
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     return parseDurationMs(raw);
@@ -114,6 +113,8 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the currently selected event's preview content, parsing it as
    * JSON when possible and falling back to the raw text otherwise.
+   * @returns The parsed (or raw) preview content, or undefined when no
+   * preview editor is present
    */
   private async getEventPreview(): Promise<unknown> {
     const editor = this.page.locator(this.EVENT_PREVIEW_EDITOR);
@@ -131,6 +132,8 @@ export class ResponsePage extends BasePage {
    * Reads all streamed events from the "events" tab. Each row is clicked
    * in turn (which updates the preview editor) so its preview payload can
    * be captured alongside its data and time columns.
+   * @returns The list of stream events, or undefined when the "events"
+   * tab isn't available
    */
   async getEvents(): Promise<StreamEvent[] | undefined> {
     if (!(await this.switchTab('events'))) return undefined;
@@ -138,9 +141,9 @@ export class ResponsePage extends BasePage {
     const count = await rows.count();
     const events: StreamEvent[] = [];
     for (let i = 0; i < count; i++) {
-      const row = rows.nth(i);
-      const data = (await row.getByTestId('event-cell-data').innerText()).trim();
-      const time = (await row.getByTestId('event-cell-time').innerText()).trim();
+      const cells = rows.nth(i).locator('td');
+      const data = (await cells.nth(1).innerText()).trim();
+      const time = (await cells.nth(2).innerText()).trim();
       await rows.nth(i).dispatchEvent('click');
       events.push({ data, time, preview: await this.getEventPreview() });
     }
@@ -151,6 +154,9 @@ export class ResponsePage extends BasePage {
    * Reads a specific streamed gRPC response message by clicking its
    * "Response N" tab and parsing the editor content as JSON, falling back
    * to the raw text when it isn't valid JSON.
+   * @param index - The zero-based index of the response message to read
+   * @returns The parsed (or raw) message content, or undefined when the
+   * tab doesn't exist
    */
   async getGrpcMessage(index = 0): Promise<unknown> {
     const tab = this.page.locator(this.PANE).getByRole('tab', { name: `Response ${index + 1}`, exact: true });
@@ -171,6 +177,7 @@ export class ResponsePage extends BasePage {
    * "Response N" tabs until one doesn't exist. Works uniformly for unary
    * (a single "Response 1" tab) and server/client/bidi-streaming calls
    * (one tab per message received).
+   * @returns The parsed (or raw) content of each response message
    */
   async getGrpcMessages(): Promise<unknown[]> {
     const messages: unknown[] = [];
@@ -185,9 +192,11 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the gRPC response status tag and splits it into a status code
    * and message.
+   * @returns The gRPC status code and message, or undefined when no
+   * status tag is present
    */
   async getGrpcStatus(): Promise<{ code: string; message: string } | undefined> {
-    const tag = this.viewer.statusTag;
+    const tag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     const [code, ...rest] = raw.split(/\s+/);
@@ -196,20 +205,27 @@ export class ResponsePage extends BasePage {
 
   /**
    * Reads all response headers listed on the "headers" tab.
+   * @returns The list of response headers, or undefined when the
+   * "headers" tab isn't available
    */
   private async getHeaders(): Promise<ResponseHeader[] | undefined> {
     if (!(await this.switchTab('headers'))) return undefined;
-    return this.page.locator(`${this.TABPANEL} [data-testid="response-header-row"]`).evaluateAll(rows =>
-      rows.map(row => ({
-        name: (row.querySelector<HTMLElement>('[data-testid="response-header-name"]')?.innerText ?? '').trim(),
-        value: (row.querySelector<HTMLElement>('[data-testid="response-header-value"]')?.innerText ?? '').trim(),
-      })),
+    return this.page.locator(`${this.TABPANEL} table tbody tr`).evaluateAll(rows =>
+      rows.map(row => {
+        const cells = row.querySelectorAll('td');
+        return {
+          name: ((cells[0] as HTMLElement | undefined)?.innerText ?? '').trim(),
+          value: ((cells[1] as HTMLElement | undefined)?.innerText ?? '').trim(),
+        };
+      }),
     );
   }
 
   /**
    * Reads all `insomnia.test`/`insomnia.expect` results listed on the
    * "test-results" tab (populated by pre-request/after-response scripts).
+   * @returns The list of test results, or undefined when the
+   * "test-results" tab isn't available
    */
   private async getTestResults(): Promise<ResponseTestResult[] | undefined> {
     if (!(await this.switchTab('test-results'))) return undefined;
@@ -218,10 +234,11 @@ export class ResponsePage extends BasePage {
     const results: ResponseTestResult[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const status = ((await row.getByTestId('test-result-status').textContent()) ?? '').trim();
-      const name = ((await row.getByTestId('test-result-case').textContent()) ?? '').trim();
-      const errorText = ((await row.getByTestId('test-result-error').textContent()) ?? '').trim();
-      const error = errorText || undefined;
+      const status = ((await row.locator('span.mr-2.ml-2').textContent()) ?? '').trim();
+      const name = ((await row.locator('span.capitalize').textContent()) ?? '').trim();
+      const errorSpan = row.locator('span.capitalize + span.text-neutral-400');
+      const error =
+        (await errorSpan.count()) > 0 ? ((await errorSpan.textContent()) ?? '').trim() || undefined : undefined;
       results.push({ name, status, error });
     }
     return results;
@@ -231,19 +248,20 @@ export class ResponsePage extends BasePage {
    * Clicks "Cancel Request" while a request is in flight.
    */
   async cancelRequest(): Promise<void> {
-    await this.cancelRequestButton.click();
+    await this.page.locator(this.CANCEL_REQUEST_BUTTON).click();
   }
 
   /**
    * Reports whether text (e.g. `"Request was cancelled"`, `"Executing
    * script timeout"`) is currently visible anywhere in the response pane.
+   * @param text - The exact text to look for
    */
   async hasMessage(text: string): Promise<boolean> {
     return this.page.locator(this.PANE).getByText(text).first().isVisible();
   }
 
   async getRequestState(): Promise<RequestState> {
-    const cancelButton = this.cancelRequestButton;
+    const cancelButton = this.page.locator(this.CANCEL_REQUEST_BUTTON);
     if ((await cancelButton.count()) === 0) return RequestState.Idle;
     return (await cancelButton.first().isVisible()) ? RequestState.Sending : RequestState.Idle;
   }
@@ -251,27 +269,30 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the response's HTTP status tag and splits it into a numeric
    * status code and message.
+   * @returns The status code and message, or undefined when no status
+   * tag is present or the code isn't numeric
    */
-  private async getStatus(): Promise<{ code: number; message: string; text: string } | undefined> {
-    const tag = this.page.locator(this.HEADER_TAGS).getByTestId('response-status-tag');
+  private async getStatus(): Promise<{ code: number; message: string } | undefined> {
+    const tag = this.page.locator(this.HEADER_TAGS).nth(0);
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     const [code, ...rest] = raw.split(/\s+/);
     const statusCode = Number(code);
     if (Number.isNaN(statusCode)) return undefined;
-    return { code: statusCode, message: rest.join(' '), text: raw };
+    return { code: statusCode, message: rest.join(' ') };
   }
 
   /**
-   * Gathers the response pane's header bar — status, elapsed time, and
-   * byte size — as shown in its header tags.
+   * Gathers the response's headline stats — status code, status message,
+   * elapsed time, and byte size — as shown in the response pane's header
+   * tags.
+   * @returns The response summary fields
    */
-  private async getStatusBar(): Promise<ResponseStatusBar> {
+  private async getSummary(): Promise<Pick<Response, 'statusCode' | 'statusMessage' | 'elapsedTime' | 'bytesContent'>> {
     const status = await this.getStatus();
     return {
-      text: status?.text,
-      code: status?.code,
-      message: status?.message,
+      statusCode: status?.code,
+      statusMessage: status?.message,
       elapsedTime: await this.getElapsedTime(),
       bytesContent: await this.getBytesContent(),
     };
@@ -286,7 +307,7 @@ export class ResponsePage extends BasePage {
    * wait on `RequestPage.send()`.
    */
   async navigate(): Promise<void> {
-    const previewTab = new TabsComponent(this.page, this.page.locator(this.PANE)).tab("timeline");
+    const previewTab = this.page.locator(`${this.PANE} [data-key="timeline"][role="tab"]`);
     const dialog = this.page.getByRole('dialog').first();
     await previewTab.or(dialog).first().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     if (await dialog.isVisible()) {
@@ -296,54 +317,15 @@ export class ResponsePage extends BasePage {
 
   /**
    * Confirms a gRPC response has been rendered by waiting for the
-   * response status tag to become visible. If an error dialog appears
-   * instead (gRPC business failures), throws using its text.
+   * response status tag to become visible.
    */
   async navigateGrpc(): Promise<void> {
-    const statusTag = this.viewer.statusTag;
-    const dialog = this.page.getByRole('dialog').first();
-    await statusTag.or(dialog).first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
-    if (await dialog.isVisible()) {
-      throw new Error((await dialog.innerText()).trim());
-    }
-  }
-
-  /**
-   * Exports the response currently shown via the "Preview" dropdown,
-   * writing it through the native save dialog, which must already be
-   * stubbed (see `FlowContext.stubSaveDialog`).
-   */
-  async exportResponse(option: ResponseExportOption): Promise<void> {
-    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
-    await this.page.getByRole('menuitem', { name: option }).click();
-  }
-
-  /**
-   * Clicks the "Save To File" button that only renders for responses over
-   * the large-response threshold, writing the raw body through the native
-   * save dialog, which must already be stubbed (see
-   * `FlowContext.stubSaveDialog`).
-   */
-  async saveResponseToFile(): Promise<void> {
-    await this.page.locator(this.PANE).getByRole('button', { name: 'Save To File' }).click();
-  }
-
-  /**
-   * Opens the "Preview" dropdown and reads one export item's label and
-   * whether it is disabled, then closes the dropdown.
-   */
-  async getExportOptionState(option: ResponseExportOption): Promise<{ text: string; disabled: boolean }> {
-    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
-    const item = this.page.getByRole('menuitem', { name: option });
-    await item.waitFor({ state: 'visible' });
-    const text = (await item.innerText()).replace(/\s+/g, ' ').trim();
-    const disabled = /cursor-not-allowed/.test((await item.getAttribute('class')) ?? '');
-    await this.page.keyboard.press('Escape');
-    return { text, disabled };
+    const statusTag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
+    await expect(statusTag).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {
-    const tabLocator = this.viewer.tabs.tab(tab);
+    const tabLocator = this.page.locator(`${this.PANE} [data-key="${tab}"][role="tab"]`);
     if ((await tabLocator.count()) === 0) return false;
     await tabLocator.click();
     return true;

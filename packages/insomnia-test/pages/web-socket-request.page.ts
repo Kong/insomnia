@@ -1,11 +1,11 @@
-import { ContentType } from "@package/enums/content-type";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { expect } from "@playwright/test";
+
+import { ContentType } from "../enums/content-type";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   WebSocketRequest,
   WebSocketRequestBody,
-} from "@package/models/websocket-request";
-import { expect } from "@playwright/test";
-
+} from "../models/websocket-request";
 import { RequestPage } from "./request.page";
 
 export class WebSocketRequestPage extends RequestPage {
@@ -15,6 +15,7 @@ export class WebSocketRequestPage extends RequestPage {
   /**
    * Assembles the full WebSocket request state currently shown in the
    * request pane — URL, params, headers, and body.
+   * @returns The request data, omitting its name
    */
   async get(): Promise<Omit<WebSocketRequest, "name">> {
     return {
@@ -28,6 +29,7 @@ export class WebSocketRequestPage extends RequestPage {
   /**
    * Reads back the currently configured WebSocket message body, treating
    * an empty/blank content as no body at all.
+   * @returns The current body, or undefined when there's no content
    */
   private async getBody(): Promise<WebSocketRequestBody | undefined> {
     const body = (await this.getContentTypeBody(ContentType.NoBody)) as
@@ -57,6 +59,7 @@ export class WebSocketRequestPage extends RequestPage {
   /**
    * Sets the WebSocket message body via the shared content-type body
    * handling on the base request page.
+   * @param body - The body to apply
    */
   async setBody(body: WebSocketRequestBody): Promise<void> {
     await this.setContentTypeBody(body);

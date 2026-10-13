@@ -1,14 +1,17 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { Collection } from "@package/models/collection";
-import type { Cookie } from "@package/models/cookie";
-import type { EventStreamRequest } from "@package/models/event-stream-request";
-import type { GraphQLRequest } from "@package/models/graphql-request";
-import type { GrpcRequest } from "@package/models/grpc-request";
-import type { HttpRequest } from "@package/models/http-request";
-import type { SocketIORequest } from "@package/models/socket-io-request";
-import type { WebSocketRequest } from "@package/models/websocket-request";
+import * as fs from "node:fs";
+import path from "node:path";
+
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { Collection } from "../models/collection";
+import type { Cookie } from "../models/cookie";
+import type { EventStreamRequest } from "../models/event-stream-request";
+import type { GraphQLRequest } from "../models/graphql-request";
+import type { GrpcRequest } from "../models/grpc-request";
+import type { HttpRequest } from "../models/http-request";
+import type { SocketIORequest } from "../models/socket-io-request";
+import type { WebSocketRequest } from "../models/websocket-request";
 import { BaseFlow } from "./base.flow";
 
 export type CookieTarget =
@@ -23,6 +26,8 @@ export type CookieTarget =
 export class CookieFlow extends BaseFlow {
   /**
    * Reads the current cookie jar, opening it from `item`'s location.
+   * @param item - The Collection/request whose location the Cookie Jar dialog is opened from
+   * @returns The current cookie jar
    */
   private async get(item: CookieTarget): Promise<Cookie[]> {
     await this.openTarget(item);
@@ -36,6 +41,9 @@ export class CookieFlow extends BaseFlow {
   /**
    * Replaces the entire cookie jar with `cookies`, opening the jar from
    * `item`'s location, then reads it back.
+   * @param item - The Collection/request whose location the Cookie Jar dialog is opened from
+   * @param cookies - The full set of cookies the jar should contain afterward
+   * @returns The cookie jar read back after setting
    */
   async link<T extends CookieTarget>(
     item: T,
@@ -65,20 +73,43 @@ export class CookieFlow extends BaseFlow {
   }
 
   /**
-   * Polls the app's `CookieJar` documents until it contains
+   * Polls the on-disk `CookieJar` NeDB file directly until it contains
    * every one of `cookies` by key/value, re-running the whole
-   * open→setCookies→close write once per mismatch. The dialog's unmount
-   * can cancel the app's debounced save, so a lost cookie write has to be
-   * repeated, not only waited for.
+   * open→setCookies→close write once per mismatch. Confirmed live via a
+   * diagnostic probe: a cookie missing right after `setCookies()` doesn't
+   * arrive later no matter how long this waits — the file's mtime never
+   * moves again, across 50+ polls spanning almost a minute. So this isn't
+   * an in-memory-state-outrunning-disk timing gap; it's a genuinely lost
+   * write, the same species of bug `HttpRequestFlow.waitForUrlPersisted()`
+   * works around for URLs. The likely cause here: clicking "Done" unmounts
+   * the edit dialog, and under CPU-contended parallel runs the app's own
+   * debounced save can still be pending at that point, so the unmount
+   * cancels it before it ever fires — so the cookie never lands on its own
+   * and the same write has to be repeated. `CookiePage` now polls the
+   * on-disk jar after each field edit to narrow that window, but this
+   * stays as the backstop.
+   * @param item - The Collection/request whose location the Cookie Jar dialog is opened from, for a retry
+   * @param cookies - The cookies that must all be present in the persisted jar
    */
   private async waitForPersisted(
     item: CookieTarget,
     cookies: Cookie[],
   ): Promise<void> {
-    const isPersisted = async (): Promise<boolean> => {
-      const persisted = (
-        await this.pageManager.findDocs("insomnia.CookieJar.db")
-      ).flatMap((doc) => doc.cookies ?? []);
+    const dataPath = await this.flowManager.getDataPath();
+    const dbPath = path.join(dataPath, "insomnia.CookieJar.db");
+
+    const isPersisted = (): boolean => {
+      const latestById = new Map<string, any>();
+      for (const line of fs
+        .readFileSync(dbPath, "utf8")
+        .split("\n")
+        .filter(Boolean)) {
+        const doc = JSON.parse(line);
+        latestById.set(doc._id, doc);
+      }
+      const persisted = [...latestById.values()]
+        .filter((doc) => !doc.$$deleted)
+        .flatMap((doc) => doc.cookies ?? []);
 
       return cookies.every((cookie) =>
         persisted.some(
@@ -88,13 +119,13 @@ export class CookieFlow extends BaseFlow {
     };
 
     await expect(async () => {
-      if (!(await isPersisted())) {
+      if (!isPersisted()) {
         await this.openTarget(item);
         await this.pageManager.cookiePage.open();
         await this.pageManager.cookiePage.setCookies(cookies);
         await this.pageManager.cookiePage.close();
       }
-      expect(await isPersisted()).toBe(true);
+      expect(isPersisted()).toBe(true);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 

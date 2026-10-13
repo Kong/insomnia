@@ -1,39 +1,56 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TableComponent } from "@package/components/table.component";
-import { SyncStatus } from "@package/enums/sync-status";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
+import { SyncStatus } from "../enums/sync-status";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
-/**
- * Cloud Sync at the project-dashboard / toolbar level: the sync dropdown
- * (pull, discard) and the entry points to its modals. The modals are
- * `CloudSyncCommitDialogPage`, `CloudSyncHistoryDialogPage` and
- * `CloudSyncBranchesDialogPage`; file deletion is `CloudSyncFileDeletePage`.
- */
+export enum DialogDismissMethod {
+  XButton,
+  Escape,
+  ClickOutside,
+}
+
 export class CloudSyncPage extends BasePage {
   navigate(): Promise<void> {
     throw new Error("Method not implemented.");
   }
-
   // Cloud Sync's sync dropdown reuses the exact same testid/aria-label as
-  // Git Sync's (both `sync-dropdown.tsx` and
+  // Git Sync's (confirmed live: both `sync-dropdown.tsx` and
   // `git-sync-dropdown.tsx` render `data-testid="git-dropdown"`,
   // `aria-label="Git Sync"` — which one mounts depends on whether the
   // active workspace's project is Cloud-synced or has a git repo attached).
   private readonly syncDropdownButton = this.page.getByTestId("git-dropdown");
-
   private readonly syncMenu = this.page.getByRole("menu", { name: "Git Sync" });
-  private readonly commitModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Commit changes" }),
-  );
-  private readonly branchesModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Branches" }),
-  );
-  private readonly historyModal = ModalComponent.byTitle(this.page, "History");
+  private readonly commitDialog = this.page.getByRole("dialog", {
+    name: "Commit changes",
+  });
+  private readonly branchesDialog = this.page.getByRole("dialog", {
+    name: "Branches",
+  });
+  private readonly historyDialog = this.page
+    .getByRole("dialog")
+    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
+  private readonly mergeConflictsDialog = this.page.getByRole("dialog", {
+    name: "Resolve conflicts",
+  });
+  private readonly deleteFileDialog = this.page
+    .getByRole("dialog")
+    .filter({ has: this.page.getByRole("heading", { name: "Delete file" }) });
+
+  /**
+   * A project dashboard's own grid card for `name` (a react-aria
+   * `GridList` row, confirmed live — the `GridListItem` renders no
+   * `data-testid` of its own, only an accessible name from its
+   * `textValue`). Scoped to the grid's own `data-testid="workspace-grid"`
+   * container — confirmed live: an unfetched fixture's sidebar
+   * "unsynced" tree row carries the exact same accessible name and role,
+   * so an unscoped `getByRole("row", { name })` hits a strict-mode
+   * violation once the sidebar tree is showing that row too.
+   * @param name - The card's file/collection name
+   */
+  private fileCard(name: string) {
+    return this.page.getByTestId("workspace-grid").getByRole("row", { name });
+  }
 
   /**
    * Waits for the project dashboard's file/collection grid to finish its
@@ -44,7 +61,7 @@ export class CloudSyncPage extends BasePage {
    */
   async waitForDashboardLoaded(): Promise<void> {
     await expect(
-      new TableComponent(this.page, this.page.getByTestId("workspace-grid")).rows.first(),
+      this.page.getByTestId("workspace-grid").getByRole("row").first(),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -55,6 +72,7 @@ export class CloudSyncPage extends BasePage {
    * project's "unsynced" row to currently be visible — call
    * `backToAllProjects()` first if another workspace's collection-focus
    * mode is hiding it.
+   * @param name - The unsynced workspace's name, e.g. "My Collection R1"
    */
   async fetchUnsyncedWorkspace(name: string): Promise<void> {
     const unsyncedRow = this.page.getByTestId(
@@ -66,15 +84,7 @@ export class CloudSyncPage extends BasePage {
     await expect(unsyncedRow).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     const workspaceRow = this.page.getByTestId(`workspace-node-${name}`);
     await expect(workspaceRow).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    // Fetching already navigates into the workspace, and the sidebar then
-    // auto-expands it asynchronously. Do NOT click the row here: once the
-    // route is on this workspace a click is a collapse/expand toggle, so it
-    // can land after the auto-expand and fold the row back to collapsed.
-    // Just wait for the auto-expand to settle (non-collection rows have no
-    // `data-expanded` attribute, so they pass immediately).
-    await expect(workspaceRow).not.toHaveAttribute("data-expanded", "false", {
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await workspaceRow.click();
   }
 
   /**
@@ -83,6 +93,7 @@ export class CloudSyncPage extends BasePage {
    * data loader (e.g. right before simulating a main-window focus change,
    * so the background "check for remote changes" logic has fresh route
    * data to act on).
+   * @param name - The workspace's name
    */
   async reselect(name: string): Promise<void> {
     await this.page.getByTestId(`workspace-node-${name}`).first().click();
@@ -95,6 +106,8 @@ export class CloudSyncPage extends BasePage {
    * indistinguishable by name alone (same accessible name, different
    * testid — a plain by-name tree lookup like `workspaceFlow.getCollection()`
    * can't tell them apart), so this checks each row's own testid directly.
+   * @param name - The workspace's name
+   * @returns The workspace's current sync status, or undefined if neither row is present (e.g. after a full delete)
    */
   async isSynced(name: string): Promise<SyncStatus | undefined> {
     if (await this.page.getByTestId(`workspace-node-${name}`).isVisible()) {
@@ -135,7 +148,7 @@ export class CloudSyncPage extends BasePage {
    *
    * The click only submits an async fetcher action (rollback to the last
    * snapshot) — the local database revert lands some time after the click
-   * resolves. Two gotchas, both required to reliably observe
+   * resolves. Confirmed live gotchas, both required to reliably observe
    * the reverted state afterward:
    * - Reloading (or otherwise tearing down the renderer) before the
    *   rollback lands can abort it entirely, leaving the pre-discard value
@@ -175,13 +188,80 @@ export class CloudSyncPage extends BasePage {
     await this.syncMenu
       .getByRole("menuitemradio", { name: "Commit", exact: true })
       .click({ delay: 500 });
-    await this.commitModal.waitForVisible();
+    await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Stages one unstaged change by its row name (e.g. a request's name) in
+   * the open Commit modal. Requires `openCommitDialog()` to have been
+   * called first.
+   * @param name - The unstaged row's visible name
+   */
+  private async stageChange(name: string): Promise<void> {
+    const row = this.commitDialog.getByRole("row", { name });
+    await row.locator('[data-icon="plus"]').click();
+    // Staging is an async action: committing before the row has moved to
+    // the staged list (its button turns into a "minus") commits nothing.
+    await expect(row.locator('[data-icon="minus"]')).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Stages `name`, fills the commit message, and commits locally without
+   * pushing, then closes the Commit modal. Requires `openCommitDialog()` to
+   * have been called first.
+   *
+   * The modal only closes itself once nothing is left to commit — adding a
+   * request also leaves a sibling's own automatic update unstaged — so it is
+   * closed explicitly when it stays open after `name`'s row is committed.
+   * @param name - The single unstaged row to stage before committing
+   * @param message - The commit message
+   */
+  async commit(name: string, message: string): Promise<void> {
+    await this.stageChange(name);
+    await this.commitDialog
+      .getByRole("textbox", { name: "Message" })
+      .fill(message);
+    await this.commitDialog
+      .getByRole("button", { name: "Commit", exact: true })
+      .click();
+    await expect(this.commitDialog.getByRole("row", { name })).toHaveCount(0, {
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const closedItself = await this.commitDialog
+      .waitFor({ state: "hidden", timeout: 3000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    if (!closedItself) {
+      await this.commitDialog.locator('[data-icon="x"]').click();
+    }
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Stages `name`, fills the commit message, and commits + pushes in one
+   * action. Requires `openCommitDialog()` to have been called first.
+   * @param name - The single unstaged row to stage before committing
+   * @param message - The commit message
+   */
+  async commitAndPush(name: string, message: string): Promise<void> {
+    await this.stageChange(name);
+    await this.commitDialog
+      .getByRole("textbox", { name: "Message" })
+      .fill(message);
+    await this.commitDialog
+      .getByRole("button", { name: "Commit and push" })
+      .click();
   }
 
   /**
    * Reads whether the sync dropdown's "Commit" action is currently
    * disabled (no staged/unstaged changes left) — opens the menu to check,
    * then closes it again.
+   * @returns Whether "Commit" is disabled
    */
   async isCommitDisabled(): Promise<boolean> {
     await this.openSyncMenu();
@@ -207,7 +287,28 @@ export class CloudSyncPage extends BasePage {
       timeout: DEFAULT_TIMEOUT,
     });
     await historyButton.click();
-    await this.historyModal.waitForVisible();
+    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Restores the snapshot whose row displays `message` (its commit
+   * message) in the open History modal, via its 2-click confirm. Requires
+   * `openHistory()` to have been called first.
+   * @param message - The snapshot's commit message, as shown in its row
+   */
+  async restoreSnapshot(message: string): Promise<void> {
+    await this.historyDialog
+      .getByRole("row", { name: message })
+      .getByRole("button", { name: "Restore" })
+      .dblclick();
+  }
+
+  /**
+   * Closes the History modal.
+   */
+  async closeHistory(): Promise<void> {
+    await this.historyDialog.locator('[data-icon="x"]').click();
+    await expect(this.historyDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -218,7 +319,197 @@ export class CloudSyncPage extends BasePage {
     await this.syncMenu
       .getByRole("menuitemradio", { name: "Branches", exact: true })
       .click();
-    await this.branchesModal.waitForVisible();
+    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Fetches a remote-only branch into the local branches list, from its
+   * row in the Branches modal's "Remote Branches list". Requires
+   * `openBranchesDialog()` to have been called first.
+   * @param branch - The remote branch to fetch
+   */
+  async fetchRemoteBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByLabel("Remote Branches list", { exact: true })
+      .getByLabel(branch, { exact: true })
+      .getByRole("button", { name: "Fetch" })
+      .click();
+  }
+
+  /**
+   * Checks out `branch` from its row in the Branches modal's local
+   * "Branches list". Requires `openBranchesDialog()` to have been called
+   * first.
+   * @param branch - The local branch to check out
+   */
+  async checkoutLocalBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByLabel("Branches list", { exact: true })
+      .getByLabel(branch, { exact: true })
+      .getByRole("button", { name: "Checkout" })
+      .click();
+  }
+
+  /**
+   * Deletes local branch `branch` via its row in the Branches modal's
+   * local "Branches list", confirming the 2-click prompt. Requires
+   * `openBranchesDialog()` to have been called first.
+   * @param branch - The local branch to delete
+   */
+  async deleteLocalBranch(branch: string): Promise<void> {
+    const row = this.branchesDialog
+      .getByLabel("Branches list", { exact: true })
+      .getByLabel(branch, { exact: true });
+    await row.getByRole("button", { name: "Delete" }).click();
+    // A dblclick can fire its 2nd click before React re-renders the
+    // button into its "Confirm" state, so wait for it explicitly.
+    await row.getByRole("button", { name: "Confirm" }).click();
+  }
+
+  /**
+   * Whether local branch `branch`'s "Delete" button is currently
+   * disabled (e.g. because it's the currently checked-out branch).
+   * Requires `openBranchesDialog()` to have been called first.
+   * @param branch - The local branch to check
+   * @returns Whether its "Delete" button is disabled
+   */
+  async isLocalBranchDeleteDisabled(branch: string): Promise<boolean> {
+    return this.branchesDialog
+      .getByLabel("Branches list", { exact: true })
+      .getByLabel(branch, { exact: true })
+      .getByRole("button", { name: "Delete" })
+      .isDisabled();
+  }
+
+  /**
+   * Merges local branch `branch` into whichever branch is currently
+   * checked out, via its row in the Branches modal's local "Branches
+   * list", confirming the 2-click prompt. Requires `openBranchesDialog()`
+   * to have been called first.
+   * @param branch - The local branch to merge in
+   */
+  async mergeBranch(branch: string): Promise<void> {
+    const row = this.branchesDialog
+      .getByLabel("Branches list", { exact: true })
+      .getByLabel(branch, { exact: true });
+    await row.getByRole("button", { name: "Merge" }).click();
+    // A dblclick can fire its 2nd click before React re-renders the
+    // button into its "Confirm" state, so wait for it explicitly.
+    await row.getByRole("button", { name: "Confirm" }).click();
+  }
+
+  /**
+   * Whether `branch` is currently listed in the Branches modal's local
+   * "Branches list". Requires `openBranchesDialog()` to have been called
+   * first.
+   * @param branch - The local branch to check for
+   * @returns Whether it's currently listed
+   */
+  async isLocalBranchListed(branch: string): Promise<boolean> {
+    const list = this.branchesDialog.getByLabel("Branches list", {
+      exact: true,
+    });
+    await expect(list).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    // `isVisible()` doesn't auto-wait, and the list can still be rendering
+    // right after the modal opens — wait briefly for the row to appear
+    // before concluding it isn't listed.
+    return list
+      .getByLabel(branch, { exact: true })
+      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT })
+      .then(
+        () => true,
+        () => false,
+      );
+  }
+
+  /**
+   * Waits for `branch` to disappear from the Branches modal's local
+   * "Branches list" (e.g. after deleting it). Unlike
+   * `isLocalBranchListed()`, which blocks up to the timeout while a row is
+   * absent, this returns as soon as the row is gone. Requires
+   * `openBranchesDialog()` to have been called first.
+   * @param branch - The local branch expected to be gone
+   */
+  async waitForLocalBranchRemoved(branch: string): Promise<void> {
+    await expect(
+      this.branchesDialog
+        .getByLabel("Branches list", { exact: true })
+        .getByLabel(branch, { exact: true }),
+    ).toHaveCount(0, { timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Creates a new local branch from the Branches modal's "New branch
+   * name" field. Requires `openBranchesDialog()` to have been called
+   * first.
+   * @param branch - The new branch's name
+   */
+  async createBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByRole("textbox", { name: "Branch name" })
+      .fill(branch);
+    await this.branchesDialog
+      .getByRole("button", { name: "Create", exact: true })
+      .click();
+  }
+
+  /**
+   * Waits for the inline error under the Branches modal's "Branch name"
+   * field to read exactly `message` — shown when creating a branch fails
+   * (an invalid or already-used name). Requires `openBranchesDialog()` to
+   * have been called first.
+   * @param message - The expected error text
+   */
+  async waitForBranchCreationError(message: string): Promise<void> {
+    await expect(
+      this.branchesDialog
+        .locator('[data-icon="triangle-exclamation"]')
+        .locator("xpath=following-sibling::span"),
+    ).toHaveText(message, { timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Resolves every conflicted file listed in the "Resolve conflicts" modal
+   * by choosing the same side for each, then submits and waits for the
+   * modal to close. Call after `mergeBranch()` hit conflicts.
+   * @param version - "Current" keeps the local change, "Incoming" takes the merged-in one
+   * @returns The names of the conflicted files that were resolved
+   */
+  async resolveMergeConflicts(
+    version: "Current" | "Incoming",
+  ): Promise<string[]> {
+    await expect(this.mergeConflictsDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const rows = this.mergeConflictsDialog
+      .getByRole("grid", { name: "Conflicted changes" })
+      .getByRole("row");
+    const count = await rows.count();
+    const names: string[] = [];
+    for (let i = 0; i < count; i++) {
+      names.push(
+        (await rows.nth(i).locator("span.truncate").first().innerText()).trim(),
+      );
+      await rows
+        .nth(i)
+        .locator("label", { hasText: version })
+        .click();
+    }
+    await this.mergeConflictsDialog
+      .getByRole("button", { name: "Resolve conflicts" })
+      .click();
+    await expect(this.mergeConflictsDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    return names;
+  }
+
+  /**
+   * Closes the Branches modal.
+   */
+  async closeBranchesDialog(): Promise<void> {
+    await this.branchesDialog.locator('[data-icon="x"]').click();
+    await expect(this.branchesDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -227,6 +518,7 @@ export class CloudSyncPage extends BasePage {
    * current label — plain "Pull" when there's nothing to pull, or
    * "Pull N Commit(s)" once one is detected. Leaves the menu open;
    * call `closeSyncMenu()` afterward.
+   * @returns The "Pull" action's current visible label
    */
   async waitForPullAvailable(): Promise<string> {
     await this.openSyncMenu();
@@ -256,5 +548,197 @@ export class CloudSyncPage extends BasePage {
    */
   async clickPull(): Promise<void> {
     await this.syncMenu.getByRole("menuitemradio", { name: /^Pull/ }).click();
+  }
+
+  /**
+   * Opens `name`'s workspace-actions dropdown from its sidebar row and
+   * clicks "Delete", opening the delete-workspace dialog.
+   * @param name - The workspace's name
+   */
+  async openDeleteWorkspaceDialog(name: string): Promise<void> {
+    const workspaceRow = this.page.getByTestId(`workspace-node-${name}`);
+    await workspaceRow.hover();
+    await workspaceRow.getByLabel("SideBar Workspace Actions").click();
+    await this.page
+      .getByRole("menuitemradio", { name: "Delete", exact: true })
+      .click();
+  }
+
+  /**
+   * Confirms the open delete-workspace dialog with "Remove Local Copy"
+   * selected (the default) — deletes only the local copy, leaving the
+   * project intact on the Cloud Sync backend.
+   */
+  async deleteWorkspaceLocalOnly(): Promise<void> {
+    await this.page.getByRole("button", { name: "Delete Workspace" }).click();
+  }
+
+  /**
+   * Selects "Delete Permanently" in the open delete-workspace dialog and
+   * confirms — deletes the workspace both locally and on the Cloud Sync
+   * backend.
+   */
+  async deleteWorkspacePermanently(): Promise<void> {
+    await this.page
+      .locator("label")
+      .filter({
+        has: this.page.getByRole("heading", { name: "Delete Permanently" }),
+      })
+      .click();
+    await this.page.getByRole("button", { name: "Delete Workspace" }).click();
+  }
+
+  /**
+   * Hovers a project dashboard card by its file/collection name.
+   * @param name - The card's name
+   */
+  async hoverFile(name: string): Promise<void> {
+    await this.fileCard(name).hover();
+  }
+
+  /**
+   * Focuses a project dashboard card by its file/collection name —
+   * `GridListItem` uses roving tabindex, so this lands focus on the card
+   * itself, the same element a real Tab/arrow-key traversal would land
+   * on, rather than a descendant.
+   * @param name - The card's name
+   */
+  async focusFile(name: string): Promise<void> {
+    await this.fileCard(name).focus();
+  }
+
+  /**
+   * Whether `name`'s dashboard card renders a delete ("trash") button at
+   * all — confirmed live: it's conditionally rendered only for cards with
+   * `scope === 'unsynced' && remoteId`, not merely hidden via CSS, so a
+   * synced or local-only card has zero matching elements rather than one
+   * with `opacity: 0`. An unsynced card's row itself can render a beat
+   * after local ones (its remote-files query resolves asynchronously), so
+   * this waits for the row to attach first rather than reading `count()`
+   * immediately — a bare immediate read raced that query and produced a
+   * false negative on a genuinely-unsynced card, confirmed live.
+   * @param name - The card's name
+   */
+  async hasFileDeleteButton(name: string): Promise<boolean> {
+    const card = this.fileCard(name);
+    await card
+      .waitFor({ state: "attached", timeout: DEFAULT_TIMEOUT })
+      .catch(() => {});
+    return (await card.getByLabel("Delete unsynced file").count()) > 0;
+  }
+
+  /**
+   * Whether an unsynced card's delete button is currently visually
+   * revealed. Confirmed live: the button always exists in the DOM (see
+   * `hasFileDeleteButton()`) but sits at `opacity: 0` until the card is
+   * hovered or focused (Tailwind `group-hover`/`group-focus`), animated by
+   * a `transition-all` — reading `getComputedStyle` once right after
+   * hover/focus can catch it mid-transition, so this polls via
+   * `toHaveCSS` instead of a single read. That poll only confirms the
+   * button *reached* opacity 1, though — reading right after an action
+   * that's expected to hide it again (moving hover elsewhere, blurring)
+   * can still catch the outgoing transition's stale "1" before it's had
+   * time to animate back down, confirmed live. This polls until the
+   * button has no running transition/animation left before taking a
+   * single settled reading, rather than polling toward an assumed target
+   * value.
+   * @param name - The card's name
+   */
+  async isFileDeleteButtonRevealed(name: string): Promise<boolean> {
+    const button = this.fileCard(name).getByLabel("Delete unsynced file");
+    await expect(async () => {
+      expect(
+        await button.evaluate((el) => el.getAnimations().length),
+      ).toBe(0);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    const opacity = await button.evaluate(
+      (el) => getComputedStyle(el).opacity,
+    );
+    return Number(opacity) > 0.5;
+  }
+
+  /**
+   * Whether `name`'s dashboard card is currently listed at all — true for
+   * a synced/local-only/unsynced card alike; false once an unsynced
+   * card's remote file has been deleted.
+   * @param name - The card's name
+   */
+  async isFileCardVisible(name: string): Promise<boolean> {
+    return this.fileCard(name).isVisible();
+  }
+
+  /**
+   * Hovers `name`'s unsynced dashboard card and clicks its delete button,
+   * opening the "Delete file" confirmation dialog.
+   * @param name - The unsynced card's name
+   */
+  async openFileDeleteDialog(name: string): Promise<void> {
+    await this.hoverFile(name);
+    await this.fileCard(name).getByLabel("Delete unsynced file").click();
+    await expect(this.deleteFileDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Reads the open "Delete file" dialog's full text (heading + warning
+   * body). Requires `openFileDeleteDialog()` to have been called first.
+   */
+  async getFileDeleteDialogText(): Promise<string> {
+    return this.deleteFileDialog.innerText();
+  }
+
+  /**
+   * Dismisses the open "Delete file" dialog via `method`, without deleting
+   * anything.
+   * @param method - How to dismiss the dialog
+   */
+  async dismissFileDeleteDialog(method: DialogDismissMethod): Promise<void> {
+    switch (method) {
+      case DialogDismissMethod.XButton: {
+        await this.deleteFileDialog.locator('[data-icon="x"]').click();
+        break;
+      }
+      case DialogDismissMethod.Escape: {
+        await this.page.keyboard.press("Escape");
+        break;
+      }
+      case DialogDismissMethod.ClickOutside: {
+        await this.page.mouse.click(5, 5);
+        break;
+      }
+      default: {
+        throw new Error(`Unhandled DialogDismissMethod: ${method}`);
+      }
+    }
+    await expect(this.deleteFileDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Confirms the open "Delete file" dialog, permanently archiving the
+   * remote file by its backend project id. Requires
+   * `openFileDeleteDialog()` to have been called first. The dialog closes
+   * immediately (optimistic) — this does not itself wait for the card to
+   * disappear or for a failure toast; poll `isFileCardVisible()` or
+   * `waitForFileDeleteFailureToast()` afterward.
+   */
+  async confirmFileDelete(): Promise<void> {
+    await this.deleteFileDialog
+      .getByRole("button", { name: "Delete unsynced file permanently" })
+      .click();
+  }
+
+  /**
+   * Waits for the "Failed to delete remote file" toast naming `name` to
+   * appear, after a `confirmFileDelete()` whose archive call was made to
+   * fail.
+   * @param name - The unsynced file's name, as named in the toast
+   */
+  async waitForFileDeleteFailureToast(name: string): Promise<void> {
+    await expect(
+      this.page.getByText(`Failed to delete ${name}`),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 }

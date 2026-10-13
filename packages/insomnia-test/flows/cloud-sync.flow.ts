@@ -1,7 +1,5 @@
-import { DeleteMode } from "@package/enums/delete-mode";
-import { step } from "@package/misc/step";
-import type { Project } from "@package/models/project";
-
+import { DeleteMode } from "../enums/delete-mode";
+import type { Project } from "../models/project";
 import { BaseFlow } from "./base.flow";
 
 export class CloudSyncFlow extends BaseFlow {
@@ -9,20 +7,20 @@ export class CloudSyncFlow extends BaseFlow {
    * Navigates into `project`'s own dashboard (its file/collection grid),
    * where synced, local-only, and unsynced remote files are all shown as
    * cards side by side.
+   * @param project - The project to open
    */
-  @step()
   async openProjectDashboard(project: Project): Promise<void> {
     const { workspacePage, cloudSyncPage } = this.pageManager;
-    const node = await workspacePage.requireItemNode({ name: project.name });
-    await workspacePage.clickNode(node);
+    const node = await workspacePage.findItemNode({ name: project.name });
+    await workspacePage.clickNode(node!);
     await cloudSyncPage.waitForDashboardLoaded();
   }
 
   /**
    * Fetches a workspace that only exists on the Cloud Sync backend into
    * the local sidebar and navigates into it.
+   * @param name - The unsynced workspace's name, e.g. "My Collection R1"
    */
-  @step()
   async fetch(name: string): Promise<void> {
     const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.backToAllProjects();
@@ -33,7 +31,6 @@ export class CloudSyncFlow extends BaseFlow {
    * Discards every uncommitted local change on the current Cloud-synced
    * workspace.
    */
-  @step()
   async discardAllChanges(): Promise<void> {
     const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.discardAllChanges();
@@ -41,74 +38,78 @@ export class CloudSyncFlow extends BaseFlow {
 
   /**
    * Stages `requestName`, commits with `message`, then pushes.
+   * @param requestName - The single unstaged row to stage before committing
+   * @param message - The commit message
    */
-  @step()
   async commitAndPush(requestName: string, message: string): Promise<void> {
-    const { cloudSyncPage, cloudSyncCommitDialogPage } = this.pageManager;
+    const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.openCommitDialog();
-    await cloudSyncCommitDialogPage.commitAndPush(requestName, message);
+    await cloudSyncPage.commitAndPush(requestName, message);
   }
 
   /**
    * Stages `requestName` and commits with `message`, without pushing.
+   * @param requestName - The single unstaged row to stage before committing
+   * @param message - The commit message
    */
-  @step()
   async commit(requestName: string, message: string): Promise<void> {
-    const { cloudSyncPage, cloudSyncCommitDialogPage } = this.pageManager;
+    const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.openCommitDialog();
-    await cloudSyncCommitDialogPage.commit(requestName, message);
+    await cloudSyncPage.commit(requestName, message);
   }
 
   /**
    * Restores the snapshot with commit message `message` from the current
    * workspace's History.
+   * @param message - The snapshot's commit message, as shown in its History row
    */
-  @step()
   async restoreSnapshot(message: string): Promise<void> {
-    const { cloudSyncPage, cloudSyncHistoryDialogPage } = this.pageManager;
+    const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.openHistory();
-    await cloudSyncHistoryDialogPage.restoreSnapshot(message);
-    await cloudSyncHistoryDialogPage.closeHistory();
+    await cloudSyncPage.restoreSnapshot(message);
+    await cloudSyncPage.closeHistory();
   }
 
   /**
    * Creates a new branch named `branch` off whichever branch is
    * currently checked out on the current Cloud-synced workspace.
+   * @param branch - The new branch's name
    */
-  @step()
   async createBranch(branch: string): Promise<void> {
-    const { cloudSyncPage, cloudSyncBranchesDialogPage } = this.pageManager;
+    const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncBranchesDialogPage.createBranch(branch);
-    await cloudSyncBranchesDialogPage.closeBranchesDialog();
+    await cloudSyncPage.createBranch(branch);
+    await cloudSyncPage.closeBranchesDialog();
   }
 
   /**
    * Merges `branch` into whichever branch is currently checked out on
    * the current Cloud-synced workspace.
+   * @param branch - The branch to merge in
    */
-  @step()
   async mergeBranch(branch: string): Promise<void> {
-    const { cloudSyncPage, cloudSyncBranchesDialogPage } = this.pageManager;
+    const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncBranchesDialogPage.mergeBranch(branch);
-    await cloudSyncBranchesDialogPage.closeBranchesDialog();
+    await cloudSyncPage.mergeBranch(branch);
+    await cloudSyncPage.closeBranchesDialog();
   }
 
   /**
    * Merges `branch` into whichever branch is currently checked out,
    * expecting conflicts, and resolves all of them by taking the same side.
+   * @param branch - The branch to merge in
+   * @param version - "Current" keeps the local change, "Incoming" takes `branch`'s
+   * @returns The names of the conflicted files that were resolved
    */
-  @step()
   async mergeBranchResolvingConflicts(
     branch: string,
     version: "Current" | "Incoming",
   ): Promise<string[]> {
-    const { cloudSyncPage, cloudSyncBranchesDialogPage } = this.pageManager;
+    const { cloudSyncPage } = this.pageManager;
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncBranchesDialogPage.mergeBranch(branch);
-    const conflicts = await cloudSyncBranchesDialogPage.resolveMergeConflicts(version);
-    await cloudSyncBranchesDialogPage.closeBranchesDialog();
+    await cloudSyncPage.mergeBranch(branch);
+    const conflicts = await cloudSyncPage.resolveMergeConflicts(version);
+    await cloudSyncPage.closeBranchesDialog();
     return conflicts;
   }
 
@@ -117,12 +118,13 @@ export class CloudSyncFlow extends BaseFlow {
    * it intact on the Cloud Sync backend, still fetchable as unsynced
    * afterward) or "Delete Permanently" (removed both locally and on the
    * backend).
+   * @param name - The workspace's name
+   * @param mode - `DeleteMode.Local` removes only the local copy; `DeleteMode.Full` deletes it everywhere
    */
-  @step()
   async delete(name: string, mode: DeleteMode): Promise<void> {
-    const { cloudSyncFileDeletePage } = this.pageManager;
-    await cloudSyncFileDeletePage.openDeleteWorkspaceDialog(name);
-    await (mode === DeleteMode.Local ? cloudSyncFileDeletePage.deleteWorkspaceLocalOnly() : cloudSyncFileDeletePage.deleteWorkspacePermanently());
+    const { cloudSyncPage } = this.pageManager;
+    await cloudSyncPage.openDeleteWorkspaceDialog(name);
+    await (mode === DeleteMode.Local ? cloudSyncPage.deleteWorkspaceLocalOnly() : cloudSyncPage.deleteWorkspacePermanently());
   }
 
   /**
@@ -130,11 +132,11 @@ export class CloudSyncFlow extends BaseFlow {
    * card — opens the "Delete file" confirmation dialog and confirms it,
    * archiving the backend project by its own id (no local pull required).
    * Requires `openProjectDashboard()` to have already navigated there.
+   * @param name - The unsynced file's name, as shown on its dashboard card
    */
-  @step()
   async deleteUnsyncedFile(name: string): Promise<void> {
-    const { cloudSyncFileDeletePage } = this.pageManager;
-    await cloudSyncFileDeletePage.openFileDeleteDialog(name);
-    await cloudSyncFileDeletePage.confirmFileDelete();
+    const { cloudSyncPage } = this.pageManager;
+    await cloudSyncPage.openFileDeleteDialog(name);
+    await cloudSyncPage.confirmFileDelete();
   }
 }

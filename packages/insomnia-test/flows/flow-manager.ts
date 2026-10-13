@@ -1,6 +1,7 @@
-import type { FlowContext } from "@package/misc/flow-context";
-import type { PageManager } from "@package/pages/page-manager";
+import type { ElectronApplication } from "@playwright/test";
 
+import { instrumentWithSteps } from "../misc/step-instrumentation";
+import type { PageManager } from "../pages/page-manager";
 import { AppFlow } from "./app.flow";
 import { CertificatesFlow } from "./certificates.flow";
 import { CloudSyncFlow } from "./cloud-sync.flow";
@@ -8,6 +9,7 @@ import { CookieFlow } from "./cookie.flow";
 import { EnvironmentFlow } from "./environment.flow";
 import { EventStreamRequestFlow } from "./event-stream-request.flow";
 import { ExportFlow } from "./export.flow";
+import type { AppLaunchConfig, FlowContext } from "./flow-context";
 import { FolderFlow } from "./folder.flow";
 import { GitSyncFlow } from "./git-sync.flow";
 import { GraphQLRequestFlow } from "./graphql-request.flow";
@@ -20,80 +22,202 @@ import { OrganizationFlow } from "./organization.flow";
 import { PreferencesFlow } from "./preferences.flow";
 import { SocketIORequestFlow } from "./socket-io-request.flow";
 import { TemplateTagFlow } from "./template-tag.flow";
-import { VariableSourceFlow } from "./variable-source.flow";
 import { WebSocketRequestFlow } from "./web-socket-request.flow";
-import type { RequestFlows } from "./workspace.flow";
 import { WorkspaceFlow } from "./workspace.flow";
 
-// Narrow view of the manager that factories depend on; kept separate from
-// `FlowManager` so the registry's types do not refer back to themselves.
-type FlowDeps = RequestFlows & {
-  readonly context: FlowContext;
-  readonly pageManager: PageManager;
-  readonly gitRepoUrl?: string;
-  readonly workspaceFlow: WorkspaceFlow;
-  readonly preferencesFlow: PreferencesFlow;
-};
-
-const flowRegistry = {
-  appFlow: (m: FlowDeps): AppFlow => new AppFlow(m.context, m.pageManager),
-  certificatesFlow: (m: FlowDeps): CertificatesFlow => new CertificatesFlow(m.context, m.pageManager),
-  cloudSyncFlow: (m: FlowDeps): CloudSyncFlow => new CloudSyncFlow(m.context, m.pageManager),
-  cookieFlow: (m: FlowDeps): CookieFlow => new CookieFlow(m.context, m.pageManager),
-  environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
-  eventStreamRequestFlow: (m: FlowDeps): EventStreamRequestFlow => new EventStreamRequestFlow(m.context, m.pageManager),
-  exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
-  folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
-  gitSyncFlow: (m: FlowDeps): GitSyncFlow => new GitSyncFlow(m.context, m.pageManager),
-  graphqlRequestFlow: (m: FlowDeps): GraphQLRequestFlow => new GraphQLRequestFlow(m.context, m.pageManager),
-  grpcRequestFlow: (m: FlowDeps): GrpcRequestFlow => new GrpcRequestFlow(m.context, m.pageManager),
-  httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
-  importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),
-  mcpClientFlow: (m: FlowDeps): McpClientFlow => new McpClientFlow(m.context, m.pageManager, m.workspaceFlow),
-  mockServerFlow: (m: FlowDeps): MockServerFlow => new MockServerFlow(m.context, m.pageManager),
-  organizationFlow: (m: FlowDeps): OrganizationFlow => new OrganizationFlow(m.context, m.pageManager),
-  preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
-  socketIoRequestFlow: (m: FlowDeps): SocketIORequestFlow => new SocketIORequestFlow(m.context, m.pageManager),
-  templateTagFlow: (m: FlowDeps): TemplateTagFlow => new TemplateTagFlow(m.context, m.pageManager),
-  variableSourceFlow: (m: FlowDeps): VariableSourceFlow => new VariableSourceFlow(m.context, m.pageManager),
-  webSocketRequestFlow: (m: FlowDeps): WebSocketRequestFlow => new WebSocketRequestFlow(m.context, m.pageManager),
-  workspaceFlow: (m: FlowDeps): WorkspaceFlow =>
-    new WorkspaceFlow(m.context, m.pageManager, m.preferencesFlow, m, m.gitRepoUrl),
-} satisfies Record<string, (m: FlowDeps) => unknown>;
-
-type FlowName = Extract<keyof typeof flowRegistry, string>;
-
-type Flows = { [K in keyof typeof flowRegistry]: ReturnType<(typeof flowRegistry)[K]> };
-
-// Typed by the `FlowManager` interface merged below; the getters themselves
-// are installed from `flowRegistry` in the static block.
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-export class FlowManager {
-  private readonly flows = new Map<string, unknown>();
+export class FlowManager implements FlowContext {
+  private _appFlow?: AppFlow;
+  private _certificatesFlow?: CertificatesFlow;
+  private _cloudSyncFlow?: CloudSyncFlow;
+  private _cookieFlow?: CookieFlow;
+  private _environmentFlow?: EnvironmentFlow;
+  private _eventStreamRequestFlow?: EventStreamRequestFlow;
+  private _exportFlow?: ExportFlow;
+  private _folderFlow?: FolderFlow;
+  private _gitSyncFlow?: GitSyncFlow;
+  private _graphqlRequestFlow?: GraphQLRequestFlow;
+  private _grpcRequestFlow?: GrpcRequestFlow;
+  private _httpRequestFlow?: HttpRequestFlow;
+  private _importFlow?: ImportFlow;
+  private _mcpClientFlow?: McpClientFlow;
+  private _mockServerFlow?: MockServerFlow;
+  private _organizationFlow?: OrganizationFlow;
+  private _preferencesFlow?: PreferencesFlow;
+  private _socketIoRequestFlow?: SocketIORequestFlow;
+  private _templateTagFlow?: TemplateTagFlow;
+  private _webSocketRequestFlow?: WebSocketRequestFlow;
+  private _workspaceFlow?: WorkspaceFlow;
 
   constructor(
-    readonly pageManager: PageManager,
-    readonly context: FlowContext,
-    readonly gitRepoUrl?: string,
+    private readonly pageManager: PageManager,
+    private insomnia?: ElectronApplication,
+    private readonly gitRepoUrl?: string,
+    private readonly appLaunchConfig?: AppLaunchConfig,
   ) {}
 
-  private getOrCreate(name: FlowName): unknown {
-    if (!this.flows.has(name)) {
-      this.flows.set(name, flowRegistry[name](this as unknown as FlowDeps));
-    }
-    return this.flows.get(name);
+  /**
+   * The underlying ElectronApplication handle, for AppFlow to reach the
+   * main process directly without going through a DOM-facing Page.
+   * @returns The ElectronApplication handle, or undefined if none was passed in
+   */
+  get electronApp(): ElectronApplication | undefined {
+    return this.insomnia;
   }
 
-  static {
-    for (const name of Object.keys(flowRegistry) as FlowName[]) {
-      Object.defineProperty(this.prototype, name, {
-        get(this: FlowManager) {
-          return this.getOrCreate(name);
-        },
-      });
-    }
+  /**
+   * The launch parameters this session's `insomnia` fixture originally
+   * used — see `AppFlow.restart()`.
+   * @returns The original launch config, or undefined if none was passed in
+   */
+  get launchConfig(): AppLaunchConfig | undefined {
+    return this.appLaunchConfig;
+  }
+
+  /**
+   * Rewires `electronApp` onto a freshly-relaunched ElectronApplication —
+   * called by `AppFlow.restart()` once the new app is up.
+   * @param insomnia - The freshly-launched ElectronApplication
+   */
+  setElectronApp(insomnia: ElectronApplication): void {
+    this.insomnia = insomnia;
+  }
+
+  /**
+   * Reads the main process's `userData` directory.
+   * @returns The absolute path to the app's data directory
+   */
+  async getDataPath(): Promise<string> {
+    return this.insomnia!.evaluate(({ app }) => app.getPath("userData"));
+  }
+
+  get appFlow(): AppFlow {
+    return (this._appFlow ??= instrumentWithSteps(
+      new AppFlow(this, this.pageManager),
+    ));
+  }
+
+  get certificatesFlow(): CertificatesFlow {
+    return (this._certificatesFlow ??= instrumentWithSteps(
+      new CertificatesFlow(this, this.pageManager),
+    ));
+  }
+
+  get cloudSyncFlow(): CloudSyncFlow {
+    return (this._cloudSyncFlow ??= instrumentWithSteps(
+      new CloudSyncFlow(this, this.pageManager),
+    ));
+  }
+
+  get cookieFlow(): CookieFlow {
+    return (this._cookieFlow ??= instrumentWithSteps(
+      new CookieFlow(this, this.pageManager),
+    ));
+  }
+
+  get environmentFlow(): EnvironmentFlow {
+    return (this._environmentFlow ??= instrumentWithSteps(
+      new EnvironmentFlow(this, this.pageManager, this.workspaceFlow),
+    ));
+  }
+
+  get eventStreamRequestFlow(): EventStreamRequestFlow {
+    return (this._eventStreamRequestFlow ??= instrumentWithSteps(
+      new EventStreamRequestFlow(this, this.pageManager),
+    ));
+  }
+
+  get exportFlow(): ExportFlow {
+    return (this._exportFlow ??= instrumentWithSteps(
+      new ExportFlow(this, this.pageManager),
+    ));
+  }
+
+  get folderFlow(): FolderFlow {
+    return (this._folderFlow ??= instrumentWithSteps(
+      new FolderFlow(this, this.pageManager),
+    ));
+  }
+
+  get gitSyncFlow(): GitSyncFlow {
+    return (this._gitSyncFlow ??= instrumentWithSteps(
+      new GitSyncFlow(this, this.pageManager),
+    ));
+  }
+
+  get graphqlRequestFlow(): GraphQLRequestFlow {
+    return (this._graphqlRequestFlow ??= instrumentWithSteps(
+      new GraphQLRequestFlow(this, this.pageManager),
+    ));
+  }
+
+  get grpcRequestFlow(): GrpcRequestFlow {
+    return (this._grpcRequestFlow ??= instrumentWithSteps(
+      new GrpcRequestFlow(this, this.pageManager),
+    ));
+  }
+
+  get httpRequestFlow(): HttpRequestFlow {
+    return (this._httpRequestFlow ??= instrumentWithSteps(
+      new HttpRequestFlow(this, this.pageManager),
+    ));
+  }
+
+  get importFlow(): ImportFlow {
+    return (this._importFlow ??= instrumentWithSteps(
+      new ImportFlow(this, this.pageManager),
+    ));
+  }
+
+  get mcpClientFlow(): McpClientFlow {
+    return (this._mcpClientFlow ??= instrumentWithSteps(
+      new McpClientFlow(this, this.pageManager, this.workspaceFlow),
+    ));
+  }
+
+  get mockServerFlow(): MockServerFlow {
+    return (this._mockServerFlow ??= instrumentWithSteps(
+      new MockServerFlow(this, this.pageManager),
+    ));
+  }
+
+  get organizationFlow(): OrganizationFlow {
+    return (this._organizationFlow ??= instrumentWithSteps(
+      new OrganizationFlow(this, this.pageManager),
+    ));
+  }
+
+  get preferencesFlow(): PreferencesFlow {
+    return (this._preferencesFlow ??= instrumentWithSteps(
+      new PreferencesFlow(this, this.pageManager),
+    ));
+  }
+
+  get socketIoRequestFlow(): SocketIORequestFlow {
+    return (this._socketIoRequestFlow ??= instrumentWithSteps(
+      new SocketIORequestFlow(this, this.pageManager),
+    ));
+  }
+
+  get templateTagFlow(): TemplateTagFlow {
+    return (this._templateTagFlow ??= instrumentWithSteps(
+      new TemplateTagFlow(this, this.pageManager),
+    ));
+  }
+
+  get webSocketRequestFlow(): WebSocketRequestFlow {
+    return (this._webSocketRequestFlow ??= instrumentWithSteps(
+      new WebSocketRequestFlow(this, this.pageManager),
+    ));
+  }
+
+  get workspaceFlow(): WorkspaceFlow {
+    return (this._workspaceFlow ??= instrumentWithSteps(
+      new WorkspaceFlow(
+        this,
+        this.pageManager,
+        this.preferencesFlow,
+        this.gitRepoUrl,
+      ),
+    ));
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-export interface FlowManager extends Flows {}

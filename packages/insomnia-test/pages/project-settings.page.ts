@@ -1,18 +1,14 @@
-import { BannerComponent } from "@package/components/banner.component";
-import { ModalComponent } from "@package/components/modal.component";
-import type { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import type { ProjectType } from "../enums/project-types";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export class ProjectSettingsPage extends BasePage {
-  private readonly modal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Create or update dialog" }),
-  );
-  private readonly dialog = this.modal.root;
+  private readonly dialog = this.page.getByRole("dialog", {
+    name: "Create or update dialog",
+  });
   private readonly relocateButton = this.dialog.getByRole("button", {
     name: "Move repository to another folder",
   });
@@ -40,11 +36,9 @@ export class ProjectSettingsPage extends BasePage {
     name: "Open",
     exact: true,
   });
-  private readonly trustFolderModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Do you trust this folder?" }),
-  );
-  private readonly trustFolderDialog = this.trustFolderModal.root;
+  private readonly trustFolderDialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Do you trust this folder?" });
 
   /**
    * Waits for the Project Settings form's "Project name" field to become
@@ -58,6 +52,7 @@ export class ProjectSettingsPage extends BasePage {
 
   /**
    * Fills the "Project name" field in the create/update dialog.
+   * @param name - The new project name
    */
   async setName(name: string): Promise<void> {
     await this.nameField.fill(name);
@@ -68,13 +63,14 @@ export class ProjectSettingsPage extends BasePage {
    * as a side effect — don't call `close()` afterward.
    */
   async clickUpdate(): Promise<void> {
-    await this.modal.clickButton("Update", false);
+    await this.dialog.getByRole("button", { name: "Update" }).click();
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
    * The project-type tile's radio control in the create/update-project
    * dialog (e.g. Git blocked by org storage rule). Poll via `isDisabled()`.
+   * @param type - The project type tile to locate
    */
   projectTypeTile(type: ProjectType): Locator {
     return this.page.getByLabel(`Project Type: ${type}`, { exact: true });
@@ -84,17 +80,20 @@ export class ProjectSettingsPage extends BasePage {
    * Reads the visible text of a labeled banner in the create/update-project
    * dialog (e.g. "Git Sync Feature Disabled Banner", "Project Storage
    * Restriction Banner").
+   * @param label - The banner's accessible label
+   * @returns The banner's trimmed text, or undefined if it isn't visible
    */
   async getBannerText(label: string): Promise<string | undefined> {
-    const banner = new BannerComponent(this.page, this.page.getByLabel(label));
+    const banner = this.page.getByLabel(label);
     if (!(await banner.isVisible())) return undefined;
-    return banner.text();
+    return (await banner.innerText()).trim();
   }
 
   /**
    * Selects a previously-added credential in the "Authorized as" dropdown
    * of the "Clone from Remote" sub-form, by the credential's display name
    * (e.g. "Custom Git Credential" for a custom/PAT credential).
+   * @param name - The credential's display name
    */
   async selectCredential(name: string): Promise<void> {
     await this.gitSetupForm
@@ -105,6 +104,7 @@ export class ProjectSettingsPage extends BasePage {
 
   /**
    * Fills the Repository URL field in the "Clone from Remote" sub-form.
+   * @param url - The remote repo URL, e.g. "http://localhost:4070/demo.git"
    */
   async setRepositoryUrl(url: string): Promise<void> {
     await this.gitSetupForm
@@ -114,6 +114,7 @@ export class ProjectSettingsPage extends BasePage {
 
   /**
    * Selects a remote branch to clone from the branch dropdown.
+   * @param branch - The branch name to select, e.g. "master"
    */
   async selectBranch(branch: string): Promise<void> {
     await this.gitSetupForm
@@ -123,11 +124,12 @@ export class ProjectSettingsPage extends BasePage {
   }
 
   /**
-   * Clicks "Choose folder" to pick the clone destination's parent folder.
-   * The native folder picker must already be stubbed to return the
-   * wanted path (see `FlowContext.stubFileChooser`).
+   * Picks the clone destination's parent folder via the native folder
+   * picker, stubbed to return `folderPath` immediately.
+   * @param folderPath - The absolute path to clone into (as a parent dir)
    */
-  async chooseCloneLocation(): Promise<void> {
+  async chooseCloneLocation(folderPath: string): Promise<void> {
+    await this.stubFileChooser(folderPath);
     await this.gitSetupForm
       .getByRole("button", { name: "Choose folder" })
       .click();
@@ -139,14 +141,6 @@ export class ProjectSettingsPage extends BasePage {
    */
   async submitScanForFiles(): Promise<void> {
     await this.scanForFilesButton.click();
-    // The dialog flips to the results view before the scan request has started, and in that
-    // window it already shows the empty-result state ("Create Blank Project", no warning).
-    // Wait for the in-flight indicator so a later read can't mistake that for a finished scan.
-    // A scan so fast it never paints this is fine to skip: it has finished already.
-    await this.dialog
-      .getByText("Scanning remote repo for Insomnia files")
-      .waitFor({ state: "visible", timeout: 3000 })
-      .catch(() => {});
   }
 
   /**
@@ -160,7 +154,6 @@ export class ProjectSettingsPage extends BasePage {
         name: /^(Clone Project|Clone and Migrate|Create Blank Project|Create)$/,
       })
       .click();
-    // The dialog only closes once the clone (git fetch + project creation) finishes.
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -178,12 +171,13 @@ export class ProjectSettingsPage extends BasePage {
   }
 
   /**
-   * Clicks "Choose folder" to pick the folder to adopt. The native folder
-   * picker must already be stubbed to return the wanted path (see
-   * `FlowContext.stubFileChooser`). Requires `selectGitOpenMode()` to have
-   * been called first.
+   * Picks the folder to adopt via the native folder picker, stubbed to
+   * return `folderPath` immediately. Requires `selectGitOpenMode()` to
+   * have been called first.
+   * @param folderPath - The absolute path of the folder to open as a Git project
    */
-  async chooseOpenFolderLocation(): Promise<void> {
+  async chooseOpenFolderLocation(folderPath: string): Promise<void> {
+    await this.stubFileChooser(folderPath);
     await this.chooseOpenFolderButton.click();
   }
 
@@ -214,7 +208,9 @@ export class ProjectSettingsPage extends BasePage {
     await expect(this.trustFolderDialog).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
-    await this.trustFolderModal.clickButton("Open folder", false);
+    await this.trustFolderDialog
+      .getByRole("button", { name: "Open folder" })
+      .click();
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -223,6 +219,7 @@ export class ProjectSettingsPage extends BasePage {
    * shown after picking a folder that's already adopted by another
    * project. Requires `chooseOpenFolderLocation()` to have been called
    * first.
+   * @returns The trimmed warning text, or undefined if no warning is showing
    */
   async getOpenFolderCollisionError(): Promise<string | undefined> {
     const warning = this.dialog.getByText(/is already connected to this folder/i);
@@ -233,6 +230,7 @@ export class ProjectSettingsPage extends BasePage {
   /**
    * Reads the repository's currently-displayed local path from the "Path to
    * local files" field's `title` attribute.
+   * @returns The trimmed absolute path
    */
   async getRepositoryPath(): Promise<string> {
     const title = await this.dialog.locator("span[title]").getAttribute("title");
@@ -240,22 +238,24 @@ export class ProjectSettingsPage extends BasePage {
   }
 
   /**
-   * Clicks "Move repository to another folder" to relocate the repo
-   * directly into the folder the (already stubbed — see
-   * `FlowContext.stubFileChooser`) native folder picker returns (the picked
-   * folder itself becomes the new repository
+   * Stubs the native folder picker to return `destinationDir`, then clicks
+   * "Move repository to another folder" to relocate the repo directly into
+   * `destinationDir` (the picked folder itself becomes the new repository
    * path — no nested repo-name subfolder is created). Does not wait for
    * the result — the new path (or a collision error) settles
    * asynchronously; read it back via
    * `getRepositoryPath()`/`getRelocationError()`.
+   * @param destinationDir - The folder to move the repo into
    */
-  async relocateRepository(): Promise<void> {
+  async relocateRepository(destinationDir: string): Promise<void> {
+    await this.stubFileChooser(destinationDir);
     await this.relocateButton.click();
   }
 
   /**
    * Reads the inline relocation-error banner's text, if visible (e.g. a
    * destination-already-has-files collision).
+   * @returns The trimmed error text, or undefined if no error is showing
    */
   async getRelocationError(): Promise<string | undefined> {
     const error = this.dialog.getByText(
@@ -265,40 +265,4 @@ export class ProjectSettingsPage extends BasePage {
     return (await error.innerText()).trim();
   }
 
-
-  private readonly unknownFieldsWarning = this.dialog.getByTestId("project-settings-unknown-fields-warning");
-
-  /**
-   * Reads the file paths listed under the post-scan "Unknown Fields
-   * Detected" warning. Requires `submitScanForFiles()` to have been called.
-   * Waits for the scan to finish first, so an
-   * empty result means no warning, not a scan still in flight.
-   */
-  async getUnknownFieldFiles(): Promise<string[]> {
-    await this.waitForScanResult();
-    return (await this.unknownFieldsWarning.getByRole("listitem").allInnerTexts()).map((text) => text.trim());
-  }
-
-  /**
-   * Reads the full text of the post-scan "Unknown Fields Detected" warning.
-   * Requires `submitScanForFiles()` to have been called.
-   */
-  async getUnknownFieldsWarningText(): Promise<string> {
-    await this.waitForScanResult();
-    if (!(await this.unknownFieldsWarning.isVisible())) {
-      return "";
-    }
-    return (await this.unknownFieldsWarning.innerText()).trim();
-  }
-
-  private async waitForScanResult(): Promise<void> {
-    await expect(this.dialog.getByText("Scanning remote repo for Insomnia files")).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
-    // "Create" is excluded: a disabled/enabled "Create" button is rendered before the scan starts,
-    // so matching it would let this return before the scan result has rendered.
-    await expect(
-      this.dialog.getByRole("button", { name: /^(Clone Project|Clone and Migrate|Create Blank Project)$/ }),
-    ).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
-  }
 }

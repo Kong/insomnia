@@ -1,11 +1,11 @@
-import { HttpMethod } from "@package/enums/http-method";
 import type {
   Request as AppRequest,
+  RequestAuthentication,
   RequestHeader,
   RequestParameter,
 } from "insomnia-data";
 
-import type { RequestAuthentication } from "./authentication";
+import { HttpMethod } from "../enums/http-method";
 import type { HttpRequestBody } from "./http-request";
 
 export interface EventStreamRequestInit extends Pick<

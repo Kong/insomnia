@@ -1,7 +1,8 @@
-import type { HttpMethod } from "@package/enums/http-method";
-import type { LintSeverity } from "@package/enums/lint-severity";
-import type { RulesetType } from "@package/enums/ruleset-type";
 import type { Workspace } from "insomnia-data";
+
+import type { HttpMethod } from "../enums/http-method";
+import type { LintSeverity } from "../enums/lint-severity";
+import type { RulesetType } from "../enums/ruleset-type";
 
 export class License {
   constructor(
@@ -101,7 +102,7 @@ export class Collection implements Pick<Workspace, "name"> {
   documentId?: string;
 
   /** Read from the spec's own "Info"/"Paths" outline panel — populated by
-   * `WorkspaceFlow.getCollectionSpec()`/`.createCollection()`, left `undefined` if
+   * `WorkspaceFlow.getCollectionSpec()`/`.create()`, left `undefined` if
    * the collection has no spec attached (no "Info" section renders). Not
    * set directly; read this instead of building it yourself. */
   specification?: Specification;
@@ -116,7 +117,7 @@ export class Collection implements Pick<Workspace, "name"> {
   };
 
   /** Whether a custom or the default Spectral ruleset is active — populated
-   * by `WorkspaceFlow.getCollectionSpec()`/`.createCollection()`. Not set directly. */
+   * by `WorkspaceFlow.getCollectionSpec()`/`.create()`. Not set directly. */
   rulesetType?: RulesetType;
 
   /** The "OpenAPI x.y.z" version label shown in the toolbar's left corner
@@ -129,7 +130,7 @@ export class Collection implements Pick<Workspace, "name"> {
   constructor(
     readonly name: string,
     /** A spec to author into the collection's spec editor right after
-     * creation, via `WorkspaceFlow.createCollection()`. Boilerplate-wrapped into
+     * creation, via `WorkspaceFlow.create()`. Boilerplate-wrapped into
      * Swagger 2.0 JSON when given as a `Specification`; pass a raw string
      * instead (e.g. a hand-built OpenAPI 3.0 payload) to write it verbatim,
      * bypassing that wrapping — needed for anything that isn't

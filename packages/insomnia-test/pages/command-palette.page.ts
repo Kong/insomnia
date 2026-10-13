@@ -1,12 +1,12 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export class CommandPalettePage extends BasePage {
   private readonly DIALOG = '[aria-label="Command palette dialog"]';
   // The results listbox is a Popover portaled outside the dialog's own DOM
-  // subtree, so it can't be scoped under DIALOG.
+  // subtree (confirmed live), so it can't be scoped under DIALOG.
   private readonly OPTION = '[role="listbox"] [role="option"]';
   private readonly TRIGGER_BUTTON = '[data-testid="quick-search"]';
 
@@ -25,7 +25,8 @@ export class CommandPalettePage extends BasePage {
   /**
    * Reads back the names of every currently listed result, across all
    * sections (Requests/API Collections/Environments/etc — the "Collections
-   * and documents" section was renamed "API Collections").
+   * and documents" section was renamed "API Collections" by INS-3528).
+   * @returns The visible result names, in on-screen order
    */
   async getResultNames(): Promise<string[]> {
     return this.page.locator(this.OPTION).allInnerTexts();
@@ -65,9 +66,10 @@ export class CommandPalettePage extends BasePage {
    * Types into the search input and polls until the listed results stop
    * changing, so they reflect the given query once the search's own
    * 250ms debounce and round trip have run.
+   * @param query - The search text to type
    */
   async search(query: string): Promise<void> {
-    await this.page.locator(this.DIALOG).getByRole("combobox").fill(query);
+    await this.page.locator(`${this.DIALOG} input`).fill(query);
     await this.waitForStableValue(
       () => this.page.locator(this.OPTION).allTextContents(),
       4,
@@ -77,6 +79,7 @@ export class CommandPalettePage extends BasePage {
   /**
    * Clicks the first result whose visible text contains the given name,
    * navigating to it.
+   * @param name - The result's name (or a substring of it) to select
    */
   async selectResult(name: string): Promise<void> {
     await this.page

@@ -8,7 +8,7 @@ import type { Settings as AppSettings } from "insomnia-data/common";
 // Each provider's real `credentials` field (`CloudProviderCredential` in
 // insomnia-data) is itself a union of every auth mode that provider
 // supports (e.g. AWS: temporary/file/SSO) — narrowed here to just the one
-// `PreferencesComponent` actually has a create method for (AWS: "Credential
+// `PreferencesPage` actually has a create method for (AWS: "Credential
 // File"; HashiCorp: on-prem AppRole), so a caller can't hand in a shape
 // (e.g. AWS temporary credentials) no create method reads. `azure` is
 // left out entirely: its credential only ever comes from a real OAuth
@@ -70,7 +70,6 @@ export type SettingsInit = Partial<
     | "httpsProxy"
     | "noProxy"
     | "sidebarFocusForCollections"
-    | "hideSecretValuesInPreviewAndConsole"
   >
 > & {
   /**
@@ -104,7 +103,6 @@ export class Settings implements SettingsInit {
   httpsProxy?: string;
   noProxy?: string;
   sidebarFocusForCollections?: boolean;
-  hideSecretValuesInPreviewAndConsole?: boolean;
   showLegacyUnitTests?: boolean;
   aiUrlBackend?: AiUrlBackendSettings | null;
   cloudCredentials?: CloudCredential[];
@@ -120,12 +118,8 @@ export class Settings implements SettingsInit {
     this.httpsProxy = init.httpsProxy;
     this.noProxy = init.noProxy;
     this.sidebarFocusForCollections = init.sidebarFocusForCollections;
-    this.hideSecretValuesInPreviewAndConsole =
-      init.hideSecretValuesInPreviewAndConsole;
     this.showLegacyUnitTests = init.showLegacyUnitTests;
     this.aiUrlBackend = init.aiUrlBackend;
     this.cloudCredentials = init.cloudCredentials;
   }
-
-  aiSmartCommits?: boolean;
 }

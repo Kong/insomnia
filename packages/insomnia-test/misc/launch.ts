@@ -1,5 +1,4 @@
 import { spawn } from "node:child_process";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { ElectronApplication } from "@playwright/test";
@@ -25,14 +24,13 @@ const INSOMNIA_DEV_MODE =
   !process.env.INSOMNIA_BINARY &&
   process.env.INSOMNIA_DEV_MODE !== "false" &&
   process.env.INSOMNIA_DEV_MODE !== "0";
-const INSOMNIA_SRC_PACKAGE = path.resolve(import.meta.dirname, "..", "..", "insomnia");
-const require = createRequire(import.meta.url);
+const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "..", "insomnia");
 
 /**
  * Runs the same one-shot `esbuild.entrypoints.ts` dev build `npm run
  * start:electron` does, compiling the main/preload bundles into
  * `packages/insomnia/src` so the local `electron` binary has something to
- * load. Cached at module scope — `playwright.config.ts` enforces one worker,
+ * load. Cached at module scope — `playwright.config.ts` pins `workers: 1`,
  * so every test in the run shares this one build rather than re-running it
  * per test.
  */
@@ -64,15 +62,6 @@ function ensureInsomniaDevBuild(): Promise<void> {
   return insomniaDevBuild;
 }
 
-function packagedAppPath(): string {
-  if (process.platform !== "darwin") {
-    throw new Error(
-      `INSOMNIA_BINARY must point at an Insomnia executable on ${process.platform}; the default packaged-app path only exists on macOS.`,
-    );
-  }
-  return "/Applications/Insomnia.app/Contents/MacOS/Insomnia";
-}
-
 /**
  * Launches the app's `ElectronApplication` against `dataPath`, exactly as
  * the `insomnia` fixture does on a test's first launch — factored out so
@@ -80,6 +69,8 @@ function packagedAppPath(): string {
  * executable/args/env derivation. Deliberately skips
  * `resetCloudSyncState()`/`resetVaultState()`: a restart must preserve
  * whatever state the test already built up.
+ * @param options - The same `dataPath`/`skipOnboarding`/`vaultKey`/`vaultSalt` values the original launch used
+ * @returns The freshly-launched ElectronApplication
  */
 export async function launchInsomniaElectron(options: {
   dataPath: string;
@@ -97,7 +88,7 @@ export async function launchInsomniaElectron(options: {
     process.env.INSOMNIA_BINARY ??
     (INSOMNIA_DEV_MODE
       ? (require(path.join(INSOMNIA_SRC_PACKAGE, "..", "..", "node_modules", "electron")) as string)
-      : packagedAppPath());
+      : "/Applications/Insomnia.app/Contents/MacOS/Insomnia");
   const args = INSOMNIA_DEV_MODE
     ? [INSOMNIA_SRC_PACKAGE, "--no-sandbox"]
     : ["--no-sandbox"];
@@ -147,11 +138,14 @@ export async function launchInsomniaElectron(options: {
 
 
 // The app sends this as the `x-session-id` header on every request to
-// mock-api.js, which keys its per-instance state (feature flags, cloud-sync
-// commits, vault, ...) by it. The suite is serial (see playwright.config.ts),
-// so one fixed id is enough; the `_admin/*` calls in misc/fixtures.ts pass it
-// explicitly because they run before the Electron instance has launched.
-export const SESSION_ID = "sess_64a477e6b59d43a5a607f84b4f73e3ce";
+// mock-api.js, so it's also the key mock-api.js uses to keep per-instance
+// state (feature flags, ...) from leaking between Electron instances that
+// are running concurrently in different Playwright workers — see
+// setGitSyncFeatureFlag() below. Suffixed with TEST_PARALLEL_INDEX, which
+// Playwright guarantees is stable for a worker's lifetime and never shared
+// by two concurrently-running workers (unlike TEST_WORKER_INDEX, which
+// changes on retry): https://playwright.dev/docs/test-parallel.
+export const SESSION_ID = `sess_64a477e6b59d43a5a607f84b4f73e3ce-w${process.env.TEST_PARALLEL_INDEX ?? "0"}`;
 
 // The account keys come from mock-api.js, which generates them at startup so
 // no key material lives in the repo (see GET /_admin/session-keys there).

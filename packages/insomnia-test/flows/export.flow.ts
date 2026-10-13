@@ -1,10 +1,8 @@
-import type { ApiSpecExportFormat } from "@package/enums/api-spec-export-format";
-import { ContextMenuItem } from "@package/enums/context-menu-items";
-import type { ExportFormat } from "@package/enums/export-format";
-import { step } from "@package/misc/step";
-import type { Collection } from "@package/models/collection";
-import type { Project } from "@package/models/project";
-
+import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
+import { ContextMenuItem } from "../enums/context-menu-items";
+import type { ExportFormat } from "../enums/export-format";
+import { Collection } from "../models/collection";
+import type { Project } from "../models/project";
 import { BaseFlow } from "./base.flow";
 
 export class ExportFlow extends BaseFlow {
@@ -12,54 +10,76 @@ export class ExportFlow extends BaseFlow {
    * Exports a single Collection to one file via its own sidebar/dashboard
    * "Export" context-menu item, confirming the request-selection step
    * (every request stays checked).
+   * @param item - The Collection to export
+   * @param format - The file format to export as
+   * @param path - Absolute path the exported file should be written to
    */
-  @step()
-  async exportCollection(item: Collection, format: ExportFormat, path: string): Promise<void> {
-    const { workspacePage, exportPage } = this.pageManager;
-    const node = await workspacePage.resolveNode(item);
-    await this.context.stubSaveDialog(path);
-    await workspacePage.rightClick(node);
-    await workspacePage.clickContextMenu(ContextMenuItem.Export);
-    await exportPage.navigate();
-    await exportPage.confirmRequestSelection();
-    await exportPage.selectFormat(format);
-    await exportPage.confirmFormat();
-  }
-
+  async export(
+    item: Collection,
+    format: ExportFormat,
+    path: string,
+  ): Promise<void>;
   /**
    * Exports every workspace under a Project to a directory (one file
    * each) via Preferences -> Data, selecting `format`. Skips the
    * request-selection step, which only Collection-scoped exports show.
+   * @param item - The Project to export
+   * @param format - The file format to export as
+   * @param path - Absolute directory path the exported files should be written into
    */
-  @step()
-  async exportProject(item: Project, format: ExportFormat, path: string): Promise<void> {
-    const { workspacePage, preferences, exportPage } = this.pageManager;
-    await workspacePage.clickNode(await workspacePage.resolveNode(item));
-    await this.context.stubFileChooser(path);
-    await preferences.open();
-    await preferences.openDataTab();
-    await preferences.clickExportProject(item.name);
-    await exportPage.navigate();
-    await exportPage.selectFormat(format);
-    await exportPage.confirmFormat();
-    await exportPage.dismissCompletionIfShown();
-    if (await preferences.isOpen()) await preferences.close();
-  }
-
+  async export(
+    // eslint-disable-next-line @typescript-eslint/unified-signatures -- kept separate from the Collection overload above: distinct JSDoc per export scope
+    item: Project,
+    format: ExportFormat,
+    path: string,
+  ): Promise<void>;
   /**
    * Exports every Project in the app to a directory (one file per
    * workspace) via Preferences -> Data. Always writes as Insomnia v5 —
    * this entry point has no request-selection or format-selection step.
+   * @param directoryPath - Absolute directory path the exported files should be written into
    */
-  @step()
-  async exportAllData(directoryPath: string): Promise<void> {
-    const { preferences, exportPage } = this.pageManager;
-    await this.context.stubFileChooser(directoryPath);
-    await preferences.open();
-    await preferences.openDataTab();
-    await preferences.clickExportAllData();
+  async export(directoryPath: string): Promise<void>;
+  async export(
+    itemOrDirectoryPath: Collection | Project | string,
+    format?: ExportFormat,
+    path?: string,
+  ): Promise<void> {
+    const { workspacePage, preferencesPage, exportPage } = this.pageManager;
+
+    if (typeof itemOrDirectoryPath === "string") {
+      await exportPage.stubSaveDirectoryLocation(itemOrDirectoryPath);
+      await preferencesPage.open();
+      await preferencesPage.openDataTab();
+      await preferencesPage.clickExportAllData();
+      await exportPage.dismissCompletionIfShown();
+      if (await preferencesPage.isOpen()) await preferencesPage.close();
+      return;
+    }
+
+    const item = itemOrDirectoryPath;
+    if (item instanceof Collection) {
+      const node = await workspacePage.resolveNode(item);
+      await exportPage.stubSaveFileLocation(path!);
+      await workspacePage.rightClick(node);
+      await workspacePage.clickContextMenu(ContextMenuItem.Export);
+      await exportPage.navigate();
+      await exportPage.confirmRequestSelection();
+      await exportPage.selectFormat(format!);
+      await exportPage.confirmFormat();
+      return;
+    }
+
+    await workspacePage.clickNode(await workspacePage.resolveNode(item));
+    await exportPage.stubSaveDirectoryLocation(path!);
+    await preferencesPage.open();
+    await preferencesPage.openDataTab();
+    await preferencesPage.clickExportProject(item.name);
+    await exportPage.navigate();
+    await exportPage.selectFormat(format!);
+    await exportPage.confirmFormat();
     await exportPage.dismissCompletionIfShown();
-    if (await preferences.isOpen()) await preferences.close();
+    if (await preferencesPage.isOpen()) await preferencesPage.close();
   }
 
   /**
@@ -71,8 +91,10 @@ export class ExportFlow extends BaseFlow {
    * `ExportPage.exportOpenApiSpec()` is decorated with `@throwOnDialog`,
    * so this rejects with that alert's trimmed text in that case; dismiss
    * it with `workspaceFlow.closeDialog()` before continuing.
+   * @param item - The Collection whose OpenAPI spec to export
+   * @param format - YAML or JSON
+   * @param path - Absolute file path the exported spec should be written to
    */
-  @step()
   async exportOpenApiSpec(
     item: Collection,
     format: ApiSpecExportFormat,
@@ -80,7 +102,7 @@ export class ExportFlow extends BaseFlow {
   ): Promise<void> {
     const { workspacePage, exportPage } = this.pageManager;
     const node = await workspacePage.resolveNode(item);
-    await this.context.stubSaveDialog(path);
+    await exportPage.stubSaveFileLocation(path);
     await workspacePage.openWorkspaceActionsDropdown(node);
     await workspacePage.clickContextMenu(ContextMenuItem.ExportOpenApiSpec);
     await exportPage.exportOpenApiSpec(format);

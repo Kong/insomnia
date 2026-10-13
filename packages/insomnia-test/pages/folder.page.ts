@@ -1,10 +1,11 @@
-import { AuthTabComponent } from "@package/components/auth-tab.component";
-import { ScriptTabComponent } from "@package/components/script-tab.component";
-import { TabPanelComponent } from "@package/components/tab-panel.component";
+import type { ElectronApplication } from "@playwright/test";
+import type { Page } from "playwright-core";
 
-import { BasePage } from "./base.page";
+import { AuthTabComponent } from "./auth-tab.page";
+import { ScriptTabComponent } from "./script-tab.page";
+import { TabPanelPage } from "./tab-panel.page";
 
-const FOLDER_PANE = '[data-testid="folder-pane"]';
+const FOLDER_PANE = 'div:has(> [aria-label="Request pane tabs"])';
 
 /**
  * A Collection folder's own editor tab (Auth/Headers/Scripts/Environment/
@@ -17,63 +18,28 @@ const FOLDER_PANE = '[data-testid="folder-pane"]';
  * carries — scoped instead via the tab bar's `aria-label`, which is
  * unique to whichever tab is currently active.
  */
-export class FolderPage extends BasePage {
-  protected readonly PANE = FOLDER_PANE;
-
-  // Getters, not fields: the components are bound to the current window, so
-  // building them on access keeps them following `this.page`.
-  protected get panel(): TabPanelComponent {
-    return new TabPanelComponent(this.page, this.PANE);
-  }
-
+export class FolderPage extends TabPanelPage {
   /** The Auth tab component for this folder's own pane. */
-  get auth(): AuthTabComponent {
-    return new AuthTabComponent(this.page, this.PANE);
-  }
+  readonly auth: AuthTabComponent;
 
   /** The Scripts tab component for this folder's own pane. */
-  get scripts(): ScriptTabComponent {
-    return new ScriptTabComponent(this.page, this.PANE);
+  readonly scripts: ScriptTabComponent;
+
+  constructor(page: Page, insomnia?: ElectronApplication) {
+    super(page, FOLDER_PANE, insomnia);
+    this.auth = new AuthTabComponent(page, FOLDER_PANE, insomnia);
+    this.scripts = new ScriptTabComponent(page, FOLDER_PANE, insomnia);
   }
 
   /**
-   * Waits for this folder's pane to become visible, confirming it's open
-   * and active.
+   * Also rewires the composed Auth/Scripts tab components, whose
+   * persistence checks read the app's on-disk store via `insomnia`.
+   * @param page - The freshly-launched app's main window
+   * @param insomnia - The freshly-launched ElectronApplication, if any
    */
-  async navigate(): Promise<void> {
-    await this.panel.waitUntilVisible();
-  }
-
-  protected async switchTab(tab: string): Promise<void> {
-    await this.panel.switchTab(tab);
-  }
-
-  /**
-   * Opens the folder's Environment tab and adds each variable as a row in
-   * its key/value table, confirming every name and value against the
-   * folder's on-disk document before moving on to the next row.
-   */
-  async setEnvironmentVariables(variables: Record<string, string>): Promise<void> {
-    await this.switchTab("environment");
-    const listbox = this.page.locator(this.PANE).getByRole("listbox");
-    for (const [name, value] of Object.entries(variables)) {
-      const key = await listbox.locator('[role="option"]').last().getAttribute("data-key");
-      const row = listbox.locator(`[role="option"][data-key="${key}"]`);
-      await this.setCodeMirrorValue(
-        row.getByTestId("OneLineEditor").nth(0).locator(".CodeMirror"),
-        name,
-      );
-      await this.waitForRowPersisted(["insomnia.RequestGroup.db"], (doc) => [doc.kvPairData], name);
-      await this.setCodeMirrorValue(
-        row.getByTestId("OneLineEditor").nth(1).locator(".CodeMirror"),
-        value,
-      );
-      await this.waitForRowPersisted(
-        ["insomnia.RequestGroup.db"],
-        (doc) => [doc.kvPairData],
-        name,
-        (pair) => pair.value === value,
-      );
-    }
+  override setContext(page: Page, insomnia?: ElectronApplication): void {
+    super.setContext(page, insomnia);
+    this.auth.setContext(page, insomnia);
+    this.scripts.setContext(page, insomnia);
   }
 }

@@ -1,10 +1,8 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TabsComponent } from "@package/components/tabs.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { Cookie } from "@package/models/cookie";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { Cookie } from "../models/cookie";
 import { BasePage } from "./base.page";
 
 function parseCookieLine(line: string): Cookie {
@@ -21,7 +19,7 @@ function parseCookieLine(line: string): Cookie {
       const [name, value] = attr.split("=");
       if (name === "Domain") cookie.domain = value;
       else if (name === "Path") cookie.path = value;
-      else if (name === "Expires") cookie.expires = value === "Infinity" ? "Infinity" : new Date(value);
+      else if (name === "Expires") cookie.expires = value;
     }
   }
   return cookie;
@@ -32,31 +30,19 @@ function parseCookieLine(line: string): Cookie {
 const RETRY_CHECK_TIMEOUT = 2000;
 
 export class CookiePage extends BasePage {
-  private readonly editModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Manage Cookies" }),
-  );
-  private readonly listModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Cookies Modal" }),
-  );
-  private readonly editDialog = this.editModal.root;
-  private readonly listDialog = this.listModal.root;
+  private readonly editDialog = this.page.getByRole("dialog", {
+    name: "Manage Cookies",
+  });
+  private readonly listDialog = this.page.getByRole("dialog", {
+    name: "Cookies Modal",
+  });
 
   /**
    * Closes the cookie list dialog via its "Done" button and waits for it
    * to disappear.
    */
   async close(): Promise<void> {
-    // Right after `deleteAll()` confirms, the "Delete All" prompt button also
-    // reads "Done" for up to 2s (PromptButton's done state), so a plain name
-    // match is ambiguous and trips strict mode. The footer button is the one
-    // that shares a row with the "cookies are automatically sent" note.
-    await this.listDialog
-      .getByText(/cookies are automatically sent/)
-      .locator("..")
-      .getByRole("button", { name: "Done", exact: true })
-      .click();
+    await this.listDialog.getByRole("button", { name: "Done" }).click();
     await this.listDialog.waitFor({
       state: "hidden",
       timeout: DEFAULT_TIMEOUT,
@@ -83,6 +69,7 @@ export class CookiePage extends BasePage {
    * Reads and parses every cookie row currently shown in the list
    * dialog, once the dialog has finished rendering them (or shows its
    * empty state).
+   * @returns The parsed cookies currently displayed
    */
   async getCookies(): Promise<Cookie[]> {
     const rows = this.rows();
@@ -141,13 +128,14 @@ export class CookiePage extends BasePage {
    * without it, a slow re-render can leave the previous iteration's row
    * still sitting in that slot, so the new cookie's fields get written
    * into it instead of a fresh row (silently clobbering the prior cookie).
+   * @param cookies - The cookies to set as the new complete list
    */
   async setCookies(cookies: Cookie[]): Promise<void> {
     await this.deleteAll();
     const saved: Cookie[] = [];
     for (const cookie of cookies) {
       const countBeforeAdd = await this.rows().count();
-      await this.listModal.clickButton("Add Cookie", false);
+      await this.listDialog.getByRole("button", { name: "Add Cookie" }).click();
       await expect(this.rows()).toHaveCount(countBeforeAdd + 1, {
         timeout: DEFAULT_TIMEOUT,
       });
@@ -180,6 +168,8 @@ export class CookiePage extends BasePage {
    * write as `waitForPersisted` above works around for the Friendly tab).
    * So this retries the whole fill-and-submit until the list actually
    * shows the parsed result, instead of trusting a fixed delay to beat it.
+   * @param existingKey - The current `key` of the cookie row to edit
+   * @param rawCookieString - The full raw cookie string to set, e.g. "foo=bar; Domain=example.com; Path=/"
    */
   async editCookieRaw(
     existingKey: string,
@@ -197,14 +187,12 @@ export class CookiePage extends BasePage {
         timeout: DEFAULT_TIMEOUT,
       });
 
-      await new TabsComponent(this.page, this.editDialog)
-        .tabByName("Raw")
-        .click();
+      await this.editDialog.getByRole("tab", { name: "Raw" }).click();
       await this.editDialog
         .getByLabel("Raw Cookie String")
         .fill(rawCookieString);
 
-      await this.editModal.clickButton("Done", false);
+      await this.editDialog.getByRole("button", { name: "Done" }).click();
       await this.editDialog.waitFor({
         state: "hidden",
         timeout: DEFAULT_TIMEOUT,
@@ -227,6 +215,7 @@ export class CookiePage extends BasePage {
    * works around). So this retries the whole open-fill-submit cycle
    * until the list actually shows the saved result, instead of trusting
    * fixed delays to beat the debounce.
+   * @param cookie - The cookie fields to write into the just-added row
    */
   private async editCookie(cookie: Cookie): Promise<void> {
     await expect(async () => {
@@ -257,7 +246,7 @@ export class CookiePage extends BasePage {
           .check();
       }
 
-      await this.editModal.clickButton("Done", false);
+      await this.editDialog.getByRole("button", { name: "Done" }).click();
       await this.editDialog.waitFor({
         state: "hidden",
         timeout: DEFAULT_TIMEOUT,
@@ -311,6 +300,8 @@ export class CookiePage extends BasePage {
    * clicked is silently dropped — callers check this after "Done" and
    * redo the whole open-fill-submit cycle if it never lands. `expires` is
    * compared as epoch milliseconds.
+   * @param expected - The cookie properties that must all be saved on a single cookie
+   * @param timeout - How long to wait before giving up (kept short so a caller's retry loop gets another attempt)
    */
   private async waitForCookieSaved(
     expected: Record<string, string | boolean | number>,
@@ -330,6 +321,6 @@ export class CookiePage extends BasePage {
   }
 
   private rows(): Locator {
-    return this.listDialog.getByTestId(/^cookie-test-iteration-/);
+    return this.listDialog.getByRole("option");
   }
 }

@@ -1,16 +1,15 @@
 import { isDeepStrictEqual } from "node:util";
 
-import { DropdownComponent } from "@package/components/dropdown.component";
-import { ContentType } from "@package/enums/content-type";
-import type { HttpMethod } from "@package/enums/http-method";
-import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { expect } from "@playwright/test";
+
+import { ContentType } from "../enums/content-type";
+import type { HttpMethod } from "../enums/http-method";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   GraphQLRequest,
   GraphQLRequestBody,
   GraphQLSchema,
-} from "@package/models/graphql-request";
-import { expect } from "@playwright/test";
-
+} from "../models/graphql-request";
 import { RequestPage } from "./request.page";
 
 export class GraphQLRequestPage extends RequestPage {
@@ -20,6 +19,7 @@ export class GraphQLRequestPage extends RequestPage {
    * Reads the full GraphQL request state from the UI (method, url, params,
    * body, schema documentation, and scripts). Headers are always returned
    * empty since this page doesn't expose a headers tab.
+   * @returns the GraphQL request fields, excluding `name`
    */
   async get(): Promise<Omit<GraphQLRequest, "name">> {
     const scripts = await this.scripts.getScripts();
@@ -41,6 +41,7 @@ export class GraphQLRequestPage extends RequestPage {
    * the generic single-editor "Change Body Type" flow the HTTP/WebSocket
    * request pages use (that dropdown has no option matching this domain's
    * mimeType, so it can't be driven the same way).
+   * @returns the body's mime type and JSON-encoded `{ query, variables }` text, or `undefined` if no query is set
    */
   private async getBody(): Promise<GraphQLRequestBody | undefined> {
     await this.switchTab("content-type");
@@ -77,6 +78,7 @@ export class GraphQLRequestPage extends RequestPage {
    * reflects the change, not that it has been persisted, so a caller that
    * immediately re-navigates (e.g. `create()` re-reading via `get()`) can
    * otherwise observe a stale empty query.
+   * @param body - the GraphQL request body to apply
    */
   async setBody(body: GraphQLRequestBody): Promise<void> {
     if (body.mimeType == null) return;
@@ -132,14 +134,15 @@ export class GraphQLRequestPage extends RequestPage {
    * jumps straight to the sole root type's fields when there's only one
    * (as with this project's mock schema), so this navigates back to the
    * root screen first to also capture the root types list.
+   * @returns The schema documentation, or `undefined` if it hasn't resolved (e.g. the request doesn't point at a GraphQL endpoint)
    */
   private async getSchemaInfo(): Promise<GraphQLSchema | undefined> {
     await this.switchTab("content-type");
     const errorButton = this.page.getByRole("button", {
       name: /error fetching schema/i,
     });
-    await errorButton
-      .waitFor({ state: "hidden", timeout: ACTION_TIMEOUT })
+    await expect(errorButton)
+      .toBeHidden({ timeout: ACTION_TIMEOUT })
       .catch(() => {});
     if (await errorButton.isVisible().catch(() => false)) return undefined;
 
@@ -150,73 +153,74 @@ export class GraphQLRequestPage extends RequestPage {
     await expect(this.page.getByText(/Schema fetched/i)).toBeVisible({
       timeout: ACTION_TIMEOUT,
     });
-    const explorerButton = this.page.getByTestId("graphql-explorer-close");
+    const explorerButton = this.page
+      .locator("#graphql-explorer-container")
+      .getByRole("button")
+      .first();
     await expect(async () => {
-      const schemaMenu = DropdownComponent.byLabel(this.page, /schema/i);
-      await schemaMenu.root.click();
-      await schemaMenu.item(/Show Documentation/i, false).click();
+      await this.page.getByRole("button", { name: /schema/i }).click();
+      await this.page
+        .getByRole("menuitem", { name: /Show Documentation/i })
+        .click();
       await expect(explorerButton).toBeVisible({ timeout: 1000 });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
 
-    const backButton = this.page.getByTestId("graphql-explorer-back");
+    const backButton = this.page.locator(
+      ".graphql-explorer__header__back-btn",
+    );
     if (await backButton.count()) {
       await backButton.click();
     }
 
-    const schemaSection = this.page.getByTestId("graphql-explorer-schema");
-    const rootTypes: Record<string, string> = {};
-    for (const kind of ["query", "mutation", "subscription"]) {
-      const rootType = schemaSection.getByTestId(`graphql-explorer-root-type-${kind}`);
-      const typeLink = rootType.getByTestId("graphql-explorer-type-link");
-      // The <li> is always rendered, but empty when the schema lacks that root type.
-      if (await typeLink.count()) {
-        rootTypes[kind] = ((await typeLink.textContent()) ?? "").trim();
-      }
-    }
+    const schemaSection = this.page.locator(".graphql-explorer__schema");
+    const rootTypes = Object.fromEntries(
+      (
+        await schemaSection
+          .locator("li")
+          .filter({ hasText: /\S/ })
+          .evaluateAll((items) =>
+            items.map((item) => [
+              item.querySelector(".success")?.textContent?.trim() ?? "",
+              item.querySelector("a")?.textContent?.trim() ?? "",
+            ]),
+          )
+      ).filter(([key]) => key),
+    );
 
-    await schemaSection.getByTestId("graphql-explorer-type-link").first().click();
+    await schemaSection.locator("a").first().click();
 
     const fields = await this.page
-      .getByTestId("graphql-explorer-field")
-      .filter({ has: this.page.getByTestId("graphql-explorer-def-description") })
+      .locator("li")
+      .filter({ has: this.page.locator(".graphql-explorer__defs__description") })
       .evaluateAll((items) =>
         items.map((item) => {
-          const name =
-            item
-              .querySelector('[data-testid="graphql-explorer-field-link"]')
-              ?.textContent?.trim() ?? "";
+          const name = item.querySelector("a.success")?.textContent?.trim() ?? "";
           const args = Array.from(
-            item.querySelectorAll('[data-testid="graphql-explorer-def-arg"]'),
+            item.querySelectorAll(".graphql-explorer__defs__arg"),
           ).map((arg) => ({
-            name:
-              arg
-                .querySelector('[data-testid="graphql-explorer-arg-name"]')
-                ?.textContent?.trim() ?? "",
-            type:
-              arg
-                .querySelector('[data-testid="graphql-explorer-type-link"]')
-                ?.textContent?.trim() ?? "",
+            name: arg.querySelector(".info")?.textContent?.trim() ?? "",
+            type: arg.querySelector("a")?.textContent?.trim() ?? "",
           }));
           const description =
             item
-              .querySelector('[data-testid="graphql-explorer-def-description"]')
+              .querySelector(".graphql-explorer__defs__description")
               ?.textContent?.trim() ?? "";
           const clone = item.cloneNode(true) as HTMLElement;
+          clone.querySelector("a.success")?.remove();
           clone
-            .querySelector('[data-testid="graphql-explorer-field-link"]')
-            ?.remove();
-          clone
-            .querySelectorAll('[data-testid="graphql-explorer-def-arg"]')
+            .querySelectorAll(".graphql-explorer__defs__arg")
             .forEach((el) => el.remove());
-          clone
-            .querySelector('[data-testid="graphql-explorer-def-description"]')
-            ?.remove();
+          clone.querySelector(".graphql-explorer__defs__description")?.remove();
           const typeText = (clone.textContent ?? "").replace(/^:/, "").trim();
           return { name, args, description, typeText };
         }),
       );
 
-    await this.page.getByTestId("graphql-explorer-close").click();
+    await this.page
+      .locator("#graphql-explorer-container")
+      .getByRole("button")
+      .first()
+      .click();
 
     return {
       queryType: rootTypes.query,
@@ -234,6 +238,8 @@ export class GraphQLRequestPage extends RequestPage {
  * Parses a GraphQL return-type signature (e.g. `CharacterResults!`,
  * `Episode`, `[Character!]!`) into the introspection standard's simplified
  * `name`/`isList`/`isNonNull` shape — see `GraphQLSchemaTypeRef`.
+ * @param typeText - The raw type signature text
+ * @returns The parsed type reference
  */
 function parseTypeRef(typeText: string): {
   name: string;
@@ -259,6 +265,8 @@ function parseTypeRef(typeText: string): {
  * `JSON.parse`/`JSON.stringify` — that would break on Insomnia template
  * tags (`{{ someVar }}`), which aren't valid JSON but are valid inside the
  * variables editor (they resolve to real values at send time).
+ * @param text - The raw `{ query, variables }` payload
+ * @returns The extracted query text, and the variables object's raw source text if present
  */
 function splitGraphQLBody(text: string): {
   query: string;

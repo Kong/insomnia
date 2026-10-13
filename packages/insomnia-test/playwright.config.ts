@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { ensureCerts } from "./misc/certs.ts";
+import { ensureCerts } from "./misc/certs";
 
 // By default, misc/fixtures.ts launches the app straight out of the
 // sibling ../insomnia source checkout (its local `electron` binary against
@@ -22,31 +22,16 @@ const isDevMode =
   !process.env.INSOMNIA_BINARY &&
   process.env.INSOMNIA_DEV_MODE !== "false" &&
   process.env.INSOMNIA_DEV_MODE !== "0";
-const INSOMNIA_SRC_PACKAGE = path.resolve(import.meta.dirname, "..", "insomnia");
+const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "insomnia");
 
 // The mock servers' TLS/mTLS key pairs are generated rather than committed.
 // Do it here, once, before any webServer below starts reading them.
 ensureCerts();
 
-// The suite is serial by design: misc/git-fixtures.ts (`currentGitRepo`),
-// module-level state and the mock servers'
-// shared state all assume one test at a time. Fail fast instead of letting
-// `--workers=N` produce cross-test interference.
-const workersIdx = process.argv.findIndex((arg) => arg === "--workers" || arg.startsWith("--workers=") || arg === "-j");
-if (workersIdx !== -1) {
-  const arg = process.argv[workersIdx];
-  const value = arg.includes("=") ? arg.split("=")[1] : process.argv[workersIdx + 1];
-  if (value !== "1") {
-    throw new Error(
-      `insomnia-test must run with a single worker (got --workers ${value}); it relies on module-level state that is not parallel-safe.`,
-    );
-  }
-}
-
 export default defineConfig({
   timeout: 90 * 1000,
   testDir: "./tests",
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
@@ -62,15 +47,22 @@ export default defineConfig({
   use: {
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    video: "retain-on-failure",
     actionTimeout: 30 * 1000,
   },
 
   webServer: [
     {
-      command: "node misc/server/index.ts",
-      url: "http://localhost:4010/",
+      command: "node misc/mock-api.js",
+      url: "http://localhost:4010/v3/users/me",
       reuseExistingServer: !process.env.CI,
-      timeout: 30 * 1000,
+      timeout: 10 * 1000,
+    },
+    {
+      command: "node misc/echo-server.js",
+      url: "http://localhost:4060/",
+      reuseExistingServer: !process.env.CI,
+      timeout: 10 * 1000,
     },
     ...(isDevMode
       ? [

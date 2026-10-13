@@ -1,40 +1,39 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Page } from "playwright-core";
+
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import {
   collectHiddenWindowCoverage,
   collectWindowCoverage,
   startWindowCoverage,
   trackHiddenWindowCoverage,
-} from "@package/misc/coverage";
-import { launchInsomniaElectron } from "@package/misc/launch";
-import { step } from "@package/misc/step";
-import type { Page } from "playwright-core";
-
+} from "../misc/coverage";
+import { launchInsomniaElectron } from "../misc/launch";
 import { BaseFlow } from "./base.flow";
 
 export class AppFlow extends BaseFlow {
   /**
    * Closes the current Electron app and relaunches a fresh one against
-   * the same `dataPath`/env (`SessionContext.launchConfig`) — for proving
+   * the same `dataPath`/env (`FlowManager.launchConfig`) — for proving
    * state survives an app restart, not just a page reload. Rewires
-   * `context`/`pageManager` onto the new app in place, so the same
+   * `flowManager`/`pageManager` onto the new app in place, so the same
    * `user.flowManager`/`user.pageManager` instances keep working.
+   * @returns The fresh app's main window
    */
-  @step()
   async restart(): Promise<Page> {
-    const config = this.context.launchConfig;
+    const config = this.flowManager.launchConfig;
     if (!config) {
       throw new Error(
-        "AppFlow.restart() requires the SessionContext to have been constructed with a launchConfig — see misc/fixtures.ts's `user` fixture",
+        "AppFlow.restart() requires the FlowManager to have been constructed with a launchConfig — see misc/fixtures.ts's `user` fixture",
       );
     }
 
     await collectWindowCoverage(
-      await this.context.electronApp!.firstWindow({
+      await this.flowManager.electronApp!.firstWindow({
         timeout: DEFAULT_TIMEOUT,
       }),
     );
-    await collectHiddenWindowCoverage(this.context.electronApp!);
-    await this.context.electronApp!.close();
+    await collectHiddenWindowCoverage(this.flowManager.electronApp!);
+    await this.flowManager.electronApp!.close();
     const app = await launchInsomniaElectron(config);
     trackHiddenWindowCoverage(app);
 
@@ -49,8 +48,8 @@ export class AppFlow extends BaseFlow {
       mainWindow?.maximize();
     });
 
-    this.context.setElectronApp(app);
-    this.pageManager.setWindow(win);
+    this.flowManager.setElectronApp(app);
+    this.pageManager.setWindow(win, app);
     await this.pageManager.workspacePage.navigate();
 
     return win;
@@ -63,16 +62,15 @@ export class AppFlow extends BaseFlow {
    * `setImmediate` before returning, so the error has been fully
    * handled by the time this resolves.
    */
-  @step()
   async emitStdoutEpipeError(): Promise<void> {
-    await this.context.electronApp!.evaluate(() => {
+    await this.flowManager.electronApp!.evaluate(() => {
       process.nextTick(() => {
         const err: NodeJS.ErrnoException = new Error("write EPIPE");
         err.code = "EPIPE";
         process.stdout.emit("error", err);
       });
     });
-    await this.context.electronApp!.evaluate(
+    await this.flowManager.electronApp!.evaluate(
       () => new Promise<void>((resolve) => setImmediate(resolve)),
     );
   }
@@ -81,10 +79,11 @@ export class AppFlow extends BaseFlow {
    * Reads the number of listeners currently registered for a given
    * event on the main process's `process.stdout` (e.g. `"error"`,
    * `"close"`, `"drain"`).
+   * @param event - The event name to check
+   * @returns The listener count
    */
-  @step()
   async getStdoutListenerCount(event: string): Promise<number> {
-    return this.context.electronApp!.evaluate(
+    return this.flowManager.electronApp!.evaluate(
       (_electron, evt) => process.stdout.listenerCount(evt),
       event,
     );
@@ -94,19 +93,19 @@ export class AppFlow extends BaseFlow {
    * Confirms the main process is still responsive by round-tripping a
    * trivial `evaluate()` call. If the main process had crashed, this
    * call itself would reject with a "Target closed" error.
+   * @returns Always `true` when the call succeeds
    */
-  @step()
   async isAlive(): Promise<boolean> {
-    return this.context.electronApp!.evaluate(() => true);
+    return this.flowManager.electronApp!.evaluate(() => true);
   }
 
   /**
    * Reads the main process's `userData` directory — the same path
    * Insomnia backs up its NeDB `.db` files under (`<dataPath>/backups`).
+   * @returns The absolute path to the app's data directory
    */
-  @step()
   async getDataPath(): Promise<string> {
-    return this.context.electronApp!.evaluate(({ app }) =>
+    return this.flowManager.electronApp!.evaluate(({ app }) =>
       app.getPath("userData"),
     );
   }
@@ -118,9 +117,8 @@ export class AppFlow extends BaseFlow {
    * "check for remote changes" logic on a real focus change, without
    * actually needing to blur/refocus the Electron window from the OS.
    */
-  @step()
   async simulateMainWindowFocusChange(): Promise<void> {
-    await this.context.electronApp!.evaluate(({ BrowserWindow }) => {
+    await this.flowManager.electronApp!.evaluate(({ BrowserWindow }) => {
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send("mainWindowFocusChange", true);
       }
@@ -133,11 +131,12 @@ export class AppFlow extends BaseFlow {
    * trail slightly behind the action that produced them), and returns
    * them in order. Only lines written during this call are captured —
    * nothing from before it started.
+   * @param action - The action to run while capturing
+   * @returns Every captured stdout/stderr line, in order
    */
-  @step()
   async captureMainProcessLog(action: () => Promise<void>): Promise<string[]> {
     const lines: string[] = [];
-    const proc = this.context.electronApp!.process();
+    const proc = this.flowManager.electronApp!.process();
     const onData = (chunk: Buffer) => {
       lines.push(...chunk.toString().split("\n").filter(Boolean));
     };
@@ -161,9 +160,8 @@ export class AppFlow extends BaseFlow {
    * to run.
    * @throws If no window with that title is currently open
    */
-  @step()
   async closeHiddenScriptWindow(): Promise<void> {
-    for (const win of await this.context.electronApp!.windows()) {
+    for (const win of await this.flowManager.electronApp!.windows()) {
       if ((await win.title().catch(() => "")) === "Hidden Browser Window") {
         await win.close();
         return;

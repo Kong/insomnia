@@ -1,11 +1,6 @@
-export const SHORT_TIMEOUT = 2000;
-
 export const DEFAULT_TIMEOUT = 10_000;
 
 export const LONG_TIMEOUT = 60_000;
-
-/** Interval between polls of a locator or in-memory read. */
-export const POLL_INTERVAL = 200;
 
 // Matches playwright.config.ts's `use.actionTimeout`.
 export const ACTION_TIMEOUT = 30_000;
@@ -33,7 +28,7 @@ export const WS_SERVER_WSS = "wss://localhost:4041";
 export const SOCKET_SERVER = "ws://localhost:3000";
 export const SOCKET_SERVER_WSS = "wss://localhost:3001";
 /**
- * The namespace on `misc/socket-server.ts` that only accepts connections
+ * The namespace on `misc/socket-server.js` that only accepts connections
  * whose handshake auth token equals `SOCKET_SERVER_AUTH_TOKEN` — mirror any
  * change here into that file.
  */
@@ -42,9 +37,6 @@ export const SOCKET_SERVER_AUTH_TOKEN = "test-socket-io-token";
 
 export const MCP_SERVER = "http://localhost:4020/mcp";
 export const MCP_SERVER_HTTPS = "https://localhost:4021/mcp";
-export const MCP_SERVER_CUSTOM_CA_HTTPS = "https://localhost:4022/mcp";
-/** Base of `misc/mcp-server.ts`'s scriptable list-response endpoints, one per `/mcp-list/<key>`. */
-export const MCP_LIST_SERVER = "http://localhost:4020/mcp-list";
 
 export const GRPC_SERVER = "localhost:9000";
 export const GRPC_SERVER_TLS = "grpcs://localhost:9001";
@@ -53,18 +45,9 @@ export const GRPC_SERVER_MTLS = "grpcs://localhost:9002";
 export const GIT_SERVER = "http://localhost:4070";
 
 export const MOCK_BIN_SERVER = "http://localhost:4090";
-
-/**
- * Forward proxy (`misc/resolving-proxy-server.ts`) that maps
- * `RESOLVING_PROXY_HOST` to 127.0.0.1. Point Insomnia's proxy settings at
- * `RESOLVING_PROXY_SERVER` to reach the mock servers without using
- * `localhost` in the URL — mirror any change to the host into that file.
- */
-export const RESOLVING_PROXY_SERVER = "http://127.0.0.1:4095";
-export const RESOLVING_PROXY_HOST = "insomnia.test";
 /**
  * `GET` this on `MOCK_BIN_SERVER` for a fixed response to turn into a mock
- * route — mirror any change here into `misc/mock-bin-server.ts`.
+ * route — mirror any change here into `misc/mock-bin-server.js`.
  */
 export const MOCK_BIN_SOURCE_RESPONSE = {
   url: `${MOCK_BIN_SERVER}/source`,
@@ -74,7 +57,7 @@ export const MOCK_BIN_SOURCE_RESPONSE = {
 };
 
 /**
- * Fixed test credentials `misc/oauth2-server.ts` accepts for its
+ * Fixed test credentials `misc/oauth2-server.js` accepts for its
  * Authorization Code / Implicit / Client Credentials / Resource Owner
  * Password grants — mirror any change here into that file.
  */

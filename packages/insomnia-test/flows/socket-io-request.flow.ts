@@ -1,27 +1,25 @@
-import { ContextMenuItem } from "@package/enums/context-menu-items";
-import { TreeNodeType } from "@package/enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import { step } from "@package/misc/step";
-import type { Collection } from "@package/models/collection";
-import type { Folder } from "@package/models/folder";
-import type { ResponseView } from "@package/models/response";
-import { SocketIORequest } from "@package/models/socket-io-request";
-import type { SocketIORequestPage } from "@package/pages/socket-io-request.page";
-
+import { ContextMenuItem } from "../enums/context-menu-items";
+import { TreeNodeType } from "../enums/tree-node-types";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
+import type { Response } from "../models/response";
+import { SocketIORequest } from "../models/socket-io-request";
+import type { SocketIORequestPage } from "../pages/socket-io-request.page";
 import { BaseFlow } from "./base.flow";
 
 export class SocketIORequestFlow extends BaseFlow {
   /**
    * Opens the Socket.IO connection for `request`, locating it via the
    * standalone project tree before connecting.
+   * @param request - The request whose connection should be opened
    */
-  @step()
   async connect(request: SocketIORequest): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
     await socketIoRequestPage.navigate();
     await socketIoRequestPage.connect();
   }
@@ -29,8 +27,10 @@ export class SocketIORequestFlow extends BaseFlow {
   /**
    * Creates a new Socket.IO request under `parent`, naming it via the
    * rename flow and applying its fields on the request page.
+   * @param parent - The Collection or Folder under which the request is created
+   * @param request - The request definition to create, including its fields
+   * @returns The created request, read back and asserted to exist
    */
-  @step()
   async create(
     parent: Collection | Folder,
     request: SocketIORequest,
@@ -58,19 +58,22 @@ export class SocketIORequestFlow extends BaseFlow {
    * once the disconnect completes (or after `timeout` ms elapses), and
    * returns the resulting response, locating it via the standalone project
    * tree.
+   * @param request - The request whose connection should be closed
+   * @param callback - Invoked once the disconnect completes; defaults to a no-op
+   * @param timeout - Maximum time in milliseconds to wait for the disconnect; defaults to DEFAULT_TIMEOUT
+   * @returns The response received after disconnecting
    */
-  @step()
   async disconnect(
     request: SocketIORequest,
     callback: () => Promise<void> | void = () => {},
     timeout = DEFAULT_TIMEOUT,
-  ): Promise<ResponseView> {
+  ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
     await socketIoRequestPage.navigate();
 
     await socketIoRequestPage.disconnect(callback, timeout);
@@ -83,8 +86,10 @@ export class SocketIORequestFlow extends BaseFlow {
   /**
    * Reads back an existing request's fields by name or identity via the
    * standalone project tree.
+   * @param item - The request's name, or an object identifying it by name and optional id
+   * @param parent - The Collection the request belongs to, if any (unused — kept for call-site symmetry with other request flows)
+   * @returns The request populated with its current fields, or undefined if not found
    */
-  @step()
   async get(
     item: string | { name: string; id?: string },
     parent?: Collection,
@@ -107,15 +112,16 @@ export class SocketIORequestFlow extends BaseFlow {
    * Sends the request's configured message over an already-open Socket.IO
    * connection and returns the resulting response, locating it via the
    * standalone project tree.
+   * @param request - The request whose message should be sent
+   * @returns The response received after sending the message
    */
-  @step()
-  async sendMessage(request: SocketIORequest): Promise<ResponseView> {
+  async sendMessage(request: SocketIORequest): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
     await socketIoRequestPage.navigate();
 
     await socketIoRequestPage.sendMessage();

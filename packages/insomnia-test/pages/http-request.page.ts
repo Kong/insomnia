@@ -1,16 +1,13 @@
-import { FileInputComponent } from "@package/components/file-input.component";
-import { SelectComponent } from "@package/components/select.component";
-import { PressedToggleComponent } from "@package/components/toggle.component";
-import { ContentType } from "@package/enums/content-type";
-import type { HttpMethod } from "@package/enums/http-method";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { expect } from "@playwright/test";
+
+import { ContentType } from "../enums/content-type";
+import type { HttpMethod } from "../enums/http-method";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   HttpRequest,
   HttpRequestBody,
   RequestBodyParameter,
-} from "@package/models/http-request";
-import { expect } from "@playwright/test";
-
+} from "../models/http-request";
 import { RequestPage } from "./request.page";
 
 export class HttpRequestPage extends RequestPage {
@@ -21,6 +18,7 @@ export class HttpRequestPage extends RequestPage {
    * pane — method, URL, params, body, and pre-request/after-response
    * scripts. Headers are always returned empty; this page doesn't read
    * them back.
+   * @returns The request data, omitting its name
    */
   async get(): Promise<Omit<HttpRequest, "name">> {
     const scripts = await this.scripts.getScripts();
@@ -40,13 +38,15 @@ export class HttpRequestPage extends RequestPage {
    * "content-type" tab and inspecting the mime type select, then reading
    * the type-specific content — form/multipart params, the chosen file
    * name, or the raw text from the CodeMirror editor.
+   * @returns The current body, or undefined when no body is set or no
+   * editor is present
    */
   async getBody(): Promise<HttpRequestBody | undefined> {
     await this.switchTab("content-type");
     const panel = this.page.locator(this.TABPANEL);
-    const mimeType = await new SelectComponent(this.page, panel).nativeValue(
-      panel,
-    );
+    const mimeType = await panel
+      .locator('[data-testid="hidden-select-container"] select')
+      .inputValue();
     if (!mimeType || mimeType === ContentType.NoBody) return undefined;
 
     if (mimeType === ContentType.Multipart || mimeType === ContentType.Form) {
@@ -75,13 +75,9 @@ export class HttpRequestPage extends RequestPage {
    * filling in the type-specific content — form/multipart parameters, a
    * file path, or raw text typed into the code editor. Does nothing when
    * no mime type is given, and skips content entirely for `NoBody`.
-   * `stubFileChooser` is called with a file path right before its native
-   * file picker opens, so the caller can stub the dialog to return it.
+   * @param body - The body to apply, including its mime type and content
    */
-  async setBody(
-    body: HttpRequestBody,
-    stubFileChooser: (filePath: string) => Promise<void>,
-  ): Promise<void> {
+  async setBody(body: HttpRequestBody): Promise<void> {
     if (body.mimeType == null) return;
     await this.selectBodyType(body.mimeType);
 
@@ -91,31 +87,29 @@ export class HttpRequestPage extends RequestPage {
       body.mimeType === ContentType.Multipart ||
       body.mimeType === ContentType.Form
     ) {
-      await this.setBodyParams(body.params ?? [], stubFileChooser);
+      await this.setBodyParams(body.params ?? []);
       return;
     }
 
     if (body.mimeType === ContentType.File) {
-      if (body.fileName) await this.chooseBodyFile(body.fileName, stubFileChooser);
+      if (body.fileName) await this.chooseBodyFile(body.fileName);
       return;
     }
 
     await this.typeBody(body.text ?? "");
   }
 
-  private async chooseBodyFile(
-    filePath: string,
-    stubFileChooser: (filePath: string) => Promise<void>,
-  ): Promise<void> {
+  private async chooseBodyFile(filePath: string): Promise<void> {
     const panel = this.page.locator(this.TABPANEL);
-    await stubFileChooser(filePath);
-    await new FileInputComponent(this.page, panel).choose();
+    await this.stubFileChooser(filePath);
+    await panel.locator('button:has-text("Choose File")').click();
   }
 
   private async getBodyFileName(): Promise<string | undefined> {
     const panel = this.page.locator(this.TABPANEL);
     const text = await panel
-      .getByTestId("body-file-name")
+      .locator("code")
+      .first()
       .innerText()
       .catch(() => "");
     return text || undefined;
@@ -128,8 +122,10 @@ export class HttpRequestPage extends RequestPage {
     const params: RequestBodyParameter[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const name = await this.keyValue.nameEditor(row).getValue();
-      const fileButton = row.getByTestId("body-param-file");
+      const name = await this.readCodeMirror(
+        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+      );
+      const fileButton = row.locator("button:has(i.fa-file-o)");
       if ((await fileButton.count()) > 0) {
         const fileName =
           (await fileButton.getAttribute("title").catch(() => "")) ||
@@ -137,28 +133,27 @@ export class HttpRequestPage extends RequestPage {
         if (name || fileName) params.push({ name, fileName });
         continue;
       }
-      const value = await this.keyValue.valueEditor(row).getValue();
+      const value = await this.readCodeMirror(
+        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+      );
       const toggle = row.locator("button[aria-pressed]");
       const enabled =
         (await toggle.count()) === 0
           ? true
-          : await new PressedToggleComponent(this.page, toggle).isOn();
+          : (await toggle.getAttribute("aria-pressed")) === "true";
       if (name || value) params.push({ name, value, disabled: !enabled });
     }
     return params;
   }
 
-  private async setBodyParams(
-    params: RequestBodyParameter[],
-    stubFileChooser: (filePath: string) => Promise<void>,
-  ): Promise<void> {
+  private async setBodyParams(params: RequestBodyParameter[]): Promise<void> {
     const panel = this.page.locator(this.TABPANEL);
-    const deleteAllBtn = panel.getByRole("button", { name: "Delete all" });
+    const deleteAllBtn = panel.locator('button:has-text("Delete all")');
     if (await deleteAllBtn.isEnabled()) {
       await deleteAllBtn.click();
     }
 
-    const addBtn = panel.getByRole("button", { name: "Add", exact: true });
+    const addBtn = panel.locator('button:has-text("Add")');
     const rows = panel.locator('[role="listbox"] [role="option"]');
 
     for (const [i, param] of params.entries()) {
@@ -173,9 +168,15 @@ export class HttpRequestPage extends RequestPage {
       }
       const row = rows.last();
       const setName = () =>
-        this.keyValue.nameEditor(row).setValue(param.name);
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+          param.name,
+        );
       const setValue = () =>
-        this.keyValue.valueEditor(row).setValue(param.value ?? "");
+        this.setCodeMirrorValue(
+          row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+          param.value ?? "",
+        );
       await setName();
       await this.waitForPairPersisted(param, {
         checkValue: false,
@@ -189,17 +190,14 @@ export class HttpRequestPage extends RequestPage {
         );
         await expect(fileModeOption).toBeVisible({ timeout: DEFAULT_TIMEOUT });
         await fileModeOption.click();
-        await stubFileChooser(param.fileName);
-        await new FileInputComponent(this.page, row).choose();
+        await this.stubFileChooser(param.fileName);
+        await row.locator('button:has-text("Choose File")').click();
       } else {
         await setValue();
       }
 
       if (param.disabled) {
-        await new PressedToggleComponent(
-          this.page,
-          row.locator("button[aria-pressed]"),
-        ).set(false);
+        await row.locator('button[aria-pressed="true"]').click();
       }
 
       if (!param.fileName) {

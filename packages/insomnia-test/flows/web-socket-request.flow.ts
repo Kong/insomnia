@@ -1,27 +1,27 @@
+import type { RequestAuthentication } from "insomnia-data";
 
-import { ContextMenuItem } from "@package/enums/context-menu-items";
-import { TreeNodeType } from "@package/enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import { step } from "@package/misc/step";
-import type { RequestAuthentication } from "@package/models/authentication";
-import type { Collection } from "@package/models/collection";
-import type { Folder } from "@package/models/folder";
-import type { ResponseView } from "@package/models/response";
+import { ContextMenuItem } from "../enums/context-menu-items";
+import { TreeNodeType } from "../enums/tree-node-types";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
+import type { Response } from "../models/response";
 import type {
-  WebSocketRequestBody} from "@package/models/websocket-request";
+  WebSocketRequestBody} from "../models/websocket-request";
 import {
   WebSocketRequest
-} from "@package/models/websocket-request";
-import type { WebSocketRequestPage } from "@package/pages/web-socket-request.page";
-
+} from "../models/websocket-request";
+import type { WebSocketRequestPage } from "../pages/web-socket-request.page";
 import { BaseFlow } from "./base.flow";
 
 export class WebSocketRequestFlow extends BaseFlow {
   /**
    * Creates a new WebSocket request under `parent`, naming it via the
    * rename flow and applying its fields on the request page.
+   * @param parent - The Collection or Folder under which the request is created
+   * @param request - The request definition to create, including its fields
+   * @returns The created request, read back and asserted to exist
    */
-  @step()
   async create(
     parent: Collection | Folder,
     request: WebSocketRequest,
@@ -53,19 +53,22 @@ export class WebSocketRequestFlow extends BaseFlow {
    * once the disconnect completes (or after `timeout` ms elapses), and
    * returns the resulting response, locating it via the standalone
    * project tree.
+   * @param request - The request whose connection should be closed
+   * @param callback - Invoked once the disconnect completes; defaults to a no-op
+   * @param timeout - Maximum time in milliseconds to wait for the disconnect; defaults to DEFAULT_TIMEOUT
+   * @returns The response received after disconnecting
    */
-  @step()
   async disconnect(
     request: WebSocketRequest,
     callback: () => Promise<void> | void = () => {},
     timeout = DEFAULT_TIMEOUT,
-  ): Promise<ResponseView> {
+  ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.disconnect(callback, timeout);
@@ -78,8 +81,10 @@ export class WebSocketRequestFlow extends BaseFlow {
   /**
    * Reads back an existing request's fields by name or identity via the
    * standalone project tree.
+   * @param item - The request's name, or an object identifying it by name and optional id
+   * @param parent - The Collection the request belongs to, if any (unused — kept for call-site symmetry with other request flows)
+   * @returns The request populated with its current fields, or undefined if not found
    */
-  @step()
   async get(
     item: string | { name: string; id?: string },
     parent?: Collection,
@@ -101,21 +106,19 @@ export class WebSocketRequestFlow extends BaseFlow {
   /**
    * Opens the WebSocket connection for `request` and returns the
    * resulting response, locating it via the standalone project tree.
+   * @param request - The request whose connection should be opened
+   * @returns The response received after connecting
    */
-  @step()
-  async send(
-    request: WebSocketRequest,
-    options?: { expectConnected?: boolean },
-  ): Promise<ResponseView> {
+  async send(request: WebSocketRequest): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
     await webSocketRequestPage.navigate();
 
-    await webSocketRequestPage.connect(options);
+    await webSocketRequestPage.connect();
     await responsePage.navigate();
 
     const data = await responsePage.get();
@@ -124,8 +127,9 @@ export class WebSocketRequestFlow extends BaseFlow {
 
   /**
    * Opens `request` and applies `authentication` on its Auth tab.
+   * @param request - The WebSocket request whose Auth tab to edit
+   * @param authentication - The authentication config to apply
    */
-  @step()
   async setAuthentication(
     request: WebSocketRequest,
     authentication: RequestAuthentication,
@@ -133,8 +137,8 @@ export class WebSocketRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.webSocketRequestPage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
     await page.navigate();
     await this.applyAuthentication(page.auth, authentication);
   }
@@ -144,20 +148,24 @@ export class WebSocketRequestFlow extends BaseFlow {
    * connection, invoking `callback` once the send completes (or after
    * `timeout` ms elapses), and returns the resulting response, locating it
    * via the standalone project tree.
+   * @param request - The request whose connection the message is sent over
+   * @param body - The message body to send
+   * @param callback - Invoked once the send completes; defaults to a no-op
+   * @param timeout - Maximum time in milliseconds to wait for the send; defaults to DEFAULT_TIMEOUT
+   * @returns The response received after sending the message
    */
-  @step()
   async sendMessage(
     request: WebSocketRequest,
     body: WebSocketRequestBody,
     callback: () => Promise<void> | void = () => {},
     timeout = DEFAULT_TIMEOUT,
-  ): Promise<ResponseView> {
+  ): Promise<Response> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.sendMessage(body, callback, timeout);

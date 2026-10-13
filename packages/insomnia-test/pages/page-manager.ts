@@ -1,28 +1,16 @@
-import type { BaseComponent } from "@package/components/base.component";
-import { PreferencesComponent } from "@package/components/preferences.component";
-import { PreferencesAiComponent } from "@package/components/preferences-ai.component";
-import { PreferencesCredentialsComponent } from "@package/components/preferences-credentials.component";
-import { PreferencesPluginsComponent } from "@package/components/preferences-plugins.component";
-import { PreferencesVaultComponent } from "@package/components/preferences-vault.component";
-import { findDocs } from "@package/misc/db";
+import type { ElectronApplication } from "@playwright/test";
 import type { Page } from "playwright-core";
 
+import { instrumentWithSteps } from "../misc/step-instrumentation";
 import type { BasePage } from "./base.page";
 import { CertificatesPage } from "./certificates.page";
 import { CloudSyncPage } from "./cloud-sync.page";
-import { CloudSyncBranchesDialogPage } from "./cloud-sync-branches-dialog.page";
-import { CloudSyncCommitDialogPage } from "./cloud-sync-commit-dialog.page";
-import { CloudSyncFileDeletePage } from "./cloud-sync-file-delete.page";
-import { CloudSyncHistoryDialogPage } from "./cloud-sync-history-dialog.page";
 import { CommandPalettePage } from "./command-palette.page";
 import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
 import { EventStreamRequestPage } from "./event-stream-request.page";
 import { ExportPage } from "./export.page";
 import { FolderPage } from "./folder.page";
-import { GitBranchesDialogPage } from "./git-branches-dialog.page";
-import { GitCommitDialogPage } from "./git-commit-dialog.page";
-import { GitHistoryDialogPage } from "./git-history-dialog.page";
 import { GitSyncPage } from "./git-sync.page";
 import { GraphQLRequestPage } from "./graphql-request.page";
 import { GrpcRequestPage } from "./grpc-request.page";
@@ -32,151 +20,286 @@ import { InvitePage } from "./invite.page";
 import { KonnectPage } from "./konnect.page";
 import { McpClientPage } from "./mcp-client.page";
 import { MockServerPage } from "./mock-server.page";
-import { ProjectPage } from "./project.page";
+import { PreferencesPage } from "./preferences.page";
 import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
 import { RunnerPage } from "./runner.page";
 import { SocketIORequestPage } from "./socket-io-request.page";
-import { SpecPage } from "./spec.page";
 import { TemplateTagPage } from "./template-tag.page";
-import { VariableSourcePage } from "./variable-source.page";
 import { WebSocketRequestPage } from "./web-socket-request.page";
 import { WorkspacePage } from "./workspace.page";
 
-const pageRegistry = {
-  certificatesPage: (page: Page): CertificatesPage =>
-    new CertificatesPage(page),
-  cloudSyncPage: (page: Page): CloudSyncPage =>
-    new CloudSyncPage(page),
-  commandPalettePage: (page: Page): CommandPalettePage =>
-    new CommandPalettePage(page),
-  cookiePage: (page: Page): CookiePage =>
-    new CookiePage(page),
-  environmentPage: (page: Page): EnvironmentPage =>
-    new EnvironmentPage(page),
-  eventStreamRequestPage: (page: Page): EventStreamRequestPage =>
-    new EventStreamRequestPage(page),
-  exportPage: (page: Page): ExportPage =>
-    new ExportPage(page),
-  folderPage: (page: Page): FolderPage =>
-    new FolderPage(page),
-  gitSyncPage: (page: Page): GitSyncPage =>
-    new GitSyncPage(page),
-  gitCommitDialogPage: (page: Page): GitCommitDialogPage =>
-    new GitCommitDialogPage(page),
-  gitBranchesDialogPage: (page: Page): GitBranchesDialogPage =>
-    new GitBranchesDialogPage(page),
-  gitHistoryDialogPage: (page: Page): GitHistoryDialogPage =>
-    new GitHistoryDialogPage(page),
-  graphqlRequestPage: (page: Page): GraphQLRequestPage =>
-    new GraphQLRequestPage(page),
-  grpcRequestPage: (page: Page): GrpcRequestPage =>
-    new GrpcRequestPage(page),
-  httpRequestPage: (page: Page): HttpRequestPage =>
-    new HttpRequestPage(page),
-  // Global dialogs reachable from any page, so components rather than pages.
-  preferences: (page: Page): PreferencesComponent =>
-    new PreferencesComponent(page),
-  preferencesCredentials: (page: Page): PreferencesCredentialsComponent =>
-    new PreferencesCredentialsComponent(page),
-  preferencesPlugins: (page: Page): PreferencesPluginsComponent =>
-    new PreferencesPluginsComponent(page),
-  preferencesAi: (page: Page): PreferencesAiComponent =>
-    new PreferencesAiComponent(page),
-  preferencesVault: (page: Page): PreferencesVaultComponent =>
-    new PreferencesVaultComponent(page),
-  importPage: (page: Page): ImportPage =>
-    new ImportPage(page),
-  invitePage: (page: Page): InvitePage =>
-    new InvitePage(page),
-  konnectPage: (page: Page): KonnectPage =>
-    new KonnectPage(page),
-  mcpClientPage: (page: Page): McpClientPage =>
-    new McpClientPage(page),
-  mockServerPage: (page: Page): MockServerPage =>
-    new MockServerPage(page),
-  projectSettingsPage: (page: Page): ProjectSettingsPage =>
-    new ProjectSettingsPage(page),
-  responsePage: (page: Page): ResponsePage =>
-    new ResponsePage(page),
-  runnerPage: (page: Page): RunnerPage =>
-    new RunnerPage(page),
-  socketIoRequestPage: (page: Page): SocketIORequestPage =>
-    new SocketIORequestPage(page),
-  templateTagPage: (page: Page): TemplateTagPage =>
-    new TemplateTagPage(page),
-  variableSourcePage: (page: Page): VariableSourcePage =>
-    new VariableSourcePage(page),
-  webSocketRequestPage: (page: Page): WebSocketRequestPage =>
-    new WebSocketRequestPage(page),
-  cloudSyncCommitDialogPage: (page: Page): CloudSyncCommitDialogPage =>
-    new CloudSyncCommitDialogPage(page),
-  cloudSyncHistoryDialogPage: (page: Page): CloudSyncHistoryDialogPage =>
-    new CloudSyncHistoryDialogPage(page),
-  cloudSyncBranchesDialogPage: (page: Page): CloudSyncBranchesDialogPage =>
-    new CloudSyncBranchesDialogPage(page),
-  cloudSyncFileDeletePage: (page: Page): CloudSyncFileDeletePage =>
-    new CloudSyncFileDeletePage(page),
-  projectPage: (page: Page): ProjectPage =>
-    new ProjectPage(page),
-  specPage: (page: Page): SpecPage =>
-    new SpecPage(page),
-  workspacePage: (page: Page): WorkspacePage =>
-    new WorkspacePage(page),
-} satisfies Record<string, (page: Page) => BasePage | BaseComponent>;
-
-type PageName = Extract<keyof typeof pageRegistry, string>;
-
-type Pages = { [K in keyof typeof pageRegistry]: ReturnType<(typeof pageRegistry)[K]> };
-
-// Typed by the `PageManager` interface merged below; the getters themselves
-// are installed from `pageRegistry` in the static block.
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class PageManager {
   private readonly instances = new Map<string, unknown>();
 
-  constructor(private page: Page) {}
-
-  /** Queries the app's database through the current window. See `findDocs`. */
-  findDocs(dbFile: string, query: Record<string, unknown> = {}): Promise<any[]> {
-    return findDocs(this.page, dbFile, query);
-  }
+  constructor(
+    private page: Page,
+    private insomnia?: ElectronApplication,
+  ) {}
 
   /**
    * Rewires every already-created Page instance (and future ones) onto a
-   * fresh window — called by `AppFlow.restart()`
+   * fresh window/ElectronApplication — called by `AppFlow.restart()`
    * once the relaunched app's first window is ready.
+   * @param page - The freshly-launched app's main window
+   * @param insomnia - The freshly-launched ElectronApplication
    */
-  setWindow(page: Page): void {
+  setWindow(page: Page, insomnia?: ElectronApplication): void {
     this.page = page;
-    for (const [name, instance] of this.instances) {
-      if (typeof (instance as BasePage).setContext === "function") {
-        // Pages are rewired in place so references a spec already holds stay valid.
-        (instance as BasePage).setContext(page);
-      } else {
-        // Components bind their root locator to the old window at construction, so rebuild.
-        this.instances.set(name, pageRegistry[name as PageName](page));
-      }
+    this.insomnia = insomnia;
+    for (const instance of this.instances.values()) {
+      (instance as BasePage).setContext(page, insomnia);
     }
   }
 
-  private getOrCreate(name: PageName): unknown {
-    if (!this.instances.has(name)) {
-      this.instances.set(name, pageRegistry[name](this.page));
-    }
-    return this.instances.get(name);
+  /**
+   * Lazily creates (and caches) the CertificatesPage instance.
+   * @returns The shared CertificatesPage instance
+   */
+  get certificatesPage(): CertificatesPage {
+    return this.getOrCreate("certificates", () => new CertificatesPage(this.page));
   }
 
-  static {
-    for (const name of Object.keys(pageRegistry) as PageName[]) {
-      Object.defineProperty(this.prototype, name, {
-        get(this: PageManager) {
-          return this.getOrCreate(name);
-        },
-      });
-    }
+  /**
+   * Lazily creates (and caches) the CloudSyncPage instance.
+   * @returns The shared CloudSyncPage instance
+   */
+  get cloudSyncPage(): CloudSyncPage {
+    return this.getOrCreate("cloudSync", () => new CloudSyncPage(this.page));
+  }
+
+  /**
+   * Lazily creates (and caches) the CommandPalettePage instance.
+   * @returns The shared CommandPalettePage instance
+   */
+  get commandPalettePage(): CommandPalettePage {
+    return this.getOrCreate(
+      "commandPalette",
+      () => new CommandPalettePage(this.page),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the CookiePage instance.
+   * @returns The shared CookiePage instance
+   */
+  get cookiePage(): CookiePage {
+    return this.getOrCreate("cookie", () => new CookiePage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the EnvironmentPage instance.
+   * @returns The shared EnvironmentPage instance
+   */
+  get environmentPage(): EnvironmentPage {
+    return this.getOrCreate(
+      "environment",
+      () => new EnvironmentPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the EventStreamRequestPage instance.
+   * @returns The shared EventStreamRequestPage instance
+   */
+  get eventStreamRequestPage(): EventStreamRequestPage {
+    return this.getOrCreate(
+      "eventStreamRequest",
+      () => new EventStreamRequestPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the ExportPage instance.
+   * @returns The shared ExportPage instance
+   */
+  get exportPage(): ExportPage {
+    return this.getOrCreate(
+      "export",
+      () => new ExportPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the FolderPage instance.
+   * @returns The shared FolderPage instance
+   */
+  get folderPage(): FolderPage {
+    return this.getOrCreate("folder", () => new FolderPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the GitSyncPage instance.
+   * @returns The shared GitSyncPage instance
+   */
+  get gitSyncPage(): GitSyncPage {
+    return this.getOrCreate(
+      "gitSync",
+      () => new GitSyncPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the GraphQLRequestPage instance.
+   * @returns The shared GraphQLRequestPage instance
+   */
+  get graphqlRequestPage(): GraphQLRequestPage {
+    return this.getOrCreate(
+      "graphqlRequest",
+      () => new GraphQLRequestPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the GrpcRequestPage instance.
+   * @returns The shared GrpcRequestPage instance
+   */
+  get grpcRequestPage(): GrpcRequestPage {
+    return this.getOrCreate(
+      "grpcRequest",
+      () => new GrpcRequestPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the HttpRequestPage instance.
+   * @returns The shared HttpRequestPage instance
+   */
+  get httpRequestPage(): HttpRequestPage {
+    return this.getOrCreate(
+      "httpRequest",
+      () => new HttpRequestPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the ImportPage instance.
+   * @returns The shared ImportPage instance
+   */
+  get importPage(): ImportPage {
+    return this.getOrCreate("import", () => new ImportPage(this.page));
+  }
+
+  /**
+   * Lazily creates (and caches) the InvitePage instance.
+   * @returns The shared InvitePage instance
+   */
+  get invitePage(): InvitePage {
+    return this.getOrCreate("invite", () => new InvitePage(this.page));
+  }
+
+  /**
+   * Lazily creates (and caches) the KonnectPage instance.
+   * @returns The shared KonnectPage instance
+   */
+  get konnectPage(): KonnectPage {
+    return this.getOrCreate("konnect", () => new KonnectPage(this.page));
+  }
+
+  /**
+   * Lazily creates (and caches) the McpClientPage instance.
+   * @returns The shared McpClientPage instance
+   */
+  get mcpClientPage(): McpClientPage {
+    return this.getOrCreate("mcpClient", () => new McpClientPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the MockServerPage instance.
+   * @returns The shared MockServerPage instance
+   */
+  get mockServerPage(): MockServerPage {
+    return this.getOrCreate(
+      "mockServer",
+      () => new MockServerPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the PreferencesPage instance.
+   * @returns The shared PreferencesPage instance
+   */
+  get preferencesPage(): PreferencesPage {
+    return this.getOrCreate(
+      "preferences",
+      () => new PreferencesPage(this.page),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the ProjectSettingsPage instance.
+   * @returns The shared ProjectSettingsPage instance
+   */
+  get projectSettingsPage(): ProjectSettingsPage {
+    return this.getOrCreate(
+      "projectSettings",
+      () => new ProjectSettingsPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the ResponsePage instance.
+   * @returns The shared ResponsePage instance
+   */
+  get responsePage(): ResponsePage {
+    return this.getOrCreate("response", () => new ResponsePage(this.page));
+  }
+
+  /**
+   * Lazily creates (and caches) the RunnerPage instance.
+   * @returns The shared RunnerPage instance
+   */
+  get runnerPage(): RunnerPage {
+    return this.getOrCreate(
+      "runner",
+      () => new RunnerPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the SocketIORequestPage instance.
+   * @returns The shared SocketIORequestPage instance
+   */
+  get socketIoRequestPage(): SocketIORequestPage {
+    return this.getOrCreate(
+      "socketIoRequest",
+      () => new SocketIORequestPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the TemplateTagPage instance.
+   * @returns The shared TemplateTagPage instance
+   */
+  get templateTagPage(): TemplateTagPage {
+    return this.getOrCreate(
+      "templateTag",
+      () => new TemplateTagPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the WebSocketRequestPage instance.
+   * @returns The shared WebSocketRequestPage instance
+   */
+  get webSocketRequestPage(): WebSocketRequestPage {
+    return this.getOrCreate(
+      "webSocketRequest",
+      () => new WebSocketRequestPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the WorkspacePage instance.
+   * @returns The shared WorkspacePage instance
+   */
+  get workspacePage(): WorkspacePage {
+    return this.getOrCreate("workspace", () => new WorkspacePage(this.page, this.insomnia));
+  }
+
+  private getOrCreate<T extends object>(key: string, factory: () => T): T {
+    if (!this.instances.has(key))
+      this.instances.set(key, instrumentWithSteps(factory()));
+    return this.instances.get(key) as T;
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-export interface PageManager extends Pages {}

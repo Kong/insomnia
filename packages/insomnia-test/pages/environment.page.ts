@@ -1,20 +1,14 @@
 import { isDeepStrictEqual } from "node:util";
 
-import { DropdownComponent } from "@package/components/dropdown.component";
-import { EnvironmentPickerComponent } from "@package/components/environment-picker.component";
-import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
-import { ModalComponent } from "@package/components/modal.component";
-import { TableComponent } from "@package/components/table.component";
-import { TooltipComponent } from "@package/components/tooltip.component";
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
-import type {
-  EnvironmentKvPairData} from "@package/models/environment";
-import {
-  EnvironmentKvPairDataType,
-} from "@package/models/environment";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type {
+  EnvironmentKvPairData} from "../models/environment";
+import {
+  EnvironmentKvPairDataType,
+} from "../models/environment";
 import { BasePage } from "./base.page";
 
 const TYPE_LABELS: Record<EnvironmentKvPairDataType, string> = {
@@ -37,28 +31,36 @@ export class EnvironmentPage extends BasePage {
     '[data-editable="true"][aria-label="Environment name"]';
   private readonly LISTBOX =
     '#pane-one [role="listbox"][aria-label="Environment Key Value Pair"]';
-  private get keyValue(): KeyValueEditorComponent {
-    return new KeyValueEditorComponent(this.page, this.page.locator("#pane-one"));
-  }
+  private readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
   private readonly RAW_EDIT_BUTTON = '#pane-one button[aria-label="Raw Edit"]';
   private readonly TABLE_EDIT_BUTTON =
     '#pane-one button[aria-label="Table Edit"]';
-  private readonly RAW_EDITOR = '#pane-one [data-testid="CodeEditor"]';
+  private readonly RAW_EDITOR = ".environment-editor";
   private readonly SIDEBAR = '[aria-label="Environments"]';
   private readonly PROJECT_ENVIRONMENT_TRIGGER =
     'button[aria-label="Select a Project Environment"]';
-  // Formerly "Select a Collection Environment".
+  // Renamed from "Select a Collection Environment" — INS-3528.
   private readonly COLLECTION_ENVIRONMENT_TRIGGER =
     'button[aria-label="Select an API Collection Environment"]';
 
   /**
-   * Clicks the sidebar's always-visible "Add Sub Environment"/"Add Private
-   * Sub Environment" button, which nests a new sub-environment directly
-   * under the current page's own Base Environment (the app has no way to
-   * nest one under another sub-environment). Then waits for the button's
-   * tooltip to close.
+   * Creates a new shared or private sub-environment under the current
+   * page's own Base Environment via the sidebar's always-visible "Add Sub
+   * Environment"/"Add Private Sub Environment" button, then renames it
+   * from its auto-generated default name to the requested one. Waits for
+   * the sidebar row count to increase before assuming the new environment
+   * exists. Only ever nests directly under Base Environment — the app has
+   * no way to create a sub-environment nested under another sub-environment.
+   * @param name - The name to give the newly created sub-environment
+   * @param isPrivate - Whether to create a private environment instead of a shared one
    */
-  async clickAddSubEnvironment(isPrivate = false): Promise<void> {
+  async createSubEnvironment(
+    name: string,
+    isPrivate = false,
+  ): Promise<void> {
+    const rows = this.page.locator(`${this.SIDEBAR} [role="row"]`);
+    const countBefore = await rows.count();
+
     const button = isPrivate
       ? this.ADD_PRIVATE_SUB_ENVIRONMENT_BUTTON
       : this.ADD_SUB_ENVIRONMENT_BUTTON;
@@ -66,41 +68,15 @@ export class EnvironmentPage extends BasePage {
     // The button's tooltip stays open while the cursor rests on it and can
     // overlap the new row's name, intercepting the rename double-click.
     await this.page.mouse.move(0, 0);
-    await expect(
-      new TooltipComponent(this.page, this.page.locator("body")).tooltip,
-    ).toBeHidden({
+    await expect(this.page.locator('[role="tooltip"]')).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
-  }
 
-  /**
-   * Counts the environment rows currently listed in the sidebar.
-   */
-  async getEnvironmentCount(): Promise<number> {
-    return this.page.locator(`${this.SIDEBAR} [role="row"]`).count();
-  }
-
-  /**
-   * Waits for the sidebar to list exactly `count` environment rows.
-   */
-  async waitForEnvironmentCount(count: number): Promise<void> {
-    await expect(this.page.locator(`${this.SIDEBAR} [role="row"]`)).toHaveCount(
-      count,
-      { timeout: DEFAULT_TIMEOUT },
-    );
-  }
-
-  /**
-   * Reads the name of the last environment row in the sidebar, i.e. the
-   * most recently added one.
-   */
-  async getLastEnvironmentName(): Promise<string> {
-    return (
-      (await this.page
-        .locator(`${this.SIDEBAR} [role="row"]`)
-        .last()
-        .getAttribute("aria-label")) ?? ""
-    );
+    await expect(rows).toHaveCount(countBefore + 1, {
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const currentName = (await rows.last().getAttribute("aria-label")) ?? "";
+    await this.renameEnvironment(currentName, name);
   }
 
   /**
@@ -121,6 +97,7 @@ export class EnvironmentPage extends BasePage {
    * Deletes a single key/value pair row via its "Delete Row" button.
    * It's a confirm button: the first click only arms it, the second
    * confirms and actually deletes the row.
+   * @param row - The row locator to delete
    */
   async deleteRow(row: Locator): Promise<void> {
     const rows = this.page.locator(this.LISTBOX).locator('[role="option"]');
@@ -134,6 +111,7 @@ export class EnvironmentPage extends BasePage {
   /**
    * Disables a key/value pair row and waits for the row to flip to its
    * disabled state (its toggle button becomes "Enable Row").
+   * @param row - The row locator to disable
    */
   async disableRow(row: Locator): Promise<void> {
     await row.getByRole("button", { name: "Disable Row" }).click();
@@ -145,6 +123,8 @@ export class EnvironmentPage extends BasePage {
    * passing into `deleteRow()`. Only matches rows whose name/value text
    * contains the given name, so it never matches the always-present
    * trailing blank row.
+   * @param name - The row's current name value
+   * @returns A Locator for the matching row
    */
   getRow(name: string): Locator {
     return this.page
@@ -156,6 +136,8 @@ export class EnvironmentPage extends BasePage {
   /**
    * Looks up an environment's stable `data-key` identifier from its
    * sidebar row.
+   * @param name - The environment's display name (matched via `aria-label`)
+   * @returns The environment's `data-key`, or `undefined` if no row with that name exists
    */
   async getEnvironmentId(name: string): Promise<string | undefined> {
     const row = this.page.locator(
@@ -168,6 +150,7 @@ export class EnvironmentPage extends BasePage {
   /**
    * Reads the names of every environment listed in the sidebar, in
    * display order.
+   * @returns Each row's `aria-label` (empty string if a row has none)
    */
   async getEnvironmentNames(): Promise<string[]> {
     return this.page
@@ -181,6 +164,7 @@ export class EnvironmentPage extends BasePage {
    * Reads every key/value pair row currently shown in the listbox,
    * including its type and enabled/disabled state. Rows with both an
    * empty name and value are omitted.
+   * @returns The variables currently displayed
    */
   async getVariables(): Promise<EnvironmentKvPairData[]> {
     const listbox = this.page.locator(this.LISTBOX);
@@ -189,8 +173,12 @@ export class EnvironmentPage extends BasePage {
     const variables: EnvironmentKvPairData[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const name = await this.keyValue.nameEditor(row).getValue();
-      const value = await this.keyValue.valueEditor(row).getValue();
+      const name = await this.readCodeMirror(
+        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+      );
+      const value = await this.readCodeMirror(
+        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+      );
       const type = await this.getType(row);
       const enabled =
         (await row.getByRole("button", { name: "Enable Row" }).count()) === 0;
@@ -209,6 +197,8 @@ export class EnvironmentPage extends BasePage {
    * anymore. Passing `containerName` alone as "No Project Environment"
    * unlinks whichever project environment is currently linked, since that
    * sentinel is itself a normal row in the list.
+   * @param containerName - The project environment's own (base) name to select
+   * @param environmentName - The global sub-environment to select; defaults to "Base Environment", in which case `containerName` itself is selected instead
    */
   async linkProjectEnvironment(
     containerName: string,
@@ -218,115 +208,14 @@ export class EnvironmentPage extends BasePage {
       environmentName === "Base Environment" ? containerName : environmentName;
     const trigger = this.page.locator(this.PROJECT_ENVIRONMENT_TRIGGER);
     await trigger.click();
-    const listbox = this.environmentPicker.listbox("project");
+    const listbox = this.page.getByRole("listbox", {
+      name: "Select a Project Environment",
+    });
     await listbox.getByRole("option", { name: optionName }).click();
     await expect(trigger).toContainText(optionName);
 
     await this.page.keyboard.press("Escape");
     await listbox.waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Opens one of the two independent environment pickers in the
-   * collection toolbar.
-   */
-  async openEnvironmentPicker(picker: "project" | "collection"): Promise<void> {
-    const trigger = this.page.locator(
-      picker === "project" ? this.PROJECT_ENVIRONMENT_TRIGGER : this.COLLECTION_ENVIRONMENT_TRIGGER,
-    );
-    await trigger.click();
-    await this.environmentPicker
-      .listbox(picker)
-      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Reports which environment picker popovers are currently open.
-   */
-  async getOpenEnvironmentPickers(): Promise<("project" | "collection")[]> {
-    const open: ("project" | "collection")[] = [];
-    for (const picker of ["project", "collection"] as const) {
-      const listbox = this.environmentPicker.listbox(picker);
-      if (await listbox.isVisible()) open.push(picker);
-    }
-    return open;
-  }
-
-  /**
-   * Dismisses whichever environment picker popover is open with Escape
-   * and waits for both listboxes to disappear.
-   */
-  async closeEnvironmentPicker(): Promise<void> {
-    await this.page.keyboard.press("Escape");
-    for (const picker of ["project", "collection"] as const) {
-      await this.environmentPicker
-        .listbox(picker)
-        .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
-    }
-  }
-
-  /**
-   * Creates a Project Environment from the project picker's "Add Project
-   * Environment" button. Creating navigates into the new environment's own
-   * page and does not link it to the collection, so the caller is
-   * responsible for navigating back.
-   */
-  async addProjectEnvironment(name: string): Promise<void> {
-    await this.openEnvironmentPicker("project");
-    await this.page.getByLabel("Add Project Environment").click();
-    await this.page.getByPlaceholder("Enter a name for your Environment").fill(name);
-    await this.page.getByRole("button", { name: "Create", exact: true }).click();
-    await new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", { name: "Create or update dialog" }),
-    ).waitForHidden();
-    await this.page.keyboard.press("Escape");
-  }
-
-  /**
-   * Reads the project picker's current selection label and, after
-   * opening it, the names of the options it lists, then closes it.
-   */
-  async getProjectEnvironmentPickerState(): Promise<{ selected: string; options: string[] }> {
-    const selected = ((await this.page.locator(this.PROJECT_ENVIRONMENT_TRIGGER).innerText()) ?? "").trim();
-    await this.openEnvironmentPicker("project");
-    const options = (
-      await this.environmentPicker
-        .listbox("project")
-        .getByRole("option")
-        .allInnerTexts()
-    ).map((text) => text.trim());
-    await this.closeEnvironmentPicker();
-    return { selected, options };
-  }
-
-  /**
-   * Opens the collection picker and its "Manage API collection
-   * environments" modal.
-   */
-  async openCollectionEnvironmentManager(): Promise<void> {
-    await this.openEnvironmentPicker("collection");
-    await this.page.getByRole("button", { name: "Manage API collection environments" }).click();
-    await this.manageEnvironmentsModal.waitForVisible();
-  }
-
-  /**
-   * Closes the "Manage Environments" modal and the collection picker
-   * popover that opened it.
-   */
-  async closeCollectionEnvironmentManager(): Promise<void> {
-    await this.manageEnvironmentsModal.clickButton("Close");
-    await this.manageEnvironmentsModal.waitForHidden();
-    await this.page.keyboard.press("Escape");
-  }
-
-  /**
-   * Reports whether the named environment row is shown with the lock icon
-   * that marks a private environment.
-   */
-  async isEnvironmentPrivate(name: string): Promise<boolean> {
-    const row = this.page.locator(`${this.SIDEBAR} [role="row"][aria-label="${name}"]`);
-    return (await row.getByTestId("environment-private-icon").count()) > 0;
   }
 
   /**
@@ -339,11 +228,14 @@ export class EnvironmentPage extends BasePage {
    * live: both pickers operate independently, and selecting a Collection
    * Environment doesn't clear whichever Project Environment is already
    * linked; their variables merge into the same active render context.
+   * @param name - The collection's own environment/sub-environment name to activate
    */
   async selectCollectionEnvironment(name: string): Promise<void> {
     const trigger = this.page.locator(this.COLLECTION_ENVIRONMENT_TRIGGER);
     await trigger.click();
-    const listbox = this.environmentPicker.listbox("collection");
+    const listbox = this.page.getByRole("listbox", {
+      name: "Select an API Collection Environment",
+    });
     await listbox.getByRole("option", { name }).click();
     await expect(trigger).toContainText(name);
 
@@ -352,15 +244,11 @@ export class EnvironmentPage extends BasePage {
   }
 
   /**
-   * Waits for the environment pane to be ready: either the key/value pair
-   * listbox (table view) or the raw JSON editor. An environment opens in
-   * whichever view its document is in — e.g. a freshly duplicated one can
-   * open in the JSON editor — so waiting for the listbox alone times out.
+   * Waits for the environment key/value pair listbox to become visible,
+   * confirming the environment page is ready for interaction.
    */
   async navigate(): Promise<void> {
-    await expect(
-      this.page.locator(this.LISTBOX).or(this.page.locator(this.RAW_EDITOR)),
-    ).toBeVisible({
+    await expect(this.page.locator(this.LISTBOX)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -374,26 +262,27 @@ export class EnvironmentPage extends BasePage {
    * Right after a workspace-level operation (e.g. duplicating an
    * Environment), the row can briefly render with a provisional
    * `data-key` before the app's list swaps in the persisted document's
-   * real key. Waiting here for the
+   * real key — confirmed live via a polling probe. Waiting here for the
    * key to settle (unchanged across consecutive reads) avoids grabbing
    * the soon-to-be-stale key and losing the row mid-rename.
+   * @param oldName - The environment's current display name
+   * @param newName - The name to rename it to
    */
   async renameEnvironment(oldName: string, newName: string): Promise<void> {
     const row = this.page.locator(
       `${this.SIDEBAR} [role="row"][aria-label="${oldName}"]`,
     );
-    let stableRow = row;
-    const input = this.page.locator(
-      `${this.SIDEBAR} [role="row"] input[name="name"][aria-label="Environment name"]`,
+    const key = await this.waitForStableAttribute(row, "data-key");
+    const stableRow = this.page.locator(
+      `${this.SIDEBAR} [role="row"][data-key="${key}"]`,
     );
-    // Re-resolve the row's key on every attempt: right after a duplicate the
-    // old row (original env's key) is briefly shown before being swapped out.
-    await expect(async () => {
-      const key = await this.waitForStableAttribute(row, "data-key", SHORT_TIMEOUT);
-      stableRow = this.page.locator(`${this.SIDEBAR} [role="row"][data-key="${key}"]`);
-      await stableRow.locator(this.EDITABLE_NAME).dblclick({ timeout: SHORT_TIMEOUT });
-      await expect(input).toBeVisible({ timeout: SHORT_TIMEOUT });
-    }).toPass({ timeout: LONG_TIMEOUT });
+
+    const editableName = row.locator(this.EDITABLE_NAME);
+    await editableName.waitFor({ state: "visible" });
+    await editableName.dblclick();
+    const input = stableRow.locator(
+      'input[name="name"][aria-label="Environment name"]',
+    );
     await input.fill(newName);
     await input.press("Enter");
     await expect(stableRow).toHaveAttribute("aria-label", newName);
@@ -402,6 +291,7 @@ export class EnvironmentPage extends BasePage {
   /**
    * Clicks the sidebar row matching the given environment name to select
    * it.
+   * @param name - The environment's display name (matched via `aria-label`)
    */
   async selectEnvironment(name: string): Promise<void> {
     await this.page
@@ -421,7 +311,7 @@ export class EnvironmentPage extends BasePage {
       .locator(this.LISTBOX)
       .locator('[role="option"]')
       .last()
-      .getByTestId("one-line-editor-container")
+      .locator(".editor__container")
       .first();
   }
 
@@ -431,6 +321,7 @@ export class EnvironmentPage extends BasePage {
    * always appended last, so each iteration locates the freshly added
    * row by grabbing the current last row's `data-key` before filling it
    * in. Disables a row afterward if `enabled` is explicitly `false`.
+   * @param variables - The variables to set as the new complete list
    */
   async setVariables(variables: EnvironmentKvPairData[]): Promise<void> {
     await this.deleteAll();
@@ -441,9 +332,15 @@ export class EnvironmentPage extends BasePage {
         .last()
         .getAttribute("data-key");
       const row = listbox.locator(`[role="option"][data-key="${key}"]`);
-      await this.keyValue.nameEditor(row).setValue(variable.name);
+      await this.setCodeMirrorValue(
+        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+        variable.name,
+      );
       await this.waitForVariablePersisted(variable, { checkValue: false });
-      await this.keyValue.valueEditor(row).setValue(variable.value);
+      await this.setCodeMirrorValue(
+        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+        variable.value,
+      );
       await this.waitForVariablePersisted(variable);
       if (variable.type) {
         await this.setType(row, variable.type);
@@ -468,6 +365,7 @@ export class EnvironmentPage extends BasePage {
   /**
    * Reads the current environment's raw JSON text, once the raw editor
    * view is showing (see `toggleRawEdit()`).
+   * @returns The raw JSON text currently in the editor
    */
   async getRawJson(): Promise<string> {
     return this.readCodeMirror(
@@ -478,6 +376,7 @@ export class EnvironmentPage extends BasePage {
   /**
    * Replaces the current environment's raw JSON text, once the raw
    * editor view is showing (see `toggleRawEdit()`).
+   * @param json - The raw JSON text to set
    */
   async setRawJson(json: string): Promise<void> {
     await this.setCodeMirrorValue(
@@ -505,6 +404,8 @@ export class EnvironmentPage extends BasePage {
    * its key/value pairs, confirming the row's debounced save has landed
    * (and the row has settled onto its persisted key) before the next edit
    * builds on it. Skipped for a blank name, which the app never persists.
+   * @param variable - The variable whose row was just edited
+   * @param options.checkValue - Whether the value must match too, or only the name (right after the name is typed)
    */
   private async waitForVariablePersisted(
     variable: EnvironmentKvPairData,
@@ -529,145 +430,9 @@ export class EnvironmentPage extends BasePage {
     row: Locator,
     type: EnvironmentKvPairDataType,
   ): Promise<void> {
-    const typeButton = row.locator('button[aria-label="Type Selection"]');
-    await typeButton.click();
-    await new DropdownComponent(this.page, typeButton)
-      .item(TYPE_LABELS[type], false)
-      .click();
-  }
-
-  private readonly environmentPicker = new EnvironmentPickerComponent(
-    this.page,
-    this.page.locator("body"),
-  );
-
-  private readonly manageEnvironmentsModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Manage Environments" }),
-  );
-
-  private readonly collectionEnvironmentDialog = this.manageEnvironmentsModal.root;
-
-  /**
-   * Opens the current workspace's own "Manage API collection environments"
-   * editor from the "Select an API Collection Environment" popover and
-   * waits for the "Manage Environments" dialog. Its Base Environment is
-   * selected by default; the dialog is not under the `#pane-one` the other
-   * variable methods read, so use `addCollectionEnvironmentVariable()` here.
-   */
-  async openCollectionEnvironmentEditor(): Promise<void> {
-    await this.page.locator(this.COLLECTION_ENVIRONMENT_TRIGGER).click();
+    await row.locator('button[aria-label="Type Selection"]').click();
     await this.page
-      .getByRole("button", { name: "Manage API collection environments" })
+      .getByRole("menuitemradio", { name: TYPE_LABELS[type] })
       .click();
-    await expect(this.collectionEnvironmentDialog).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Hovers the first rendered variable chip whose template references
-   * `variable` until its source tooltip appears, then reads the tooltip.
-   * The chip can be rebuilt right after the editor mounts, silently
-   * dropping the pointer, so the hover is retried until the tooltip shows.
-   */
-  async hoverVariableSource(
-    variable: string,
-    inDialog = false,
-  ): Promise<string> {
-    const root = inDialog ? this.collectionEnvironmentDialog : this.page;
-    const chip = root.locator(`[data-template*="${variable}"]`).first();
-    await chip.waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
-    const tooltip = this.page.getByTestId("variable-source-tooltip");
-    await expect(async () => {
-      await this.page.mouse.move(0, 0);
-      await chip.hover();
-      await expect(tooltip).toBeVisible({ timeout: 1500 });
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
-    return (await tooltip.innerText()).trim();
-  }
-
-  /**
-   * Clicks "Open" inside the currently shown variable source tooltip.
-   */
-  async openVariableSource(): Promise<void> {
-    await this.page
-      .getByTestId("variable-source-tooltip")
-      .getByTestId("variable-source-tooltip-open")
-      .click();
-  }
-
-  /**
-   * Presses the shortcut that opens the "Manage Environments" dialog on a
-   * project environment page (which hides the picker) and waits for it.
-   */
-  async openManageEnvironmentsDialogByShortcut(): Promise<void> {
-    await this.page.keyboard.press("ControlOrMeta+e");
-    await expect(this.collectionEnvironmentDialog).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Clicks an environment's row inside the open "Manage Environments" dialog.
-   */
-  async selectEnvironmentInDialog(name: string): Promise<void> {
-    await new TableComponent(this.page, this.collectionEnvironmentDialog)
-      .row(name)
-      .click();
-  }
-
-  /**
-   * Whether an environment row in the "Environments" grid is selected.
-   */
-  async isEnvironmentRowSelected(
-    name: string,
-    inDialog = false,
-  ): Promise<boolean> {
-    const root = inDialog
-      ? this.collectionEnvironmentDialog
-      : this.page.getByRole("grid", { name: "Environments" });
-    return (
-      (await new TableComponent(this.page, root).row(name).first().getAttribute("aria-selected")) ===
-      "true"
-    );
-  }
-
-  /**
-   * Counts the "Manage Environments" dialogs currently mounted.
-   */
-  async countManageEnvironmentsDialogs(): Promise<number> {
-    return this.collectionEnvironmentDialog.count();
-  }
-
-  /**
-   * Fills the last (empty) row of the open "Manage Environments" dialog
-   * with `variable`, then closes the dialog and the picker popover behind it.
-   * Requires `openCollectionEnvironmentEditor()` to have been called first.
-   */
-  async addCollectionEnvironmentVariable(
-    variable: EnvironmentKvPairData,
-  ): Promise<void> {
-    const listbox = this.collectionEnvironmentDialog.getByRole("listbox", {
-      name: "Environment Key Value Pair",
-    });
-    const key = await listbox
-      .locator('[role="option"]')
-      .last()
-      .getAttribute("data-key");
-    const row = listbox.locator(`[role="option"][data-key="${key}"]`);
-    await this.keyValue.nameEditor(row).setValue(variable.name);
-    await this.keyValue.valueEditor(row).setValue(variable.value);
-    await this.manageEnvironmentsModal.clickButton("Close");
-    await expect(this.collectionEnvironmentDialog).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
-    const picker = this.environmentPicker.listbox("collection");
-    await expect(async () => {
-      if (await picker.isVisible()) {
-        await this.page.keyboard.press("Escape");
-      }
-      await expect(picker).toBeHidden({ timeout: 2000 });
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 }
