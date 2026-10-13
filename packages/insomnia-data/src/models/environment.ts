@@ -34,6 +34,7 @@ export const EnvironmentKvPairDataSchema = z.object({
   value: z.string().optional().default(''),
   type: z.enum([EnvironmentKvPairDataType.JSON, EnvironmentKvPairDataType.STRING, EnvironmentKvPairDataType.SECRET]),
   enabled: z.boolean().optional(),
+  isConfidential: z.boolean().optional(),
 });
 export type EnvironmentKvPairData = z.infer<typeof EnvironmentKvPairDataSchema>;
 

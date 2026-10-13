@@ -273,6 +273,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -328,6 +331,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
@@ -822,6 +828,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -877,6 +886,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
@@ -1439,6 +1451,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -1494,6 +1509,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
@@ -2227,6 +2245,9 @@
                         },
                         "enabled": {
                           "type": "boolean"
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -2282,6 +2303,9 @@
                     ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
