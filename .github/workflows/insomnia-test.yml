@@ -112,13 +112,29 @@ jobs:
         run: npx electron-builder build --config electron-builder.config.js --linux --dir --publish never
 
   # ---------------------------------------------------------------------------
+  # Single source of truth for the shard count. Generates the matrix indices
+  # (1..N) so scaling up only requires changing SHARD_TOTAL.
+  # ---------------------------------------------------------------------------
+  shards:
+    name: Shard Matrix
+    runs-on: ubuntu-latest
+    env:
+      SHARD_TOTAL: 64
+    outputs:
+      indices: ${{ steps.matrix.outputs.indices }}
+      total: ${{ env.SHARD_TOTAL }}
+    steps:
+      - id: matrix
+        run: echo "indices=$(seq 1 $SHARD_TOTAL | jq -sc .)" >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------------
   # Run the whole suite across N shards in parallel. Each shard restores the
   # cached binary and runs a slice of the suite, retrying failures in-process
   # (see playwright.config.ts `retries`).
   # ---------------------------------------------------------------------------
   parallel-test:
     name: Parallel Test
-    needs: build
+    needs: [build, shards]
     timeout-minutes: 60
     runs-on: ubuntu-latest
     permissions:
@@ -127,9 +143,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # To scale up, add indices here and bump shardTotal to match.
-        shardIndex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
-        shardTotal: [32]
+        shardIndex: ${{ fromJSON(needs.shards.outputs.indices) }}
+        shardTotal: ${{ fromJSON(format('[{0}]', needs.shards.outputs.total)) }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
