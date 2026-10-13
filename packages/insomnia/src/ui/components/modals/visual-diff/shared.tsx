@@ -5,6 +5,7 @@ import { Button } from 'react-aria-components';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import type { EntityChangeStatus, VisualDiffEntityType } from './diff-engine';
+import { InlineDiffEditor } from './inline-diff-editor';
 
 const ENTITY_TYPE_LABELS: Record<VisualDiffEntityType, string> = {
   request: 'Request',
@@ -201,11 +202,42 @@ export function formatValue(value: unknown): string {
   }
 }
 
-// Lays before/after side-by-side when there's room for both (flex-wrap falls
-// back to stacked once the combined width no longer fits the container).
+// Past this a value is hard to compare by eye as two whole blocks.
+const LONG_VALUE_LENGTH = 120;
+
+function isLongValue(text: string) {
+  return text.includes('\n') || text.length > LONG_VALUE_LENGTH;
+}
+
+// Objects are shown as JSON, and so are strings holding a JSON document (eg. a request body).
+function diffLanguage(value: unknown, text: string) {
+  if (typeof value === 'object') {
+    return 'json';
+  }
+  if (!/^\s*[[{]/.test(text)) {
+    return 'plaintext';
+  }
+  try {
+    JSON.parse(text);
+    return 'json';
+  } catch {
+    return 'plaintext';
+  }
+}
+
+// A long value changed on both sides gets a highlighted diff, so the changed parts stand out.
+// Otherwise before/after are laid side-by-side when there's room for both (flex-wrap falls back
+// to stacked once the combined width no longer fits the container).
 export const ValueChange: FC<{ before: unknown; after: unknown }> = ({ before, after }) => {
   const hasBefore = before !== undefined;
   const hasAfter = after !== undefined;
+  if (hasBefore && hasAfter) {
+    const original = formatValue(before);
+    const modified = formatValue(after);
+    if (isLongValue(original) || isLongValue(modified)) {
+      return <InlineDiffEditor original={original} modified={modified} language={diffLanguage(after, modified)} />;
+    }
+  }
   return (
     <div className="flex flex-wrap items-start gap-2 text-sm">
       {hasBefore && (

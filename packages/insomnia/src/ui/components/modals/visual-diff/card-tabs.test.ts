@@ -1,7 +1,7 @@
 import { models } from 'insomnia-data';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildCookieJarTabs } from './cookie-jar-diff-card';
 import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from './diff-engine';
@@ -13,8 +13,15 @@ import { buildMcpTabs } from './mcp-diff-card';
 import { buildMockRouteTabs } from './mock-route-diff-card';
 import { buildRequestTabs } from './request-diff-card';
 import { buildRequestGroupTabs, folderDiscardConfirmMessage } from './request-group-diff-card';
+import { ValueChange } from './shared';
 import { buildSocketIOTabs } from './socket-io-diff-card';
 import { buildWebSocketTabs } from './websocket-diff-card';
+
+// Monaco needs a browser; the stand-in records what the highlighted diff would have shown.
+const inlineDiffEditor = vi.hoisted(() =>
+  vi.fn((_props: { original: string; modified: string; language: string }) => null),
+);
+vi.mock('./inline-diff-editor', () => ({ InlineDiffEditor: inlineDiffEditor }));
 
 function modified(type: VisualDiffEntityType, before: any, after: any): EntityDiff {
   return {
@@ -350,6 +357,31 @@ describe('buildGenericTabs', () => {
     expect(summary(buildGenericTabs(added('mock_server', server)))).toEqual([
       { id: 'fields', status: 'added', count: 2 },
     ]);
+  });
+});
+
+describe('ValueChange', () => {
+  const render = (before: unknown, after: unknown) =>
+    renderToStaticMarkup(React.createElement(ValueChange, { before, after }));
+
+  beforeEach(() => inlineDiffEditor.mockClear());
+
+  it('highlights the diff of a long value changed on both sides, as JSON when it holds JSON', () => {
+    render('{\n  "name": "Rex"\n}', '{\n  "name": "Rex",\n  "age": 3\n}');
+    render({ info: { version: '1.0.3' } }, { info: { version: '1.0.4' } });
+    render('line one\nline two', 'line one\nline 2');
+
+    expect(inlineDiffEditor.mock.calls.map(([props]) => props.language)).toEqual(['json', 'json', 'plaintext']);
+    expect(inlineDiffEditor.mock.calls[1][0].modified).toContain('"version": "1.0.4"');
+  });
+
+  it('keeps short values, and values on one side only, as plain before/after blocks', () => {
+    const shortMarkup = render('https://a', 'https://b');
+    const addedMarkup = render(undefined, 'line one\nline two');
+
+    expect(inlineDiffEditor).not.toHaveBeenCalled();
+    expect(shortMarkup).toContain('https://b');
+    expect(addedMarkup).toContain('line two');
   });
 });
 
