@@ -22,6 +22,7 @@ import type { PageManager } from '../pages/page-manager';
 import type { TreeNode, UnitTestResultRow } from '../pages/workspace.page';
 import { BaseFlow } from './base.flow';
 import type { FlowContext } from './flow-context';
+import type { FlowManager } from './flow-manager';
 import type { PreferencesFlow } from './preferences.flow';
 
 export type WorkspaceItem =
@@ -1031,7 +1032,7 @@ export class WorkspaceFlow extends BaseFlow {
     }
 
     if (node.type === TreeNodeType.Request) {
-      const flows = this.flowManager;
+      const flows = this.flowManager as FlowManager;
       const label = await workspace.getRequestTypeLabel(node);
       switch (label) {
         case 'GQL': {
