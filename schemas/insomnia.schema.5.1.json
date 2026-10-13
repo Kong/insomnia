@@ -1238,6 +1238,9 @@
                     "name": {
                       "type": "string"
                     },
+                    "id": {
+                      "type": "string"
+                    },
                     "value": {
                       "type": "string"
                     },
