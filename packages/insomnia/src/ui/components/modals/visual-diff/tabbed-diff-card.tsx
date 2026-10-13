@@ -95,7 +95,7 @@ export const EntityHeader: FC<{ current: EntityHeaderLine; previous?: EntityHead
           <span className="shrink-0 text-xs font-normal text-(--hl) line-through">{previous.name}</span>
         )}
         {previous.detail !== undefined && (
-          <span className="truncate font-mono text-xs text-(--color-font-danger) line-through">{previous.detail}</span>
+          <span className="truncate font-mono text-xs text-(--color-font) line-through">{previous.detail}</span>
         )}
       </div>
     )}

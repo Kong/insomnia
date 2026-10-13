@@ -31,19 +31,19 @@ export function entityTypeLabel(type: VisualDiffEntityType): string {
 
 const STATUS_STYLES: Record<EntityChangeStatus, { className: string; dotClassName: string; icon: IconProp; label: string }> = {
   added: {
-    className: 'bg-(--color-success)/20 text-(--color-font-success)',
+    className: 'bg-(--color-success)/20 text-(--color-font)',
     dotClassName: 'bg-(--color-success)',
     icon: 'plus',
     label: 'Added',
   },
   removed: {
-    className: 'bg-(--color-danger)/20 text-(--color-font-danger)',
+    className: 'bg-(--color-danger)/20 text-(--color-font)',
     dotClassName: 'bg-(--color-danger)',
     icon: 'minus',
     label: 'Removed',
   },
   modified: {
-    className: 'bg-(--color-notice)/20 text-(--color-font-notice)',
+    className: 'bg-(--color-notice)/20 text-(--color-font)',
     dotClassName: 'bg-(--color-notice)',
     icon: 'pencil',
     label: 'Modified',
@@ -241,12 +241,12 @@ export const ValueChange: FC<{ before: unknown; after: unknown }> = ({ before, a
   return (
     <div className="flex flex-wrap items-start gap-2 text-sm">
       {hasBefore && (
-        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font-danger) line-through">
+        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font) line-through">
           {formatValue(before)}
         </pre>
       )}
       {hasAfter && (
-        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font-success)">
+        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font)">
           {formatValue(after)}
         </pre>
       )}

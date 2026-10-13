@@ -81,9 +81,7 @@ export const KeyValueDiffRows: FC<{ title?: string; rows: KeyedDiffRow[] } & Key
                 <span className="font-mono text-sm font-medium">{labelOf(row)}</span>
                 {item?.disabled && <span className="text-xs text-(--hl)">(disabled)</span>}
               </div>
-              <span
-                className={`truncate font-mono text-sm ${isAdded ? 'text-(--color-font-success)' : 'text-(--color-font-danger) line-through'}`}
-              >
+              <span className={`truncate font-mono text-sm text-(--color-font) ${isAdded ? '' : 'line-through'}`}>
                 {getRowValue(item) ?? '(empty)'}
               </span>
             </li>

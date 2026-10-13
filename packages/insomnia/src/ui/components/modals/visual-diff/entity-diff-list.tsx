@@ -160,9 +160,9 @@ export const EntityDiffList: FC<Props> = ({
         <span className="font-semibold text-(--color-font)">
           {entities.length} {entities.length === 1 ? 'entity' : 'entities'} changed
         </span>
-        {summary.added > 0 && <span className="text-(--color-font-success)">{summary.added} added</span>}
-        {summary.modified > 0 && <span className="text-(--color-font-notice)">{summary.modified} modified</span>}
-        {summary.removed > 0 && <span className="text-(--color-font-danger)">{summary.removed} removed</span>}
+        {summary.added > 0 && <span className="text-(--color-success)">{summary.added} added</span>}
+        {summary.modified > 0 && <span className="text-(--color-notice)">{summary.modified} modified</span>}
+        {summary.removed > 0 && <span className="text-(--color-danger)">{summary.removed} removed</span>}
       </div>
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
         {entities.map(diff => {
