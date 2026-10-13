@@ -20,14 +20,10 @@ jobs:
   # ---------------------------------------------------------------------------
   # Build the Insomnia binary once and cache it by commit SHA. All shards
   # restore the same cached binary instead of each building it.
-  #
-  # continue-on-error: true so a failure here never blocks the PR merge check
-  # and downstream jobs still run instead of being skipped.
   # ---------------------------------------------------------------------------
   build:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: read
       packages: read

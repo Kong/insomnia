@@ -1611,6 +1611,6 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(4010, () => {
+server.listen(4010, "127.0.0.1", () => {
   process.stdout.write("Listening at http://localhost:4010\n");
 });
