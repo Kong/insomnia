@@ -1,23 +1,11 @@
-import { expect } from "@playwright/test";
+import { expect } from '@playwright/test';
 
-import { SendButtonState } from "../enums/send-button-state";
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from "../misc/constants";
-import type {
-  Response,
-  ResponseHeader,
-  ResponseTestResult,
-  StreamEvent,
-} from "../models/response";
-import { BasePage } from "./base.page";
+import { RequestState } from '../enums/request-state';
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../misc/constants';
+import type { Response, ResponseHeader, ResponseTestResult, StreamEvent } from '../models/response';
+import { BasePage } from './base.page';
 
-export type ResponseTab =
-  | "preview"
-  | "headers"
-  | "cookies"
-  | "test-results"
-  | "mock-response"
-  | "timeline"
-  | "events";
+export type ResponseTab = 'preview' | 'headers' | 'cookies' | 'test-results' | 'mock-response' | 'timeline' | 'events';
 
 const DURATION_UNIT_MS: Record<string, number> = { ms: 1, s: 1000, m: 60_000 };
 const BYTE_UNIT_FACTOR: Record<string, number> = {
@@ -36,20 +24,14 @@ function parseDurationMs(raw: string): number | undefined {
 function parseByteSize(raw: string): number | undefined {
   const match = raw.match(/^([\d.]+)\s*(B|KB|MB|GB)$/i);
   if (!match) return undefined;
-  return Math.round(
-    Number.parseFloat(match[1]) * BYTE_UNIT_FACTOR[match[2].toUpperCase()],
-  );
+  return Math.round(Number.parseFloat(match[1]) * BYTE_UNIT_FACTOR[match[2].toUpperCase()]);
 }
 
 export class ResponsePage extends BasePage {
-  private readonly CANCEL_REQUEST_BUTTON =
-    '[data-testid="response-pane"] button:has-text("Cancel Request")';
-  private readonly EVENT_PREVIEW_EDITOR =
-    '[data-testid="response-pane"] #mcp-data-preview + .CodeMirror';
-  private readonly EVENT_ROWS =
-    '[data-testid="response-pane"] [role="tabpanel"] table tbody tr';
-  private readonly HEADER_TAGS =
-    '[data-testid="response-pane"] [aria-live="polite"] .tag';
+  private readonly CANCEL_REQUEST_BUTTON = '[data-testid="response-pane"] button:has-text("Cancel Request")';
+  private readonly EVENT_PREVIEW_EDITOR = '[data-testid="response-pane"] #mcp-data-preview + .CodeMirror';
+  private readonly EVENT_ROWS = '[data-testid="response-pane"] [role="tabpanel"] table tbody tr';
+  private readonly HEADER_TAGS = '[data-testid="response-pane"] [aria-live="polite"] .tag';
   private readonly NBSP = / /g;
   private readonly PANE = '[data-testid="response-pane"]';
   private readonly TABPANEL = '[data-testid="response-pane"] [role="tabpanel"]';
@@ -66,7 +48,7 @@ export class ResponsePage extends BasePage {
       headers: (await this.getHeaders()) ?? [],
       body: await this.getBody(),
       events: async () => (await this.getEvents()) ?? [],
-      console: async () => (await this.getConsole()) ?? "",
+      console: async () => (await this.getConsole()) ?? '',
       tests: async () => this.getTestResults(),
     };
   }
@@ -78,7 +60,7 @@ export class ResponsePage extends BasePage {
    * "preview" tab or its editor isn't available
    */
   private async getBody(): Promise<unknown> {
-    if (!(await this.switchTab("preview"))) return undefined;
+    if (!(await this.switchTab('preview'))) return undefined;
     const editor = this.page.locator(`${this.TABPANEL} .CodeMirror`).first();
     if ((await editor.count()) === 0) return undefined;
     await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
@@ -99,7 +81,7 @@ export class ResponsePage extends BasePage {
   private async getBytesContent(): Promise<number | undefined> {
     const tag = this.page.locator(this.HEADER_TAGS).nth(2);
     if ((await tag.count()) === 0) return undefined;
-    const raw = (await tag.innerText()).replace(this.NBSP, " ").trim();
+    const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     return parseByteSize(raw);
   }
 
@@ -109,7 +91,7 @@ export class ResponsePage extends BasePage {
    * isn't available
    */
   async getConsole(): Promise<string | undefined> {
-    if (!(await this.switchTab("timeline"))) return undefined;
+    if (!(await this.switchTab('timeline'))) return undefined;
     const editor = this.page.locator(`${this.TABPANEL} .CodeMirror`).first();
     await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return this.readCodeMirror(editor);
@@ -124,7 +106,7 @@ export class ResponsePage extends BasePage {
   private async getElapsedTime(): Promise<number | undefined> {
     const tag = this.page.locator(this.HEADER_TAGS).nth(1);
     if ((await tag.count()) === 0) return undefined;
-    const raw = (await tag.innerText()).replace(this.NBSP, " ").trim();
+    const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     return parseDurationMs(raw);
   }
 
@@ -154,15 +136,15 @@ export class ResponsePage extends BasePage {
    * tab isn't available
    */
   async getEvents(): Promise<StreamEvent[] | undefined> {
-    if (!(await this.switchTab("events"))) return undefined;
+    if (!(await this.switchTab('events'))) return undefined;
     const rows = this.page.locator(this.EVENT_ROWS);
     const count = await rows.count();
     const events: StreamEvent[] = [];
     for (let i = 0; i < count; i++) {
-      const cells = rows.nth(i).locator("td");
+      const cells = rows.nth(i).locator('td');
       const data = (await cells.nth(1).innerText()).trim();
       const time = (await cells.nth(2).innerText()).trim();
-      await rows.nth(i).dispatchEvent("click");
+      await rows.nth(i).dispatchEvent('click');
       events.push({ data, time, preview: await this.getEventPreview() });
     }
     return events;
@@ -177,14 +159,10 @@ export class ResponsePage extends BasePage {
    * tab doesn't exist
    */
   async getGrpcMessage(index = 0): Promise<unknown> {
-    const tab = this.page
-      .locator(this.PANE)
-      .getByRole("tab", { name: `Response ${index + 1}`, exact: true });
+    const tab = this.page.locator(this.PANE).getByRole('tab', { name: `Response ${index + 1}`, exact: true });
     if ((await tab.count()) === 0) return undefined;
     await tab.click();
-    const editor = this.page
-      .locator(`${this.PANE} [role="tabpanel"] .CodeMirror`)
-      .first();
+    const editor = this.page.locator(`${this.PANE} [role="tabpanel"] .CodeMirror`).first();
     const raw = await this.readCodeMirror(editor);
     if (!raw) return undefined;
     try {
@@ -217,16 +195,12 @@ export class ResponsePage extends BasePage {
    * @returns The gRPC status code and message, or undefined when no
    * status tag is present
    */
-  async getGrpcStatus(): Promise<
-    { code: string; message: string } | undefined
-  > {
-    const tag = this.page.locator(
-      `${this.PANE} [data-testid="response-status-tag"]`,
-    );
+  async getGrpcStatus(): Promise<{ code: string; message: string } | undefined> {
+    const tag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
     if ((await tag.count()) === 0) return undefined;
-    const raw = (await tag.innerText()).replace(this.NBSP, " ").trim();
+    const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     const [code, ...rest] = raw.split(/\s+/);
-    return { code, message: rest.join(" ") };
+    return { code, message: rest.join(' ') };
   }
 
   /**
@@ -235,12 +209,12 @@ export class ResponsePage extends BasePage {
    * "headers" tab isn't available
    */
   private async getHeaders(): Promise<ResponseHeader[] | undefined> {
-    if (!(await this.switchTab("headers"))) return undefined;
+    if (!(await this.switchTab('headers'))) return undefined;
     const rows = this.page.locator(`${this.TABPANEL} table tbody tr`);
     const count = await rows.count();
     const headers: ResponseHeader[] = [];
     for (let i = 0; i < count; i++) {
-      const cells = rows.nth(i).locator("td");
+      const cells = rows.nth(i).locator('td');
       headers.push({
         name: (await cells.nth(0).innerText()).trim(),
         value: (await cells.nth(1).innerText()).trim(),
@@ -256,25 +230,17 @@ export class ResponsePage extends BasePage {
    * "test-results" tab isn't available
    */
   private async getTestResults(): Promise<ResponseTestResult[] | undefined> {
-    if (!(await this.switchTab("test-results"))) return undefined;
-    const rows = this.page.locator(
-      `${this.TABPANEL} [data-testid="test-result-row"]`,
-    );
+    if (!(await this.switchTab('test-results'))) return undefined;
+    const rows = this.page.locator(`${this.TABPANEL} [data-testid="test-result-row"]`);
     const count = await rows.count();
     const results: ResponseTestResult[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const status = (
-        (await row.locator("span.mr-2.ml-2").textContent()) ?? ""
-      ).trim();
-      const name = (
-        (await row.locator("span.capitalize").textContent()) ?? ""
-      ).trim();
-      const errorSpan = row.locator("span.capitalize + span.text-neutral-400");
+      const status = ((await row.locator('span.mr-2.ml-2').textContent()) ?? '').trim();
+      const name = ((await row.locator('span.capitalize').textContent()) ?? '').trim();
+      const errorSpan = row.locator('span.capitalize + span.text-neutral-400');
       const error =
-        (await errorSpan.count()) > 0
-          ? ((await errorSpan.textContent()) ?? "").trim() || undefined
-          : undefined;
+        (await errorSpan.count()) > 0 ? ((await errorSpan.textContent()) ?? '').trim() || undefined : undefined;
       results.push({ name, status, error });
     }
     return results;
@@ -296,12 +262,10 @@ export class ResponsePage extends BasePage {
     return this.page.locator(this.PANE).getByText(text).first().isVisible();
   }
 
-  async getSendButtonState(): Promise<SendButtonState> {
+  async getRequestState(): Promise<RequestState> {
     const cancelButton = this.page.locator(this.CANCEL_REQUEST_BUTTON);
-    if ((await cancelButton.count()) === 0) return SendButtonState.Idle;
-    return (await cancelButton.first().isVisible())
-      ? SendButtonState.Sending
-      : SendButtonState.Idle;
+    if ((await cancelButton.count()) === 0) return RequestState.Idle;
+    return (await cancelButton.first().isVisible()) ? RequestState.Sending : RequestState.Idle;
   }
 
   /**
@@ -310,16 +274,14 @@ export class ResponsePage extends BasePage {
    * @returns The status code and message, or undefined when no status
    * tag is present or the code isn't numeric
    */
-  private async getStatus(): Promise<
-    { code: number; message: string } | undefined
-  > {
+  private async getStatus(): Promise<{ code: number; message: string } | undefined> {
     const tag = this.page.locator(this.HEADER_TAGS).nth(0);
     if ((await tag.count()) === 0) return undefined;
-    const raw = (await tag.innerText()).replace(this.NBSP, " ").trim();
+    const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     const [code, ...rest] = raw.split(/\s+/);
     const statusCode = Number(code);
     if (Number.isNaN(statusCode)) return undefined;
-    return { code: statusCode, message: rest.join(" ") };
+    return { code: statusCode, message: rest.join(' ') };
   }
 
   /**
@@ -328,12 +290,7 @@ export class ResponsePage extends BasePage {
    * tags.
    * @returns The response summary fields
    */
-  private async getSummary(): Promise<
-    Pick<
-      Response,
-      "statusCode" | "statusMessage" | "elapsedTime" | "bytesContent"
-    >
-  > {
+  private async getSummary(): Promise<Pick<Response, 'statusCode' | 'statusMessage' | 'elapsedTime' | 'bytesContent'>> {
     const status = await this.getStatus();
     return {
       statusCode: status?.code,
@@ -352,14 +309,9 @@ export class ResponsePage extends BasePage {
    * wait on `RequestPage.send()`.
    */
   async navigate(): Promise<void> {
-    const previewTab = this.page.locator(
-      `${this.PANE} [data-key="timeline"][role="tab"]`,
-    );
-    const dialog = this.page.getByRole("dialog").first();
-    await previewTab
-      .or(dialog)
-      .first()
-      .waitFor({ state: "visible", timeout: LONG_TIMEOUT });
+    const previewTab = this.page.locator(`${this.PANE} [data-key="timeline"][role="tab"]`);
+    const dialog = this.page.getByRole('dialog').first();
+    await previewTab.or(dialog).first().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     if (await dialog.isVisible()) {
       throw new Error((await dialog.innerText()).trim());
     }
@@ -370,16 +322,12 @@ export class ResponsePage extends BasePage {
    * response status tag to become visible.
    */
   async navigateGrpc(): Promise<void> {
-    const statusTag = this.page.locator(
-      `${this.PANE} [data-testid="response-status-tag"]`,
-    );
+    const statusTag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
     await expect(statusTag).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {
-    const tabLocator = this.page.locator(
-      `${this.PANE} [data-key="${tab}"][role="tab"]`,
-    );
+    const tabLocator = this.page.locator(`${this.PANE} [data-key="${tab}"][role="tab"]`);
     if ((await tabLocator.count()) === 0) return false;
     await tabLocator.click();
     return true;
