@@ -1,0 +1,10 @@
+extends: [spectral:oas]
+rules:
+  require-x-test-marker:
+    description: info object must contain a custom x-test-marker field
+    message: "{{description}}"
+    severity: error
+    given: $.info
+    then:
+      field: x-test-marker
+      function: truthy
