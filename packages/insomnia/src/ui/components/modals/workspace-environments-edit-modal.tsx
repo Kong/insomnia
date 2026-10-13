@@ -41,7 +41,17 @@ import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
 
-export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => void }) => {
+export const WorkspaceEnvironmentsEditModal = ({
+  onClose,
+  // Environment preselected on open, e.g. when opened for a specific variable's
+  // source. Validated against this workspace's environments — the id can go stale
+  // (e.g. the environment is deleted between hover and Open) and an unknown id
+  // would leave the modal with no editor and no selection.
+  initialEnvironmentId,
+}: {
+  onClose: () => void;
+  initialEnvironmentId?: string;
+}) => {
   const { organizationId, projectId, workspaceId } = useParams<{
     organizationId: string;
     projectId: string;
@@ -64,7 +74,11 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const preselectedEnvironmentId =
+    initialEnvironmentId && [baseEnvironment, ...subEnvironments].some(env => env._id === initialEnvironmentId)
+      ? initialEnvironmentId
+      : activeEnvironment._id;
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(preselectedEnvironmentId);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );
