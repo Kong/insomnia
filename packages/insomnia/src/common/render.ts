@@ -96,7 +96,7 @@ function getConfidentialityByKey(kvPairData?: EnvironmentKvPairData[]) {
   const confidentialityByKey = new Map<string, ConfidentialValueKind | undefined>();
 
   for (const pair of kvPairData || []) {
-    if (pair.enabled === false || pair.type === EnvironmentKvPairDataType.SECRET) {
+    if (!pair.enabled || pair.type === EnvironmentKvPairDataType.SECRET) {
       continue;
     }
     confidentialityByKey.set(pair.name, pair.isConfidential ? 'normal' : undefined);
@@ -398,9 +398,7 @@ export async function buildRenderContext({
       // correct "public" signal and clears any confidentiality from lower layers.
       confidentialityByKey.set(key, layerConfidentialityByKey.get(key));
       const confidentiality = confidentialityByKey.get(key);
-      renderableData[key] = confidentiality && confidentialPolicy === 'mask'
-        ? maskConfidentialValue(value)
-        : value;
+      renderableData[key] = confidentiality && confidentialPolicy === 'mask' ? maskConfidentialValue(value) : value;
     }
 
     finalRenderContext = await renderSubContext(renderableData, finalRenderContext);
