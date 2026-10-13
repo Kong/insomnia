@@ -210,17 +210,15 @@ export class ResponsePage extends BasePage {
    */
   private async getHeaders(): Promise<ResponseHeader[] | undefined> {
     if (!(await this.switchTab('headers'))) return undefined;
-    const rows = this.page.locator(`${this.TABPANEL} table tbody tr`);
-    const count = await rows.count();
-    const headers: ResponseHeader[] = [];
-    for (let i = 0; i < count; i++) {
-      const cells = rows.nth(i).locator('td');
-      headers.push({
-        name: (await cells.nth(0).innerText()).trim(),
-        value: (await cells.nth(1).innerText()).trim(),
-      });
-    }
-    return headers;
+    return this.page.locator(`${this.TABPANEL} table tbody tr`).evaluateAll(rows =>
+      rows.map(row => {
+        const cells = row.querySelectorAll('td');
+        return {
+          name: ((cells[0] as HTMLElement | undefined)?.innerText ?? '').trim(),
+          value: ((cells[1] as HTMLElement | undefined)?.innerText ?? '').trim(),
+        };
+      }),
+    );
   }
 
   /**

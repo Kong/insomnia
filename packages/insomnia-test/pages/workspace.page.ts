@@ -1220,10 +1220,12 @@ export class WorkspacePage extends BasePage {
     // this when a tooltip is actually open — an unconditional Escape can
     // instead dismiss an unrelated open dialog/panel (e.g. the
     // Environment Editor) and disrupt the tree this row lives in.
-    if (await this.page.getByRole("tooltip").isVisible()) {
-      await this.page.keyboard.press("Escape");
-    }
-    await row.click({ button: "right" });
+    await expect(async () => {
+      if (await this.page.getByRole("tooltip").isVisible()) {
+        await this.page.keyboard.press("Escape");
+      }
+      await row.click({ button: "right", timeout: 3000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

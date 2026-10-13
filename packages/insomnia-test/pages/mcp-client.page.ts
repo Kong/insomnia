@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import { RequestPage } from "./request.page";
 
 export class McpClientPage extends RequestPage {
@@ -53,7 +53,7 @@ export class McpClientPage extends RequestPage {
           ).filter(Boolean);
           return tools.length;
         },
-        { timeout: DEFAULT_TIMEOUT },
+        { timeout: ACTION_TIMEOUT },
       )
       .toBeGreaterThan(0);
     return tools;

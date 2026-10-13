@@ -48,7 +48,7 @@ export class SocketIORequestFlow extends BaseFlow {
 
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
     await socketIoRequestPage.navigate();
-    await this.applyRequestFields(socketIoRequestPage, request);
+    await this.applyRequestFields(socketIoRequestPage, request, requestNode._id);
 
     return this.assertCreated(await this.get(request.name), request.name);
   }
@@ -134,8 +134,10 @@ export class SocketIORequestFlow extends BaseFlow {
   private async applyRequestFields(
     page: SocketIORequestPage,
     request: SocketIORequest,
+    id: string,
   ): Promise<void> {
     await page.setUrl(request.url);
+    await this.waitForUrlPersisted("insomnia.SocketIORequest.db", page, id, request.url);
     if (request.headers && request.headers.length > 0) {
       await page.setHeaders(request.headers);
     }
