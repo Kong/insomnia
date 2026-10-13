@@ -143,7 +143,14 @@ export const EntityDiffList: FC<Props> = ({
   }
 
   if (entities.length === 0) {
-    return <TextViewHint message="No structured changes detected in this file." onShowTextView={onShowTextView} />;
+    // Also covers metadata-only (eg. timestamps) and formatting-only changes, and non-Insomnia files
+    // such as the project's .spectral.yaml lint ruleset — not just moves.
+    return (
+      <TextViewHint
+        message="No requests, folders, environments or settings changed — this file only has changes the Visual view doesn't show, like moves, reordering, timestamps or formatting."
+        onShowTextView={onShowTextView}
+      />
+    );
   }
 
   const summary = entities.reduce(
