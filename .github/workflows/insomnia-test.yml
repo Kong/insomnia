@@ -341,7 +341,7 @@ jobs:
           ids=$(gh api --paginate \
             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
             --jq '.artifacts[] | select(.name | test("^playwright-report-[0-9]+$|^coverage-raw-[0-9]+$|^blob-report-[0-9]+$")) | .id')
-          for id in $ids; do
-            echo "Deleting intermediate artifact $id"
-            gh api -X DELETE "/repos/${{ github.repository }}/actions/artifacts/$id"
-          done
+          export REPO="${{ github.repository }}"
+          # Delete in parallel (16 at a time); one failed delete shouldn't abort the rest.
+          echo "$ids" | xargs -r -P 16 -I{} sh -c \
+            'echo "Deleting intermediate artifact {}"; gh api -X DELETE "/repos/$REPO/actions/artifacts/{}" --silent || echo "Failed to delete {}"'
