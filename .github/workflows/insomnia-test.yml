@@ -57,16 +57,38 @@ jobs:
           sudo mkswap /mnt/swapfile
           sudo swapon /mnt/swapfile
 
+      # node_modules is installed once here and cached by lockfile hash; the
+      # test shards and result job restore it instead of running `npm ci`.
+      # Restore must come before install; the save runs right after install so
+      # later build steps can't alter what gets cached.
+      - name: Restore node_modules
+        id: node-modules-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Remove verify-bundle-plugins from postinstall
-        if: steps.binary-cache.outputs.cache-hit != 'true'
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: |
           sed -i 's/ && npm run verify-bundle-plugins -w insomnia//' package.json
 
       - name: Install dependencies
-        if: steps.binary-cache.outputs.cache-hit != 'true'
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save node_modules
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Build Insomnia
         if: steps.binary-cache.outputs.cache-hit != 'true'
@@ -126,12 +148,14 @@ jobs:
           key: insomnia-linux-unpacked-${{ github.sha }}
           fail-on-cache-miss: true
 
-      - name: Install test dependencies
-        run: |
-          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
-          npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore node_modules
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       - name: Install Electron system dependencies
         working-directory: packages/insomnia-test
@@ -220,13 +244,15 @@ jobs:
       # Full install (not just monocart-coverage-reports) so `npx playwright
       # merge-reports` below is the exact same Playwright version the shards
       # generated their blob reports with.
-      - name: Install test dependencies
+      - name: Restore node_modules
         continue-on-error: true
-        run: |
-          sed -i 's/patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron/patch-package/' package.json
-          npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       # Coverage raw data can embed `file:` sourcemap URLs pointing into this
       # build output (see parallel-test's own restore step). Without it
