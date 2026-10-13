@@ -521,12 +521,11 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     .map(doc => doc.name);
   let vault;
   if (globals && models.environment.vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
-    // decrypt and set vault in insomnia sdk if necessary
-    globals.data[models.environment.vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
-      globals.data[models.environment.vaultEnvironmentPath],
-      'script',
-    );
-    vault = globals.data[models.environment.vaultEnvironmentPath];
+    // decrypt and set vault in insomnia sdk if necessary.
+    // the decrypted secrets must stay out of `globals.data`: that object is written back to the
+    // database by `savePatchesMadeByScript` once the script returns, so storing plaintext there
+    // would permanently replace the stored ciphertext.
+    vault = await maskOrDecryptVaultDataIfNecessary(globals.data[models.environment.vaultEnvironmentPath], 'script');
   }
 
   try {
