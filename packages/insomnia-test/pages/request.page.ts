@@ -498,7 +498,7 @@ export abstract class RequestPage extends TabPanelPage {
             pair.value ?? "",
           );
           await this.syncRowToggle(row, pair);
-          await this.waitForPairPersisted(pair).catch(() => undefined);
+          await this.waitForPairPersisted(pair).catch(() => {});
         }
       }
       expect(missing.map(({ pair }) => pair.name)).toEqual([]);
