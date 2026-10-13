@@ -14,6 +14,10 @@ import {
   StatusDot,
 } from './shared';
 
+// The header starts right after the collapse toggle (h-6 + gap-1 = pl-7); everything below it sits
+// slightly further in, so a card's content never hangs to the left of its title.
+const CONTENT_INDENT = 'pl-9';
+
 const TAB_CLASS =
   'flex h-full shrink-0 cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-sm) hover:text-(--color-font) aria-selected:bg-(--color-bg) aria-selected:text-(--color-font) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset';
 
@@ -63,21 +67,23 @@ export function buildHeaderLines(
 }
 
 // `<badge|icon> <name> <detail>` on one line; when `previous` is given, a second
-// struck-through line shows the old values.
+// struck-through line, indented like the card's content, shows the old values. Lines align
+// on the text baseline, since the name, the monospace detail and the badge differ in font
+// size and family.
 export const EntityHeader: FC<{ current: EntityHeaderLine; previous?: EntityHeaderLine }> = ({ current, previous }) => (
   <div className="flex flex-1 flex-col gap-1 overflow-hidden">
-    <div className="flex items-center gap-2 overflow-hidden">
+    <div className="flex items-baseline gap-2 overflow-hidden">
       {current.badge && (
         <span className={`shrink-0 rounded-xs px-1.5 py-0.5 text-xs font-bold ${current.badge.className}`}>
           {current.badge.label}
         </span>
       )}
-      {current.icon && <Icon icon={current.icon} className="shrink-0 text-(--hl)" />}
+      {current.icon && <Icon icon={current.icon} className="shrink-0 self-center text-(--hl)" />}
       <span className="shrink-0 font-semibold">{current.name}</span>
       {current.detail !== undefined && <span className="truncate font-mono text-sm text-(--hl)">{current.detail}</span>}
     </div>
     {previous && (
-      <div className="flex items-center gap-2 overflow-hidden opacity-60">
+      <div className="flex items-baseline gap-2 overflow-hidden pl-2 opacity-60">
         {previous.badge && (
           <span
             className={`shrink-0 rounded-xs px-1.5 py-0.5 text-[10px] font-bold line-through ${previous.badge.className}`}
@@ -122,7 +128,7 @@ export const TabbedDiffCard: FC<
       </div>
 
       {!isExpanded && tabs.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pl-7">
+        <div className={`flex flex-wrap gap-1.5 ${CONTENT_INDENT}`}>
           {tabs.map(tab => (
             <ChangeChip
               key={tab.id}
@@ -137,7 +143,7 @@ export const TabbedDiffCard: FC<
 
       {isExpanded && tabs.length > 0 && (
         <Tabs
-          className="flex flex-col overflow-hidden"
+          className={`mt-2 flex flex-col overflow-hidden ${CONTENT_INDENT}`}
           selectedKey={activeTabId}
           onSelectionChange={key => setSelectedTabId(String(key))}
         >
@@ -168,7 +174,9 @@ export const TabbedDiffCard: FC<
         </Tabs>
       )}
 
-      {isExpanded && tabs.length === 0 && <span className="pl-7 text-sm text-(--hl)">No further details to show.</span>}
+      {isExpanded && tabs.length === 0 && (
+        <span className={`${CONTENT_INDENT} text-sm text-(--hl)`}>No further details to show.</span>
+      )}
     </DiffCardShell>
   );
 };
