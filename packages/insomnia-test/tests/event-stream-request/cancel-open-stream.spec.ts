@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 
 import { ProjectType } from "../../enums/project-types";
-import { SendButtonState } from "../../enums/send-button-state";
+import { RequestState } from "../../enums/request-state";
 import {
   DEFAULT_TIMEOUT,
   EVENT_STREAM_SERVER,
@@ -42,8 +42,8 @@ test("Verify Disconnecting an Open Event Stream Stops It Early", async ({
   });
 
   await expect
-    .poll(() => responsePage.getSendButtonState(), { timeout: DEFAULT_TIMEOUT })
-    .toEqual(SendButtonState.Idle);
+    .poll(() => responsePage.getRequestState(), { timeout: DEFAULT_TIMEOUT })
+    .toEqual(RequestState.Idle);
   const events = await responsePage.getEvents();
   expect(
     events?.filter((event) => event.data.includes("Hello from the server!"))

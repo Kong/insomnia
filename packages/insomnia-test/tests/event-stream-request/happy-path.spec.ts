@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 
 import { ProjectType } from "../../enums/project-types";
-import { SendButtonState } from "../../enums/send-button-state";
+import { RequestState } from "../../enums/request-state";
 import { EVENT_STREAM_SERVER,expect, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EnvironmentKvPairDataType } from "../../models/environment";
@@ -54,7 +54,7 @@ test("Verify Create Event Stream Request", async ({ user }) => {
       { timeout: 15_000 },
     )
     .toBeTruthy();
-  expect(await responsePage.getSendButtonState()).toEqual(SendButtonState.Idle);
+  expect(await responsePage.getRequestState()).toEqual(RequestState.Idle);
 
   await workspaceFlow.delete(collection);
   const deletedNames = [collection.name, request.name];

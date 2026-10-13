@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 
 import { ProjectType } from "../../enums/project-types";
+import { certPath } from "../../misc/certs";
 import {
   DEFAULT_TIMEOUT,
   expect,
@@ -11,12 +12,8 @@ import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 
 test("Verify Socket.IO Request Over a TLS Connection", async ({ user }) => {
-  test.fail(true, "INS-3998");
-
-  const { preferencesFlow, socketIoRequestFlow, workspaceFlow } =
+  const { certificatesFlow, socketIoRequestFlow, workspaceFlow } =
     user.flowManager;
-
-  await preferencesFlow.set({ validateSSL: false });
 
   const project = await workspaceFlow.create(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -24,6 +21,11 @@ test("Verify Socket.IO Request Over a TLS Connection", async ({ user }) => {
   const collection = await workspaceFlow.create(
     project,
     new Collection(faker.string.alphanumeric(10)),
+  );
+  
+  await certificatesFlow.setCaCertificate(
+    collection,
+    certPath("localhost-cert.pem"),
   );
 
   const request = await socketIoRequestFlow.create(collection, {

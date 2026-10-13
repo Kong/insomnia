@@ -4,6 +4,7 @@ import type { EventStreamRequest } from "../models/event-stream-request";
 import type { GraphQLRequest } from "../models/graphql-request";
 import type { GrpcRequest } from "../models/grpc-request";
 import type { HttpRequest } from "../models/http-request";
+import type { McpClient } from "../models/mcp-client";
 import type { SocketIORequest } from "../models/socket-io-request";
 import type { WebSocketRequest } from "../models/websocket-request";
 import { BaseFlow } from "./base.flow";
@@ -14,6 +15,7 @@ export type CertificateTarget =
   | EventStreamRequest
   | GraphQLRequest
   | GrpcRequest
+  | McpClient
   | SocketIORequest
   | WebSocketRequest;
 

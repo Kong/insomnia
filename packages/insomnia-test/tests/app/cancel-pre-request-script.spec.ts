@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { SendButtonState } from "../../enums/send-button-state";
+import { RequestState } from "../../enums/request-state";
 import { DEFAULT_TIMEOUT,expect, HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
@@ -45,8 +45,8 @@ test("Verify cancelling a long-running pre-request script shows a cancellation m
   await httpRequestFlow.get(request.name);
   await httpRequestPage.send();
   await expect
-    .poll(() => responsePage.getSendButtonState(), { timeout: DEFAULT_TIMEOUT })
-    .toBe(SendButtonState.Sending);
+    .poll(() => responsePage.getRequestState(), { timeout: DEFAULT_TIMEOUT })
+    .toBe(RequestState.Sending);
   await responsePage.cancelRequest();
   let cancelledMessageVisible = false;
   await expect
