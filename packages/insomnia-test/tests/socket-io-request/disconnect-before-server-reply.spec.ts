@@ -14,7 +14,6 @@ test("Verify Disconnecting a Socket.IO Request Before the Server Replies Deliver
   user,
 }) => {
   const { socketIoRequestFlow, workspaceFlow } = user.flowManager;
-  const { responsePage } = user.pageManager;
 
   const project = await workspaceFlow.create(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -49,6 +48,8 @@ test("Verify Disconnecting a Socket.IO Request Before the Server Replies Deliver
   const eventsAfterDisconnect = (await disconnectResponse.events?.()) ?? [];
 
   await socketIoRequestFlow.connect(request);
+  
+  const reconnectResponse = await socketIoRequestFlow.disconnect(request);
 
   expect(
     eventsAfterDisconnect.filter((event) => event.data.includes(payload)),
@@ -56,7 +57,7 @@ test("Verify Disconnecting a Socket.IO Request Before the Server Replies Deliver
   await expect
     .poll(
       async () =>
-        (await responsePage.getEvents())?.some((event) =>
+        (await reconnectResponse.events?.())?.some((event) =>
           event.data.includes("Connected successfully"),
         ),
       {
