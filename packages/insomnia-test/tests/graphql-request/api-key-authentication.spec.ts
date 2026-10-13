@@ -1,0 +1,42 @@
+import { faker } from '@faker-js/faker';
+
+import { ContentType } from '../../enums/content-type';
+import { HttpMethod } from '../../enums/http-method';
+import { ProjectType } from '../../enums/project-types';
+import { expect, HTTP_SERVER, test } from '../../misc/fixtures';
+import { Collection } from '../../models/collection';
+import { Project } from '../../models/project';
+
+const query = '{ characters { results { name } } }';
+const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
+
+test('Verify GraphQL Request Sends the API Key Header Until Authentication Is Set to None', async ({ user }) => {
+  const { graphqlRequestFlow, workspaceFlow } = user.flowManager;
+
+  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+
+  const apiKeyName = `X-${faker.string.alphanumeric(8)}`;
+  const apiKeyValue = faker.string.alphanumeric(16);
+  const request = await graphqlRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Post,
+    url: `${HTTP_SERVER}/post`,
+    body,
+    authentication: { type: 'apikey', key: apiKeyName, value: apiKeyValue },
+  });
+  const authenticatedResponse = await graphqlRequestFlow.send(request);
+  await graphqlRequestFlow.setAuthentication(request, { type: 'none' });
+  const unauthenticatedResponse = await graphqlRequestFlow.send(request);
+
+  expect(authenticatedResponse.statusCode).toBe(200);
+  expect(authenticatedResponse.body).toMatchObject({
+    headers: expect.objectContaining({
+      [apiKeyName.toLowerCase()]: apiKeyValue,
+    }),
+  });
+  expect(unauthenticatedResponse.statusCode).toBe(200);
+  expect((unauthenticatedResponse.body as { headers: Record<string, string> }).headers).not.toHaveProperty(
+    apiKeyName.toLowerCase(),
+  );
+});
