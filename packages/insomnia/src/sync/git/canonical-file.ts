@@ -14,6 +14,7 @@ import { createNedbDatabase } from 'insomnia-data/node';
 
 import { InsomniaFileTypeValues } from '~/common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '~/common/insomnia-v5';
+import { hasSignificantChanges } from '~/common/significant-diff-detection';
 
 /**
  * Returns the content the Git Sync pipeline would write to disk after importing `content`,
@@ -57,9 +58,11 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
  * can only be resolved by committing it.
  */
 export async function isUndiscardableChange({
+  filepath,
   committedContent,
   workingCopyContent,
 }: {
+  filepath: string;
   committedContent: string | null;
   workingCopyContent: string | null;
 }) {
@@ -68,5 +71,12 @@ export async function isUndiscardableChange({
   }
 
   const canonicalContent = await getCanonicalInsomniaFileContent(committedContent);
-  return canonicalContent !== null && canonicalContent !== committedContent && canonicalContent === workingCopyContent;
+  if (canonicalContent === null || canonicalContent === committedContent) {
+    return false;
+  }
+
+  // Compare with the same rules the Unstaged changes list uses. Import fills missing
+  // `meta.created`/`modified` with the current time, so the replay and the working copy can
+  // differ in those alone even though both come from re-generating the same committed file.
+  return !hasSignificantChanges(canonicalContent, workingCopyContent, filepath);
 }
