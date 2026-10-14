@@ -36,6 +36,38 @@ describe('applyEntityChange - collection tree', () => {
     expect(result.collection[0].children[0].url).toBe('https://old');
   });
 
+  // The app writes an empty folder without a `children` key, so that side looks like a leaf.
+  const emptyFolder = (id: string, name = id) => ({ name, meta: { id } });
+
+  it('keeps requests added to a folder when discarding the rename of the folder they were empty in', () => {
+    const workdir = collectionFile(BASE_ENV, [folder('fld_a', [req('req_1'), req('req_2')], 'Renamed')]);
+    const index = collectionFile(BASE_ENV, [emptyFolder('fld_a', 'Original')]);
+
+    const result = parse(applyEntityChange(workdir, index, 'fld_a'));
+
+    expect(result.collection[0].name).toBe('Original');
+    expect(placements(result.collection)).toEqual(['root>fld_a', 'fld_a>req_1', 'fld_a>req_2']);
+  });
+
+  it("doesn't stage the removal of a folder's children along with its rename", () => {
+    const head = collectionFile(BASE_ENV, [folder('fld_a', [req('req_1')], 'Original')]);
+    const workdir = collectionFile(BASE_ENV, [emptyFolder('fld_a', 'Renamed')]);
+
+    const result = parse(applyEntityChange(head, workdir, 'fld_a'));
+
+    expect(result.collection[0].name).toBe('Renamed');
+    expect(placements(result.collection)).toEqual(['root>fld_a', 'fld_a>req_1']);
+  });
+
+  it('leaves a folder that is empty on both sides without a `children` key', () => {
+    const head = collectionFile(BASE_ENV, [emptyFolder('fld_a', 'Original')]);
+    const workdir = collectionFile(BASE_ENV, [emptyFolder('fld_a', 'Renamed')]);
+
+    const result = parse(applyEntityChange(head, workdir, 'fld_a'));
+
+    expect(result.collection[0]).toEqual({ name: 'Renamed', meta: { id: 'fld_a' } });
+  });
+
   it('inserts a newly added folder as an empty shell, leaving its added children to their own cards', () => {
     const base = collectionFile(BASE_ENV, []);
     const source = collectionFile(BASE_ENV, [folder('fld_a', [req('req_1')])]);

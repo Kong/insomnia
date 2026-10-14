@@ -246,6 +246,26 @@ function descendToContainer(baseFile: any, sourceFile: any, folderPath: string[]
   return { container, sourceArray };
 }
 
+// A folder's own fields with `children` swapped for the given ones — placed after `meta`, where the
+// app writes them, and left out when empty, as the app's export does.
+function withChildren(folder: any, children: any[] | undefined): any {
+  const hasChildren = Array.isArray(children) && children.length > 0;
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(folder)) {
+    if (key === 'children') {
+      continue;
+    }
+    result[key] = value;
+    if (key === 'meta' && hasChildren) {
+      result.children = children;
+    }
+  }
+  if (hasChildren && !('children' in result)) {
+    result.children = children;
+  }
+  return result;
+}
+
 // Grafts a collection-tree entity (request or folder) from source into base,
 // wherever source has it — moving it if it sits elsewhere in base, and removing
 // it if source no longer has it. A folder only carries its own fields: its
@@ -270,7 +290,9 @@ function applyCollectionChange(baseFile: any, sourceFile: any, entityId: string)
   const { container, sourceArray } = descendToContainer(baseFile, sourceFile, sourceLocation.folderPath);
   const sourceIndex = sourceArray.findIndex((node: any) => node?.meta?.id === entityId);
   const sourceNode = sourceArray[sourceIndex];
-  const node = Array.isArray(sourceNode.children) ? { ...sourceNode, children: existing?.node?.children ?? [] } : sourceNode;
+  // Recognised by id, not by a `children` array: the app omits `children` for an empty folder,
+  // and treating such a folder as a leaf would replace base's folder along with its contents.
+  const node = entityId.startsWith('fld_') ? withChildren(sourceNode, existing?.node?.children) : sourceNode;
 
   // Staying in the same container keeps its original position to avoid reorder noise.
   const insertAt = existing?.container === container ? existingIndex : Math.min(sourceIndex, container.length);
