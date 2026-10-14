@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
-import { expect, getServerBranches, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { getServerBranches, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
 import { Project } from '../../models/project';
 
 test('Verify creating a new branch in a Git Sync project switches to it', async ({ user }) => {

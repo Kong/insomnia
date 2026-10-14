@@ -1,9 +1,6 @@
-import {
-  expect,
-  MOCK_API_SERVER,
-  SESSION_ID,
-  test,
-} from "../../misc/fixtures";
+import { expect } from "@playwright/test";
+
+import { MOCK_API_SERVER, SESSION_ID, test } from "../../misc/fixtures";
 
 test("Verify a new remote commit becomes pullable on a Cloud-synced workspace after a main-window focus change", async ({
   user,

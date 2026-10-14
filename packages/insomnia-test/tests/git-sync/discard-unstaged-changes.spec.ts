@@ -1,13 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  getServerCommits,
-  GIT_CREDENTIAL,
-  test,
-} from "../../misc/git-fixtures";
+import { DEFAULT_TIMEOUT, getServerCommits, GIT_CREDENTIAL, test } from "../../misc/git-fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 

@@ -2,10 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { SyncStatus } from "../../enums/sync-status";
-import { expect, HTTP_SERVER, test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 
 test("Verify a new collection commits and pushes under its own backend project", async ({

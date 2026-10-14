@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { DialogDismissMethod } from "../../pages/cloud-sync.page";
 

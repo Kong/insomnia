@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { TreeNodeType } from "../../enums/tree-node-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 
 test("Verify dragging a request out of a Cloud Sync collection into an empty Cloud Sync collection", async ({

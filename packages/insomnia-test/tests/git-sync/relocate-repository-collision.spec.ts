@@ -3,10 +3,11 @@ import * as os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
 import { DEFAULT_TIMEOUT } from '../../misc/fixtures';
-import { expect, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
 import { Project } from '../../models/project';
 
 test(

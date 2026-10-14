@@ -1,12 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  HTTP_SERVER,
-  test,
-} from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
 import type { Collection } from "../../models/collection";
 
 test("Verify restoring an earlier snapshot removes a request added and committed after it on a Cloud-synced workspace", async ({

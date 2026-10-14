@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContentType } from "../../enums/content-type";
-import { DEFAULT_TIMEOUT, expect, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
 
 for (const { version, chosenIndex } of [
   { version: "Current", chosenIndex: 0 },

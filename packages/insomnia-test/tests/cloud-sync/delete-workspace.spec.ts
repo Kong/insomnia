@@ -1,11 +1,8 @@
+import { expect } from "@playwright/test";
+
 import { DeleteMode } from "../../enums/delete-mode";
 import { SyncStatus } from "../../enums/sync-status";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  resetCloudSyncState,
-  test,
-} from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, resetCloudSyncState, test } from "../../misc/fixtures";
 
 test.afterAll(async () => {
   await resetCloudSyncState();
