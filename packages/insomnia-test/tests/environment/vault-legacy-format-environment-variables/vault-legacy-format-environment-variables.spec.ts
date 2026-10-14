@@ -2,9 +2,10 @@ import * as crypto from "node:crypto";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
-import { expect, test } from "../../../misc/fixtures";
+import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import {
   ENVIRONMENT_TYPE,

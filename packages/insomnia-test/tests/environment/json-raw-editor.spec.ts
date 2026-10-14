@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import type {
   EnvironmentKvPairData} from "../../models/environment";
 import {
