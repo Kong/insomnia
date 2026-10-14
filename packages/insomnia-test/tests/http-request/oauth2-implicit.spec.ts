@@ -42,10 +42,9 @@ test("Verify Implicit grant with response type ID Token fetches only an identity
 
   const tokens = await httpRequestFlow.fetchOAuth2Tokens(request);
 
-  // Confirmed live: with no separate access_token in the fragment, the
-  // app falls back to displaying the identity token in the Access Token
-  // field too (labeled "never expires" rather than an actual TTL),
-  // rather than leaving it blank.
+  // With no separate access_token in the fragment, the app displays the
+  // identity token in the Access Token field too, rather than leaving it
+  // blank.
   expect(tokens.identityToken).not.toBe("");
   expect(tokens.accessToken).toBe(tokens.identityToken);
 });
