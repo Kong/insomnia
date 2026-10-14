@@ -5,7 +5,7 @@ import { TreeNodeType } from "../enums/tree-node-types";
 import type { Collection } from "../models/collection";
 import { EventStreamRequest } from "../models/event-stream-request";
 import type { Folder } from "../models/folder";
-import type { Response } from "../models/response";
+import type { ResponseView } from "../models/response";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { EventStreamRequestPage } from "../pages/event-stream-request.page";
 import { BaseFlow } from "./base.flow";
@@ -113,9 +113,9 @@ export class EventStreamRequestFlow extends BaseFlow {
    * Connects the event stream for `request` and reads back the resulting
    * response via the standalone project tree.
    * @param request - The request to connect
-   * @returns The response captured after connecting
+   * @returns The response view captured after connecting
    */
-  async send(request: EventStreamRequest): Promise<Response> {
+  async send(request: EventStreamRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const eventStreamRequestPage = this.pageManager.eventStreamRequestPage;
     const responsePage = this.pageManager.responsePage;

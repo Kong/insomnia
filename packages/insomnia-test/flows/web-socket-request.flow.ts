@@ -5,7 +5,7 @@ import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
-import type { Response } from "../models/response";
+import type { ResponseView } from "../models/response";
 import type {
   WebSocketRequestBody} from "../models/websocket-request";
 import {
@@ -56,13 +56,13 @@ export class WebSocketRequestFlow extends BaseFlow {
    * @param request - The request whose connection should be closed
    * @param callback - Invoked once the disconnect completes; defaults to a no-op
    * @param timeout - Maximum time in milliseconds to wait for the disconnect; defaults to DEFAULT_TIMEOUT
-   * @returns The response received after disconnecting
+   * @returns The response view received after disconnecting
    */
   async disconnect(
     request: WebSocketRequest,
     callback: () => Promise<void> | void = () => {},
     timeout = DEFAULT_TIMEOUT,
-  ): Promise<Response> {
+  ): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
@@ -107,9 +107,9 @@ export class WebSocketRequestFlow extends BaseFlow {
    * Opens the WebSocket connection for `request` and returns the
    * resulting response, locating it via the standalone project tree.
    * @param request - The request whose connection should be opened
-   * @returns The response received after connecting
+   * @returns The response view received after connecting
    */
-  async send(request: WebSocketRequest): Promise<Response> {
+  async send(request: WebSocketRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
@@ -152,14 +152,14 @@ export class WebSocketRequestFlow extends BaseFlow {
    * @param body - The message body to send
    * @param callback - Invoked once the send completes; defaults to a no-op
    * @param timeout - Maximum time in milliseconds to wait for the send; defaults to DEFAULT_TIMEOUT
-   * @returns The response received after sending the message
+   * @returns The response view received after sending the message
    */
   async sendMessage(
     request: WebSocketRequest,
     body: WebSocketRequestBody,
     callback: () => Promise<void> | void = () => {},
     timeout = DEFAULT_TIMEOUT,
-  ): Promise<Response> {
+  ): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;

@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { McpClient } from "../models/mcp-client";
 import type { Project } from "../models/project";
-import type { Response } from "../models/response";
+import type { ResponseView } from "../models/response";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { PageManager } from "../pages/page-manager";
 import { BaseFlow } from "./base.flow";
@@ -34,7 +34,7 @@ export class McpClientFlow extends BaseFlow {
    * @param args - Argument name/value pairs to fill in before calling the tool
    * @param callback - Invoked repeatedly until it passes, before reading the response
    * @param timeout - The maximum time, in milliseconds, to retry `callback`
-   * @returns The response produced by the tool call
+   * @returns The response view produced by the tool call
    */
   async callTool(
     client: McpClient,
@@ -42,7 +42,7 @@ export class McpClientFlow extends BaseFlow {
     args: Record<string, string>,
     callback: () => Promise<void> | void = () => {},
     timeout = DEFAULT_TIMEOUT,
-  ): Promise<Response> {
+  ): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
     const responsePage = this.pageManager.responsePage;

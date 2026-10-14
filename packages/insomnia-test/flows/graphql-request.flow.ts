@@ -5,7 +5,7 @@ import { TreeNodeType } from "../enums/tree-node-types";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import { GraphQLRequest } from "../models/graphql-request";
-import type { Response } from "../models/response";
+import type { ResponseView } from "../models/response";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { GraphQLRequestPage } from "../pages/graphql-request.page";
 import { BaseFlow } from "./base.flow";
@@ -105,9 +105,9 @@ export class GraphQLRequestFlow extends BaseFlow {
    * Sends `request` and reads back the resulting response via the
    * standalone project tree.
    * @param request - The request to send
-   * @returns The response received after sending
+   * @returns The response view received after sending
    */
-  async send(request: GraphQLRequest): Promise<Response> {
+  async send(request: GraphQLRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const graphqlRequestPage = this.pageManager.graphqlRequestPage;
     const responsePage = this.pageManager.responsePage;

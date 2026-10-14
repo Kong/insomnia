@@ -63,13 +63,13 @@ test("Verify Create HTTP Request", async ({ user }) => {
     preRequestScript,
     afterResponseScript,
   });
-  const response = await httpRequestFlow.send(request!);
-  expect(response.statusCode).toBe(200);
-  expect(response.statusMessage).toBe("OK");
+  const responseView = await httpRequestFlow.send(request!);
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusMessage).toBe("OK");
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("log: pre-request script");
-  expect(response.body).toMatchObject({
+  expect(responseView.body).toMatchObject({
     data: "Test",
     args: { [paramName]: paramValue },
     headers: expect.objectContaining({

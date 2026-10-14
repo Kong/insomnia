@@ -4,7 +4,7 @@ import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import type { RequestAuthentication } from "../models/http-request";
 import { HttpRequest } from "../models/http-request";
-import type { Response } from "../models/response";
+import type { ResponseView } from "../models/response";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
 import type { HttpRequestPage } from "../pages/http-request.page";
 import { BaseFlow } from "./base.flow";
@@ -65,9 +65,9 @@ export class HttpRequestFlow extends BaseFlow {
    * Sends `request` and returns the resulting response, locating it in the
    * standalone project tree.
    * @param request - The request to send
-   * @returns The response received after sending the request
+   * @returns The response view received after sending the request
    */
-  async send(request: HttpRequest): Promise<Response> {
+  async send(request: HttpRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const httpRequestPage = this.pageManager.httpRequestPage;
     const responsePage = this.pageManager.responsePage;
