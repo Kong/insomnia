@@ -2,11 +2,12 @@ import * as os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ApiSpecExportFormat } from '../../../enums/api-spec-export-format';
 import { ProjectType } from '../../../enums/project-types';
 import { waitForExportedFile } from '../../../misc/export-file';
-import { expect, test } from '../../../misc/fixtures';
+import { test } from '../../../misc/fixtures';
 import { Collection } from '../../../models/collection';
 import { Project } from '../../../models/project';
 

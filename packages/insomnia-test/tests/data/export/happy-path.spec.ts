@@ -3,12 +3,13 @@ import * as os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ExportFormat } from "../../../enums/export-format";
 import { HttpMethod } from "../../../enums/http-method";
 import { ProjectType } from "../../../enums/project-types";
 import { waitForExportedFile } from "../../../misc/export-file";
-import { expect, test } from "../../../misc/fixtures";
+import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { HttpRequest } from "../../../models/http-request";
 import { Project } from "../../../models/project";
