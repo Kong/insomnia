@@ -35,21 +35,21 @@ testWithVaultKey(
     const { environmentFlow, httpRequestFlow, workspaceFlow } =
       user.flowManager;
 
-    const project = await workspaceFlow.create(
+    const project = await workspaceFlow.createProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Local),
     );
-    const collection = await workspaceFlow.create(
+    const collection = await workspaceFlow.createCollection(
       project,
       new Collection(faker.string.alphanumeric(10)),
     );
 
-    const globalEnvironment = await environmentFlow.create(project, {
+    const globalEnvironment = await environmentFlow.createBaseEnvironment(project, {
       name: faker.string.alphanumeric(10),
       type: ENVIRONMENT_TYPE,
     });
     const secretValueFoo = faker.string.alphanumeric(10);
     const secretValueHello = faker.string.alphanumeric(10);
-    const privateEnvironment = await environmentFlow.create(globalEnvironment, {
+    const privateEnvironment = await environmentFlow.createSubEnvironment(globalEnvironment, {
       name: faker.string.alphanumeric(10),
       isPrivate: true,
       kvPairData: [

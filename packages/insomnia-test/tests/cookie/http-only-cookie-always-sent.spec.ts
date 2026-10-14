@@ -17,10 +17,10 @@ test("Verify HttpOnly Cookie Flag Persists And Cookie Is Always Sent Over HTTP A
   const { cookieFlow, httpRequestFlow, workspaceFlow, preferencesFlow } =
     user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

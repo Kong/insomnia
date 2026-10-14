@@ -15,10 +15,10 @@ test("Verify Sub Environment Variable Overrides Base Environment", async ({
 }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -26,7 +26,7 @@ test("Verify Sub Environment Variable Overrides Base Environment", async ({
   const baseValue = faker.string.alphanumeric(10);
   const subValue = faker.string.alphanumeric(10);
 
-  const baseEnvironment = await environmentFlow.create(project, {
+  const baseEnvironment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
@@ -38,7 +38,7 @@ test("Verify Sub Environment Variable Overrides Base Environment", async ({
       },
     ],
   });
-  const subEnvironment = await environmentFlow.create(baseEnvironment, {
+  const subEnvironment = await environmentFlow.createSubEnvironment(baseEnvironment, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {

@@ -14,10 +14,10 @@ test("Verify HTTP request succeeds against a local IPv6 address", async ({
 }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

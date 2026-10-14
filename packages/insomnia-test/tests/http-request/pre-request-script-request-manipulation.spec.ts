@@ -13,8 +13,8 @@ test('Verify pre-request script manipulates request headers, query params and bo
 }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const headerValue = faker.string.alphanumeric(10);
   const rawContent = faker.string.alphanumeric(10);
@@ -56,8 +56,8 @@ test('Verify pre-request script manipulates request headers, query params and bo
 test('Verify pre-request script sets bearer auth via insomnia.request.auth', async ({ user }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const token = faker.string.alphanumeric(10);
   const prefix = faker.string.alpha(8);
@@ -88,8 +88,8 @@ test('Verify pre-request script sets bearer auth via insomnia.request.auth', asy
 test('Verify pre-request script sets basic auth via insomnia.request.auth', async ({ user }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const username = faker.string.alphanumeric(10);
   const password = faker.string.alphanumeric(10);
@@ -123,8 +123,8 @@ test('Verify pre-request script applies apikey, AWS v4, Hawk and OAuth 1.0 auth 
 }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const apiKeyName = faker.string.alpha(8);
   const apiKeyValue = faker.string.alphanumeric(10);

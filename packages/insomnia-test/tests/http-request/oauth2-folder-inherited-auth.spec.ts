@@ -20,10 +20,10 @@ test("Verify a request set to Inherit from parent picks up its folder's OAuth 2.
   const { workspaceFlow, folderFlow, httpRequestFlow } = user.flowManager;
   const { httpRequestPage, folderPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

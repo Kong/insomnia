@@ -19,10 +19,10 @@ test("Verify refreshing an existing OAuth 2.0 token issues a new access token wi
 }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -68,10 +68,10 @@ test("Verify clearing OAuth 2.0 tokens wipes the stored Refresh/Identity/Access 
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
