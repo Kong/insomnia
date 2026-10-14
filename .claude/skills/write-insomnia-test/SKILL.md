@@ -134,8 +134,10 @@ Skip this step when nothing about the real app's live behavior is in question.
 ### 8. Follow this skeleton
 
 ```ts
-import { expect, test } from "../../misc/fixtures"; // adjust relative depth to the actual file location
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures"; // adjust relative depth to the actual file location
 import { ProjectType } from "../../enums/project-types";
 import { Project } from "../../models/project";
 import { Collection } from "../../models/collection";
@@ -163,7 +165,7 @@ Rules that apply to every test:
 
 - Every variable name/string that could collide across tests (project/collection/request names, custom header values, etc.) must come from `faker` (`faker.string.alphanumeric(10)` and friends) — never hardcode.
 - Every fixed UI value (HTTP method, content type, project type, context-menu item, import source) must come from `enums/`, never a magic string.
-- Every mock-server base URL (`http://localhost:4060`, `ws://localhost:4040`, `localhost:9000`, etc.) must come from `misc/constants.ts` (`HTTP_SERVER`, `WS_SERVER`, `GRPC_SERVER`, ...; re-exported by `misc/fixtures.ts`), never hardcoded — import it from `misc/fixtures` alongside `expect`/`test` and compose the path onto it, e.g. `` `${HTTP_SERVER}/post` ``. See the Mock servers table in `reference.md` for the full constant list.
+- Every mock-server base URL (`http://localhost:4060`, `ws://localhost:4040`, `localhost:9000`, etc.) must come from `misc/constants.ts` (`HTTP_SERVER`, `WS_SERVER`, `GRPC_SERVER`, ...; re-exported by `misc/fixtures.ts`), never hardcoded — import it from `misc/fixtures` alongside `test` and compose the path onto it, e.g. `` `${HTTP_SERVER}/post` ``. See the Mock servers table in `reference.md` for the full constant list.
 - When asserting the shape of a constructed object, use `satisfies <Model>` (not `as`) so TypeScript catches misspelled/nonexistent fields at write time — see the real example in `tests/environment/sub-environment-variable-priority.spec.ts:59`.
 - Model fields are exactly what's in `models/*.ts` / `reference.md` — don't add fields "because it seems logical."
 - **Prefer a plain object literal over `new <Model>(...)` for every Model whose constructor takes a single init object** — `Settings`, `Environment`, `HttpRequest`/`GraphQLRequest`/`GrpcRequest`/`WebSocketRequest`/`SocketIORequest`, `Cookie`, etc. (e.g. `{ validateSSL: false }`, not `new Settings({ validateSSL: false })`; `{ name, kvPairData: [...] }`, not `new Environment({ name, kvPairData: [...] })`). `new <Model>(...)` is only correct for the handful of Models with *positional* constructor args instead of an init object — `Project`, `Collection`, `Document`, `McpClient` (e.g. `new Project(name, ProjectType)` above) — those have no literal equivalent. See the full rule in `reference.md`.
@@ -234,7 +236,7 @@ Real example: `tests/document/happy-path.spec.ts`.
 - [ ] No file outside `tests/` was created or modified, unless it was a confirmed bug fix under the Scope Constraint's exception — any *gap* found in `flows/`/`pages/`/`models/` was reported to the user, not patched.
 - [ ] If a framework bug was fixed: it was confirmed as broken (not merely unsupported) via a probe, the fix was minimal and targeted at that bug only (no unrelated refactors/new methods), the probe was re-run to confirm the fix, and the bug + fix were called out to the user as their own item.
 - [ ] If the test documents a real Insomnia *app* bug (not a framework bug, per §9a): it asserts the expected/correct behavior (never the current buggy one), starts with `test.fail();`, and confirmed via a real run that it reports as an expected failure ("✘" but counted as passed), not a hard failure.
-- [ ] `import { expect, test }` comes from the relative path to `misc/fixtures` (not `@playwright/test`) — except Git Sync specs, which import `test`/`expect`/`GIT_CREDENTIAL`/`pushServerFile`/`buildCollectionFile`/`getServerBranches`/`getServerCommits` from `misc/git-fixtures` (see `reference.md`).
+- [ ] `import { expect } from "@playwright/test"` directly (`misc/fixtures` does not re-export it), and `test` comes from the relative path to `misc/fixtures` — except Git Sync specs, which import `test`/`GIT_CREDENTIAL`/`pushServerFile`/`buildCollectionFile`/`getServerBranches`/`getServerCommits` from `misc/git-fixtures` (see `reference.md`).
 - [ ] The test function takes only `{ user }` — no `workspaceFlow`/`pageManager`/other per-flow fixture in the parameter list.
 - [ ] Every Flow/Page method and every Model field used actually exists in `reference.md` or the real source file — nothing invented.
 - [ ] Every direct `pageManager.xxxPage` call was necessary because no Flow method covers that action (per "Prefer Flow methods over direct Page access") — never a Page call standing in for a step a Flow method already does.
