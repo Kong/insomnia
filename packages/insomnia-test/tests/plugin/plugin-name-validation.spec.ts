@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 
 test("Verify plugin name validation rejects invalid names and accepts a valid one", async ({
   user,

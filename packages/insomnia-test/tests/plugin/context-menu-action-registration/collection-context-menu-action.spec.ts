@@ -2,9 +2,10 @@ import * as fs from 'node:fs';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, test } from '../../../misc/fixtures';
 import { Collection } from '../../../models/collection';
 import { Project } from '../../../models/project';
 

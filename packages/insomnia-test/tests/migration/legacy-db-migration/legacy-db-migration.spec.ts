@@ -1,7 +1,9 @@
+import { expect } from "@playwright/test";
+
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "../../../misc/fixtures";
+import { test } from "../../../misc/fixtures";
 
 const LEGACY_DB_DIR = path.join(__dirname, "insomnia-legacy-db");
 

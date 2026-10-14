@@ -2,10 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContentType } from "../../../../../enums/content-type";
 import { ProjectType } from "../../../../../enums/project-types";
-import { expect, test } from "../../../../../misc/fixtures";
+import { test } from "../../../../../misc/fixtures";
 import { Project } from "../../../../../models/project";
 
 const wsdl = fs.readFileSync(path.join(__dirname, "calculator.wsdl"), "utf8");
