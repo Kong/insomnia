@@ -112,6 +112,42 @@ describe('migrateRepoStructureIfNeeded', () => {
     expect(content).toBe('name: My Workspace\n');
   });
 
+  // Regression: gitFilePath is derived from an imported workspace/collection
+  // name, which isn't sanitized against path separators. If a symlinked
+  // directory sits under baseDir (e.g. left over from an earlier state), a
+  // gitFilePath with a subdirectory segment must never let the workspace
+  // export land outside baseDir via that symlink — even though the old
+  // check (`absPath.startsWith(baseDir + path.sep)`) is purely lexical and
+  // would have let it through.
+  it('refuses to write a workspace export through a symlinked intermediate directory', async () => {
+    const outsideDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-git-migration-outside-'));
+    try {
+      const { getInsomniaV5DataExport } = await import('../../../common/insomnia-v5');
+      vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce('name: Escaping Workspace\n');
+
+      await fs.promises.symlink(outsideDir, path.join(baseDir, 'linked-dir'));
+
+      await services.gitRepository.create({ _id: 'git_repo_h' });
+      await services.project.create({ _id: 'proj_h', name: 'Test Project' });
+      const workspace = await services.workspace.create({
+        _id: 'wrk_h',
+        name: 'Escaping Workspace',
+        parentId: 'proj_h',
+        scope: 'collection',
+      });
+      const meta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+      await services.workspaceMeta.update(meta, { gitFilePath: 'linked-dir/escaped.yaml' });
+
+      const { logs, logger } = makeLogger();
+      await migrateRepoStructureIfNeeded(baseDir, 'proj_h', 'git_repo_h', logger);
+
+      expect(await fileExists(path.join(outsideDir, 'escaped.yaml'))).toBe(false);
+      expect(logs.some(l => l.includes('Skipping unsafe gitFilePath'))).toBe(true);
+    } finally {
+      await fs.promises.rm(outsideDir, { recursive: true, force: true });
+    }
+  });
+
   it('does not include the repo ID in any log message', async () => {
     await services.gitRepository.create({ _id: 'git_repo_f' });
     await mkDir(path.join(baseDir, 'git'));
