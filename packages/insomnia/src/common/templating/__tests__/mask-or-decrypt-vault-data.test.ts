@@ -26,7 +26,7 @@ describe('maskOrDecryptVaultDataIfNecessary', () => {
     };
     const ciphertext = { ...storedVaultData };
 
-    const result = await maskOrDecryptVaultDataIfNecessary(storedVaultData, 'script');
+    const result = await maskOrDecryptVaultDataIfNecessary({ vaultEnvironmentData: storedVaultData, renderPurpose: 'script' });
 
     expect(result).toEqual({ token: 'secret-token', password: 'secret-password' });
     expect(result).not.toBe(storedVaultData);
@@ -38,7 +38,7 @@ describe('maskOrDecryptVaultDataIfNecessary', () => {
     await services.userSession.update({ vaultKey: '', vaultSalt: 'salt' });
     const storedVaultData = { token: 'cipher-1' };
 
-    const result = await maskOrDecryptVaultDataIfNecessary(storedVaultData, 'script');
+    const result = await maskOrDecryptVaultDataIfNecessary({ vaultEnvironmentData: storedVaultData, renderPurpose: 'script' });
 
     expect(result).toEqual({});
     expect(storedVaultData).toEqual({ token: 'cipher-1' });
@@ -47,7 +47,7 @@ describe('maskOrDecryptVaultDataIfNecessary', () => {
   it('returns a copy of the unchanged data when the vault is not enabled', async () => {
     const storedVaultData = { token: 'cipher-1' };
 
-    const result = await maskOrDecryptVaultDataIfNecessary(storedVaultData, 'script');
+    const result = await maskOrDecryptVaultDataIfNecessary({ vaultEnvironmentData: storedVaultData, renderPurpose: 'script' });
 
     expect(result).toEqual({ token: 'cipher-1' });
     // nothing is decrypted here, but the caller still must not reach the stored data through the result
@@ -58,7 +58,7 @@ describe('maskOrDecryptVaultDataIfNecessary', () => {
   it('masks into a new object and leaves the stored ciphertext untouched', async () => {
     const storedVaultData = { token: 'cipher-1' };
 
-    const result = await maskOrDecryptVaultDataIfNecessary(storedVaultData, 'general');
+    const result = await maskOrDecryptVaultDataIfNecessary({ vaultEnvironmentData: storedVaultData, renderPurpose: 'general' });
 
     expect(result).toEqual({ token: models.environment.vaultEnvironmentMaskValue });
     expect(result).not.toBe(storedVaultData);
@@ -66,7 +66,7 @@ describe('maskOrDecryptVaultDataIfNecessary', () => {
   });
 
   it('returns non object values as is', async () => {
-    expect(await maskOrDecryptVaultDataIfNecessary(undefined, 'script')).toBeUndefined();
-    expect(await maskOrDecryptVaultDataIfNecessary(null, 'script')).toBeNull();
+    expect(await maskOrDecryptVaultDataIfNecessary({ vaultEnvironmentData: undefined, renderPurpose: 'script' })).toBeUndefined();
+    expect(await maskOrDecryptVaultDataIfNecessary({ vaultEnvironmentData: null, renderPurpose: 'script' })).toBeNull();
   });
 });

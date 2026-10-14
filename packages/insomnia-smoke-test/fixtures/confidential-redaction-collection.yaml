@@ -1,0 +1,84 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Confidential Redaction
+meta:
+  id: wrk_c0nf1dent1a1redact10n00000000001
+  created: 1739888439647
+  modified: 1739888439647
+collection:
+  - url: http://localhost:4010/echo?token={{ _.token }}
+    name: redaction request
+    meta:
+      id: req_c0nf1dent1a1redact10n0000000001
+      created: 1707808697304
+      modified: 1707809218855
+      isPrivate: false
+      sortKey: -1707809028499
+    method: GET
+    headers:
+      # Echoed back by the test server, so the test can prove the real value was actually
+      # sent. The query string above is not echoed, but it does reach Response.url.
+      - name: X-Token
+        value: "{{ _.token }}"
+    scripts:
+      afterResponse: |-
+        // The value that existed before the script ran: covered by the collector pre-fill.
+        console.log('existing token: ' + insomnia.environment.get('token'));
+        // A value the script itself writes into a confidential key. Nothing renders after an
+        // after-response script, so only the post-script registration can catch this one.
+        insomnia.environment.set('token', 'confidential-value-rotated');
+        console.log('rotated token: ' + insomnia.environment.get('token'));
+        // A failing assertion puts the actual value into chai's message, which is persisted
+        // on both the Response document and the runner's RunnerTestResult document.
+        insomnia.test('rotated token should not equal nope', () => {
+          insomnia.expect(insomnia.environment.get('token')).to.eql('nope');
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  # Re-sends the request above through the template tag's dependent-request path
+  # (plugins/context/network.ts or the templating worker), which is a separate send
+  # implementation from the main send route and writes its own timeline.
+  - url: http://localhost:4010/echo
+    name: chained request
+    meta:
+      id: req_c0nf1dent1a1redact10n0000000002
+      created: 1707808697304
+      modified: 1707809218855
+      isPrivate: false
+      sortKey: -1707809028498
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{% response 'body', 'req_c0nf1dent1a1redact10n0000000001', 'b64::JC5kYXRh::46b', 'always', 60 %} and chained"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_c0nf1dent1a1redact10n0000000001
+    created: 1670587793248
+    modified: 1670587793248
+environments:
+  name: Base Environment
+  meta:
+    id: env_c0nf1dent1a1redact10n0000000001
+    created: 1670587793246
+    modified: 1670587811762
+    isPrivate: false
+  data:
+    token: confidential-value-alpha

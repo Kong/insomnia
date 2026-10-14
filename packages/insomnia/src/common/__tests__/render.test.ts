@@ -956,14 +956,15 @@ describe('render tests', () => {
       );
     });
 
-    it('parses JSON confidential rows and registers each leaf value', () => {
+    it('registers each leaf of a JSON confidential row', () => {
+      const config = { token: 'nested-secret', nested: { deep: 'deep-secret' } };
       const rootEnvironment = envBuilder
-        .data({ config: { enabled: true } })
+        .data({ config })
         .kvPairData([
           {
             id: 'envPair_config',
             name: 'config',
-            value: JSON.stringify({ token: 'nested-secret', nested: { deep: 'deep-secret' } }),
+            value: JSON.stringify(config),
             type: EnvironmentKvPairDataType.JSON,
             enabled: true,
             isConfidential: true,
@@ -975,6 +976,83 @@ describe('render tests', () => {
       renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
 
       expect(collector.redact('nested-secret and deep-secret')).toBe('•••••• and ••••••');
+    });
+
+    it('registers numeric leaves of a JSON confidential row', () => {
+      const credentials = { pin: 1234, meta: { retries: 7 } };
+      const rootEnvironment = envBuilder
+        .data({ credentials })
+        .kvPairData([
+          {
+            id: 'envPair_credentials',
+            name: 'credentials',
+            value: JSON.stringify(credentials),
+            type: EnvironmentKvPairDataType.JSON,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.redact('pin=1234 retries=7')).toBe('pin=•••••• retries=••••••');
+    });
+
+    it('takes the value from data rather than from the KV row', () => {
+      // The two diverge once a script has written to the environment: `data` holds what the
+      // script left behind, while kvPairData is only regenerated afterwards by
+      // savePatchesMadeByScript. The collector has to match what render will actually use.
+      const rootEnvironment = envBuilder
+        .data({ token: 'value-from-data' })
+        .kvPairData([
+          {
+            id: 'envPair_root',
+            name: 'token',
+            value: 'stale-value-from-kv-row',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.redact('value-from-data')).toBe('••••••');
+      expect(collector.redact('stale-value-from-kv-row')).toBe('stale-value-from-kv-row');
+    });
+
+    it('applies last-enabled-wins for duplicate names, like getDataFromKVPair', () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'effective-value' })
+        .kvPairData([
+          {
+            id: 'envPair_first',
+            name: 'token',
+            value: 'overridden-value',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_second',
+            name: 'token',
+            value: 'effective-value',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: false,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      // The last enabled row is the one that lands in data, and it isn't confidential.
+      expect(collector.isEmpty).toBe(true);
     });
 
     it('ignores non-confidential, disabled, and SECRET rows', () => {
@@ -1017,6 +1095,80 @@ describe('render tests', () => {
     it('does nothing when given no layers', () => {
       const collector = createSensitiveValueCollector(true)!;
       renderUtils.collectConfidentialRawValues({}, collector);
+
+      expect(collector.isEmpty).toBe(true);
+    });
+  });
+
+  describe('registerConfidentialValues()', () => {
+    // These mirror how tryToExecuteScript calls it after a script runs: the data is the
+    // script's output, the kvPairData is the untouched original carrying the flags.
+    const confidentialRow = (id: string, name: string, value: string) => ({
+      id,
+      name,
+      value,
+      type: EnvironmentKvPairDataType.STRING,
+      enabled: true,
+      isConfidential: true,
+    });
+
+    it('registers a value the script wrote into a confidential key', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues(
+        [
+          {
+            data: { token: 'token-set-by-script' },
+            kvPairData: [confidentialRow('envPair_root', 'token', 'token-before-script')],
+          },
+        ],
+        collector,
+      );
+
+      expect(collector.redact('token-set-by-script')).toBe('••••••');
+    });
+
+    it('does not register a key the script invented, which has no KV row', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues(
+        [
+          {
+            data: { token: 'known-secret', brandNewKey: 'invented-by-script' },
+            kvPairData: [confidentialRow('envPair_root', 'token', 'known-secret')],
+          },
+        ],
+        collector,
+      );
+
+      expect(collector.redact('invented-by-script')).toBe('invented-by-script');
+      expect(collector.redact('known-secret')).toBe('••••••');
+    });
+
+    it('registers across several layers, including a folder layer', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues(
+        [
+          {
+            data: { globalToken: 'global-secret' },
+            kvPairData: [confidentialRow('envPair_global', 'globalToken', 'global-secret')],
+          },
+          {
+            data: { folderToken: 'folder-secret' },
+            kvPairData: [confidentialRow('envPair_folder', 'folderToken', 'folder-secret')],
+          },
+        ],
+        collector,
+      );
+
+      expect(collector.redact('global-secret folder-secret')).toBe('•••••• ••••••');
+    });
+
+    it('ignores a layer without kvPairData, such as transient variables', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues([{ data: { localVar: 'not-confidential' } }], collector);
 
       expect(collector.isEmpty).toBe(true);
     });

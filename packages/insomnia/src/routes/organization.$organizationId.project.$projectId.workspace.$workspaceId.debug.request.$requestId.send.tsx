@@ -15,7 +15,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
 import { getContentDispositionHeader } from '~/common/misc';
-import { createSensitiveValueCollector, withRedaction } from '~/common/network/sensitive-value-collector';
+import {
+  createSensitiveValueCollector,
+  redactResponsePatch,
+  redactTestResults,
+  redactText,
+  withRedaction,
+} from '~/common/network/sensitive-value-collector';
 import { collectConfidentialRawValues } from '~/common/render';
 import type { RenderContextAncestor } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
@@ -184,7 +190,7 @@ export const sendActionImplementation = async (options: {
         parentId: requestId,
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
-        error: mutatedContext.error,
+        error: redactText(mutatedContext.error, collector),
         timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
@@ -260,7 +266,7 @@ export const sendActionImplementation = async (options: {
         parentId: requestId,
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
-        error: response.error,
+        error: redactText(response.error, collector),
         timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
@@ -303,7 +309,7 @@ export const sendActionImplementation = async (options: {
         parentId: requestId,
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
-        error: postMutatedContext.error,
+        error: redactText(postMutatedContext.error, collector),
         timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
@@ -318,24 +324,37 @@ export const sendActionImplementation = async (options: {
   const preTestResults = mutatedContext.requestTestResults || [];
   const postTestResults = postMutatedContext?.requestTestResults || [];
   if (testResultCollector) {
-    testResultCollector.results = [...testResultCollector.results, ...preTestResults, ...postTestResults];
+    // Mirrors the Response document below: these results are persisted again, in the
+    // RunnerTestResult document the collection runner writes at the end of its run.
+    testResultCollector.results = [
+      ...testResultCollector.results,
+      ...redactTestResults([...preTestResults, ...postTestResults], collector),
+    ];
     const timingSteps = await window.main.getExecution({ requestId });
     testResultCollector.duration = timingSteps.reduce((acc: number, cur: TimingStep) => {
       return acc + (cur.duration || 0);
     }, 0);
     testResultCollector.responseId = response._id;
-    testResultCollector.requestUrl = renderedRequest.url || testResultCollector.requestUrl;
+    // The fallback keeps the runner's own initial value, which is the request's *unrendered*
+    // URL (`{{ _.base }}/login`) -- not a rendered secret, and request-result-card renders it
+    // through RenderedText, which applies the preview policy.
+    testResultCollector.requestUrl = redactText(renderedRequest.url, collector) || testResultCollector.requestUrl;
     testResultCollector.statusCode = baseResponsePatch.statusCode || 0;
     testResultCollector.statusMessage = baseResponsePatch.statusMessage || '';
     testResultCollector.size = baseResponsePatch.bytesRead || 0;
   }
-  const responsePatch = postMutatedContext
-    ? {
-        ...baseResponsePatch,
-        // both pre-request and after-response test results are collected
-        requestTestResults: [...preTestResults, ...postTestResults],
-      }
-    : baseResponsePatch;
+  // Redacted once here so both write points below -- services.response.create and, when the
+  // body is saved to a file, writeToDownloadPath -- persist the same redacted patch.
+  const responsePatch = redactResponsePatch(
+    postMutatedContext
+      ? {
+          ...baseResponsePatch,
+          // both pre-request and after-response test results are collected
+          requestTestResults: [...preTestResults, ...postTestResults],
+        }
+      : baseResponsePatch,
+    collector,
+  );
 
   if (!shouldWriteToFile) {
     const response = await services.response.create(responsePatch, requestData.settings.maxHistoryResponses);
