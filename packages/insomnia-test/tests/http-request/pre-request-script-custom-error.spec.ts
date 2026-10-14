@@ -33,10 +33,10 @@ test("Verify a thrown error in pre-request script surfaces in the response conso
     url,
     preRequestScript: `throw new Error('${errorMessage}');`,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(errorMessage);
 });
 
@@ -59,9 +59,9 @@ test("Verify accessing an invalid field in pre-request script surfaces in the re
     url,
     preRequestScript: `insomnia.INVALID_FIELD.set('', '');`,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Cannot read properties of undefined (reading 'set')");
 });

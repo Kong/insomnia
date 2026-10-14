@@ -59,9 +59,9 @@ test("Verify Variable Names Are Case Sensitive Across Environment Levels", async
     url: `${HTTP_SERVER}/post?lower={{${lowerCaseVariable}}}&upper={{${upperCaseVariable}}}`,
   } satisfies HttpRequest);
 
-  const response = await httpRequestFlow.send(request);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  const responseView = await httpRequestFlow.send(request);
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     args: { lower: baseValue, upper: subValue },
   });
 });

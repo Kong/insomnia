@@ -38,7 +38,7 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
   await httpRequestPage.importParamsFromUrl();
   const updatedUrl = await httpRequestPage.getUrl();
   const updatedParams = await httpRequestPage.getParams();
-  const response = await httpRequestFlow.send(request!);
+  const responseView = await httpRequestFlow.send(request!);
 
   expect(updatedUrl).toBe(baseUrl);
   expect(updatedParams).toEqual(
@@ -47,9 +47,9 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
       expect.objectContaining({ name: paramName2, value: paramValue2 }),
     ]),
   );
-  expect(response.statusCode).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(
       `Preparing request to ${baseUrl}?${paramName1}=${paramValue1}&${paramName2}=${paramValue2}`,
     );

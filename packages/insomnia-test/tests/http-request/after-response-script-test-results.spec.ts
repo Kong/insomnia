@@ -51,11 +51,11 @@ test('Verify insomnia.test/insomnia.expect report PASS/FAIL results, including a
       });
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   await expect
-    .poll(() => response.tests?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.tests?.(), { timeout: DEFAULT_TIMEOUT })
     .toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'transient var', status: 'PASS' }),

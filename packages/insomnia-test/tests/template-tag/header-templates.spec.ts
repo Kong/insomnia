@@ -30,9 +30,9 @@ test("Verify a Header With a Template Tag in Its Value", async ({ user }) => {
       },
     ],
   });
-  const response = await httpRequestFlow.send(request!);
+  const responseView = await httpRequestFlow.send(request!);
 
-  expect(response.body).toMatchObject({
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "x-header-name": "aGVhZGVyLXZhbHVl",
     }),

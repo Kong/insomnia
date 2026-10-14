@@ -48,8 +48,8 @@ test("Verify A Response Tag Chain Resolves Through Multiple Requests", async ({
     },
   });
 
-  const response = await httpRequestFlow.send(third);
+  const responseView = await httpRequestFlow.send(third);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({ data: "first and second and third" });
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({ data: "first and second and third" });
 });

@@ -30,10 +30,10 @@ test("Verify a Header With a Templated Name Resolves and Sends Correctly", async
       },
     ],
   });
-  const response = await httpRequestFlow.send(request!);
+  const responseView = await httpRequestFlow.send(request!);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "x-7cd8e9f98e9104085ea06e39b87faf36": "plain-value",
     }),

@@ -46,10 +46,10 @@ test("Verify Linked Cookie Is Sent With HTTP Request", async ({ user }) => {
     },
   ]);
 
-  const response = await httpRequestFlow.send(request);
-  expect(response.statusCode).toBe(200);
+  const responseView = await httpRequestFlow.send(request);
+  expect(responseView.statusCode).toBe(200);
 
-  const { cookies } = response.body as { cookies: Record<string, string> };
+  const { cookies } = responseView.body as { cookies: Record<string, string> };
   expect(Object.keys(cookies)).toHaveLength(2);
 
   const expectedCookies = Object.fromEntries(

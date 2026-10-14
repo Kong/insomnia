@@ -54,9 +54,9 @@ test("Verify Multiple Variables Mixed In A Single Value Resolve Together", async
     url: `${HTTP_SERVER}/post?value={{${firstVariable}}}-{{${secondVariable}}}`,
   } satisfies HttpRequest);
 
-  const response = await httpRequestFlow.send(request);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  const responseView = await httpRequestFlow.send(request);
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     args: { value: `${firstValue}-${secondValue}` },
   });
 });

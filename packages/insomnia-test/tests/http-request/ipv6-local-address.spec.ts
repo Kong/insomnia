@@ -29,9 +29,9 @@ test("Verify HTTP request succeeds against a local IPv6 address", async ({
     url: url,
     body: { mimeType: ContentType.Plain, text: bodyText },
   });
-  const response = await httpRequestFlow.send(request!);
+  const responseView = await httpRequestFlow.send(request!);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.statusMessage).toBe("OK");
-  expect(response.body).toMatchObject({ data: bodyText });
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusMessage).toBe("OK");
+  expect(responseView.body).toMatchObject({ data: bodyText });
 });
