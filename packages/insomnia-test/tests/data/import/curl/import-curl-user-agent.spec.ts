@@ -15,10 +15,10 @@ test("Import HTTP Request by Curl Command: -A Shorthand Is Ignored, Default User
 }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -49,10 +49,10 @@ test("Import HTTP Request by Curl Command With Explicit -H User-Agent Header Is 
 }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

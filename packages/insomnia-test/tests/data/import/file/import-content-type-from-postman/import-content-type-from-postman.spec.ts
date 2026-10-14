@@ -13,7 +13,7 @@ test("Import Generates Content-Type Header From Postman File", async ({
 }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

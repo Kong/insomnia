@@ -25,8 +25,8 @@ test(
     fs.copyFileSync(path.join(__dirname, 'plugin-main.js'), path.join(pluginDir, 'main.js'));
     await preferencesPage.reloadPlugins();
 
-    const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-    const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+    const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+    const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
     const requestName = faker.string.alphanumeric(10);
     await httpRequestFlow.create(collection, {
       name: requestName,
