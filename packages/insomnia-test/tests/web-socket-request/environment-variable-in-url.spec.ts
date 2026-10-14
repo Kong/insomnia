@@ -1,12 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  test,
-  WS_SERVER,
-} from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, test, WS_SERVER } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EnvironmentKvPairDataType } from "../../models/environment";
 import { Project } from "../../models/project";

@@ -1,12 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  SOCKET_SERVER,
-  test,
-} from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, SOCKET_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 import type { SocketIORequest } from "../../models/socket-io-request";

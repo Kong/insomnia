@@ -4,13 +4,10 @@ import * as net from "node:net";
 import type { Duplex } from "node:stream";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import {
-  expect,
-  MCP_SERVER,
-  test,
-} from "../../misc/fixtures";
+import { MCP_SERVER, test } from "../../misc/fixtures";
 import { McpClient } from "../../models/mcp-client";
 import { Project } from "../../models/project";
 
