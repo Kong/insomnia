@@ -2,21 +2,13 @@ import type { FC } from 'react';
 
 import { formatMethodName, getRequestBadgeClassName } from '../../tags/method-tag';
 import { diffByKey, type EntityDiff, sideStatus, valuesEqual } from './diff-engine';
-import { compactTabs, type DiffTabDef, docsTab, keyValueTab, settingsTab } from './diff-tabs';
+import { type DiffTabDef, docsTab, keyValueTab, withSettingsTab } from './diff-tabs';
 import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // The route's path lives in `name`; its status is shown in the header, like a request's URL.
-const HANDLED_FIELD_PATHS = new Set([
-  'name',
-  'method',
-  'statusCode',
-  'statusText',
-  'mimeType',
-  'body',
-  'headers',
-  'meta.description',
-]);
+// Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
+const HEADER_FIELD_PATHS = new Set(['name', 'method', 'statusCode', 'statusText']);
 
 function bodyTab(diff: EntityDiff): DiffTabDef | null {
   const mimeTypeChanged = !valuesEqual(diff.before?.mimeType, diff.after?.mimeType);
@@ -28,6 +20,7 @@ function bodyTab(diff: EntityDiff): DiffTabDef | null {
     id: 'body',
     label: 'Body',
     status: sideStatus(Boolean(diff.before?.body), Boolean(diff.after?.body)),
+    paths: ['mimeType', 'body'],
     content: () => (
       <div className="flex flex-col gap-3">
         {mimeTypeChanged && (
@@ -42,15 +35,14 @@ function bodyTab(diff: EntityDiff): DiffTabDef | null {
 // Tabs mirror the mock route editor's response sections: Body and Headers (status is in the
 // header), plus Docs and the diff-only Settings catch-all.
 export function buildMockRouteTabs(diff: EntityDiff): DiffTabDef[] {
-  return compactTabs([
+  return withSettingsTab(diff, HEADER_FIELD_PATHS, [
     bodyTab(diff),
     keyValueTab({
       id: 'headers',
       label: 'Headers',
-      sections: [{ rows: diffByKey(diff.before?.headers, diff.after?.headers, 'name') }],
+      sections: [{ path: 'headers', rows: diffByKey(diff.before?.headers, diff.after?.headers, 'name') }],
     }),
     docsTab(diff),
-    settingsTab(diff, HANDLED_FIELD_PATHS),
   ]);
 }
 

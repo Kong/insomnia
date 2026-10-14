@@ -2,20 +2,12 @@ import type { FC } from 'react';
 
 import { getRequestBadgeClassName } from '../../tags/method-tag';
 import { diffByKey, type EntityDiff, sideStatus, valuesEqual } from './diff-engine';
-import { compactTabs, type DiffTabDef, docsTab, fieldChangesTab, keyValueTab, settingsTab } from './diff-tabs';
+import { type DiffTabDef, docsTab, fieldChangesTab, keyValueTab, withSettingsTab } from './diff-tabs';
 import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
-const HANDLED_FIELD_PATHS = new Set([
-  'name',
-  'url',
-  'protoMethodName',
-  'protoFileId',
-  'body',
-  'metadata',
-  'reflectionApi',
-  'meta.description',
-]);
+// Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
+const HEADER_FIELD_PATHS = new Set(['name', 'url']);
 
 function methodTab(diff: EntityDiff): DiffTabDef | null {
   const methodChanged = !valuesEqual(diff.before?.protoMethodName, diff.after?.protoMethodName);
@@ -28,6 +20,7 @@ function methodTab(diff: EntityDiff): DiffTabDef | null {
     id: 'method',
     label: 'Method',
     status: sideStatus(Boolean(diff.before?.protoMethodName), Boolean(diff.after?.protoMethodName)),
+    paths: ['protoMethodName', 'protoFileId'],
     content: () => (
       <div className="flex flex-col gap-3">
         {methodChanged && (
@@ -52,28 +45,29 @@ function messageTab(diff: EntityDiff): DiffTabDef | null {
     label: 'Message',
     status: sideStatus(Boolean(before), Boolean(after)),
     content: () => <FieldDiffRow label="Message" before={before} after={after} />,
+    paths: ['body'],
   };
 }
 
 // Tabs mirror the gRPC request editor: Method, Message, Headers (gRPC metadata), plus Reflection
 // settings, Docs and the diff-only Settings catch-all.
 export function buildGrpcTabs(diff: EntityDiff): DiffTabDef[] {
-  return compactTabs([
+  return withSettingsTab(diff, HEADER_FIELD_PATHS, [
     methodTab(diff),
     messageTab(diff),
     keyValueTab({
       id: 'headers',
       label: 'Headers',
-      sections: [{ rows: diffByKey(diff.before?.metadata, diff.after?.metadata, 'name') }],
+      sections: [{ path: 'metadata', rows: diffByKey(diff.before?.metadata, diff.after?.metadata, 'name') }],
     }),
     fieldChangesTab({
       id: 'reflection',
       label: 'Reflection',
       before: diff.before?.reflectionApi,
       after: diff.after?.reflectionApi,
+      paths: ['reflectionApi'],
     }),
     docsTab(diff),
-    settingsTab(diff, HANDLED_FIELD_PATHS),
   ]);
 }
 

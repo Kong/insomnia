@@ -102,6 +102,75 @@ describe('buildRequestTabs', () => {
   });
 });
 
+describe('Settings catch-all for changes a tab finds nothing to show for', () => {
+  const request = { name: 'r', url: 'https://a', method: 'GET', meta: { id: 'req_1' } };
+  const settingsPaths = (tabs: DiffTabDef[]) => {
+    const settings = tabs.find(tab => tab.id === 'settings');
+    return settings ? renderToStaticMarkup(React.createElement(settings.content)) : '';
+  };
+
+  it('shows a change to the first of two same-named params, which matching by name hides', () => {
+    const before = {
+      ...request,
+      parameters: [
+        { name: 'tag', value: 'a' },
+        { name: 'tag', value: 'b' },
+      ],
+    };
+    const after = {
+      ...request,
+      parameters: [
+        { name: 'tag', value: 'z' },
+        { name: 'tag', value: 'b' },
+      ],
+    };
+
+    const tabs = buildRequestTabs(modified('request', before, after));
+
+    expect(summary(tabs)).toEqual([{ id: 'settings', status: 'modified', count: 1 }]);
+    expect(settingsPaths(tabs)).toContain('Parameters');
+  });
+
+  it('shows headers that were only reordered', () => {
+    const headers = [
+      { name: 'A', value: '1' },
+      { name: 'B', value: '2' },
+    ];
+    const tabs = buildRequestTabs(
+      modified('request', { ...request, headers }, { ...request, headers: [...headers].reverse() }),
+    );
+
+    expect(summary(tabs)).toEqual([{ id: 'settings', status: 'modified', count: 1 }]);
+    expect(settingsPaths(tabs)).toContain('Headers');
+  });
+
+  it('only counts the sections of a tab that showed something', () => {
+    const before = {
+      ...request,
+      parameters: [
+        { name: 'tag', value: 'a' },
+        { name: 'tag', value: 'b' },
+      ],
+      pathParameters: [{ name: 'id', value: '1' }],
+    };
+    const after = {
+      ...request,
+      parameters: [
+        { name: 'tag', value: 'z' },
+        { name: 'tag', value: 'b' },
+      ],
+      pathParameters: [{ name: 'id', value: '2' }],
+    };
+
+    const tabs = buildRequestTabs(modified('request', before, after));
+
+    expect(summary(tabs)).toEqual([
+      { id: 'params', status: 'modified', count: 1 },
+      { id: 'settings', status: 'modified', count: 1 },
+    ]);
+  });
+});
+
 describe('buildWebSocketTabs', () => {
   it('maps params/auth/headers/docs to their tabs and connection settings to the Settings catch-all', () => {
     const before = { name: 'ws', url: 'wss://a', meta: { id: 'ws-req_1' }, settings: { encodeUrl: true } };

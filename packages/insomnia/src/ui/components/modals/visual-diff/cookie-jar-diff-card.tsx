@@ -1,11 +1,12 @@
 import type { FC } from 'react';
 
 import { diffByKey, type EntityDiff } from './diff-engine';
-import { compactTabs, type DiffTabDef, keyValueTab, settingsTab } from './diff-tabs';
+import { type DiffTabDef, keyValueTab, withSettingsTab } from './diff-tabs';
 import type { EntityCardActionProps } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
-const HANDLED_FIELD_PATHS = new Set(['name', 'cookies']);
+// Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
+const HEADER_FIELD_PATHS = new Set(['name']);
 
 interface Cookie {
   key?: string;
@@ -31,16 +32,18 @@ function cookieLabel(cookie: Cookie | undefined) {
 
 // Mirrors the cookie manager: one row per cookie, plus the diff-only Settings catch-all.
 export function buildCookieJarTabs(diff: EntityDiff): DiffTabDef[] {
-  return compactTabs([
+  return withSettingsTab(diff, HEADER_FIELD_PATHS, [
     keyValueTab({
       id: 'cookies',
       label: 'Cookies',
       sections: [
-        { rows: diffByKey(withIdentity(diff.before?.cookies), withIdentity(diff.after?.cookies), 'identity') },
+        {
+          path: 'cookies',
+          rows: diffByKey(withIdentity(diff.before?.cookies), withIdentity(diff.after?.cookies), 'identity'),
+        },
       ],
       labelOf: row => cookieLabel((row.after ?? row.before) as Cookie),
     }),
-    settingsTab(diff, HANDLED_FIELD_PATHS),
   ]);
 }
 

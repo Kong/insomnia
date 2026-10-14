@@ -2,13 +2,14 @@ import { models } from 'insomnia-data';
 import type { FC } from 'react';
 
 import { diffRecord, dominantStatus, type EntityDiff, valuesEqual } from './diff-engine';
-import { compactTabs, type DiffTabDef, RecordDiffRows, settingsTab } from './diff-tabs';
+import { type DiffTabDef, RecordDiffRows, withSettingsTab } from './diff-tabs';
 import { type EntityCardActionProps, FieldDiffRow, StatusBadge } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 const { vaultEnvironmentPath, vaultEnvironmentMaskValue } = models.environment;
 
-const HANDLED_FIELD_PATHS = new Set(['name', 'data', 'dataPropertyOrder']);
+// Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
+const HEADER_FIELD_PATHS = new Set(['name']);
 
 function withoutVault(data: Record<string, any> | undefined) {
   return Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => key !== vaultEnvironmentPath));
@@ -26,6 +27,7 @@ function variablesTab(diff: EntityDiff): DiffTabDef | null {
   }
   return {
     id: 'variables',
+    paths: ['data', 'dataPropertyOrder'],
     label: 'Variables',
     status: rows.length > 0 ? dominantStatus(rows.map(row => row.status)) : 'modified',
     count: rows.length,
@@ -49,6 +51,7 @@ function secretsTab(diff: EntityDiff): DiffTabDef | null {
   }
   return {
     id: 'secrets',
+    paths: ['data'],
     label: 'Secrets',
     status: dominantStatus(rows.map(row => row.status)),
     count: rows.length,
@@ -69,7 +72,7 @@ function secretsTab(diff: EntityDiff): DiffTabDef | null {
 // Tabs follow the environment editor: variables, vault secrets, plus the diff-only Settings
 // catch-all (eg. color). Sub-environments are entities with their own cards.
 export function buildEnvironmentTabs(diff: EntityDiff): DiffTabDef[] {
-  return compactTabs([variablesTab(diff), secretsTab(diff), settingsTab(diff, HANDLED_FIELD_PATHS)]);
+  return withSettingsTab(diff, HEADER_FIELD_PATHS, [variablesTab(diff), secretsTab(diff)]);
 }
 
 export const EnvironmentDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {

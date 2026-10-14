@@ -19,6 +19,9 @@ export interface DiffTabDef {
   status: EntityChangeStatus;
   count?: number;
   content: FC;
+  // Field paths (as in `FieldChange.path`) whose changes this tab shows; the Settings catch-all
+  // shows any other changed field.
+  paths?: readonly string[];
 }
 
 export function compactTabs(tabs: (DiffTabDef | null | undefined | false)[]): DiffTabDef[] {
@@ -122,6 +125,7 @@ const FieldChangeList: FC<{ changes: FieldChange[] }> = ({ changes }) => (
 );
 
 // A tab listing keyed rows (headers, params, metadata, ...), optionally split into titled sections.
+// Each section names the field its rows come from; only sections with rows count as shown.
 export function keyValueTab({
   id,
   label,
@@ -130,7 +134,7 @@ export function keyValueTab({
 }: {
   id: string;
   label: string;
-  sections: { title?: string; rows: KeyedDiffRow[] }[];
+  sections: { title?: string; path: string; rows: KeyedDiffRow[] }[];
 } & KeyValueRowFormat): DiffTabDef | null {
   const rows = sections.flatMap(section => section.rows);
   if (rows.length === 0) {
@@ -141,6 +145,7 @@ export function keyValueTab({
     label,
     status: dominantStatus(rows.map(row => row.status)),
     count: rows.length,
+    paths: sections.filter(section => section.rows.length > 0).map(section => section.path),
     content: () => (
       <div className="flex flex-col gap-3">
         {sections.map((section, index) => (
@@ -158,12 +163,14 @@ export function fieldChangesTab({
   before,
   after,
   status,
+  paths,
 }: {
   id: string;
   label: string;
   before: unknown;
   after: unknown;
   status?: EntityChangeStatus;
+  paths?: readonly string[];
 }): DiffTabDef | null {
   const changes = computeFieldChanges(before, after);
   if (changes.length === 0) {
@@ -175,6 +182,7 @@ export function fieldChangesTab({
     status: status ?? sideStatus(before !== undefined, after !== undefined),
     count: changes.length,
     content: () => <FieldChangeList changes={changes} />,
+    paths,
   };
 }
 
@@ -194,6 +202,7 @@ export function authTab(diff: EntityDiff): DiffTabDef | null {
     label: 'Auth',
     status: sideStatus(isMeaningfulAuth(before), isMeaningfulAuth(after)),
     content: () => <FieldChangeList changes={changes} />,
+    paths: ['authentication'],
   };
 }
 
@@ -213,6 +222,7 @@ export function scriptsTab(diff: EntityDiff): DiffTabDef | null {
     label: 'Scripts',
     status: sideStatus(hasScriptContent(before), hasScriptContent(after)),
     content: () => <FieldChangeList changes={changes} />,
+    paths: ['scripts'],
   };
 }
 
@@ -227,20 +237,34 @@ export function docsTab(diff: EntityDiff): DiffTabDef | null {
     label: 'Docs',
     status: sideStatus(Boolean(before), Boolean(after)),
     content: () => <FieldDiffRow label="Description" before={before} after={after} />,
+    paths: ['meta.description'],
   };
 }
 
-// Catch-all for every changed field no dedicated tab/header covers, so no change is ever hidden.
-export function settingsTab(diff: EntityDiff, handledPaths: ReadonlySet<string>): DiffTabDef | null {
-  const otherChanges = diff.fieldChanges.filter(change => !handledPaths.has(change.path));
+// A card's tabs followed by the Settings catch-all, which shows every changed field that neither
+// the card's header (`headerPaths`) nor one of its tabs shows — so no change is ever hidden. That
+// includes a field a tab is meant to cover but found nothing to show for (eg. two headers with the
+// same name collapse onto one key, or headers that were only reordered): it's shown as raw
+// before/after values instead.
+export function withSettingsTab(
+  diff: EntityDiff,
+  headerPaths: ReadonlySet<string>,
+  tabs: (DiffTabDef | null | undefined | false)[],
+): DiffTabDef[] {
+  const shownTabs = compactTabs(tabs);
+  const shownPaths = new Set([...headerPaths, ...shownTabs.flatMap(tab => tab.paths ?? [])]);
+  const otherChanges = diff.fieldChanges.filter(change => !shownPaths.has(change.path));
   if (otherChanges.length === 0) {
-    return null;
+    return shownTabs;
   }
-  return {
-    id: 'settings',
-    label: 'Settings',
-    status: 'modified',
-    count: otherChanges.length,
-    content: () => <FieldChangeList changes={otherChanges} />,
-  };
+  return [
+    ...shownTabs,
+    {
+      id: 'settings',
+      label: 'Settings',
+      status: 'modified',
+      count: otherChanges.length,
+      content: () => <FieldChangeList changes={otherChanges} />,
+    },
+  ];
 }

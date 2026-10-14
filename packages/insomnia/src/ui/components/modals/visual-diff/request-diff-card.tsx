@@ -4,31 +4,18 @@ import { formatMethodName, getRequestBadgeClassName } from '../../tags/method-ta
 import { diffByKey, type EntityDiff, sideStatus, valuesEqual } from './diff-engine';
 import {
   authTab,
-  compactTabs,
   type DiffTabDef,
   docsTab,
   KeyValueDiffRows,
   keyValueTab,
   scriptsTab,
-  settingsTab,
+  withSettingsTab,
 } from './diff-tabs';
 import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
-// Fields already surfaced by a dedicated tab/header row — everything else
-// modified on the request node falls into the (diff-only) Settings tab.
-const HANDLED_FIELD_PATHS = new Set([
-  'name',
-  'url',
-  'method',
-  'headers',
-  'parameters',
-  'pathParameters',
-  'body',
-  'authentication',
-  'scripts',
-  'meta.description',
-]);
+// Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
+const HEADER_FIELD_PATHS = new Set(['name', 'url', 'method']);
 
 function hasBodyContent(body: any) {
   return Boolean(body?.mimeType || body?.text || body?.params?.length);
@@ -47,6 +34,7 @@ function bodyTab(diff: EntityDiff): DiffTabDef | null {
     id: 'body',
     label: 'Body',
     status: sideStatus(hasBodyContent(before), hasBodyContent(after)),
+    paths: ['body'],
     content: () => (
       <div className="flex flex-col gap-3">
         {mimeTypeChanged && <FieldDiffRow label="Content Type" before={before?.mimeType} after={after?.mimeType} />}
@@ -59,13 +47,21 @@ function bodyTab(diff: EntityDiff): DiffTabDef | null {
 
 // Tabs mirror the request editor: Params, Body, Auth, Headers, Scripts, Docs, plus a diff-only Settings catch-all.
 export function buildRequestTabs(diff: EntityDiff): DiffTabDef[] {
-  return compactTabs([
+  return withSettingsTab(diff, HEADER_FIELD_PATHS, [
     keyValueTab({
       id: 'params',
       label: 'Params',
       sections: [
-        { title: 'Query Parameters', rows: diffByKey(diff.before?.parameters, diff.after?.parameters, 'name') },
-        { title: 'Path Parameters', rows: diffByKey(diff.before?.pathParameters, diff.after?.pathParameters, 'name') },
+        {
+          title: 'Query Parameters',
+          path: 'parameters',
+          rows: diffByKey(diff.before?.parameters, diff.after?.parameters, 'name'),
+        },
+        {
+          title: 'Path Parameters',
+          path: 'pathParameters',
+          rows: diffByKey(diff.before?.pathParameters, diff.after?.pathParameters, 'name'),
+        },
       ],
     }),
     bodyTab(diff),
@@ -73,11 +69,10 @@ export function buildRequestTabs(diff: EntityDiff): DiffTabDef[] {
     keyValueTab({
       id: 'headers',
       label: 'Headers',
-      sections: [{ rows: diffByKey(diff.before?.headers, diff.after?.headers, 'name') }],
+      sections: [{ path: 'headers', rows: diffByKey(diff.before?.headers, diff.after?.headers, 'name') }],
     }),
     scriptsTab(diff),
     docsTab(diff),
-    settingsTab(diff, HANDLED_FIELD_PATHS),
   ]);
 }
 

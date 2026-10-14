@@ -3,27 +3,19 @@ import type { FC } from 'react';
 import { diffByKey, diffRecord, dominantStatus, type EntityDiff, valuesEqual } from './diff-engine';
 import {
   authTab,
-  compactTabs,
   type DiffTabDef,
   docsTab,
   keyValueTab,
   RecordDiffRows,
   scriptsTab,
-  settingsTab,
+  withSettingsTab,
 } from './diff-tabs';
 import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // `children` never shows up here: nested requests/folders are entities with their own cards.
-const HANDLED_FIELD_PATHS = new Set([
-  'name',
-  'authentication',
-  'headers',
-  'scripts',
-  'environment',
-  'environmentPropertyOrder',
-  'meta.description',
-]);
+// Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
+const HEADER_FIELD_PATHS = new Set(['name']);
 
 function environmentTab(diff: EntityDiff): DiffTabDef | null {
   const rows = diffRecord(diff.before?.environment ?? {}, diff.after?.environment ?? {});
@@ -40,6 +32,7 @@ function environmentTab(diff: EntityDiff): DiffTabDef | null {
     label: 'Environment',
     status: rows.length > 0 ? dominantStatus(rows.map(row => row.status)) : 'modified',
     count: rows.length,
+    paths: ['environment', 'environmentPropertyOrder'],
     content: () => (
       <div className="flex flex-col gap-3">
         <RecordDiffRows rows={rows} />
@@ -52,17 +45,16 @@ function environmentTab(diff: EntityDiff): DiffTabDef | null {
 // Tabs mirror the folder settings editor: Auth, Headers, Scripts, Environment, Docs, plus the
 // diff-only Settings catch-all.
 export function buildRequestGroupTabs(diff: EntityDiff): DiffTabDef[] {
-  return compactTabs([
+  return withSettingsTab(diff, HEADER_FIELD_PATHS, [
     authTab(diff),
     keyValueTab({
       id: 'headers',
       label: 'Headers',
-      sections: [{ rows: diffByKey(diff.before?.headers, diff.after?.headers, 'name') }],
+      sections: [{ path: 'headers', rows: diffByKey(diff.before?.headers, diff.after?.headers, 'name') }],
     }),
     scriptsTab(diff),
     environmentTab(diff),
     docsTab(diff),
-    settingsTab(diff, HANDLED_FIELD_PATHS),
   ]);
 }
 
