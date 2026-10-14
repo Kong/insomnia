@@ -43,14 +43,17 @@ export class EventStreamRequestPage extends RequestPage {
 
   /**
    * Navigates to the event-stream request pane, then installs a
-   * `db.changes` listener that increments `window.__saveCount` each time a
-   * "Request" document is saved — used by tests to assert save behavior
-   * without polling the UI.
+   * `db.changes` listener (once per window) that increments
+   * `window.__saveCount` each time a "Request" document is saved — used by
+   * tests to assert save behavior without polling the UI. Repeat calls
+   * only reset the counter.
    */
   async navigate(): Promise<void> {
     await super.navigate();
     await this.page.evaluate(() => {
       (window as any).__saveCount = 0;
+      if ((window as any).__saveCountListenerInstalled) return;
+      (window as any).__saveCountListenerInstalled = true;
       (window as any).main.on(
         "db.changes",
         (_: unknown, changes: [string, { type: string }][]) => {

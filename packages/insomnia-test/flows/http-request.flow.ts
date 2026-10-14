@@ -121,7 +121,7 @@ export class HttpRequestFlow extends BaseFlow {
       await page.setBody(request.body);
     }
     if (request.authentication) {
-      await this.applyAuthentication(page, request.authentication);
+      await this.applyHttpAuthentication(page, request.authentication);
     }
     if (request.preRequestScript || request.afterResponseScript) {
       await page.scripts.setScripts({
@@ -132,22 +132,21 @@ export class HttpRequestFlow extends BaseFlow {
   }
 
   /**
-   * Applies `authentication` to the request pane's Auth tab. Only OAuth
-   * 1.0 and OAuth 2.0 are wired up so far — other auth types will need
-   * their own Page setter before they can be added here.
+   * Applies `authentication` to the request pane's Auth tab. OAuth 1.0 is
+   * HTTP-only so it is handled here; every other type is delegated to
+   * `BaseFlow.applyAuthentication`.
    * @param page - The request page to apply authentication on
    * @param authentication - The authentication config to apply
    */
-  private async applyAuthentication(
+  private async applyHttpAuthentication(
     page: HttpRequestPage,
     authentication: RequestAuthentication,
   ): Promise<void> {
     if (authentication.type === "oauth1") {
       await page.auth.setOAuth1Fields(authentication);
+      return;
     }
-    if (authentication.type === "oauth2") {
-      await page.auth.setOAuth2Fields(authentication);
-    }
+    await this.applyAuthentication(page.auth, authentication);
   }
 
 }

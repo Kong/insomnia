@@ -112,6 +112,11 @@ export abstract class RequestPage extends TabPanelPage {
       .locator(this.PANE)
       .getByRole("button", { name: /^(Connect|Disconnect)$/ });
     await connectButton.click();
+    await expect(
+      this.page
+        .locator(this.PANE)
+        .getByRole("button", { name: "Disconnect", exact: true }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
