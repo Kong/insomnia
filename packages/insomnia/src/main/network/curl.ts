@@ -9,6 +9,7 @@ import { services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { redactConfidentialText, redactDeep } from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
@@ -70,6 +71,53 @@ const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
+// Mirrors websocket.ts / socket-io.ts: the renderer renders the request and ships the
+// confidential values it registered alongside it, because these writes happen in the main
+// process, outside any SendActionRuntime/appendTimeline abstraction. Only grows for the
+// lifetime of a connection; cleaned up in deleteRequestMaps. Setting OFF ⇒ the renderer sends
+// nothing ⇒ nothing is redacted.
+const sensitiveValuesByRequestId = new Map<string, Set<string>>();
+
+const registerSensitiveValues = (requestId: string, values: string[] | undefined) => {
+  if (!values || values.length === 0) {
+    return;
+  }
+  let set = sensitiveValuesByRequestId.get(requestId);
+  if (!set) {
+    set = new Set();
+    sensitiveValuesByRequestId.set(requestId, set);
+  }
+  for (const value of values) {
+    if (value) {
+      set.add(value);
+    }
+  }
+};
+
+const redactForRequest = (requestId: string, text: string): string => {
+  const values = sensitiveValuesByRequestId.get(requestId);
+  if (!values || values.size === 0) {
+    return text;
+  }
+  return redactConfidentialText(text, [...values]);
+};
+
+const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ ...entry, value: redactForRequest(requestId, entry.value) }) + '\n');
+};
+
+const writeCurlEventLog = (requestId: string, event: CurlEvent, opts: { clearRequestIdMap?: boolean } = {}) => {
+  const values = sensitiveValuesByRequestId.get(requestId);
+  const redactedEvent = values && values.size > 0 ? redactDeep(event, [...values]) : event;
+  writeEventLogAndNotify({
+    requestId,
+    data: JSON.stringify(redactedEvent) + '\n',
+    clearRequestIdMap: opts.clearRequestIdMap,
+  });
+};
+
 const getEventNotificationChannel = (responseId: string) =>
   `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 const writeEventLogAndNotify = ({
@@ -110,6 +158,7 @@ interface OpenCurlRequestOptions {
   workspaceId: string;
   renderedRequest: RenderedRequest;
   initialPayload?: string;
+  sensitiveValues?: string[];
 }
 const openCurlConnection = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -117,6 +166,7 @@ const openCurlConnection = async (
 ): Promise<void> => {
   const { workspaceId, renderedRequest: req } = options;
   const requestId = req._id;
+  registerSensitiveValues(requestId, options.sensitiveValues);
   const existingConnection = CurlConnections.get(requestId);
 
   if (existingConnection) {
@@ -154,7 +204,7 @@ const openCurlConnection = async (
     const filteredClientCertificates = filterClientCertificates(clientCertificates, req.url, 'https:');
 
     const { header: authHeader, timeline: authTimeline } = await getAuthHeader(req, req.url);
-    authTimeline?.forEach(entry => timelineFileStreams.get(requestId)?.write(JSON.stringify(entry) + '\n'));
+    authTimeline?.forEach(entry => writeTimelineEntry(requestId, entry));
 
     // request-level `cookies` aren't resolved for realtime connections (unlike the plain HTTP
     // send path), so cookie sending relies entirely on the cookie jar file below.
@@ -168,7 +218,7 @@ const openCurlConnection = async (
     curl.setOpt(Curl.option.CUSTOMREQUEST, req.method);
     // TODO: support all post data content types
     curl.setOpt(Curl.option.POSTFIELDS, req.body?.text || '');
-    debugTimeline.forEach(entry => timelineFileStreams.get(requestId)?.write(JSON.stringify(entry) + '\n'));
+    debugTimeline.forEach(entry => writeTimelineEntry(requestId, entry));
     CurlConnections.set(requestId, curl);
     CurlConnections.get(requestId)?.enable(CurlFeature.StreamResponse);
     const headerStrings = parseHeaderStrings({ req, finalUrl: req.url, authHeader });
@@ -185,7 +235,10 @@ const openCurlConnection = async (
       };
       console.error('curl - error:', error, errorCode);
       CurlConnections.get(requestId)?.close();
-      deleteRequestMaps(requestId, error.message, errorEvent);
+      // Captured before deleteRequestMaps drops this request's registered values. A curl
+      // error message readily echoes the rendered URL.
+      const redactedErrorMessage = redactForRequest(requestId, error.message);
+      deleteRequestMaps(requestId, redactedErrorMessage, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
@@ -197,7 +250,7 @@ const openCurlConnection = async (
             requestId,
             responseEnvironmentId,
             timelinePath,
-            error.message || 'Something went wrong creating curl response',
+            redactedErrorMessage || 'Something went wrong creating curl response',
           );
         }
       }
@@ -227,7 +280,7 @@ const openCurlConnection = async (
         name = 'Text';
       }
       const value = timelineMessage || buffer.toString('utf8');
-      timelineFileStreams.get(requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
+      writeTimelineEntry(requestId, { name, value, timestamp: Date.now() });
       return 0;
     });
 
@@ -247,7 +300,9 @@ const openCurlConnection = async (
           parentId: requestId,
           environmentId: responseEnvironmentId,
           headers: responseHeaders,
-          url: req.url,
+          // The Response document is persisted separately from the timeline, and this is the
+          // rendered URL, so a confidential value interpolated into it would land in NeDB.
+          url: redactForRequest(requestId, req.url),
           statusCode,
           statusMessage,
           httpVersion,
@@ -282,7 +337,7 @@ const openCurlConnection = async (
             }
           }
         }
-        timeline.map(t => timelineFileStreams.get(requestId)?.write(JSON.stringify(t) + '\n'));
+        timeline.forEach(t => writeTimelineEntry(requestId, t));
 
         invariant(eventLogFileStreams.get(requestId), 'writableStream should be defined');
         for await (const chunk of stream) {
@@ -294,7 +349,7 @@ const openCurlConnection = async (
             timestamp: Date.now(),
             direction: 'INCOMING',
           };
-          writeEventLogAndNotify({ requestId, data: JSON.stringify(messageEvent) + '\n' });
+          writeCurlEventLog(requestId, messageEvent);
         }
 
         // NOTE: when stream is closed by remote server
@@ -319,13 +374,16 @@ const openCurlConnection = async (
   } catch (e) {
     console.error('unhandled error:', e);
 
-    deleteRequestMaps(requestId, e.message || 'Something went wrong opening curl connection');
+    // Same ordering constraint as the 'error' handler above: redact before deleteRequestMaps
+    // drops this request's registered values.
+    const redactedMessage = redactForRequest(requestId, e.message || '');
+    deleteRequestMaps(requestId, redactedMessage || 'Something went wrong opening curl connection');
     createErrorResponse(
       responseId,
       requestId,
       responseEnvironmentId,
       timelinePath,
-      e.message || 'Something went wrong creating curl connection',
+      redactedMessage || 'Something went wrong creating curl connection',
     );
   }
 };
@@ -344,6 +402,8 @@ const createErrorResponse = async (
     environmentId: environmentId,
     timelinePath,
     statusMessage: 'Error',
+    // Already redacted by the caller: deleteRequestMaps clears this request's registered
+    // values before we get here, so redacting at this point would be a no-op.
     error: message,
   };
   const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
@@ -352,20 +412,16 @@ const createErrorResponse = async (
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
   if (event) {
-    writeEventLogAndNotify({
-      requestId: requestId,
-      data: JSON.stringify(event) + '\n',
-      clearRequestIdMap: true,
-    });
+    writeCurlEventLog(requestId, event, { clearRequestIdMap: true });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
-  timelineFileStreams
-    .get(requestId)
-    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  // `message` is often a curl error, which can echo the rendered URL.
+  writeTimelineEntry(requestId, { value: message, name: 'Text', timestamp: Date.now() });
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   CurlConnections.delete(requestId);
+  sensitiveValuesByRequestId.delete(requestId);
 };
 
 const getCurlReadyState = async (options: { requestId: string }): Promise<CurlConnection['isOpen']> => {
