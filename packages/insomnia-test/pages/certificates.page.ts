@@ -2,7 +2,7 @@ import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { ClientCertificate } from "../models/certificate";
+import type { ClientCertificate } from "../models/client-certificate";
 import { BasePage } from "./base.page";
 
 export class CertificatesPage extends BasePage {
