@@ -15,7 +15,7 @@ test("Verify Disabling A Row In The Table Editor Is Reflected On Read-Back", asy
   const { environmentFlow, workspaceFlow } = user.flowManager;
   const { environmentPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const varA = {
@@ -32,7 +32,7 @@ test("Verify Disabling A Row In The Table Editor Is Reflected On Read-Back", asy
     type: EnvironmentKvPairDataType.STRING,
     enabled: true,
   } satisfies EnvironmentKvPairData;
-  await environmentFlow.create(project, {
+  await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [varA, varB],
   });

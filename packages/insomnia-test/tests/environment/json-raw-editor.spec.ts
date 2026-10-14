@@ -15,7 +15,7 @@ test("Verify Environment Raw JSON Editor Reads Back And Persists Edits", async (
   const { environmentFlow, workspaceFlow } = user.flowManager;
   const { environmentPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const varA = {
@@ -25,7 +25,7 @@ test("Verify Environment Raw JSON Editor Reads Back And Persists Edits", async (
     type: EnvironmentKvPairDataType.STRING,
     enabled: true,
   } satisfies EnvironmentKvPairData;
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [varA],
   });

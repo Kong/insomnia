@@ -13,16 +13,16 @@ test("Verify creating and duplicating a global environment", async ({
 }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
 
   const variableValue = faker.string.alphanumeric(10);
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
@@ -36,7 +36,7 @@ test("Verify creating and duplicating a global environment", async ({
   });
 
   const duplicatedName = faker.string.alphanumeric(10);
-  const duplicatedEnvironment = await workspaceFlow.duplicate(
+  const duplicatedEnvironment = await workspaceFlow.duplicateEnvironment(
     environment,
     duplicatedName,
   );

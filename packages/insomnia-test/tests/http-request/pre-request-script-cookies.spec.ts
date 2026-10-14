@@ -11,8 +11,8 @@ test('Verify pre-request script manages cookies via insomnia.cookies.jar() and t
 }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const keptName = faker.string.alpha(8);
   const keptValue = faker.string.alphanumeric(10);

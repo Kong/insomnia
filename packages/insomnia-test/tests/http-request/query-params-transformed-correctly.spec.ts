@@ -12,17 +12,17 @@ test("Verify query params from the URL, template tags, and the Parameters tab ar
 }) => {
   const { httpRequestFlow, workspaceFlow, environmentFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
 
   const fromUrlValue = faker.string.alphanumeric(10);
   const fromEditorValue = faker.string.alphanumeric(10);
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
