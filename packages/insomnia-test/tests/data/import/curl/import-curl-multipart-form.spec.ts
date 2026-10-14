@@ -47,8 +47,8 @@ test("Import HTTP Request by Curl Command With -F Builds a Multipart Form Body I
     url,
   } satisfies HttpRequest;
   const persisted = await httpRequestFlow.get(url);
-  const response = await httpRequestFlow.send(request);
-  const raw = (response.body as { data: string }).data;
+  const responseView = await httpRequestFlow.send(request);
+  const raw = (responseView.body as { data: string }).data;
 
   expect(persisted).toMatchObject(request);
   expect(persisted?.body?.mimeType).toBe(ContentType.Multipart);
@@ -58,12 +58,12 @@ test("Import HTTP Request by Curl Command With -F Builds a Multipart Form Body I
   });
   expect(persisted?.body?.params?.[1]?.name).toBe("upload");
   expect(persisted?.body?.params?.[1]?.fileName).toContain("upload-sample.txt");
-  expect(response.statusCode).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(raw).toContain('name="title"');
   expect(raw).toContain(title);
   expect(raw).toContain('name="upload"; filename="upload-sample.txt"');
   expect(raw).toContain("insomnia-e2e-upload-fixture");
-  expect(response.body).toMatchObject({
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(ContentType.Multipart),
     }),
