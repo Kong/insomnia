@@ -1041,11 +1041,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         )}
         {pushFailedError ? (
           <PushFailedAfterCommitBanner
-          error={pushFailedError}
-          isRetrying={isRetryingPush}
-          onRetry={retryPush}
-          projectId={projectId}
-        />
+            error={pushFailedError}
+            isRetrying={isRetryingPush}
+            onRetry={retryPush}
+            projectId={projectId}
+          />
         ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
@@ -1367,7 +1367,12 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 // that was renamed, moved, or deleted outside Insomnia.
                 const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
                 if ('errors' in result && result.errors) {
-                  showToast({ icon: 'exclamation-triangle', title: 'Folder not found', description: result.errors.join(', '), status: 'error' });
+                  showToast({
+                    icon: 'exclamation-triangle',
+                    title: 'Folder not found',
+                    description: result.errors.join(', '),
+                    status: 'error',
+                  });
                   return;
                 }
                 if (result.path) {
@@ -1895,9 +1900,8 @@ const OriginalGitProjectStagingModal: FC<
 const UndiscardableChangeWarning = () => (
   <p className="rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm) text-base">
     <Icon icon="exclamation-triangle" className="mr-2" />
-    The changes in this file can&apos;t be discarded. Insomnia reformats this file to keep it working, so the changes
-    come back after every discard. Often this comes from manual edits, or changes made in other versions of
-    Insomnia. Commit this file once to resolve it.
+    This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
+    other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
   </p>
 );
 
@@ -2051,7 +2055,7 @@ const CreateBranchAndPushModal = ({
                 <Button
                   type="submit"
                   isDisabled={isCreating || !branchName.trim()}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80 disabled:opacity-50"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:opacity-80"
                 >
                   <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
                   Create branch &amp; push
