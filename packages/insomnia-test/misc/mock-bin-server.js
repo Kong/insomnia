@@ -44,7 +44,12 @@ const readBody = req =>
   });
 
 const send = (res, status, body, headers = {}) => {
-  res.writeHead(status, { ...CORS_HEADERS, ...headers });
+  res.writeHead(status, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'X-Content-Type-Options': 'nosniff',
+    ...CORS_HEADERS,
+    ...headers,
+  });
   res.end(body);
 };
 
