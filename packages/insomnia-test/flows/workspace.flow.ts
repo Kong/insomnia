@@ -8,7 +8,7 @@ import { DEFAULT_TIMEOUT } from '../misc/constants';
 import { Collection, TestSuite, UnitTest } from '../models/collection';
 import { Environment } from '../models/environment';
 import type { EventStreamRequest } from '../models/event-stream-request';
-import type { GitRepoConnection } from '../models/git-repo-connection';
+import type { GitRepository } from '../models/git-repository';
 import type { GraphQLRequest } from '../models/graphql-request';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { HttpRequest } from '../models/http-request';
@@ -140,7 +140,7 @@ export class WorkspaceFlow extends BaseFlow {
   async cloneGitProject(
     item: Project,
     credentialName: string,
-    repo?: Partial<GitRepoConnection>,
+    repo?: Partial<GitRepository>,
   ): Promise<Project> {
     const uri = repo?.uri ?? this.gitRepoUrl;
     if (!uri) {
