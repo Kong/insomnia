@@ -167,5 +167,4 @@ export const test = base.extend<GitFixtures>({
   },
 });
 
-export { expect } from "@playwright/test";
 export { DEFAULT_TIMEOUT } from "./fixtures";
