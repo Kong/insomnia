@@ -67,6 +67,29 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  # Basic Auth whose password is a confidential variable. The header is base64(user:pass),
+  # a derived form that does not contain the plaintext, so it is only redacted if the main
+  # process registers it specifically -- see isDerivedFromConfidentialValues in websocket.ts.
+  # Not /basic-auth: that endpoint only upgrades for one hard-coded credential pair, and the
+  # point here is what gets written while connecting, not whether the server accepts it.
+  - url: ws://localhost:4010
+    name: confidential ws
+    meta:
+      id: ws-req_c0nf1dent1a1redact10n000000001
+      created: 1662451239058
+      modified: 1662451274029
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: user
+      password: "{{ _.token }}"
 cookieJar:
   name: Default Jar
   meta:
