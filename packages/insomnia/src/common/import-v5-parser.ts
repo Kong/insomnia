@@ -19,7 +19,7 @@ import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/sch
 
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
 
-const { environment, mockServer, mockRoute } = models;
+const { environment, mockServer, mockRoute, mcpRequest } = models;
 
 // Basic literal types that can appear in JSON data
 export const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -487,32 +487,25 @@ export const SocketIORequestSchema = z.object({
   eventListeners: SocketIOEventListenerSchema.array().optional(),
 });
 
+// Keep the key order consistent so that export to YAML maintains the same order as before: meta sits after authentication
+const {
+  description: mcpRequestDescription,
+  url: mcpRequestUrl,
+  transportType: mcpRequestTransportType,
+  headers: mcpRequestHeaders,
+  authentication: mcpRequestAuthentication,
+  ...restMcpRequestShape
+} = mcpRequest.baseMcpRequestSchema.shape;
 export const McpRequestSchema = z.object({
   name: z.string().optional().default(''),
-  url: z.string().optional().default(''),
-  transportType: z.enum(['stdio', 'streamable-http']).optional().default('streamable-http'),
-  headers: HeadersSchema.optional(),
-  authentication: AuthenticationSchema.optional(),
-  meta: MetaSchema.optional(),
-  env: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string().optional().default(''),
-        value: z.string().optional().default(''),
-        type: z.literal('str'),
-        enabled: z.boolean().optional().default(true),
-      }),
-    )
-    .optional(),
-  roots: z
-    .array(
-      z.object({
-        name: z.string().optional(),
-        uri: z.string().optional().default(''),
-      }),
-    )
-    .optional(),
+  url: mcpRequestUrl,
+  transportType: mcpRequestTransportType,
+  headers: mcpRequestHeaders,
+  authentication: mcpRequestAuthentication,
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('mcp-req'),
+  }).optional(),
+  ...restMcpRequestShape,
 });
 
 type Request = z.infer<typeof RequestSchema>;
