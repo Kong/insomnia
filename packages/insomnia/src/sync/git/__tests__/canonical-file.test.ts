@@ -145,7 +145,7 @@ describe('canonical-file', () => {
       const workingCopyContent = await exportThroughDatabase(reorderedCollection);
       expect(workingCopyContent).not.toBe(reorderedCollection);
 
-      expect(await isUndiscardableChange({ filepath: FILEPATH, committedContent: reorderedCollection, workingCopyContent })).toBe(true);
+      expect(await isUndiscardableChange({ filepath: FILEPATH, baselineContent: reorderedCollection, workingCopyContent })).toBe(true);
     });
 
     it('detects an old-schema file that the diff view normalizes to look identical to the working copy', async () => {
@@ -155,17 +155,17 @@ describe('canonical-file', () => {
       delete oldSchemaFile.schema_version;
       oldSchemaFile.collection.reverse();
       oldSchemaFile.collection[0].children[0].headers[0].id = 'pair_1';
-      const committedContent = YAML.stringify(oldSchemaFile);
+      const baselineContent = YAML.stringify(oldSchemaFile);
 
       // The diff view migrates and reorders the committed side against the working copy, hiding the change
-      expect(migrateToLatestYaml(committedContent, workingCopyContent)).toBe(workingCopyContent);
+      expect(migrateToLatestYaml(baselineContent, workingCopyContent)).toBe(workingCopyContent);
 
-      expect(await isUndiscardableChange({ filepath: FILEPATH, committedContent, workingCopyContent })).toBe(true);
+      expect(await isUndiscardableChange({ filepath: FILEPATH, baselineContent, workingCopyContent })).toBe(true);
     });
 
     it('detects a hand-added request whose missing timestamps are filled with the import time', async () => {
       // No meta.created/modified and no settings, as if the request was typed into the file by hand
-      const committedContent = reorderedCollection.replace(
+      const baselineContent = reorderedCollection.replace(
         'collection:\n',
         `collection:
   - url: https://example.com/hand-added
@@ -178,11 +178,11 @@ describe('canonical-file', () => {
 
       // The watcher imported the file at one time, the replay runs at another
       const dateNow = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
-      const workingCopyContent = await exportThroughDatabase(committedContent);
+      const workingCopyContent = await exportThroughDatabase(baselineContent);
       dateNow.mockReturnValue(1_800_000_000_000);
       try {
-        expect(await getCanonicalInsomniaFileContent(committedContent)).not.toBe(workingCopyContent);
-        expect(await isUndiscardableChange({ filepath: FILEPATH, committedContent, workingCopyContent })).toBe(true);
+        expect(await getCanonicalInsomniaFileContent(baselineContent)).not.toBe(workingCopyContent);
+        expect(await isUndiscardableChange({ filepath: FILEPATH, baselineContent, workingCopyContent })).toBe(true);
       } finally {
         dateNow.mockRestore();
       }
@@ -194,21 +194,21 @@ describe('canonical-file', () => {
         'https://example.com/edited',
       );
 
-      expect(await isUndiscardableChange({ filepath: FILEPATH, committedContent: reorderedCollection, workingCopyContent })).toBe(false);
+      expect(await isUndiscardableChange({ filepath: FILEPATH, baselineContent: reorderedCollection, workingCopyContent })).toBe(false);
     });
 
     it('does not flag a real edit to a file in the canonical format', async () => {
-      const committedContent = await exportThroughDatabase(reorderedCollection);
-      const workingCopyContent = committedContent.replace('https://example.com/fld_a', 'https://example.com/edited');
+      const baselineContent = await exportThroughDatabase(reorderedCollection);
+      const workingCopyContent = baselineContent.replace('https://example.com/fld_a', 'https://example.com/edited');
 
-      expect(await isUndiscardableChange({ filepath: FILEPATH, committedContent, workingCopyContent })).toBe(false);
+      expect(await isUndiscardableChange({ filepath: FILEPATH, baselineContent, workingCopyContent })).toBe(false);
     });
 
     it('does not flag new or deleted files', async () => {
-      expect(await isUndiscardableChange({ filepath: FILEPATH, committedContent: null, workingCopyContent: reorderedCollection })).toBe(
+      expect(await isUndiscardableChange({ filepath: FILEPATH, baselineContent: null, workingCopyContent: reorderedCollection })).toBe(
         false,
       );
-      expect(await isUndiscardableChange({ filepath: FILEPATH, committedContent: reorderedCollection, workingCopyContent: null })).toBe(
+      expect(await isUndiscardableChange({ filepath: FILEPATH, baselineContent: reorderedCollection, workingCopyContent: null })).toBe(
         false,
       );
     });

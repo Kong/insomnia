@@ -53,30 +53,31 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
 }
 
 /**
- * Whether the whole difference between the committed and working copy of a file comes from
- * Insomnia re-generating the committed file. Such a change reappears after every discard and
- * can only be resolved by committing it.
+ * Whether the whole difference between the baseline and working copy of a file comes from
+ * Insomnia re-generating the baseline. The baseline is what a discard restores: the staged
+ * content, or the HEAD content when nothing is staged. Such a change reappears after every
+ * discard and can only be resolved by committing it.
  */
 export async function isUndiscardableChange({
   filepath,
-  committedContent,
+  baselineContent,
   workingCopyContent,
 }: {
   filepath: string;
-  committedContent: string | null;
+  baselineContent: string | null;
   workingCopyContent: string | null;
 }) {
-  if (!committedContent || !workingCopyContent || committedContent === workingCopyContent) {
+  if (!baselineContent || !workingCopyContent || baselineContent === workingCopyContent) {
     return false;
   }
 
-  const canonicalContent = await getCanonicalInsomniaFileContent(committedContent);
-  if (canonicalContent === null || canonicalContent === committedContent) {
+  const canonicalContent = await getCanonicalInsomniaFileContent(baselineContent);
+  if (canonicalContent === null || canonicalContent === baselineContent) {
     return false;
   }
 
   // Compare with the same rules the Unstaged changes list uses. Import fills missing
   // `meta.created`/`modified` with the current time, so the replay and the working copy can
-  // differ in those alone even though both come from re-generating the same committed file.
+  // differ in those alone even though both come from re-generating the same baseline.
   return !hasSignificantChanges(canonicalContent, workingCopyContent, filepath);
 }

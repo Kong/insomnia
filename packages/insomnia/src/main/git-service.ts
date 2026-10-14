@@ -3424,7 +3424,7 @@ export const diffFileLoader = async ({
         // `diff.before` is migrated and reordered for display, but discard restores the raw index/HEAD content
         undiscardable = await isUndiscardableChange({
           filepath,
-          committedContent: fileStatus.rawStage || fileStatus.rawHead,
+          baselineContent: fileStatus.rawStage || fileStatus.rawHead,
           workingCopyContent: fileStatus.workdir,
         });
       } catch (err) {
