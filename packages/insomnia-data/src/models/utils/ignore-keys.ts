@@ -2,7 +2,7 @@ import type { BaseModel, ProjectLintRuleset, Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 
 // Key for VCS to delete before computing changes
-const DELETE_KEY: keyof BaseModel = 'modified';
+export const DELETE_KEY: keyof BaseModel = 'modified';
 
 type ResetModelKeys<T extends BaseModel> = {
   [K in keyof T]?: T[K] | null;
