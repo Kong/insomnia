@@ -35,12 +35,12 @@ test("Verify Mock Route Response Definition Is Returned By Test", async ({
     body: JSON.stringify(body),
     headers: [header],
   });
-  const response = await mockServerFlow.test(route);
+  const responseView = await mockServerFlow.test(route);
 
-  expect(response.statusCode).toBe(201);
-  expect(response.statusMessage).toBe(statusText);
-  expect(response.body).toEqual(body);
-  expect(response.headers).toEqual(
+  expect(responseView.statusCode).toBe(201);
+  expect(responseView.statusMessage).toBe(statusText);
+  expect(responseView.body).toEqual(body);
+  expect(responseView.headers).toEqual(
     expect.arrayContaining([expect.objectContaining(header)]),
   );
 });

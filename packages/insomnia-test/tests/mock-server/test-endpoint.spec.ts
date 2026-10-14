@@ -21,8 +21,8 @@ test("Verify Testing A Default Mock Route Returns 200 With No Body", async ({
   const route = await mockServerFlow.createRoute(server, {
     path: `/${faker.string.alphanumeric(8)}`,
   });
-  const response = await mockServerFlow.test(route);
+  const responseView = await mockServerFlow.test(route);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toBeUndefined();
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toBeUndefined();
 });
