@@ -3,7 +3,7 @@ import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
-import type { Response } from "../models/response";
+import type { ResponseView } from "../models/response";
 import { SocketIORequest } from "../models/socket-io-request";
 import type { SocketIORequestPage } from "../pages/socket-io-request.page";
 import { BaseFlow } from "./base.flow";
@@ -61,13 +61,13 @@ export class SocketIORequestFlow extends BaseFlow {
    * @param request - The request whose connection should be closed
    * @param callback - Invoked once the disconnect completes; defaults to a no-op
    * @param timeout - Maximum time in milliseconds to wait for the disconnect; defaults to DEFAULT_TIMEOUT
-   * @returns The response received after disconnecting
+   * @returns The response view received after disconnecting
    */
   async disconnect(
     request: SocketIORequest,
     callback: () => Promise<void> | void = () => {},
     timeout = DEFAULT_TIMEOUT,
-  ): Promise<Response> {
+  ): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
     const responsePage = this.pageManager.responsePage;
@@ -113,9 +113,9 @@ export class SocketIORequestFlow extends BaseFlow {
    * connection and returns the resulting response, locating it via the
    * standalone project tree.
    * @param request - The request whose message should be sent
-   * @returns The response received after sending the message
+   * @returns The response view received after sending the message
    */
-  async sendMessage(request: SocketIORequest): Promise<Response> {
+  async sendMessage(request: SocketIORequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
     const responsePage = this.pageManager.responsePage;
