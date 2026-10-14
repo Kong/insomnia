@@ -111,6 +111,15 @@ const redactForRequest = (requestId: string, text: string): string => {
   return redactConfidentialText(text, [...values]);
 };
 
+// base64(user:pass) is a *derived* form: it does not contain the plaintext password, so it
+// never matches the values the renderer registered and has to be registered separately.
+// Only do that when an input actually was confidential -- registering it unconditionally
+// masks every Basic Auth header in the console, including credentials nobody marked.
+// No need to check the setting: with it off the renderer sends no values, so the set is
+// empty and nothing ever looks confidential.
+const isDerivedFromConfidentialValues = (requestId: string, inputs: (string | undefined)[]) =>
+  inputs.some(input => !!input && redactForRequest(requestId, input) !== input);
+
 const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
   timelineFileStreams
     .get(requestId)
@@ -259,7 +268,7 @@ const openWebSocketConnection = async (
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
         headers.push(basicAuthHeader);
-        if (settings.hideSecretValuesInPreviewAndConsole && basicAuthHeader.value) {
+        if (basicAuthHeader.value && isDerivedFromConfidentialValues(options.requestId, [username, password])) {
           registerSensitiveValues(options.requestId, [basicAuthHeader.value]);
         }
       }

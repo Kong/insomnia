@@ -15,6 +15,7 @@ import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
+import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { filterClientCertificates } from '../../network/certificate';
 import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
@@ -101,6 +102,13 @@ const redactForRequest = (requestId: string, text: string): string => {
   }
   return redactConfidentialText(text, [...values]);
 };
+
+// base64(user:pass) is a *derived* form: it does not contain the plaintext password, so it
+// never matches the values the renderer registered and has to be registered separately.
+// Only do that when an input actually was confidential -- registering it unconditionally
+// would mask every Basic Auth header in the console, including credentials nobody marked.
+const isDerivedFromConfidentialValues = (requestId: string, inputs: (string | undefined)[]) =>
+  inputs.some(input => !!input && redactForRequest(requestId, input) !== input);
 
 const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
   timelineFileStreams
@@ -204,6 +212,17 @@ const openCurlConnection = async (
     const filteredClientCertificates = filterClientCertificates(clientCertificates, req.url, 'https:');
 
     const { header: authHeader, timeline: authTimeline } = await getAuthHeader(req, req.url);
+    // getAuthHeader builds the Basic header here, after the render that registered the
+    // credentials, so its base64 has to be registered before anything writes it out.
+    const auth = getAuthObjectOrNull(req.authentication);
+    if (
+      authHeader?.value &&
+      auth?.type === 'basic' &&
+      isAuthEnabled(req.authentication) &&
+      isDerivedFromConfidentialValues(requestId, [auth.username, auth.password])
+    ) {
+      registerSensitiveValues(requestId, [authHeader.value]);
+    }
     authTimeline?.forEach(entry => writeTimelineEntry(requestId, entry));
 
     // request-level `cookies` aren't resolved for realtime connections (unlike the plain HTTP
