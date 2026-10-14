@@ -317,11 +317,16 @@ export class ResponsePage extends BasePage {
 
   /**
    * Confirms a gRPC response has been rendered by waiting for the
-   * response status tag to become visible.
+   * response status tag to become visible. If an error dialog appears
+   * instead (gRPC business failures), throws using its text.
    */
   async navigateGrpc(): Promise<void> {
     const statusTag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
-    await expect(statusTag).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    const dialog = this.page.getByRole('dialog').first();
+    await statusTag.or(dialog).first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
   }
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {

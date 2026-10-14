@@ -418,6 +418,7 @@ export const test = base.extend<Fixtures>({
   user: async (
     { window, insomnia, gitCloneUrl, dataPath, skipOnboarding, vaultKey, vaultSalt },
     use,
+    testInfo,
   ) => {
     const pageManager = new PageManager(window, insomnia);
     const flowManager = new FlowManager(pageManager, insomnia, gitCloneUrl, {
@@ -430,6 +431,27 @@ export const test = base.extend<Fixtures>({
     await disableFocusModeDefault(flowManager);
     await use({ page: window, pageManager, flowManager });
     await closeOpenStepGroup();
+
+    // A test that called AppFlow.restart() leaves the relaunched app
+    // behind — the `insomnia`/`window` fixtures only know the original
+    // handles. Collect its coverage and close it here, before they tear down.
+    const currentApp = flowManager.electronApp;
+    if (currentApp && currentApp !== insomnia) {
+      const currentWindow = await currentApp
+        .firstWindow({ timeout: DEFAULT_TIMEOUT })
+        .catch(() => null);
+      if (currentWindow) {
+        if (testInfo.status !== testInfo.expectedStatus) {
+          await testInfo.attach("screenshot-after-restart", {
+            body: await currentWindow.screenshot().catch(() => Buffer.alloc(0)),
+            contentType: "image/png",
+          });
+        }
+        await collectWindowCoverage(currentWindow);
+      }
+      await collectHiddenWindowCoverage(currentApp);
+      await currentApp.close().catch(() => {});
+    }
   },
 });
 
