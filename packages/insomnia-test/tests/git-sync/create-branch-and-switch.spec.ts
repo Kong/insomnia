@@ -9,7 +9,7 @@ test('Verify creating a new branch in a Git Sync project switches to it', async 
   const { gitSyncPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const branchName = faker.string.alphanumeric(10);
   await gitSyncFlow.createBranch(branchName);
 

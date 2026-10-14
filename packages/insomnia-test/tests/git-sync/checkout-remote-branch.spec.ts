@@ -10,7 +10,7 @@ test('Verify a branch that exists only on the remote is listed after Fetch and c
   const { gitSyncPage, workspacePage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const remoteBranch = faker.string.alpha(10).toLowerCase();
   const remoteCollection = new Collection(faker.string.alpha(10));
   const fileName = faker.string.alpha(10).toLowerCase();

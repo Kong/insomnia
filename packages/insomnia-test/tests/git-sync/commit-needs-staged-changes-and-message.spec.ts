@@ -12,12 +12,12 @@ test('Verify committing with nothing staged prompts to stage all, and cancelling
   const { gitSyncPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.cloneGitProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Git),
     GIT_CREDENTIAL.name,
   );
   const fileName = faker.string.alpha(10).toLowerCase();
-  await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), fileName);
+  await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), fileName);
 
   await gitSyncPage.openHistory();
   const initialCommit = await gitSyncPage.getLatestCommit();
@@ -50,16 +50,16 @@ test('Verify confirming the stage-all prompt stages every change and commits it'
   const { gitSyncPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.cloneGitProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Git),
     GIT_CREDENTIAL.name,
   );
-  await workspaceFlow.create(
+  await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
     faker.string.alpha(10).toLowerCase(),
   );
-  await workspaceFlow.create(
+  await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
     faker.string.alpha(11).toLowerCase(),

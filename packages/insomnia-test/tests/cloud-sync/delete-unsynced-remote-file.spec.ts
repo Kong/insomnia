@@ -58,7 +58,7 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   await setCloudSyncArchiveFailure(false);
 
   const newCollectionName = `Z ${faker.string.alphanumeric(8)}`;
-  const newCollection = await workspaceFlow.create(
+  const newCollection = await workspaceFlow.createCollection(
     project!,
     new Collection(newCollectionName),
   ) as Collection;

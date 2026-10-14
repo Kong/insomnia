@@ -11,7 +11,7 @@ test('Verify creating a branch with a duplicate or invalid name shows an error a
   const { gitSyncPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const branchName = faker.string.alpha(10).toLowerCase();
   await gitSyncFlow.createBranch(branchName);
 

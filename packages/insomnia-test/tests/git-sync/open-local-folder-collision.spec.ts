@@ -17,12 +17,12 @@ test(
     const folderPath = fs.mkdtempSync(
       path.join(os.tmpdir(), "insomnia-open-local-folder-collision-"),
     );
-    await workspaceFlow.create(
+    await workspaceFlow.openLocalGitFolder(
       new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath),
     );
 
     await expect(async () => {
-      return workspaceFlow.create(
+      return workspaceFlow.openLocalGitFolder(
         new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath),
       );
     }).rejects.toThrow();

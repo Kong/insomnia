@@ -22,7 +22,7 @@ test("Verify a new collection commits and pushes under its own backend project",
   });
 
   const collectionYName = `Y ${faker.string.alphanumeric(8)}`;
-  const collectionY = await workspaceFlow.create(
+  const collectionY = await workspaceFlow.createCollection(
     project!,
     new Collection(collectionYName),
   );

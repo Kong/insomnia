@@ -14,7 +14,7 @@ test(
     const { workspaceFlow } = user.flowManager;
 
     const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-open-local-folder-'));
-    await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath));
+    await workspaceFlow.openLocalGitFolder(new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath));
 
     await expect.poll(() => fs.existsSync(path.join(folderPath, '.git'))).toBe(true);
   },

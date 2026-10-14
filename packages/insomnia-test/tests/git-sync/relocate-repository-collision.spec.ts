@@ -16,7 +16,7 @@ test(
     const { projectSettingsPage } = user.pageManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-    const project = await workspaceFlow.create(
+    const project = await workspaceFlow.cloneGitProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Git),
       GIT_CREDENTIAL.name,
     );
