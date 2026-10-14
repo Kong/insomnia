@@ -115,13 +115,13 @@ export class McpClientFlow extends BaseFlow {
 
   /**
    * Creates an MCP Client node under `parent` (delegating the tree creation
-   * to `workspaceFlow.create`), then opens it and sets its URL.
+   * to `workspaceFlow.createMcpClient`), then opens it and sets its URL.
    * @param parent - The project to create the MCP Client under
    * @param client - The MCP Client to create, including its URL
    * @returns The created MCP Client, with `id` populated
    */
   async create(parent: Project, client: McpClient): Promise<McpClient> {
-    await this.workspaceFlow.create(parent, client);
+    await this.workspaceFlow.createMcpClient(parent, client);
 
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
