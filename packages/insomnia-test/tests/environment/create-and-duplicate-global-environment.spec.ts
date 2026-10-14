@@ -8,7 +8,7 @@ import { EnvironmentKvPairDataType } from "../../models/environment";
 import type { HttpRequest } from "../../models/http-request";
 import { Project } from "../../models/project";
 
-test("Verify creating and duplicating a private global environment", async ({
+test("Verify creating and duplicating a global environment", async ({
   user,
 }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
@@ -24,7 +24,6 @@ test("Verify creating and duplicating a private global environment", async ({
   const variableValue = faker.string.alphanumeric(10);
   const environment = await environmentFlow.create(project, {
     name: faker.string.alphanumeric(10),
-    isPrivate: true,
     kvPairData: [
       {
         id: "",

@@ -9,7 +9,7 @@ import { Project } from "../../models/project";
 
 const variableName = "unlinked";
 
-test("Verify Linked Environment Variable Causes Error", async ({ user }) => {
+test("Verify Unlinked Environment Variable Causes Error", async ({ user }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
   const project = await workspaceFlow.create(
