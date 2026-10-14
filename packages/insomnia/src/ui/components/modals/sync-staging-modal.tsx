@@ -1,6 +1,6 @@
 import { models } from 'insomnia-data';
 import type { StageEntry, Status, StatusCandidate } from 'insomnia-vcs';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -18,11 +18,17 @@ import {
 import { useParams } from 'react-router';
 import { stringify } from 'yaml';
 
+import { checkDocCompatibilityFromSchema, findDocUnknownFieldRanges } from '~/common/zod/check-doc-compatibility';
 import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
 import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
 
 import { DiffEditor } from '../diff-view-editor';
+import {
+  UnknownFieldsWarningIcon,
+  UNSUPPORTED_DOC_MESSAGE,
+  UnsupportedDocErrorIcon,
+} from '../git/unknown-fields-warning';
 import { Icon } from '../icon';
 
 interface Props {
@@ -32,16 +38,24 @@ interface Props {
   onClose: () => void;
 }
 
-function getDiff(previewDiffItem?: StageEntry) {
+function getPreviousBlobContent(item?: StageEntry) {
+  return item && 'previousBlobContent' in item ? item.previousBlobContent : undefined;
+}
+
+function getBlobContent(item?: StageEntry) {
+  return item && 'blobContent' in item ? item.blobContent : undefined;
+}
+
+function getDiff(previousBlobContent?: string, blobContent?: string) {
   let before = '{}';
   let after = '{}';
 
-  if (previewDiffItem && 'previousBlobContent' in previewDiffItem && previewDiffItem.previousBlobContent) {
-    before = previewDiffItem.previousBlobContent === 'null' ? '' : previewDiffItem.previousBlobContent || '{}';
+  if (previousBlobContent) {
+    before = previousBlobContent === 'null' ? '' : previousBlobContent;
   }
 
-  if (previewDiffItem && 'blobContent' in previewDiffItem && previewDiffItem.blobContent) {
-    after = previewDiffItem.blobContent === 'null' ? '' : previewDiffItem.blobContent || '{}';
+  if (blobContent) {
+    after = blobContent === 'null' ? '' : blobContent;
   }
 
   try {
@@ -56,9 +70,18 @@ function getDiff(previewDiffItem?: StageEntry) {
     console.warn('Failed to parse after JSON', e);
   }
 
+  const originDocCompatibility = checkDocCompatibilityFromSchema(previousBlobContent);
+  // Check for unknown fields only if the original document has unknown fields.
+  const unknownFieldRanges =
+    originDocCompatibility === 'match-with-unknown-fields'
+      ? findDocUnknownFieldRanges(previousBlobContent, before)
+      : [];
+
   return {
     before,
     after,
+    unknownFieldRanges,
+    originStatus: originDocCompatibility,
   };
 }
 
@@ -98,6 +121,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
       syncItems.find(item => item.key === key)?.document || 'deleted' in entry
         ? { type: getModelTypeById(key) }
         : undefined,
+    originStatus: checkDocCompatibilityFromSchema(getPreviousBlobContent(entry)),
     id: `staged-${key}`,
   }));
   const unstagedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
@@ -106,6 +130,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
       syncItems.find(item => item.key === key)?.document || 'deleted' in entry
         ? { type: getModelTypeById(key) }
         : undefined,
+    originStatus: checkDocCompatibilityFromSchema(getPreviousBlobContent(entry)),
     id: `unstaged-${key}`,
   }));
 
@@ -145,7 +170,14 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
 
   const previewDiffItem = allChanges.find(item => item.id === selectedItemId);
   const previewDiffItemName = getPreviewItemName(previewDiffItem);
-  const diff = getDiff(previewDiffItem);
+  const previewPreviousBlobContent = getPreviousBlobContent(previewDiffItem);
+  const previewBlobContent = getBlobContent(previewDiffItem);
+
+  // DiffEditor re-creates its models whenever its props change, so keep `diff` (and its ranges) referentially stable.
+  const diff = useMemo(
+    () => getDiff(previewPreviousBlobContent, previewBlobContent),
+    [previewPreviousBlobContent, previewBlobContent],
+  );
 
   return (
     <ModalOverlay
@@ -290,6 +322,10 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                   >
                                     <Icon icon="minus" />
                                   </Button>
+                                  {item.entry.originStatus === 'match-with-unknown-fields' && (
+                                    <UnknownFieldsWarningIcon />
+                                  )}
+                                  {item.entry.originStatus === 'mismatch' && <UnsupportedDocErrorIcon />}
                                   <TooltipTrigger>
                                     <Button className="cursor-default">
                                       {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
@@ -358,6 +394,10 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                   >
                                     <Icon icon="plus" />
                                   </Button>
+                                  {item.entry.originStatus === 'match-with-unknown-fields' && (
+                                    <UnknownFieldsWarningIcon />
+                                  )}
+                                  {item.entry.originStatus === 'mismatch' && <UnsupportedDocErrorIcon />}
                                   <TooltipTrigger>
                                     <Button className="cursor-default">
                                       {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
@@ -388,9 +428,31 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                       <Icon icon="code-compare" />
                       {previewDiffItemName}
                     </Heading>
+                    {diff.originStatus === 'mismatch' && (
+                      <p data-testid="unsupported-doc-diff-error">
+                        <Icon icon="circle-exclamation" className="mt-0.5 mr-2 shrink-0 text-(--color-danger)" />
+                        {UNSUPPORTED_DOC_MESSAGE}
+                        <div className="mt-2 font-bold">
+                          We strongly recommend upgrading, then deleting and re-syncing it from the remote source before
+                          making any changes.
+                        </div>
+                      </p>
+                    )}
+                    {diff.unknownFieldRanges.length > 0 && (
+                      <p data-testid="unknown-fields-diff-warning">
+                        <Icon icon="triangle-exclamation" className="mt-0.5 mr-2 shrink-0 text-(--color-warning)" />
+                        The remote version of this file has fields not recognized by this version of Insomnia.
+                        Committing changes to this file from this version of Insomnia may break or remove functionality
+                        for your collaborators. We recommend upgrading.
+                      </p>
+                    )}
                     {previewDiffItem && (
                       <div className="flex-1 overflow-y-auto rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
-                        <DiffEditor original={diff.before} modified={diff.after} />
+                        <DiffEditor
+                          original={diff.before}
+                          modified={diff.after}
+                          originalHighlights={diff.unknownFieldRanges}
+                        />
                       </div>
                     )}
                   </div>
