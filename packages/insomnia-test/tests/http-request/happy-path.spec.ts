@@ -20,10 +20,10 @@ const afterResponseScript = "console.log('after-response script');";
 test("Verify Create HTTP Request", async ({ user }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -31,7 +31,7 @@ test("Verify Create HTTP Request", async ({ user }) => {
   const headerNameVariable = faker.string.alpha(8);
   const templatedHeaderName = faker.string.alphanumeric(8);
   const templatedHeaderValue = faker.string.alphanumeric(10);
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
@@ -79,7 +79,7 @@ test("Verify Create HTTP Request", async ({ user }) => {
   });
 
   const duplicatedName = `${request!.name} (Copy)`;
-  await workspaceFlow.duplicate(request!, duplicatedName);
+  await workspaceFlow.duplicateRequest(request!, duplicatedName);
 
   const duplicated = await httpRequestFlow.get(duplicatedName);
   expect(duplicated).toBeTruthy();

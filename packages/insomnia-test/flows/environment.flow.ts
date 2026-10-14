@@ -2,7 +2,6 @@ import type { Collection } from "../models/collection";
 import {
   Environment,
   ENVIRONMENT_TYPE,
-  isEnvironmentItem,
 } from "../models/environment";
 import type { EventStreamRequest } from "../models/event-stream-request";
 import type { GraphQLRequest } from "../models/graphql-request";
@@ -34,26 +33,38 @@ export class EnvironmentFlow extends BaseFlow {
   }
 
   /**
-   * Creates/renames the workspace's Base Environment (when `parent` is a
-   * Project), or a sub-environment under it (when `parent` is an
-   * Environment), then applies `environment.kvPairData`.
-   * @param parent - A Project to create/rename the Base Environment, or an Environment to nest a sub-environment under
+   * Creates/renames the workspace's Base Environment under `parent`, then
+   * applies `environment.kvPairData`.
+   * @param parent - The Project to create/rename the Base Environment in
    * @param environment - The environment to create, including variables to set
    * @returns The created environment, with `containerName` populated
    */
-  async create(
-    parent: Project | Environment,
-    environment: Environment,
-  ): Promise<Environment> {
-    let containerName: string | undefined;
-    if (isEnvironmentItem(parent)) {
-      await this.createSubEnvironment(environment);
-      containerName = parent.containerName;
-    } else {
-      containerName = await this.createBaseEnvironment(parent, environment);
+  async createBaseEnvironment(parent: Project, environment: Environment): Promise<Environment> {
+    await this.workspaceFlow.createEnvironment(parent, environment);
+    if (environment.name !== BASE_ENVIRONMENT_NAME) {
+      await this.pageManager.environmentPage.renameEnvironment(
+        BASE_ENVIRONMENT_NAME,
+        environment.name,
+      );
     }
     const created = await this.applyVariables(environment);
-    return containerName ? Object.assign(created, { containerName }) : created;
+    return Object.assign(created, { containerName: environment.name });
+  }
+
+  /**
+   * Creates a sub-environment nested under `parent`, then applies
+   * `environment.kvPairData`.
+   * @param parent - The Environment to nest a sub-environment under; must be the object returned by `createBaseEnvironment()`
+   * @param environment - The sub-environment to create, including variables to set
+   * @returns The created environment, with `containerName` inherited from `parent` if set
+   */
+  async createSubEnvironment(parent: Environment, environment: Environment): Promise<Environment> {
+    await this.pageManager.environmentPage.createSubEnvironment(
+      environment.name,
+      environment.isPrivate ?? false,
+    );
+    const created = await this.applyVariables(environment);
+    return parent.containerName ? Object.assign(created, { containerName: parent.containerName }) : created;
   }
 
   /**
@@ -146,30 +157,6 @@ export class EnvironmentFlow extends BaseFlow {
     return this.assertCreated(
       await this.get(environment.name),
       environment.name,
-    );
-  }
-
-  private async createBaseEnvironment(
-    parent: Project,
-    environment: Environment,
-  ): Promise<string> {
-    await this.workspaceFlow.create(parent, {
-      name: environment.name,
-      type: ENVIRONMENT_TYPE,
-    });
-    if (environment.name !== BASE_ENVIRONMENT_NAME) {
-      await this.pageManager.environmentPage.renameEnvironment(
-        BASE_ENVIRONMENT_NAME,
-        environment.name,
-      );
-    }
-    return environment.name;
-  }
-
-  private async createSubEnvironment(environment: Environment): Promise<void> {
-    await this.pageManager.environmentPage.createSubEnvironment(
-      environment.name,
-      environment.isPrivate ?? false,
     );
   }
 }
