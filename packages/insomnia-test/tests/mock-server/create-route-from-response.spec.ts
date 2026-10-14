@@ -40,12 +40,12 @@ test("Verify Creating A Mock Route From A Request Response", async ({
     `/${faker.string.alphanumeric(8)}`,
   );
   const routePaths = await mockServerFlow.getRoutePaths(server);
-  const response = await mockServerFlow.test(route);
+  const responseView = await mockServerFlow.test(route);
 
   expect(routePaths).toEqual([route.path]);
-  expect(response.statusCode).toBe(MOCK_BIN_SOURCE_RESPONSE.statusCode);
-  expect(response.body).toEqual(MOCK_BIN_SOURCE_RESPONSE.body);
-  expect(response.headers).toEqual(
+  expect(responseView.statusCode).toBe(MOCK_BIN_SOURCE_RESPONSE.statusCode);
+  expect(responseView.body).toEqual(MOCK_BIN_SOURCE_RESPONSE.body);
+  expect(responseView.headers).toEqual(
     expect.arrayContaining([
       expect.objectContaining(MOCK_BIN_SOURCE_RESPONSE.header),
     ]),
