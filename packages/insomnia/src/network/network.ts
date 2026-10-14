@@ -37,7 +37,7 @@ import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
-import { getRenderedRequestAndContext } from '../common/render';
+import { getRenderedRequestAndContext, registerConfidentialValues } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { ResponsePatch } from '../main/network/libcurl-promise';
 import { QUERY_PARAMS } from './api-key/constants';
@@ -527,7 +527,10 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     // the decrypted secrets must stay out of `globals.data`: that object is written back to the
     // database by `savePatchesMadeByScript` once the script returns, so storing plaintext there
     // would permanently replace the stored ciphertext.
-    vault = await maskOrDecryptVaultDataIfNecessary({vaultEnvironmentData: globals.data[models.environment.vaultEnvironmentPath], renderPurpose: 'script'  sensitiveValueCollector,
+    vault = await maskOrDecryptVaultDataIfNecessary({
+      vaultEnvironmentData: globals.data[models.environment.vaultEnvironmentPath],
+      renderPurpose: 'script',
+      sensitiveValueCollector,
     });
   }
 
@@ -633,6 +636,29 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       );
       userUploadEnvironment.data = output?.iterationData?.data || [];
       userUploadEnvironment.dataPropertyOrder = userUploadEnvPropertyOrder.map;
+    }
+
+    // Register the confidential values as the script left them, before its console output is
+    // written to disk. The pre-fill in sendActionImplementation only saw the values that
+    // existed before the script ran, and an after-response script is followed by no render at
+    // all -- so `insomnia.environment.set('token', ...)` followed by a console.log would
+    // otherwise reach the timeline in plaintext. Confidential flags still come from the
+    // original kvPairData, so a key the script invented has no row and stays unregistered.
+    if (sensitiveValueCollector) {
+      const scriptOutputLayers = [
+        // .data was reassigned from output above, so these already hold the script's values.
+        ...[globals, baseGlobals, baseEnvironment, environment]
+          .filter((env): env is Environment => !!env)
+          .map(env => ({ data: env.data || {}, kvPairData: env.kvPairData })),
+        ...(output.parentFolders || []).map(folder => {
+          const originalFolder = ancestors.find(doc => doc._id === folder.id);
+          return {
+            data: folder.environment || {},
+            kvPairData: originalFolder && isRequestGroup(originalFolder) ? originalFolder.kvPairData : undefined,
+          };
+        }),
+      ];
+      registerConfidentialValues(scriptOutputLayers, sensitiveValueCollector);
     }
 
     if (runtime) {

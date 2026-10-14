@@ -41,8 +41,8 @@ export async function maskOrDecryptVaultDataIfNecessary({
       for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
         const encryptedValue = vaultEnvironmentData[vaultContextKey];
         decryptedData[vaultContextKey] = await getRuntime().crypto.decryptSecretValue(encryptedValue, symmetricKey);
-        if (sensitiveValueCollector && typeof decrypted[vaultContextKey] === 'string') {
-          sensitiveValueCollector.register(decrypted[vaultContextKey]);
+        if (sensitiveValueCollector && typeof decryptedData[vaultContextKey] === 'string') {
+          sensitiveValueCollector.register(decryptedData[vaultContextKey]);
         }
       }
       return decryptedData;

@@ -22,15 +22,24 @@
 //   (tryToExecuteScript → runtime.appendTimeline / runtime.appendTimelineOnError) →
 //   timeline lines written to disk are already redacted.
 //
+// tryToExecuteScript also calls registerConfidentialValues on the script's *output* data
+// right before writing that script's logs, so a value the script itself wrote into a
+// confidential key (insomnia.environment.set('token', ...)) is redacted too. The pre-fill
+// above only saw the values that existed before the script ran, and an after-response
+// script is followed by no render at all.
+//
 // Pre-/after-response scripts also decrypt global-vault secrets via
 // maskOrDecryptVaultDataIfNecessary({ ..., sensitiveValueCollector }) inside tryToExecuteScript,
 // so those register into the same collector before their console.log output is written.
 //
 // WebSocket/SocketIO timeline redaction is deferred to a follow-up phase (T10).
 
+import type { RequestTestResult } from 'insomnia-data';
+
 import type { SendActionRuntime } from '~/common/network/send-action-runtime';
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import type { SensitiveValueCollector } from '~/common/templating/types';
+import type { ResponsePatch } from '~/main/network/libcurl-promise';
 
 
 export type { SensitiveValueCollector };
@@ -49,19 +58,77 @@ export function withRedaction(
   };
 }
 
-export function collectLeafStrings(value: any, collector: SensitiveValueCollector): void {
+// Registers every scalar leaf of `value` that can show up verbatim in a timeline line.
+//
+// Numbers are registered as `String(value)`: a confidential JSON variable like
+// `{ "pin": 1234 }` renders into the request as `1234`, so skipping numeric leaves would
+// leave that secret in plaintext on disk.
+//
+// Booleans and null are skipped: `true`/`false`/`null` carry no secrecy of their own and
+// registering them would mangle unrelated JSON in the timeline. Non-finite numbers
+// (NaN/Infinity) are skipped for the same reason.
+//
+// Short numeric leaves (`1`, `0`) still over-redact aggressively -- every occurrence of that
+// digit in the timeline is replaced. That is the same trade-off already accepted for short
+// strings: over-redaction is preferred over a silent "short secrets are unprotected" gap.
+export function collectLeafValues(value: any, collector: SensitiveValueCollector): void {
   if (typeof value === 'string') {
     collector.register(value);
+  } else if (typeof value === 'number') {
+    if (Number.isFinite(value)) {
+      collector.register(String(value));
+    }
   } else if (Array.isArray(value)) {
     for (const item of value) {
-      collectLeafStrings(item, collector);
+      collectLeafValues(item, collector);
     }
   } else if (value !== null && typeof value === 'object') {
     for (const v of Object.values(value)) {
-      collectLeafStrings(v, collector);
+      collectLeafValues(v, collector);
     }
   }
 }
+
+// Response documents are persisted to NeDB without passing through the timeline's
+// withRedaction wrapper, so they need redacting at their own write points. Three fields can
+// echo a confidential value:
+//   - url: the effective URL, with any confidential variable already interpolated into it.
+//   - error: most often a script throw. Users concatenate secrets themselves
+//     (`throw new Error('auth failed for ' + token)`), chai puts the actual value in its
+//     message when `insomnia.expect(token)` fails outside a test block, and V8 echoes its
+//     input verbatim for things like `JSON.parse(token)`.
+//   - requestTestResults: `testCase` is a user-supplied test name that may concatenate
+//     variables, and `errorMessage` embeds chai's ACTUAL/EXPECTED values.
+//
+// A null collector (the setting is OFF) leaves everything untouched, as everywhere else.
+export const redactText = <T extends string | undefined>(text: T, collector: SensitiveValueCollector | null): T =>
+  (collector && text !== undefined ? collector.redact(text) : text) as T;
+
+export const redactTestResults = (results: RequestTestResult[], collector: SensitiveValueCollector | null) =>
+  collector
+    ? results.map(result => ({
+      ...result,
+      testCase: collector.redact(result.testCase),
+      ...(result.errorMessage === undefined ? {} : { errorMessage: collector.redact(result.errorMessage) }),
+    }))
+    : results;
+
+export type PersistedResponsePatch = ResponsePatch & { requestTestResults?: RequestTestResult[] };
+
+export const redactResponsePatch = (
+  patch: PersistedResponsePatch,
+  collector: SensitiveValueCollector | null,
+): PersistedResponsePatch =>
+  collector
+    ? {
+      ...patch,
+      url: redactText(patch.url, collector),
+      error: redactText(patch.error, collector),
+      ...(patch.requestTestResults === undefined
+        ? {}
+        : { requestTestResults: redactTestResults(patch.requestTestResults, collector) }),
+    }
+    : patch;
 
 export function redactConfidentialText(text: string, values: readonly string[]): string {
   // Longest-first so a short value (e.g. "abc") can't consume part of a longer

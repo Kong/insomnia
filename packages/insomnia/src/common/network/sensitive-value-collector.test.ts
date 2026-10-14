@@ -3,9 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 
 import {
-  collectLeafStrings,
+  collectLeafValues,
   createSensitiveValueCollector,
   redactConfidentialText,
+  redactResponsePatch,
+  redactTestResults,
+  redactText,
   withRedaction,
 } from './sensitive-value-collector';
 
@@ -74,29 +77,136 @@ describe('createSensitiveValueCollector', () => {
   });
 });
 
-describe('collectLeafStrings', () => {
+describe('collectLeafValues', () => {
   it('registers a top-level string', () => {
     const collector = createSensitiveValueCollector(true)!;
-    collectLeafStrings('secret', collector);
+    collectLeafValues('secret', collector);
     expect(collector.redact('secret')).toBe('••••••');
   });
 
   it('registers strings nested in an object', () => {
     const collector = createSensitiveValueCollector(true)!;
-    collectLeafStrings({ a: 'val1', b: { c: 'val2' } }, collector);
+    collectLeafValues({ a: 'val1', b: { c: 'val2' } }, collector);
     expect(collector.redact('val1 val2')).toBe('•••••• ••••••');
   });
 
   it('registers strings inside an array', () => {
     const collector = createSensitiveValueCollector(true)!;
-    collectLeafStrings(['x', 'y'], collector);
+    collectLeafValues(['x', 'y'], collector);
     expect(collector.redact('x y')).toBe('•••••• ••••••');
   });
 
-  it('skips non-string leaves', () => {
+  it('registers numeric leaves as their string form', () => {
     const collector = createSensitiveValueCollector(true)!;
-    collectLeafStrings({ n: 42, b: true, nil: null }, collector);
+    collectLeafValues({ pin: 1234, nested: { rate: 0.75 } }, collector);
+    expect(collector.redact('pin=1234 rate=0.75')).toBe('pin=•••••• rate=••••••');
+  });
+
+  it('registers a top-level number', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    collectLeafValues(987_654, collector);
+    expect(collector.redact('987654')).toBe('••••••');
+  });
+
+  it('skips booleans, null and non-finite numbers', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    collectLeafValues({ b: true, nil: null, nan: Number.NaN, inf: Number.POSITIVE_INFINITY }, collector);
     expect(collector.isEmpty).toBe(true);
+  });
+});
+
+describe('redactText', () => {
+  it('redacts registered values', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('sk_live_abc');
+    expect(redactText('auth failed for sk_live_abc', collector)).toBe('auth failed for ••••••');
+  });
+
+  it('returns the text unchanged when the collector is null', () => {
+    expect(redactText('sk_live_abc', null)).toBe('sk_live_abc');
+  });
+
+  it('passes undefined through', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('sk_live_abc');
+    expect(redactText(undefined, collector)).toBeUndefined();
+  });
+});
+
+describe('redactTestResults', () => {
+  const result = {
+    testCase: 'login with sk_live_abc',
+    status: 'failed' as const,
+    executionTime: 1,
+    errorMessage: "expected 'sk_live_abc' to deeply equal 'x'",
+    category: 'after-response' as const,
+  };
+
+  it('redacts both the test name and the assertion message', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('sk_live_abc');
+
+    const [redacted] = redactTestResults([result], collector);
+
+    expect(redacted.testCase).toBe('login with ••••••');
+    expect(redacted.errorMessage).toBe("expected '••••••' to deeply equal 'x'");
+    expect(redacted.status).toBe('failed');
+  });
+
+  it('does not introduce an errorMessage key when there was none', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    const { errorMessage: _omitted, ...passing } = result;
+
+    const [redacted] = redactTestResults([passing], collector);
+
+    expect('errorMessage' in redacted).toBe(false);
+  });
+
+  it('returns the results unchanged when the collector is null', () => {
+    const results = [result];
+    expect(redactTestResults(results, null)).toBe(results);
+  });
+});
+
+describe('redactResponsePatch', () => {
+  it('redacts url, error and test results', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('sk_live_abc');
+
+    const redacted = redactResponsePatch(
+      {
+        elapsedTime: 10,
+        url: 'https://example.com/?token=sk_live_abc',
+        error: 'Script executor returns error: sk_live_abc is not valid JSON',
+        requestTestResults: [
+          {
+            testCase: 'uses sk_live_abc',
+            status: 'passed',
+            executionTime: 1,
+            category: 'pre-request',
+          },
+        ],
+      },
+      collector,
+    );
+
+    expect(redacted.url).toBe('https://example.com/?token=••••••');
+    expect(redacted.error).toBe('Script executor returns error: •••••• is not valid JSON');
+    expect(redacted.requestTestResults?.[0].testCase).toBe('uses ••••••');
+  });
+
+  it('leaves absent fields absent', () => {
+    const collector = createSensitiveValueCollector(true)!;
+    const redacted = redactResponsePatch({ elapsedTime: 10, statusCode: 200 }, collector);
+
+    expect(redacted.url).toBeUndefined();
+    expect(redacted.error).toBeUndefined();
+    expect('requestTestResults' in redacted).toBe(false);
+  });
+
+  it('returns the patch unchanged when the collector is null', () => {
+    const patch = { elapsedTime: 10, url: 'https://example.com/?token=sk_live_abc' };
+    expect(redactResponsePatch(patch, null)).toBe(patch);
   });
 });
 

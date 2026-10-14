@@ -15,7 +15,7 @@ import type {
 import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
-import { collectLeafStrings, type SensitiveValueCollector } from '~/common/network/sensitive-value-collector';
+import { collectLeafValues, type SensitiveValueCollector } from '~/common/network/sensitive-value-collector';
 import { type ConfidentialValueKind, getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
@@ -275,9 +275,34 @@ export function buildEnvironmentRenderLayers({
   return environmentLayers;
 }
 
+// Registers the confidential values of already-built environment layers into the collector:
+// the confidential *flags* come from each layer's kvPairData, the *values* from that layer's
+// `data`. That is the same split buildRenderContext uses at render time
+// (getConfidentialityByKey for the flags, the merged context for the values), and it is what
+// lets this helper also serve post-script registration in tryToExecuteScript, where only the
+// script's output data exists and no kvPairData has been regenerated for it yet.
+//
+// Reusing getConfidentialityByKey means disabled rows, SECRET rows (registered separately by
+// maskOrDecryptVaultDataIfNecessary) and duplicate names (last enabled row wins) are all
+// handled exactly as they are during render.
+export function registerConfidentialValues(
+  layers: { data: Record<string, any>; kvPairData?: EnvironmentKvPairData[] }[],
+  collector: SensitiveValueCollector,
+): void {
+  for (const layer of layers) {
+    for (const [name, kind] of getConfidentialityByKey(layer.kvPairData)) {
+      if (kind !== 'normal') {
+        continue;
+      }
+      // Undefined (a row whose name isn't in data) is a no-op in collectLeafValues.
+      collectLeafValues(layer.data[name], collector);
+    }
+  }
+}
+
 // Enumerates the same five confidential-capable layers as buildEnvironmentRenderLayers
 // (rootGlobal, subGlobal, rootEnvironment, subEnvironment, folder ancestors) and registers
-// every isConfidential:true KV pair's raw, unrendered value into the collector.
+// every confidential value's raw, unrendered form into the collector.
 //
 // Used to pre-fill a collector before a pre-request script runs or a WebSocket/MCP
 // connection is opened, i.e. before any render pass would otherwise register these values.
@@ -302,36 +327,16 @@ export function collectConfidentialRawValues(
   },
   collector: SensitiveValueCollector,
 ): void {
-  const layers = buildEnvironmentRenderLayers({
-    ancestors,
-    rootEnvironment,
-    subEnvironment,
-    rootGlobalEnvironment,
-    subGlobalEnvironment,
-  });
-
-  for (const layer of layers) {
-    for (const pair of layer.kvPairData ?? []) {
-      // SECRET values are decrypted and registered separately by
-      // maskOrDecryptVaultDataIfNecessary; double-registering them here would be harmless
-      // but redundant, so they're excluded for the same reason getConfidentialityByKey excludes them.
-      if (pair.enabled === false || !pair.isConfidential || pair.type === EnvironmentKvPairDataType.SECRET) {
-        continue;
-      }
-
-      if (pair.type === EnvironmentKvPairDataType.JSON) {
-        // pair.value is the JSON-stringified raw text (see getKVPairFromData); parse it so
-        // collectLeafStrings registers each scalar leaf rather than the whole JSON string.
-        try {
-          collectLeafStrings(JSON.parse(pair.value), collector);
-        } catch {
-          collector.register(pair.value);
-        }
-      } else {
-        collector.register(pair.value);
-      }
-    }
-  }
+  registerConfidentialValues(
+    buildEnvironmentRenderLayers({
+      ancestors,
+      rootEnvironment,
+      subEnvironment,
+      rootGlobalEnvironment,
+      subGlobalEnvironment,
+    }),
+    collector,
+  );
 }
 
 export async function buildRenderContext({
@@ -560,7 +565,7 @@ export async function buildRenderContext({
   if (collector) {
     for (const key of keys) {
       if (confidentialityByKey.get(key) === 'normal') {
-        collectLeafStrings(finalRenderContext[key], collector);
+        collectLeafValues(finalRenderContext[key], collector);
       }
     }
   }
