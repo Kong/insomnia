@@ -1,6 +1,6 @@
-import type { RequestAuthentication } from "insomnia-data";
+import type { McpRequest, RequestAuthentication } from "insomnia-data";
 
-export class McpClient {
+export class McpClient implements Pick<McpRequest, "name" | "url"> {
   id?: string;
 
   constructor(

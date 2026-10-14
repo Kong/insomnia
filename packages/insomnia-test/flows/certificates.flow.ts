@@ -1,4 +1,4 @@
-import type { ClientCertificate } from "../models/certificate";
+import type { ClientCertificate } from "../models/client-certificate";
 import type { Collection } from "../models/collection";
 import type { EventStreamRequest } from "../models/event-stream-request";
 import type { GraphQLRequest } from "../models/graphql-request";
