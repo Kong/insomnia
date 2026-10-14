@@ -15,6 +15,8 @@ This repo is strictly layered: `tests/*.spec.ts` → `flows/*.flow.ts` → `page
 
 When a step can be done through a `xxxFlow` method, call that — never reach for the equivalent `pageManager.xxxPage` method just because it's more direct. A Flow method already sequences the right Page calls (and any related field the action implies — e.g. `HttpRequestFlow.create()` also applying auth/params/headers, not just the URL) in the order the app actually expects; composing a spec straight out of Page calls risks silently skipping or reordering a step the Flow would have handled correctly. This is also why a genuinely new spec almost always destructures a Flow instance first and a Page instance only if step 3 shows the action has no Flow wrapper — never the other way around.
 
+Flow methods are explicit, not overloaded: each distinct action has its own named method (`workspaceFlow.createProject()` / `.openLocalGitFolder()` / `.cloneGitProject()` / `.createCollection()`, `exportFlow.exportCollection()` / `.exportProject()`, `workspaceFlow.renameRequest()` …) so a call site shows which flow it triggers. When adding a new Flow method, give it its own name rather than another `typeof`/`instanceof`-dispatched overload of an existing one.
+
 Call `pageManager.xxxPage` directly only for the specific action `reference.md` shows has no Flow method covering it (e.g. `pageManager.<domain>RequestPage.setMethod()` — no Flow method changes an already-created request's method) — and only that one call, not the surrounding sequence a Flow method already exists for.
 
 ## Scope constraint: `tests/` only, nothing lower-layer — except a genuine bug
@@ -143,10 +145,10 @@ test("<one sentence, imperative, e.g. 'Verify XXX'>", async ({ user }) => {
   const { workspaceFlow, xxxRequestFlow } = user.flowManager; // pull exactly the flows reference.md lists for this domain
   const { xxxPage } = user.pageManager; // only if you need direct Page access (e.g. no Flow method covers it) — name the exact Page(s), never the whole object
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -203,15 +205,15 @@ This is distinct from the Scope Constraint's exception above — that one is abo
 
 Format blank lines in the action-step section by which flow instance is being called, not one-blank-line-per-statement:
 
-- **No blank line** between consecutive statements that call the *same* flow instance — e.g. `environmentFlow.create(...)` immediately followed by `environmentFlow.link(...)`, or a run of `socketIoRequestFlow.create(...)` / `.connect(...)` / `.sendMessage(...)` / `.disconnect(...)`.
+- **No blank line** between consecutive statements that call the *same* flow instance — e.g. `environmentFlow.createBaseEnvironment(...)` immediately followed by `environmentFlow.link(...)`, or a run of `socketIoRequestFlow.create(...)` / `.connect(...)` / `.sendMessage(...)` / `.disconnect(...)`.
 - **One blank line** exactly where the next statement switches to a *different* flow instance (`workspaceFlow` → `environmentFlow` → `socketIoRequestFlow`, etc.) — this is what visually marks the domain/setup boundaries in the test body.
 - **A plain variable declaration (no flow call) belongs to whichever flow group it's nearest to** — specifically, the group that *consumes* it. It's not its own group and doesn't get a blank line before or after it relative to that group; the blank line goes only between it and the *previous* flow group. E.g. `const names = Array.from({ length: 5 }, () => faker.person.firstName())` that only feeds the next block's `grpcRequestFlow.create(...)`/`.streamMessage(...)` calls sits immediately above them, with the blank line placed before `names`, not after it.
 - This composes with §9: inside the trailing assertion block, consecutive `expect(...)` calls also get no blank line between them — one flowing block of assertions, not one per line.
 
 ```ts
-const collection = await workspaceFlow.create(project, new Collection(name));
+const collection = await workspaceFlow.createCollection(project, new Collection(name));
 
-const environment = await environmentFlow.create(project, { ... });
+const environment = await environmentFlow.createBaseEnvironment(project, { ... });
 await environmentFlow.link(collection, environment);                  // same flow as above — no blank line
 
 const names = Array.from({ length: 5 }, () => faker.person.firstName()); // feeds the group below — no blank line after it

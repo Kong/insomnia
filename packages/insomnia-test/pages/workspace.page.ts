@@ -774,7 +774,7 @@ export class WorkspacePage extends BasePage {
    * create menu" shortcut (Cmd+N on macOS, Ctrl+N elsewhere), opening the
    * Sidebar Shortcut Create Menu targeted at that folder/collection/project.
    * Confirmed live: the shortcut only opens the menu — it does not create
-   * anything by itself, unlike `workspaceFlow.create()`'s own "+"-button
+   * anything by itself, unlike `workspaceFlow.createCollection()`'s own "+"-button
    * dropdown path.
    * @param node - The node to select before opening the create menu
    */
@@ -1134,7 +1134,7 @@ export class WorkspacePage extends BasePage {
   /**
    * Renames a request in place via the sidebar's inline editable label
    * (double-click to edit, Enter to submit) — distinct from the
-   * context-menu "Rename" dialog `workspaceFlow.rename()` drives.
+   * context-menu "Rename" dialog `workspaceFlow.rename*()` drives.
    * @param name - The request's current name
    * @param newName - The name to give it
    */
