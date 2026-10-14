@@ -22,7 +22,7 @@ test("Import OpenAPI Spec by Url", async ({ user }, testInfo) => {
     cookieFlow,
   } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
@@ -30,7 +30,7 @@ test("Import OpenAPI Spec by Url", async ({ user }, testInfo) => {
 
   const petId = faker.number.bigInt(10_000).toString();
 
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {

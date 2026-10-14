@@ -15,7 +15,7 @@ test("Import WSDL by Clipboard", async ({ user }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
   const { httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

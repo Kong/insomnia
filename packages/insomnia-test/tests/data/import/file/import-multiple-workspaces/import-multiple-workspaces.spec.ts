@@ -9,7 +9,7 @@ import { Project } from "../../../../../models/project";
 test("Import Multiple Workspaces From Single File", async ({ user }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
