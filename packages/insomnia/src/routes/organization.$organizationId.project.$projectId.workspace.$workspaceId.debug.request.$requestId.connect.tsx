@@ -90,7 +90,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
-    window.main.curl.open({ workspaceId, renderedRequest });
+    window.main.curl.open({ workspaceId, renderedRequest, sensitiveValues: rendered.sensitiveValues });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
       properties: { request_type: 'Event Stream' },
