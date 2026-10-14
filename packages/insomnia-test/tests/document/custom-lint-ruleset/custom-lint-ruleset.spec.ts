@@ -1,10 +1,11 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
 import { RulesetType } from "../../../enums/ruleset-type";
-import { expect, test } from "../../../misc/fixtures";
+import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 

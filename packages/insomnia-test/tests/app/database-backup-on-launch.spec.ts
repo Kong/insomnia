@@ -1,7 +1,9 @@
+import { expect } from "@playwright/test";
+
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 
 test("Verify Main Process Backs Up NeDB Files On Launch", async ({
   user,

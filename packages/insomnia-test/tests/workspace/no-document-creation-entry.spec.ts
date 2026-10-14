@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContextMenuItem } from "../../enums/context-menu-items";
 import { ProjectType } from "../../enums/project-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Project } from "../../models/project";
 
 test("Verify the project row's creation context menu offers API Collection but no separate Document option", async ({

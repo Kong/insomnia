@@ -1,4 +1,6 @@
-import { expect, test } from "../../misc/fixtures";
+import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 test("Verify a new vault key can be generated and persists across reopening Preferences", async ({
   user,
