@@ -216,6 +216,7 @@ export class FlowManager implements FlowContext {
         this,
         this.pageManager,
         this.preferencesFlow,
+        this,
         this.gitRepoUrl,
       ),
     ));
