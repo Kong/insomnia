@@ -474,4 +474,3 @@ export async function disableFocusModeDefault(
   });
 }
 
-export { expect } from "@playwright/test";
