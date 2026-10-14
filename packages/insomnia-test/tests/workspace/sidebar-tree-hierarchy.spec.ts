@@ -14,7 +14,7 @@ test("Verify requests and folders render as nested child rows under a spec-carry
   const { workspaceFlow, folderFlow, httpRequestFlow } = user.flowManager;
   const { workspacePage, httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const specPath = `/${faker.word.sample()}`;
@@ -29,7 +29,7 @@ test("Verify requests and folders render as nested child rows under a spec-carry
       },
     },
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10), spec),
   );

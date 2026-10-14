@@ -10,7 +10,7 @@ test("Verify Testing A Default Mock Route Returns 200 With No Body", async ({
 }) => {
   const { mockServerFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

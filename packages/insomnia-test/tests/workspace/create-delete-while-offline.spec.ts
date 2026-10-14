@@ -11,10 +11,10 @@ test("Verify collection/request create and delete persist correctly while offlin
 }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collectionA = await workspaceFlow.create(
+  const collectionA = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -26,7 +26,7 @@ test("Verify collection/request create and delete persist correctly while offlin
 
   await user.page.context().setOffline(true);
 
-  const collectionB = await workspaceFlow.create(
+  const collectionB = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

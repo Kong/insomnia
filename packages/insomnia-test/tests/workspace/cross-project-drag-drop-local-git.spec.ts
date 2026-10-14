@@ -15,13 +15,13 @@ test(
     const { workspacePage } = user.pageManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-    const localProject = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-    const localCollection = await workspaceFlow.create(localProject, new Collection(faker.string.alphanumeric(10)));
-    const gitProject = await workspaceFlow.create(
+    const localProject = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+    const localCollection = await workspaceFlow.createCollection(localProject, new Collection(faker.string.alphanumeric(10)));
+    const gitProject = await workspaceFlow.cloneGitProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Git),
       GIT_CREDENTIAL.name,
     );
-    const gitCollection = await workspaceFlow.create(
+    const gitCollection = await workspaceFlow.createCollection(
       gitProject,
       new Collection(faker.string.alphanumeric(10)),
       faker.string.alphanumeric(10),

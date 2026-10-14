@@ -12,7 +12,7 @@ test("Verify Edited Mock Route Status And Body Are Pushed To The Mock Server Wit
 }) => {
   const { mockServerFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
@@ -45,7 +45,7 @@ test("Verify Edited Mock Route Headers Are Pushed To The Mock Server Without Tes
 
   const { mockServerFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

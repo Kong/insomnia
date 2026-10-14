@@ -15,12 +15,12 @@ test(
     const { workspaceFlow, httpRequestFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;
 
-    const localProject = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-    const localCollection = await workspaceFlow.create(localProject, new Collection(faker.string.alphanumeric(10)));
+    const localProject = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+    const localCollection = await workspaceFlow.createCollection(localProject, new Collection(faker.string.alphanumeric(10)));
     const cloudProject = (await workspaceFlow.getProject({
       name: 'Personal Workspace',
     }))!;
-    const cloudCollection = await workspaceFlow.create(cloudProject, new Collection(faker.string.alphanumeric(10)));
+    const cloudCollection = await workspaceFlow.createCollection(cloudProject, new Collection(faker.string.alphanumeric(10)));
     const request = await httpRequestFlow.create(localCollection, {
       name: faker.string.alphanumeric(10),
       method: HttpMethod.Get,

@@ -18,7 +18,7 @@ test("Verify Overwriting A Mock Route With A Request Response", async ({
 }) => {
   const { httpRequestFlow, mockServerFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const server = await mockServerFlow.create(
@@ -31,7 +31,7 @@ test("Verify Overwriting A Mock Route With A Request Response", async ({
     bodyType: MockBodyType.Json,
     body: JSON.stringify({ original: faker.string.alphanumeric(10) }),
   });
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

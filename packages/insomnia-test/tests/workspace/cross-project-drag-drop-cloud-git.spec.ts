@@ -17,11 +17,11 @@ test(
     const { workspacePage } = user.pageManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-    const gitProject = await workspaceFlow.create(
+    const gitProject = await workspaceFlow.cloneGitProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Git),
       GIT_CREDENTIAL.name,
     );
-    const gitCollection = await workspaceFlow.create(
+    const gitCollection = await workspaceFlow.createCollection(
       gitProject,
       new Collection(faker.string.alphanumeric(10)),
       faker.string.alphanumeric(10),
@@ -29,7 +29,7 @@ test(
     const cloudProject = (await workspaceFlow.getProject({
       name: 'Personal Workspace',
     }))!;
-    const cloudCollection = await workspaceFlow.create(cloudProject, new Collection(faker.string.alphanumeric(10)));
+    const cloudCollection = await workspaceFlow.createCollection(cloudProject, new Collection(faker.string.alphanumeric(10)));
     const request = await httpRequestFlow.create(gitCollection, {
       name: faker.string.alphanumeric(10),
       method: HttpMethod.Get,

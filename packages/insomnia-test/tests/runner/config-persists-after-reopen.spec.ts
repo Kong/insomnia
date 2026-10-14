@@ -12,8 +12,8 @@ test('Verify Runner Iterations Setting Persists After Leaving and Reopening the 
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { runnerPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const request = await httpRequestFlow.create(collection, {
     name: faker.string.alphanumeric(10),

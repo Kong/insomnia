@@ -11,7 +11,7 @@ test("Verify Renaming And Deleting A Project Via The Dashboard", async ({
 
   const oldName = faker.string.alphanumeric(10);
   const newName = faker.string.alphanumeric(10);
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(oldName, ProjectType.Local),
   );
 

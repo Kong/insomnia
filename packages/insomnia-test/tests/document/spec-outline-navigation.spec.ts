@@ -25,11 +25,11 @@ test("Verify Spec Outline Sidebar Lists Every Section And Jumps To The Matching 
   const { workspacePage } = user.pageManager;
   const s = buildSpec();
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  await workspaceFlow.create(
+  await workspaceFlow.createCollection(
     project,
     new Collection(
       faker.string.alphanumeric(10),
@@ -117,11 +117,11 @@ test("Verify Spec Outline Sidebar Lists Every Section And Jumps To The Matching 
   const { workspacePage } = user.pageManager;
   const s = buildSpec();
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  await workspaceFlow.create(
+  await workspaceFlow.createCollection(
     project,
     new Collection(
       faker.string.alphanumeric(10),
@@ -226,11 +226,11 @@ test("Verify Spec Outline Sidebar Jumps To The Line Of A Scalar Info Value In A 
   const title = faker.commerce.productName();
   const version = faker.system.semver();
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  await workspaceFlow.create(
+  await workspaceFlow.createCollection(
     project,
     new Collection(
       faker.string.alphanumeric(10),

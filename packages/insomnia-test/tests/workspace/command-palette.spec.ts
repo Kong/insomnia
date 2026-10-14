@@ -13,14 +13,14 @@ test("Verify command palette fuzzy-jumps between requests and collections", asyn
   const { httpRequestPage, workspacePage, commandPalettePage } =
     user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collectionA = await workspaceFlow.create(
+  const collectionA = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
-  const collectionB = await workspaceFlow.create(
+  const collectionB = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
