@@ -30,15 +30,15 @@ test("Verify Event Stream Request Over a TLS Connection", async ({ user }) => {
     method: EventStreamMethod.Get,
     url: `${EVENT_STREAM_SERVER_HTTPS}/sse-events/1`,
   });
-  const response = await eventStreamRequestFlow.send(request);
+  const responseView = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("TLSv1.3");
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) =>
+        (await responseView.events?.())?.some((event) =>
           event.data.includes("Starting Events"),
         ),
       { timeout: DEFAULT_TIMEOUT },

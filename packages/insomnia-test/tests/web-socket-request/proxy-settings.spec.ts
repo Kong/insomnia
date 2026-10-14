@@ -97,7 +97,7 @@ test("Verify WebSocket Requests Are Routed Through the Preferences Proxy", async
       url: WS_SERVER,
     });
     await webSocketRequestFlow.send(request);
-    const response = await webSocketRequestFlow.disconnect(
+    const responseView = await webSocketRequestFlow.disconnect(
       request,
       async () => {
         const events = await responsePage.getEvents();
@@ -108,7 +108,7 @@ test("Verify WebSocket Requests Are Routed Through the Preferences Proxy", async
     );
 
     await expect
-      .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+      .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
       .toContain("101 Switching Protocols");
     expect(proxy.targets).toContain(hostOf(WS_SERVER));
   } finally {

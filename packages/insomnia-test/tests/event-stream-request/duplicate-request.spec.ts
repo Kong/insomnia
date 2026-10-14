@@ -35,12 +35,12 @@ test("Verify Duplicated Event Stream Request Keeps Url, Method and Headers", asy
   await workspaceFlow.duplicate(request, duplicatedName);
 
   const duplicated = await eventStreamRequestFlow.get(duplicatedName);
-  const response = await eventStreamRequestFlow.send(duplicated!);
+  const responseView = await eventStreamRequestFlow.send(duplicated!);
 
   expect(duplicated).toBeTruthy();
   expect(duplicated!.url).toBe(request.url);
   expect(duplicated!.method).toBe(request.method);
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`X-Custom: ${headerValue}`);
 });

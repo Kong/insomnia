@@ -29,15 +29,15 @@ test("Verify WebSocket Request Over a TLS Connection", async ({ user }) => {
     url: WS_SERVER_WSS,
   });
   await webSocketRequestFlow.send(request);
-  const response = await webSocketRequestFlow.disconnect(request);
+  const responseView = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("101 Switching Protocols");
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) =>
+        (await responseView.events?.())?.some((event) =>
           event.data.includes("Request served by"),
         ),
       { timeout: DEFAULT_TIMEOUT },

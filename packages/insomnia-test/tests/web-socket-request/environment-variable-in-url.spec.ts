@@ -45,15 +45,15 @@ test("Verify Environment Variable in WebSocket Request URL Is Resolved", async (
   await environmentFlow.link(request, environment);
 
   await webSocketRequestFlow.send(request);
-  const response = await webSocketRequestFlow.disconnect(request);
+  const responseView = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`Preparing request to ${WS_SERVER}`);
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) =>
+        (await responseView.events?.())?.some((event) =>
           event.data.includes("Connected successfully"),
         ),
       { timeout: DEFAULT_TIMEOUT },

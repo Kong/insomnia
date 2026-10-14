@@ -35,10 +35,10 @@ test("Verify GraphQL Request Header With a Template Tag Is Resolved", async ({
       },
     ],
   });
-  const response = await graphqlRequestFlow.send(request);
+  const responseView = await graphqlRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({ "x-header-name": "aGVhZGVyLXZhbHVl" }),
   });
 });
