@@ -1,7 +1,8 @@
 import type { EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentType } from 'insomnia-data';
-import React, { type FC, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
+import { useSearchParams } from 'react-router';
 
 import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
@@ -33,6 +34,26 @@ export const RequestGroupPane: FC = () => {
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const patchGroup = useRequestGroupPatcher();
   const { toggleEnvironmentType } = useToggleEnvironmentType();
+
+  // Deep-linkable inner tab selection, e.g. /debug/request-group/:id?tab=environment
+  // (used by the variable live preview "Open" action to land on the folder's env editor).
+  // Unknown values (stale/renamed deep links) fall back to the default tab instead of
+  // leaving the controlled Tabs without a selection.
+  const FOLDER_TAB_IDS = ['auth', 'headers', 'scripts', 'environment', 'docs'];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const isValidRequestedTab = requestedTab !== null && FOLDER_TAB_IDS.includes(requestedTab);
+  const [selectedTab, setSelectedTab] = useState<string>(isValidRequestedTab ? requestedTab : 'auth');
+  useEffect(() => {
+    if (isValidRequestedTab) {
+      setSelectedTab(requestedTab);
+      // Consume the param: the sidebar forwards current search params to the next
+      // folder navigation, and a stale tab=environment would override its tab choice.
+      const next = new URLSearchParams(searchParams);
+      next.delete('tab');
+      setSearchParams(next, { replace: true });
+    }
+  }, [isValidRequestedTab, requestedTab, searchParams, setSearchParams]);
 
   const saveChanges = () => {
     if (environmentEditorRef.current?.isValid()) {
@@ -69,7 +90,9 @@ export const RequestGroupPane: FC = () => {
       <Tabs
         aria-label="Request group tabs"
         className="flex h-full w-full flex-1 flex-col"
+        selectedKey={selectedTab}
         onSelectionChange={key => {
+          setSelectedTab(String(key));
           // Save environment changes when nav away from environment tab.
           if (key !== 'environment' && environmentEditorRef) {
             saveChanges();

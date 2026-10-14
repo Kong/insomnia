@@ -201,6 +201,51 @@ collection: []
       });
     });
 
+    // Check exported key order for workspaces
+    it.each(['collection', 'design', 'environment'] as const)(
+      'exports environments with a stable key order for %s scope',
+      async scope => {
+        const workspace = await services.workspace.create({
+          _id: `wrk_env_order_${scope}`,
+          name: 'Env Order Workspace',
+          parentId: 'proj_test',
+          scope,
+        });
+
+        const baseEnvironment = await services.environment.create({
+          _id: `env_base_${scope}`,
+          name: 'Base Environment',
+          parentId: workspace._id,
+          data: { api_url: 'https://api.example.com' },
+          color: '#ff0000',
+        });
+        await services.environment.create({
+          _id: `env_sub_${scope}`,
+          name: 'Sub Environment',
+          parentId: baseEnvironment._id,
+          data: { api_url: 'https://sub.example.com' },
+          color: '#00ff00',
+        });
+
+        if (scope === 'design') {
+          await services.apiSpec.getOrCreateForParentId(workspace._id, {
+            _id: 'spec_env_order',
+            contents: '{"openapi": "3.0.0"}',
+            contentType: 'json',
+          });
+        }
+
+        const result = await getInsomniaV5DataExport({
+          workspaceId: workspace._id,
+          includePrivateEnvironments: false,
+        });
+
+        const { environments } = YAML.parse(result);
+        expect(Object.keys(environments)).toEqual(['name', 'meta', 'data', 'color', 'subEnvironments']);
+        expect(Object.keys(environments.subEnvironments[0])).toEqual(['name', 'meta', 'data', 'color']);
+      },
+    );
+
     it('handles empty workspace gracefully', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_empty_test',
@@ -325,6 +370,57 @@ collection: []
       expect(parsed.server.url).toBe('http://localhost:3000');
     });
 
+    // Check exported key order for mock server and routes
+    it('exports mock server and mock routes with a stable key order', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_mock_order',
+        name: 'Mock Order Workspace',
+        parentId: 'proj_test',
+        scope: 'mock-server',
+      });
+
+      const server = await services.mockServer.create({
+        _id: 'mock_order',
+        name: 'Order Server',
+        parentId: workspace._id,
+        url: 'http://localhost:3000',
+        useInsomniaCloud: false,
+      });
+
+      await services.mockRoute.create({
+        _id: 'route_order',
+        name: '/ping',
+        parentId: server._id,
+        body: '{"ok":true}',
+        headers: [{ name: 'X-Mock', value: '1', description: 'mock header', disabled: false }],
+        method: 'GET',
+        mimeType: 'application/json',
+        statusCode: 201,
+        statusText: 'Created',
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(Object.keys(parsed)).toEqual(['type', 'schema_version', 'name', 'meta', 'server', 'routes']);
+      expect(Object.keys(parsed.server)).toEqual(['meta', 'url', 'useInsomniaCloud']);
+      expect(parsed.routes).toHaveLength(1);
+      expect(Object.keys(parsed.routes[0])).toEqual([
+        'name',
+        'meta',
+        'body',
+        'headers',
+        'method',
+        'mimeType',
+        'statusCode',
+        'statusText',
+      ]);
+      expect(Object.keys(parsed.routes[0].headers[0])).toEqual(['name', 'value', 'description', 'disabled']);
+    });
+
     it('handles mcp client scope', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_mcp',
@@ -393,6 +489,53 @@ collection: []
       expect(parsed.mcpRequest.transportType).toBe('stdio');
       expect(parsed.mcpRequest.env).toHaveLength(2);
       expect(parsed.mcpRequest.roots).toHaveLength(1);
+    });
+
+    it('exports mcp request with a stable key order', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_mcp_order',
+        name: 'MCP Order Workspace',
+        parentId: 'proj_test',
+        scope: 'mcp',
+      });
+
+      await services.environment.create({
+        _id: 'env_mcp_order',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.mcpRequest.create({
+        _id: 'mcp-request_order',
+        name: 'Order MCP client',
+        parentId: workspace._id,
+        url: 'npx mcp-client stdio',
+        transportType: 'stdio',
+        headers: [{ name: 'X-MCP', value: '1' }],
+        authentication: { type: 'basic', username: 'user', password: 'pass' },
+        env: [{ id: 'var1', name: 'foo', value: 'bar', type: EnvironmentKvPairDataType.STRING, enabled: true }],
+        roots: [{ uri: 'file:///workspace' }],
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const { mcpRequest } = YAML.parse(result);
+      expect(Object.keys(mcpRequest)).toEqual([
+        'name',
+        'url',
+        'transportType',
+        'headers',
+        'authentication',
+        'meta',
+        'env',
+        'roots',
+      ]);
+      expect(Object.keys(mcpRequest.env[0])).toEqual(['id', 'name', 'value', 'type', 'enabled']);
+      expect(Object.keys(mcpRequest.roots[0])).toEqual(['uri']);
     });
 
     it('returns empty string for unknown workspace', async () => {
