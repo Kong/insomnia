@@ -38,11 +38,11 @@ test("Verify OAuth 1.0 auth fields persist and sign the sent request", async ({
     authentication: authentication,
   });
 
-  const response = await httpRequestFlow.send(request);
-  const authHeader = (response.body as { headers: Record<string, string> })
+  const responseView = await httpRequestFlow.send(request);
+  const authHeader = (responseView.body as { headers: Record<string, string> })
     .headers.authorization;
 
-  expect(response.statusCode).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(authHeader).toContain("OAuth ");
   expect(authHeader).toContain(
     `oauth_consumer_key="${authentication.consumerKey}"`,

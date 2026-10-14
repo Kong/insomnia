@@ -46,10 +46,10 @@ test("Verify LiquidJS control flow tags render correctly", async ({ user }) => {
       text: `{{ envVar }}-{% assign x = 5 %}{% if x > 3 %}big{% else %}small{% endif %}-{% for i in (1..3) %}{{ i }}{% endfor %}-{% unless x == 5 %}no{% else %}yes{% endunless %}`,
     },
   } satisfies HttpRequest);
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     data: `${envValue}-big-123-yes`,
   });
 });

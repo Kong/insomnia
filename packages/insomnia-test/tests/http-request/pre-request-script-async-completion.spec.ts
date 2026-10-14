@@ -74,10 +74,10 @@ test("Verify pending async work in a pre-request script (Promise, setTimeout, se
       insomnia.environment.set('bodyFromCallback', respFromCallback.body);
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     json: {
       asyncDoneViaPromise: true,
       asyncDoneViaTimeout: true,

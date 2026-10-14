@@ -46,17 +46,17 @@ test("Verify pre-request script's sendRequest serializes raw, urlencoded, graphq
       insomnia.environment.set('results', JSON.stringify(results));
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   const results = (
-    response.body as { json: { results: Record<string, string> } }
+    responseView.body as { json: { results: Record<string, string> } }
   ).json.results;
   const raw = JSON.parse(results.raw);
   const urlencoded = JSON.parse(results.urlencoded);
   const graphql = JSON.parse(results.graphql);
   const formdata = JSON.parse(results.formdata);
 
-  expect(response.statusCode).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(raw.data).toBe(rawValue);
   expect(urlencoded.data).toBe("a=1&b=2");
   expect(graphql.json).toMatchObject({

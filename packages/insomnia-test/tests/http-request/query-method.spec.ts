@@ -28,7 +28,7 @@ test("Verify sending a QUERY request with a body", async ({ user }) => {
   await importFlow.importCurl(project, collection, curl);
 
   const imported = await httpRequestFlow.get(url);
-  const response = await httpRequestFlow.send(imported!);
+  const responseView = await httpRequestFlow.send(imported!);
 
   expect(imported).toMatchObject({
     name: url,
@@ -36,6 +36,6 @@ test("Verify sending a QUERY request with a body", async ({ user }) => {
     method: HttpMethod.Query,
     body: { mimeType: ContentType.JSON, text: body },
   } satisfies HttpRequest);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({ data: body });
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({ data: body });
 });

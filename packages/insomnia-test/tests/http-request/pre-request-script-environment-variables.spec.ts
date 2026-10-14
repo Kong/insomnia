@@ -58,10 +58,10 @@ test("Verify pre-request script overrides base environment values through the en
       insomnia.environment.set('varBool', insomnia.variables.get('varBool'));
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     json: {
       fallbackToBase: fallbackValue,
       scriptValue: envScriptValue,

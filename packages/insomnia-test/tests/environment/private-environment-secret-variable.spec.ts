@@ -80,10 +80,10 @@ testWithVaultKey(
         text: "{{ _.vault.foo }}\n{{ _.vault.hello }}",
       },
     });
-    const response = await httpRequestFlow.send(request!);
+    const responseView = await httpRequestFlow.send(request!);
 
-    expect(response.statusCode).toBe(200);
-    expect((response.body as { data: string }).data).toBe(
+    expect(responseView.statusCode).toBe(200);
+    expect((responseView.body as { data: string }).data).toBe(
       `${secretValueFoo}\n${secretValueHello}`,
     );
   },

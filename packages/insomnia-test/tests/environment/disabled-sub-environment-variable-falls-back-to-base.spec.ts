@@ -57,8 +57,8 @@ test("Verify a disabled sub-environment variable falls back to the base environm
     method: HttpMethod.Post,
     url: `${HTTP_SERVER}/post?value={{${sharedVariable}}}`,
   } satisfies HttpRequest);
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({ args: { value: baseValue } });
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({ args: { value: baseValue } });
 });
