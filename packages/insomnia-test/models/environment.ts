@@ -36,11 +36,3 @@ export class Environment implements EnvironmentInit {
     this.id = init.id;
   }
 }
-
-export function isEnvironmentItem(item: unknown): item is Environment {
-  return (
-    typeof item === "object" &&
-    item !== null &&
-    (item as { type?: unknown }).type === ENVIRONMENT_TYPE
-  );
-}

@@ -33,7 +33,7 @@ Every test injects only the `user` fixture (`async ({ user }) => {...}`) — nev
 | Plugins & Script Sandbox (Preferences → Plugins/Scripting tabs, `tests/plugin/`)                             | `preferencesFlow` (no separate PluginsFlow/PluginsPage)                                                                                                                                                                                                                                                                                                                                                                                                                                            | `flows/preferences.flow.ts`                         | `pages/preferences.page.ts`                                                                                                                                                              | `models/settings.ts`'s `pluginSandboxEnabled`; `enums/script-sandbox-rule-group.ts`                                                                                         |
 | Konnect sidebar sync (`tests/konnect/`)                                                                      | none — call `user.pageManager.konnectPage` directly, no KonnectFlow                                                                                                                                                                                                                                                                                                                                                                                                                                | none                                                | `pages/konnect.page.ts`                                                                                                                                                                  | none                                                                                                                                                                             |
 | Template Tags (Insert/Edit Tag modal, Live Preview)                                                          | `templateTagFlow`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `flows/template-tag.flow.ts`                        | `pages/template-tag.page.ts`                                                                                                                                                             | `models/template-tag.ts`                                                                                                                                                         |
-| Git Sync (branch/commit/history/push, `tests/git-sync/`)                                                     | `gitSyncFlow` (+ `preferencesFlow.addGitCredential`, `workspaceFlow.create`/`.openSettings` for cloning/settings/adopting a local folder)                                                                                                                                                                                                                                                                                                                                                          | `flows/git-sync.flow.ts`, `flows/workspace.flow.ts` | `pages/git-sync.page.ts` (connected-project toolbar/modals), `pages/project-settings.page.ts` (create/settings dialog's Git setup form + repo relocation + "Open local folder" sub-form) | `models/commit.ts`, `models/git-credential.ts`, `models/git-repo-connection.ts`                                                                                                  |
+| Git Sync (branch/commit/history/push, `tests/git-sync/`)                                                     | `gitSyncFlow` (+ `preferencesFlow.addGitCredential`, `workspaceFlow.cloneGitProject`/`.openLocalGitFolder`/`.openSettings` for cloning/adopting a local folder/settings)                                                                                                                                                                                                                                                                                                                                                          | `flows/git-sync.flow.ts`, `flows/workspace.flow.ts` | `pages/git-sync.page.ts` (connected-project toolbar/modals), `pages/project-settings.page.ts` (create/settings dialog's Git setup form + repo relocation + "Open local folder" sub-form) | `models/commit.ts`, `models/git-credential.ts`, `models/git-repo-connection.ts`                                                                                                  |
 | Cloud Sync (VCS-backed workspace sync, `tests/cloud-sync/`)                                                  | `cloudSyncFlow` (openProjectDashboard/fetch/discardAllChanges/commitAndPush/restoreSnapshot/createBranch/mergeBranch/delete/deleteUnsyncedFile) — Branches-modal actions (fetch remote branch/checkout/delete/create) and a few polling/re-navigation/one-off-action helpers (`reselect`/`waitForPullAvailable`/`clickPull`/`closeSyncMenu`/`isCommitDisabled`) have no Flow wrapper, call `pageManager.cloudSyncPage` directly since a whole modal-session needs to stay open across several of them or the test needs to read a live value rather than fire-and-forget an action | `flows/cloud-sync.flow.ts`                          | `pages/cloud-sync.page.ts`                                                                                                                                                               | `enums/delete-mode.ts` (`DeleteMode`), `enums/sync-status.ts` (`SyncStatus`) — otherwise plain strings/booleans in, plain booleans out                                           |
 | App lifecycle (main process, not a UI domain)                                                                | `appFlow`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `flows/app.flow.ts`                                 | none — reaches the main process directly via `flowManager.electronApp`, no DOM involved                                                                                                  | none                                                                                                                                                                             |
 | Login / Scratch Pad entry points (`tests/app/scratch-pad-mode.spec.ts`)                                      | none — call `user.pageManager.workspacePage` directly (`logOut()`/`clickUseLocalScratchPad()`/`isLoginEntryPointVisible()`/`isUnlockFullFeaturesVisible()`), no dedicated flow                                                                                                                                                                                                                                                                                                                     | none                                                | `pages/workspace.page.ts`                                                                                                                                                                | none                                                                                                                                                                             |
@@ -54,27 +54,32 @@ Every test injects only the `user` fixture (`async ({ user }) => {...}`) — nev
 ## `workspaceFlow` (the root flow — every domain's parent)
 
 ```ts
-create(item: Project): Promise<Project>
-create(parent: Project, item: Collection, fileName?: string): Promise<Collection>   // if Collection.spec is set, the spec is authored after creation
-create(parent: Project, item: McpClient): Promise<McpClient>
-create(parent: Project, item: Environment): Promise<Environment>
-create(item: Project, credentialName: string, repo?: Partial<GitRepoConnection>): Promise<Project>   // clones a Git Sync project with an explicit credential; repo.uri defaults to the injected gitRepoUrl, branch to "master"
-// Project.folderPath (3rd ctor arg) routes create(project) to "Open local folder" mode
+// One explicit method per creation flow — there is no overloaded `create()`; the method name says which flow runs.
+createProject(item: Project): Promise<Project>
+openLocalGitFolder(item: Project): Promise<Project>                                       // "Open local folder" mode — item.folderPath (Project's 3rd ctor arg) is required, throws if missing
+cloneGitProject(item: Project, credentialName: string, repo?: Partial<GitRepoConnection>): Promise<Project>   // clones a Git Sync project with an explicit credential; repo.uri defaults to the injected gitRepoUrl, branch to "master"
+createCollection(parent: Project, item: Collection, fileName?: string): Promise<Collection>   // if Collection.spec is set, the spec is authored after creation
+createMcpClient(parent: Project, item: McpClient): Promise<McpClient>
+createEnvironment(parent: Project, item: Pick<Environment, "name">): Promise<Environment>   // low-level: creates the project-tree Environment node only — specs use environmentFlow.createBaseEnvironment()/createSubEnvironment() instead (they also rename + apply variables)
 
 get<T = WorkspaceItem>(item: string | { name: string; id?: string }, parent?: Project | Collection): Promise<T | undefined>
-getProject(item) / getCollection(item) / getCollectionSpec(item): Promise<... | undefined>  // the public getters (getCollectionSpec is a fuller Collection read that includes specification/lint/rulesetType/version); for an Environment/McpClient use the generic get<T>() above instead — getEnvironment()/getMcpClient() are private (internal re-fetch helpers for create()/duplicate()/rename())
+getProject(item) / getCollection(item) / getCollectionSpec(item): Promise<... | undefined>  // the public getters (getCollectionSpec is a fuller Collection read that includes specification/lint/rulesetType/version); for an Environment/McpClient use the generic get<T>() above instead — getEnvironment()/getMcpClient() are private (internal re-fetch helpers for the create*/duplicate*/rename* methods)
 
-duplicate(item: Collection | McpClient | Environment, newName: string, targetProject?: Project): Promise<...>
-duplicate(item: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest, newName: string): Promise<{ id: string; name: string }>
+duplicateCollection(item: Collection, newName: string, targetProject?: Project): Promise<Collection>
+duplicateMcpClient(item: McpClient, newName: string, targetProject?: Project): Promise<McpClient>
+duplicateEnvironment(item: Environment, newName: string, targetProject?: Project): Promise<Environment>
+duplicateRequest(item: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest, newName: string): Promise<{ id: string; name: string }>
 
-rename(item: Collection | McpClient | Environment, newName: string): Promise<...>
-rename(item: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest, newName: string): Promise<{ id: string; name: string }>
-// Project is deliberately NOT accepted by rename()/duplicate() — its context menu has neither "Rename" nor "Duplicate" (confirmed live), only "Delete".
-// duplicate() on an Environment returns it with `containerName` already populated to `newName` — don't set
+renameCollection(item: Collection, newName: string): Promise<Collection>
+renameMcpClient(item: McpClient, newName: string): Promise<McpClient>
+renameEnvironment(item: Environment, newName: string): Promise<Environment>
+renameRequest(item: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest, newName: string): Promise<{ id: string; name: string }>
+// Project has no duplicate*/rename* method — its context menu has neither "Rename" nor "Duplicate" (confirmed live), only "Delete" (use renameProject() below to rename one).
+// duplicateEnvironment() returns the Environment with `containerName` already populated to `newName` — don't set
 // `containerName: <newName>` yourself on the result before passing it to environmentFlow.link()/activate()
 // like older specs did. Confirmed live: duplicating only renames the copy's project-tree title, not its
-// inner Base Environment document (which still carries the source's original name), so duplicate() now also
-// renames that inner document to match — mirroring create()'s own Base-Environment-rename step — before
+// inner Base Environment document (which still carries the source's original name), so duplicateEnvironment() now also
+// renames that inner document to match — mirroring environmentFlow.createBaseEnvironment()'s own Base-Environment-rename step — before
 // returning.
 
 delete(item: Project | Collection | McpClient | Environment | <any request type>): Promise<void>
@@ -83,7 +88,7 @@ openSettings(project: Project): Promise<void>
   // right-clicks project's node -> context menu "Settings" -> waits for pageManager.projectSettingsPage.navigate()
   // to confirm the "Create or update dialog" loaded in settings mode. Leaves the dialog open for further
   // pageManager.projectSettingsPage interaction (e.g. relocating a Git Sync project's repo — see gitSyncFlow below).
-// create(item: Project) gives WorkspacePage.clickCreate() a longer-than-default timeout budget
+// createProject() gives WorkspacePage.clickCreate() a longer-than-default timeout budget
 // (DEFAULT_TIMEOUT * 2) before waiting for the create dialog to close — creating a Project also
 // provisions its NeDB records before the dialog closes, observed to occasionally run past the
 // plain UI-only default under CI load. clickCreate(timeoutMs = DEFAULT_TIMEOUT) itself now takes
@@ -155,7 +160,7 @@ pinTab(name: string): Promise<void>               // double-clicks a temporary (
 filterSidebar(text: string): Promise<void>         // types into the "Projects filter" searchbox, narrowing the tree to matches (+ their ancestor project/collection)
 clearSidebarFilter(): Promise<void>                  // clicks "Clear search", restoring the full tree
 isPinned(name: string): Promise<boolean>             // whether the request currently shows in the sidebar's top-level "Pinned" section
-renameRequestInline(name: string, newName: string): Promise<void>  // dblclick the row's editable label -> fill -> Enter; distinct from workspaceFlow.rename()'s context-menu "Rename" dialog
+renameRequestInline(name: string, newName: string): Promise<void>  // dblclick the row's editable label -> fill -> Enter; distinct from workspaceFlow.renameRequest()'s context-menu "Rename" dialog
 findItemNode(item: { id?: string; name: string }, type?: TreeNodeType, parent?: TreeNode): Promise<TreeNode | undefined>
   // looks up a tree node by id (preferred) or name, optionally scoped to a parent's subtree and/or a TreeNodeType
 rightClick(node: TreeNode): Promise<void>            // scrolls the node's row into view and right-clicks it, opening its context menu
@@ -191,7 +196,7 @@ openCreateShortcut(node: TreeNode): Promise<void>
   // clicks the node to select it, waits for the row's selection to settle (see gotcha below), then
   // sends the platform's "show create menu" shortcut (Cmd+N on macOS, Ctrl+N elsewhere), opening
   // the Sidebar Shortcut Create Menu targeted at it. Confirmed live: the shortcut only opens the
-  // menu — it does not create anything by itself, unlike workspaceFlow.create()'s own "+"-button
+  // menu — it does not create anything by itself, unlike workspaceFlow.createCollection()'s own "+"-button
   // dropdown path.
 isCreateShortcutShown(): Promise<boolean>           // whether that menu is currently open — a plain getByRole("menu") count, since only one menu is ever open at a time in this app
 isFocusModePromptShown(): Promise<boolean>
@@ -596,11 +601,12 @@ Real examples: `tests/mock-server/*.spec.ts` (one behaviour per file: `create-mo
 ## `environmentFlow`
 
 ```ts
-create(parent: Project | Environment, environment: Environment): Promise<Environment>
-// parent = Project  → creates/renames the workspace's Base Environment
-// parent = Environment (isEnvironmentItem(parent) true) → creates a sub-environment under it
+createBaseEnvironment(parent: Project, environment: Environment): Promise<Environment>
+  // creates/renames the workspace's Base Environment, then applies environment.kvPairData; returns it with containerName populated
+createSubEnvironment(parent: Environment, environment: Environment): Promise<Environment>
+  // creates a sub-environment under `parent` (the object returned by createBaseEnvironment()), then applies kvPairData
 link(item: Collection | McpClient | <any request type>, environment: Environment): Promise<void>
-  // environment MUST be the object returned by create() — it needs environment.containerName
+  // environment MUST be the object returned by createBaseEnvironment()/createSubEnvironment() — it needs environment.containerName
 activate(collection: Collection, name: string): Promise<void>
   // opens `collection`'s node, then activates one of its OWN built-in "Collection Environments"
   // (its Base Environment, or a private/shared sub-environment nested directly under it — e.g.
@@ -610,7 +616,7 @@ activate(collection: Collection, name: string): Promise<void>
   // independently, activating one doesn't clear the other, and their variables merge into the
   // same active render context. Use this one when the scenario's environment/sub-environment
   // already lives inside the collection itself (e.g. straight out of an import) rather than being
-  // a Project Environment created via environmentFlow.create()+link().
+  // a Project Environment created via environmentFlow.createBaseEnvironment()+link().
   //
   // As of 2026-09-03 the picker is two independent popovers, not one "Manage Environments"
   // dialog — EnvironmentPage.linkProjectEnvironment()/selectCollectionEnvironment() (which
@@ -981,11 +987,11 @@ All of them import into the given `project`; `importCurl` additionally targets a
 
 ## `exportFlow`
 
-Covers exporting a Collection/Project/all-data to disk. A single overloaded `export()` method dispatches on argument shape — there is no separate `exportCollection()`/`exportAllData()` method:
+Covers exporting a Collection/Project/all-data to disk. One explicit method per export scope — `exportCollection()`, `exportProject()` and `exportAllData()`; there is no overloaded `export()`:
 
 ```ts
 // ExportFlow (flows/export.flow.ts)
-export(item: Collection, format: ExportFormat, path: string): Promise<void>
+exportCollection(item: Collection, format: ExportFormat, path: string): Promise<void>
   // via the Collection's own sidebar/dashboard "Export" context-menu item (ContextMenuItem.Export)
   // -> "Export requests" (confirms request-selection, every request stays checked) -> "Select Export
   // Type" -> selects format -> "Done". This is the ONLY Collection export entry point covered —
@@ -995,23 +1001,22 @@ export(item: Collection, format: ExportFormat, path: string): Promise<void>
   // two don't collide, but a raw getByRole("menuitem", { name: "Export" }) without exact:true will
   // match both and throw a strict-mode violation. See "Export OpenAPI Spec" below for that entry's
   // own dedicated methods.
-export(item: Project, format: ExportFormat, path: string): Promise<void>
+exportProject(item: Project, format: ExportFormat, path: string): Promise<void>
   // via Preferences -> Data -> "Export...<name>...Project" button -> selects format -> skips
   // request-selection (a Project export always includes every request) -> one file per workspace
   // written into `path` as a directory
-export(directoryPath: string): Promise<void>
+exportAllData(directoryPath: string): Promise<void>
   // via Preferences -> Data -> "Export all data (N files)" -> always Insomnia v5, one file per
-  // workspace -> no request-selection or format-selection step at all — dispatched by the single
-  // string argument (`typeof itemOrDirectoryPath === "string"`), not a separate method
+  // workspace -> no request-selection or format-selection step at all
 ```
 
-`ExportFormat` (`enums/export-format.ts`): `InsomniaV5 = "Insomnia v5" | Har = "HAR – HTTP Archive Format"`. The `Collection` overload writes a single file to `path`; the `Project` overload/the single-arg (`directoryPath`) overload write into a directory (one file per workspace) — `fs.mkdirSync(dir, { recursive: true })` it yourself before calling, same as any other Node fs usage in a spec.
+`ExportFormat` (`enums/export-format.ts`): `InsomniaV5 = "Insomnia v5" | Har = "HAR – HTTP Archive Format"`. `exportCollection()` writes a single file to `path`; `exportProject()` and `exportAllData()` write into a directory (one file per workspace) — `fs.mkdirSync(dir, { recursive: true })` it yourself before calling, same as any other Node fs usage in a spec.
 
-All three overloads stub Electron's native dialogs first via `pageManager.exportPage` — `stubSaveFileLocation(filePath)` (wraps `BasePage.stubSaveDialog()`, for the single-file `Collection` overload) or `stubSaveDirectoryLocation(directoryPath)` (wraps `BasePage.stubFileChooser()`, for the multi-file ones) — call the matching stub _before_ triggering the export action, not after. The `Project` overload and the single-arg `directoryPath` overload also call `exportPage.dismissCompletionIfShown()` afterward (an "Export Complete" dialog that only sometimes appears for multi-file exports) and close Preferences only if `preferencesPage.isOpen()` (a multi-file export's completion can close the dialog as a side effect).
+All three methods stub Electron's native dialogs first via `pageManager.exportPage` — `stubSaveFileLocation(filePath)` (wraps `BasePage.stubSaveDialog()`, for the single-file `exportCollection()`) or `stubSaveDirectoryLocation(directoryPath)` (wraps `BasePage.stubFileChooser()`, for the multi-file ones) — call the matching stub _before_ triggering the export action, not after. `exportProject()` and `exportAllData()` also call `exportPage.dismissCompletionIfShown()` afterward (an "Export Complete" dialog that only sometimes appears for multi-file exports) and close Preferences only if `preferencesPage.isOpen()` (a multi-file export's completion can close the dialog as a side effect).
 
 **An export writes its file asynchronously after the native dialog resolves** — reading the file the instant `exportFlow`'s call returns can catch it mid-write (truncated content). Use `misc/export-file.ts`'s `waitForExportedFile(filePath, timeout = 20000): Promise<string>` instead of `fs.readFileSync()` directly — it polls until the file exists and its size has stopped changing across several consecutive checks, then returns its content. The same file also exports `normalizeExportFixture(content: string): string`, which replaces dynamic fields (`id`/`created`/`modified`/`sortKey`/`startedDateTime`) with fixed placeholders — apply it to both sides before diffing a fresh export against a checked-in fixture.
 
-Real example: `tests/data/export/happy-path.spec.ts` — exports a Collection via its context menu twice (HAR + Insomnia v5, `export(collection, ...)`) and a Project via Preferences -> Data to a directory (Insomnia v5, `export(project, ...)`), asserting each written file's content via `waitForExportedFile()`.
+Real example: `tests/data/export/happy-path.spec.ts` — exports a Collection via its context menu twice (HAR + Insomnia v5, `exportCollection(collection, ...)`) and a Project via Preferences -> Data to a directory (Insomnia v5, `exportProject(project, ...)`), asserting each written file's content via `waitForExportedFile()`.
 
 ### Export OpenAPI Spec (INS-3641, `ContextMenuItem.ExportOpenApiSpec`)
 
@@ -1034,7 +1039,7 @@ exportOpenApiSpec(item: Collection, format: ApiSpecExportFormat, path: string): 
 
 `pageManager.exportPage.exportOpenApiSpec(format: ApiSpecExportFormat): Promise<void>` — decorated with `@throwOnDialog()` (`misc/decorators.ts`, the same decorator `RequestPage.send()`/`GrpcRequestPage.fetchServerReflection()` use). Waits for any dialog the click could have opened, then checks specifically whether it's the "Select Specification Format" modal: if so, selects `format` and clicks "Done"; if not (a "Cannot export" alert appeared instead, for an empty/missing spec), it's a no-op that leaves the alert open, and `@throwOnDialog`'s post-check then rejects the call with the alert's trimmed text — so a caller asserts the empty-spec path with `.rejects.toThrow("does not contain an OpenAPI specification to export")` (same `.rejects.toThrow()` pattern as `tests/environment/unlinked-environment-variable.spec.ts`), then dismisses the alert via `workspaceFlow.closeDialog()` before continuing.
 
-`workspaceFlow.fillSpecification(item: Collection, spec: NonNullable<Collection["spec"]>): Promise<void>` — types `spec` into an already-existing collection's spec editor at any point after creation (unlike the `spec` passed to `create()`, which only authors right after creation) — e.g. filling in a collection that started out empty, per the empty-spec-then-filled test below.
+`workspaceFlow.fillSpecification(item: Collection, spec: NonNullable<Collection["spec"]>): Promise<void>` — types `spec` into an already-existing collection's spec editor at any point after creation (unlike the `spec` passed to `createCollection()`, which only authors right after creation) — e.g. filling in a collection that started out empty, per the empty-spec-then-filled test below.
 
 Real example: `tests/data/export/export-openapi-spec.spec.ts` — exports a Pet-Store-shaped spec as both YAML and JSON from the sidebar dropdown (asserting format conversion), and confirms the empty-spec path rejects via `.rejects.toThrow(...)` followed by a successful export once `fillSpecification()` fills it in. (`WorkspacePage.getContextMenuItem()` is available for a right-click-visibility test but no committed spec exercises it yet — re-probe before adding one.) Note: an OpenAPI spec authored with `paths: {}` (no paths at all) breaks `WorkspaceFlow.getCollectionSpec()`'s outline-section expansion (used internally by `create()` when given a `spec`) — always include at least one real path in a spec passed to `create()`/`fillSpecification()`.
 
@@ -1235,19 +1240,19 @@ deleteBranch(branch: string, switchToBranch = "master"): Promise<void>  // check
 
 `Commit` (`models/commit.ts`): `{ message: string; id?: string }` — positional constructor (`new Commit(message)`), `id` populated after `commit()`/`commitAndPush()` read it back from the History modal's row `data-key` (the real git OID).
 
-**Creating a Git Sync project and its collections** goes through `workspaceFlow.create()`'s dedicated overloads, not a separate flow:
+**Creating a Git Sync project and its collections** goes through `workspaceFlow.cloneGitProject()` and `createCollection(..., fileName)`, not a separate flow:
 
 ```ts
-// WorkspaceFlow.create() — Git-specific overloads
-create(item: Project, credentialName: string, repo?: Partial<GitRepoConnection>): Promise<Project>
+// WorkspaceFlow — Git-specific creation methods
+cloneGitProject(item: Project, credentialName: string, repo?: Partial<GitRepoConnection>): Promise<Project>
   // item.type must be ProjectType.Git; clones from repo.uri (defaults to the local mock server's
   // URL, injected by the `user` fixture in git-fixtures.ts) and repo.branch (defaults to "master")
-create(parent: Project, item: Collection, fileName: string): Promise<Collection>
+createCollection(parent: Project, item: Collection, fileName: string): Promise<Collection>
   // creates a Collection with an explicit on-disk file name, decoupled from its display name —
   // only meaningful for Git Sync projects, where each collection is backed by its own file
 ```
 
-A `fileName`-carrying collection additionally writes and stages that file into the repo before the create dialog closes — `WorkspaceFlow` gives `WorkspacePage.clickCreate()` a longer-than-default timeout budget (`DEFAULT_TIMEOUT * 2`) for it, same as it already does for any project's own creation (see `clickCreate()`'s note under `workspaceFlow` above). Nothing a spec needs to do differently — this is handled inside `create()`.
+A `fileName`-carrying collection additionally writes and stages that file into the repo before the create dialog closes — `WorkspaceFlow` gives `WorkspacePage.clickCreate()` a longer-than-default timeout budget (`DEFAULT_TIMEOUT * 2`) for it, same as it already does for any project's own creation (see `clickCreate()`'s note under `workspaceFlow` above). Nothing a spec needs to do differently — this is handled inside `createCollection()`.
 
 `GitRepoConnection` (`models/git-repo-connection.ts`): `{ uri: string; branch?: string; cloneParentDir?: string }` — pass as `Partial<GitRepoConnection>`; every field is optional since `uri`/`branch` default. Only set `cloneParentDir` when a test needs to assert on/reuse the on-disk clone path — otherwise omit `repo` entirely and let it default to the mock server.
 
@@ -1264,7 +1269,7 @@ addGitCredential(credential: GitCredential): Promise<void>
 ```ts
 import { GIT_CREDENTIAL } from "../../misc/git-fixtures";
 await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-await workspaceFlow.create(
+await workspaceFlow.cloneGitProject(
   new Project(faker.string.alphanumeric(10), ProjectType.Git),
   GIT_CREDENTIAL.name,
 );
@@ -1302,7 +1307,7 @@ getRelocationError(): Promise<string | undefined>            // e.g. a destinati
 // Settings finishes the flow some other way (e.g. navigating elsewhere) instead of explicitly closing it
 ```
 
-`WorkspaceFlow.create()`'s Git-clone overload (below) drives these directly — it's the one place a test doesn't call `projectSettingsPage` itself. To open Settings for an _existing_ project: `workspaceFlow.openSettings(project)` (right-clicks the project node → "Settings" → waits for `projectSettingsPage.navigate()`), then interact with `pageManager.projectSettingsPage` directly. Real examples: `tests/git-sync/relocate-repository.spec.ts`, `tests/git-sync/relocate-repository-collision.spec.ts`, `tests/git-sync/disabled-via-feature-flag.spec.ts` (also uses `workspacePage.clickProjectTypeTile()`/`projectSettingsPage.getBannerText()`), `tests/git-sync/disabled-via-storage-rule.spec.ts` (also uses `projectSettingsPage.isDisabled(projectSettingsPage.projectTypeTile())`).
+`WorkspaceFlow.cloneGitProject()` (below) drives these directly — it's the one place a test doesn't call `projectSettingsPage` itself. To open Settings for an _existing_ project: `workspaceFlow.openSettings(project)` (right-clicks the project node → "Settings" → waits for `projectSettingsPage.navigate()`), then interact with `pageManager.projectSettingsPage` directly. Real examples: `tests/git-sync/relocate-repository.spec.ts`, `tests/git-sync/relocate-repository-collision.spec.ts`, `tests/git-sync/disabled-via-feature-flag.spec.ts` (also uses `workspacePage.clickProjectTypeTile()`/`projectSettingsPage.getBannerText()`), `tests/git-sync/disabled-via-storage-rule.spec.ts` (also uses `projectSettingsPage.isDisabled(projectSettingsPage.projectTypeTile())`).
 
 **Server-side ground-truth verification** — read the real bare repo on `misc/git-server.js` directly, independent of anything the app's UI reports:
 
@@ -1330,7 +1335,7 @@ Other real examples: `tests/git-sync/stage-and-unstage-individual-changes.spec.t
 
 There is no separate mock-server row to remember beyond this — `git-server.js` is a real smart-HTTP git server (via the `git-http-backend` npm package wrapping the system `git` binary), not a canned-response stub, so its state is asserted by literally reading the bare repo with `git log`/`git branch`.
 
-**Adopting an existing local folder as a Git project** ("Open local folder" mode of the same create-project dialog, as opposed to "Clone from Remote") — no credential/repo URL needed, since it runs `git init` in the chosen folder rather than cloning. Pass the folder as the `Project`'s third constructor arg and go through the normal `create()` overload — `create()` detects `folderPath` and routes to this mode instead of creating a fresh project:
+**Adopting an existing local folder as a Git project** ("Open local folder" mode of the same create-project dialog, as opposed to "Clone from Remote") — no credential/repo URL needed, since it runs `git init` in the chosen folder rather than cloning. Pass the folder as the `Project`'s third constructor arg and call `openLocalGitFolder()` — it requires `folderPath` (throws if missing) and is a distinct method from `createProject()`, so the call site shows which flow runs:
 
 ```ts
 // models/project.ts
@@ -1338,8 +1343,8 @@ new Project(name, ProjectType.Git, folderPath)
   // folderPath: absolute path of an existing local folder to adopt
 
 // WorkspaceFlow
-create(item: Project): Promise<Project>
-  // item.folderPath set -> clicks the dialog's "Open local folder" toggle,
+openLocalGitFolder(item: Project): Promise<Project>
+  // clicks the dialog's "Open local folder" toggle,
   // picks it via the stubbed native folder picker, clicks "Open", then confirms
   // the one-time "Do you trust this folder?" prompt
 
@@ -1358,7 +1363,7 @@ Real examples: `tests/git-sync/open-local-folder.spec.ts` (adopt + assert `.git`
 
 Covers Kong Cloud-backed workspace sync (branch/commit/history/push/pull/delete against a GraphQL VCS backend) — a categorically different subsystem from local Git Sync above, even though its sync dropdown trigger reuses the exact same `data-testid="git-dropdown"`/`aria-label="Git Sync"` (confirmed live: both `sync-dropdown.tsx` and `git-sync-dropdown.tsx` render it identically; whichever mounts depends on whether the active project is Cloud-synced or has a git repo attached). Tests live under `tests/cloud-sync/` and import from the ordinary `../../misc/fixtures` (no dedicated fixtures file — unlike Git Sync, nothing here needs a per-test repo).
 
-Every workspace this domain touches is a **pre-seeded fixture** on `misc/mock-api.js`'s `/graphql` mock (ported from insomnia-smoke-test's own `server/cloud-sync-api.ts`) — there is no `create()` overload for `ProjectType.Cloud`; a test always starts from `cloudSyncFlow.fetch(name)` with one of the three seeded names: `"My Collection R1"` (a Collection with one request, "New Request", body `foo=bar`), `"My Environment"` (an Environment-type workspace, Base Environment starts empty), `"My MCP Client"` (an MCP Client with one request). All three sit under a single local Project the app auto-creates on first launch ("Personal Workspace") — nothing needs pre-seeding on the local side, only the mock server's REST (`team-projects`) + GraphQL (`projects`) responses. A 4th fixture, **`"Ghost Collection"`**, is never meant to be `fetch()`'d — its own `rootDocumentId` is seeded to permanently disagree with the `wrk_*` key inside its one snapshot's `state[]`, simulating INS-2026's cross-workspace commit misalignment bug's end state, purely for exercising the dashboard-delete path below against a pre-existing "ghost" entry without reproducing the underlying race.
+Every workspace this domain touches is a **pre-seeded fixture** on `misc/mock-api.js`'s `/graphql` mock (ported from insomnia-smoke-test's own `server/cloud-sync-api.ts`) — there is no create method for `ProjectType.Cloud`; a test always starts from `cloudSyncFlow.fetch(name)` with one of the three seeded names: `"My Collection R1"` (a Collection with one request, "New Request", body `foo=bar`), `"My Environment"` (an Environment-type workspace, Base Environment starts empty), `"My MCP Client"` (an MCP Client with one request). All three sit under a single local Project the app auto-creates on first launch ("Personal Workspace") — nothing needs pre-seeding on the local side, only the mock server's REST (`team-projects`) + GraphQL (`projects`) responses. A 4th fixture, **`"Ghost Collection"`**, is never meant to be `fetch()`'d — its own `rootDocumentId` is seeded to permanently disagree with the `wrk_*` key inside its one snapshot's `state[]`, simulating INS-2026's cross-workspace commit misalignment bug's end state, purely for exercising the dashboard-delete path below against a pre-existing "ghost" entry without reproducing the underlying race.
 
 ### Project dashboard — unsynced-file delete (INS-2026 fix, PR #10477)
 
@@ -1464,7 +1469,7 @@ isSynced(name: string): Promise<SyncStatus | undefined>
 
 A `"local"` delete's workspace reliably reappears as an **unsynced dashboard card** in the project's grid view — but does NOT reliably reappear as an `unsynced-workspace-node-*` **sidebar row** while a different workspace is still the active/focused one (this needs more investigation; don't assert on the sidebar row reappearing without first confirming the dashboard view is what's on screen). Real example: `tests/cloud-sync/delete-workspace.spec.ts`, `test.afterAll(() => resetCloudSyncState())` (from `misc/fixtures.ts`) to undo the "full" delete's archive so later spec files still see the fixture workspace.
 
-**A brand-new collection's own local commit sequence runs synchronously inside its creation, before the "New Collection" dialog closes** — confirmed live: `workspaceFlow.create()` doesn't return until `switchAndCreateBackendProjectIfNotExist`/`status`/`stage`/`takeSnapshot` finish, well under 1 second, all inside one blocking, focus-trapped modal that no other click or IPC event can interrupt while it's open. So an INS-2026-style "unrelated UI action interleaved with a fresh collection's own creation" can't be driven through the UI at all on a stock build — and there's no test-only way to widen that window without a hook in the app's own source, which is out of scope here (see `SKILL.md`'s Scope Constraint).
+**A brand-new collection's own local commit sequence runs synchronously inside its creation, before the "New Collection" dialog closes** — confirmed live: `workspaceFlow.createCollection()` doesn't return until `switchAndCreateBackendProjectIfNotExist`/`status`/`stage`/`takeSnapshot` finish, well under 1 second, all inside one blocking, focus-trapped modal that no other click or IPC event can interrupt while it's open. So an INS-2026-style "unrelated UI action interleaved with a fresh collection's own creation" can't be driven through the UI at all on a stock build — and there's no test-only way to widen that window without a hook in the app's own source, which is out of scope here (see `SKILL.md`'s Scope Constraint).
 
 **`tests/cloud-sync/unrelated-action-during-collection-creation.spec.ts` covers the closest test-only-feasible variant instead**: it reuses `concurrent-workspace-creation-race.spec.ts`'s proven mechanism (stall `"My Environment"`'s `pull()` via `setCloudSyncGraphQLDelay(ms, projectId)` — stalling `push()` instead is already known to pass unconditionally, a false-positive) and layers a genuinely concurrent, unrelated mutation on top: while the pull is stalled, it renames that same workspace (`workspaceFlow.rename()`) **and** creates a brand-new sibling collection Y. Confirmed live: the rename survives intact, alongside the same invariants the race spec already checks (blob count grows once released, pull queries stay scoped to their own project id, neither snapshot gains the other's `key`).
 
