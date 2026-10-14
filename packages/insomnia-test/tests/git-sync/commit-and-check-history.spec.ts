@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from '../../enums/http-method';
 import { ProjectType } from '../../enums/project-types';
 import { HTTP_SERVER } from '../../misc/fixtures';
-import { expect, getServerCommits, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { getServerCommits, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 

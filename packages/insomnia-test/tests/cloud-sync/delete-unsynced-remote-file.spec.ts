@@ -2,16 +2,10 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
-import {
-  expect,
-  getCloudSyncProjectInfo,
-  HTTP_SERVER,
-  resetCloudSyncState,
-  setCloudSyncArchiveFailure,
-  test,
-} from "../../misc/fixtures";
+import { getCloudSyncProjectInfo, HTTP_SERVER, resetCloudSyncState, setCloudSyncArchiveFailure, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 
 test.afterAll(async () => {

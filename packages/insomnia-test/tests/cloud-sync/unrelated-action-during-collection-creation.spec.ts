@@ -2,16 +2,9 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import {
-  expect,
-  getCloudSyncGraphQLRequestLog,
-  MOCK_API_SERVER,
-  resetCloudSyncState,
-  SESSION_ID,
-  setCloudSyncGraphQLDelay,
-  test,
-} from "../../misc/fixtures";
+import { getCloudSyncGraphQLRequestLog, MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, setCloudSyncGraphQLDelay, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import type { Environment } from "../../models/environment";
 

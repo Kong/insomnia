@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
-import { expect, getServerBranches, getServerCommits, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { getServerBranches, getServerCommits, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 
