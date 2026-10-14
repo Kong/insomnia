@@ -36,15 +36,15 @@ test("Verify Template Tags in WebSocket Header and Message Are Resolved", async 
     contentType: ContentType.Plain,
     content: tag,
   });
-  const response = await webSocketRequestFlow.disconnect(request);
+  const responseView = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("x-tag: YWJj");
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) => event.data === "YWJj"),
+        (await responseView.events?.())?.some((event) => event.data === "YWJj"),
       { timeout: DEFAULT_TIMEOUT },
     )
     .toBeTruthy();

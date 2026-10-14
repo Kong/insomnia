@@ -38,10 +38,10 @@ test('Verify pre-request script manipulates request headers, query params and bo
       insomnia.request.body.update({ mode: 'raw', raw: '${rawContent}' });
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     data: rawContent,
     args: { added: addedParam, keepMe: updatedParam },
     headers: expect.objectContaining({
@@ -49,8 +49,8 @@ test('Verify pre-request script manipulates request headers, query params and bo
       'x-upsert': upsertedValue,
     }),
   });
-  expect((response.body as { args: Record<string, string>; headers: object }).args).not.toHaveProperty('removeMe');
-  expect((response.body as { args: Record<string, string>; headers: object }).headers).not.toHaveProperty('x-remove');
+  expect((responseView.body as { args: Record<string, string>; headers: object }).args).not.toHaveProperty('removeMe');
+  expect((responseView.body as { args: Record<string, string>; headers: object }).headers).not.toHaveProperty('x-remove');
 });
 
 test('Verify pre-request script sets bearer auth via insomnia.request.auth', async ({ user }) => {
@@ -75,10 +75,10 @@ test('Verify pre-request script sets bearer auth via insomnia.request.auth', asy
       }, 'bearer');
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       authorization: `${prefix} ${token}`,
     }),
@@ -107,11 +107,11 @@ test('Verify pre-request script sets basic auth via insomnia.request.auth', asyn
       }, 'basic');
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   const expectedEncodedCredentials = Buffer.from(`${username}:${password}`, 'utf8').toString('base64');
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       authorization: `Basic ${expectedEncodedCredentials}`,
     }),

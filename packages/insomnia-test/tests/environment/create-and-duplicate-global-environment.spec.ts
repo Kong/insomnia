@@ -51,10 +51,10 @@ test("Verify creating and duplicating a private global environment", async ({
     method: HttpMethod.Post,
     url: `${HTTP_SERVER}/post?value={{ globalVar }}`,
   } satisfies HttpRequest);
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   expect(duplicatedEnvironment.id).not.toBe(environment.id);
   expect(duplicatedEnvironment.name).toBe(duplicatedName);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({ args: { value: variableValue } });
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({ args: { value: variableValue } });
 });

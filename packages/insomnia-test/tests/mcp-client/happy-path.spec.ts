@@ -50,7 +50,7 @@ test("Verify Create MCP Client", async ({ user }) => {
     events: { data: string; preview?: unknown }[] | undefined,
   ) => events?.find((event) => event.data === "tools/call")?.preview;
 
-  const response = await mcpClientFlow.callTool(
+  const responseView = await mcpClientFlow.callTool(
     mcpClient,
     tool,
     args,
@@ -61,7 +61,7 @@ test("Verify Create MCP Client", async ({ user }) => {
     15_000,
   );
   await expect
-    .poll(async () => findToolCallPreview(await response.events?.()), {
+    .poll(async () => findToolCallPreview(await responseView.events?.()), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toEqual(expectedToolCallResult);

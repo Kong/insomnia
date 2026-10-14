@@ -55,13 +55,13 @@ test("Verify Resource Owner Password Credentials grant fetches tokens with no po
     )
   ).json();
 
-  const response = await httpRequestFlow.send(request);
-  const body = response.body as { authorization?: string };
+  const responseView = await httpRequestFlow.send(request);
+  const body = responseView.body as { authorization?: string };
 
   expect(tokens.accessToken).not.toBe("");
   expect(tokens.refreshToken).not.toBe("");
   expect(windowsAfterFetch).toBe(windowsBeforeFetch);
   expect(lastTokenRequest.grantType).toBe("password");
-  expect(response.statusCode).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
 });

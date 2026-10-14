@@ -32,8 +32,8 @@ test("Import WSDL by Clipboard", async ({ user }) => {
     text: soapBody,
   });
 
-  const response = await httpRequestFlow.send(request!);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toContain("AddResult");
-  expect(response.body).toContain("9");
+  const responseView = await httpRequestFlow.send(request!);
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toContain("AddResult");
+  expect(responseView.body).toContain("9");
 });

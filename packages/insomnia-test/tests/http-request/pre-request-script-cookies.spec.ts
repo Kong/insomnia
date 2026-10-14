@@ -32,10 +32,10 @@ test('Verify pre-request script manages cookies via insomnia.cookies.jar() and t
       await call(jar.unset, '${HTTP_SERVER}', '${unsetName}');
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toEqual({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toEqual({
     cookies: { [keptName]: keptValue, [objectName]: objectValue },
   });
 });

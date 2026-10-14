@@ -33,12 +33,12 @@ test("Verify Socket.IO Request Over a TLS Connection", async ({ user }) => {
     url: SOCKET_SERVER_WSS,
   });
   await socketIoRequestFlow.connect(request);
-  const response = await socketIoRequestFlow.disconnect(request);
+  const responseView = await socketIoRequestFlow.disconnect(request);
 
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) =>
+        (await responseView.events?.())?.some((event) =>
           event.data.includes("Connected successfully"),
         ),
       { timeout: DEFAULT_TIMEOUT },

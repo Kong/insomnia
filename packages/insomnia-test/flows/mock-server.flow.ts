@@ -5,7 +5,7 @@ import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { MockRoute, MockRouteHistoryEntry } from "../models/mock-route";
 import { MockServer } from "../models/mock-server";
 import type { Project } from "../models/project";
-import type { Response } from "../models/response";
+import type { ResponseView } from "../models/response";
 import { BaseFlow } from "./base.flow";
 
 export class MockServerFlow extends BaseFlow {
@@ -216,9 +216,9 @@ export class MockServerFlow extends BaseFlow {
    * Opens `route`, clicks "Test" and reads the response the mock server
    * answered with.
    * @param route - The route (with `id`) to test
-   * @returns The response shown in the response pane
+   * @returns The response view shown in the response pane
    */
-  async test(route: MockRoute): Promise<Response> {
+  async test(route: MockRoute): Promise<ResponseView> {
     const mockServerPage = this.pageManager.mockServerPage;
     const responsePage = this.pageManager.responsePage;
 

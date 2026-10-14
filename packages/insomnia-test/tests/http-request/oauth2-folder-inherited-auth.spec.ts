@@ -49,10 +49,10 @@ test("Verify a request set to Inherit from parent picks up its folder's OAuth 2.
   });
   await httpRequestPage.auth.setAuthType(AuthType.Inherit);
 
-  const response = await httpRequestFlow.send(request);
-  const body = response.body as { authorization?: string };
+  const responseView = await httpRequestFlow.send(request);
+  const body = responseView.body as { authorization?: string };
 
   expect(folderTokens.accessToken).not.toBe("");
-  expect(response.statusCode).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(body.authorization).toBe(`Bearer ${folderTokens.accessToken}`);
 });

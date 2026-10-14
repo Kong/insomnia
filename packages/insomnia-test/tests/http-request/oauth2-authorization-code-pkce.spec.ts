@@ -53,15 +53,15 @@ for (const pkceMethod of ["S256", "plain"] as const) {
       )
     ).json();
 
-    const response = await httpRequestFlow.send(request);
-    const body = response.body as { authorization?: string };
+    const responseView = await httpRequestFlow.send(request);
+    const body = responseView.body as { authorization?: string };
 
     expect(tokens.accessToken).not.toBe("");
     expect(lastTokenRequest.grantType).toBe("authorization_code");
     expect(lastTokenRequest.pkceUsed).toBe(true);
     expect(lastTokenRequest.pkceMethod).toBe(pkceMethod);
     expect(lastTokenRequest.pkceVerified).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(responseView.statusCode).toBe(200);
     expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
   });
 }

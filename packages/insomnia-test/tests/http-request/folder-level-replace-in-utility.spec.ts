@@ -46,12 +46,12 @@ test("Verify a folder-level script wrapping insomnia.variables.replaceIn resolve
       console.log(typeof firstname, firstname);
     `,
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toMatch(/log: string \S+/);
-  const consoleText = await response.console?.();
+  const consoleText = await responseView.console?.();
   expect(consoleText).not.toContain("Promise");
   expect(consoleText).not.toContain("undefined");
 });

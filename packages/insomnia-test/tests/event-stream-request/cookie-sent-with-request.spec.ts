@@ -39,9 +39,9 @@ test("Verify Linked Cookie Is Sent With Event Stream Request", async ({
     },
   ]);
 
-  const response = await eventStreamRequestFlow.send(request);
+  const responseView = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Enable cookie sending with jar of 1 cookie");
 });

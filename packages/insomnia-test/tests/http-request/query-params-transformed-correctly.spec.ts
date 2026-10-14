@@ -62,10 +62,10 @@ test("Verify query params from the URL, template tags, and the Parameters tab ar
       { name: "chinese", value: chineseValue },
     ],
   });
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     args: {
       key: ["fromUrl", fromUrlValue, fromEditorValue, "/"],
       space: spaceValue,

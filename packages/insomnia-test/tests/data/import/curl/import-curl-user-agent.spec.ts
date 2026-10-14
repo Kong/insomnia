@@ -33,11 +33,11 @@ test("Import HTTP Request by Curl Command: -A Shorthand Is Ignored, Default User
     method: HttpMethod.Post,
     url,
   } satisfies HttpRequest;
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "user-agent": expect.stringMatching(/^insomnia\//),
     }),
@@ -67,11 +67,11 @@ test("Import HTTP Request by Curl Command With Explicit -H User-Agent Header Is 
     method: HttpMethod.Post,
     url,
   } satisfies HttpRequest;
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({ "user-agent": explicitAgent }),
   });
 });

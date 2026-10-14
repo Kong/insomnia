@@ -44,9 +44,9 @@ test("Verify __Host- Prefixed Cookie Is Only Sent When Marked HostOnly", async (
   };
   await cookieFlow.link(request, [hostOnlyCookie, nonHostOnlyCookie]);
 
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
-  const { cookies } = response.body as { cookies: Record<string, string> };
+  const { cookies } = responseView.body as { cookies: Record<string, string> };
   expect(cookies).toMatchObject({
     [hostOnlyCookie.key]: hostOnlyCookie.value,
   });
