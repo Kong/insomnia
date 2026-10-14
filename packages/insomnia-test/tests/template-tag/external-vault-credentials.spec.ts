@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 import {
   AWSCredentialType,
   HashiCorpCredentialType,
@@ -8,7 +9,7 @@ import {
 import { ContentType } from "../../enums/content-type";
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import type { HttpRequest } from "../../models/http-request";
 import { Project } from "../../models/project";
