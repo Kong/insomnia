@@ -461,19 +461,6 @@
                     "name": {
                       "type": "string"
                     },
-                    "requestId": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "code": {
-                      "type": "string"
-                    },
                     "meta": {
                       "type": "object",
                       "properties": {
@@ -499,6 +486,19 @@
                       "required": [
                         "id"
                       ]
+                    },
+                    "requestId": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "code": {
+                      "type": "string"
                     }
                   }
                 }
@@ -1071,19 +1071,6 @@
                     "name": {
                       "type": "string"
                     },
-                    "requestId": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "code": {
-                      "type": "string"
-                    },
                     "meta": {
                       "type": "object",
                       "properties": {
@@ -1109,6 +1096,19 @@
                       "required": [
                         "id"
                       ]
+                    },
+                    "requestId": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "code": {
+                      "type": "string"
                     }
                   }
                 }
@@ -1857,16 +1857,6 @@
                           "type": "string",
                           "const": "hawk"
                         },
-                        "disabled": {
-                          "type": "boolean"
-                        },
-                        "algorithm": {
-                          "type": "string",
-                          "enum": [
-                            "sha1",
-                            "sha256"
-                          ]
-                        },
                         "id": {
                           "type": "string"
                         },
@@ -1878,13 +1868,23 @@
                         },
                         "validatePayload": {
                           "type": "boolean"
+                        },
+                        "algorithm": {
+                          "type": "string",
+                          "enum": [
+                            "sha1",
+                            "sha256"
+                          ]
+                        },
+                        "disabled": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
                         "type",
-                        "algorithm",
                         "id",
-                        "key"
+                        "key",
+                        "algorithm"
                       ]
                     },
                     {
@@ -2883,16 +2883,6 @@
                             "type": "string",
                             "const": "hawk"
                           },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "algorithm": {
-                            "type": "string",
-                            "enum": [
-                              "sha1",
-                              "sha256"
-                            ]
-                          },
                           "id": {
                             "type": "string"
                           },
@@ -2904,13 +2894,23 @@
                           },
                           "validatePayload": {
                             "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
                           "type",
-                          "algorithm",
                           "id",
-                          "key"
+                          "key",
+                          "algorithm"
                         ]
                       },
                       {
@@ -3497,16 +3497,6 @@
                             "type": "string",
                             "const": "hawk"
                           },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "algorithm": {
-                            "type": "string",
-                            "enum": [
-                              "sha1",
-                              "sha256"
-                            ]
-                          },
                           "id": {
                             "type": "string"
                           },
@@ -3518,13 +3508,23 @@
                           },
                           "validatePayload": {
                             "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
                           "type",
-                          "algorithm",
                           "id",
-                          "key"
+                          "key",
+                          "algorithm"
                         ]
                       },
                       {
@@ -4114,16 +4114,6 @@
                             "type": "string",
                             "const": "hawk"
                           },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "algorithm": {
-                            "type": "string",
-                            "enum": [
-                              "sha1",
-                              "sha256"
-                            ]
-                          },
                           "id": {
                             "type": "string"
                           },
@@ -4135,13 +4125,23 @@
                           },
                           "validatePayload": {
                             "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
                           "type",
-                          "algorithm",
                           "id",
-                          "key"
+                          "key",
+                          "algorithm"
                         ]
                       },
                       {
@@ -4710,16 +4710,6 @@
                             "type": "string",
                             "const": "hawk"
                           },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "algorithm": {
-                            "type": "string",
-                            "enum": [
-                              "sha1",
-                              "sha256"
-                            ]
-                          },
                           "id": {
                             "type": "string"
                           },
@@ -4731,13 +4721,23 @@
                           },
                           "validatePayload": {
                             "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
                           "type",
-                          "algorithm",
                           "id",
-                          "key"
+                          "key",
+                          "algorithm"
                         ]
                       },
                       {
