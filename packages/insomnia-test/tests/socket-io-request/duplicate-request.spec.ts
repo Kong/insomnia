@@ -12,10 +12,10 @@ test("Verify Duplicated Socket.IO Request Keeps Url and Message", async ({
 }) => {
   const { socketIoRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -26,7 +26,7 @@ test("Verify Duplicated Socket.IO Request Keeps Url and Message", async ({
     message,
   });
   const duplicatedName = `${request.name} (Copy)`;
-  await workspaceFlow.duplicate(request, duplicatedName);
+  await workspaceFlow.duplicateRequest(request, duplicatedName);
 
   const duplicated = await socketIoRequestFlow.get(duplicatedName);
 

@@ -17,8 +17,8 @@ test('Verify Cancelling an In-Flight GraphQL Request Shows a Cancellation Messag
   const { graphqlRequestFlow, workspaceFlow } = user.flowManager;
   const { graphqlRequestPage, responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const slowRequest = await graphqlRequestFlow.create(collection, {
     name: faker.string.alphanumeric(10),

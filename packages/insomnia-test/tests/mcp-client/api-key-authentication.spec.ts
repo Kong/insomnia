@@ -9,7 +9,7 @@ test('Verify MCP Client Sends the API Key Header Only When Authentication Is Con
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
 
   const apiKeyName = `x-${faker.string.alphanumeric(8).toLowerCase()}`;
   const apiKeyValue = faker.string.alphanumeric(16);

@@ -11,7 +11,7 @@ test('Verify MCP Client Sends the Basic Authentication Header Only When Authenti
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
 
   const username = faker.string.alphanumeric(8);
   const password = faker.string.alphanumeric(12);

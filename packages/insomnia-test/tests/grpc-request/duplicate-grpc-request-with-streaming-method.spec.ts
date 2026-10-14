@@ -10,10 +10,10 @@ test("Verify Duplicating a gRPC Request With a Bidirectional Streaming Method Se
 }) => {
   const { grpcRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -24,7 +24,7 @@ test("Verify Duplicating a gRPC Request With a Bidirectional Streaming Method Se
     method: "/hello.HelloService/BidiHello",
   });
   const duplicatedName = `${request.name} (Copy)`;
-  await workspaceFlow.duplicate(request, duplicatedName);
+  await workspaceFlow.duplicateRequest(request, duplicatedName);
 
   const greetingName = faker.person.firstName();
   const duplicated = await grpcRequestFlow.get(duplicatedName);

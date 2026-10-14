@@ -9,8 +9,8 @@ import { Project } from '../../models/project';
 test('Verify Event Stream Request Sends the API Key Header Until Authentication Is Set to None', async ({ user }) => {
   const { eventStreamRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const apiKeyName = `X-${faker.string.alphanumeric(8)}`;
   const apiKeyValue = faker.string.alphanumeric(16);

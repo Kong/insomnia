@@ -15,10 +15,10 @@ test("Verify Socket.IO Request Over a TLS Connection", async ({ user }) => {
   const { certificatesFlow, socketIoRequestFlow, workspaceFlow } =
     user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
