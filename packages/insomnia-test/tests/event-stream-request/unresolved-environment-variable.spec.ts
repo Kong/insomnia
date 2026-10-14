@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { EVENT_STREAM_SERVER, expect, test } from "../../misc/fixtures";
+import { EVENT_STREAM_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EnvironmentKvPairDataType } from "../../models/environment";
 import { EventStreamMethod } from "../../models/event-stream-request";

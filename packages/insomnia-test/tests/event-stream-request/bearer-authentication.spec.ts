@@ -1,12 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import {
-  DEFAULT_TIMEOUT,
-  EVENT_STREAM_SERVER,
-  expect,
-  test,
-} from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EventStreamMethod } from "../../models/event-stream-request";
 import { Project } from "../../models/project";

@@ -1,15 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  MCP_SERVER,
-  OAUTH2_CLIENT_ID,
-  OAUTH2_CLIENT_SECRET,
-  OAUTH2_SERVER,
-  test,
-} from '../../misc/fixtures';
+import { DEFAULT_TIMEOUT, MCP_SERVER, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from '../../misc/fixtures';
 import { McpClient } from '../../models/mcp-client';
 import { Project } from '../../models/project';
 
