@@ -150,7 +150,7 @@ const server = http.createServer((req, res) => {
   handle(req, res).catch(error => {
     console.error('[mock-bin-server]', error);
     if (!res.headersSent) {
-      send(res, 500, String(error && error.message));
+      send(res, 500, 'internal error');
     } else {
       res.end();
     }
