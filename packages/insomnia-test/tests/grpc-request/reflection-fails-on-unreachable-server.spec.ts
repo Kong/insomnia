@@ -13,10 +13,10 @@ test("Verify gRPC Server Reflection Fails Against an Unreachable Server", async 
   const { grpcRequestFlow, workspaceFlow } = user.flowManager;
   const { grpcRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

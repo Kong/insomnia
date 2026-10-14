@@ -20,10 +20,10 @@ test("Verify Disconnecting an Open Event Stream Stops It Early", async ({
   const { eventStreamRequestFlow, workspaceFlow } = user.flowManager;
   const { eventStreamRequestPage, responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

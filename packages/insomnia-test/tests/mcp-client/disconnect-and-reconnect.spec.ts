@@ -11,7 +11,7 @@ test("Verify Disconnecting an MCP Client Closes the Connection and It Can Reconn
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

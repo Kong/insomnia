@@ -17,11 +17,11 @@ test("Verify Environment Variable in MCP Client URL Is Resolved", async ({
   const { environmentFlow, mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {

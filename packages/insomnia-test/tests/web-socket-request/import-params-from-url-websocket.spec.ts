@@ -11,10 +11,10 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
   const { webSocketRequestFlow, workspaceFlow } = user.flowManager;
   const { webSocketRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

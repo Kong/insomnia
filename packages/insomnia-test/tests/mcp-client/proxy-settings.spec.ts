@@ -75,7 +75,7 @@ test("Verify MCP Clients Are Routed Through the Preferences Proxy", async ({
 
   const proxy = await startRecordingProxy();
   try {
-    const project = await workspaceFlow.create(
+    const project = await workspaceFlow.createProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Local),
     );
 

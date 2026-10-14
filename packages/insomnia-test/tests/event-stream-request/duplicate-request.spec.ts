@@ -16,10 +16,10 @@ test("Verify Duplicated Event Stream Request Keeps Url, Method and Headers", asy
 }) => {
   const { eventStreamRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -32,7 +32,7 @@ test("Verify Duplicated Event Stream Request Keeps Url, Method and Headers", asy
     headers: [{ name: "X-Custom", value: headerValue }],
   });
   const duplicatedName = `${request.name} (Copy)`;
-  await workspaceFlow.duplicate(request, duplicatedName);
+  await workspaceFlow.duplicateRequest(request, duplicatedName);
 
   const duplicated = await eventStreamRequestFlow.get(duplicatedName);
   const responseView = await eventStreamRequestFlow.send(duplicated!);

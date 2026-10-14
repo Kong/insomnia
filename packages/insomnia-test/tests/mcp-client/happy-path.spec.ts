@@ -28,7 +28,7 @@ test("Verify Create MCP Client", async ({ user }) => {
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage, workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

@@ -13,10 +13,10 @@ const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
 test("Verify Linked Cookie Is Sent With GraphQL Request", async ({ user }) => {
   const { cookieFlow, graphqlRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

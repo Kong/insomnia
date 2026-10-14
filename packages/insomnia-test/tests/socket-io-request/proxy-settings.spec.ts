@@ -17,10 +17,10 @@ test("Verify Enabling an Unreachable Proxy Fails the Socket.IO Connection", asyn
     user.flowManager;
   const { responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

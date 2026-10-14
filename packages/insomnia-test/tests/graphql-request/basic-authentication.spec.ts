@@ -15,8 +15,8 @@ test('Verify GraphQL Request Sends the Basic Authentication Header Until Authent
 }) => {
   const { graphqlRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const username = faker.string.alphanumeric(8);
   const password = faker.string.alphanumeric(12);

@@ -17,17 +17,17 @@ test("Verify GraphQL Request Renders a Numeric Environment Variable", async ({
   const { environmentFlow, graphqlRequestFlow, workspaceFlow } =
     user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
 
   const episodeId = faker.number.int({ min: 1, max: 3 });
   const variableName = faker.string.alpha(8);
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
