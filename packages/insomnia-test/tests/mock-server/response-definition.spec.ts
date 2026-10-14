@@ -12,7 +12,7 @@ test("Verify Mock Route Response Definition Is Returned By Test", async ({
 }) => {
   const { mockServerFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

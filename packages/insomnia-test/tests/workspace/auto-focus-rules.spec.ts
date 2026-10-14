@@ -13,10 +13,10 @@ test("Verify adding a query parameter or header focuses the new row's Name cell"
   const { workspaceFlow } = user.flowManager;
   const { workspacePage, httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -42,12 +42,12 @@ test("Verify opening a brand-new empty environment focuses its key/value editor'
   const { workspaceFlow, environmentFlow } = user.flowManager;
   const { environmentPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const environmentName = faker.string.alphanumeric(10);
 
-  await environmentFlow.create(project, {
+  await environmentFlow.createBaseEnvironment(project, {
     name: environmentName,
     kvPairData: [],
   });

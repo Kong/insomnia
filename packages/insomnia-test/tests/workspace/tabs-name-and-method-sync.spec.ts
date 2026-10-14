@@ -12,10 +12,10 @@ test("Verify a tab's label and method icon stay in sync with the underlying requ
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { workspacePage, httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -27,7 +27,7 @@ test("Verify a tab's label and method icon stay in sync with the underlying requ
   await httpRequestFlow.get(request.name);
 
   const renamedName = faker.string.alphanumeric(10);
-  const renamedRequest = await workspaceFlow.rename(request, renamedName);
+  const renamedRequest = await workspaceFlow.renameRequest(request, renamedName);
   const namesAfterRename = await workspacePage.getTabNames();
 
   await httpRequestPage.setMethod(HttpMethod.Post);

@@ -13,9 +13,9 @@ test('Verify Runner Bail Option Stops the Run at the First Request Error', async
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { runnerPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const continuingCollection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
-  const bailingCollection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const continuingCollection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
+  const bailingCollection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const [first, broken, last] = Array.from({ length: 3 }, () => faker.string.alphanumeric(10));
   for (const collection of [continuingCollection, bailingCollection]) {

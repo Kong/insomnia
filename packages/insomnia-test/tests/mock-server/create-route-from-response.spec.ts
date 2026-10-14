@@ -17,14 +17,14 @@ test("Verify Creating A Mock Route From A Request Response", async ({
 }) => {
   const { httpRequestFlow, mockServerFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const server = await mockServerFlow.create(
     project,
     new MockServer(faker.string.alphanumeric(10), MOCK_BIN_SERVER),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

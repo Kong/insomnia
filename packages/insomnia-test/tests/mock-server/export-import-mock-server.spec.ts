@@ -15,7 +15,7 @@ test("Verify Exported Mock Server Can Be Imported Into Another Project", async (
   const { importFlow, mockServerFlow, workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const server = await mockServerFlow.create(
@@ -33,7 +33,7 @@ test("Verify Exported Mock Server Can Be Imported Into Another Project", async (
   await mockServerFlow.export(server, filePath);
   const exported = await waitForExportedFile(filePath);
 
-  const targetProject = await workspaceFlow.create(
+  const targetProject = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   await importFlow.importFile(targetProject, filePath);

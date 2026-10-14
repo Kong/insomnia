@@ -20,7 +20,7 @@ test("Verify Unit Test Suite Run Results And Suite/Test Renaming", async ({
 }) => {
   const { workspaceFlow, importFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

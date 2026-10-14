@@ -13,10 +13,10 @@ test("Verify the Docs editor keeps undo history across a Write/Preview toggle", 
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -45,10 +45,10 @@ test("Verify a request script keeps undo history across a Pre-request/After-resp
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

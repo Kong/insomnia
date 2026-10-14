@@ -9,7 +9,7 @@ test("Verify Create Self-Hosted Mock Server", async ({ user }) => {
   const { mockServerFlow, workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

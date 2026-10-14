@@ -13,8 +13,8 @@ const requestCount = 3;
 test('Verify Runner Delay Option Waits Between Requests', async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   for (let i = 0; i < requestCount; i++) {
     await httpRequestFlow.create(collection, {

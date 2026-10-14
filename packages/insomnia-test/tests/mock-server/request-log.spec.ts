@@ -9,7 +9,7 @@ import { Project } from "../../models/project";
 test("Verify Mock Route History Logs Each Tested Request", async ({ user }) => {
   const { mockServerFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

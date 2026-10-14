@@ -14,10 +14,10 @@ test("Verify typing into the URL bar keeps focus and Cmd/Ctrl+Z undoes in place"
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -51,10 +51,10 @@ test("Verify importing query params from the URL bar stays undoable", async ({
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
   const { httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -84,18 +84,18 @@ test("Verify switching environment refreshes the URL bar's rendered variable pre
   const valueA = faker.string.alphanumeric(10);
   const valueB = faker.string.alphanumeric(10);
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
-  const baseEnvironment = await environmentFlow.create(project, {
+  const baseEnvironment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [],
   });
-  const environmentA = await environmentFlow.create(baseEnvironment, {
+  const environmentA = await environmentFlow.createSubEnvironment(baseEnvironment, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
@@ -107,7 +107,7 @@ test("Verify switching environment refreshes the URL bar's rendered variable pre
       },
     ],
   });
-  const environmentB = await environmentFlow.create(baseEnvironment, {
+  const environmentB = await environmentFlow.createSubEnvironment(baseEnvironment, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {
