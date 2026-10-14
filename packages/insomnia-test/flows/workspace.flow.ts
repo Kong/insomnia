@@ -22,8 +22,26 @@ import type { PageManager } from '../pages/page-manager';
 import type { TreeNode, UnitTestResultRow } from '../pages/workspace.page';
 import { BaseFlow } from './base.flow';
 import type { FlowContext } from './flow-context';
-import type { FlowManager } from './flow-manager';
 import type { PreferencesFlow } from './preferences.flow';
+
+interface RequestLookup<T> {
+  get(item: { name: string; id?: string }): Promise<T | undefined>;
+}
+
+/**
+ * The per-protocol request flows `WorkspaceFlow` resolves tree nodes
+ * through. `FlowManager` satisfies it structurally; depending on this shape
+ * instead of `FlowManager` keeps the manager (which imports every flow)
+ * from forming an import cycle with `WorkspaceFlow`.
+ */
+export interface RequestFlows {
+  readonly graphqlRequestFlow: RequestLookup<GraphQLRequest>;
+  readonly grpcRequestFlow: RequestLookup<GrpcRequest>;
+  readonly eventStreamRequestFlow: RequestLookup<EventStreamRequest>;
+  readonly socketIoRequestFlow: RequestLookup<SocketIORequest>;
+  readonly webSocketRequestFlow: RequestLookup<WebSocketRequest>;
+  readonly httpRequestFlow: RequestLookup<HttpRequest>;
+}
 
 export type WorkspaceItem =
   | (Project & { kind: 'project' })
@@ -47,12 +65,14 @@ export class WorkspaceFlow extends BaseFlow {
    * @param flowManager - The owning FlowManager
    * @param pageManager - The shared PageManager
    * @param preferencesFlow - Used to enable settings the workspace flows depend on
+   * @param requestFlows - Used to resolve a request tree node to its typed request model
    * @param gitRepoUrl - The default repo URL to clone from when creating a Git Sync project without an explicit `repo.uri`; injected by the `git-fixtures` `user` fixture
    */
   constructor(
     flowManager: FlowContext,
     pageManager: PageManager,
     private readonly preferencesFlow: PreferencesFlow,
+    private readonly requestFlows: RequestFlows,
     private readonly gitRepoUrl?: string,
   ) {
     super(flowManager, pageManager);
@@ -1032,7 +1052,7 @@ export class WorkspaceFlow extends BaseFlow {
     }
 
     if (node.type === TreeNodeType.Request) {
-      const flows = this.flowManager as FlowManager;
+      const flows = this.requestFlows;
       const label = await workspace.getRequestTypeLabel(node);
       switch (label) {
         case 'GQL': {
