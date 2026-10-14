@@ -30,10 +30,10 @@ test("Verify GraphQL Request Over a TLS Connection", async ({ user }) => {
     url: `${HTTP_SERVER_HTTPS}/post`,
     body,
   });
-  const response = await graphqlRequestFlow.send(request);
+  const responseView = await graphqlRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  const sent = JSON.parse((response.body as { data: string }).data) as {
+  expect(responseView.statusCode).toBe(200);
+  const sent = JSON.parse((responseView.body as { data: string }).data) as {
     query: string;
   };
   expect(sent.query.replace(/\s+/g, " ").trim()).toBe(query);

@@ -24,26 +24,26 @@ test("Verify Create WebSocket Request", async ({ user }) => {
     url: webSocketUrl,
   });
   await webSocketRequestFlow.send(request);
-  const response = await webSocketRequestFlow.disconnect(request, async () => {
+  const responseView = await webSocketRequestFlow.disconnect(request, async () => {
     const events = await responsePage.getEvents();
     expect(
       events?.some((event) => event.data.includes("Request served by")),
     ).toBeTruthy();
   });
 
-  expect(response.headers).toEqual(
+  expect(responseView.headers).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ name: "upgrade", value: "websocket" }),
       expect.objectContaining({ name: "connection", value: "Upgrade" }),
     ]),
   );
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("101 Switching Protocols");
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) =>
+        (await responseView.events?.())?.some((event) =>
           event.data.includes("Connected successfully"),
         ),
       { timeout: DEFAULT_TIMEOUT },
@@ -52,7 +52,7 @@ test("Verify Create WebSocket Request", async ({ user }) => {
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) =>
+        (await responseView.events?.())?.some((event) =>
           event.data.includes("Disconnected"),
         ),
       { timeout: DEFAULT_TIMEOUT },

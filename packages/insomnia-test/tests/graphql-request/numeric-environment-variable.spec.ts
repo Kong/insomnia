@@ -48,10 +48,10 @@ test("Verify GraphQL Request Renders a Numeric Environment Variable", async ({
     url: url,
     body: { mimeType: ContentType.JSON, text: bodyText },
   });
-  const response = await graphqlRequestFlow.send(request);
+  const responseView = await graphqlRequestFlow.send(request);
 
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     data: { episode: { id: episodeId } },
   });
 });

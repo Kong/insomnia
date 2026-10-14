@@ -33,10 +33,10 @@ test("Verify Create GraphQL Request", async ({ user }) => {
     url: url,
     body: body,
   });
-  const response = await graphqlRequestFlow.send(request);
-  expect(response.statusCode).toBe(200);
-  expect(response.statusMessage).toBe("OK");
-  expect(response.headers).toEqual(
+  const responseView = await graphqlRequestFlow.send(request);
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusMessage).toBe("OK");
+  expect(responseView.headers).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
         name: "content-type",
@@ -44,7 +44,7 @@ test("Verify Create GraphQL Request", async ({ user }) => {
       }),
     ]),
   );
-  expect(response.body).toMatchObject({
+  expect(responseView.body).toMatchObject({
     data: {
       characters: {
         results: expect.arrayContaining(

@@ -32,7 +32,7 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
   const updatedUrl = await webSocketRequestPage.getUrl();
   const updatedParams = await webSocketRequestPage.getParams();
   await webSocketRequestFlow.send(request);
-  const response = await webSocketRequestFlow.disconnect(request);
+  const responseView = await webSocketRequestFlow.disconnect(request);
 
   expect(updatedUrl).toBe(baseUrl);
   expect(updatedParams).toEqual(
@@ -42,10 +42,10 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
     ]),
   );
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("101 Switching Protocols");
   await expect
-    .poll(() => response.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(
       `Preparing request to ${baseUrl}?${paramName1}=${paramValue1}&${paramName2}=${paramValue2}`,
     );

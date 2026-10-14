@@ -35,12 +35,12 @@ test("Verify Duplicated GraphQL Request Keeps Url, Body and Headers", async ({
   await workspaceFlow.duplicate(request, duplicatedName);
 
   const duplicated = await graphqlRequestFlow.get(duplicatedName);
-  const response = await graphqlRequestFlow.send(duplicated!);
+  const responseView = await graphqlRequestFlow.send(duplicated!);
 
   expect(duplicated).toBeTruthy();
   expect(duplicated!.url).toBe(request.url);
   expect(duplicated!.body!.text).toBe(request.body!.text);
-  expect(response.body).toMatchObject({
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({ "x-custom": headerValue }),
   });
 });

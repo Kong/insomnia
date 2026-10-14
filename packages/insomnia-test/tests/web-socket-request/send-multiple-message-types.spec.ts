@@ -53,11 +53,11 @@ test("Send Multiple Messages of Different Body Types Over an Open WebSocket Conn
       ).toBeTruthy();
     },
   );
-  const response = await webSocketRequestFlow.disconnect(request);
+  const responseView = await webSocketRequestFlow.disconnect(request);
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.filter((event) =>
+        (await responseView.events?.())?.filter((event) =>
           event.data.includes(jsonMessage),
         ).length,
       { timeout: DEFAULT_TIMEOUT },
@@ -66,7 +66,7 @@ test("Send Multiple Messages of Different Body Types Over an Open WebSocket Conn
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.filter((event) =>
+        (await responseView.events?.())?.filter((event) =>
           event.data.includes(rawMessage),
         ).length,
       { timeout: DEFAULT_TIMEOUT },
@@ -75,7 +75,7 @@ test("Send Multiple Messages of Different Body Types Over an Open WebSocket Conn
   await expect
     .poll(
       async () =>
-        (await response.events?.())?.some((event) =>
+        (await responseView.events?.())?.some((event) =>
           event.data.includes("Disconnected"),
         ),
       { timeout: DEFAULT_TIMEOUT },
