@@ -15,7 +15,11 @@ export interface ResponseTestResult {
   error?: string;
 }
 
-export type Response = Partial<
+/**
+ * What the response pane currently shows: the response itself plus debug
+ * info (console, stream events, script test results) read lazily from the UI.
+ */
+export type ResponseView = Partial<
   Pick<
     AppResponse,
     "statusCode" | "statusMessage" | "elapsedTime" | "bytesContent" | "headers"

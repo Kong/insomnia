@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 
 import { RequestState } from '../enums/request-state';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../misc/constants';
-import type { Response, ResponseHeader, ResponseTestResult, StreamEvent } from '../models/response';
+import type { ResponseView, ResponseHeader, ResponseTestResult, StreamEvent } from '../models/response';
 import { BasePage } from './base.page';
 
 export type ResponseTab = 'preview' | 'headers' | 'cookies' | 'test-results' | 'mock-response' | 'timeline' | 'events';
@@ -40,9 +40,9 @@ export class ResponsePage extends BasePage {
    * Assembles the full response state currently shown in the response
    * pane — summary stats, streamed events, headers, console log, and
    * body.
-   * @returns The complete response data
+   * @returns The complete response view (response data plus console, events and test results)
    */
-  async get(): Promise<Response> {
+  async get(): Promise<ResponseView> {
     return {
       ...(await this.getSummary()),
       headers: (await this.getHeaders()) ?? [],
@@ -288,7 +288,7 @@ export class ResponsePage extends BasePage {
    * tags.
    * @returns The response summary fields
    */
-  private async getSummary(): Promise<Pick<Response, 'statusCode' | 'statusMessage' | 'elapsedTime' | 'bytesContent'>> {
+  private async getSummary(): Promise<Pick<ResponseView, 'statusCode' | 'statusMessage' | 'elapsedTime' | 'bytesContent'>> {
     const status = await this.getStatus();
     return {
       statusCode: status?.code,
