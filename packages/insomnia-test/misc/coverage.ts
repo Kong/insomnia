@@ -66,7 +66,7 @@ function getReport() {
         // multi-shard merge of raw V8 coverage has a bug where merging a
         // script's coverage across shards with very different coverage
         // levels can produce a result *lower* than any individual shard —
-        // see `misc/merge-coverage-union.js`, which reads this file from
+        // see `misc/merge-coverage-union.ts`, which reads this file from
         // every shard and unions them itself instead of relying on that
         // merge). Must NOT be written inside the "raw" report's own
         // `raw/` output dir: that report unconditionally deletes and

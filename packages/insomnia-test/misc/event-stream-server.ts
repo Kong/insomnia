@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-'use strict';
 
-const http = require('node:http');
-const https = require('node:https');
-const fs = require('node:fs');
-const { certPath } = require('./certs');
+import fs from 'node:fs';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import http from 'node:http';
+import https from 'node:https';
+import type { TLSSocket } from 'node:tls';
+
+import { certPath } from './certs';
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(certPath('localhost-key.pem')),
@@ -14,7 +16,7 @@ const HTTPS_OPTIONS = {
 const MIN_REPLY_DELAY_MS = 1;
 const MAX_REPLY_DELAY_MS = 60_000;
 
-function delayResponse(req) {
+function delayResponse(req: IncomingMessage) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
@@ -23,8 +25,8 @@ function delayResponse(req) {
   return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
 }
 
-async function handleRequest(req, res) {
-  const url = new URL(req.url, `${req.socket.encrypted ? 'https' : 'http'}://localhost`);
+async function handleRequest(req: IncomingMessage, res: ServerResponse) {
+  const url = new URL(req.url ?? '/', `${(req.socket as TLSSocket).encrypted ? 'https' : 'http'}://localhost`);
   process.stdout.write(`${req.method} ${url.pathname}\n`);
 
   const sseEventsMatch = req.method === 'GET' && url.pathname.match(/^\/sse-events\/(\d+)$/);

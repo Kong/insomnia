@@ -28,7 +28,7 @@ export const WS_SERVER_WSS = "wss://localhost:4041";
 export const SOCKET_SERVER = "ws://localhost:3000";
 export const SOCKET_SERVER_WSS = "wss://localhost:3001";
 /**
- * The namespace on `misc/socket-server.js` that only accepts connections
+ * The namespace on `misc/socket-server.ts` that only accepts connections
  * whose handshake auth token equals `SOCKET_SERVER_AUTH_TOKEN` — mirror any
  * change here into that file.
  */
@@ -47,7 +47,7 @@ export const GIT_SERVER = "http://localhost:4070";
 export const MOCK_BIN_SERVER = "http://localhost:4090";
 /**
  * `GET` this on `MOCK_BIN_SERVER` for a fixed response to turn into a mock
- * route — mirror any change here into `misc/mock-bin-server.js`.
+ * route — mirror any change here into `misc/mock-bin-server.ts`.
  */
 export const MOCK_BIN_SOURCE_RESPONSE = {
   url: `${MOCK_BIN_SERVER}/source`,
@@ -57,7 +57,7 @@ export const MOCK_BIN_SOURCE_RESPONSE = {
 };
 
 /**
- * Fixed test credentials `misc/oauth2-server.js` accepts for its
+ * Fixed test credentials `misc/oauth2-server.ts` accepts for its
  * Authorization Code / Implicit / Client Credentials / Resource Owner
  * Password grants — mirror any change here into that file.
  */

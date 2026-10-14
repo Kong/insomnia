@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-"use strict";
 
-const { createServer } = require("node:http");
-const { createServer: createHttpsServer } = require("node:https");
-const fs = require("node:fs");
-const { WebSocketServer } = require("ws");
-const { certPath } = require("./certs");
+import fs from "node:fs";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
+
+import type WebSocket from "ws";
+import { WebSocketServer } from "ws";
+
+import { certPath } from "./certs";
 
 const PORT = process.env.WS_PORT || 4040;
 const SECURE_PORT = process.env.WS_SECURE_PORT || 4041;
@@ -15,23 +17,23 @@ const HTTPS_OPTIONS = {
   cert: fs.readFileSync(certPath("localhost-cert.pem")),
 };
 
-function handleRequest(req, res) {
+function handleRequest(_req: IncomingMessage, res: ServerResponse) {
   res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("ws-echo-server ok");
 }
 
-function handleConnection(ws, req) {
+function handleConnection(ws: WebSocket, req: IncomingMessage) {
   const delayMs = Number(req.headers["x-reply-delay-ms"]) || 0;
 
-  const sendAfterDelay = (data, opts) => {
+  const sendAfterDelay = (data: WebSocket.RawData | string, opts?: { binary: boolean }) => {
     setTimeout(() => {
-      if (ws.readyState === ws.OPEN) ws.send(data, opts);
+      if (ws.readyState === ws.OPEN) ws.send(data, opts ?? {});
     }, delayMs);
   };
 
   sendAfterDelay("Request served by insomnia-mock-ws-echo-server");
 
-  ws.on("message", (data, isBinary) => {
+  ws.on("message", (data: WebSocket.RawData, isBinary: boolean) => {
     sendAfterDelay(data, { binary: isBinary });
   });
 }

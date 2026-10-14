@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-'use strict';
 
-const https = require('node:https');
-const fs = require('node:fs');
-const express = require('express');
-const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
-const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
-const z = require('zod/v4');
-const { certPath } = require('./certs');
+import fs from 'node:fs';
+import https from 'node:https';
+
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import express from 'express';
+import * as z from 'zod/v4';
+
+import { certPath } from './certs';
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(certPath('localhost-key.pem')),
@@ -87,9 +88,9 @@ app.get('/', (_req, res) => {
 });
 
 const MIN_REPLY_DELAY_MS = 1;
-const MAX_REPLY_DELAY_MS = 1_000;
+const MAX_REPLY_DELAY_MS = 1000;
 
-function delayResponse(req) {
+function delayResponse(req: express.Request) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {

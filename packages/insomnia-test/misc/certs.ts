@@ -3,11 +3,11 @@
 // (git-ignored). Idempotent: does nothing when every file already exists, so
 // playwright.config.ts can call it once before the webServers start and each
 // server can call it again as a no-op (or to run standalone).
-const crypto = require("node:crypto");
-const fs = require("node:fs");
-const path = require("node:path");
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
-const forge = require("node-forge");
+import forge from "node-forge";
 
 const CERT_DIR = path.join(__dirname, "fixtures", "generated");
 
@@ -27,20 +27,30 @@ function generateKeyPair() {
   const { privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
   });
-  const privatePem = privateKey.export({ type: "pkcs8", format: "pem" });
+  const privatePem = privateKey.export({ type: "pkcs8", format: "pem" }) as string;
   const forgePrivate = forge.pki.privateKeyFromPem(privatePem);
   const forgePublic = forge.pki.setRsaPublicKey(forgePrivate.n, forgePrivate.e);
   return { privatePem, forgePrivate, forgePublic };
 }
 
-function createCert({ commonName, issuer, issuerKey, key, extensions }) {
+type KeyPair = ReturnType<typeof generateKeyPair>;
+
+interface CreateCertOptions {
+  commonName: string;
+  issuer?: forge.pki.CertificateField[];
+  issuerKey?: forge.pki.rsa.PrivateKey;
+  key: KeyPair;
+  extensions: any[];
+}
+
+function createCert({ commonName, issuer, issuerKey, key, extensions }: CreateCertOptions) {
   const cert = forge.pki.createCertificate();
   cert.publicKey = key.forgePublic;
   cert.serialNumber = crypto.randomBytes(8).toString("hex");
   // Back-date the start so a clock a little behind this machine's still accepts it.
   cert.validity.notBefore = new Date(Date.now() - 24 * 60 * 60 * 1000);
   cert.validity.notAfter = new Date(Date.now() + TEN_YEARS_MS);
-  const subject = [{ name: "commonName", value: commonName }];
+  const subject: forge.pki.CertificateField[] = [{ name: "commonName", value: commonName }];
   cert.setSubject(subject);
   cert.setIssuer(issuer ?? subject);
   cert.setExtensions(extensions);
@@ -58,7 +68,7 @@ const LOCALHOST_SAN = {
 
 function generate() {
   fs.mkdirSync(CERT_DIR, { recursive: true });
-  const write = (name, contents) =>
+  const write = (name: string, contents: string) =>
     fs.writeFileSync(path.join(CERT_DIR, name), contents);
 
   // Self-signed localhost cert, used by every plain HTTPS/WSS/gRPC-TLS server.
@@ -137,9 +147,9 @@ function ensureCerts() {
  * @param name - A fixture file name, e.g. `"localhost-key.pem"`
  * @returns The absolute path to that generated file, creating it first if needed
  */
-function certPath(name) {
+function certPath(name: string) {
   ensureCerts();
   return path.join(CERT_DIR, name);
 }
 
-module.exports = { CERT_DIR, ensureCerts, certPath };
+export { CERT_DIR, ensureCerts, certPath };

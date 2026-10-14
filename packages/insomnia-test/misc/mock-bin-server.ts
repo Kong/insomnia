@@ -1,14 +1,13 @@
 #!/usr/bin/env node
-'use strict';
 
-const http = require('node:http');
+import http, { type IncomingMessage, type ServerResponse } from 'node:http';
 
 const PORT = 4090;
 
-/** @type {Map<string, any>} key: `${METHOD} ${compoundId}` -> HAR response */
-const bins = new Map();
-/** @type {Map<string, any[]>} key: `${METHOD} ${compoundId}` -> HAR log entries */
-const logs = new Map();
+/** key: `${METHOD} ${compoundId}` -> HAR response */
+const bins = new Map<string, any>();
+/** key: `${METHOD} ${compoundId}` -> HAR log entries */
+const logs = new Map<string, any[]>();
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -36,20 +35,20 @@ const HOP_BY_HOP_HEADERS = new Set([
   'transfer-encoding',
 ]);
 
-const readBody = req =>
-  new Promise(resolve => {
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
+const readBody = (req: IncomingMessage) =>
+  new Promise<string>(resolve => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
   });
 
-const send = (res, status, body, headers = {}) => {
+const send = (res: ServerResponse, status: number, body: string, headers: Record<string, string> = {}) => {
   res.writeHead(status, { ...CORS_HEADERS, ...headers });
   res.end(body);
 };
 
-const handle = async (req, res) => {
-  const url = new URL(req.url, `http://localhost:${PORT}`);
+const handle = async (req: IncomingMessage, res: ServerResponse) => {
+  const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
   const method = (req.method || 'GET').toUpperCase();
 
   if (method === 'OPTIONS') {
@@ -64,7 +63,7 @@ const handle = async (req, res) => {
     const body = JSON.stringify(SOURCE_RESPONSE_BODY);
     return send(res, SOURCE_RESPONSE_STATUS, body, {
       'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(body),
+      'Content-Length': String(Buffer.byteLength(body)),
       [SOURCE_RESPONSE_HEADER_NAME]: SOURCE_RESPONSE_HEADER_VALUE,
     });
   }
@@ -121,7 +120,7 @@ const handle = async (req, res) => {
         'Content-Type': 'application/json',
       });
     }
-    const headers = {};
+    const headers: Record<string, string> = {};
     for (const { name, value } of har.headers || []) {
       if (name && !HOP_BY_HOP_HEADERS.has(name.toLowerCase())) headers[name] = value;
     }

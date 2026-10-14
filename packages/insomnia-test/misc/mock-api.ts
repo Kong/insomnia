@@ -1,14 +1,113 @@
 #!/usr/bin/env node
-"use strict";
 
-const http = require("node:http");
-const crypto = require("node:crypto");
-const zlib = require("node:zlib");
-const { parse } = require("graphql");
+import crypto from "node:crypto";
+import http from "node:http";
+import zlib from "node:zlib";
+
+import type * as SrpModule from "@getinsomnia/srp-js";
+import type { Server as SrpServer } from "@getinsomnia/srp-js";
+import { type FieldNode, type OperationDefinitionNode,parse } from "graphql";
 
 const ACCOUNT_ID = "acct_64a477e6b59d43a5a607f84b4f73e3ce";
 const ORG_ID = "org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
 const PROJECT_ID = "proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
+
+type SessionId = string | null | undefined;
+
+interface FeatureState {
+  gitSyncEnabled: boolean;
+  gitSyncStorageRuleEnabled: boolean;
+  konnectEntitlementEnabled: boolean;
+}
+
+interface EncryptedMessage {
+  iv: string;
+  t: string;
+  ad?: string;
+  d: string;
+}
+
+interface CloudSyncProject {
+  id: string;
+  name: string;
+  rootDocumentId: string;
+  teamProjectId: string;
+  teams: { id: string; name: string }[];
+}
+
+interface CloudSyncSnapshot {
+  author: string;
+  authorAccount: { email: string; firstName: string; lastName: string };
+  description: string;
+  created: string;
+  id: string;
+  name: string;
+  parent: string;
+  state: { blob: string; key: string; name: string }[];
+}
+
+interface CloudSyncState {
+  newSnapshots: Record<string, CloudSyncSnapshot[]>;
+  newBlobs: Record<string, string>;
+  newProjects: CloudSyncProject[];
+  deletedProjectIds: string[];
+  remoteHasNewCommit: boolean;
+  newCommitProjectId: string;
+  delayMs: number;
+  delayProjectId: string | null;
+  requestLog: { operationName: string; projectId: string | null; at: number }[];
+  archiveShouldFail: boolean;
+}
+
+// Variables the Cloud Sync GraphQL operations carry; which ones are present
+// depends on the operation, the mock just trusts the client.
+interface CloudSyncVariables {
+  id: string;
+  projectId: string;
+  teamProjectId: string;
+  name: string;
+  rootDocumentId: string;
+  branch?: string;
+  ids?: string[];
+  snapshots?: CloudSyncSnapshot[];
+  blobs?: { id: string; content: string }[];
+}
+
+// Bodies of the vault routes.
+interface VaultBody {
+  salt: string;
+  verifier: string;
+  srpA: string;
+  srpM1: string;
+  sessionStarterId: string;
+}
+
+// Bodies of the `_admin/*` and vault/collaborator routes.
+interface JsonBody {
+  sessionId?: string;
+  enabled?: boolean;
+  projectId?: string;
+  ms?: number | string;
+  emails?: string[];
+  roles?: string[];
+}
+
+interface Collaborator {
+  id: string;
+  picture: string;
+  type: string;
+  name: string;
+  createdAt: string;
+  metadata: {
+    userId?: string;
+    invitationId?: string;
+    roleId: string;
+    email: string;
+    expiresAt?: string;
+  };
+}
+
+type VaultExchange = SrpServer & { sessionId?: SessionId };
 
 // Feature-flag / storage-rule state, isolated per Electron instance via the
 // `x-session-id` header every request carries (sourced from
@@ -19,18 +118,18 @@ const PROJECT_ID = "proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
 // below run *before* the Electron instance they're meant for has launched,
 // so they can't rely on a header — misc/fixtures.ts passes `sessionId`
 // explicitly in the body instead.
-const DEFAULT_FEATURE_STATE = {
+const DEFAULT_FEATURE_STATE: FeatureState = {
   gitSyncEnabled: true,
   gitSyncStorageRuleEnabled: true,
   konnectEntitlementEnabled: false,
 };
-const featureStateBySession = new Map(); // sessionId -> partial DEFAULT_FEATURE_STATE overrides
+const featureStateBySession = new Map<SessionId, Partial<FeatureState>>(); // sessionId -> partial DEFAULT_FEATURE_STATE overrides
 
-function getFeatureState(sessionId) {
+function getFeatureState(sessionId: SessionId): FeatureState {
   return { ...DEFAULT_FEATURE_STATE, ...featureStateBySession.get(sessionId) };
 }
 
-function setFeatureState(sessionId, patch) {
+function setFeatureState(sessionId: SessionId, patch: Partial<FeatureState>) {
   featureStateBySession.set(sessionId, { ...getFeatureState(sessionId), ...patch });
 }
 
@@ -52,11 +151,11 @@ const CLOUD_SYNC_SYMMETRIC_KEY = {
   kty: "oct",
 };
 
-function cloudSyncKeyBuf(jwk) {
+function cloudSyncKeyBuf(jwk: { k: string }) {
   return Buffer.from(jwk.k, "base64url");
 }
 
-function decryptCloudSyncBlob(msg) {
+function decryptCloudSyncBlob(msg: EncryptedMessage) {
   const decipher = crypto.createDecipheriv(
     "aes-256-gcm",
     cloudSyncKeyBuf(CLOUD_SYNC_SYMMETRIC_KEY),
@@ -71,7 +170,7 @@ function decryptCloudSyncBlob(msg) {
   ]);
 }
 
-function encryptCloudSyncBlob(buf) {
+function encryptCloudSyncBlob(buf: Buffer) {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(
     "aes-256-gcm",
@@ -130,7 +229,7 @@ const CLOUD_SYNC_ENCRYPTED_SYMMETRIC_KEY = crypto
 
 const CLOUD_SYNC_TEAMS = [{ id: "team_001", name: "Test Team" }];
 
-const cloudSyncProjects = [
+const cloudSyncProjects: CloudSyncProject[] = [
   {
     id: "proj_5145140e072d4007a30bfa6630ddae70",
     name: "My Collection R1",
@@ -179,7 +278,7 @@ const CLOUD_SYNC_SNAPSHOT_COMMON = {
   description: "",
 };
 
-const cloudSyncProjectSnapshots = {
+const cloudSyncProjectSnapshots: Record<string, CloudSyncSnapshot[]> = {
   // "My Collection R1"
   proj_5145140e072d4007a30bfa6630ddae70: [
     {
@@ -387,12 +486,12 @@ const cloudSyncCollectionNewCommitSnapshots = [
 // `remoteHasNewCommit` is on and that project is the one selected via
 // `/_admin/cloud-sync/new-commit`'s `projectId` — see `getCloudSyncState`'s
 // `newCommitProjectId`.
-const CLOUD_SYNC_NEW_COMMIT_SNAPSHOTS = {
+const CLOUD_SYNC_NEW_COMMIT_SNAPSHOTS: Record<string, CloudSyncSnapshot[]> = {
   proj_5145140e072d4007a30bfa6630ddae70: cloudSyncCollectionNewCommitSnapshots,
   proj_5145140e072d4007a30bfa6630ddae71: cloudSyncEnvironmentNewCommitSnapshots,
 };
 
-const cloudSyncRawBlobs = {
+const cloudSyncRawBlobs: Record<string, string> = {
   "be076c5943e0d32b05efbbf215b4f9d2bb894a9c":
     '{"_id":"wrk_a7132f924ba7451594ba64ec411c9e13","created":1769407477819,"description":"","name":"My Collection R1","parentId":null,"scope":"collection","type":"Workspace"}',
   "1b7fe31ec583c8a42fedc0e86a103b94076e77c4":
@@ -430,9 +529,9 @@ const CLOUD_SYNC_DEFAULT_BRANCHES = [{ name: "master" }, { name: "develop" }];
 // `commitAndPush()`s on the same project produce a genuine "Remote history
 // conflict" — correct VCS behavior, but not what a same-fixture-per-test
 // spec expects.
-const cloudSyncStateBySession = new Map(); // sessionId -> { newSnapshots, newBlobs, deletedProjectIds, remoteHasNewCommit }
+const cloudSyncStateBySession = new Map<SessionId, CloudSyncState>(); // sessionId -> { newSnapshots, newBlobs, deletedProjectIds, remoteHasNewCommit }
 
-function getCloudSyncState(sessionId) {
+function getCloudSyncState(sessionId: SessionId): CloudSyncState {
   if (!cloudSyncStateBySession.has(sessionId)) {
     cloudSyncStateBySession.set(sessionId, {
       newSnapshots: {},
@@ -476,14 +575,14 @@ function getCloudSyncState(sessionId) {
       archiveShouldFail: false,
     });
   }
-  return cloudSyncStateBySession.get(sessionId);
+  return cloudSyncStateBySession.get(sessionId)!;
 }
 
-function resetCloudSyncState(sessionId) {
+function resetCloudSyncState(sessionId: SessionId) {
   cloudSyncStateBySession.delete(sessionId);
 }
 
-function getCloudSyncSnapshotsForProject(projectId, sessionId) {
+function getCloudSyncSnapshotsForProject(projectId: string, sessionId: SessionId) {
   const state = getCloudSyncState(sessionId);
   if (
     state.remoteHasNewCommit &&
@@ -498,19 +597,19 @@ function getCloudSyncSnapshotsForProject(projectId, sessionId) {
   ];
 }
 
-function graphqlOperation(query) {
+function graphqlOperation(query: string) {
   const document = parse(query);
-  const operation = document.definitions[0];
+  const operation = document.definitions[0] as OperationDefinitionNode;
   return {
     operationType: operation.operation,
-    operationName: operation.selectionSet.selections[0].name.value,
+    operationName: (operation.selectionSet.selections[0] as FieldNode).name.value,
   };
 }
 
-function handleCloudSyncGraphQL(req, res) {
-  const sessionId = req.headers["x-session-id"];
-  readJsonBody(req)
-    .then(async ({ query, variables = {} }) => {
+function handleCloudSyncGraphQL(req: http.IncomingMessage, res: http.ServerResponse) {
+  const sessionId = req.headers["x-session-id"] as string | undefined;
+  readJsonBody<{ query: string; variables?: CloudSyncVariables }>(req)
+    .then(async ({ query, variables = {} as CloudSyncVariables }) => {
       const { operationType, operationName } = graphqlOperation(query);
       const state = getCloudSyncState(sessionId);
       const requestProjectId =
@@ -734,17 +833,17 @@ function handleCloudSyncGraphQL(req, res) {
 // version) rather than canned responses, so an incorrect vault key
 // genuinely fails `Server#checkM1()` and a correct one genuinely succeeds —
 // see `handleVault()`.
-const vaultStateBySession = new Map(); // sessionId -> { salt, verifier }
-const vaultExchanges = new Map(); // sessionStarterId -> srp.Server instance
+const vaultStateBySession = new Map<SessionId, { salt: string; verifier: string }>(); // sessionId -> { salt, verifier }
+const vaultExchanges = new Map<string, VaultExchange>(); // sessionStarterId -> srp.Server instance
 
-function resetVaultState(sessionId) {
+function resetVaultState(sessionId: SessionId) {
   vaultStateBySession.delete(sessionId);
   for (const [id, exchange] of vaultExchanges) {
     if (exchange.sessionId === sessionId) vaultExchanges.delete(id);
   }
 }
 
-let srpModulePromise;
+let srpModulePromise: Promise<typeof SrpModule> | undefined;
 function loadSrp() {
   if (!srpModulePromise) {
     // @getinsomnia/srp-js's dist bundle is built for a browser/Electron
@@ -759,7 +858,7 @@ function loadSrp() {
   return srpModulePromise;
 }
 
-function isVaultRoute(method, pathname) {
+function isVaultRoute(method: string | undefined, pathname: string) {
   return (
     method === "POST" &&
     (pathname === "/v1/user/vault" ||
@@ -769,9 +868,9 @@ function isVaultRoute(method, pathname) {
   );
 }
 
-async function handleVault(req, res, url) {
-  const sessionId = req.headers["x-session-id"];
-  const body = await readJsonBody(req);
+async function handleVault(req: http.IncomingMessage, res: http.ServerResponse, url: URL) {
+  const sessionId = req.headers["x-session-id"] as string | undefined;
+  const body = await readJsonBody<VaultBody>(req);
 
   if (url.pathname === "/v1/user/vault" || url.pathname === "/v1/user/vault/reset") {
     vaultStateBySession.set(sessionId, { salt: body.salt, verifier: body.verifier });
@@ -791,7 +890,7 @@ async function handleVault(req, res, url) {
     if (!stored) return sendJson(res, 400, { error: "vault not initialized" });
 
     const secret2 = await genKey();
-    const server = new Server(
+    const server: VaultExchange = new Server(
       vaultKeyParams,
       SrpBuffer.from(stored.verifier, "hex"),
       secret2,
@@ -822,12 +921,12 @@ async function handleVault(req, res, url) {
   return sendJson(res, 200, { srpM2 });
 }
 
-function readJsonBody(req) {
-  return new Promise((resolve, reject) => {
+function readJsonBody<T = JsonBody>(req: http.IncomingMessage): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
     let data = "";
-    req.on("data", (chunk) => (data += chunk));
+    req.on("data", (chunk: Buffer) => (data += chunk));
     req.on("end", () => {
-      if (!data) return resolve({});
+      if (!data) return resolve({} as T);
       try {
         resolve(JSON.parse(data));
       } catch (err) {
@@ -838,7 +937,7 @@ function readJsonBody(req) {
   });
 }
 
-function sendJson(res, status, body) {
+function sendJson(res: http.ServerResponse, status: number, body: unknown) {
   res.writeHead(status, {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
@@ -846,7 +945,7 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function handleAdmin(req, res, url) {
+async function handleAdmin(req: http.IncomingMessage, res: http.ServerResponse, url: URL) {
   if (url.pathname === "/_admin/session-keys" && req.method === "GET") {
     return sendJson(res, 200, {
       publicKey: {
@@ -1050,7 +1149,7 @@ const COLLABORATOR_ROLE_IDS = {
   member: "role_member",
 };
 
-function seedCollaborator(type, index) {
+function seedCollaborator(type: string, index: number): Collaborator {
   const email = `existing-collaborator-${index}@example.com`;
   const base = {
     id: `collab_seed_${index}`,
@@ -1092,22 +1191,22 @@ const COLLABORATOR_SEARCH_RESULTS = Array.from({ length: 8 }, (_, i) => ({
   name: `searchable-collaborator-${i}@example.com`,
 }));
 
-const collaboratorsBySession = new Map(); // sessionId -> Collaborator[]
+const collaboratorsBySession = new Map<SessionId, Collaborator[]>(); // sessionId -> Collaborator[]
 
-function getCollaboratorsState(sessionId) {
+function getCollaboratorsState(sessionId: SessionId): Collaborator[] {
   if (!collaboratorsBySession.has(sessionId)) {
     collaboratorsBySession.set(
       sessionId,
       SEED_COLLABORATORS.map((c) => ({ ...c, metadata: { ...c.metadata } })),
     );
   }
-  return collaboratorsBySession.get(sessionId);
+  return collaboratorsBySession.get(sessionId)!;
 }
 
-async function handleCollaborators(req, res, url) {
+async function handleCollaborators(req: http.IncomingMessage, res: http.ServerResponse, url: URL) {
   const { method } = req;
   const segs = url.pathname.split("/").filter(Boolean);
-  const sessionId = req.headers["x-session-id"];
+  const sessionId = req.headers["x-session-id"] as string | undefined;
 
   if (
     method === "GET" &&
@@ -1234,7 +1333,7 @@ async function handleCollaborators(req, res, url) {
   sendJson(res, 404, { error: `no collaborators route for ${method} ${url.pathname}` });
 }
 
-function isCollaboratorsRoute(method, pathname) {
+function isCollaboratorsRoute(method: string | undefined, pathname: string) {
   const segs = pathname.split("/").filter(Boolean);
   if (
     segs[0] === "v1" &&
@@ -1297,7 +1396,7 @@ const KONNECT_SERVICES = [
     tags: null,
   },
 ];
-const KONNECT_ROUTES = {
+const KONNECT_ROUTES: Record<string, unknown[]> = {
   "svc-http": [
     {
       id: "route-traditional",
@@ -1377,11 +1476,11 @@ const KONNECT_ROUTES = {
   ],
 };
 
-function matchDynamic(req, url) {
+function matchDynamic(req: http.IncomingMessage, url: URL) {
   const { method } = req;
   const pathname = url.pathname;
   const segs = pathname.split("/").filter(Boolean);
-  const featureState = getFeatureState(req.headers["x-session-id"]);
+  const featureState = getFeatureState(req.headers["x-session-id"] as string | undefined);
 
   if (
     method === "GET" &&
@@ -1540,7 +1639,7 @@ function matchDynamic(req, url) {
 }
 
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, "http://localhost:4010");
+  const url = new URL(req.url!, "http://localhost:4010");
   const key = `${req.method} ${url.pathname}`;
   process.stdout.write(`${key}\n`);
 
@@ -1584,7 +1683,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let body = ROUTES[key];
+  let body = (ROUTES as Record<string, unknown>)[key];
   if (body === undefined) {
     body = matchDynamic(req, url);
   }

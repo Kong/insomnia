@@ -121,7 +121,7 @@ export class HttpRequestFlow extends BaseFlow {
       await page.setBody(request.body);
     }
     if (request.authentication) {
-      await this.applyAuthentication(page, request.authentication);
+      await this.applyHttpAuthentication(page, request.authentication);
     }
     if (request.preRequestScript || request.afterResponseScript) {
       await page.scripts.setScripts({
@@ -138,7 +138,7 @@ export class HttpRequestFlow extends BaseFlow {
    * @param page - The request page to apply authentication on
    * @param authentication - The authentication config to apply
    */
-  private async applyAuthentication(
+  private async applyHttpAuthentication(
     page: HttpRequestPage,
     authentication: RequestAuthentication,
   ): Promise<void> {

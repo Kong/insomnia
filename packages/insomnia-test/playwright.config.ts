@@ -53,49 +53,49 @@ export default defineConfig({
 
   webServer: [
     {
-      command: "node misc/mock-api.js",
+      command: "npx esr misc/mock-api.ts",
       url: "http://localhost:4010/v3/users/me",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/event-stream-server.js",
+      command: "npx esr misc/event-stream-server.ts",
       url: "http://localhost:4050/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/echo-server.js",
+      command: "npx esr misc/echo-server.ts",
       url: "http://localhost:4060/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/socket-server.js",
+      command: "npx esr misc/socket-server.ts",
       url: "http://localhost:3000/socket.io/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/ws-echo-server.js",
+      command: "npx esr misc/ws-echo-server.ts",
       url: "http://localhost:4040",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/mcp-server.js",
+      command: "npx esr misc/mcp-server.ts",
       url: "http://localhost:4020/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/grpc-server.js",
+      command: "npx esr misc/grpc-server.ts",
       port: 9000,
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/git-server.js",
+      command: "npx esr misc/git-server.ts",
       url: "http://localhost:4070/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
@@ -103,13 +103,13 @@ export default defineConfig({
       stderr: "ignore",
     },
     {
-      command: "node misc/oauth2-server.js",
+      command: "npx esr misc/oauth2-server.ts",
       url: "http://localhost:4080/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/mock-bin-server.js",
+      command: "npx esr misc/mock-bin-server.ts",
       url: "http://localhost:4090/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
