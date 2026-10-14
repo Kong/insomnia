@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { OverlayContainer,useOverlayPosition } from 'react-aria';
+import { OverlayContainer, useOverlayPosition } from 'react-aria';
 import { createPortal } from 'react-dom';
 
 import type { VariableSourceTooltipState } from './.client/codemirror/extensions/variable-source-tooltip';
@@ -53,14 +53,15 @@ export const VariableSourceTooltipHost = () => {
           ref={overlayRef}
           {...overlayProps}
           data-testid="variable-source-tooltip"
-          className="tooltip__bubble theme--tooltip tooltip__bubble--visible tooltip__bubble--wide p-2 text-xs text-left text-(--color-font) whitespace-pre-wrap!"
+          className="tooltip__bubble theme--tooltip tooltip__bubble--visible tooltip__bubble--wide p-2 text-left text-xs whitespace-pre-wrap! text-(--color-font)"
           onMouseEnter={() => setPointerInBubble(true)}
           onMouseLeave={() => setPointerInBubble(false)}
         >
           <div className="max-h-40 overflow-hidden font-mono">{state.value}</div>
           {state.source && (
             <div className="mt-1 flex items-center gap-2 border-t border-solid border-(--hl-md) pt-1">
-              <span className="truncate italic">{state.source.label}</span>
+              <span className="shrink-0 text-[0.7rem] tracking-wide uppercase opacity-60">Source</span>
+              <span className="min-w-0 flex-1 truncate italic">{state.source.label}</span>
               {state.source.onOpen && (
                 <button
                   type="button"
