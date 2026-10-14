@@ -11,7 +11,7 @@ test("Verify the dashboard's unsynced-file delete button only appears on unsynce
   const { cloudSyncPage } = user.pageManager;
 
   const project = await workspaceFlow.getProject({ name: "Personal Workspace" });
-  const localCollection = await workspaceFlow.create(
+  const localCollection = await workspaceFlow.createCollection(
     project!,
     new Collection(faker.string.alphanumeric(10)),
   );

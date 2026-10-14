@@ -11,7 +11,7 @@ test('Verify pulling brings in a collection that was pushed to the remote by ano
   const { workspacePage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const remoteCollection = new Collection(faker.string.alpha(10));
   await pushServerFile({
     path: `${faker.string.alpha(10).toLowerCase()}.yaml`,

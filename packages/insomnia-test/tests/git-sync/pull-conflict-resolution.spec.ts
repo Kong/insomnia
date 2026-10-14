@@ -23,17 +23,17 @@ for (const { version, keepsLocal } of [
     const { gitSyncPage, workspacePage } = user.pageManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-    const project = await workspaceFlow.create(
+    const project = await workspaceFlow.cloneGitProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Git),
       GIT_CREDENTIAL.name,
     );
     const fileName = faker.string.alpha(10).toLowerCase();
-    const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), fileName);
+    const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), fileName);
     await gitSyncFlow.commitAndPush(faker.string.alphanumeric(10));
 
     const localCollection = new Collection(faker.string.alpha(10));
     const remoteCollection = new Collection(faker.string.alpha(10));
-    await workspaceFlow.rename(collection, localCollection.name);
+    await workspaceFlow.renameCollection(collection, localCollection.name);
     await gitSyncFlow.commit(faker.string.alphanumeric(10));
     await pushServerFile({ path: `${fileName}.yaml`, content: buildCollectionFile(remoteCollection.name) });
     await gitSyncFlow.pull();

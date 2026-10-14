@@ -18,7 +18,7 @@ test("Verify dragging a request out of a Cloud Sync collection into an empty Clo
     "My Collection R1",
   );
   const project = await workspaceFlow.getProject({ name: "Personal Workspace" });
-  const emptyCollection = await workspaceFlow.create(
+  const emptyCollection = await workspaceFlow.createCollection(
     project!,
     new Collection(faker.string.alphanumeric(10)),
   );
