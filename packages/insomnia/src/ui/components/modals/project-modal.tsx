@@ -2,7 +2,7 @@ import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useNavigation } from 'react-router';
+import { useLocation } from 'react-router';
 
 import { useActiveView } from '~/ui/components/project/utils';
 import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
@@ -25,16 +25,25 @@ export const ProjectModal = ({
   project?: Project;
   gitRepository?: GitRepository;
 }) => {
-  // Close the modal when a navigation happens
-  const activeNavigation = useNavigation();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const location = useLocation();
+  const openedAtPathRef = useRef(location.pathname);
   useEffect(() => {
-    if (activeNavigation && activeNavigation.state !== 'idle' && activeNavigation.location && isOpen) {
+    if (isOpen) {
+      openedAtPathRef.current = location.pathname;
+    }
+    // Deliberately only re-capture when the modal opens, not on every
+    // location change while it's open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && location.pathname !== openedAtPathRef.current) {
       onOpenChange(false);
     }
-  }, [activeNavigation, isOpen, onOpenChange]);
+  }, [location, isOpen, onOpenChange]);
 
   const activeViewObj = useActiveView();
 

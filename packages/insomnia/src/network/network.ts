@@ -439,14 +439,14 @@ export async function savePatchesMadeByScript(patches: {
   const hasGlobalEnvironmentAndIsNotBase =
     mutatedContext.globals && mutatedContext.globals?._id !== activeGlobalBaseEnvironment?._id;
   const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
-    const { environmentType } = originEnvironment;
+    const { environmentType, kvPairData: originalKvPairData } = originEnvironment;
     const { data, dataPropertyOrder } = mutatedContextEnvironment;
     await services.environment.update(originEnvironment, {
       data,
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null, originalKvPairData),
       }),
     });
   };
@@ -475,7 +475,11 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
+          kvPairData: getKVPairFromData(
+            mutatedFolder.environment,
+            originalFolder.environmentPropertyOrder ?? null,
+            originalFolder.kvPairData,
+          ),
         }),
       });
     }
