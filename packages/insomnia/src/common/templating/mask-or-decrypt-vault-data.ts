@@ -5,9 +5,11 @@ import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 
 /**
- * Returns a new object with the vault secrets decrypted or masked, the input is never mutated.
+ * Returns the vault secrets decrypted or masked, never mutating the input.
  * Callers may hand in data that belongs to a persisted environment document, mutating it in place
  * would overwrite the stored ciphertext with plaintext.
+ *
+ * Given an object the result is always a fresh copy; a non-object input is returned as is.
  */
 export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
   /**
@@ -37,7 +39,8 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
       // remove all values under vaultEnvironmentPath if no vault key found
       return {};
     }
-    return vaultEnvironmentData;
+    // nothing to decrypt, still hand back a copy so no caller can reach the stored data through it
+    return { ...vaultEnvironmentData };
   }
   // mask all secret values under vaultEnvironmentPath property in context
   const maskedData: Record<string, any> = {};

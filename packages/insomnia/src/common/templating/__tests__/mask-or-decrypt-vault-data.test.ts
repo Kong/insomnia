@@ -44,12 +44,14 @@ describe('maskOrDecryptVaultDataIfNecessary', () => {
     expect(storedVaultData).toEqual({ token: 'cipher-1' });
   });
 
-  it('returns the data unchanged when the vault is not enabled', async () => {
+  it('returns a copy of the unchanged data when the vault is not enabled', async () => {
     const storedVaultData = { token: 'cipher-1' };
 
     const result = await maskOrDecryptVaultDataIfNecessary(storedVaultData, 'script');
 
     expect(result).toEqual({ token: 'cipher-1' });
+    // nothing is decrypted here, but the caller still must not reach the stored data through the result
+    expect(result).not.toBe(storedVaultData);
     expect(storedVaultData).toEqual({ token: 'cipher-1' });
   });
 
