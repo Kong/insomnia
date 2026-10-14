@@ -34,12 +34,12 @@ test("Import HTTP Request by Curl Command With Basic Auth (-u) Sends Authorizati
     method: HttpMethod.Post,
     url,
   } satisfies HttpRequest;
-  const response = await httpRequestFlow.send(request);
+  const responseView = await httpRequestFlow.send(request);
 
   const expectedAuthorization = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       authorization: expectedAuthorization,
     }),

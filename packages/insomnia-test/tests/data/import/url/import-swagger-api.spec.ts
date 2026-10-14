@@ -93,15 +93,15 @@ test("Import OpenAPI Spec by Url", async ({ user }, testInfo) => {
     ]),
   );
 
-  const response = await httpRequestFlow.send(request!);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toMatchObject({
+  const responseView = await httpRequestFlow.send(request!);
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     id: Number(petId),
     name: "doggie",
     status: "available",
   });
 
-  const { cookies } = response.body as { cookies: Record<string, string> };
+  const { cookies } = responseView.body as { cookies: Record<string, string> };
   expect(Object.keys(cookies)).toHaveLength(2);
 
   const expectedCookies = Object.fromEntries(
