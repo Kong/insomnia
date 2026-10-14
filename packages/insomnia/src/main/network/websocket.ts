@@ -512,32 +512,21 @@ const openWebSocketConnection = async (
         timestamp: Date.now(),
       };
 
-      // createErrorResponse must run before deleteRequestMaps: it redacts using
-      // sensitiveValuesByRequestId, which deleteRequestMaps clears for this requestId.
-      if (error.code) {
-        await createErrorResponse(
-          responseId,
-          request._id,
-          responseEnvironmentId,
-          timelinePath,
-          message || 'Something went wrong',
-        );
-      }
+      // Redact up front: deleteRequestMaps drops this request's value set below.
+      const redactedMessage = redactForRequest(request._id, message || 'Something went wrong');
       deleteRequestMaps(request._id, message, errorEvent);
       sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
+      if (error.code) {
+        createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
+      }
     });
   } catch (e) {
     console.error('unhandled error:', e);
 
-    // See the comment above: createErrorResponse must run before deleteRequestMaps.
-    await createErrorResponse(
-      responseId,
-      request._id,
-      responseEnvironmentId,
-      timelinePath,
-      e.message || 'Something went wrong',
-    );
+    // See the comment above: redact before deleteRequestMaps clears the value set.
+    const redactedMessage = redactForRequest(request._id, e.message || 'Something went wrong');
     deleteRequestMaps(request._id, e.message || 'Something went wrong');
+    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
   }
 };
 
@@ -573,7 +562,9 @@ const createErrorResponse = async (
   requestId: string,
   environmentId: string | null,
   timelinePath: string,
-  message: string,
+  // Redacted by the caller: the error paths run deleteRequestMaps first — so a failure here can
+  // never leave the streams and maps behind — and that drops this request's value set.
+  redactedMessage: string,
 ) => {
   const settings = await services.settings.get();
   const responsePatch = {
@@ -582,7 +573,7 @@ const createErrorResponse = async (
     environmentId: environmentId,
     timelinePath,
     statusMessage: 'Error',
-    error: redactForRequest(requestId, message),
+    error: redactedMessage,
   };
   const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
   services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
