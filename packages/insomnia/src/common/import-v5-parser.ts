@@ -25,7 +25,6 @@ const {
   mockServer,
   mockRoute,
   unitTest,
-  unitTestSuite,
   caCertificate,
   cookieJar,
   requestGroup,
@@ -354,11 +353,19 @@ export const RequestCollectionSchema = z
   ])
   .array();
 
-const TestSchema = unitTest.BaseUnitTestSchema.omit({ metaSortKey: true }).extend({
+const {
+  name: unitTestNameShape,
+  metaSortKey: unitTestMetaSortKeyShape,
+  ...restUnitTestSchemaShape
+} = unitTest.BaseUnitTestSchema.shape;
+const TestSchema = z.object({
+  name: unitTestNameShape,
   meta: MetaSchema.optional(),
+  ...restUnitTestSchemaShape,
 });
 
-const TestSuiteSchema = unitTestSuite.baseUnitTestSuiteSchema.omit({ metaSortKey: true }).extend({
+const TestSuiteSchema = z.object({
+  name: z.string().optional().default(''),
   meta: MetaSchema.optional(),
   tests: z.array(TestSchema).optional(),
 });
