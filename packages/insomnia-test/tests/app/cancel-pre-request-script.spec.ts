@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
 import { RequestState } from "../../enums/request-state";
-import { DEFAULT_TIMEOUT,expect, HTTP_SERVER, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 

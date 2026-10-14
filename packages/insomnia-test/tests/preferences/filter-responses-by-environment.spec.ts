@@ -1,4 +1,6 @@
-import { expect, test } from "../../misc/fixtures";
+import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 test("Verify the 'Filter responses by environment' preference persists across closing and reopening Preferences", async ({
   user,

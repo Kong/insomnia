@@ -1,14 +1,10 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { MockBodyType } from "../../enums/mock-body-type";
 import { ProjectType } from "../../enums/project-types";
-import {
-  expect,
-  MOCK_BIN_SERVER,
-  MOCK_BIN_SOURCE_RESPONSE,
-  test,
-} from "../../misc/fixtures";
+import { MOCK_BIN_SERVER, MOCK_BIN_SOURCE_RESPONSE, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { MockServer } from "../../models/mock-server";
 import { Project } from "../../models/project";

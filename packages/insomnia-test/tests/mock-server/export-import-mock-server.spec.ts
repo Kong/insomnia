@@ -2,10 +2,11 @@ import * as os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
 import { waitForExportedFile } from "../../misc/export-file";
-import { expect, MOCK_BIN_SERVER, test } from "../../misc/fixtures";
+import { MOCK_BIN_SERVER, test } from "../../misc/fixtures";
 import { MockServer } from "../../models/mock-server";
 import { Project } from "../../models/project";
 

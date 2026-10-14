@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContextMenuItem } from "../../enums/context-menu-items";
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
 import { TreeNodeType } from "../../enums/tree-node-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Folder } from "../../models/folder";
 import { Project } from "../../models/project";
