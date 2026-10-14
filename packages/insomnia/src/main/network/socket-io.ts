@@ -265,7 +265,9 @@ const createErrorResponse = async (
   requestId: string,
   environmentId: string | null,
   timelinePath: string,
-  message: string,
+  // Redacted by the caller: the error paths run deleteRequestMaps first — so a failure here can
+  // never leave the streams and maps behind — and that drops this request's value set.
+  redactedMessage: string,
 ) => {
   const settings = await services.settings.get();
   const responsePatch = {
@@ -274,7 +276,7 @@ const createErrorResponse = async (
     environmentId: environmentId,
     timelinePath,
     statusMessage: 'Error',
-    error: redactForRequest(requestId, message),
+    error: redactedMessage,
   };
   const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
   services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
@@ -440,7 +442,7 @@ const openSocketIOConnection = async (
       sendToOpenWindows(readyStateChannel, socket.connected);
     });
 
-    socket.on('connect_error', async error => {
+    socket.on('connect_error', error => {
       console.log('connect_error', error.message);
       socket.close();
       const errorEvent: SocketIOErrorEvent = {
@@ -451,16 +453,10 @@ const openSocketIOConnection = async (
         error,
         timestamp: Date.now(),
       };
-      // createErrorResponse must run before deleteRequestMaps: it redacts using
-      // sensitiveValuesByRequestId, which deleteRequestMaps clears for this requestId.
-      await createErrorResponse(
-        responseId,
-        request._id,
-        responseEnvironmentId,
-        timelinePath,
-        error.message || 'Something went wrong',
-      );
+      // Redact up front: deleteRequestMaps drops this request's value set below.
+      const redactedMessage = redactForRequest(request._id, error.message || 'Something went wrong');
       deleteRequestMaps(request._id, error.message, errorEvent);
+      createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
     });
 
     // listen to all open events when the connection is opened
@@ -477,15 +473,10 @@ const openSocketIOConnection = async (
       error: e,
       timestamp: Date.now(),
     };
-    // See the comment above: createErrorResponse must run before deleteRequestMaps.
-    await createErrorResponse(
-      responseId,
-      request._id,
-      responseEnvironmentId,
-      timelinePath,
-      e.message || 'Something went wrong',
-    );
+    // See the comment above: redact before deleteRequestMaps clears the value set.
+    const redactedMessage = redactForRequest(request._id, e.message || 'Something went wrong');
     deleteRequestMaps(request._id, e.message, errorEvent);
+    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
   }
 };
 
