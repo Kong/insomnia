@@ -128,9 +128,18 @@
                   "pathIsDefault": {
                     "type": "boolean"
                   },
-                  "lastAccessed": {}
+                  "lastAccessed": {},
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "manual",
+                      "response"
+                    ]
+                  }
                 },
-                "required": []
+                "required": [
+                  "source"
+                ]
               }
             }
           }
@@ -683,9 +692,18 @@
                   "pathIsDefault": {
                     "type": "boolean"
                   },
-                  "lastAccessed": {}
+                  "lastAccessed": {},
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "manual",
+                      "response"
+                    ]
+                  }
                 },
-                "required": []
+                "required": [
+                  "source"
+                ]
               }
             }
           }

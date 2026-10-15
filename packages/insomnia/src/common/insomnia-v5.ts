@@ -1060,6 +1060,7 @@ export async function getInsomniaV5DataExport({
           hostOnly: cookie.hostOnly,
           pathIsDefault: cookie.pathIsDefault,
           lastAccessed: cookie.lastAccessed,
+          source: cookie.source,
         })),
       }))[0];
     }

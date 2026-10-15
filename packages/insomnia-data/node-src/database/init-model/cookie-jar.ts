@@ -14,9 +14,12 @@ function migrateCookieId(cookieJar: CookieJar) {
 
 /**
  * Grandfather in cookies that predate the `source` field as 'manual', so cookies a user
- * already relied on for template rendering keep working. Every write path introduced
- * alongside `source` (network responses, imports, scripts) always sets it explicitly, so once
- * a cookie has passed through this migration once, `source` should never go missing again.
+ * already relied on for template rendering keep working; every write path introduced alongside
+ * `source` (network responses, imports, scripts) always sets it explicitly, so once a cookie
+ * has passed through this migration once, `source` should never go missing again. Known,
+ * accepted tradeoff: a pre-existing response-planted cookie is indistinguishable from a manual
+ * one at this point and gets grandfathered in as trusted too, since there's no way to tell them
+ * apart without breaking rendering for every user's pre-existing manual cookies.
  */
 function migrateCookieSource(cookieJar: CookieJar) {
   for (const cookie of cookieJar.cookies) {
