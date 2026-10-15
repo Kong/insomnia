@@ -736,7 +736,7 @@ export const TagEditor: FC<Props> = props => {
           <Button
             aria-label={isRevealed ? 'Hide value' : 'Reveal value'}
             style={{ zIndex: 10, position: 'relative' }}
-            className="txt-sm pull-right icon mr-1 inline-block"
+            className="txt-sm pull-right icon mr-2 inline-block"
             onPress={() => setIsRevealed(prev => !prev)}
           >
             <Icon icon={isRevealed ? 'eye-slash' : 'eye'} />
