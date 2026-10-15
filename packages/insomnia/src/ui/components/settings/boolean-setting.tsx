@@ -15,7 +15,9 @@ export const BooleanSetting: FC<{
   confirmBeforeToggle?: boolean;
   confirmMessage?: (isChecked: boolean) => string;
   disabled?: boolean;
-}> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false }) => {
+  /** Called with the new value once the setting has been persisted. */
+  onAfterToggle?: (isChecked: boolean) => void;
+}> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false, onAfterToggle }) => {
   const { settings } = useRootLoaderData()!;
   if (!(setting in settings)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
@@ -40,11 +42,13 @@ export const BooleanSetting: FC<{
                   onDone: async (isYes: boolean) => {
                     if (isYes) {
                       patchSettings({ [setting]: isChecked });
+                      onAfterToggle?.(isChecked);
                     }
                   },
                 });
               } else {
                 patchSettings({ [setting]: isChecked });
+                onAfterToggle?.(isChecked);
               }
             }}
             type="checkbox"

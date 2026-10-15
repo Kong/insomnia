@@ -422,9 +422,27 @@ const Root = () => {
         revalidate();
       }
     });
+    // Lives here rather than in renderer-listeners so the clear can revalidate loaders
+    // afterwards - the response panes read their data from loaders, which a raw database
+    // write does not refresh.
+    const unsubClearResponseHistory = window.main.on('clear-all-response-history', () => {
+      showModal(AlertModal, {
+        title: 'Clear All Response History',
+        message:
+          'This will clear your local Response history across every project/collection. No functionality will be impacted, and this will not affect any other user. Do you wish to continue?',
+        addCancel: true,
+        okLabel: 'Continue',
+        onConfirm: async () => {
+          await services.helpers.removeAllResponseHistory();
+          revalidate();
+          showToast({ icon: 'trash', title: 'Response history cleared', status: 'success' });
+        },
+      });
+    });
     return () => {
       unsubLoggedIn();
       unsubGitDbSynced();
+      unsubClearResponseHistory();
     };
   }, [latestInSubmission, revalidate, navigate]);
 
