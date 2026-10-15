@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import type { McpResponse, Response, RunnerTestResult, SocketIOResponse, WebSocketResponse } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { removeAllResponseHistory } from './response-operations';
 
@@ -15,6 +15,10 @@ const writeFile = (dir: string, name: string) => {
 };
 
 describe('removeAllResponseHistory', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('removes every response type and runner result, unlinks their files and leaves other models alone', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'remove-all-response-history-'));
     const workspace = await services.workspace.create({ name: 'Workspace' });
@@ -85,5 +89,22 @@ describe('removeAllResponseHistory', () => {
 
     await expect(removeAllResponseHistory()).resolves.toBeUndefined();
     expect(await db.count(models.response.type)).toBe(0);
+  });
+
+  it('surfaces an unlink failure that is not a missing file', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'remove-all-response-history-'));
+    await db.docCreate<Response>(models.response.type, {
+      parentId: 'req_3',
+      bodyPath: writeFile(dir, 'locked-body'),
+      timelinePath: writeFile(dir, 'locked-timeline'),
+    });
+
+    const permissionError: NodeJS.ErrnoException = new Error('EPERM: operation not permitted');
+    permissionError.code = 'EPERM';
+    vi.spyOn(fs.promises, 'unlink').mockRejectedValue(permissionError);
+
+    // A file left behind still holds the confidential body, so the caller must hear about it
+    // instead of being told the history was cleared.
+    await expect(removeAllResponseHistory()).rejects.toThrow('EPERM');
   });
 });
