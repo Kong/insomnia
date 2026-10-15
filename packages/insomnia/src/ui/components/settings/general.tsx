@@ -58,7 +58,7 @@ export const General: FC = () => {
             setting="enableLegacyUnitTests"
             help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
           />
-          <BooleanSetting label="Hide Secret Values in Preview/Console" setting="hideSecretValuesInPreviewAndConsole" />
+          <BooleanSetting label="Hide Confidential values in Preview/Console" setting="hideSecretValuesInPreviewAndConsole" />
         </div>
       </div>
 
