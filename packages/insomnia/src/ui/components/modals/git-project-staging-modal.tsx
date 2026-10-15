@@ -60,6 +60,7 @@ import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
+import { WarningBanner } from '~/ui/components/warning-banner';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
@@ -1712,6 +1713,7 @@ const OriginalGitProjectStagingModal: FC<
     previewDiffItem?.undiscardable && !previewDiffItem.staged && isPreviewDiffItemInChangesList
       ? previewDiffItem.filepath
       : null;
+  const hasUnknownFields = previewDiffItem && previewDiffItem.unknownFieldRanges.length > 0;
 
   return (
     <>
@@ -1853,7 +1855,7 @@ const OriginalGitProjectStagingModal: FC<
                       <Heading className="flex items-center gap-2 font-bold">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                           <div
-                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-5 w-5 items-center justify-center rounded-s-sm px-2`}
                           >
                             <Icon icon={scopeToIconMap[previewDiffItem.scope]} />
                           </div>
@@ -1872,7 +1874,15 @@ const OriginalGitProjectStagingModal: FC<
                           </BasicButton>
                         )}
                       </Heading>
-                      {undiscardableFilePath && <UndiscardableChangeWarning />}
+                      {hasUnknownFields && (
+                        <WarningBanner icon="triangle-exclamation" data-testid="unknown-fields-diff-warning">
+                          The remote version of this file has fields not recognized by this version of Insomnia.
+                          Committing changes to this file from this version of Insomnia may break or remove
+                          functionality for your collaborators. We recommend upgrading.
+                        </WarningBanner>
+                      )}
+                      {/* Show undiscardable change warning if the file is undiscardable and has no unknown field ranges */}
+                      {undiscardableFilePath && !hasUnknownFields && <UndiscardableChangeWarning />}
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
@@ -1881,15 +1891,6 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
-
-                      {previewDiffItem.unknownFieldRanges.length > 0 && (
-                        <p data-testid="unknown-fields-diff-warning">
-                          <Icon icon="triangle-exclamation" className="mt-0.5 mr-2 shrink-0 text-(--color-warning)" />
-                          The remote version of this file has fields not recognized by this version of Insomnia.
-                          Committing changes to this file from this version of Insomnia may break or remove
-                          functionality for your collaborators. We recommend upgrading.
-                        </p>
-                      )}
 
                       {previewDiffItem && (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
@@ -1923,7 +1924,6 @@ const OriginalGitProjectStagingModal: FC<
       {showConfirmDiscardAndPullModal && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
-          showUndiscardableWarning={Boolean(undiscardableFilePath)}
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1939,7 +1939,13 @@ const OriginalGitProjectStagingModal: FC<
       {discardData && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
-          showUndiscardableWarning={undiscardableFilePath !== null && discardData.paths.includes(undiscardableFilePath)}
+          showUndiscardableWarning={
+            // Only show the undiscardable warning if there are no unknown fields, there is an undiscardable file, and it is the only file being discarded.
+            !hasUnknownFields &&
+            undiscardableFilePath !== null &&
+            discardData.filesCount === 1 &&
+            discardData.paths.includes(undiscardableFilePath)
+          }
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1968,11 +1974,10 @@ const OriginalGitProjectStagingModal: FC<
 };
 
 const UndiscardableChangeWarning = () => (
-  <p className="rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm) text-base">
-    <Icon icon="exclamation-triangle" className="mr-2" />
+  <WarningBanner icon="exclamation-triangle">
     This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
     other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
-  </p>
+  </WarningBanner>
 );
 
 interface ConfirmModalProps {
