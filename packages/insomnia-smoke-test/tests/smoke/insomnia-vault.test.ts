@@ -161,7 +161,7 @@ test.describe('Check vault used in environment', () => {
 
     // secret values are masked in the console by default; turn it off so the test can verify the decrypted values
     await insomnia.statusbar.openPreferences();
-    const hideSecretsCheckbox = page.getByRole('checkbox', { name: 'Hide Secret Values in Preview/Console' }).first();
+    const hideSecretsCheckbox = page.getByRole('checkbox', { name: 'Hide Confidential values in Preview/Console' }).first();
     await hideSecretsCheckbox.click();
     await expect.soft(hideSecretsCheckbox).not.toBeChecked();
     await insomnia.preferencesPage.closePreferences();

@@ -673,7 +673,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           if (response.url.includes(CONFIDENTIAL_MASK_VALUE)) {
             throw new Error(
               'The response URL was redacted because it contained confidential values. ' +
-                'Turn off "Hide Secret Values in Preview/Console" in Preferences to chain it.',
+                'Turn off "Hide Confidential values in Preview/Console" in Preferences to chain it.',
             );
           }
           return response.url;
