@@ -14,17 +14,19 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
     const { syncItems } = await getSyncItems({ workspaceId });
-    const localBranches = (await window.main.sync.getBranchNames()).sort();
-    const currentBranch = await window.main.sync.getCurrentBranchName();
-    const history = (await window.main.sync.getHistory()).sort((a, b) => (b.created > a.created ? 1 : -1));
-    const historyCount = await window.main.sync.getHistoryCount();
-    const status = await window.main.sync.status(syncItems);
+    const localBranches = (await window.main.sync.getBranchNames(workspaceId)).sort();
+    const currentBranch = await window.main.sync.getCurrentBranchName(workspaceId);
+    const history = (await window.main.sync.getHistory(workspaceId)).sort((a, b) => (b.created > a.created ? 1 : -1));
+    const historyCount = await window.main.sync.getHistoryCount(workspaceId);
+    const status = await window.main.sync.status(workspaceId, syncItems);
 
     let remoteBranches: string[] = [];
     let compare = { ahead: 0, behind: 0 };
     try {
-      remoteBranches = (remoteBranchesCache[workspaceId] || (await window.main.sync.getRemoteBranchNames())).sort();
-      compare = remoteCompareCache[workspaceId] || (await window.main.sync.compareRemoteBranch());
+      remoteBranches = (
+        remoteBranchesCache[workspaceId] || (await window.main.sync.getRemoteBranchNames(workspaceId))
+      ).sort();
+      compare = remoteCompareCache[workspaceId] || (await window.main.sync.compareRemoteBranch(workspaceId));
       const remoteBackendProjects =
         remoteBackendProjectsCache[project.remoteId] ||
         (await window.main.sync.remoteBackendProjects({
@@ -73,8 +75,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(project.remoteId, 'Project is not remote');
 
   try {
-    const remoteBranches = (await window.main.sync.getRemoteBranchNames()).sort();
-    const compare = await window.main.sync.compareRemoteBranch();
+    const remoteBranches = (await window.main.sync.getRemoteBranchNames(workspaceId)).sort();
+    const compare = await window.main.sync.compareRemoteBranch(workspaceId);
     const remoteBackendProjects = await window.main.sync.remoteBackendProjects({
       teamId: project.parentId,
       teamProjectId: project.remoteId,

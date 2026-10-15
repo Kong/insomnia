@@ -83,7 +83,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    await page.getByText('Create a new API Collection').waitFor({ state: 'hidden' });
     // Creating the collection focused the sidebar on it; back out before selecting the project.
     await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.selectProject(GIT_PROJECT_NAME);
@@ -170,7 +170,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'File name' }).fill('discard_test_collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    await page.getByText('Create a new API Collection').waitFor({ state: 'hidden' });
 
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();
@@ -201,7 +201,7 @@ test.describe('Git Sync', () => {
     // Only Name was touched. Pre-fix, the auto-mirrored File name field also counted
     // as changed, pushing changedFieldCount to 2 and wrongly triggering this prompt.
     await page.keyboard.press('Escape');
-    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    await page.getByText('Create a new API Collection').waitFor({ state: 'hidden' });
     await expect.soft(page.getByRole('heading', { name: 'Unsaved changes' })).toBeHidden();
 
     await insomnia.navigationSidebar.selectProjectDropdownOption({
@@ -222,7 +222,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('button', { name: 'No' }).click();
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Yes' }).click();
-    await page.getByText('Create a new Request Collection').waitFor({ state: 'hidden' });
+    await page.getByText('Create a new API Collection').waitFor({ state: 'hidden' });
   });
 });
 

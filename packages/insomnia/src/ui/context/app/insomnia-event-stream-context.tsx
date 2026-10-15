@@ -1,4 +1,5 @@
 import { getRealTimeCollaborators, type Organization, type UserPresence } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
@@ -10,9 +11,9 @@ import { useProjectLoaderData } from '~/routes/organization.$organizationId.proj
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
-import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
+import { useInvalidateAccountData } from '~/ui/hooks/use-account-server-data';
 import { useInvalidateOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 
 const InsomniaEventStreamContext = createContext<{
@@ -73,7 +74,7 @@ const isSameWorkspaceWithRemote = async (workspaceId: string | undefined, remote
   if (!workspaceId || !remoteWorkspaceId) {
     return false;
   }
-  const currentBackendProject = await window.main.sync.getActiveBackendProject();
+  const currentBackendProject = await window.main.sync.getActiveBackendProject(workspaceId);
   if (
     currentBackendProject &&
     currentBackendProject?.id === remoteWorkspaceId &&
@@ -97,7 +98,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
-  const { submit: syncOrganizationsSubmit } = useOrganizationSyncActionFetcher();
+  const invalidateAccountData = useInvalidateAccountData();
   const invalidateStorageRule = useInvalidateOrganizationStorageRule();
   const { submit: syncProjectsSubmit } = useOrganizationSyncProjectsActionFetcher();
   const { submit: syncDataSubmit } = useInsomniaSyncDataActionFetcher();
@@ -111,7 +112,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   useEffect(() => {
     async function updatePresence() {
       const sessionId = userSession.id;
-      if (sessionId && remoteId) {
+      if (sessionId && remoteId && !models.organization.isLocalOrganizationId(organizationId)) {
         try {
           const response = await getRealTimeCollaborators({
             sessionId,
@@ -140,7 +141,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
   useEffect(() => {
     const sessionId = userSession.id;
-    if (sessionId) {
+    // Local-only organizations have no server-side stream to subscribe to.
+    if (sessionId && !models.organization.isLocalOrganizationId(organizationId)) {
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams`);
 
@@ -183,7 +185,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               if (event.avatar) {
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
-              syncOrganizationsSubmit();
+              invalidateAccountData();
             } else if (event.type === 'StorageRuleChanged' && (event.team.startsWith('org_') || event.team.startsWith('team_'))) {
               invalidateStorageRule(event.team);
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
@@ -203,11 +205,14 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               }
             } else if (event.type === 'VaultKeyChanged') {
               const accountId = userSession.accountId;
-              const organizations = JSON.parse(
-                localStorage.getItem(`${accountId}:spaces`) || '[]',
-              ) as Organization[];
+              const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
               clearVaultKeySubmit({
-                organizations: organizations?.map(org => org.id) || [],
+                // The Konnect organization is local-only so it is never in the cached list, but its
+                // workspaces hold secrets like any other.
+                organizations: [
+                  ...(organizations?.map(org => org.id) || []),
+                  models.organization.getKonnectOrganizationId(accountId),
+                ],
                 sessionId: event.sessionId,
               });
             } else if (
@@ -249,7 +254,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     organizationId,
     revalidate,
     syncDataSubmit,
-    syncOrganizationsSubmit,
+    invalidateAccountData,
     syncProjectsSubmit,
     invalidateStorageRule,
     userSession.accountId,

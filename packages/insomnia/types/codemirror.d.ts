@@ -8,6 +8,7 @@ import type { Settings } from 'insomnia-data';
 
 import { HandleRender } from '../src/common/render';
 import { NunjucksParsedTag } from '../src/templating/utils';
+import type { OpenVariableSource } from '../src/common/templating/types';
 
 type LinkClickCallback = (url: string) => void;
 
@@ -18,6 +19,7 @@ interface InsomniaExtensions {
     handleGetRenderContext?: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
     showVariableSourceAndValue?: boolean,
     editorId?: string,
+    onOpenVariableSource?: OpenVariableSource,
   ) => void;
   isHintDropdownActive: () => boolean;
   makeLinksClickable: (handleClick: LinkClickCallback) => void;

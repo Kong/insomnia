@@ -2,6 +2,7 @@ import { Switch } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
 
+import { QUICKJS_SANDBOX_ENABLED } from '../../../scripting/run-script-quickjs';
 import {
   type ASTRule,
   blockedPropertyRules,
@@ -320,32 +321,34 @@ export const ScriptingSettings = () => {
         </div>
       </div>
 
-      <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-(--color-font)">
-              Use QuickJS sandbox for scripts (proof of concept)
-            </span>
-            <p className="text-xs text-(--hl)">
-              Run pre-request and after-response scripts inside the QuickJS-WASM sandbox instead of the hidden browser
-              window. Only a minimal API is supported so far (console, insomnia.environment/variables get/set, read-only
-              insomnia.request) — scripts calling insomnia.sendRequest() or insomnia.test()/pm.test() will throw. Leave
-              this off to keep using the full-featured hidden-window sandbox.
-            </p>
-          </div>
-          <Switch
-            aria-label="Use QuickJS sandbox for scripts (proof of concept)"
-            data-testid="toggle-quickjs-script-sandbox"
-            isSelected={useQuickJsScriptSandbox}
-            onChange={enabled => patchSettings({ useQuickJsScriptSandbox: enabled })}
-            className="group flex items-center gap-2"
-          >
-            <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-selected:bg-(--color-surprise)">
-              <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+      {QUICKJS_SANDBOX_ENABLED && (
+        <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-(--color-font)">
+                Use QuickJS sandbox for scripts (proof of concept)
+              </span>
+              <p className="text-xs text-(--hl)">
+                Run pre-request and after-response scripts inside the QuickJS-WASM sandbox instead of the hidden browser
+                window. Only a minimal API is supported so far (console, insomnia.environment/variables get/set, read-only
+                insomnia.request) — scripts calling insomnia.sendRequest() or insomnia.test()/pm.test() will throw. Leave
+                this off to keep using the full-featured hidden-window sandbox.
+              </p>
             </div>
-          </Switch>
+            <Switch
+              aria-label="Use QuickJS sandbox for scripts (proof of concept)"
+              data-testid="toggle-quickjs-script-sandbox"
+              isSelected={useQuickJsScriptSandbox}
+              onChange={enabled => patchSettings({ useQuickJsScriptSandbox: enabled })}
+              className="group flex items-center gap-2"
+            >
+              <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-selected:bg-(--color-surprise)">
+                <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+              </div>
+            </Switch>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <div className="flex items-center justify-between">

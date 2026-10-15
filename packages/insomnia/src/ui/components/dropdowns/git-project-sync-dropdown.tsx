@@ -89,12 +89,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   }, [providerName]);
 
   useEffect(() => {
-    if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
+    if (gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
       gitRepoDataFetcher.load({
         projectId,
       });
     }
-  }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId]);
+  }, [gitRepoDataFetcher, gitRepository?._id, organizationId, projectId]);
 
   const legacyInsomniaWorkspace =
     gitRepoDataFetcher.data &&

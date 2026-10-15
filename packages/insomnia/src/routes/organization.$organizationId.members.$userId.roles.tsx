@@ -1,5 +1,5 @@
 import { updateUserRoles } from 'insomnia-api';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
@@ -9,6 +9,10 @@ import type { Route } from './+types/organization.$organizationId.members.$userI
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, userId } = params;
+
+  if (models.organization.isLocalOrganizationId(organizationId)) {
+    return { error: 'Organization members are not available for this organization' };
+  }
 
   const formData = await request.formData();
 

@@ -1,26 +1,25 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
-import type { BackendProject } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { deterministicStringify } from 'insomnia-data/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { baseModelSchema, workspaceModelSchema } from '../__schemas__/model-schemas';
-import { projectSchema } from '../__schemas__/type-schemas';
+import { configureStore } from '../store/current-store';
 import MemoryDriver from '../store/drivers/memory-driver';
 import { hashDocument } from '../util';
 import { chunkArray, VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
-const projectBuilder = createBuilder(projectSchema);
 
 function newDoc(id) {
   return baseModelBuilder.reset()._id(id).build();
 }
 
 async function vcs(branch) {
-  const v = new VCS({ driver: new MemoryDriver() });
+  configureStore(new MemoryDriver());
+  const v = new VCS({ workspaceId: 'workspace_1' });
   await v.switchAndCreateBackendProjectIfNotExist('workspace_1', 'Test Workspace');
   await v.checkout([], branch);
   return v;
@@ -968,93 +967,6 @@ describe('VCS', () => {
       expect(await v.getHistory(2)).toStrictEqual([s1, s2]);
       // Get the last 3 items (only 2 exist)
       expect(await v.getHistory(3)).toStrictEqual([s1, s2]);
-    });
-  });
-
-  describe('hasBackendProjectForRootDocument', () => {
-    let vcs: VCS;
-    let backendProject: BackendProject;
-
-    beforeEach(async () => {
-      backendProject = projectBuilder.reset().build();
-
-      const driver = new MemoryDriver();
-      vcs = new VCS({ driver });
-
-      driver.setItem('/projects/', Buffer.from(JSON.stringify([backendProject])));
-      driver.setItem(`/projects/${backendProject.id}/`, Buffer.from(''));
-      driver.setItem(`/projects/${backendProject.id}/meta.json`, Buffer.from(JSON.stringify(backendProject)));
-    });
-
-    it('should return true if has project', async () => {
-      const hasProject = await vcs.hasBackendProjectForRootDocument(backendProject.rootDocumentId);
-
-      expect(hasProject).toBe(true);
-    });
-
-    it('should return false if has no project', async () => {
-      const hasProject = await vcs.hasBackendProjectForRootDocument('some other id');
-
-      expect(hasProject).toBe(false);
-    });
-  });
-
-  describe('_storeBackendProject()', () => {
-    let driver: MemoryDriver;
-    let vcs: VCS;
-    let backendProject: BackendProject;
-
-    beforeEach(() => {
-      driver = new MemoryDriver();
-      vcs = new VCS({ driver });
-      backendProject = projectBuilder.reset().build();
-    });
-
-    it('writes backend project metadata when missing', async () => {
-      const setItemSpy = vi.spyOn(driver, 'setItem');
-
-      await vcs._storeBackendProject(backendProject);
-
-      expect(setItemSpy).toHaveBeenCalledTimes(1);
-      expect(setItemSpy).toHaveBeenCalledWith(`/projects/${backendProject.id}/meta.json`, expect.any(Buffer));
-      expect(await vcs._getBackendProjectById(backendProject.id)).toEqual(backendProject);
-    });
-
-    it('skips identical backend project metadata writes', async () => {
-      const setItemSpy = vi.spyOn(driver, 'setItem');
-
-      await vcs._storeBackendProject(backendProject);
-      setItemSpy.mockClear();
-
-      await vcs._storeBackendProject(backendProject);
-
-      expect(setItemSpy).not.toHaveBeenCalled();
-    });
-
-    it('writes changed backend project metadata', async () => {
-      const setItemSpy = vi.spyOn(driver, 'setItem');
-      const updatedProject = {
-        ...backendProject,
-        name: `${backendProject.name} Updated`,
-      };
-
-      await vcs._storeBackendProject(backendProject);
-      setItemSpy.mockClear();
-
-      await vcs._storeBackendProject(updatedProject);
-
-      expect(setItemSpy).toHaveBeenCalledTimes(1);
-      expect(await vcs._getBackendProjectById(backendProject.id)).toEqual(updatedProject);
-    });
-
-    it('writes backend project metadata when existing meta.json is corrupted', async () => {
-      await driver.setItem(`/projects/${backendProject.id}/meta.json`, Buffer.from('{', 'utf8'));
-      const setItemSpy = vi.spyOn(driver, 'setItem');
-
-      await vcs._storeBackendProject(backendProject);
-
-      expect(setItemSpy).toHaveBeenCalledTimes(1);
-      expect(setItemSpy).toHaveBeenCalledWith(`/projects/${backendProject.id}/meta.json`, expect.any(Buffer));
     });
   });
 

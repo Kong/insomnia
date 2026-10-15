@@ -26,6 +26,7 @@ import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
+import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
@@ -227,10 +228,10 @@ export function createWindow(): ElectronBrowserWindow {
     showUnresponsiveModal();
   });
 
-  // Open generic links (<a .../>) in default browser
-  mainBrowserWindow.webContents.on('will-navigate', (event, url) => {
+  // Open generic links (<a .../>) in default browser; also covers redirects.
+  const guardNavigation = (event: Electron.Event, url: string) => {
     // Prevents local dev full-reload events from opening browser window, see https://github.com/Kong/insomnia/pull/4925
-    if (url.startsWith(appUrl)) {
+    if (isTrustedAppOrigin(url, appUrl)) {
       return;
     }
 
@@ -240,7 +241,9 @@ export function createWindow(): ElectronBrowserWindow {
     if (protocol === 'http:' || protocol === 'https:') {
       shell.openExternal(url);
     }
-  });
+  };
+  mainBrowserWindow.webContents.on('will-navigate', guardNavigation);
+  mainBrowserWindow.webContents.on('will-redirect', guardNavigation);
 
   mainBrowserWindow.webContents.setWindowOpenHandler(() => {
     return { action: 'deny' };

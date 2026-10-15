@@ -9,17 +9,25 @@ import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { setTemplatingDbAuthToken } from '~/common/templating/liquid-extension-worker';
+import { migrateKonnectProjectsIfUnambiguous } from '~/konnect/migrate-konnect-organization';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
 import { database as clientDatabase } from '~/ui/database.client';
+import { refreshKonnectAccess } from '~/ui/organization-utils';
 import { applyColorScheme } from '~/ui/plugins/misc';
 import { createServicesProxy } from '~/ui/services-proxy';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { getInitialEntry } from '~/ui/utils/router';
 
 import { configureV3ClientDefaults } from './common/configure-v3-client';
-import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
+import {
+  getInsomniaSession,
+  getInsomniaVaultKey,
+  getInsomniaVaultSalt,
+  getSkipOnboarding,
+  HAS_SEEN_ONBOARDING_KEY,
+} from './common/constants';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
@@ -72,7 +80,7 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV13', skipOnboarding.toString());
+    window.localStorage.setItem(HAS_SEEN_ONBOARDING_KEY, skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
@@ -145,11 +153,38 @@ if (appSettings.clearOAuth2SessionOnRestart) {
 
 applyColorScheme(appSettings);
 
+// Runs before the router hydrates so every loader can assume Konnect projects already live under
+// the Konnect organization. The ambiguous case is left for the user to resolve in the UI.
+try {
+  const { id: sessionId, accountId } = await services.userSession.get();
+  if (accountId) {
+    try {
+      await migrateKonnectProjectsIfUnambiguous(accountId);
+    } catch (e) {
+      console.log('[konnect] Failed to migrate Konnect projects', e);
+    }
+  }
+  // Resolved here, after the migration, so render-time readers of Konnect access stay synchronous.
+  await refreshKonnectAccess(sessionId, accountId);
+} catch (e) {
+  console.log('[konnect] Failed to resolve Konnect access', e);
+}
+
 const initialEntry = await getInitialEntry();
 
-if (typeof initialEntry === 'string' && window.location.pathname !== initialEntry) {
-  console.log('[entry.client] Initial entry:', initialEntry);
-  window.location.pathname = initialEntry;
+// `getInitialEntry` returns either a bare pathname string or an object carrying router
+// `state` (e.g. `asyncTaskList`). Normalize both shapes, then set the URL and state before
+// hydration. We use `history.replaceState` rather than assigning `window.location.pathname`
+// (a full reload that would drop the `state`): in SPA mode `HydratedRouter` hydrates against
+// the current `window.location` and reads `location.state` from `window.history.state.usr`.
+if (initialEntry) {
+  const { pathname, state } =
+    typeof initialEntry === 'string' ? { pathname: initialEntry, state: undefined } : initialEntry;
+
+  if (pathname !== window.location.pathname || state) {
+    console.log('[entry.client] Initial entry:', pathname);
+    window.history.replaceState({ ...window.history.state, usr: state }, '', pathname);
+  }
 }
 
 startTransition(() => {

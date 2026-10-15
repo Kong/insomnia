@@ -12,7 +12,6 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
   aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
   aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
-  konnectSync: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
 // If network unreachable assume user has paid for the current period
@@ -36,7 +35,7 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
   const params = useParams() as { organizationId?: string };
   const organizationId = organizationIdParam ?? params.organizationId ?? '';
 
-  const isEnabled = !!organizationId && !models.organization.isScratchpadOrganizationId(organizationId);
+  const isEnabled = !!organizationId && !models.organization.isLocalOrganizationId(organizationId);
 
   const { data } = useServerQuery({
     queryKey: ['organization-features', organizationId],
@@ -47,7 +46,7 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
     enabled: isEnabled,
   });
 
-  // Fall back to safe defaults while loading, when disabled (scratchpad), or on error.
+  // Fall back to safe defaults while loading, when disabled (scratchpad/local-only), or on error.
   return {
     features: data?.features ?? fallbackFeatures,
     billing: data?.billing ?? fallbackBilling,

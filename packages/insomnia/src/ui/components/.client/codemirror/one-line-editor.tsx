@@ -19,7 +19,11 @@ import * as reactUse from 'react-use';
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
-import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import {
+  containsExternalVaultTag,
+  extractNunjucksTagFromCoords,
+  replaceVaultTagIdIfNeeded,
+} from '~/common/templating/utils';
 import { isCurlCommand } from '~/common/utils/curl';
 import { useRootLoaderData } from '~/root';
 import { showModal } from '~/ui/components/modals';
@@ -29,12 +33,14 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { Tooltip } from '~/ui/components/tooltip';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
+import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
+import { hideVariableSourceTooltip, isVariableSourceTooltipInside } from './extensions/variable-source-tooltip';
 
 // Replace the editor's entire value while PRESERVING undo/redo history and the
 // cursor. Unlike cm.setValue(), which clears history, replaceRange records the
@@ -109,6 +115,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
+    const openVariableSource = useOpenVariableSource();
     const isPasswordEditor = type?.toLowerCase() === 'password';
 
     // Update the tooltip value, including rendering the value of a nunjucks tag if necessary
@@ -200,16 +207,23 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       };
       codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
       codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
-        const isPaste = change.text && change.text.length > 1;
-        if (isPaste) {
+        const isMultiLineInsert = change.text && change.text.length > 1;
+        const isSingleLinePaste = change.origin === 'paste' && change.update && change.text.length === 1;
+        if (isMultiLineInsert || isSingleLinePaste) {
           const pastedText = change.text.join('\n');
           const hasContent = pastedText.trim();
+          // Cancel the change if it's a curl command or has no content
           if (isCurlCommand(pastedText) || !hasContent) {
             change.cancel();
             return;
           }
+          // Replace vault tags id if needed
+          let editorPasteText = change.text.join('').replace(/\n/g, ' ');
+          if (containsExternalVaultTag(editorPasteText)) {
+            editorPasteText = replaceVaultTagIdIfNeeded(editorPasteText);
+          }
           // If we're in single-line mode, merge all changed lines into one
-          change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
+          change.update?.(change.from, change.to, [editorPasteText]);
         }
       });
       codeMirror.current.on('paste', (_, e: ClipboardEvent) => {
@@ -295,6 +309,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           handleGetRenderContext,
           settings.showVariableSourceAndValue,
           id,
+          openVariableSource,
         );
       }
       setEditorVersion(version => version + 1);
@@ -306,6 +321,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       onBlur,
       onKeyDown,
       onPaste,
+      openVariableSource,
       placeholder,
       readOnly,
       settings.autocompleteDelay,
@@ -326,6 +342,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [historyKey]);
 
     const cleanUpEditor = useCallback(() => {
+      // Hide only a tooltip anchored inside this editor; another editor's tooltip survives.
+      if (isVariableSourceTooltipInside(codeMirror.current?.getWrapperElement() ?? null)) {
+        hideVariableSourceTooltip();
+      }
       codeMirror.current?.toTextArea();
       codeMirror.current?.closeHintDropdown();
       codeMirror.current = null;
@@ -357,6 +377,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         const ensureFocus = () => {
           const cm = codeMirror.current;
           if (!cm) {
+            return;
+          }
+          // codeMirror.current is nulled asynchronously — by the useUnmount cleanup
+          // effect on unmount, and by reinitialize()'s cleanUpEditor() — so React
+          // schedules asynchronously and does not guarantee runs before the next rAF tick — so a
+          // stale loop can still see a non-null cm whose wrapper was already removed from the DOM.
+          // Bail here rather than steal focus into a zombie editor that's mid-teardown.
+          if (!document.body.contains(cm.getWrapperElement())) {
             return;
           }
           if (!cm.hasFocus()) {
@@ -477,13 +505,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
-        if (onChange) {
+        if (onChange && !readOnly) {
           onChange(doc.getValue() || '');
         }
       };
       codeMirror.current?.on('blur', flushOnBlur);
       return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [editorVersion, onChange]);
+    }, [editorVersion, onChange, readOnly]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(

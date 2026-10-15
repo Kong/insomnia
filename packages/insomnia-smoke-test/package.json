@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "13.2.0",
+  "version": "13.3.1",
   "scripts": {
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
@@ -28,7 +28,7 @@
     "@types/ws": "^8.18.1",
     "cross-env": "^10.1.0",
     "esbuild-runner": "2.2.2",
-    "express": "^4.21.2",
+    "express": "^4.22.3",
     "express-basic-auth": "^1.2.1",
     "git-http-backend": "^1.1.2",
     "graphql": "^16.10.0",

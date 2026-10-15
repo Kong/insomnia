@@ -12,14 +12,17 @@ test('can send requests', async ({ page, insomnia }) => {
   await insomnia.projectPage.importFixture('smoke-test-collection.yaml');
 
   await insomnia.navigationSidebar.openWorkspaceActionsDropdown('Smoke tests');
-  await page.getByRole('menuitemradio', { name: 'Export' }).click();
+  await page.getByRole('menuitemradio', { name: 'Export', exact: true }).click();
   await page.getByRole('button', { name: 'Export' }).click();
   await page.getByText('Which format would you like to export as?').click();
   await insomnia.pressEscape();
 
   await insomnia.navigationSidebar.openWorkspaceActionsDropdown('Smoke tests');
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
-  await page.locator('.CodeMirror textarea').fill('curl --request GET --url http://127.0.0.1:4010/echo');
+  await page
+    .getByRole('dialog')
+    .locator('.CodeMirror textarea')
+    .fill('curl --request GET --url http://127.0.0.1:4010/echo');
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await expect

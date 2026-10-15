@@ -230,7 +230,7 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                       </Fragment>
                     ) : (
                       <Fragment>
-                        {getImporterSign(scanResult)} resources to be imported from {scanResult.oriFileName}:
+                        {getImporterSign(scanResult)} resources to be imported{scanResult.oriFileName ? ` from ${scanResult.oriFileName}` : ''}:
                       </Fragment>
                     )}
                   </div>

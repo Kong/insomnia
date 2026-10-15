@@ -90,6 +90,7 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
+import { resolveUserDataFolder } from './path-guard';
 import type { secretStorageBridgeAPI } from './secret-storage';
 import { registerTemplatingDbAuthIpcHandler } from './templating-db-auth';
 
@@ -633,7 +634,7 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const folderPath = path.join(app.getPath('userData'), options.folder);
+    const folderPath = resolveUserDataFolder(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
     try {
       return await readDir(_, { path: folderPath });

@@ -34,6 +34,10 @@ export interface CreateProjectData {
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
+  // Local-only organizations are not known to the backend, so there is nothing to report.
+  if (models.organization.isLocalOrganizationId(organizationId)) {
+    return;
+  }
   const projects = await services.project.listByOrganizationIds(organizationId);
   const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
   const gitProjectsCount = gitRepositoryIds.length;
@@ -59,6 +63,10 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
   const user = await services.userSession.get();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
+  invariant(
+    newProjectData.storageType === 'local' || !models.organization.isLocalOrganizationId(organizationId),
+    'Only local projects can be created in this organization',
+  );
 
   if (newProjectData.storageType === 'local') {
     const project = await services.project.create({
