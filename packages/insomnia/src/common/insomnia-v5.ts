@@ -19,6 +19,7 @@ import type {
   Environment,
   EnvironmentKvPairData,
   GrpcRequest,
+  IDatabase,
   McpRequest,
   MockRoute,
   MockServer,
@@ -34,7 +35,7 @@ import type {
   Workspace,
   WorkspaceScope,
 } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { EnvironmentKvPairDataType, models } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
@@ -813,19 +814,24 @@ export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
  * @param workspaceId - ID of the workspace to export
  * @param includePrivateEnvironments - Whether to include private environment data
  * @param requestIds - Optional array of specific request IDs to export (if not provided, exports all)
+ * @param db - Database to read from (defaults to the app database)
  * @returns YAML string containing the exported workspace data
  */
 export async function getInsomniaV5DataExport({
   workspaceId,
   includePrivateEnvironments,
   requestIds,
+  db = database,
 }: {
   workspaceId: string;
   includePrivateEnvironments: boolean;
   requestIds?: string[];
+  db?: IDatabase;
 }) {
   try {
-    const workspace = await services.workspace.getById(workspaceId);
+    // Read through `db` rather than `services.workspace.getById`: services always use the app database,
+    // so they would miss the workspace when exporting from another database (e.g. a scratch in-memory one)
+    const workspace = await db.findOne<Workspace>(models.workspace.type, { _id: workspaceId });
 
     if (!workspace) {
       throw new Error('Workspace not found');
@@ -835,7 +841,7 @@ export async function getInsomniaV5DataExport({
     const exportableTypes = Object.values(MODELS_BY_EXPORT_TYPE);
 
     // Fetch all descendants of the workspace (requests, folders, environments, etc.)
-    const workspaceDescendants = await database.getWithDescendants(workspace, exportableTypes);
+    const workspaceDescendants = await db.getWithDescendants(workspace, exportableTypes);
 
     // Filter to only include resources that are exportable
     const exportableResources = workspaceDescendants.filter(resource => {
@@ -1166,7 +1172,7 @@ export async function getInsomniaV5DataExport({
           id: envVar.id,
           name: envVar.name,
           value: envVar.value,
-          type: 'str',
+          type: EnvironmentKvPairDataType.STRING,
           enabled: !!envVar.enabled,
         })),
         roots: resource.roots.map(root => ({

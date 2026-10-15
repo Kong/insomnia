@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
-import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
+import { EnvironmentType, models } from 'insomnia-data';
 import React, { Fragment, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -22,7 +22,7 @@ import {
 import { useParams } from 'react-router';
 
 import { responseTagRegex } from '~/common/templating/utils';
-import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { invariant } from '~/common/utils/invariant';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
@@ -41,7 +41,17 @@ import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
 
-export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => void }) => {
+export const WorkspaceEnvironmentsEditModal = ({
+  onClose,
+  // Environment preselected on open, e.g. when opened for a specific variable's
+  // source. Validated against this workspace's environments — the id can go stale
+  // (e.g. the environment is deleted between hover and Open) and an unknown id
+  // would leave the modal with no editor and no selection.
+  initialEnvironmentId,
+}: {
+  onClose: () => void;
+  initialEnvironmentId?: string;
+}) => {
   const { organizationId, projectId, workspaceId } = useParams<{
     organizationId: string;
     projectId: string;
@@ -64,7 +74,11 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const preselectedEnvironmentId =
+    initialEnvironmentId && [baseEnvironment, ...subEnvironments].some(env => env._id === initialEnvironmentId)
+      ? initialEnvironmentId
+      : activeEnvironment._id;
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(preselectedEnvironmentId);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );
@@ -77,10 +91,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
     }
     return false;
   }, [selectedEnvironment]);
-  // Do not allowed to switch to json environment if contains secret item
-  const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
-    d => d.type === EnvironmentKvPairDataType.SECRET,
-  );
+  const allowSwitchEnvironment = !hasProtectedKvPairs(selectedEnvironment?.kvPairData);
 
   const environmentActionsList: {
     id: string;

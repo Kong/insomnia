@@ -25,6 +25,17 @@ export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
 
 export const isWorkspaceMeta = (model: Pick<BaseModel, 'type'>): model is WorkspaceMeta => model.type === type;
 
+export function rewriteReferences(workspaceMeta: WorkspaceMeta, idMapping: Map<string, string>): WorkspaceMeta {
+  const remap = (id: string | null) => (id ? idMapping.get(id) ?? id : null);
+  return {
+    ...workspaceMeta,
+    activeEnvironmentId: remap(workspaceMeta.activeEnvironmentId),
+    activeGlobalEnvironmentId: remap(workspaceMeta.activeGlobalEnvironmentId),
+    activeRequestId: remap(workspaceMeta.activeRequestId),
+    activeUnitTestSuiteId: remap(workspaceMeta.activeUnitTestSuiteId),
+  };
+}
+
 export function init(): BaseWorkspaceMeta {
   return {
     activeActivity: null,

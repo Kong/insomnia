@@ -1041,11 +1041,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         )}
         {pushFailedError ? (
           <PushFailedAfterCommitBanner
-          error={pushFailedError}
-          isRetrying={isRetryingPush}
-          onRetry={retryPush}
-          projectId={projectId}
-        />
+            error={pushFailedError}
+            isRetrying={isRetryingPush}
+            onRetry={retryPush}
+            projectId={projectId}
+          />
         ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
@@ -1367,7 +1367,12 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 // that was renamed, moved, or deleted outside Insomnia.
                 const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
                 if ('errors' in result && result.errors) {
-                  showToast({ icon: 'exclamation-triangle', title: 'Folder not found', description: result.errors.join(', '), status: 'error' });
+                  showToast({
+                    icon: 'exclamation-triangle',
+                    title: 'Folder not found',
+                    description: result.errors.join(', '),
+                    status: 'error',
+                  });
                   return;
                 }
                 if (result.path) {
@@ -1644,6 +1649,11 @@ const OriginalGitProjectStagingModal: FC<
     return false;
   })();
 
+  const undiscardableFilePath =
+    previewDiffItem?.undiscardable && !previewDiffItem.staged && isPreviewDiffItemInChangesList
+      ? previewDiffItem.filepath
+      : null;
+
   return (
     <>
       <ModalOverlay
@@ -1803,6 +1813,7 @@ const OriginalGitProjectStagingModal: FC<
                           </BasicButton>
                         )}
                       </Heading>
+                      {undiscardableFilePath && <UndiscardableChangeWarning />}
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
@@ -1842,6 +1853,7 @@ const OriginalGitProjectStagingModal: FC<
       {showConfirmDiscardAndPullModal && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          showUndiscardableWarning={Boolean(undiscardableFilePath)}
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1857,6 +1869,7 @@ const OriginalGitProjectStagingModal: FC<
       {discardData && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          showUndiscardableWarning={undiscardableFilePath !== null && discardData.paths.includes(undiscardableFilePath)}
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1884,14 +1897,23 @@ const OriginalGitProjectStagingModal: FC<
   );
 };
 
+const UndiscardableChangeWarning = () => (
+  <p className="rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm) text-base">
+    <Icon icon="exclamation-triangle" className="mr-2" />
+    This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
+    other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
+  </p>
+);
+
 interface ConfirmModalProps {
   message: string;
+  showUndiscardableWarning?: boolean;
   onConfirm?: () => void;
   onClose?: () => void;
 }
 
 // TODO - refactor this to use the new modal system
-const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps) => {
+const ConfirmDiscardModal = ({ message, showUndiscardableWarning, onConfirm, onClose }: ConfirmModalProps) => {
   return (
     <ModalOverlay
       isOpen
@@ -1923,6 +1945,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 </Button>
               </div>
               <div className="">{message}</div>
+              {showUndiscardableWarning && <UndiscardableChangeWarning />}
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
@@ -2032,7 +2055,7 @@ const CreateBranchAndPushModal = ({
                 <Button
                   type="submit"
                   isDisabled={isCreating || !branchName.trim()}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80 disabled:opacity-50"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:opacity-80"
                 >
                   <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
                   Create branch &amp; push
