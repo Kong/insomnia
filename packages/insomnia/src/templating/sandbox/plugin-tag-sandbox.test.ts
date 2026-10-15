@@ -485,6 +485,40 @@ describe('manifest-declared module grants (C3)', () => {
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
+
+  const querystringTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var qs = require('querystring'); return JSON.stringify(qs.parse('a=1&a=2')); } }];";
+
+  it('a plugin granted "querystring" can use it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: querystringTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['querystring'])),
+      bridge: noBridge,
+    });
+    expect(JSON.parse(actual)).toEqual({ a: ['1', '2'] });
+  });
+
+  it('a plugin declaring the node:querystring alias can use it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: querystringTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:querystring'])),
+      bridge: noBridge,
+    });
+    expect(JSON.parse(actual)).toEqual({ a: ['1', '2'] });
+  });
+
+  it('a plugin without the grant is denied "querystring" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: querystringTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'querystring' not permitted by manifest");
+  });
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
