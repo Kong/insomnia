@@ -424,10 +424,14 @@ export async function savePatchesMadeByScript(patches: {
 
   // persist updated cookieJar if needed
   if (mutatedContext.cookieJar) {
-    // merge cookies from response to the cookiejar, or cookies from response will not be persisted
-    await services.cookieJar.update(mutatedContext.cookieJar, {
-      cookies: [...(responseCookies || []), ...mutatedContext.cookieJar.cookies],
-    });
+    // merge cookies from response to the cookiejar, or cookies from response will not be persisted.
+    // responseCookies already carry their own 'manual'/'response' tag; anything in
+    // mutatedContext.cookieJar.cookies without one was created/edited directly by the script,
+    // which is trusted like a manual edit.
+    const cookies = [...(responseCookies || []), ...mutatedContext.cookieJar.cookies].map(cookie =>
+      cookie.source ? cookie : { ...cookie, source: 'manual' as const },
+    );
+    await services.cookieJar.update(mutatedContext.cookieJar, { cookies });
   }
   // when base environment is activated, `mutatedContext.environment` points to it
   const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;
@@ -435,14 +439,14 @@ export async function savePatchesMadeByScript(patches: {
   const hasGlobalEnvironmentAndIsNotBase =
     mutatedContext.globals && mutatedContext.globals?._id !== activeGlobalBaseEnvironment?._id;
   const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
-    const { environmentType } = originEnvironment;
+    const { environmentType, kvPairData: originalKvPairData } = originEnvironment;
     const { data, dataPropertyOrder } = mutatedContextEnvironment;
     await services.environment.update(originEnvironment, {
       data,
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null, originalKvPairData),
       }),
     });
   };
@@ -471,7 +475,11 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
+          kvPairData: getKVPairFromData(
+            mutatedFolder.environment,
+            originalFolder.environmentPropertyOrder ?? null,
+            originalFolder.kvPairData,
+          ),
         }),
       });
     }
@@ -513,12 +521,11 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     .map(doc => doc.name);
   let vault;
   if (globals && models.environment.vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
-    // decrypt and set vault in insomnia sdk if necessary
-    globals.data[models.environment.vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
-      globals.data[models.environment.vaultEnvironmentPath],
-      'script',
-    );
-    vault = globals.data[models.environment.vaultEnvironmentPath];
+    // decrypt and set vault in insomnia sdk if necessary.
+    // the decrypted secrets must stay out of `globals.data`: that object is written back to the
+    // database by `savePatchesMadeByScript` once the script returns, so storing plaintext there
+    // would permanently replace the stored ciphertext.
+    vault = await maskOrDecryptVaultDataIfNecessary(globals.data[models.environment.vaultEnvironmentPath], 'script');
   }
 
   try {

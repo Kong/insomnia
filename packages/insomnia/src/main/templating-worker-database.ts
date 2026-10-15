@@ -8,6 +8,7 @@ import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import { ProxyScopes } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
@@ -63,7 +64,7 @@ export const resolveDbByKey = async (request: Request) => {
   try {
     // We expect this to throw if a db call returns undefined
     body = JSON.parse(await request.text(), stripDangerousKeysReviver);
-  } catch { }
+  } catch {}
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
@@ -802,6 +803,10 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
   }) => {
     const requestId = uuidv4();
     const settings = await services.settings.get();
+    if (settings.proxyScope !== ProxyScopes.all) {
+      // Disable proxying unless user chooses "All traffic sent by Insomnia" (all).
+      settings.proxyEnabled = false;
+    }
     const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
     const { request: originRequest } = body.options;
     const response = await curlRequest({

@@ -43,7 +43,6 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
     isOpen: false,
   });
   const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar' });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar' });
   const createNewMockServer = () =>
     setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar' });
   const createNewGlobalEnvironment = () =>
@@ -52,6 +51,7 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
+
   const parentId = requestGroup?._id || workspace?._id || project._id;
 
   const createRequest = ({ requestType }: { requestType: CreateRequestType }) => {
@@ -150,17 +150,10 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
   const createInProjectActionList: ActionItem[] = [
     {
       id: 'new-collection',
-      name: 'Request collection',
+      name: 'API Collection',
       scope: 'collection',
       icon: 'bars',
       action: createNewCollection,
-    },
-    {
-      id: 'new-document',
-      name: 'Design document',
-      scope: 'design',
-      icon: 'file',
-      action: createNewDocument,
     },
     {
       id: 'new-mcp-client',
@@ -193,7 +186,7 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
         return 'Project is empty';
       }
       case 'emptyCollection': {
-        return 'Collection is empty';
+        return 'No requests yet';
       }
       case 'emptyFolder': {
         return 'Folder is empty';
@@ -210,7 +203,7 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
         return 'empty project';
       }
       case 'emptyCollection': {
-        return 'empty collection';
+        return 'empty API collection';
       }
       case 'emptyFolder': {
         return 'empty folder';
@@ -243,6 +236,7 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
       <span className={`${kind === 'emptyFolder' ? 'ml-7' : 'ml-3'} min-w-0 flex-1 truncate text-sm`}>
         {getLabel()}
       </span>
+
       <MenuTrigger>
         <Button
           aria-label={`Create in ${getAriaLabel()}`}

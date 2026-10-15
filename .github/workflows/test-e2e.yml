@@ -78,6 +78,8 @@ jobs:
 
       - name: Checkout branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -100,8 +102,82 @@ jobs:
           name: app-build
           path: packages/insomnia/build/
 
+      - name: Download previous Playwright last run state
+        if: ${{ github.run_attempt > 1 }}
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: playwright-last-run-shard-${{ matrix.shardIndex }}-attempt-*
+          path: .playwright-last-run-history
+
+      - name: Restore previous Playwright last run state
+        if: ${{ github.run_attempt > 1 }}
+        env:
+          SHARD_INDEX: ${{ matrix.shardIndex }}
+          SHARD_TOTAL: ${{ matrix.shardTotal }}
+        run: |
+          set -euo pipefail
+          CURRENT_ATTEMPT="${GITHUB_RUN_ATTEMPT}"
+          PREVIOUS_ATTEMPT=$((CURRENT_ATTEMPT - 1))
+          mkdir -p packages/insomnia-smoke-test/traces
+
+          if [ ! -d .playwright-last-run-history ]; then
+            echo "::notice::No last-run history downloaded for shard $SHARD_INDEX/$SHARD_TOTAL. Falling back to full shard run."
+            exit 0
+          fi
+
+          CANDIDATE_FILE="$(
+            find .playwright-last-run-history -type f \( -name '.last-run.json' -o -path '*/traces/.last-run.json' \) \
+              | while IFS= read -r file; do
+                  if [[ "$file" =~ attempt-([0-9]+) ]]; then
+                    attempt="${BASH_REMATCH[1]}"
+                  else
+                    attempt="$PREVIOUS_ATTEMPT"
+                  fi
+
+                  if [ "$attempt" -lt "$CURRENT_ATTEMPT" ]; then
+                    printf '%s\t%s\n' "$attempt" "$file"
+                  fi
+                done \
+              | sort -t $'\t' -k1,1nr \
+              | head -n1 \
+              | cut -f2
+          )"
+
+          if [ -z "${CANDIDATE_FILE:-}" ]; then
+            echo "::notice::No previous last-run state found for shard $SHARD_INDEX/$SHARD_TOTAL. Falling back to full shard run."
+            exit 0
+          fi
+
+          cp "$CANDIDATE_FILE" packages/insomnia-smoke-test/traces/.last-run.json
+          echo "Restored Playwright last-run state from: $CANDIDATE_FILE"
+
       - name: Smoke test electron app (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: |
+          LAST_FAILED_ARGS=()
+
+          if [ "${GITHUB_RUN_ATTEMPT:-1}" -gt 1 ]; then
+            if [ ! -f packages/insomnia-smoke-test/traces/.last-run.json ]; then
+              echo "::notice::Rerun attempt detected but no previous .last-run.json for shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}. Running full shard."
+            elif node -e "const fs=require('node:fs'); const data=JSON.parse(fs.readFileSync('packages/insomnia-smoke-test/traces/.last-run.json','utf8')); process.exit(Array.isArray(data.failedTests) && data.failedTests.length > 0 ? 0 : 1)"; then
+              echo "Rerun attempt detected. Running only last failed tests for shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}."
+              LAST_FAILED_ARGS+=(--last-failed)
+            else
+              echo "::notice::No failed tests recorded in previous .last-run.json for shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}. Running full shard."
+            fi
+          fi
+
+          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} "${LAST_FAILED_ARGS[@]}"
+
+      - name: Upload Playwright last run state
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          if-no-files-found: warn
+          name: playwright-last-run-shard-${{ matrix.shardIndex }}-attempt-${{ github.run_attempt }}
+          path: packages/insomnia-smoke-test/traces/.last-run.json
+          include-hidden-files: true
+          retention-days: 7
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

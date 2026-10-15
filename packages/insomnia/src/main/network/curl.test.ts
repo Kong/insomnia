@@ -1,4 +1,8 @@
 // @ts-nocheck
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import { Curl } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import { services } from 'insomnia-data';
@@ -10,11 +14,14 @@ import { registerCurlHandlers } from './curl';
 // register the real handlers once and pull the handler function out of the mocked
 // `electron.ipcMain.handle` calls instead of exporting an internal for tests only.
 let openCurlConnection: (event: unknown, options: unknown) => Promise<void>;
+let findCurlEvents: (event: unknown, options: { responseId: string }) => Promise<unknown[]>;
 
 beforeAll(() => {
   registerCurlHandlers();
   const call = electron.ipcMain.handle.mock.calls.find(([channel]) => channel === 'curl.open');
   openCurlConnection = call[1];
+  const findManyCall = electron.ipcMain.handle.mock.calls.find(([channel]) => channel === 'curl.event.findMany');
+  findCurlEvents = findManyCall[1];
 });
 
 const baseRenderedRequest = (overrides: Record<string, unknown> = {}) => ({
@@ -108,5 +115,54 @@ describe('openCurlConnection', () => {
     await openCurlConnection({}, { workspaceId, renderedRequest });
 
     expect(setOptCallsFor(setOptSpy, Curl.option.HTTPHEADER)).toHaveLength(1);
+  });
+});
+
+describe('curl.event.findMany', () => {
+  // The streaming connection writes its NDJSON event log to the response's `bodyPath`, exactly where
+  // the plain HTTP send path stores a raw body, so the content is what tells the two apart.
+  const createResponseWithBody = async (body: string) => {
+    const bodyPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-curl-events-')), 'body.response');
+    fs.writeFileSync(bodyPath, body);
+    const response = await services.response.create({ parentId: 'req_find_many_test', bodyPath }, 20);
+    return response._id;
+  };
+
+  const messageEvent = (id: string, data: string) => ({
+    _id: id,
+    requestId: 'req_find_many_test',
+    type: 'message',
+    timestamp: 1,
+    data,
+    direction: 'INCOMING',
+  });
+
+  it('returns the events written by the streaming connection', async () => {
+    const first = messageEvent('evt_1', 'hello');
+    const second = messageEvent('evt_2', 'world');
+    const responseId = await createResponseWithBody(`${JSON.stringify(first)}\n${JSON.stringify(second)}\n`);
+
+    // Newest first.
+    await expect(findCurlEvents({}, { responseId })).resolves.toEqual([second, first]);
+  });
+
+  it('never reads a plain HTTP response body as events', async () => {
+    // Regression: flipping the request to `Accept: text/event-stream` while an HTTP response is
+    // active used to hand that JSON body to the event log table, which then threw
+    // "Could not determine key for item" and blanked the whole response pane.
+    const responseId = await createResponseWithBody(JSON.stringify({ id: '1' }));
+
+    await expect(findCurlEvents({}, { responseId })).resolves.toEqual([]);
+  });
+
+  it('skips lines that are not events', async () => {
+    // Pretty printed bodies, a line being appended while the stream is still open, and any other
+    // junk must be dropped rather than parsed into keyless "events".
+    const event = messageEvent('evt_1', 'hello');
+    const responseId = await createResponseWithBody(
+      `{\n  "id": "1"\n}\n${JSON.stringify(event)}\n{"_id":"evt_2","requestId":"req_find_many_test","ty`,
+    );
+
+    await expect(findCurlEvents({}, { responseId })).resolves.toEqual([event]);
   });
 });

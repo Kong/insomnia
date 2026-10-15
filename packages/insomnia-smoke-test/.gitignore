@@ -20,3 +20,6 @@ fixtures/inso-nedb/insomnia.OAuth2Token.db
 fixtures/inso-nedb/insomnia.PluginData.db
 fixtures/inso-nedb/insomnia.CaCertificate.db
 fixtures/inso-nedb/insomnia.CloudCredential.db
+
+# Playwright junit/xml run artifacts
+test-results.xml

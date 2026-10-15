@@ -25,6 +25,9 @@ export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT_TEST = env.PLAYWRIGHT_TEST;
 export const OAUTH_WINDOW_SESSION_ID_KEY = 'current-oauth-session-id';
+// Bump this when the onboarding content changes so that users will see the new wizard again.
+export const ONBOARDING_VERSION = '13.3';
+export const HAS_SEEN_ONBOARDING_KEY = `hasSeenOnboardingV${ONBOARDING_VERSION}`;
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;

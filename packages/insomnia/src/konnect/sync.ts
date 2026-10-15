@@ -700,13 +700,13 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
   };
 
   try {
-    // Load all existing Konnect projects up front to avoid per Control Plane queries
-    const existingProjects = (
-      await insoservices.project.list({
-        parentId: organizationId,
-        konnectControlPlaneId: { $ne: null },
-      })
-    ).filter(p => p.konnectControlPlaneId != null);
+    // Load all existing Konnect projects up front to avoid per Control Plane queries.
+    // `konnectControlPlaneId` is an optional key, so regular projects omit it entirely and NeDB's
+    // `$ne: null` alone would match them.
+    const existingProjects = await insoservices.project.list({
+      parentId: organizationId,
+      konnectControlPlaneId: { $exists: true, $ne: null },
+    });
     const existingProjectsByKonnectId = new Map(existingProjects.map(p => [p.konnectControlPlaneId!, p]));
     const incomingControlPlaneIds = new Set<string>();
     const syncCtx: SyncContext = { pat, organizationId, existingProjectsByKonnectId, signal, onProgress };

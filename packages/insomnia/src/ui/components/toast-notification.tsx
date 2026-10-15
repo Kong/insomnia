@@ -34,6 +34,33 @@ const logTransitionError = (error: unknown) => {
   console.warn('Transition error:', error);
 };
 
+type DocumentWithActiveViewTransition = Document & { activeViewTransition?: ViewTransition | null };
+
+// While a view transition is running - including the moment one gets skipped by a newer one -
+// Chromium retargets hit-testing for the whole viewport to <html>, so a click can arrive with
+// document.documentElement as its target. react-aria's interact-outside reads such an event as a
+// click outside an open modal and closes it (e.g. the settings modal when pressing Check for
+// updates repeatedly). Drop those events: their real target cannot be recovered while the
+// transition is running, and the browser was suppressing hit-testing for that click anyway.
+// Events that land on real elements are untouched, so dialogs, popovers and menus keep behaving
+// as before. This complements the ::view-transition rules in styles.css, which keep clicks
+// reaching real elements in the first place.
+const isRetargetedByViewTransition = (event: Event) =>
+  event.target === document.documentElement &&
+  Boolean((document as DocumentWithActiveViewTransition).activeViewTransition);
+
+const dropRetargetedEvents = (event: Event) => {
+  if (isRetargetedByViewTransition(event)) {
+    event.stopPropagation();
+  }
+};
+
+// Guarded because this module is also evaluated in Node (dev server, prerender), where `window` does not exist.
+if (typeof window !== 'undefined') {
+  window.addEventListener('pointerdown', dropRetargetedEvents, true);
+  window.addEventListener('click', dropRetargetedEvents, true);
+}
+
 // Create a global ToastQueue.
 export const queue = new ToastQueue<RAToastContent>({
   // Wrap state updates in a CSS view transition.
@@ -110,7 +137,7 @@ export const Toaster = () => (
       <Toast
         toast={toast}
         style={{ viewTransitionName: toast.key }}
-        className={`flex items-center gap-4 rounded-lg border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg outline-hidden [view-transition-name:toast]`}
+        className={`flex items-center gap-4 rounded-lg border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg outline-hidden`}
       >
         <ToastContent className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center gap-2">

@@ -61,7 +61,7 @@ test.describe('runner features tests', () => {
 
   test('run collection runner', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -104,7 +104,7 @@ test.describe('runner features tests', () => {
 
   test('shows live progress and cancels an in-progress run', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -126,7 +126,7 @@ test.describe('runner features tests', () => {
 
   test('skips the in-flight request and continues to the next', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -145,7 +145,7 @@ test.describe('runner features tests', () => {
 
   test('run collection runner with data upload', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
     // upload data
@@ -186,7 +186,7 @@ test.describe('runner features tests', () => {
 
   test('run req4 3 times with setNextRequest the pre-request script', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
     await selectRunnerRequests(page, 'req4');
@@ -204,7 +204,7 @@ test.describe('runner features tests', () => {
 
   test('await test works', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
     await selectRunnerRequests(page, 'await-test');
@@ -222,7 +222,7 @@ test.describe('runner features tests', () => {
 
   test('run req5 3 times with setNextRequest in the after-response script', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
     await selectRunnerRequests(page, 'req5');
@@ -240,7 +240,7 @@ test.describe('runner features tests', () => {
 
   test('skip req01 with setNextRequest', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
     await selectRunnerRequests(page, 'req0', 'req01', 'req02');
@@ -263,7 +263,7 @@ test.describe('runner features tests', () => {
 
   test('can read variables during whole execution', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -282,7 +282,7 @@ test.describe('runner features tests', () => {
 
   test('can detect sync and async test failure', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -301,7 +301,7 @@ test.describe('runner features tests', () => {
 
   test('delay input can be cleared to enter a new value', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -321,7 +321,7 @@ test.describe('runner features tests', () => {
 
   test('running with cleared delay input uses last valid value', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -342,7 +342,7 @@ test.describe('runner features tests', () => {
 
   test('iterations input can be cleared to enter a new value', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -362,7 +362,7 @@ test.describe('runner features tests', () => {
 
   test('running with cleared iterations input uses last valid value', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 
@@ -387,7 +387,7 @@ test.describe('runner features tests', () => {
 
   test('can turn off logs via settings', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      actionName: 'Run Collection',
+      actionName: 'Run API Collection',
       workspaceName: 'Runner',
     });
 

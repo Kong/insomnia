@@ -35,6 +35,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const currentUserOrganizationIds = new Set([
     ...organizations.map(o => o.id),
     models.organization.SCRATCHPAD_ORGANIZATION_ID,
+    models.organization.getKonnectOrganizationId(accountId),
   ]);
 
   const currentUserProjects = relatedProjects.filter(p => currentUserOrganizationIds.has(p.parentId));

@@ -3,7 +3,7 @@ import { models } from 'insomnia-data';
 import { useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
+import { useCurrentPlan, useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 export const usePlanData = () => {
   let isOwner = false;
@@ -14,19 +14,15 @@ export const usePlanData = () => {
   let isEnterprisePlan = false;
   const { userSession } = useRootLoaderData()!;
   const { organizationId } = useParams<{ organizationId: string }>();
-  const organizationData = useOrganizationLoaderData();
+  const organizations = useOrganizations();
+  const currentPlan = useCurrentPlan();
   // ensure user has logged in with valid organization
-  if (
-    organizationData &&
-    userSession &&
-    Array.isArray(organizationData.organizations) &&
-    organizationData.organizations.length > 0
-  ) {
-    const currentOrg = organizationData.organizations.find(organization => organization.id === organizationId);
+  if (userSession && Array.isArray(organizations) && organizations.length > 0) {
+    const currentOrg = organizations.find(organization => organization.id === organizationId);
     if (currentOrg && userSession.accountId) {
       isOwner = Boolean(currentOrg.is_owner);
     }
-    planType = organizationData.currentPlan?.type || planType;
+    planType = currentPlan?.type || planType;
     isFreePlan = planType.includes('free');
     isTeamPlan = planType.includes('team');
     isEnterprisePlan = planType.includes('enterprise');
@@ -34,7 +30,7 @@ export const usePlanData = () => {
   }
   return {
     isOwner,
-    currentPlan: organizationData?.currentPlan,
+    currentPlan,
     planDisplayName,
     isFreePlan,
     isTeamPlan,

@@ -177,6 +177,7 @@ export type HandleChannels =
   | 'socketIO.event.send'
   | 'syncNewWorkspaceIfNeeded'
   | 'sync.invoke'
+  | 'sync.invokeGlobal'
   | 'sync.pullRemoteBackendProject'
   | 'templatingDb.getAuthToken'
   | 'socketIO.open'
