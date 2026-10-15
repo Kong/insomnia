@@ -1,0 +1,30 @@
+{
+  "_comment": [
+    "Copy to profiles.json and fill in your team's backend URLs. profiles.json is",
+    "gitignored on purpose: this repo is public, and internal hostnames should not",
+    "end up in its history. Ask a teammate for the real values.",
+    "",
+    "Mirror whatever env vars you normally pass to `npm run dev` for that stack.",
+    "Anything you leave out falls back to the PRODUCTION default in",
+    "packages/insomnia/src/common/constants.ts - so omitting KONNECT_API_URL",
+    "points that one service at prod while the rest go to your stack.",
+    "The built-in `mock` and `prod` profiles need no configuration."
+  ],
+  "dev": {
+    "description": "internal dev stack",
+    "env": {
+      "INSOMNIA_API_URL": "https://api.dev.example.com",
+      "INSOMNIA_APP_WEBSITE_URL": "https://app.dev.example.com",
+      "INSOMNIA_AI_URL": "https://ai.dev.example.com",
+      "INSOMNIA_MOCK_API_URL": "https://mock.dev.example.com",
+      "KONNECT_API_URL": "https://global.api.example.com"
+    }
+  },
+  "staging": {
+    "description": "staging stack",
+    "env": {
+      "INSOMNIA_API_URL": "https://api.staging.example.com",
+      "INSOMNIA_APP_WEBSITE_URL": "https://app.staging.example.com"
+    }
+  }
+}
