@@ -64,7 +64,7 @@ export const AuthInputRow: FC<Props> = ({
         // If the editor is disabled, we don't want to patch the value
         return;
       }
-      patcher(_id, { authentication: { ...authentication, [property]: value } });
+      patcher(_id, { authentication: { ...authentication, [property]: value } as typeof authentication });
     },
     [patcher, _id, authentication, property, disabled],
   );

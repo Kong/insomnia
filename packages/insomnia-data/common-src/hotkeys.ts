@@ -34,7 +34,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_showCreateFolder: 'Create Folder',
   request_showDuplicate: 'Duplicate Request',
   request_togglePin: 'Pin/Unpin Request',
-  environment_showVariableSourceAndValue: 'Show variable source and value',
+  environment_showVariableSourceAndValue: 'Template tags show variable source and value',
   beautifyRequestBody: 'Beautify Active Code Editors',
   graphql_explorer_focus_filter: 'Focus GraphQL Explorer Filter',
   close_tab: 'Close Tab',
