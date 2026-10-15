@@ -191,6 +191,7 @@ const getMethodsFromReflectionServer = async (
     }
     const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
       Buffer.from(res.fileDescriptorSet.toBinary()),
+      grpcOptions,
     );
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);
@@ -245,7 +246,7 @@ const getMethodsFromReflection = async (
     const fullService = fileContainingSymbol.lookupService(service);
     const mockedRequestMethods = mockRequestMethods(fullService);
     const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
-    const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, grpcOptions);
     const tryToGetMethods = () => {
       try {
         console.log('[grpc] loading service from reflection:', service);
