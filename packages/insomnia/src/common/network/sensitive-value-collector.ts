@@ -140,11 +140,31 @@ export function redactConfidentialText(text: string, values: readonly string[]):
     if (val.length === 0) {
       continue;
     }
-    // MVP: raw string replacement only.
-    // TODO: also replace URL-encoded (%XX) and JSON-escaped (\uXXXX) variants.
     result = result.replaceAll(val, CONFIDENTIAL_MASK_VALUE);
   }
   return result;
+}
+
+// A registered value rarely reaches disk in its raw form. Timeline lines are written as NDJSON,
+// so JSON.stringify escapes `"`, `\` and control characters, and a secret interpolated into a
+// URL is percent-encoded by the time curl echoes it back. `replaceAll` is a literal match, so a
+// secret like `ab"cd` would survive on disk as `ab\"cd` unless the escaped form is registered too.
+//
+// Variants that are identical to the raw value (the common case: no quotes, no reserved
+// characters) are collapsed by the Set, so this costs nothing for ordinary secrets.
+function expandEncodedVariants(value: string): string[] {
+  const variants = [value];
+
+  // JSON.stringify always yields a quoted string; strip the surrounding quotes.
+  variants.push(JSON.stringify(value).slice(1, -1));
+
+  try {
+    variants.push(encodeURIComponent(value));
+  } catch {
+    // encodeURIComponent throws URIError on a lone surrogate -- nothing to register then.
+  }
+
+  return variants.filter(variant => variant.length > 0);
 }
 
 export function createSensitiveValueCollector(hideSecretValues: boolean): SensitiveValueCollector | null {
@@ -157,7 +177,9 @@ export function createSensitiveValueCollector(hideSecretValues: boolean): Sensit
   return {
     register(value: string): void {
       if (value.length > 0) {
-        values.add(value);
+        for (const variant of expandEncodedVariants(value)) {
+          values.add(variant);
+        }
       }
     },
     redact(text: string): string {

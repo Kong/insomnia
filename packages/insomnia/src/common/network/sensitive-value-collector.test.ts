@@ -74,6 +74,27 @@ describe('createSensitiveValueCollector', () => {
       collector.register('');
       expect(collector.isEmpty).toBe(true);
     });
+
+    it('redacts a value that reaches the timeline JSON-escaped', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      collector.register('ab"cd');
+      // How the value actually lands in an NDJSON timeline line.
+      const timelineLine = JSON.stringify({ value: 'token=ab"cd' });
+      expect(collector.redact(timelineLine)).toBe('{"value":"token=••••••"}');
+    });
+
+    it('redacts a value that reaches the timeline percent-encoded in a URL', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      collector.register('p@ss word/1');
+      expect(collector.redact('GET https://example.com?t=p%40ss%20word%2F1')).toBe(
+        'GET https://example.com?t=••••••',
+      );
+    });
+
+    it('does not throw on a lone surrogate, which encodeURIComponent rejects', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      expect(() => collector.register(String.fromCodePoint(0xD8_00))).not.toThrow();
+    });
   });
 });
 
