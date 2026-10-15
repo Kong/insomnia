@@ -22,6 +22,7 @@ import { checkDocCompatibilityFromSchema, findDocUnknownFieldRanges } from '~/co
 import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
 import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
+import { ErrorBanner, WarningBanner } from '~/ui/components/warning-banner';
 
 import { DiffEditor } from '../diff-view-editor';
 import {
@@ -70,7 +71,8 @@ function getDiff(previousBlobContent?: string, blobContent?: string) {
     console.warn('Failed to parse after JSON', e);
   }
 
-  const originDocCompatibility = checkDocCompatibilityFromSchema(previousBlobContent);
+  // Check the compatibility of the original document against the schema only when there is blob content (not being deleted).
+  const originDocCompatibility = !!blobContent && checkDocCompatibilityFromSchema(previousBlobContent);
   // Check for unknown fields only if the original document has unknown fields.
   const unknownFieldRanges =
     originDocCompatibility === 'match-with-unknown-fields'
@@ -429,22 +431,20 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                       {previewDiffItemName}
                     </Heading>
                     {diff.originStatus === 'mismatch' && (
-                      <p data-testid="unsupported-doc-diff-error">
-                        <Icon icon="circle-exclamation" className="mt-0.5 mr-2 shrink-0 text-(--color-danger)" />
+                      <ErrorBanner data-testid="unsupported-doc-diff-error">
                         {UNSUPPORTED_DOC_MESSAGE}
                         <div className="mt-2 font-bold">
                           We strongly recommend upgrading, then deleting and re-syncing it from the remote source before
                           making any changes.
                         </div>
-                      </p>
+                      </ErrorBanner>
                     )}
                     {diff.unknownFieldRanges.length > 0 && (
-                      <p data-testid="unknown-fields-diff-warning">
-                        <Icon icon="triangle-exclamation" className="mt-0.5 mr-2 shrink-0 text-(--color-warning)" />
+                      <WarningBanner icon="triangle-exclamation" data-testid="unknown-fields-diff-warning">
                         The remote version of this file has fields not recognized by this version of Insomnia.
                         Committing changes to this file from this version of Insomnia may break or remove functionality
                         for your collaborators. We recommend upgrading.
-                      </p>
+                      </WarningBanner>
                     )}
                     {previewDiffItem && (
                       <div className="flex-1 overflow-y-auto rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
