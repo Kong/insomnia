@@ -322,32 +322,32 @@ type RequestGroup = z.input<typeof RequestGroupSchema> & {
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
   children: z.lazy(() => RequestCollectionSchema).optional(),
   // These undefined properties are added to differentiate between the different types of children in the union
-  method: z.undefined(),
-  url: z.undefined(),
-  parameters: z.undefined(),
-  pathParameters: z.undefined(),
+  method: z.undefined().optional(),
+  url: z.undefined().optional(),
+  parameters: z.undefined().optional(),
+  pathParameters: z.undefined().optional(),
 });
 
 export const RequestCollectionSchema = z
   .union([
     GRPCRequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
-      method: z.undefined(),
+      children: z.undefined().optional(),
+      method: z.undefined().optional(),
     }),
     RequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
+      children: z.undefined().optional(),
     }),
     WebsocketRequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
-      method: z.undefined(),
+      children: z.undefined().optional(),
+      method: z.undefined().optional(),
     }),
     SocketIORequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
-      children: z.undefined(),
-      method: z.undefined(),
+      children: z.undefined().optional(),
+      method: z.undefined().optional(),
     }),
     RequestGroupWithChildrenSchema,
   ])
