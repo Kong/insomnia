@@ -39,7 +39,7 @@ export const General: FC = () => {
             help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px."
           />
           <BooleanSetting
-            label="Show variable source and value"
+            label="Template tags show variable source and value"
             help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
             setting="showVariableSourceAndValue"
           />
@@ -58,6 +58,7 @@ export const General: FC = () => {
             setting="enableLegacyUnitTests"
             help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
           />
+          <BooleanSetting label="Hide Secret Values in Preview/Console" setting="hideSecretValuesInPreviewAndConsole" />
         </div>
       </div>
 
