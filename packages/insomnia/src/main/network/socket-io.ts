@@ -112,6 +112,13 @@ const registerSensitiveValues = (requestId: string, values: string[] | undefined
   }
 };
 
+// A new connection starts from a fresh value set: a connect that never reached its cleanup leaves
+// its values behind, and merging could neither drop those nor empty the set once the setting is off.
+const resetSensitiveValues = (requestId: string, values: string[] | undefined) => {
+  sensitiveValuesByRequestId.delete(requestId);
+  registerSensitiveValues(requestId, values);
+};
+
 const redactForRequest = (requestId: string, text: string): string => {
   const values = sensitiveValuesByRequestId.get(requestId);
   if (!values || values.size === 0) {
@@ -306,7 +313,7 @@ const openSocketIOConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
-  registerSensitiveValues(options.requestId, options.sensitiveValues);
+  resetSensitiveValues(options.requestId, options.sensitiveValues);
 
   // fallback to base environment
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);

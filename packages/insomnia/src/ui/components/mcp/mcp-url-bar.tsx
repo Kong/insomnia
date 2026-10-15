@@ -1,11 +1,12 @@
 import type { AuthTypeOAuth2, McpRequest, Project } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-components';
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
+import { isDerivedFromConfidentialValues } from '~/common/network/sensitive-value-collector';
 import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import type { McpReadyState } from '~/main/mcp/types';
 import { _buildBearerHeader } from '~/network/authentication';
@@ -120,8 +121,7 @@ export const McpUrlActionBar = ({
           const encoding = useISO88591 ? 'latin1' : 'utf8';
           const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
           headers.push(basicAuthHeader);
-          const settings = await services.settings.get();
-          if (settings.hideSecretValuesInPreviewAndConsole && basicAuthHeader.value) {
+          if (basicAuthHeader.value && isDerivedFromConfidentialValues(sensitiveValues, [username, password])) {
             sensitiveValues.push(basicAuthHeader.value);
           }
         } else if (authentication.type === 'bearer' && authentication.token) {
