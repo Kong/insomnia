@@ -977,24 +977,19 @@ export const gitLogLoader = async ({ projectId, workspaceId }: { projectId: stri
   }
 };
 
+export interface ChangeEntry {
+  name: string;
+  path: string;
+  status: Status;
+  type: GitFileStatus;
+  symbol: GitFileStatusSymbol;
+  originHasUnknownFields?: boolean;
+}
+
 export interface GitChangesLoaderData {
   changes: {
-    staged: {
-      name: string;
-      path: string;
-      status: Status;
-      type: GitFileStatus;
-      symbol: GitFileStatusSymbol;
-      originHasUnknownFields?: boolean;
-    }[];
-    unstaged: {
-      name: string;
-      path: string;
-      status: Status;
-      type: GitFileStatus;
-      symbol: GitFileStatusSymbol;
-      originHasUnknownFields?: boolean;
-    }[];
+    staged: ChangeEntry[];
+    unstaged: ChangeEntry[];
   };
   branch: string;
   gitRepository?: GitRepository | null;
@@ -1021,10 +1016,10 @@ export const gitChangesLoader = async ({
     });
 
     // Check HEAD version of YAML files containing unknown fields.
-    const addUnknownFieldsCheck = async <T extends { path: string }>(entries: T[]) =>
+    const addUnknownFieldsCheck = async (entries: ChangeEntry[]) =>
       Promise.all(
         entries.map(async entry => {
-          if (!entry.path.endsWith('.yaml')) {
+          if (!entry.path.endsWith('.yaml') || entry.type === 'deleted') {
             return entry;
           }
           const originContents = await GitVCS.readFileAtHead(entry.path);
@@ -1032,7 +1027,10 @@ export const gitChangesLoader = async ({
           if (originContents) {
             try {
               const document = parse(migrateToLatestYaml(originContents));
-              originHasUnknownFields = checkStrictSchemaMatch(InsomniaFileSchema, document).mismatch;
+              // Only Insomnia files carry unknown fields; unrelated YAML (e.g. OpenAPI specs) must not be flagged.
+              if (InsomniaFileSchema.safeParse(document).success) {
+                originHasUnknownFields = checkStrictSchemaMatch(InsomniaFileSchema, document).mismatch;
+              }
             } catch {
               originHasUnknownFields = false;
             }
@@ -3478,7 +3476,8 @@ export const diffFileLoader = async ({
       name: name || filepath,
       diff,
       // Unknown fields live on the original side: saving from this version drops them from the modified side.
-      unknownFieldRanges: diff.before ? findUnknownFieldRanges(diff.before, InsomniaFileSchema) : [],
+      // When the whole file was removed there is nothing to be dropped, so skip the calculation.
+      unknownFieldRanges: diff.before && diff.after ? findUnknownFieldRanges(diff.before, InsomniaFileSchema) : [],
       filepath,
       scope,
       staged,
