@@ -21,7 +21,11 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
-import { redactConfidentialText, redactDeep } from '~/common/network/sensitive-value-collector';
+import {
+  isDerivedFromConfidentialValues,
+  redactConfidentialText,
+  redactDeep,
+} from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
@@ -103,6 +107,13 @@ const registerSensitiveValues = (requestId: string, values: string[] | undefined
   }
 };
 
+// A new connection starts from a fresh value set: a connect that never reached its cleanup leaves
+// its values behind, and merging could neither drop those nor empty the set once the setting is off.
+const resetSensitiveValues = (requestId: string, values: string[] | undefined) => {
+  sensitiveValuesByRequestId.delete(requestId);
+  registerSensitiveValues(requestId, values);
+};
+
 const redactForRequest = (requestId: string, text: string): string => {
   const values = sensitiveValuesByRequestId.get(requestId);
   if (!values || values.size === 0) {
@@ -110,15 +121,6 @@ const redactForRequest = (requestId: string, text: string): string => {
   }
   return redactConfidentialText(text, [...values]);
 };
-
-// base64(user:pass) is a *derived* form: it does not contain the plaintext password, so it
-// never matches the values the renderer registered and has to be registered separately.
-// Only do that when an input actually was confidential -- registering it unconditionally
-// masks every Basic Auth header in the console, including credentials nobody marked.
-// No need to check the setting: with it off the renderer sends no values, so the set is
-// empty and nothing ever looks confidential.
-const isDerivedFromConfidentialValues = (requestId: string, inputs: (string | undefined)[]) =>
-  inputs.some(input => !!input && redactForRequest(requestId, input) !== input);
 
 const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
   timelineFileStreams
@@ -231,7 +233,7 @@ const openWebSocketConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
-  registerSensitiveValues(options.requestId, options.sensitiveValues);
+  resetSensitiveValues(options.requestId, options.sensitiveValues);
 
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
@@ -268,7 +270,8 @@ const openWebSocketConnection = async (
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
         headers.push(basicAuthHeader);
-        if (basicAuthHeader.value && isDerivedFromConfidentialValues(options.requestId, [username, password])) {
+        const registeredValues = [...(sensitiveValuesByRequestId.get(options.requestId) ?? [])];
+        if (basicAuthHeader.value && isDerivedFromConfidentialValues(registeredValues, [username, password])) {
           registerSensitiveValues(options.requestId, [basicAuthHeader.value]);
         }
       }

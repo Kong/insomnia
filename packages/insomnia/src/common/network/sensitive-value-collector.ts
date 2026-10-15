@@ -32,16 +32,20 @@
 // maskOrDecryptVaultDataIfNecessary({ ..., sensitiveValueCollector }) inside tryToExecuteScript,
 // so those register into the same collector before their console.log output is written.
 //
-// WebSocket/SocketIO/MCP timeline & event-log redaction (T10) works differently, because those
+// WebSocket/SocketIO/SSE/MCP timeline & event-log redaction (T10) works differently, because those
 // writes happen in the main process, outside any SendActionRuntime/appendTimeline abstraction:
 //   renderer: tryToInterpolateRequestAndCollectSensitiveValues / renderRealtimeConnectPayload build a
 //     collector the same way, then read collector.values (a snapshot array) and send it over IPC
 //     alongside the already-rendered request (webSocket.open/event.send, socketIO.open/event.send,
-//     mcp.connect). Setting OFF ⇒ collector is null ⇒ an empty array is sent ⇒ main redacts nothing.
-//   main: websocket.ts/socket-io.ts keep a Map<requestId, Set<string>>, mcp/common.ts keeps a
-//     Set<string> on ConnectionContext; both only grow (new IPC calls merge in more values) and are
-//     used to redact every timeline/event-log write before it reaches disk via redactConfidentialText
-//     (single-line fields) or redactDeep (nested JSON payloads).
+//     curl.open, mcp.connect). Setting OFF ⇒ collector is null ⇒ an empty array is sent ⇒ main
+//     redacts nothing.
+//   main: websocket.ts/socket-io.ts/curl.ts keep a Map<requestId, Set<string>>, mcp/common.ts keeps
+//     a Set<string> on ConnectionContext. Opening a connection *replaces* that request's set (MCP
+//     builds a fresh ConnectionContext instead); each later send merges its own values in. Replacing
+//     matters because a connect that never reaches its cleanup leaves its set behind, and a merge
+//     could neither drop those stale values nor empty the set once the setting is off. The set is
+//     used to redact every timeline/event-log write before it reaches disk via
+//     redactConfidentialText (single-line fields) or redactDeep (nested JSON payloads).
 // gRPC Stream tab messages never leave the renderer, so getRenderedGrpcRequestMessage takes a
 // sensitiveValueCollector directly and the caller redacts the display-only copy of the text.
 
@@ -156,6 +160,20 @@ export function redactConfidentialText(text: string, values: readonly string[]):
   return result;
 }
 
+// A derived credential (base64(user:pass) for Basic Auth) does not contain the plaintext inputs,
+// so it never matches the values the renderer registered and has to be registered separately.
+// Only do that when an input actually was confidential -- registering it unconditionally would
+// mask every Basic Auth header on every surface, including credentials nobody marked.
+//
+// No need to check the hide setting: with it off nothing is ever registered, so `values` is empty
+// and nothing looks confidential.
+export function isDerivedFromConfidentialValues(
+  values: readonly string[],
+  inputs: (string | undefined)[],
+): boolean {
+  return inputs.some(input => !!input && redactConfidentialText(input, values) !== input);
+}
+
 // A registered value rarely reaches disk in its raw form. Timeline lines are written as NDJSON,
 // so JSON.stringify escapes `"`, `\` and control characters, and a secret interpolated into a
 // URL is percent-encoded by the time curl echoes it back. `replaceAll` is a literal match, so a
@@ -181,14 +199,31 @@ function expandEncodedVariants(value: string): string[] {
 // Recursively redacts string leaves of a plain object/array, preserving shape. Used where a field
 // (e.g. a WebSocket/MCP message payload) must be redacted *before* JSON.stringify so that quotes,
 // backslashes and newlines inside a registered value don't need to match their escaped form.
-// Non-plain-object values (Buffer, ArrayBuffer, Error, class instances, etc.) pass through
+// Other non-plain-object values (Buffer, ArrayBuffer, class instances, etc.) pass through
 // unchanged: they're either binary (nothing to redact) or not the kind of payload this covers.
+//
+// Errors are the exception. Event-log writers put the raw Error on the event's `error` field, and
+// JSON.stringify writes an Error's own *enumerable* properties -- socket.io-client attaches the
+// server's handshake data as `err.data` -- so an Error left alone can still put a registered value
+// on disk. Every caller only ever JSON.stringify's the result, so a plain object carrying the same
+// own enumerable properties serializes identically. A custom `toJSON` would not survive that swap,
+// so Errors defining one are left untouched.
 export function redactDeep<T>(value: T, values: readonly string[]): T {
   if (typeof value === 'string') {
     return redactConfidentialText(value, values) as unknown as T;
   }
   if (Array.isArray(value)) {
     return value.map(item => redactDeep(item, values)) as unknown as T;
+  }
+  if (value instanceof Error) {
+    if (typeof (value as { toJSON?: unknown }).toJSON === 'function') {
+      return value;
+    }
+    const result: Record<string, any> = {};
+    for (const [key, v] of Object.entries(value)) {
+      result[key] = redactDeep(v, values);
+    }
+    return result as unknown as T;
   }
   if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
     const result: Record<string, any> = {};

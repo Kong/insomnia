@@ -9,7 +9,11 @@ import { services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { redactConfidentialText, redactDeep } from '~/common/network/sensitive-value-collector';
+import {
+  isDerivedFromConfidentialValues,
+  redactConfidentialText,
+  redactDeep,
+} from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
@@ -95,6 +99,13 @@ const registerSensitiveValues = (requestId: string, values: string[] | undefined
   }
 };
 
+// A new connection starts from a fresh value set: a connect that never reached its cleanup leaves
+// its values behind, and merging could neither drop those nor empty the set once the setting is off.
+const resetSensitiveValues = (requestId: string, values: string[] | undefined) => {
+  sensitiveValuesByRequestId.delete(requestId);
+  registerSensitiveValues(requestId, values);
+};
+
 const redactForRequest = (requestId: string, text: string): string => {
   const values = sensitiveValuesByRequestId.get(requestId);
   if (!values || values.size === 0) {
@@ -102,13 +113,6 @@ const redactForRequest = (requestId: string, text: string): string => {
   }
   return redactConfidentialText(text, [...values]);
 };
-
-// base64(user:pass) is a *derived* form: it does not contain the plaintext password, so it
-// never matches the values the renderer registered and has to be registered separately.
-// Only do that when an input actually was confidential -- registering it unconditionally
-// would mask every Basic Auth header in the console, including credentials nobody marked.
-const isDerivedFromConfidentialValues = (requestId: string, inputs: (string | undefined)[]) =>
-  inputs.some(input => !!input && redactForRequest(requestId, input) !== input);
 
 const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
   timelineFileStreams
@@ -174,7 +178,6 @@ const openCurlConnection = async (
 ): Promise<void> => {
   const { workspaceId, renderedRequest: req } = options;
   const requestId = req._id;
-  registerSensitiveValues(requestId, options.sensitiveValues);
   const existingConnection = CurlConnections.get(requestId);
 
   if (existingConnection) {
@@ -190,6 +193,7 @@ const openCurlConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(requestId, responseId);
+  resetSensitiveValues(requestId, options.sensitiveValues);
 
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
@@ -215,11 +219,12 @@ const openCurlConnection = async (
     // getAuthHeader builds the Basic header here, after the render that registered the
     // credentials, so its base64 has to be registered before anything writes it out.
     const auth = getAuthObjectOrNull(req.authentication);
+    const registeredValues = [...(sensitiveValuesByRequestId.get(requestId) ?? [])];
     if (
       authHeader?.value &&
       auth?.type === 'basic' &&
       isAuthEnabled(req.authentication) &&
-      isDerivedFromConfidentialValues(requestId, [auth.username, auth.password])
+      isDerivedFromConfidentialValues(registeredValues, [auth.username, auth.password])
     ) {
       registerSensitiveValues(requestId, [authHeader.value]);
     }

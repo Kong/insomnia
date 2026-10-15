@@ -5,6 +5,7 @@ import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-
 import {
   collectLeafValues,
   createSensitiveValueCollector,
+  isDerivedFromConfidentialValues,
   redactConfidentialText,
   redactDeep,
   redactResponsePatch,
@@ -120,6 +121,20 @@ describe('createSensitiveValueCollector', () => {
   });
 });
 
+describe('isDerivedFromConfidentialValues', () => {
+  it('is true when an input was registered, so the derived form has to be registered too', () => {
+    expect(isDerivedFromConfidentialValues(['hunter2'], ['user', 'hunter2'])).toBe(true);
+  });
+
+  it('is false when nothing was registered, so credentials nobody marked stay visible', () => {
+    expect(isDerivedFromConfidentialValues([], ['user', 'hunter2'])).toBe(false);
+  });
+
+  it('ignores undefined and empty inputs', () => {
+    expect(isDerivedFromConfidentialValues(['hunter2'], [undefined, ''])).toBe(false);
+  });
+});
+
 describe('redactDeep', () => {
   it('redacts a top-level string', () => {
     expect(redactDeep('mysecret', ['mysecret'])).toBe('••••••');
@@ -140,10 +155,25 @@ describe('redactDeep', () => {
     expect(redactDeep(input, [secret])).toEqual({ data: '••••••' });
   });
 
-  it('leaves non-plain-object values (e.g. Buffer, Error) unchanged', () => {
+  it('leaves non-plain-object values (e.g. Buffer) unchanged', () => {
     const buf = Buffer.from('mysecret');
     expect(redactDeep(buf, ['mysecret'])).toBe(buf);
-    const err = new Error('mysecret');
+  });
+
+  it("redacts an Error's own enumerable properties, which JSON.stringify would have written", () => {
+    // How socket.io-client surfaces the server's handshake rejection payload.
+    const err = Object.assign(new Error('connect failed'), { data: { token: 'mysecret' } });
+    expect(JSON.stringify(redactDeep(err, ['mysecret']))).toBe('{"data":{"token":"••••••"}}');
+  });
+
+  it('serializes a bare Error to {}, exactly as an unredacted one would', () => {
+    // message/stack are non-enumerable, so JSON.stringify never wrote them in the first place --
+    // swapping the Error for a plain object must not resurrect them.
+    expect(JSON.stringify(redactDeep(new Error('mysecret'), ['mysecret']))).toBe('{}');
+  });
+
+  it('leaves an Error defining toJSON untouched, since a plain object would not serialize the same', () => {
+    const err = Object.assign(new Error('boom'), { toJSON: () => ({ custom: 'mysecret' }) });
     expect(redactDeep(err, ['mysecret'])).toBe(err);
   });
 
