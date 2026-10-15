@@ -433,9 +433,17 @@ const Root = () => {
         addCancel: true,
         okLabel: 'Continue',
         onConfirm: async () => {
-          await services.helpers.removeAllResponseHistory();
-          revalidate();
-          showToast({ icon: 'trash', title: 'Response history cleared', status: 'success' });
+          try {
+            await services.helpers.removeAllResponseHistory();
+            revalidate();
+            showToast({ icon: 'trash', title: 'Response history cleared', status: 'success' });
+          } catch (error) {
+            // AlertModal does not await onConfirm, so an unreported failure would look exactly
+            // like a successful clear. The clear can also stop part-way through, hence the
+            // revalidate on this path too.
+            revalidate();
+            showError({ title: 'Failed to clear response history', error });
+          }
         },
       });
     });

@@ -15,7 +15,7 @@ export const BooleanSetting: FC<{
   confirmBeforeToggle?: boolean;
   confirmMessage?: (isChecked: boolean) => string;
   disabled?: boolean;
-  /** Called with the new value once the setting has been persisted. */
+  /** Called with the new value when the toggle is accepted. The patch may still be in flight. */
   onAfterToggle?: (isChecked: boolean) => void;
 }> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false, onAfterToggle }) => {
   const { settings } = useRootLoaderData()!;

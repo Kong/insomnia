@@ -71,8 +71,17 @@ export async function removeResponsesForRequest(requestId: string, environmentId
  * just the database rows. None of these types sync, so this only affects this machine.
  */
 export async function removeAllResponseHistory() {
+  // Only a file that is already gone is ignored. Anything else (a locked or read-only file)
+  // means a confidential body or timeline is still on disk, so it has to reach the caller
+  // rather than be reported as a successful clear.
   const unlinkIfExists = (path?: string) =>
-    path ? fs.promises.unlink(path).catch(() => {}) : Promise.resolve();
+    path
+      ? fs.promises.unlink(path).catch((err: NodeJS.ErrnoException) => {
+          if (err.code !== 'ENOENT') {
+            throw err;
+          }
+        })
+      : Promise.resolve();
 
   for (const type of [
     responseType,
