@@ -6,6 +6,7 @@ import type {
   McpResponse,
   Response,
   ResponseTimelineEntry,
+  RunnerTestResult,
   SocketIOResponse,
   WebSocketResponse,
 } from 'insomnia-data';
@@ -58,6 +59,54 @@ export async function removeResponsesForRequest(requestId: string, environmentId
   // Also delete legacy responses here or else the user will be confused as to
   // why some responses are still showing in the UI.
   await db.removeWhere(type, query);
+}
+
+/**
+ * Delete every locally stored response and collection-runner result, across every project
+ * and collection.
+ *
+ * Backs the global "Clear All Response History" action: these documents (and the timeline /
+ * event-log files they point at) can hold confidential values that were revealed while
+ * `hideSecretValuesInPreviewAndConsole` was off, so the on-disk files have to go too, not
+ * just the database rows. None of these types sync, so this only affects this machine.
+ */
+export async function removeAllResponseHistory() {
+  const unlinkIfExists = (path?: string) =>
+    path ? fs.promises.unlink(path).catch(() => {}) : Promise.resolve();
+
+  for (const type of [
+    responseType,
+    models.webSocketResponse.type,
+    models.socketIOResponse.type,
+    models.mcpResponse.type,
+    models.runnerTestResult.type,
+  ] as const) {
+    const docs = await db.find<Response | WebSocketResponse | SocketIOResponse | McpResponse | RunnerTestResult>(
+      type,
+      {},
+    );
+
+    if (docs.length === 0) {
+      continue;
+    }
+
+    await Promise.all(
+      docs.map(doc => {
+        // Runner results hold no files of their own - they point at the responses above.
+        if (models.runnerTestResult.isRunnerTestResult(doc)) {
+          return Promise.resolve();
+        }
+
+        return isResponse(doc)
+          ? Promise.all([unlinkIfExists(doc.bodyPath), unlinkIfExists(doc.timelinePath)])
+          : Promise.all([unlinkIfExists(doc.eventLogPath), unlinkIfExists(doc.timelinePath)]);
+      }),
+    );
+
+    // None of these types have descendants, so a batch remove is enough and - unlike
+    // removeWhere - it does not walk the tree once per document.
+    await db.batchModifyDocs({ remove: docs });
+  }
 }
 
 export function removeResponse(response: Response | WebSocketResponse | SocketIOResponse | McpResponse) {

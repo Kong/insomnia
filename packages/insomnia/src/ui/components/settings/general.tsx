@@ -15,12 +15,33 @@ import {
 import { docsKeyMaps } from '../../../common/documentation';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
 import { TextArraySetting } from './text-array-setting';
 import { TextSetting } from './text-setting';
 import { VaultKeyPanel } from './vault-key-panel';
+
+// Hiding Confidential values again does not undo what was already written to the local
+// timeline/response history while they were visible, so both directions get a heads-up.
+const onHideConfidentialValuesToggled = (isHiding: boolean) => {
+  if (isHiding) {
+    showModal(AlertModal, {
+      title: 'Hiding Confidential Variables',
+      message:
+        'You are now hiding Confidential variables in the Insomnia UI. Consider clearing your Response History to remove any potentially confidential information from your local logs/history. You can do this in a Collection’s Settings, or globally from the Tools menu.',
+    });
+    return;
+  }
+
+  showModal(AlertModal, {
+    title: 'Confidential Variables Are Now Visible',
+    message:
+      'Confidential variables are now visible. FYI, they will persist locally in your local logs/Response History.',
+  });
+};
 
 export const General: FC = () => {
   const { settings, userSession } = useRootLoaderData()!;
@@ -58,7 +79,11 @@ export const General: FC = () => {
             setting="enableLegacyUnitTests"
             help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
           />
-          <BooleanSetting label="Hide Confidential values in Preview/Console" setting="hideSecretValuesInPreviewAndConsole" />
+          <BooleanSetting
+            label="Hide Confidential values in Preview/Console"
+            setting="hideSecretValuesInPreviewAndConsole"
+            onAfterToggle={onHideConfidentialValuesToggled}
+          />
         </div>
       </div>
 
