@@ -36,6 +36,28 @@ export function buildLiquidEngine(opts: {
     ownPropertyOnly: true, // Contexts are plain objects
     dynamicPartials: false, // Disable dynamic paths to prevent variable-interpolated includes.
 
+    // Render arrays and objects as JSON. LiquidJS's default stringification concatenates
+    // array items ('ab' for ['a', 'b']) and renders objects as '[object Object]', which
+    // corrupts JSON-typed variables interpolated into request bodies. Dates, RegExps and
+    // Errors keep the default stringification, matching the "leave these types alone"
+    // list in common/render.ts.
+    outputEscape: (value: any) => {
+      if (
+        value !== null &&
+        typeof value === 'object' &&
+        !(value instanceof Date) &&
+        !(value instanceof RegExp) &&
+        !(value instanceof Error)
+      ) {
+        try {
+          return JSON.stringify(value);
+        } catch {
+          // Unserializable values (e.g. circular references) fall back below.
+        }
+      }
+      return value;
+    },
+
     // hard-stop rendering after 10 s and cap object allocations.
     renderLimit: 10_000,
     memoryLimit: 10_000_000,
