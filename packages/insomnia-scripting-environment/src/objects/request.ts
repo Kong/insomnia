@@ -590,6 +590,16 @@ export function toScriptRequestBody(insomniaReqBody: InsomniaRequestBody): Reque
       mode: 'file',
       file: insomniaReqBody.fileName,
     };
+  } else if (insomniaReqBody.mimeType?.startsWith('multipart/form-data') && insomniaReqBody.params !== undefined) {
+    reqBodyOpt = {
+      mode: 'formdata',
+      formdata: insomniaReqBody.params.map((param: RequestBodyParameter) => ({
+        key: param.name,
+        type: param.type,
+        value: param.type === 'file' ? (param.fileName ?? param.value ?? '') : (param.value ?? ''),
+        disabled: param.disabled,
+      })),
+    };
   } else if (insomniaReqBody.params !== undefined) {
     reqBodyOpt = {
       mode: 'urlencoded',
@@ -645,7 +655,8 @@ export function mergeRequestBody(
       }
     }
   }
-  // Keep the original mimeType unless the script switched away from the body mode it was given (params bodies are given as urlencoded)
+  // Keep the original mimeType unless the script switched away from the body mode it was given
+  // (params bodies are given as formdata for multipart, urlencoded otherwise)
   if (originalReqBody.mimeType && toScriptRequestBody(originalReqBody).mode === updatedReqBody?.mode) {
     mimeType = originalReqBody.mimeType;
   }

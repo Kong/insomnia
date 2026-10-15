@@ -105,7 +105,7 @@ describe('test request and response objects', () => {
         mimeType: 'multipart/form-data',
         params: [
           { name: 'k1', type: 'text', value: 'v1' },
-          { name: 'k2', type: 'file', value: '/path/to/image' },
+          { name: 'k2', type: 'file', value: '', fileName: '/path/to/image' },
         ],
       },
     ];
@@ -135,7 +135,7 @@ describe('test request and response objects', () => {
     });
   });
 
-  it('test script-updated formdata body on a multipart request falls back to the multipart mimeType', () => {
+  it('test script-updated formdata body on a multipart request keeps the original multipart mimeType', () => {
     const scriptReqBody = new RequestBody({
       mode: 'formdata',
       formdata: [
@@ -144,13 +144,15 @@ describe('test request and response objects', () => {
       ],
     });
 
+    // The boundary parameter differs from the mimeType inferred for the formdata mode, proving
+    // the original value is preserved rather than fallen back to.
     expect(
       mergeRequestBody(scriptReqBody, {
-        mimeType: 'multipart/form-data',
+        mimeType: 'multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
         params: [{ name: 'old', value: 'old' }],
       }),
     ).toEqual({
-      mimeType: 'multipart/form-data',
+      mimeType: 'multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
       params: [
         { name: 'k1', type: 'text', value: 'v1' },
         { name: 'k2', type: 'text', value: 'v2', disabled: true },
