@@ -70,7 +70,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
       authentication: {
         ...mcpRequest.authentication,
         ...auth,
-      },
+      } as RequestAuthentication,
     });
     // update local authentication copy
     this.authentication = {
