@@ -36,6 +36,44 @@ import { database as db } from './database';
 const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
+// Source labels read as `<environment type> : <name>`; the type alone stands in
+// when an environment has no name.
+const formatSourceLabel = (type: string, name?: string) => (name ? `${type} : ${name}` : type);
+
+// Function that gets Keys and stores their Source location
+function getKeySource(
+  subObject: string | Record<string, any>,
+  inKey: string,
+  meta: VariableSourceMeta,
+  keySource: Record<string, string>,
+  keySourceMeta: Record<string, VariableSourceMeta>,
+) {
+  // Add key to map if it's not root
+  if (inKey) {
+    const normalizedKey = templatingUtils.normalizeToDotAndBracketNotation(inKey);
+    // The label doubles as the keySource entry the "Template tags show variable source and value"
+    // setting renders. Transient sources (runner upload data, script-local
+    // variables) carry no workspaceId, so overwriting an environment's metadata
+    // with one of these keeps consumers honest without becoming navigable.
+    keySource[normalizedKey] = meta.label;
+    keySourceMeta[normalizedKey] = meta;
+  }
+
+  // Recurse down for Objects and Arrays
+  const typeStr = Object.prototype.toString.call(subObject);
+
+  if (typeStr === '[object Object]') {
+    for (const key of Object.keys(subObject)) {
+      // @ts-expect-error -- mapping unsoundness
+      getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), meta, keySource, keySourceMeta);
+    }
+  } else if (typeStr === '[object Array]' && Array.isArray(subObject)) {
+    for (const [i, element] of subObject.entries()) {
+      getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), meta, keySource, keySourceMeta);
+    }
+  }
+}
+
 export async function buildRenderContext({
   ancestors,
   rootEnvironment,
@@ -53,9 +91,14 @@ export async function buildRenderContext({
   subGlobalEnvironment?: Environment | null;
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
-  baseContext: BaseRenderContext;
+  baseContext: Omit<BaseRenderContext, 'getKeysContext'>;
 }): Promise<BaseRenderContext> {
-  const envObjects: Record<string, any>[] = [];
+  // Per-key source attribution, recorded while the environments merge below so it
+  // follows the same merge order and winners as the values.
+  const keySource: Record<string, string> = {};
+  const keySourceMeta: Record<string, VariableSourceMeta> = {};
+  const workspaceId = baseContext.getMeta().workspaceId;
+  const envObjects: { data: Record<string, any>; meta?: VariableSourceMeta }[] = [];
 
   if (rootGlobalEnvironment) {
     const ordered = orderedJSON.order(
@@ -63,7 +106,14 @@ export async function buildRenderContext({
       rootGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    envObjects.push({
+      data: ordered,
+      meta: {
+        label: formatSourceLabel('Project Environment', rootGlobalEnvironment.name),
+        workspaceId: rootGlobalEnvironment.parentId,
+        environmentId: rootGlobalEnvironment._id,
+      },
+    });
   }
 
   if (subGlobalEnvironment) {
@@ -72,7 +122,14 @@ export async function buildRenderContext({
       subGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    envObjects.push({
+      data: ordered,
+      meta: {
+        label: formatSourceLabel('Project Environment', subGlobalEnvironment.name),
+        workspaceId: rootGlobalEnvironment?.parentId,
+        environmentId: subGlobalEnvironment._id,
+      },
+    });
   }
 
   // Get root environment keys in correct order
@@ -84,7 +141,14 @@ export async function buildRenderContext({
       rootEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    envObjects.push({
+      data: ordered,
+      meta: {
+        label: formatSourceLabel('Collection Environment', rootEnvironment.name),
+        workspaceId: workspaceId,
+        environmentId: rootEnvironment._id,
+      },
+    });
   }
 
   if (subEnvironment) {
@@ -93,7 +157,19 @@ export async function buildRenderContext({
       subEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    envObjects.push({
+      data: ordered,
+      // The active sub environment can be the base environment itself; only a
+      // distinct sub environment carries its own source attribution.
+      meta:
+        subEnvironment._id !== rootEnvironment?._id
+          ? {
+              label: formatSourceLabel('Collection Environment', subEnvironment.name),
+              workspaceId: workspaceId,
+              environmentId: subEnvironment._id,
+            }
+          : undefined,
+    });
   }
 
   for (const doc of (ancestors || []).reverse()) {
@@ -102,7 +178,19 @@ export async function buildRenderContext({
 
     if (typeof environment === 'object' && environment !== null) {
       const ordered = orderedJSON.order(environment, environmentPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
-      envObjects.push(ordered);
+      // Only folder environments carry source metadata; the request and workspace
+      // ancestors define no variables of their own.
+      envObjects.push({
+        data: ordered,
+        meta:
+          isRequestGroup(ancestor) && 'name' in ancestor
+            ? {
+                label: formatSourceLabel('Folder Environment', ancestor.name),
+                workspaceId: workspaceId,
+                requestGroupId: ancestor._id,
+              }
+            : undefined,
+      });
     }
   }
 
@@ -113,7 +201,7 @@ export async function buildRenderContext({
       userUploadEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    envObjects.push({ data: ordered, meta: { label: formatSourceLabel('Upload Data', userUploadEnvironment.name) } });
   }
 
   // script local variables (insomnia.variable.set) has highest priority
@@ -123,7 +211,7 @@ export async function buildRenderContext({
       transientVariables.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
-    envObjects.push(ordered);
+    envObjects.push({ data: ordered, meta: { label: formatSourceLabel('Script Variables', transientVariables.name) } });
   }
 
   // At this point, environments is a list of environments ordered
@@ -131,7 +219,15 @@ export async function buildRenderContext({
   // ordered by its property map.
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
-  const renderContext = baseContext;
+  // BaseRenderContext carries a string index signature, so the spread needs an
+  // explicit annotation to keep the named members.
+  const renderContext = {
+    ...baseContext,
+    getKeysContext: () => ({
+      keyContext: keySource,
+      keyContextMeta: keySourceMeta,
+    }),
+  } as BaseRenderContext;
 
   // Made the rendering into a recursive function to handle nested Objects
   async function renderSubContext(subObject: Record<string, any>, subContext: BaseRenderContext) {
@@ -175,14 +271,47 @@ export async function buildRenderContext({
   }
   let finalRenderContext = { ...renderContext };
 
-  for (const envObject of envObjects) {
+  for (const { data } of envObjects) {
     // For every environment render the Objects
-    finalRenderContext = await renderSubContext(envObject, finalRenderContext);
+    finalRenderContext = await renderSubContext(data, finalRenderContext);
+  }
+
+  // Key source attribution, registered in the same order the runtime merges the
+  // environments: sealed values of every environment first, then the plain walks —
+  // a legacy plaintext `vault` key (which import and sync carry without
+  // reserved-key validation) wins over sealed values, mirroring the vault merge
+  // below. Vault secrets are stored under the reserved `__insomnia_vault` key and
+  // surface at runtime under the `vault` namespace, so their leaves are recorded
+  // there for `_.vault.key` chips; the reserved key itself is never exposed.
+  const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+
+  for (const { data, meta } of envObjects) {
+    if (!meta) {
+      continue;
+    }
+    const { [models.environment.vaultEnvironmentPath]: vaultData } = data ?? {};
+    if (vaultData && typeof vaultData === 'object' && !Array.isArray(vaultData)) {
+      getKeySource(
+        vaultData,
+        templatingUtils.forceBracketNotation(inKey, models.environment.vaultEnvironmentRuntimePath),
+        meta,
+        keySource,
+        keySourceMeta,
+      );
+    }
+  }
+
+  for (const { data, meta } of envObjects) {
+    if (!meta) {
+      continue;
+    }
+    const { [models.environment.vaultEnvironmentPath]: vault, ...plainData } = data ?? {};
+    getKeySource(plainData, inKey, meta, keySource, keySourceMeta);
   }
 
   const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
     finalRenderContext[models.environment.vaultEnvironmentPath],
-    renderContext?.getPurpose(),
+    renderContext.getPurpose(),
   );
   if (vaultEnvironmentData) {
     // avoid add undefined data to render context
@@ -410,108 +539,13 @@ export async function getRenderContext({
       : environment
     : await services.environment.getById('n/a');
 
-  const keySource: Record<string, string> = {};
-  const keySourceMeta: Record<string, VariableSourceMeta> = {};
-  // Function that gets Keys and stores their Source location
-  function getKeySource(subObject: string | Record<string, any>, inKey: string, meta: VariableSourceMeta) {
-    // Add key to map if it's not root
-    if (inKey) {
-      const normalizedKey = templatingUtils.normalizeToDotAndBracketNotation(inKey);
-      // The label doubles as the keySource entry the "Show variable source and value"
-      // setting renders. Transient sources (runner upload data, script-local
-      // variables) carry no workspaceId, so overwriting an environment's metadata
-      // with one of these keeps consumers honest without becoming navigable.
-      keySource[normalizedKey] = meta.label;
-      keySourceMeta[normalizedKey] = meta;
-    }
-
-    // Recurse down for Objects and Arrays
-    const typeStr = Object.prototype.toString.call(subObject);
-
-    if (typeStr === '[object Object]') {
-      for (const key of Object.keys(subObject)) {
-        // @ts-expect-error -- mapping unsoundness
-        getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), meta);
-      }
-    } else if (typeStr === '[object Array]' && Array.isArray(subObject)) {
-      for (const [i, element] of subObject.entries()) {
-        getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), meta);
-      }
-    }
-  }
-
-  const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
-
-  if (rootGlobalEnvironment) {
-    getKeySource(rootGlobalEnvironment.data || {}, inKey, {
-      label: rootGlobalEnvironment.name || 'Base Environment (Project)',
-      workspaceId: rootGlobalEnvironment.parentId,
-      environmentId: rootGlobalEnvironment._id,
-    });
-  }
-
-  if (subGlobalEnvironment) {
-    getKeySource(subGlobalEnvironment.data || {}, inKey, {
-      label: `${subGlobalEnvironment.name || 'Environment'} (Project Sub-Environment)`,
-      workspaceId: rootGlobalEnvironment?.parentId,
-      environmentId: subGlobalEnvironment._id,
-    });
-  }
-
-  // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, inKey, {
-    label: rootEnvironment?.name || 'Base Environment (API Collection)',
-    workspaceId: workspace._id,
-    environmentId: rootEnvironment?._id,
-  });
-
-  if (subEnvironment && subEnvironment._id !== rootEnvironment?._id) {
-    getKeySource(subEnvironment.data || {}, inKey, {
-      label: `${subEnvironment.name || 'Environment'} (API Collection Sub-Environment)`,
-      workspaceId: workspace._id,
-      environmentId: subEnvironment._id,
-    });
-  }
-
-  // Get Keys from ancestors (e.g. Folders)
-  // Iterate outermost-first (ancestors are innermost-first) so the closest folder's
-  // assignment lands last and wins, matching buildRenderContext's merge order.
-  if (ancestors) {
-    for (const ancestor of [...ancestors].reverse()) {
-      if (isRequestGroup(ancestor) && 'environment' in ancestor && 'name' in ancestor) {
-        getKeySource(ancestor.environment || {}, inKey, {
-          label: ancestor.name || '',
-          workspaceId: workspace._id,
-          requestGroupId: ancestor._id,
-        });
-      }
-    }
-  }
-
-  // Get Keys from user upload environment
-  if (userUploadEnvironment) {
-    getKeySource(userUploadEnvironment.data || {}, inKey, {
-      label: userUploadEnvironment.name || 'uploadData',
-    });
-  }
-
-  if (transientVariables) {
-    getKeySource(transientVariables.data || {}, inKey, {
-      label: transientVariables.name || 'scriptLocalVariables',
-    });
-  }
-
   const settings = await services.settings.get();
 
   // Add meta data helper function
-  const baseContext: BaseRenderContext = {
+  const baseContext: Omit<BaseRenderContext, 'getKeysContext'> = {
     getMeta: () => ({
       requestId: request?._id,
       workspaceId: workspace?._id,
-    }),
-    getKeysContext: () => ({
-      keyContext: keySource,
-      keyContextMeta: keySourceMeta,
     }),
     getPurpose: () => purpose,
     getExtraInfo: () => extraInfo,
