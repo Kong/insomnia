@@ -158,6 +158,13 @@ test.describe('confidential value redaction', () => {
     const hideSecretValues = page.getByLabel('Hide Confidential values in Preview/Console');
     await hideSecretValues.click();
     await expect.soft(hideSecretValues).not.toBeChecked();
+    // Turning the setting off raises a notice that confidential values now persist locally.
+    // Dismiss it before touching the preferences dialog underneath, or its own close button
+    // makes the one below ambiguous.
+    const visibilityNotice = page.getByText('Confidential Variables Are Now Visible', { exact: true });
+    await visibilityNotice.waitFor();
+    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+    await visibilityNotice.waitFor({ state: 'hidden' });
     await page.getByRole('button', { name: 'Close' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 

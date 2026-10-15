@@ -164,6 +164,12 @@ test.describe('Check vault used in environment', () => {
     const hideSecretsCheckbox = page.getByRole('checkbox', { name: 'Hide Confidential values in Preview/Console' }).first();
     await hideSecretsCheckbox.click();
     await expect.soft(hideSecretsCheckbox).not.toBeChecked();
+    // Turning the setting off raises a notice that confidential values now persist locally;
+    // dismiss it so its close button does not clash with the preferences dialog's own.
+    const visibilityNotice = page.getByText('Confidential Variables Are Now Visible', { exact: true });
+    await visibilityNotice.waitFor();
+    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+    await visibilityNotice.waitFor({ state: 'hidden' });
     await insomnia.preferencesPage.closePreferences();
 
     // activate request and validate newly created vault env has been applied
