@@ -981,6 +981,16 @@ export class GitVCS {
     return enhancedStatus;
   }
 
+  async readFileAtHead(filepath: string): Promise<string | null> {
+    try {
+      const oid = await git.resolveRef({ ...this._baseOpts, ref: 'HEAD' });
+      const { blob } = await git.readBlob({ ...this._baseOpts, oid, filepath });
+      return Buffer.from(blob).toString('utf8');
+    } catch {
+      return null;
+    }
+  }
+
   classifyStatus(head: git.StageStatus, workdir: git.WorkdirStatus, stage: git.StageStatus): FileStatus {
     // Untracked
     if (head === 0 && stage === 0 && workdir === 2) {

@@ -95,6 +95,7 @@ export const ProjectCreateForm: FC<Props> = ({
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
       : [];
+  const insomniaFilesContainUnknownFields = insomniaFiles?.filter(file => file.hasUnknownFields) || [];
 
   const changedFieldCount = [
     projectData.name !== defaultProjectName,
@@ -365,6 +366,35 @@ export const ProjectCreateForm: FC<Props> = ({
             insomniaFiles={insomniaFiles}
             repoURI={projectData.uri}
           />
+          {initCloneGitRepositoryFetcher.state === 'idle' && insomniaFilesContainUnknownFields.length > 0 && (
+            <div
+              className={
+                'mt-4 flex max-h-75 flex-col items-start gap-2 overflow-y-auto rounded-xs border border-solid border-(--color-warning) px-3 py-2 text-left text-sm text-(--color-font)'
+              }
+            >
+              <h3 className="font-semibold">
+                <Icon icon="triangle-exclamation" className="mr-2 shrink-0 text-(--color-warning)" />
+                Unknown Fields Detected
+              </h3>
+              <span>
+                The files listed below contain fields not recognized by this version of Insomnia (i.e. fields added by a
+                newer version of Insomnia, or manual edits).
+              </span>
+              <ul className="flex list-disc flex-col gap-2 pl-5 font-bold">
+                {insomniaFilesContainUnknownFields.map(f => (
+                  <li className="break-all" key={f.path}>
+                    {f.path}
+                  </li>
+                ))}
+              </ul>
+
+              <span>
+                You can safely open and work with these files, but committing changes to these files from this version
+                of Insomnia may break or remove functionality for your collaborators. We recommend upgrading. Best
+                practice is to collaborate from the same major version.
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
