@@ -2,6 +2,7 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { FC, ReactNode } from 'react';
 import { Button } from 'react-aria-components';
 
+import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import type { EntityChangeStatus, VisualDiffEntityType } from './diff-engine';
 import { InlineDiffEditor } from './inline-diff-editor';
@@ -106,9 +107,9 @@ export const CollapseToggleButton: FC<{ isExpanded: boolean; onPress: () => void
   </Button>
 );
 
-export type EntityCardPendingAction = 'stage' | null;
+export type EntityCardPendingAction = 'stage' | 'discard' | null;
 
-// Props every visual diff card accepts for its per-entity stage/unstage actions.
+// Props every visual diff card accepts for its per-entity stage/unstage/discard actions.
 export interface EntityCardActionProps {
   staged: boolean;
   // This card's own in-flight action, if any (drives its spinner).
@@ -116,14 +117,18 @@ export interface EntityCardActionProps {
   // True while any card's action is in flight: every action computes from the
   // currently loaded diff, so a second one must wait for the refresh.
   isDisabled: boolean;
-  // Omitted when the entity can't be acted on independently of its file.
+  // Omitted (along with onDiscard) when the entity can't be acted on independently of its file.
   onStage?: () => void;
+  // Only provided for unstaged changes — staged changes can't be discarded from the index view.
+  onDiscard?: () => Promise<void>;
+  // Replaces the Discard button's "Confirm" prompt, eg. to warn that more than this card is affected.
+  discardConfirmMessage?: string;
 }
 
 const CARD_ACTION_BUTTON_CLASS =
   'flex items-center gap-1 rounded-xs bg-(--hl-xs) px-2 py-1 text-xs font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50';
 
-// Groups the status badge with the per-entity stage/unstage action,
+// Groups the status badge with the per-entity discard/stage/unstage actions,
 // shown at the top-right of every visual diff card.
 export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardActionProps> = ({
   status,
@@ -131,11 +136,28 @@ export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardAc
   pendingAction,
   isDisabled,
   onStage,
+  onDiscard,
+  discardConfirmMessage = 'Confirm',
 }) => {
   const isStaging = pendingAction === 'stage';
   return (
     <div className="flex shrink-0 items-center gap-2">
       <StatusBadge status={status} />
+      {!staged && onDiscard && (
+        <PromptButton
+          className={CARD_ACTION_BUTTON_CLASS}
+          disabled={isDisabled}
+          confirmMessage={discardConfirmMessage}
+          loadingMessage="Discarding"
+          // On success the card disappears with the refresh; on failure a toast explains — so no "done" text.
+          doneMessage=""
+          referToOnClickReturnValue
+          onClick={onDiscard}
+        >
+          <Icon icon="rotate-left" />
+          Discard
+        </PromptButton>
+      )}
       {onStage && (
         <Button isDisabled={isDisabled} onPress={onStage} className={CARD_ACTION_BUTTON_CLASS}>
           <Icon icon={isStaging ? 'spinner' : staged ? 'minus' : 'plus'} className={isStaging ? 'animate-spin' : ''} />
