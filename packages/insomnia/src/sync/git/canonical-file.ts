@@ -53,6 +53,22 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
 }
 
 /**
+ * `content` as the Git Sync pipeline would write it, or `content` itself when it can't be replayed
+ * (not an importable Insomnia file, or a workspace the export can't produce, e.g. an MCP client file).
+ * For files assembled outside the export, like the visual diff's per-entity stage/discard that splices
+ * one entity into a file: replaying them gives the export's key order, entity order and dropped empty
+ * values, so the result doesn't differ from what Insomnia writes in ways no entity accounts for.
+ */
+export async function canonicalizeInsomniaFileContent(content: string): Promise<string> {
+  try {
+    return (await getCanonicalInsomniaFileContent(content)) ?? content;
+  } catch (err) {
+    console.warn('[git] Failed to canonicalize Insomnia file content', err);
+    return content;
+  }
+}
+
+/**
  * Whether the whole difference between the baseline and working copy of a file comes from
  * Insomnia re-generating the baseline. The baseline is what a discard restores: the staged
  * content, or the HEAD content when nothing is staged. Such a change reappears after every

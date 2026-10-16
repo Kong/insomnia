@@ -9,7 +9,11 @@ import YAML from 'yaml';
 import { database as db } from '../../../common/database';
 import { migrateToLatestYaml } from '../../../common/insomnia-schema-migrations';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../../common/insomnia-v5';
-import { getCanonicalInsomniaFileContent, isUndiscardableChange } from '../canonical-file';
+import {
+  canonicalizeInsomniaFileContent,
+  getCanonicalInsomniaFileContent,
+  isUndiscardableChange,
+} from '../canonical-file';
 
 const FIXTURE_DIR = path.join(__dirname, '..', '..', '..', 'common', '__fixtures__', 'insomnia-v5-roundtrip');
 // Skip fixtures that are raw OpenAPI documents rather than Insomnia files
@@ -82,6 +86,42 @@ const reorderedCollection = buildCollection([
 describe('canonical-file', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
+  });
+
+  describe('canonicalizeInsomniaFileContent', () => {
+    it('drops what splicing leaves behind and the export never writes, like an empty `children`', async () => {
+      const document = YAML.parse(reorderedCollection);
+      document.collection[0].children = [];
+      const spliced = YAML.stringify(document);
+
+      const canonicalContent = await canonicalizeInsomniaFileContent(spliced);
+
+      expect(canonicalContent).not.toContain('children: []');
+      expect(canonicalContent).toBe(await exportThroughDatabase(spliced));
+    });
+
+    it('returns content it cannot replay unchanged', async () => {
+      const notInsomnia = 'extends: spectral:oas\n';
+      // The export needs a base environment, which an MCP client file doesn't have
+      const mcpClient = `type: mcpClient.insomnia/5.0
+name: MCP
+meta:
+  id: wrk_mcp
+  created: 1000
+  modified: 1000
+mcpRequest:
+  name: MCP
+  url: npx server
+  transportType: stdio
+  meta:
+    id: mcp-req_1
+    created: 1000
+    modified: 1000
+`;
+
+      expect(await canonicalizeInsomniaFileContent(notInsomnia)).toBe(notInsomnia);
+      expect(await canonicalizeInsomniaFileContent(mcpClient)).toBe(mcpClient);
+    });
   });
 
   describe('getCanonicalInsomniaFileContent', () => {

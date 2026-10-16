@@ -50,7 +50,7 @@ import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import { checkStrictSchemaMatch } from '../common/zod/check-schema-mismatch';
 import { findUnknownFieldRanges, type UnknownFieldRange } from '../common/zod/find-unknown-field-ranges';
-import { isUndiscardableChange } from '../sync/git/canonical-file';
+import { canonicalizeInsomniaFileContent, isUndiscardableChange } from '../sync/git/canonical-file';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -3389,7 +3389,8 @@ export const stagePartialContentAction = async ({
 }> => {
   try {
     await getGitRepository({ workspaceId, projectId });
-    await GitVCS.stagePartialContent(filepath, content);
+    // `content` is spliced together by the visual diff; write it the way Git Sync would export it.
+    await GitVCS.stagePartialContent(filepath, await canonicalizeInsomniaFileContent(content));
     return {};
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while staging changes';
@@ -3414,7 +3415,8 @@ export const discardPartialContentAction = async ({
 }> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
-    await GitVCS.discardPartialContent(filepath, content);
+    // `content` is spliced together by the visual diff; write it the way Git Sync would export it.
+    await GitVCS.discardPartialContent(filepath, await canonicalizeInsomniaFileContent(content));
     // Sync the rewritten YAML back into the DB, otherwise the watcher's next
     // DB -> disk flush would resurrect the discarded change.
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
