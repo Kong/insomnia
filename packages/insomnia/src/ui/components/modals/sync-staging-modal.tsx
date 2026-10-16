@@ -73,7 +73,6 @@ function getDiff(previousBlobContent?: string, blobContent?: string) {
 
   // Check the compatibility of the original document against the schema only when there is blob content (not being deleted).
   const originDocCompatibility = !!blobContent && checkDocCompatibilityFromSchema(previousBlobContent);
-  // Check for unknown fields only if the original document has unknown fields.
   const unknownFieldRanges =
     originDocCompatibility === 'match-with-unknown-fields'
       ? findDocUnknownFieldRanges(previousBlobContent, before)
