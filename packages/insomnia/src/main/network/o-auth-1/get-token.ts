@@ -79,9 +79,7 @@ export default async function getToken(
     requestData.data.oauth_verifier = authentication.verifier;
   }
 
-  if (authentication.includeBodyHash && body && body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    requestData.includeBodyHash = true;
-
+  if (body?.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     for (const p of body.params || []) {
       requestData.data[p.name] = p.value;
     }
