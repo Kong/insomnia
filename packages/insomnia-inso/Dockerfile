@@ -15,5 +15,7 @@ FROM docker.io/ubuntu:24.04
 COPY --from=fetch /usr/bin/inso /usr/bin/inso
 RUN chmod +x /usr/bin/inso
 RUN apt-get update && apt-get install -y libstdc++6 && rm -rf /var/lib/apt/lists/*
+RUN useradd --create-home --shell /usr/sbin/nologin inso
+USER inso
 
 ENTRYPOINT ["/usr/bin/inso"]
