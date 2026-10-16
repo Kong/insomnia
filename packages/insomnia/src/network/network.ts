@@ -439,14 +439,14 @@ export async function savePatchesMadeByScript(patches: {
   const hasGlobalEnvironmentAndIsNotBase =
     mutatedContext.globals && mutatedContext.globals?._id !== activeGlobalBaseEnvironment?._id;
   const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
-    const { environmentType } = originEnvironment;
+    const { environmentType, kvPairData: originalKvPairData } = originEnvironment;
     const { data, dataPropertyOrder } = mutatedContextEnvironment;
     await services.environment.update(originEnvironment, {
       data,
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null, originalKvPairData),
       }),
     });
   };
@@ -475,7 +475,11 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
+          kvPairData: getKVPairFromData(
+            mutatedFolder.environment,
+            originalFolder.environmentPropertyOrder ?? null,
+            originalFolder.kvPairData,
+          ),
         }),
       });
     }
@@ -517,12 +521,11 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     .map(doc => doc.name);
   let vault;
   if (globals && models.environment.vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
-    // decrypt and set vault in insomnia sdk if necessary
-    globals.data[models.environment.vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
-      globals.data[models.environment.vaultEnvironmentPath],
-      'script',
-    );
-    vault = globals.data[models.environment.vaultEnvironmentPath];
+    // decrypt and set vault in insomnia sdk if necessary.
+    // the decrypted secrets must stay out of `globals.data`: that object is written back to the
+    // database by `savePatchesMadeByScript` once the script returns, so storing plaintext there
+    // would permanently replace the stored ciphertext.
+    vault = await maskOrDecryptVaultDataIfNecessary(globals.data[models.environment.vaultEnvironmentPath], 'script');
   }
 
   try {

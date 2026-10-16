@@ -5,6 +5,7 @@ import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ChangeBufferEvent } from '../..';
 import { database as db } from '../..';
+import { createNedbDatabase } from './database-nedb';
 import * as workspaceInitModel from './init-model/workspace';
 import { repairDatabase } from './repair-database';
 
@@ -17,6 +18,31 @@ describe('init()', () => {
       inMemoryOnly: true,
     });
     expect((await db.find(models.request.type)).length).toBe(0);
+  });
+});
+
+describe('createNedbDatabase()', () => {
+  it('keeps documents and change listeners separate between instances', async () => {
+    await db.init({ inMemoryOnly: true }, true);
+    const appChanges: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => {
+      appChanges.push(changes);
+    });
+    await db.update({ _id: 'req_app', type: models.request.type, parentId: 'wrk_app' });
+    appChanges.length = 0;
+
+    const scratchDb = createNedbDatabase();
+    await scratchDb.init({ inMemoryOnly: true });
+    const scratchChanges: ChangeBufferEvent<BaseModel>[][] = [];
+    scratchDb.onChange(changes => {
+      scratchChanges.push(changes);
+    });
+    await scratchDb.update({ _id: 'req_scratch', type: models.request.type, parentId: 'wrk_scratch' });
+
+    expect((await db.find(models.request.type)).map(doc => doc._id)).toEqual(['req_app']);
+    expect((await scratchDb.find(models.request.type)).map(doc => doc._id)).toEqual(['req_scratch']);
+    expect(appChanges).toEqual([]);
+    expect(scratchChanges).toHaveLength(1);
   });
 });
 

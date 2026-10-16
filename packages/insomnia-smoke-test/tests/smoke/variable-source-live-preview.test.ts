@@ -50,7 +50,7 @@ async function openVariableModal(page: Page, templateSnippet: string) {
 
 async function enableShowVariableSourceAndValue(page: Page) {
   await page.getByTestId('settings-button').click();
-  const checkbox = page.getByRole('checkbox', { name: 'Show variable source and value' });
+  const checkbox = page.getByRole('checkbox', { name: 'Template tags show variable source and value' });
   await checkbox.click();
   await expect.soft(checkbox).toBeChecked();
   await page.locator('.app').press('Escape');
@@ -75,7 +75,7 @@ const SCENARIOS = [
     varSnippet: 'cascadeVar',
     chipName: '_.cascadeVar',
     value: 'fromBase',
-    source: 'Base Environment',
+    source: 'Collection Environment : Base Environment',
     openSurface: 'environments-modal' as const,
     envPageRow: 'Base Environment',
     extraFixtures: [] as string[],
@@ -89,7 +89,7 @@ const SCENARIOS = [
     varSnippet: 'cascadeVar',
     chipName: '_.cascadeVar',
     value: 'fromSubA',
-    source: 'SubEnvA (API Collection Sub-Environment)',
+    source: 'Collection Environment : SubEnvA',
     openSurface: 'environments-modal' as const,
     envPageRow: 'SubEnvA',
     extraFixtures: [] as string[],
@@ -103,7 +103,7 @@ const SCENARIOS = [
     varSnippet: 'cascadeVar',
     chipName: '_.cascadeVar',
     value: 'fromFolder',
-    source: 'cascadeFolder',
+    source: 'Folder Environment : cascadeFolder',
     openSurface: 'folder-pane' as const,
     envPageRow: '',
     extraFixtures: [] as string[],
@@ -117,7 +117,7 @@ const SCENARIOS = [
     varSnippet: 'folderOverride',
     chipName: '_.folderOverride',
     value: 'fromInnerFolder',
-    source: 'innerFolder',
+    source: 'Folder Environment : innerFolder',
     openSurface: 'folder-pane' as const,
     envPageRow: '',
     extraFixtures: [] as string[],
@@ -131,7 +131,7 @@ const SCENARIOS = [
     varSnippet: 'global-base',
     chipName: "_['global-base']",
     value: '4444',
-    source: 'Base Environment',
+    source: 'Project Environment : Base Environment',
     openSurface: 'environment-page' as const,
     envPageRow: 'Base Environment',
     // The global environment lives in its own fixtures, imported on top of the
