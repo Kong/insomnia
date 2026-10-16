@@ -29,6 +29,55 @@ describe('addSetCookiesToToughCookieJar', () => {
     expect(cookies.map(c => c.key)).toEqual(expect.arrayContaining(['a', 'b']));
   });
 
+  // The cookie jar is serialized into the Git-synced file, so a cookie's `id` must survive the
+  // tough-cookie round-trip (which drops it) or every Set-Cookie response would dirty the file.
+  describe('cookie id stability', () => {
+    const storedCookie = (key: string, id: string) => ({
+      id, key, value: '1', domain: 'localhost', path: '/',
+      secure: false, httpOnly: false, hostOnly: true,
+    });
+
+    it('keeps the id of a cookie when an identical Set-Cookie response is replayed', async () => {
+      const cookieJar = { cookies: [storedCookie('session', 'cookie_1')] };
+
+      const { cookies } = await addSetCookiesToToughCookieJar({
+        setCookieStrings: ['session=1; Path=/'],
+        currentUrl: 'http://localhost:3000/',
+        cookieJar,
+      });
+
+      expect(cookies).toHaveLength(1);
+      expect(cookies[0]).toMatchObject({ id: 'cookie_1', key: 'session', value: '1', domain: 'localhost', path: '/' });
+    });
+
+    it('keeps the ids of all cookies when a response only sets one of them', async () => {
+      const cookieJar = { cookies: [storedCookie('a', 'cookie_a'), storedCookie('b', 'cookie_b')] };
+
+      const { cookies } = await addSetCookiesToToughCookieJar({
+        setCookieStrings: ['a=2; Path=/'],
+        currentUrl: 'http://localhost:3000/',
+        cookieJar,
+      });
+
+      expect(cookies.find(c => c.key === 'a')).toMatchObject({ id: 'cookie_a', value: '2' });
+      expect(cookies.find(c => c.key === 'b')).toMatchObject({ id: 'cookie_b', value: '1' });
+    });
+
+    it('does not reuse an id for a cookie with the same key on a different path', async () => {
+      const cookieJar = { cookies: [storedCookie('session', 'cookie_1')] };
+
+      const { cookies } = await addSetCookiesToToughCookieJar({
+        setCookieStrings: ['session=1; Path=/other'],
+        currentUrl: 'http://localhost:3000/',
+        cookieJar,
+      });
+
+      expect(cookies).toHaveLength(2);
+      expect(cookies.find(c => c.path === '/')?.id).toBe('cookie_1');
+      expect(cookies.find(c => c.path === '/other')?.id).not.toBe('cookie_1');
+    });
+  });
+
   // A cookie value set via a response may contain Nunjucks/Liquid template syntax. Only
   // 'manual' cookies are ever rendered as templates (see cookies-modal.tsx), so every cookie
   // a response actually sets/updates must always come out tagged 'response' here, even if a

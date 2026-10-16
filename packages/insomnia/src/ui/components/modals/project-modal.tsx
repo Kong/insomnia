@@ -28,13 +28,6 @@ export const ProjectModal = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Close the modal once a submission (e.g. creating a project) redirects
-  // to a new URL. Comparing the pathname captured when the modal opened
-  // against the current one — rather than watching `useNavigation().state`
-  // flip away from 'idle' in an effect — because a fast redirect can
-  // resolve within the same render/commit that starts it, so the 'loading'
-  // state is never observed and the effect never fires, leaving the modal
-  // stuck open indefinitely with no error (see insomnia PR #10556).
   const location = useLocation();
   const openedAtPathRef = useRef(location.pathname);
   useEffect(() => {
@@ -47,7 +40,7 @@ export const ProjectModal = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && location.pathname !== openedAtPathRef.current) {
+    if (activeNavigation && activeNavigation.state !== 'idle' && activeNavigation.location && isOpen) {
       onOpenChange(false);
     }
   }, [location, isOpen, onOpenChange]);

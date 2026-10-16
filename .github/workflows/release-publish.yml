@@ -296,7 +296,7 @@ jobs:
       # TODO: also release for aarch64 Linux?
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
-        uses: docker://kong/release-script:latest
+        uses: docker://kong/release-script@sha256:112bd255bb38be52bd626e7f615fd1c4bb1c948f48612984591907dc7cf95ce4 # 1.36.0
         env:
           PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
           PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}

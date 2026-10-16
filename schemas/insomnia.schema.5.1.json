@@ -94,7 +94,15 @@
                   },
                   "expires": {
                     "anyOf": [
-                      {},
+                      {
+                        "anyOf": [
+                          {},
+                          {
+                            "type": "string",
+                            "const": "Infinity"
+                          }
+                        ]
+                      },
                       {
                         "type": "null"
                       }
@@ -128,7 +136,19 @@
                   "pathIsDefault": {
                     "type": "boolean"
                   },
-                  "lastAccessed": {}
+                  "lastAccessed": {},
+                  "source": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "manual"
+                      },
+                      {
+                        "type": "string",
+                        "const": "response"
+                      }
+                    ]
+                  }
                 },
                 "required": []
               }
@@ -358,7 +378,14 @@
             "type": "object",
             "properties": {
               "path": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "disabled": {
                 "type": "boolean"
@@ -649,7 +676,15 @@
                   },
                   "expires": {
                     "anyOf": [
-                      {},
+                      {
+                        "anyOf": [
+                          {},
+                          {
+                            "type": "string",
+                            "const": "Infinity"
+                          }
+                        ]
+                      },
                       {
                         "type": "null"
                       }
@@ -683,7 +718,19 @@
                   "pathIsDefault": {
                     "type": "boolean"
                   },
-                  "lastAccessed": {}
+                  "lastAccessed": {},
+                  "source": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "manual"
+                      },
+                      {
+                        "type": "string",
+                        "const": "response"
+                      }
+                    ]
+                  }
                 },
                 "required": []
               }
@@ -1075,7 +1122,14 @@
             "type": "object",
             "properties": {
               "path": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "disabled": {
                 "type": "boolean"
@@ -1236,6 +1290,9 @@
                   "type": "object",
                   "properties": {
                     "name": {
+                      "type": "string"
+                    },
+                    "id": {
                       "type": "string"
                     },
                     "value": {
@@ -1598,6 +1655,9 @@
                   "name": {
                     "type": "string"
                   },
+                  "id": {
+                    "type": "string"
+                  },
                   "value": {
                     "type": "string"
                   },
@@ -1623,54 +1683,6 @@
                       "properties": {
                         "type": {
                           "type": "string",
-                          "const": "basic"
-                        },
-                        "useISO88591": {
-                          "type": "boolean"
-                        },
-                        "username": {
-                          "type": "string"
-                        },
-                        "password": {
-                          "type": "string"
-                        },
-                        "disabled": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "type"
-                      ]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "const": "apikey"
-                        },
-                        "key": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "type": "string"
-                        },
-                        "disabled": {
-                          "type": "boolean"
-                        },
-                        "addTo": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "type"
-                      ]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
                           "const": "oauth2"
                         },
                         "disabled": {
@@ -1681,8 +1693,8 @@
                           "enum": [
                             "authorization_code",
                             "client_credentials",
-                            "implicit",
                             "password",
+                            "implicit",
                             "refresh_token",
                             "mcp_auth_flow"
                           ]
@@ -1698,6 +1710,12 @@
                         },
                         "clientSecret": {
                           "type": "string"
+                        },
+                        "clientIdIssuedAt": {
+                          "type": "number"
+                        },
+                        "clientSecretExpiresAt": {
+                          "type": "number"
                         },
                         "audience": {
                           "type": "string"
@@ -1748,11 +1766,14 @@
                           "type": "string",
                           "enum": [
                             "code",
-                            "token",
-                            "none",
                             "id_token",
-                            "id_token token"
+                            "id_token token",
+                            "none",
+                            "token"
                           ]
+                        },
+                        "launchBrowserManually": {
+                          "type": "boolean"
                         },
                         "origin": {
                           "type": "string"
@@ -1761,6 +1782,72 @@
                       "required": [
                         "type",
                         "grantType"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "basic"
+                        },
+                        "useISO88591": {
+                          "type": "boolean"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "bearer"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "token": {
+                          "type": "string"
+                        },
+                        "prefix": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "digest"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
                       ]
                     },
                     {
@@ -1795,6 +1882,8 @@
                       },
                       "required": [
                         "type",
+                        "id",
+                        "key",
                         "algorithm"
                       ]
                     },
@@ -1812,12 +1901,15 @@
                           "type": "string",
                           "enum": [
                             "HMAC-SHA1",
-                            "RSA-SHA1",
                             "HMAC-SHA256",
+                            "RSA-SHA1",
                             "PLAINTEXT"
                           ]
                         },
                         "consumerKey": {
+                          "type": "string"
+                        },
+                        "consumerSecret": {
                           "type": "string"
                         },
                         "tokenKey": {
@@ -1849,69 +1941,6 @@
                         },
                         "includeBodyHash": {
                           "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "type"
-                      ]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "const": "digest"
-                        },
-                        "disabled": {
-                          "type": "boolean"
-                        },
-                        "username": {
-                          "type": "string"
-                        },
-                        "password": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "type"
-                      ]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "const": "ntlm"
-                        },
-                        "disabled": {
-                          "type": "boolean"
-                        },
-                        "username": {
-                          "type": "string"
-                        },
-                        "password": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "type"
-                      ]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "const": "bearer"
-                        },
-                        "disabled": {
-                          "type": "boolean"
-                        },
-                        "token": {
-                          "type": "string"
-                        },
-                        "prefix": {
-                          "type": "string"
                         }
                       },
                       "required": [
@@ -1982,13 +2011,56 @@
                         "audience": {
                           "type": "string"
                         },
-                        "addintionalClaims": {
+                        "additionalClaims": {
                           "type": "string"
                         },
                         "privateKey": {
                           "type": "string"
                         },
                         "keyId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "issuer",
+                        "audience",
+                        "privateKey",
+                        "keyId"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "none"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "apikey"
+                        },
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "disabled": {
+                          "type": "boolean"
+                        },
+                        "addTo": {
                           "type": "string"
                         }
                       },
@@ -2001,10 +2073,16 @@
                       "properties": {
                         "type": {
                           "type": "string",
-                          "const": "none"
+                          "const": "ntlm"
                         },
                         "disabled": {
                           "type": "boolean"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -2041,7 +2119,8 @@
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^mcp-req.*"
                 },
                 "created": {
                   "type": "number"
@@ -2079,9 +2158,16 @@
                   },
                   "type": {
                     "type": "string",
-                    "const": "str"
+                    "enum": [
+                      "json",
+                      "str",
+                      "secret"
+                    ]
                   },
                   "enabled": {
+                    "type": "boolean"
+                  },
+                  "isConfidential": {
                     "type": "boolean"
                   }
                 },
@@ -2348,7 +2434,8 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^greq.*"
                   },
                   "created": {
                     "type": "number"
@@ -2399,14 +2486,7 @@
                 }
               },
               "protoFileId": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
+                "type": "string"
               },
               "protoMethodName": {
                 "type": "string"
@@ -2428,6 +2508,32 @@
                   }
                 }
               },
+              "disableUserAgentHeader": {
+                "type": "boolean"
+              },
+              "konnectRouteKey": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "konnectManagedHeaderNames": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "children": {},
               "method": {}
             },
@@ -2448,7 +2554,8 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^req.*"
                   },
                   "created": {
                     "type": "number"
@@ -2519,6 +2626,9 @@
                             }
                           ]
                         },
+                        "id": {
+                          "type": "string"
+                        },
                         "fileName": {
                           "type": "string"
                         },
@@ -2547,13 +2657,20 @@
                     "disabled": {
                       "type": "boolean"
                     },
+                    "id": {
+                      "type": "string"
+                    },
                     "type": {
                       "type": "string"
                     },
                     "multiline": {
                       "type": "boolean"
                     }
-                  }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
                 }
               },
               "headers": {
@@ -2562,6 +2679,9 @@
                   "type": "object",
                   "properties": {
                     "name": {
+                      "type": "string"
+                    },
+                    "id": {
                       "type": "string"
                     },
                     "value": {
@@ -2589,54 +2709,6 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "const": "basic"
-                          },
-                          "useISO88591": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "apikey"
-                          },
-                          "key": {
-                            "type": "string"
-                          },
-                          "value": {
-                            "type": "string"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "addTo": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
                             "const": "oauth2"
                           },
                           "disabled": {
@@ -2647,8 +2719,8 @@
                             "enum": [
                               "authorization_code",
                               "client_credentials",
-                              "implicit",
                               "password",
+                              "implicit",
                               "refresh_token",
                               "mcp_auth_flow"
                             ]
@@ -2664,6 +2736,12 @@
                           },
                           "clientSecret": {
                             "type": "string"
+                          },
+                          "clientIdIssuedAt": {
+                            "type": "number"
+                          },
+                          "clientSecretExpiresAt": {
+                            "type": "number"
                           },
                           "audience": {
                             "type": "string"
@@ -2714,11 +2792,14 @@
                             "type": "string",
                             "enum": [
                               "code",
-                              "token",
-                              "none",
                               "id_token",
-                              "id_token token"
+                              "id_token token",
+                              "none",
+                              "token"
                             ]
+                          },
+                          "launchBrowserManually": {
+                            "type": "boolean"
                           },
                           "origin": {
                             "type": "string"
@@ -2727,6 +2808,72 @@
                         "required": [
                           "type",
                           "grantType"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "basic"
+                          },
+                          "useISO88591": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "bearer"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "prefix": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "digest"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
                         ]
                       },
                       {
@@ -2761,6 +2908,8 @@
                         },
                         "required": [
                           "type",
+                          "id",
+                          "key",
                           "algorithm"
                         ]
                       },
@@ -2778,12 +2927,15 @@
                             "type": "string",
                             "enum": [
                               "HMAC-SHA1",
-                              "RSA-SHA1",
                               "HMAC-SHA256",
+                              "RSA-SHA1",
                               "PLAINTEXT"
                             ]
                           },
                           "consumerKey": {
+                            "type": "string"
+                          },
+                          "consumerSecret": {
                             "type": "string"
                           },
                           "tokenKey": {
@@ -2815,69 +2967,6 @@
                           },
                           "includeBodyHash": {
                             "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "digest"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "ntlm"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "bearer"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "token": {
-                            "type": "string"
-                          },
-                          "prefix": {
-                            "type": "string"
                           }
                         },
                         "required": [
@@ -2948,13 +3037,56 @@
                           "audience": {
                             "type": "string"
                           },
-                          "addintionalClaims": {
+                          "additionalClaims": {
                             "type": "string"
                           },
                           "privateKey": {
                             "type": "string"
                           },
                           "keyId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "issuer",
+                          "audience",
+                          "privateKey",
+                          "keyId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "none"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "apikey"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "addTo": {
                             "type": "string"
                           }
                         },
@@ -2967,10 +3099,16 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "const": "none"
+                            "const": "ntlm"
                           },
                           "disabled": {
                             "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -3000,6 +3138,32 @@
                   {
                     "type": "object",
                     "properties": {}
+                  }
+                ]
+              },
+              "disableUserAgentHeader": {
+                "type": "boolean"
+              },
+              "konnectRouteKey": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "konnectManagedHeaderNames": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
                   }
                 ]
               },
@@ -3063,7 +3227,11 @@
                         "value": {
                           "type": "string"
                         }
-                      }
+                      },
+                      "required": [
+                        "name",
+                        "value"
+                      ]
                     }
                   },
                   {
@@ -3137,6 +3305,9 @@
                       "on",
                       "off"
                     ]
+                  },
+                  "useProxy": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -3152,54 +3323,6 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "const": "basic"
-                          },
-                          "useISO88591": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "apikey"
-                          },
-                          "key": {
-                            "type": "string"
-                          },
-                          "value": {
-                            "type": "string"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "addTo": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
                             "const": "oauth2"
                           },
                           "disabled": {
@@ -3210,8 +3333,8 @@
                             "enum": [
                               "authorization_code",
                               "client_credentials",
-                              "implicit",
                               "password",
+                              "implicit",
                               "refresh_token",
                               "mcp_auth_flow"
                             ]
@@ -3227,6 +3350,12 @@
                           },
                           "clientSecret": {
                             "type": "string"
+                          },
+                          "clientIdIssuedAt": {
+                            "type": "number"
+                          },
+                          "clientSecretExpiresAt": {
+                            "type": "number"
                           },
                           "audience": {
                             "type": "string"
@@ -3277,11 +3406,14 @@
                             "type": "string",
                             "enum": [
                               "code",
-                              "token",
-                              "none",
                               "id_token",
-                              "id_token token"
+                              "id_token token",
+                              "none",
+                              "token"
                             ]
+                          },
+                          "launchBrowserManually": {
+                            "type": "boolean"
                           },
                           "origin": {
                             "type": "string"
@@ -3290,6 +3422,72 @@
                         "required": [
                           "type",
                           "grantType"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "basic"
+                          },
+                          "useISO88591": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "bearer"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "prefix": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "digest"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
                         ]
                       },
                       {
@@ -3324,6 +3522,8 @@
                         },
                         "required": [
                           "type",
+                          "id",
+                          "key",
                           "algorithm"
                         ]
                       },
@@ -3341,12 +3541,15 @@
                             "type": "string",
                             "enum": [
                               "HMAC-SHA1",
-                              "RSA-SHA1",
                               "HMAC-SHA256",
+                              "RSA-SHA1",
                               "PLAINTEXT"
                             ]
                           },
                           "consumerKey": {
+                            "type": "string"
+                          },
+                          "consumerSecret": {
                             "type": "string"
                           },
                           "tokenKey": {
@@ -3378,69 +3581,6 @@
                           },
                           "includeBodyHash": {
                             "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "digest"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "ntlm"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "bearer"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "token": {
-                            "type": "string"
-                          },
-                          "prefix": {
-                            "type": "string"
                           }
                         },
                         "required": [
@@ -3511,13 +3651,56 @@
                           "audience": {
                             "type": "string"
                           },
-                          "addintionalClaims": {
+                          "additionalClaims": {
                             "type": "string"
                           },
                           "privateKey": {
                             "type": "string"
                           },
                           "keyId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "issuer",
+                          "audience",
+                          "privateKey",
+                          "keyId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "none"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "apikey"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "addTo": {
                             "type": "string"
                           }
                         },
@@ -3530,10 +3713,16 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "const": "none"
+                            "const": "ntlm"
                           },
                           "disabled": {
                             "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -3574,6 +3763,9 @@
                     "name": {
                       "type": "string"
                     },
+                    "id": {
+                      "type": "string"
+                    },
                     "value": {
                       "type": "string"
                     },
@@ -3607,14 +3799,47 @@
                     "disabled": {
                       "type": "boolean"
                     },
+                    "id": {
+                      "type": "string"
+                    },
                     "type": {
                       "type": "string"
                     },
                     "multiline": {
                       "type": "boolean"
                     }
-                  }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
                 }
+              },
+              "disableUserAgentHeader": {
+                "type": "boolean"
+              },
+              "konnectRouteKey": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "konnectManagedHeaderNames": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "pathParameters": {
                 "anyOf": [
@@ -3629,7 +3854,11 @@
                         "value": {
                           "type": "string"
                         }
-                      }
+                      },
+                      "required": [
+                        "name",
+                        "value"
+                      ]
                     }
                   },
                   {
@@ -3711,54 +3940,6 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "const": "basic"
-                          },
-                          "useISO88591": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "apikey"
-                          },
-                          "key": {
-                            "type": "string"
-                          },
-                          "value": {
-                            "type": "string"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "addTo": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
                             "const": "oauth2"
                           },
                           "disabled": {
@@ -3769,8 +3950,8 @@
                             "enum": [
                               "authorization_code",
                               "client_credentials",
-                              "implicit",
                               "password",
+                              "implicit",
                               "refresh_token",
                               "mcp_auth_flow"
                             ]
@@ -3786,6 +3967,12 @@
                           },
                           "clientSecret": {
                             "type": "string"
+                          },
+                          "clientIdIssuedAt": {
+                            "type": "number"
+                          },
+                          "clientSecretExpiresAt": {
+                            "type": "number"
                           },
                           "audience": {
                             "type": "string"
@@ -3836,11 +4023,14 @@
                             "type": "string",
                             "enum": [
                               "code",
-                              "token",
-                              "none",
                               "id_token",
-                              "id_token token"
+                              "id_token token",
+                              "none",
+                              "token"
                             ]
+                          },
+                          "launchBrowserManually": {
+                            "type": "boolean"
                           },
                           "origin": {
                             "type": "string"
@@ -3849,6 +4039,72 @@
                         "required": [
                           "type",
                           "grantType"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "basic"
+                          },
+                          "useISO88591": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "bearer"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "prefix": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "digest"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
                         ]
                       },
                       {
@@ -3883,6 +4139,8 @@
                         },
                         "required": [
                           "type",
+                          "id",
+                          "key",
                           "algorithm"
                         ]
                       },
@@ -3900,12 +4158,15 @@
                             "type": "string",
                             "enum": [
                               "HMAC-SHA1",
-                              "RSA-SHA1",
                               "HMAC-SHA256",
+                              "RSA-SHA1",
                               "PLAINTEXT"
                             ]
                           },
                           "consumerKey": {
+                            "type": "string"
+                          },
+                          "consumerSecret": {
                             "type": "string"
                           },
                           "tokenKey": {
@@ -3937,69 +4198,6 @@
                           },
                           "includeBodyHash": {
                             "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "digest"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "ntlm"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "username": {
-                            "type": "string"
-                          },
-                          "password": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "type"
-                        ]
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "const": "bearer"
-                          },
-                          "disabled": {
-                            "type": "boolean"
-                          },
-                          "token": {
-                            "type": "string"
-                          },
-                          "prefix": {
-                            "type": "string"
                           }
                         },
                         "required": [
@@ -4070,13 +4268,56 @@
                           "audience": {
                             "type": "string"
                           },
-                          "addintionalClaims": {
+                          "additionalClaims": {
                             "type": "string"
                           },
                           "privateKey": {
                             "type": "string"
                           },
                           "keyId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "issuer",
+                          "audience",
+                          "privateKey",
+                          "keyId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "none"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "apikey"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "addTo": {
                             "type": "string"
                           }
                         },
@@ -4089,10 +4330,16 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "const": "none"
+                            "const": "ntlm"
                           },
                           "disabled": {
                             "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -4133,6 +4380,9 @@
                     "name": {
                       "type": "string"
                     },
+                    "id": {
+                      "type": "string"
+                    },
                     "value": {
                       "type": "string"
                     },
@@ -4166,13 +4416,20 @@
                     "disabled": {
                       "type": "boolean"
                     },
+                    "id": {
+                      "type": "string"
+                    },
                     "type": {
                       "type": "string"
                     },
                     "multiline": {
                       "type": "boolean"
                     }
-                  }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
                 }
               },
               "pathParameters": {
@@ -4185,20 +4442,12 @@
                     },
                     "value": {
                       "type": "string"
-                    },
-                    "description": {
-                      "type": "string"
-                    },
-                    "disabled": {
-                      "type": "boolean"
-                    },
-                    "type": {
-                      "type": "string"
-                    },
-                    "multiline": {
-                      "type": "boolean"
                     }
-                  }
+                  },
+                  "required": [
+                    "name",
+                    "value"
+                  ]
                 }
               },
               "eventListeners": {
@@ -4224,6 +4473,9 @@
                   ]
                 }
               },
+              "disableUserAgentHeader": {
+                "type": "boolean"
+              },
               "children": {},
               "method": {}
             }
@@ -4238,7 +4490,8 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^fld.*"
                   },
                   "created": {
                     "type": "number"
@@ -4279,436 +4532,462 @@
                   {
                     "anyOf": [
                       {
-                        "anyOf": [
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "basic"
-                              },
-                              "useISO88591": {
-                                "type": "boolean"
-                              },
-                              "username": {
-                                "type": "string"
-                              },
-                              "password": {
-                                "type": "string"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "type"
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth2"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "grantType": {
+                            "type": "string",
+                            "enum": [
+                              "authorization_code",
+                              "client_credentials",
+                              "password",
+                              "implicit",
+                              "refresh_token",
+                              "mcp_auth_flow"
                             ]
                           },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "apikey"
-                              },
-                              "key": {
-                                "type": "string"
-                              },
-                              "value": {
-                                "type": "string"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "addTo": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
+                          "accessTokenUrl": {
+                            "type": "string"
+                          },
+                          "authorizationUrl": {
+                            "type": "string"
+                          },
+                          "clientId": {
+                            "type": "string"
+                          },
+                          "clientSecret": {
+                            "type": "string"
+                          },
+                          "clientIdIssuedAt": {
+                            "type": "number"
+                          },
+                          "clientSecretExpiresAt": {
+                            "type": "number"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "scope": {
+                            "type": "string"
+                          },
+                          "resource": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "redirectUrl": {
+                            "type": "string"
+                          },
+                          "useDefaultBrowser": {
+                            "type": "boolean"
+                          },
+                          "credentialsInBody": {
+                            "type": "boolean"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "accessToken": {
+                            "type": "string"
+                          },
+                          "refreshToken": {
+                            "type": "string"
+                          },
+                          "tokenPrefix": {
+                            "type": "string"
+                          },
+                          "usePkce": {
+                            "type": "boolean"
+                          },
+                          "pkceMethod": {
+                            "type": "string"
+                          },
+                          "responseType": {
+                            "type": "string",
+                            "enum": [
+                              "code",
+                              "id_token",
+                              "id_token token",
+                              "none",
+                              "token"
                             ]
                           },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "oauth2"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "grantType": {
-                                "type": "string",
-                                "enum": [
-                                  "authorization_code",
-                                  "client_credentials",
-                                  "implicit",
-                                  "password",
-                                  "refresh_token",
-                                  "mcp_auth_flow"
-                                ]
-                              },
-                              "accessTokenUrl": {
-                                "type": "string"
-                              },
-                              "authorizationUrl": {
-                                "type": "string"
-                              },
-                              "clientId": {
-                                "type": "string"
-                              },
-                              "clientSecret": {
-                                "type": "string"
-                              },
-                              "audience": {
-                                "type": "string"
-                              },
-                              "scope": {
-                                "type": "string"
-                              },
-                              "resource": {
-                                "type": "string"
-                              },
-                              "username": {
-                                "type": "string"
-                              },
-                              "password": {
-                                "type": "string"
-                              },
-                              "redirectUrl": {
-                                "type": "string"
-                              },
-                              "useDefaultBrowser": {
-                                "type": "boolean"
-                              },
-                              "credentialsInBody": {
-                                "type": "boolean"
-                              },
-                              "state": {
-                                "type": "string"
-                              },
-                              "code": {
-                                "type": "string"
-                              },
-                              "accessToken": {
-                                "type": "string"
-                              },
-                              "refreshToken": {
-                                "type": "string"
-                              },
-                              "tokenPrefix": {
-                                "type": "string"
-                              },
-                              "usePkce": {
-                                "type": "boolean"
-                              },
-                              "pkceMethod": {
-                                "type": "string"
-                              },
-                              "responseType": {
-                                "type": "string",
-                                "enum": [
-                                  "code",
-                                  "token",
-                                  "none",
-                                  "id_token",
-                                  "id_token token"
-                                ]
-                              },
-                              "origin": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type",
-                              "grantType"
-                            ]
+                          "launchBrowserManually": {
+                            "type": "boolean"
                           },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "hawk"
-                              },
-                              "id": {
-                                "type": "string"
-                              },
-                              "key": {
-                                "type": "string"
-                              },
-                              "ext": {
-                                "type": "string"
-                              },
-                              "validatePayload": {
-                                "type": "boolean"
-                              },
-                              "algorithm": {
-                                "type": "string",
-                                "enum": [
-                                  "sha1",
-                                  "sha256"
-                                ]
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "type",
-                              "algorithm"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "oauth1"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "signatureMethod": {
-                                "type": "string",
-                                "enum": [
-                                  "HMAC-SHA1",
-                                  "RSA-SHA1",
-                                  "HMAC-SHA256",
-                                  "PLAINTEXT"
-                                ]
-                              },
-                              "consumerKey": {
-                                "type": "string"
-                              },
-                              "tokenKey": {
-                                "type": "string"
-                              },
-                              "tokenSecret": {
-                                "type": "string"
-                              },
-                              "privateKey": {
-                                "type": "string"
-                              },
-                              "version": {
-                                "type": "string"
-                              },
-                              "nonce": {
-                                "type": "string"
-                              },
-                              "timestamp": {
-                                "type": "string"
-                              },
-                              "callback": {
-                                "type": "string"
-                              },
-                              "realm": {
-                                "type": "string"
-                              },
-                              "verifier": {
-                                "type": "string"
-                              },
-                              "includeBodyHash": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "digest"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "username": {
-                                "type": "string"
-                              },
-                              "password": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "ntlm"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "username": {
-                                "type": "string"
-                              },
-                              "password": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "bearer"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "token": {
-                                "type": "string"
-                              },
-                              "prefix": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "iam"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "accessKeyId": {
-                                "type": "string"
-                              },
-                              "secretAccessKey": {
-                                "type": "string"
-                              },
-                              "sessionToken": {
-                                "type": "string"
-                              },
-                              "region": {
-                                "type": "string"
-                              },
-                              "service": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "netrc"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "asap"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "issuer": {
-                                "type": "string"
-                              },
-                              "subject": {
-                                "type": "string"
-                              },
-                              "audience": {
-                                "type": "string"
-                              },
-                              "addintionalClaims": {
-                                "type": "string"
-                              },
-                              "privateKey": {
-                                "type": "string"
-                              },
-                              "keyId": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "none"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "const": "singleToken"
-                              },
-                              "disabled": {
-                                "type": "boolean"
-                              },
-                              "token": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ]
+                          "origin": {
+                            "type": "string"
                           }
+                        },
+                        "required": [
+                          "type",
+                          "grantType"
                         ]
                       },
                       {
                         "type": "object",
-                        "properties": {}
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "basic"
+                          },
+                          "useISO88591": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "bearer"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "prefix": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "digest"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "hawk"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "ext": {
+                            "type": "string"
+                          },
+                          "validatePayload": {
+                            "type": "boolean"
+                          },
+                          "algorithm": {
+                            "type": "string",
+                            "enum": [
+                              "sha1",
+                              "sha256"
+                            ]
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "id",
+                          "key",
+                          "algorithm"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "oauth1"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "signatureMethod": {
+                            "type": "string",
+                            "enum": [
+                              "HMAC-SHA1",
+                              "HMAC-SHA256",
+                              "RSA-SHA1",
+                              "PLAINTEXT"
+                            ]
+                          },
+                          "consumerKey": {
+                            "type": "string"
+                          },
+                          "consumerSecret": {
+                            "type": "string"
+                          },
+                          "tokenKey": {
+                            "type": "string"
+                          },
+                          "tokenSecret": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "nonce": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string"
+                          },
+                          "callback": {
+                            "type": "string"
+                          },
+                          "realm": {
+                            "type": "string"
+                          },
+                          "verifier": {
+                            "type": "string"
+                          },
+                          "includeBodyHash": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "iam"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "accessKeyId": {
+                            "type": "string"
+                          },
+                          "secretAccessKey": {
+                            "type": "string"
+                          },
+                          "sessionToken": {
+                            "type": "string"
+                          },
+                          "region": {
+                            "type": "string"
+                          },
+                          "service": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "netrc"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "asap"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "issuer": {
+                            "type": "string"
+                          },
+                          "subject": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          },
+                          "additionalClaims": {
+                            "type": "string"
+                          },
+                          "privateKey": {
+                            "type": "string"
+                          },
+                          "keyId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "issuer",
+                          "audience",
+                          "privateKey",
+                          "keyId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "none"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "apikey"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "addTo": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "ntlm"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "singleToken"
+                          },
+                          "disabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
                       }
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {}
+                  }
+                ]
+              },
+              "environment": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "environmentPropertyOrder": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
                   },
                   {
                     "type": "null"
                   }
                 ]
-              },
-              "environment": {
-                "$ref": "#/$defs/__schema1"
-              },
-              "environmentPropertyOrder": {
-                "$ref": "#/$defs/__schema1"
               },
               "headers": {
                 "type": "array",
@@ -4716,6 +4995,9 @@
                   "type": "object",
                   "properties": {
                     "name": {
+                      "type": "string"
+                    },
+                    "id": {
                       "type": "string"
                     },
                     "value": {
@@ -4733,6 +5015,58 @@
                     "value"
                   ]
                 }
+              },
+              "kvPairData": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "json",
+                        "str",
+                        "secret"
+                      ]
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "isConfidential": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type"
+                  ]
+                }
+              },
+              "environmentType": {
+                "type": "string",
+                "enum": [
+                  "json",
+                  "kv"
+                ]
+              },
+              "konnectRouteId": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "method": {},
               "url": {},

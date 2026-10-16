@@ -39,7 +39,7 @@ export const General: FC = () => {
             help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px."
           />
           <BooleanSetting
-            label="Show variable source and value"
+            label="Template tags show variable source and value"
             help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
             setting="showVariableSourceAndValue"
           />
