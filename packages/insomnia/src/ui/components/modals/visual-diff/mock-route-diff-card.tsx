@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { formatMethodName, getRequestBadgeClassName } from '../../tags/method-tag';
 import { diffByKey, type EntityDiff, sideStatus, valuesEqual } from './diff-engine';
 import { type DiffTabDef, docsTab, keyValueTab, withSettingsTab } from './diff-tabs';
-import { FieldDiffRow } from './shared';
+import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // The route's path lives in `name`; its status is shown in the header, like a request's URL.
@@ -53,7 +53,7 @@ function statusOf(node: any) {
   return [node.statusCode ?? 200, node.statusText].filter(Boolean).join(' ');
 }
 
-export const MockRouteDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const MockRouteDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const currentMethod = (diff.after ?? diff.before)?.method || 'GET';
   const header = buildHeaderLines(diff, {
     badgeOf: node => {
@@ -64,5 +64,12 @@ export const MockRouteDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
     watchedPaths: ['method', 'statusCode', 'statusText'],
   });
 
-  return <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildMockRouteTabs(diff)} />;
+  return (
+    <TabbedDiffCard
+      diff={diff}
+      header={<EntityHeader {...header} />}
+      tabs={buildMockRouteTabs(diff)}
+      {...actionProps}
+    />
+  );
 };

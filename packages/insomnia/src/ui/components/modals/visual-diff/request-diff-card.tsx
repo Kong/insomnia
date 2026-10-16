@@ -11,7 +11,7 @@ import {
   scriptsTab,
   withSettingsTab,
 } from './diff-tabs';
-import { FieldDiffRow } from './shared';
+import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
@@ -76,7 +76,7 @@ export function buildRequestTabs(diff: EntityDiff): DiffTabDef[] {
   ]);
 }
 
-export const RequestDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const RequestDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const currentMethod = (diff.after ?? diff.before)?.method || 'GET';
   const header = buildHeaderLines(diff, {
     badgeOf: node => {
@@ -87,5 +87,7 @@ export const RequestDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
     watchedPaths: ['url', 'method'],
   });
 
-  return <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildRequestTabs(diff)} />;
+  return (
+    <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildRequestTabs(diff)} {...actionProps} />
+  );
 };

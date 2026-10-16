@@ -1684,6 +1684,21 @@ const OriginalGitProjectStagingModal: FC<
     }
   }
 
+  // After staging/unstaging/discarding a single entity out of the currently-previewed
+  // file, refresh both the file list (staged/unstaged buckets) and the diff itself so
+  // the entity's card disappears/updates without switching away from this view.
+  function afterEntityChange() {
+    return Promise.all([
+      gitChangesFetcher.load({ projectId }),
+      fileToDiff &&
+        diffChangesFetcherLoad({
+          projectId,
+          filePath: fileToDiff.path,
+          staged: fileToDiff.staged,
+        }),
+    ]);
+  }
+
   async function stageChanges(paths: string[]) {
     await stageChangesFetcher.submit({
       projectId,
@@ -1920,6 +1935,10 @@ const OriginalGitProjectStagingModal: FC<
                         <EntityDiffList
                           before={previewDiffItem.diff.before}
                           after={previewDiffItem.diff.after}
+                          projectId={projectId}
+                          filepath={previewDiffItem.filepath}
+                          staged={previewDiffItem.staged}
+                          onEntityChanged={afterEntityChange}
                           onShowTextView={() => setDiffViewMode('text')}
                         />
                       )}
