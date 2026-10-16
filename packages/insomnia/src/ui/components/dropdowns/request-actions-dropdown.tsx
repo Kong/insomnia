@@ -294,6 +294,7 @@ export const RequestActionsDropdown = ({
             onRename();
           },
           icon: 'edit',
+          hint: hotKeyRegistry.sidebar_rename,
         },
         {
           id: 'Delete',
