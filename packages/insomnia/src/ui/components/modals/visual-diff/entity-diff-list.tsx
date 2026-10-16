@@ -1,10 +1,17 @@
 import { type FC, useMemo } from 'react';
 import { Button } from 'react-aria-components';
 
+import { CookieJarDiffCard } from './cookie-jar-diff-card';
 import { computeVisualDiff } from './diff-engine';
+import { EnvironmentDiffCard } from './environment-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
+import { GrpcDiffCard } from './grpc-diff-card';
+import { McpDiffCard } from './mcp-diff-card';
+import { MockRouteDiffCard } from './mock-route-diff-card';
 import { RequestDiffCard } from './request-diff-card';
 import { RequestGroupDiffCard } from './request-group-diff-card';
+import { SocketIODiffCard } from './socket-io-diff-card';
+import { WebSocketDiffCard } from './websocket-diff-card';
 
 interface Props {
   before: string;
@@ -70,6 +77,27 @@ export const EntityDiffList: FC<Props> = ({ before, after, onShowTextView }) => 
             }
             case 'request_group': {
               return <RequestGroupDiffCard key={diff.id} diff={diff} />;
+            }
+            case 'websocket_request': {
+              return <WebSocketDiffCard key={diff.id} diff={diff} />;
+            }
+            case 'socketio_request': {
+              return <SocketIODiffCard key={diff.id} diff={diff} />;
+            }
+            case 'grpc_request': {
+              return <GrpcDiffCard key={diff.id} diff={diff} />;
+            }
+            case 'mcp_request': {
+              return <McpDiffCard key={diff.id} diff={diff} />;
+            }
+            case 'mock_route': {
+              return <MockRouteDiffCard key={diff.id} diff={diff} />;
+            }
+            case 'cookie_jar': {
+              return <CookieJarDiffCard key={diff.id} diff={diff} />;
+            }
+            case 'environment': {
+              return <EnvironmentDiffCard key={diff.id} diff={diff} />;
             }
             default: {
               return <GenericEntityDiffCard key={diff.id} diff={diff} />;
