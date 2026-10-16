@@ -40,7 +40,7 @@ export const ProjectModal = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (activeNavigation && activeNavigation.state !== 'idle' && activeNavigation.location && isOpen) {
+    if (isOpen && location.pathname !== openedAtPathRef.current) {
       onOpenChange(false);
     }
   }, [location, isOpen, onOpenChange]);
