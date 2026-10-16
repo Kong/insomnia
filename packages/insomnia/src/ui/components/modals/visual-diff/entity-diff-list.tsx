@@ -7,7 +7,7 @@ import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stag
 import { showToast } from '../../toast-notification';
 import { CookieJarDiffCard } from './cookie-jar-diff-card';
 import { computeVisualDiff } from './diff-engine';
-import { applyEntityChange } from './entity-splice';
+import { applyEntityChange, hasOnlyWorkspaceIdentity } from './entity-splice';
 import { EnvironmentDiffCard } from './environment-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
 import { GrpcDiffCard } from './grpc-diff-card';
@@ -110,16 +110,23 @@ export const EntityDiffList: FC<Props> = ({
 
   const handleStage = useCallback(
     (entityId: string) =>
-      runAction(entityId, 'stage', () =>
-        stagePartialContentFetcher.submit({
+      runAction(entityId, 'stage', () => {
+        // Unstaged view: graft the entity's workdir state onto the current index.
+        // Staged view: graft the entity's HEAD state back onto the index (ie. unstage it).
+        const content = staged
+          ? applyEntityChange(after, before, entityId)
+          : applyEntityChange(before, after, entityId);
+        // The side the index moves towards has no file (staging a deleted file, unstaging a new one). Once only the
+        // workspace identity is left, which has no card to stage on its own, take the file out of the index (`null`)
+        // rather than leave an empty file there.
+        const target = staged ? before : after;
+        return stagePartialContentFetcher.submit({
           filepath,
-          // Unstaged view: graft the entity's workdir state onto the current index.
-          // Staged view: graft the entity's HEAD state back onto the index (ie. unstage it).
-          content: staged ? applyEntityChange(after, before, entityId) : applyEntityChange(before, after, entityId),
+          content: !target && hasOnlyWorkspaceIdentity(content) ? null : content,
           projectId,
           workspaceId,
-        }),
-      ),
+        });
+      }),
     [runAction, staged, before, after, filepath, projectId, workspaceId, stagePartialContentFetcher],
   );
 

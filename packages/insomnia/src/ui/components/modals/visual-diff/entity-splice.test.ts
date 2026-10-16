@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parse, stringify } from 'yaml';
 
-import { applyEntityChange } from './entity-splice';
+import { applyEntityChange, hasOnlyWorkspaceIdentity } from './entity-splice';
 
 const ENV_ID = 'env_base';
 const SUB_ENV_ID = 'env_sub';
@@ -210,5 +210,29 @@ describe('applyEntityChange - top-level key order', () => {
 
     expect(Object.keys(parse(result))).toEqual(['type', 'name', 'meta', 'server', 'routes']);
     expect(result).toBe(stringify(parse(source)));
+  });
+});
+
+describe('hasOnlyWorkspaceIdentity', () => {
+  it('is true once the last entity is spliced out of a file', () => {
+    const onlyRequest = stringify({
+      type: 'collection.insomnia.rest/5.0',
+      name: 'New',
+      meta: { id: 'wrk_1' },
+      collection: [req('req_1')],
+    });
+    // Unstaging the request of a file HEAD doesn't have
+    const empty = applyEntityChange(onlyRequest, '', 'req_1');
+
+    expect(hasOnlyWorkspaceIdentity(onlyRequest)).toBe(false);
+    expect(hasOnlyWorkspaceIdentity(collectionFile(BASE_ENV))).toBe(false);
+    expect(parse(empty).collection).toEqual([]);
+    expect(hasOnlyWorkspaceIdentity(empty)).toBe(true);
+  });
+
+  it('is false for files that are empty, not YAML or not Insomnia files', () => {
+    expect(hasOnlyWorkspaceIdentity('')).toBe(false);
+    expect(hasOnlyWorkspaceIdentity('name: [\n')).toBe(false);
+    expect(hasOnlyWorkspaceIdentity('extends: spectral:oas\n')).toBe(false);
   });
 });

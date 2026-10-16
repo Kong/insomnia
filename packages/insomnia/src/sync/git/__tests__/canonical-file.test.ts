@@ -102,7 +102,7 @@ describe('canonical-file', () => {
 
     it('returns content it cannot replay unchanged', async () => {
       const notInsomnia = 'extends: spectral:oas\n';
-      // The export needs a base environment, which an MCP client file doesn't have
+      // The export needs a base environment, which this MCP client file doesn't have
       const mcpClient = `type: mcpClient.insomnia/5.0
 name: MCP
 meta:
@@ -121,6 +121,28 @@ mcpRequest:
 
       expect(await canonicalizeInsomniaFileContent(notInsomnia)).toBe(notInsomnia);
       expect(await canonicalizeInsomniaFileContent(mcpClient)).toBe(mcpClient);
+    });
+
+    it('returns content unchanged when the replay fills in an entity it does not have', async () => {
+      // A deleted mock file with only the server removal staged so far
+      const mockWithoutServer = `type: mock.insomnia.rest/5.0
+schema_version: "5.1"
+name: Mock
+meta:
+  id: wrk_mock
+  created: 1000
+  modified: 1000
+routes:
+  - name: /
+    meta:
+      id: mock-route_1
+      created: 1000
+      modified: 1000
+    method: GET
+`;
+
+      expect(await getCanonicalInsomniaFileContent(mockWithoutServer)).toContain('__MOCK_SERVER_ID__');
+      expect(await canonicalizeInsomniaFileContent(mockWithoutServer)).toBe(mockWithoutServer);
     });
   });
 

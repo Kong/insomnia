@@ -3383,14 +3383,18 @@ export const stagePartialContentAction = async ({
   projectId: string;
   workspaceId?: string;
   filepath: string;
-  content: string;
+  // `null` removes the file from the index
+  content: string | null;
 }): Promise<{
   errors?: string[];
 }> => {
   try {
     await getGitRepository({ workspaceId, projectId });
     // `content` is spliced together by the visual diff; write it the way Git Sync would export it.
-    await GitVCS.stagePartialContent(filepath, await canonicalizeInsomniaFileContent(content));
+    await GitVCS.stagePartialContent(
+      filepath,
+      content === null ? null : await canonicalizeInsomniaFileContent(content),
+    );
     return {};
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while staging changes';

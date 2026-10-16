@@ -2084,9 +2084,14 @@ export class GitVCS {
   // Sets the git index entry for `filepath` to `content` directly, independent of
   // whatever is currently on disk in the working directory. Used to stage/unstage a
   // single entity out of a file that bundles many entities (eg. a whole workspace
-  // export) without staging the rest of that file's changes.
-  async stagePartialContent(filepath: string, content: string) {
+  // export) without staging the rest of that file's changes. `null` removes the
+  // file from the index, leaving the working directory untouched.
+  async stagePartialContent(filepath: string, content: string | null) {
     const normalizedFilepath = convertToPosixSep(path.join('.', filepath));
+    if (content === null) {
+      await git.remove({ ...this._baseOpts, filepath: normalizedFilepath });
+      return;
+    }
     const oid = await git.writeBlob({ ...this._baseOpts, blob: new TextEncoder().encode(content) });
     await git.updateIndex({ ...this._baseOpts, filepath: normalizedFilepath, oid, add: true });
   }

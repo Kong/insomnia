@@ -1,6 +1,6 @@
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
-import { FILE_SECTIONS } from './diff-engine';
+import { computeVisualDiff, FILE_SECTIONS } from './diff-engine';
 
 /**
  * Builds the YAML content for "stage/unstage just this one entity": start from
@@ -41,6 +41,15 @@ export function applyEntityChange(baseText: string, sourceText: string, entityId
   applyChange(merged, sourceFile ?? {}, entityId, location);
 
   return stringifyYaml(withSourceKeyOrder(merged, sourceFile));
+}
+
+/**
+ * Whether `text` is an Insomnia file with nothing left in it but the workspace identity
+ * (`type`, `schema_version`, `name`, `meta`), eg. after the last entity was spliced out of it.
+ */
+export function hasOnlyWorkspaceIdentity(text: string): boolean {
+  const { entities, unparseable } = computeVisualDiff('', text);
+  return !unparseable && entities.length > 0 && entities.every(entity => entity.type === 'workspace');
 }
 
 // Orders top-level keys like source (keys only base has keep their place after those), so a

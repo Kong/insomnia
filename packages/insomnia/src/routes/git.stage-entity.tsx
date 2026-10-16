@@ -6,7 +6,8 @@ import type { Route } from './+types/git.stage-entity';
 
 interface StagePartialGitChangeData {
   filepath: string;
-  content: string;
+  // `null` removes the file from the index
+  content: string | null;
   projectId: string;
   workspaceId?: string;
 }
