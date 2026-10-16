@@ -8,7 +8,7 @@ import type {
   Workspace,
 } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -129,9 +129,19 @@ interface RequestNodeProps {
   // Number of ancestor indent levels to strip when the sidebar is focused on a
   // single collection (the project and workspace rows are no longer shown).
   depthOffset?: number;
+  // Set by the sidebar when the rename shortcut targets this row.
+  isRenaming: boolean;
+  onRename: () => void;
 }
 
-export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }: RequestNodeProps) => {
+export const RequestNode = ({
+  item,
+  onToggleFolder,
+  className,
+  depthOffset = 0,
+  isRenaming,
+  onRename,
+}: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
   const isPinnedRequest = kind === 'pinnedRequest';
   const isLastPinned = item.kind === 'pinnedRequest' && item.isLastPinned;
@@ -147,6 +157,27 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
   const level = isPinnedRequest ? 0 : requestLevel;
   const params = useParams() as { requestId?: string; requestGroupId?: string };
   const isSelected = item.doc._id === params.requestId || item.doc._id === params.requestGroupId;
+
+  const openRenameModal = () =>
+    showModal(PromptModal, {
+      title: `Rename ${getRequestNameOrFallback(doc)}`,
+      defaultValue: getRequestNameOrFallback(doc),
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: newName =>
+        models.requestGroup.isRequestGroup(doc)
+          ? patchGroup(doc._id, { name: newName })
+          : patchRequest(doc._id, { name: newName }),
+    });
+
+  useEffect(() => {
+    if (isRenaming) {
+      onRename();
+      openRenameModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to a new rename request
+  }, [isRenaming]);
 
   const content = (
     <>
@@ -202,16 +233,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       {models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestGroupActionsDropdown
           requestGroup={doc}
-          onRename={() =>
-            showModal(PromptModal, {
-              title: `Rename ${getRequestNameOrFallback(doc)}`,
-              defaultValue: getRequestNameOrFallback(doc),
-              submitName: 'Rename',
-              selectText: true,
-              label: 'Name',
-              onComplete: newName => patchGroup(doc._id, { name: newName }),
-            })
-          }
+          onRename={openRenameModal}
           activeProject={project}
           activeWorkspace={workspace}
           isOpen={isContextMenuOpen}
@@ -221,16 +243,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       {!models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestActionsDropdown
           request={doc}
-          onRename={() =>
-            showModal(PromptModal, {
-              title: `Rename ${getRequestNameOrFallback(doc)}`,
-              defaultValue: getRequestNameOrFallback(doc),
-              submitName: 'Rename',
-              selectText: true,
-              label: 'Name',
-              onComplete: newName => patchRequest(doc._id, { name: newName }),
-            })
-          }
+          onRename={openRenameModal}
           activeProject={project}
           activeWorkspace={workspace}
           isPinned={item.pinned}

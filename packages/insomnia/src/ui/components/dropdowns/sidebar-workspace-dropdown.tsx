@@ -63,6 +63,8 @@ interface Props {
   isOpen: boolean;
   forceShowTrigger?: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  isRenaming?: boolean;
+  onRename?: () => void;
 }
 
 interface ActionItem {
@@ -92,6 +94,8 @@ export const SidebarWorkspaceDropdown = ({
   isOpen,
   onOpenChange,
   forceShowTrigger = false,
+  isRenaming,
+  onRename,
 }: Props) => {
   const projectId = project._id;
   const workspaceId = workspace._id;
@@ -150,6 +154,29 @@ export const SidebarWorkspaceDropdown = ({
       handleDropdownOpen();
     }
   }, [isOpen, handleDropdownOpen]);
+
+  const openRenameModal = () =>
+    showModal(PromptModal, {
+      title: `Rename ${getWorkspaceLabel(workspace).singular}`,
+      defaultValue: workspaceName,
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: (name: string) =>
+        updateWorkspaceFetcher.submit({
+          organizationId,
+          projectId,
+          patch: { name, workspaceId },
+        }),
+    });
+
+  useEffect(() => {
+    if (isRenaming) {
+      onRename?.();
+      openRenameModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to a new rename request
+  }, [isRenaming]);
 
   const handlePluginClick = async ({ pluginName, label }: SerializableActionMeta) => {
     try {
@@ -277,20 +304,7 @@ export const SidebarWorkspaceDropdown = ({
         id: 'Rename',
         name: 'Rename',
         icon: 'pen-to-square' as IconName,
-        action: () =>
-          showModal(PromptModal, {
-            title: `Rename ${getWorkspaceLabel(workspace).singular}`,
-            defaultValue: workspaceName,
-            submitName: 'Rename',
-            selectText: true,
-            label: 'Name',
-            onComplete: (name: string) =>
-              updateWorkspaceFetcher.submit({
-                organizationId,
-                projectId,
-                patch: { name, workspaceId },
-              }),
-          }),
+        action: openRenameModal,
       },
       {
         id: 'Export',
