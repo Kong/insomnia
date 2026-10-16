@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 import { diffRecord, dominantStatus, type EntityDiff, valuesEqual } from './diff-engine';
 import { type DiffTabDef, RecordDiffRows, withSettingsTab } from './diff-tabs';
-import { FieldDiffRow, StatusBadge } from './shared';
+import { type EntityCardActionProps, FieldDiffRow, StatusBadge } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 const { vaultEnvironmentPath, vaultEnvironmentMaskValue } = models.environment;
@@ -75,7 +75,7 @@ export function buildEnvironmentTabs(diff: EntityDiff): DiffTabDef[] {
   return withSettingsTab(diff, HEADER_FIELD_PATHS, [variablesTab(diff), secretsTab(diff)]);
 }
 
-export const EnvironmentDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const EnvironmentDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const color = (diff.after ?? diff.before)?.color;
   const header = buildHeaderLines(diff, { watchedPaths: [] });
 
@@ -89,6 +89,7 @@ export const EnvironmentDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
         </>
       }
       tabs={buildEnvironmentTabs(diff)}
+      {...actionProps}
     />
   );
 };

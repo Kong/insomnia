@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { getRequestBadgeClassName } from '../../tags/method-tag';
 import { diffByKey, type EntityDiff, sideStatus, valuesEqual } from './diff-engine';
 import { type DiffTabDef, docsTab, fieldChangesTab, keyValueTab, withSettingsTab } from './diff-tabs';
-import { FieldDiffRow } from './shared';
+import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
@@ -73,12 +73,14 @@ export function buildGrpcTabs(diff: EntityDiff): DiffTabDef[] {
 
 const GRPC_BADGE = { label: 'gRPC', className: getRequestBadgeClassName('gRPC') };
 
-export const GrpcDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const GrpcDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const header = buildHeaderLines(diff, {
     badgeOf: () => GRPC_BADGE,
     detailOf: node => node?.url || '(no url)',
     watchedPaths: ['url'],
   });
 
-  return <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildGrpcTabs(diff)} />;
+  return (
+    <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildGrpcTabs(diff)} {...actionProps} />
+  );
 };
