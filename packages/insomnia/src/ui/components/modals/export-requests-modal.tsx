@@ -221,6 +221,8 @@ export const ExportRequestsModal = ({
   const [state, setState] = useState<{
     treeRoot: Node | null;
   }>();
+  const [includeCookies, setIncludeCookies] = useState(true);
+  const [includeEnvironments, setIncludeEnvironments] = useState(true);
 
   useEffect(() => {
     const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
@@ -349,6 +351,34 @@ export const ExportRequestsModal = ({
                   }}
                 />
               </div>
+              <div className="flex shrink-0 items-center gap-4">
+                <Checkbox
+                  isSelected={includeCookies}
+                  onChange={setIncludeCookies}
+                  className="group flex items-center gap-2"
+                >
+                  <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                    <Icon
+                      icon="check"
+                      className="h-3 w-3 opacity-0 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+                    />
+                  </div>
+                  Include cookies
+                </Checkbox>
+                <Checkbox
+                  isSelected={includeEnvironments}
+                  onChange={setIncludeEnvironments}
+                  className="group flex items-center gap-2"
+                >
+                  <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                    <Icon
+                      icon="check"
+                      className="h-3 w-3 opacity-0 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+                    />
+                  </div>
+                  Include environments
+                </Checkbox>
+              </div>
               <div className="flex flex-1 shrink-0 items-center justify-end gap-2">
                 <Button
                   onPress={close}
@@ -367,7 +397,11 @@ export const ExportRequestsModal = ({
                         },
                       });
                     }
-                    state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
+                    state?.treeRoot &&
+                      exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot), {
+                        includeCookies,
+                        includeEnvironments,
+                      });
                     close();
                   }}
                   isDisabled={isExportDisabled}
