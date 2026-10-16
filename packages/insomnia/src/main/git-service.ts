@@ -50,7 +50,7 @@ import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import { checkStrictSchemaMatch } from '../common/zod/check-schema-mismatch';
 import { findUnknownFieldRanges, type UnknownFieldRange } from '../common/zod/find-unknown-field-ranges';
-import { isUndiscardableChange } from '../sync/git/canonical-file';
+import { canonicalizeInsomniaFileContent, isUndiscardableChange } from '../sync/git/canonical-file';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -3390,10 +3390,43 @@ export const stagePartialContentAction = async ({
 }> => {
   try {
     await getGitRepository({ workspaceId, projectId });
-    await GitVCS.stagePartialContent(filepath, content);
+    // `content` is spliced together by the visual diff; write it the way Git Sync would export it.
+    await GitVCS.stagePartialContent(
+      filepath,
+      content === null ? null : await canonicalizeInsomniaFileContent(content),
+    );
     return {};
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while staging changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+};
+
+export const discardPartialContentAction = async ({
+  projectId,
+  workspaceId,
+  filepath,
+  content,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  content: string;
+}): Promise<{
+  errors?: string[];
+}> => {
+  try {
+    const gitRepository = await getGitRepository({ workspaceId, projectId });
+    // `content` is spliced together by the visual diff; write it the way Git Sync would export it.
+    await GitVCS.discardPartialContent(filepath, await canonicalizeInsomniaFileContent(content));
+    // Sync the rewritten YAML back into the DB, otherwise the watcher's next
+    // DB -> disk flush would resurrect the discarded change.
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error while discarding changes';
     return {
       errors: [errorMessage],
     };
@@ -4033,6 +4066,7 @@ export interface GitServiceAPI {
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
   stagePartialContent: typeof stagePartialContentAction;
+  discardPartialContent: typeof discardPartialContentAction;
   diffFileLoader: typeof diffFileLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
@@ -4145,6 +4179,9 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.stagePartialContent', (_, options: Parameters<typeof stagePartialContentAction>[0]) =>
     stagePartialContentAction(options),
+  );
+  ipcMainHandle('git.discardPartialContent', (_, options: Parameters<typeof discardPartialContentAction>[0]) =>
+    discardPartialContentAction(options),
   );
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
