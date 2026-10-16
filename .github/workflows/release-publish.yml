@@ -20,13 +20,15 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   ARTIFACTS_VERIFY_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts_verify
-  INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE 'kong/inso' # By default, registry is docker.io
-  NOTARY_REPOSITORY: &NOTARY_REPOSITORY 'kong/notary' # All signatures will be pushed to public notary repository
+  INSO_DOCKER_IMAGE: 'kong/inso' # By default, registry is docker.io
+  NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
 
 permissions: {}
 
 jobs:
   publish:
+    if: startsWith(github.ref_name, 'release/')
+    environment: release
     timeout-minutes: 30
     runs-on: ubuntu-24.04
     outputs:
@@ -344,19 +346,30 @@ jobs:
 
   inso-image-provenance:
     needs: [publish]
+    if: startsWith(github.ref_name, 'release/')
+    environment: release
+    runs-on: ubuntu-24.04
     permissions:
-      id-token: write # needed for signing the images
-      actions: read # For getting workflow run info to build provenance
-      packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
-      # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
-      contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
-    with:
-      image: *INSO_DOCKER_IMAGE
-      digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}
-      provenance-repository: *NOTARY_REPOSITORY
-    secrets:
-      registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
-      registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-      provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
-      provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+      contents: read
+      packages: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+      - name: Generate Inso image provenance
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-name: docker.io/${{ needs.publish.outputs.INSO_DOCKER_IMAGE }}
+          subject-digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}
+          push-to-registry: true
