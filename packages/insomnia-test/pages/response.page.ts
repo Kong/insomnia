@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 
 import { RequestState } from '../enums/request-state';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../misc/constants';
-import type { ResponseView, ResponseHeader, ResponseTestResult, StreamEvent } from '../models/response';
+import type { ResponseHeader, ResponseTestResult, ResponseView, StreamEvent } from '../models/response';
 import { BasePage } from './base.page';
 
 export type ResponseTab = 'preview' | 'headers' | 'cookies' | 'test-results' | 'mock-response' | 'timeline' | 'events';
