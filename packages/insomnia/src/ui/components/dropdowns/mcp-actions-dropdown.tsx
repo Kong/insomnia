@@ -4,8 +4,6 @@ import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 
-import type { McpServerData } from '~/common/mcp-utils';
-
 import { Icon } from '../icon';
 import type { PrimitiveTypeItem } from '../mcp/types';
 
@@ -15,15 +13,8 @@ interface Props {
   triggerRef: React.RefObject<HTMLDivElement>;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onRefreshPrimitive: (
-    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
-    type: McpServerPrimitiveTypes,
-  ) => void;
-  onUpdatePrimitiveNextCursor: (newNextCursor: string, type: McpServerPrimitiveTypes) => void;
-  onLoadMorePrimitive: (
-    newData: McpServerData['primitives'][McpServerPrimitiveTypes],
-    type: McpServerPrimitiveTypes,
-  ) => void;
+  onRefreshPrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
+  onLoadMorePrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
 }
 interface actionList {
   name: string;
@@ -44,7 +35,6 @@ export const McpActionsDropdown = ({
   isOpen,
   onOpenChange,
   onRefreshPrimitive,
-  onUpdatePrimitiveNextCursor,
   onLoadMorePrimitive,
   triggerRef,
 }: Props) => {
@@ -52,7 +42,6 @@ export const McpActionsDropdown = ({
   const { nextCursor } = item as PrimitiveTypeItem;
   // If there is a nextCursor, it means there are more items to load, so we only support load more
   const couldRefresh = !nextCursor;
-  const updateMethod = couldRefresh ? onRefreshPrimitive : onLoadMorePrimitive;
 
   const requestId = activeRequest._id;
 
@@ -60,25 +49,20 @@ export const McpActionsDropdown = ({
     const params = {
       ...(nextCursor && { cursor: nextCursor }),
     };
-    if (type === 'tools') {
-      const toolList = await window.main.mcp.primitive.listTools({ requestId, ...params });
-      if (toolList) {
-        updateMethod(toolList.tools, type);
-        toolList.nextCursor && onUpdatePrimitiveNextCursor(toolList.nextCursor, type);
+    try {
+      if (type === 'tools') {
+        await window.main.mcp.primitive.listTools({ requestId, ...params });
+      } else if (type === 'prompts') {
+        await window.main.mcp.primitive.listPrompts({ requestId, ...params });
+      } else if (type === 'resources') {
+        await window.main.mcp.primitive.listResources({ requestId, ...params });
       }
-    } else if (type === 'prompts') {
-      const promptList = await window.main.mcp.primitive.listPrompts({ requestId, ...params });
-      if (promptList) {
-        updateMethod(promptList.prompts, type);
-        promptList.nextCursor && onUpdatePrimitiveNextCursor(promptList.nextCursor, type);
-      }
-    } else if (type === 'resources') {
-      const resourceList = await window.main.mcp.primitive.listResources({ requestId, ...params });
-      if (resourceList) {
-        updateMethod(resourceList.resources, type);
-        resourceList.nextCursor && onUpdatePrimitiveNextCursor(resourceList.nextCursor, type);
-      }
+    } catch {
+      // A schema-invalid response throws here, but the request/response is still logged as an
+      // event, so onRefreshPrimitive/onLoadMorePrimitive re-derive the real data/error from the
+      // event log below regardless of whether this call succeeded or threw.
     }
+    await (couldRefresh ? onRefreshPrimitive(type) : onLoadMorePrimitive(type));
   };
 
   const mcpPrimitiveActionList: actionList[] = [

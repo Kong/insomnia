@@ -342,11 +342,26 @@ export const parseAndLogMcpRequest = (context: ConnectionContext, message: any) 
   }
 };
 
+// Events are written through an async WriteStream, so a read issued right after an MCP request resolves can miss the response line.
+const flushEventLog = async (responseId: string) => {
+  for (const context of activeConnectionContexts.values()) {
+    if (isContextReady(context) && context.responseId === responseId) {
+      const { eventLogStream } = context;
+      if (!eventLogStream.writableEnded) {
+        // Queue a zero-length write and wait for its callback to ensure all previous writes have been flushed.
+        await new Promise<void>(resolve => eventLogStream.write('', () => resolve()));
+      }
+      return;
+    }
+  }
+};
+
 const getAllEvents = async (options: { responseId: string }): Promise<McpEvent[]> => {
   const response = await services.mcpResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }
+  await flushEventLog(options.responseId);
   const body = await fs.promises.readFile(response.eventLogPath);
   return (
     body
