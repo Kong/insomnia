@@ -301,12 +301,22 @@ class RepoFileWatcher {
 
           if (maxDbModified <= fileMtime) return; // disk is up-to-date
 
-          // DB is newer \u2014 write fresh YAML so importAllFiles doesn\u2019t overwrite it
-          const yamlContent = await getInsomniaV5DataExport({
+          // DB is newer — write fresh YAML so importAllFiles doesn't overwrite it
+          const { yaml: yamlContent, errors: exportErrors } = await getInsomniaV5DataExport({
             workspaceId: workspace._id,
             includePrivateEnvironments: false,
           });
-          if (!yamlContent?.trim()) return;
+
+          // Never write a partial export here: an entity missing from the file would be
+          // treated as deleted by deleteOrphans on the next import.
+          if (exportErrors.length > 0 || !yamlContent.trim()) {
+            console.warn(
+              '[repo-file-watcher] Skipping flush, export could not cover the whole workspace:',
+              workspace._id,
+              exportErrors.map(error => `${error.name} (${error.entityType})`),
+            );
+            return;
+          }
 
           await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
           await fs.promises.writeFile(absPath, yamlContent, 'utf8');
@@ -522,13 +532,21 @@ class RepoFileWatcher {
       const isRename = previousAbsPath && previousAbsPath !== absPath;
 
       try {
-        const yamlContent = await getInsomniaV5DataExport({
+        const { yaml: yamlContent, errors: exportErrors } = await getInsomniaV5DataExport({
           workspaceId: workspace._id,
           includePrivateEnvironments: false,
         });
 
-        if (!yamlContent?.trim()) {
-          return;
+        // Never write a partial export into the repo: an entity missing from the file would
+        // be treated as deleted by deleteOrphans on the next import. `continue` — the same
+        // condition for one workspace must not stop the remaining ones from being written.
+        if (exportErrors.length > 0 || !yamlContent.trim()) {
+          console.warn(
+            '[repo-file-watcher] Skipping flush, export could not cover the whole workspace:',
+            workspace._id,
+            exportErrors.map(error => `${error.name} (${error.entityType})`),
+          );
+          continue;
         }
 
         const hash = contentHash(yamlContent);
@@ -1133,11 +1151,19 @@ class RepoFileWatcher {
     }
 
     try {
-      const yamlContent = await getInsomniaV5DataExport({
+      const { yaml: yamlContent, errors: exportErrors } = await getInsomniaV5DataExport({
         workspaceId: workspace._id,
         includePrivateEnvironments: false,
       });
-      if (!yamlContent?.trim()) {
+
+      // Never write a partial export into the repo: an entity missing from the file would
+      // be treated as deleted by deleteOrphans on the next import.
+      if (exportErrors.length > 0 || !yamlContent.trim()) {
+        console.warn(
+          '[repo-file-watcher] Skipping flush, export could not cover the whole workspace:',
+          workspace._id,
+          exportErrors.map(error => `${error.name} (${error.entityType})`),
+        );
         return;
       }
 

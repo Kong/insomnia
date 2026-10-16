@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 import {
@@ -282,4 +282,82 @@ test.describe('Export', () => {
       cleanupExportDir(tempDir);
     }
   });
+
+  test('Exports the requests that pass validation and reports the ones that do not', async ({ insomnia, page }) => {
+    const projectName = 'Export Partial Validation Test';
+    const fixtureFile = FIXTURE_FILES[0];
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.importFixture(fixtureFile);
+    await insomnia.workspacePage.goBackToProject();
+    const filesGrid = page.getByLabel('Files');
+    await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
+
+    // A null authentication is a shape old versions and plugins write, and the v5 schema
+    // rejects it for requests. Written straight to the database because no UI flow can
+    // produce it.
+    await breakRequestAuthentication(page, 'Request A');
+
+    const tempDir = createTempExportDir();
+    const exportFilePath = path.join(tempDir, 'Collection-A-partial-export.yaml');
+
+    try {
+      await insomnia.projectPage.exportWorkspaceFromCard('Collection A', exportFilePath, 'yaml');
+      await waitForExportFiles(tempDir, 1);
+
+      const exportedContent = readExportedFile(exportFilePath);
+      expect.soft(exportedContent).toContain('name: Request B');
+      expect.soft(exportedContent).not.toContain('name: Request A');
+
+      await expect.soft(page.getByText('Export completed with 1 skipped entity')).toBeVisible();
+      await expect.soft(page.getByText('Request A (Request)')).toBeVisible();
+    } finally {
+      cleanupExportDir(tempDir);
+    }
+  });
+
+  test('Writes no file and reports the failure when nothing can be exported', async ({ insomnia, page }) => {
+    const projectName = 'Export Nothing Valid Test';
+    const fixtureFile = FIXTURE_FILES[0];
+    await insomnia.projectPage.createProject(projectName, 'local');
+    await insomnia.projectPage.importFixture(fixtureFile);
+    await insomnia.workspacePage.goBackToProject();
+    const filesGrid = page.getByLabel('Files');
+    await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
+
+    await breakRequestAuthentication(page, 'Request A');
+    await breakRequestAuthentication(page, 'Request B');
+
+    const tempDir = createTempExportDir();
+    const exportFilePath = path.join(tempDir, 'Collection-A-empty-export.yaml');
+
+    try {
+      await insomnia.projectPage.exportWorkspaceFromCard('Collection A', exportFilePath, 'yaml');
+
+      await expect.soft(page.getByText('export failed, no file was written')).toBeVisible();
+      await expect.soft(page.getByText('Request A (Request)')).toBeVisible();
+      expect.soft(getExportedFiles(tempDir)).toHaveLength(0);
+    } finally {
+      cleanupExportDir(tempDir);
+    }
+  });
 });
+
+/**
+ * Gives the named request an authentication the v5 schema rejects, straight through the data
+ * bridge. Importing a file reassigns resource ids, so the request is looked up by name.
+ */
+async function breakRequestAuthentication(page: Page, requestName: string) {
+  await page.evaluate(async name => {
+    const requests = (await window.database.invoke('find', 'Request', {}, { created: 1 }, 0)) as {
+      _id: string;
+      name: string;
+    }[];
+    const request = requests.find(candidate => candidate.name === name);
+    if (!request) {
+      throw new Error(`Request not found: ${name}`);
+    }
+
+    await window.database.invoke('docUpdate', request, { authentication: null });
+  }, requestName);
+}
+

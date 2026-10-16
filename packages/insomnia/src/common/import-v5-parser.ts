@@ -364,13 +364,13 @@ const TestSchema = z.object({
   ...restUnitTestSchemaShape,
 });
 
-const TestSuiteSchema = z.object({
+export const TestSuiteSchema = z.object({
   name: z.string().optional().default(''),
   meta: MetaSchema.optional(),
   tests: z.array(TestSchema).optional(),
 });
 
-const SpecSchema = z.union([
+export const SpecSchema = z.union([
   z.object({
     file: z.string(),
     meta: MetaSchema.optional(),
