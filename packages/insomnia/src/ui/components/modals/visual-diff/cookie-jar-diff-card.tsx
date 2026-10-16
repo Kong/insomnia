@@ -2,6 +2,7 @@ import type { FC } from 'react';
 
 import { diffByKey, type EntityDiff } from './diff-engine';
 import { type DiffTabDef, keyValueTab, withSettingsTab } from './diff-tabs';
+import type { EntityCardActionProps } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
@@ -46,8 +47,15 @@ export function buildCookieJarTabs(diff: EntityDiff): DiffTabDef[] {
   ]);
 }
 
-export const CookieJarDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const CookieJarDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const header = buildHeaderLines(diff, { icon: 'cookie-bite', watchedPaths: [] });
 
-  return <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildCookieJarTabs(diff)} />;
+  return (
+    <TabbedDiffCard
+      diff={diff}
+      header={<EntityHeader {...header} />}
+      tabs={buildCookieJarTabs(diff)}
+      {...actionProps}
+    />
+  );
 };

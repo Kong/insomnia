@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import { getRequestBadgeClassName } from '../../tags/method-tag';
 import { diffByKey, type EntityDiff } from './diff-engine';
 import { authTab, type DiffTabDef, docsTab, keyValueTab, withSettingsTab } from './diff-tabs';
+import type { EntityCardActionProps } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
@@ -40,12 +41,19 @@ export function buildWebSocketTabs(diff: EntityDiff): DiffTabDef[] {
 
 const WS_BADGE = { label: 'WS', className: getRequestBadgeClassName('WS') };
 
-export const WebSocketDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const WebSocketDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const header = buildHeaderLines(diff, {
     badgeOf: () => WS_BADGE,
     detailOf: node => node?.url || '(no url)',
     watchedPaths: ['url'],
   });
 
-  return <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildWebSocketTabs(diff)} />;
+  return (
+    <TabbedDiffCard
+      diff={diff}
+      header={<EntityHeader {...header} />}
+      tabs={buildWebSocketTabs(diff)}
+      {...actionProps}
+    />
+  );
 };

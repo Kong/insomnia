@@ -106,6 +106,46 @@ export const CollapseToggleButton: FC<{ isExpanded: boolean; onPress: () => void
   </Button>
 );
 
+export type EntityCardPendingAction = 'stage' | null;
+
+// Props every visual diff card accepts for its per-entity stage/unstage actions.
+export interface EntityCardActionProps {
+  staged: boolean;
+  // This card's own in-flight action, if any (drives its spinner).
+  pendingAction: EntityCardPendingAction;
+  // True while any card's action is in flight: every action computes from the
+  // currently loaded diff, so a second one must wait for the refresh.
+  isDisabled: boolean;
+  // Omitted when the entity can't be acted on independently of its file.
+  onStage?: () => void;
+}
+
+const CARD_ACTION_BUTTON_CLASS =
+  'flex items-center gap-1 rounded-xs bg-(--hl-xs) px-2 py-1 text-xs font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50';
+
+// Groups the status badge with the per-entity stage/unstage action,
+// shown at the top-right of every visual diff card.
+export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardActionProps> = ({
+  status,
+  staged,
+  pendingAction,
+  isDisabled,
+  onStage,
+}) => {
+  const isStaging = pendingAction === 'stage';
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <StatusBadge status={status} />
+      {onStage && (
+        <Button isDisabled={isDisabled} onPress={onStage} className={CARD_ACTION_BUTTON_CLASS}>
+          <Icon icon={isStaging ? 'spinner' : staged ? 'minus' : 'plus'} className={isStaging ? 'animate-spin' : ''} />
+          {staged ? 'Unstage' : 'Stage'}
+        </Button>
+      )}
+    </div>
+  );
+};
+
 export const DiffCardShell: FC<{ status: EntityChangeStatus; children: ReactNode }> = ({ status, children }) => {
   const borderColor =
     status === 'added'
