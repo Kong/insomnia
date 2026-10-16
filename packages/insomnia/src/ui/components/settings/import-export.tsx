@@ -1,8 +1,5 @@
 import { format } from 'date-fns';
-import {
-  convertApiSpecSyntax,
-  detectApiSpecSyntax,
-} from 'insomnia/src/common/api-specs';
+import { convertApiSpecSyntax, detectApiSpecSyntax } from 'insomnia/src/common/api-specs';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
@@ -298,7 +295,14 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
   }
 };
 
-export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) => {
+export const exportRequestsToFile = (
+  workspaceId: string,
+  requestIds: string[],
+  {
+    includeCookies = true,
+    includeEnvironments = true,
+  }: { includeCookies?: boolean; includeEnvironments?: boolean } = {},
+) => {
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
       const requests: BaseModel[] = [];
@@ -311,7 +315,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
       const baseEnvironment = await services.environment.getByParentId(workspaceId);
 
       const subEnvironments = baseEnvironment ? await services.environment.listByParentId(baseEnvironment._id) : [];
-      const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+      const shouldPrompt = includeEnvironments && subEnvironments.some(e => e.isPrivate);
       let shouldExportPrivateEnvironments = false;
       if (shouldPrompt) {
         shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
@@ -342,6 +346,8 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
               workspaceId,
               includePrivateEnvironments: shouldExportPrivateEnvironments,
               requestIds,
+              includeCookies,
+              includeEnvironments,
             });
             break;
           }
@@ -755,8 +761,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const activeProject = projectLoaderData?.activeProject;
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
-  const organizationName =
-    organizations.find(org => org.id === organizationId)?.name || 'Organization';
+  const organizationName = organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);

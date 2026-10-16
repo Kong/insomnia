@@ -425,6 +425,39 @@ spec:
       expect(parsed.collection[0].children[0].children[0].name).toBe('Selected');
     });
 
+    it('omits cookies and environments when excluded', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_exclude_test',
+        name: 'Exclude Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+      await services.environment.create({
+        _id: 'env_exclude',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: { a: 1 },
+      });
+      await services.cookieJar.create({ _id: 'jar_exclude', parentId: workspace._id });
+
+      const withBoth = YAML.parse(
+        await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false }),
+      );
+      expect(withBoth.environments).toBeDefined();
+      expect(withBoth.cookieJar).toBeDefined();
+
+      const withNeither = YAML.parse(
+        await getInsomniaV5DataExport({
+          workspaceId: workspace._id,
+          includePrivateEnvironments: false,
+          includeCookies: false,
+          includeEnvironments: false,
+        }),
+      );
+      expect(withNeither.environments).toBeUndefined();
+      expect(withNeither.cookieJar).toBeUndefined();
+    });
+
     it('handles design workspace correctly', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_design_test',
