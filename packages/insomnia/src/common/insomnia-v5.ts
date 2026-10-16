@@ -1044,11 +1044,15 @@ export async function getInsomniaV5DataExport({
   workspaceId,
   includePrivateEnvironments,
   requestIds,
+  includeCookies = true,
+  includeEnvironments = true,
   db = database,
 }: {
   workspaceId: string;
   includePrivateEnvironments: boolean;
   requestIds?: string[];
+  includeCookies?: boolean;
+  includeEnvironments?: boolean;
   db?: IDatabase;
 }) {
   try {
@@ -1463,11 +1467,15 @@ export async function getInsomniaV5DataExport({
           ),
           workspace._id,
         ),
-        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
-        ),
+        cookieJar: includeCookies
+          ? getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar))
+          : undefined,
+        environments: includeEnvironments
+          ? getEnvironmentsFromResources(
+              exportableResources.filter(models.environment.isEnvironment),
+              includePrivateEnvironments,
+            )
+          : undefined,
         spec: collectionApiSpec.length > 0 ? getSpecFromResources(collectionApiSpec) : {},
         testSuites: getTestSuitesFromResources(collectionTestSuites),
       };
@@ -1492,11 +1500,15 @@ export async function getInsomniaV5DataExport({
           ),
           workspace._id,
         ),
-        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
-        ),
+        cookieJar: includeCookies
+          ? getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar))
+          : undefined,
+        environments: includeEnvironments
+          ? getEnvironmentsFromResources(
+              exportableResources.filter(models.environment.isEnvironment),
+              includePrivateEnvironments,
+            )
+          : undefined,
         spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
         testSuites: getTestSuitesFromResources(
           exportableResources.filter(
