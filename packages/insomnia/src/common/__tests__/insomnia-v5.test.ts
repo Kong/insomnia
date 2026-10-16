@@ -369,6 +369,62 @@ spec:
       expect(parsed.collection[0].name).toBe('Request 1');
     });
 
+    it('omits folders that contain no selected requests', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_folder_filter',
+        name: 'Folder Filter Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+      await services.environment.create({
+        _id: 'env_folder_filter',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+      const keptOuter = await services.requestGroup.create({
+        _id: 'fld_kept_outer',
+        name: 'Kept',
+        parentId: workspace._id,
+      });
+      const keptInner = await services.requestGroup.create({
+        _id: 'fld_kept_inner',
+        name: 'Inner',
+        parentId: keptOuter._id,
+      });
+      const skipped = await services.requestGroup.create({
+        _id: 'fld_skipped',
+        name: 'Skipped',
+        parentId: workspace._id,
+      });
+      const selected = await services.request.create({
+        _id: 'req_selected',
+        name: 'Selected',
+        parentId: keptInner._id,
+        url: 'https://api.example.com/selected',
+        method: 'GET',
+      });
+      await services.request.create({
+        _id: 'req_unselected',
+        name: 'Unselected',
+        parentId: skipped._id,
+        url: 'https://api.example.com/unselected',
+        method: 'GET',
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+        requestIds: [selected._id],
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.collection[0].name).toBe('Kept');
+      expect(parsed.collection[0].children[0].name).toBe('Inner');
+      expect(parsed.collection[0].children[0].children[0].name).toBe('Selected');
+    });
+
     it('handles design workspace correctly', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_design_test',
