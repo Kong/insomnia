@@ -933,6 +933,39 @@ collection: []
       expect(errors).toHaveLength(1);
       expect(errors[0].entityId).toBe('req_all_broken');
     });
+
+    it('returns no yaml when every request of a design workspace fails', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_design_all_broken',
+        name: 'Broken Design Workspace',
+        parentId: 'proj_test',
+        scope: 'design',
+      });
+
+      await services.apiSpec.getOrCreateForParentId(workspace._id, {
+        contents: 'openapi: 3.0.0\ninfo:\n  title: Spec\n  version: 1.0.0\npaths: {}\n',
+      });
+
+      const brokenRequest = await services.request.create({
+        _id: 'req_design_all_broken',
+        name: 'Broken Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/broken',
+        method: 'GET',
+      });
+
+      await services.request.update(brokenRequest, { authentication: null as unknown as Request['authentication'] });
+
+      const { yaml: result, errors } = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      // Same as the collection scope: a spec file without its requests would wipe them on the next import.
+      expect(result).toBe('');
+      expect(errors).toHaveLength(1);
+      expect(errors[0].entityId).toBe('req_design_all_broken');
+    });
   });
 
   describe('Edge Cases', () => {

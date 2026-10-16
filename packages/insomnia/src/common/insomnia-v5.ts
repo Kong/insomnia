@@ -904,6 +904,9 @@ export async function getInsomniaV5DataExport({
     return { yaml: '', errors };
   };
 
+  // Reported in the catch-all below; stays the raw id while the workspace is still unknown.
+  let workspaceName = workspaceId;
+
   try {
     // Read through `db` rather than `services.workspace.getById`: services always use the app database,
     // so they would miss the workspace when exporting from another database (e.g. a scratch in-memory one)
@@ -912,6 +915,8 @@ export async function getInsomniaV5DataExport({
     if (!workspace) {
       throw new Error('Workspace not found');
     }
+
+    workspaceName = workspace.name;
 
     /**
      * Runs a whole-document schema check as a last line of defence. Anything still invalid
@@ -1508,22 +1513,31 @@ export async function getInsomniaV5DataExport({
         return { yaml: '', errors };
       }
 
+      const errorsBeforeCollection = errors.length;
+      const designCollection = getCollectionFromResources(
+        exportableResources.filter(
+          resource =>
+            models.requestGroup.isRequestGroup(resource) ||
+            models.request.isRequest(resource) ||
+            models.webSocketRequest.isWebSocketRequest(resource) ||
+            models.grpcRequest.isGrpcRequest(resource),
+        ),
+        workspace._id,
+        'collection',
+      );
+
+      // Same guard as the collection scope: exporting none of the requests would look like
+      // a success while wiping them on the next import.
+      if (designCollection.length === 0 && errors.length > errorsBeforeCollection) {
+        return { yaml: '', errors };
+      }
+
       const specDoc: InsomniaFile = {
         type: 'spec.insomnia.rest/5.0',
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
-        collection: getCollectionFromResources(
-          exportableResources.filter(
-            resource =>
-              models.requestGroup.isRequestGroup(resource) ||
-              models.request.isRequest(resource) ||
-              models.webSocketRequest.isWebSocketRequest(resource) ||
-              models.grpcRequest.isGrpcRequest(resource),
-          ),
-          workspace._id,
-          'collection',
-        ),
+        collection: designCollection,
         cookieJar: parseSection(
           () => getCookieJarFromResources(cookieJarResources),
           CookieJarSchema,
@@ -1630,7 +1644,7 @@ export async function getInsomniaV5DataExport({
   } catch (err) {
     console.error('Failed to export Insomnia v5 data', err);
     return fail(
-      { entityId: workspaceId, entityType: models.workspace.type, name: workspaceId, path: '' },
+      { entityId: workspaceId, entityType: models.workspace.type, name: workspaceName, path: '' },
       err instanceof Error ? err.message : String(err),
     );
   }

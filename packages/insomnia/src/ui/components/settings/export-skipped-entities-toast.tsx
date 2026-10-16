@@ -24,16 +24,19 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
     return;
   }
 
+  // Keyed by the failing entity id: identical display lines from different entities stay unique.
   const lines = skipped.flatMap(({ workspaceName, result }) => {
     const prefix = workspaceName ? `${workspaceName}: ` : '';
 
-    const entityLines = result.errors.map(
-      error =>
-        `${prefix}${error.name} (${error.entityType}) — ${error.issues[0]?.message ?? 'failed schema validation'}`,
-    );
+    const entityLines = result.errors.map(error => ({
+      key: `${error.entityId}:${error.issues[0]?.path ?? ''}`,
+      line: `${prefix}${error.name} (${error.entityType}) — ${error.issues[0]?.message ?? 'failed schema validation'}`,
+    }));
 
     // A workspace that produced nothing still has to say which entities are to blame.
-    return result.yaml === '' ? [`${prefix}export failed, no file was written`, ...entityLines] : entityLines;
+    return result.yaml === ''
+      ? [{ key: `${result.errors[0]?.entityId}:export-failed`, line: `${prefix}export failed, no file was written` }, ...entityLines]
+      : entityLines;
   });
 
   const skippedCount = skipped.reduce((total, outcome) => total + outcome.result.errors.length, 0);
@@ -47,8 +50,8 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
       title: `Export completed with ${skippedCount} skipped ${skippedCount === 1 ? 'entity' : 'entities'}`,
       description: (
         <div className="flex flex-col gap-1">
-          {lines.slice(0, MAX_LISTED_SKIPPED_ENTITIES).map(line => (
-            <span key={line}>{line}</span>
+          {lines.slice(0, MAX_LISTED_SKIPPED_ENTITIES).map(({ key, line }) => (
+            <span key={key}>{line}</span>
           ))}
           {lines.length > MAX_LISTED_SKIPPED_ENTITIES && (
             <span>{`and ${lines.length - MAX_LISTED_SKIPPED_ENTITIES} more`}</span>

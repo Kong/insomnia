@@ -6,7 +6,6 @@ import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
 import { invariant } from '~/common/utils/invariant';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
-import { showError } from '~/ui/components/modals';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.move';
@@ -68,11 +67,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       workspaceScope: newWorkspace.scope,
     };
   } catch (error) {
-    // Nothing consumes this action's error, and a rejected duplicate has to be visible.
-    showError({
-      title: 'Duplicate Workspace Failed',
-      error: error instanceof Error ? error : new Error(String(error)),
-    });
+    // The duplicate modal renders this action's returned error inline (fetcher.data.error); do not stack a second error modal on top of it.
     return {
       error: 'Failed to duplicate workspace: ' + (error instanceof Error ? error.message : String(error)),
     };
