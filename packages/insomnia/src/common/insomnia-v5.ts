@@ -1085,6 +1085,19 @@ export async function getInsomniaV5DataExport({
       exportableResources.filter(models.webSocketPayload.isWebSocketPayload).map(payload => [payload.parentId, payload]),
     );
 
+    // When exporting a subset of requests, only keep the folders that contain at least one of them
+    const requestGroupIdsToKeep = new Set<string>();
+    if (requestIds && requestIds.length > 0) {
+      const parentIdById = new Map(exportableResources.map(resource => [resource._id, resource.parentId]));
+      for (const requestId of requestIds) {
+        let parentId = parentIdById.get(requestId);
+        while (parentId && !requestGroupIdsToKeep.has(parentId)) {
+          requestGroupIdsToKeep.add(parentId);
+          parentId = parentIdById.get(parentId);
+        }
+      }
+    }
+
     /**
      * Recursively builds a collection structure from flat resource list
      * This function converts the flat list of resources into a hierarchical structure
@@ -1103,9 +1116,12 @@ export async function getInsomniaV5DataExport({
       // Filter resources based on requestIds filter and parent relationship
       resources
         .filter(resource => {
-          // Include all request groups, or filter by requestIds if specified
-          if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource)) {
+          // Include everything, or filter by requestIds if specified (folders are kept only if they contain a selected request)
+          if (!requestIds || requestIds.length === 0) {
             return true;
+          }
+          if (models.requestGroup.isRequestGroup(resource)) {
+            return requestGroupIdsToKeep.has(resource._id);
           }
 
           return requestIds.includes(resource._id);
