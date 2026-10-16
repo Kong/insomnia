@@ -24,9 +24,10 @@ import { EnvironmentType, models, services } from 'insomnia-data';
 import { invariant, serializeNDJSON } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 
+import type { SendActionRuntime } from '~/common/network/send-action-runtime';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
 import { RenderError } from '~/common/templating/render-error';
-import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
+import type { RenderedRequest, RenderPurpose, SensitiveValueCollector } from '~/common/templating/types';
 import { getKVPairFromData } from '~/common/utils/environment-utils';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
 import { getRuntime } from '~/runtimes';
@@ -36,7 +37,7 @@ import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
-import { getRenderedRequestAndContext } from '../common/render';
+import { getRenderedRequestAndContext, registerConfidentialValues } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { ResponsePatch } from '../main/network/libcurl-promise';
 import { QUERY_PARAMS } from './api-key/constants';
@@ -47,9 +48,7 @@ import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
-export interface SendActionRuntime {
-  appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
-}
+export type { SendActionRuntime };
 
 export const getOrInheritAuthentication = ({
   request,
@@ -292,6 +291,7 @@ export const tryToExecutePreRequestScript = async (
   iteration?: number,
   iterationCount?: number,
   runtime?: SendActionRuntime,
+  sensitiveValueCollector?: SensitiveValueCollector | null,
 ) => {
   const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups
@@ -350,6 +350,7 @@ export const tryToExecutePreRequestScript = async (
     transientVariables,
     runtime,
     parentFolders,
+    sensitiveValueCollector,
   });
   if (!mutatedContext || 'error' in mutatedContext) {
     return {
@@ -508,6 +509,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     runtime,
     parentFolders,
     settings,
+    sensitiveValueCollector,
   } = context;
   invariant(script, 'script must be provided');
 
@@ -525,7 +527,11 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     // the decrypted secrets must stay out of `globals.data`: that object is written back to the
     // database by `savePatchesMadeByScript` once the script returns, so storing plaintext there
     // would permanently replace the stored ciphertext.
-    vault = await maskOrDecryptVaultDataIfNecessary(globals.data[models.environment.vaultEnvironmentPath], 'script');
+    vault = await maskOrDecryptVaultDataIfNecessary({
+      vaultEnvironmentData: globals.data[models.environment.vaultEnvironmentPath],
+      renderPurpose: 'script',
+      sensitiveValueCollector,
+    });
   }
 
   try {
@@ -632,6 +638,29 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       userUploadEnvironment.dataPropertyOrder = userUploadEnvPropertyOrder.map;
     }
 
+    // Register the confidential values as the script left them, before its console output is
+    // written to disk. The pre-fill in sendActionImplementation only saw the values that
+    // existed before the script ran, and an after-response script is followed by no render at
+    // all -- so `insomnia.environment.set('token', ...)` followed by a console.log would
+    // otherwise reach the timeline in plaintext. Confidential flags still come from the
+    // original kvPairData, so a key the script invented has no row and stays unregistered.
+    if (sensitiveValueCollector) {
+      const scriptOutputLayers = [
+        // .data was reassigned from output above, so these already hold the script's values.
+        ...[globals, baseGlobals, baseEnvironment, environment]
+          .filter((env): env is Environment => !!env)
+          .map(env => ({ data: env.data || {}, kvPairData: env.kvPairData })),
+        ...(output.parentFolders || []).map(folder => {
+          const originalFolder = ancestors.find(doc => doc._id === folder.id);
+          return {
+            data: folder.environment || {},
+            kvPairData: originalFolder && isRequestGroup(originalFolder) ? originalFolder.kvPairData : undefined,
+          };
+        }),
+      ];
+      registerConfidentialValues(scriptOutputLayers, sensitiveValueCollector);
+    }
+
     if (runtime) {
       await runtime.appendTimeline(timelinePath, output.logs);
     }
@@ -662,10 +691,13 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await getRuntime().network.appendToTimelineOnError(
-      timelinePath,
-      serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
-    );
+    const errorTimelineData = serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]);
+    // Route through the (possibly redacting) runtime rather than calling the underlying
+    // service directly, so a thrown error message that echoes a confidential value
+    // (e.g. `throw new Error('auth failed for ' + token)`) is still redacted before disk.
+    runtime
+      ? await runtime.appendTimelineOnError(timelinePath, errorTimelineData)
+      : await getRuntime().network.appendToTimelineOnError(timelinePath, errorTimelineData);
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
     return { error: errMessage };
@@ -688,6 +720,7 @@ interface RequestContextForScript {
   execution?: ExecutionOption;
   transientVariables: Environment;
   parentFolders: { id: string; name: string; environment: Record<string, any> }[];
+  sensitiveValueCollector?: SensitiveValueCollector | null;
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
@@ -778,6 +811,7 @@ export const tryToInterpolateRequest = async ({
   userUploadEnvironment,
   transientVariables,
   ignoreUndefinedEnvVariable,
+  sensitiveValueCollector,
 }: {
   request: Request;
   environment: string | Environment;
@@ -787,6 +821,7 @@ export const tryToInterpolateRequest = async ({
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   ignoreUndefinedEnvVariable?: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
 }) => {
   try {
     return await getRenderedRequestAndContext({
@@ -798,6 +833,7 @@ export const tryToInterpolateRequest = async ({
       purpose,
       extraInfo,
       ignoreUndefinedEnvVariable,
+      sensitiveValueCollector,
     });
   } catch (err) {
     if (err instanceof RenderError) {
@@ -1040,4 +1076,5 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
 
 export const defaultSendActionRuntime: SendActionRuntime = {
   appendTimeline: (timelinePath, logs) => getRuntime().network.appendTimelineLines(timelinePath, logs),
+  appendTimelineOnError: (timelinePath, data) => getRuntime().network.appendToTimelineOnError(timelinePath, data),
 };
