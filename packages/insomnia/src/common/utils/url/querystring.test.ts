@@ -234,6 +234,20 @@ describe('querystring', () => {
       expect(url).toBe('https://google.com/%%?foo=%%');
     });
 
+    it('preserves percent-encoded UTF-8 query octets', () => {
+      const url = smartEncodeUrl(
+        'https://example.com?text=%4E%C3%A4%72%20%6D%61%6E%20%74%65%73%74%61%72%20%74%65%73%74%61%72%20%6D%61%6E',
+      );
+      expect(url).toBe(
+        'https://example.com/?text=%4E%C3%A4%72%20%6D%61%6E%20%74%65%73%74%61%72%20%74%65%73%74%61%72%20%6D%61%6E',
+      );
+    });
+
+    it('preserves encoded octets and double-encoding while encoding raw input once', () => {
+      const url = smartEncodeUrl('https://example.com?q=%E2%9C%93&raw=a b%25%2520&lit=%25de%&id=1%2C2,3&bad=%ZZ');
+      expect(url).toBe('https://example.com/?q=%E2%9C%93&raw=a%20b%25%2520&lit=%25de%25&id=1%2C2,3&bad=%25ZZ');
+    });
+
     it('Equal sign behavior with or without strictNullHandle option', () => {
       const urlEqualSign1 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1=');
       expect(urlEqualSign1).toBe('https://google.com/terminologies?foo=bar&foo1');

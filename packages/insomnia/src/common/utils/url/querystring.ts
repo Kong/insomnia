@@ -152,7 +152,10 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
 
   const rawQuery = parsedUrl.search.startsWith('?') ? parsedUrl.search.slice(1) : parsedUrl.search;
   if (rawQuery) {
-    const qsParams = deconstructQueryStringToParams(rawQuery, true, { strictNullHandling });
+    // Keep valid percent-escapes out of decodeURIComponent. Decoding %4E to N (or %25 to %)
+    // cannot be reversed, so already-encoded octets and double-encoded values must survive.
+    const shieldedQuery = rawQuery.replace(/%([0-9a-fA-F]{2})/g, '__PCT__$1');
+    const qsParams = deconstructQueryStringToParams(shieldedQuery, true, { strictNullHandling });
     const encodedQsParams = [];
     for (const { name, value } of qsParams) {
       encodedQsParams.push({
@@ -161,7 +164,10 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
       });
     }
 
-    const query = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling });
+    const query = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling }).replace(
+      /__PCT__([0-9a-fA-F]{2})/g,
+      '%$1',
+    );
     parsedUrl.search = query ? `?${query}` : '';
   }
 
