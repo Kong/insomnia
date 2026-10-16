@@ -5,7 +5,9 @@ import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-
 import {
   collectLeafValues,
   createSensitiveValueCollector,
+  isDerivedFromConfidentialValues,
   redactConfidentialText,
+  redactDeep,
   redactResponsePatch,
   redactTestResults,
   redactText,
@@ -95,6 +97,90 @@ describe('createSensitiveValueCollector', () => {
       const collector = createSensitiveValueCollector(true)!;
       expect(() => collector.register(String.fromCodePoint(0xD8_00))).not.toThrow();
     });
+
+    it('exposes every registered value as a snapshot array, for cross-IPC transfer (T10)', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      collector.register('a');
+      collector.register('b');
+      collector.register('a');
+      expect([...collector.values].sort()).toEqual(['a', 'b']);
+    });
+
+    it('returns an empty array from values when nothing was registered', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      expect(collector.values).toEqual([]);
+    });
+
+    it('does not let external mutation of the values snapshot affect subsequent redaction', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      collector.register('secret');
+      const snapshot = collector.values as string[];
+      snapshot.push('unregistered');
+      expect(collector.redact('secret unregistered')).toBe('•••••• unregistered');
+    });
+  });
+});
+
+describe('isDerivedFromConfidentialValues', () => {
+  it('is true when an input was registered, so the derived form has to be registered too', () => {
+    expect(isDerivedFromConfidentialValues(['hunter2'], ['user', 'hunter2'])).toBe(true);
+  });
+
+  it('is false when nothing was registered, so credentials nobody marked stay visible', () => {
+    expect(isDerivedFromConfidentialValues([], ['user', 'hunter2'])).toBe(false);
+  });
+
+  it('ignores undefined and empty inputs', () => {
+    expect(isDerivedFromConfidentialValues(['hunter2'], [undefined, ''])).toBe(false);
+  });
+});
+
+describe('redactDeep', () => {
+  it('redacts a top-level string', () => {
+    expect(redactDeep('mysecret', ['mysecret'])).toBe('••••••');
+  });
+
+  it('redacts string leaves nested in an object, preserving shape', () => {
+    const input = { a: 'mysecret', b: { c: 'mysecret', d: 42 } };
+    expect(redactDeep(input, ['mysecret'])).toEqual({ a: '••••••', b: { c: '••••••', d: 42 } });
+  });
+
+  it('redacts string leaves inside an array', () => {
+    expect(redactDeep(['mysecret', 'unrelated'], ['mysecret'])).toEqual(['••••••', 'unrelated']);
+  });
+
+  it('redacts a value containing quotes and newlines before JSON.stringify would have escaped them', () => {
+    const secret = 'p@ss"with\nquotes';
+    const input = { data: secret };
+    expect(redactDeep(input, [secret])).toEqual({ data: '••••••' });
+  });
+
+  it('leaves non-plain-object values (e.g. Buffer) unchanged', () => {
+    const buf = Buffer.from('mysecret');
+    expect(redactDeep(buf, ['mysecret'])).toBe(buf);
+  });
+
+  it("redacts an Error's own enumerable properties, which JSON.stringify would have written", () => {
+    // How socket.io-client surfaces the server's handshake rejection payload.
+    const err = Object.assign(new Error('connect failed'), { data: { token: 'mysecret' } });
+    expect(JSON.stringify(redactDeep(err, ['mysecret']))).toBe('{"data":{"token":"••••••"}}');
+  });
+
+  it('serializes a bare Error to {}, exactly as an unredacted one would', () => {
+    // message/stack are non-enumerable, so JSON.stringify never wrote them in the first place --
+    // swapping the Error for a plain object must not resurrect them.
+    expect(JSON.stringify(redactDeep(new Error('mysecret'), ['mysecret']))).toBe('{}');
+  });
+
+  it('leaves an Error defining toJSON untouched, since a plain object would not serialize the same', () => {
+    const err = Object.assign(new Error('boom'), { toJSON: () => ({ custom: 'mysecret' }) });
+    expect(redactDeep(err, ['mysecret'])).toBe(err);
+  });
+
+  it('leaves numbers, booleans and null unchanged', () => {
+    expect(redactDeep(42, ['x'])).toBe(42);
+    expect(redactDeep(true, ['x'])).toBe(true);
+    expect(redactDeep(null, ['x'])).toBe(null);
   });
 });
 

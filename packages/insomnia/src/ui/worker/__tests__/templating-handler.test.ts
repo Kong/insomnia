@@ -45,7 +45,7 @@ function emitFromWorker(data: any) {
 // and lands unredacted on disk.
 describe('renderInWorker sensitive value bridge', () => {
   it('registers a sensitiveValue message into the collector and still resolves the render', async () => {
-    const collector: SensitiveValueCollector = { register: vi.fn(), redact: vi.fn(), isEmpty: true };
+    const collector: SensitiveValueCollector = { register: vi.fn(), redact: vi.fn(), isEmpty: true, values: [] };
     const promise = renderInWorker({
       input: '{% vault %}',
       context: {},
