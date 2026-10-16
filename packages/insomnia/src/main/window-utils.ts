@@ -707,6 +707,18 @@ export function createWindow(): ElectronBrowserWindow {
           w.webContents.send('reload-plugins');
         },
       },
+      {
+        label: `${MNEMONIC_SYM}Clear All Response History`,
+        click: () => {
+          const w = BrowserWindow.getFocusedWindow();
+
+          if (!w || !w.webContents) {
+            return;
+          }
+
+          w.webContents.send('clear-all-response-history');
+        },
+      },
     ],
   };
   const template: MenuItemConstructorOptions[] = [];

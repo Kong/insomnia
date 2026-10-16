@@ -7,7 +7,7 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 // End-to-end check that confidential values never reach disk while
-// "Hide Secret Values in Preview/Console" is on (its default).
+// "Hide Confidential values in Preview/Console" is on (its default).
 //
 // Unit tests cover the redaction helpers, but nothing covers the wiring: the collector is
 // built in the send route, filled from several places (environment pre-fill, vault decrypt,
@@ -155,9 +155,16 @@ test.describe('confidential value redaction', () => {
     // click + poll rather than uncheck(): the checkbox is controlled by the root loader's
     // settings, so it only flips once the patch has round-tripped. uncheck() verifies the
     // state immediately after its click and fails on that gap.
-    const hideSecretValues = page.getByLabel('Hide Secret Values in Preview/Console');
+    const hideSecretValues = page.getByLabel('Hide Confidential values in Preview/Console');
     await hideSecretValues.click();
     await expect.soft(hideSecretValues).not.toBeChecked();
+    // Turning the setting off raises a notice that confidential values now persist locally.
+    // Dismiss it before touching the preferences dialog underneath, or its own close button
+    // makes the one below ambiguous.
+    const visibilityNotice = page.getByText('Confidential Variables Are Now Visible', { exact: true });
+    await visibilityNotice.waitFor();
+    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+    await visibilityNotice.waitFor({ state: 'hidden' });
     await page.getByRole('button', { name: 'Close' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
