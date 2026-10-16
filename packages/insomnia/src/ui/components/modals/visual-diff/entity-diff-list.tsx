@@ -1,6 +1,7 @@
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { useGitProjectDiscardPartialContentActionFetcher } from '~/routes/git.discard-entity';
 import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stage-entity';
 
 import { showToast } from '../../toast-notification';
@@ -28,7 +29,7 @@ interface Props {
   // INDEX..WORKDIR (unstaged, `before`=stage/`after`=workdir) — determines the
   // direction of "stage"/"unstage" and which side each entity's action pulls from.
   staged: boolean;
-  // Called after any per-entity action (stage/unstage) finishes, so the
+  // Called after any per-entity action (stage/unstage/discard) finishes, so the
   // parent can refresh the file list and this file's diff. Actions stay locked
   // until the returned promise settles, since the next one must compute from the
   // refreshed `before`/`after`.
@@ -62,6 +63,7 @@ export const EntityDiffList: FC<Props> = ({
 }) => {
   const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
   const stagePartialContentFetcher = useGitProjectStagePartialContentActionFetcher();
+  const discardPartialContentFetcher = useGitProjectDiscardPartialContentActionFetcher();
   const [pending, setPending] = useState<{ entityId: string; action: NonNullable<EntityCardPendingAction> } | null>(null);
 
   const stageErrors = stagePartialContentFetcher.state === 'idle' ? stagePartialContentFetcher.data?.errors : undefined;
@@ -76,6 +78,13 @@ export const EntityDiffList: FC<Props> = ({
     // `staged` deliberately omitted: only a new action result should toast, not a view switch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stageErrors]);
+
+  const discardErrors = discardPartialContentFetcher.state === 'idle' ? discardPartialContentFetcher.data?.errors : undefined;
+  useEffect(() => {
+    if (discardErrors?.length) {
+      showToast({ status: 'error', title: 'Failed to discard changes', description: discardErrors.join('\n') });
+    }
+  }, [discardErrors]);
 
   // Synchronous guard on top of `pending`: two clicks landing before the re-render
   // that disables the buttons would otherwise both compute from the same diff.
@@ -119,6 +128,21 @@ export const EntityDiffList: FC<Props> = ({
         });
       }),
     [runAction, staged, before, after, filepath, projectId, workspaceId, stagePartialContentFetcher],
+  );
+
+  // Unstaged view only: graft the entity's index/HEAD state (`before`) onto the
+  // workdir file (`after`), throwing away just this entity's unstaged edits.
+  const handleDiscard = useCallback(
+    (entityId: string) =>
+      runAction(entityId, 'discard', () =>
+        discardPartialContentFetcher.submit({
+          filepath,
+          content: applyEntityChange(after, before, entityId),
+          projectId,
+          workspaceId,
+        }),
+      ),
+    [runAction, before, after, filepath, projectId, workspaceId, discardPartialContentFetcher],
   );
 
   if (unparseable) {
@@ -165,6 +189,10 @@ export const EntityDiffList: FC<Props> = ({
             pendingAction: pending?.entityId === diff.id ? pending.action : null,
             isDisabled: pending !== null,
             onStage: isFileIdentityChange ? undefined : () => handleStage(diff.id),
+            // No per-entity discard when the working-tree file is gone (deleted
+            // workspace): it would resurrect the file with just this one entity.
+            // The file-level discard restores it whole.
+            onDiscard: staged || !after || isFileIdentityChange ? undefined : () => handleDiscard(diff.id),
           };
 
           switch (diff.type) {

@@ -11,6 +11,7 @@
 
 import { models } from 'insomnia-data';
 import { createNedbDatabase } from 'insomnia-data/node';
+import { parse } from 'yaml';
 
 import { InsomniaFileTypeValues } from '~/common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '~/common/insomnia-v5';
@@ -50,6 +51,48 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
   });
 
   return exportedContent || null;
+}
+
+/**
+ * `content` as the Git Sync pipeline would write it, or `content` itself when it can't be replayed
+ * (not an importable Insomnia file, or a workspace the export can't produce, e.g. a file without a
+ * base environment) or the replay adds entities `content` doesn't have.
+ * For files assembled outside the export, like the visual diff's per-entity stage/discard that splices
+ * one entity into a file: replaying them gives the export's key order, entity order and dropped empty
+ * values, so the result doesn't differ from what Insomnia writes in ways no entity accounts for.
+ */
+export async function canonicalizeInsomniaFileContent(content: string): Promise<string> {
+  try {
+    const canonicalContent = await getCanonicalInsomniaFileContent(content);
+    // The import fills in what a file is missing, eg. a `__MOCK_SERVER_ID__` server for a mock file
+    // whose server was spliced out. Writing that would add an entity nobody added, so keep `content`.
+    if (canonicalContent === null || hasEntityIdsNotIn(canonicalContent, content)) {
+      return content;
+    }
+    return canonicalContent;
+  } catch (err) {
+    console.warn('[git] Failed to canonicalize Insomnia file content', err);
+    return content;
+  }
+}
+
+function hasEntityIdsNotIn(content: string, originalContent: string) {
+  const originalIds = collectMetaIds(parse(originalContent));
+  return [...collectMetaIds(parse(content))].some(id => !originalIds.has(id));
+}
+
+// Every `meta.id` in a parsed Insomnia file, at any depth
+function collectMetaIds(value: unknown, ids = new Set<string>()) {
+  if (Array.isArray(value)) {
+    value.forEach(item => collectMetaIds(item, ids));
+  } else if (value && typeof value === 'object') {
+    const { meta } = value as { meta?: { id?: unknown } };
+    if (typeof meta?.id === 'string') {
+      ids.add(meta.id);
+    }
+    Object.values(value).forEach(item => collectMetaIds(item, ids));
+  }
+  return ids;
 }
 
 /**
