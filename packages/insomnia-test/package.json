@@ -2,6 +2,7 @@
   "name": "insomnia-test",
   "version": "1.0.0",
   "scripts": {
+    "lint": "eslint . --ext .js,.ts --cache",
     "mock-api": "node misc/mock-api.js",
     "echo-server": "node misc/echo-server.js",
     "event-stream-server": "node misc/event-stream-server.js",
