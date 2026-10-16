@@ -48,6 +48,7 @@ export type KeyboardShortcut =
   | 'sidebar_focusFilter'
   | 'sidebar_showCreateDropdown'
   | 'sidebar_toggle'
+  | 'sidebar_rename'
   | 'response_focus'
   | 'showCookiesEditor'
   | 'request_createHTTP'
