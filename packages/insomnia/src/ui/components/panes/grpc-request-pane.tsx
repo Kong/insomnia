@@ -138,8 +138,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
     }
   });
 
-  // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
+  // Reset the response pane state when we switch requests, the environment changes, or the (Git|Sync)VCS version changes
+  const uniqueKey = `${environmentId}::${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {
