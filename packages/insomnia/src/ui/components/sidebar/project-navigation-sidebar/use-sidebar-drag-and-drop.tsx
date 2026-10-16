@@ -798,7 +798,10 @@ export const useSidebarDragAndDrop = ({
       }
 
       // move request or request group into collection
-      if (realTargetItem?.kind === 'workspace' && models.workspace.isCollection(realTargetItem!.doc)) {
+      if (
+        realTargetItem?.kind === 'workspace' &&
+        (models.workspace.isCollection(realTargetItem!.doc) || models.workspace.isDesign(realTargetItem!.doc))
+      ) {
         const firstChildOfCollection = flatItems.find(
           (item): item is CollectionChildFlatItem =>
             item.kind === 'collectionChild' && item.doc.parentId === realTargetItem!.doc._id,
