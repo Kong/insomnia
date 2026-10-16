@@ -105,7 +105,7 @@ jobs:
           USE_HARD_LINKS: 'false'
           # Package .map files so coverage reports show original (pre-compile) sources
           KEEP_SOURCEMAPS: 'true'
-        run: npx electron-builder build --config electron-builder.config.js --linux --dir --publish never
+        run: npx electron-builder build --config ../insomnia-test/electron-builder.config.js --linux --dir --publish never
 
   # ---------------------------------------------------------------------------
   # Single source of truth for the shard count. Generates the matrix indices
