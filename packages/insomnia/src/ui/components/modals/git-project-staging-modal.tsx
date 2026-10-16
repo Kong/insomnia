@@ -60,6 +60,7 @@ import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
+import { WarningBanner } from '~/ui/components/warning-banner';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
@@ -274,6 +275,7 @@ interface FileItem {
   name: string;
   type: string;
   symbol: string;
+  originHasUnknownFields?: boolean;
 }
 
 interface CommitItem {
@@ -437,6 +439,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   const pushRetryFetcher = useGitProjectPushActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pendingUnknownFieldsPush, setPendingUnknownFieldsPush] = useState<boolean | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
   // Set when the commits succeeded but the push that followed them failed —
   // the commits are safe locally, so we offer a retry rather than a plain error.
@@ -547,6 +550,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           name: file,
           type: changes.staged.find(change => change.path === file)?.type || 'modified',
           symbol: changes.staged.find(change => change.path === file)?.symbol || 'M',
+          originHasUnknownFields: changes.staged.find(change => change.path === file)?.originHasUnknownFields,
         })),
       }))
       .concat({
@@ -558,6 +562,37 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
     getChildren: item => item.files || [],
   });
 
+  const getCommitsToSubmit = () =>
+    commitsSections.items
+      .map(commit => ({
+        id: commit.value.id,
+        message: commit.value.name,
+        files: commit.children?.map(file => file.value.name) || [],
+      }))
+      .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
+
+  const submitGeneratedCommits = (push: boolean) => {
+    committingActionRef.current = push ? 'commit-push' : 'commit';
+
+    const commits = getCommitsToSubmit();
+
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.recommendCommitsSaved,
+      properties: {
+        group_count: commits.length,
+        file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
+      },
+    });
+    commitsFetcher.submit({
+      projectId,
+      commits: commits.map(commit => ({
+        message: commit.message,
+        files: commit.files,
+      })),
+      push,
+    });
+  };
+
   return (
     <form
       onSubmit={e => {
@@ -567,32 +602,16 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
 
         const push = Boolean(formData.get('push') === 'true');
 
-        const action = push ? 'commit-push' : 'commit';
-        committingActionRef.current = action;
+        const filesToCommit = new Set(getCommitsToSubmit().flatMap(commit => commit.files));
+        const touchesUnknownFields = changes.staged.some(
+          change => change.originHasUnknownFields && filesToCommit.has(change.path),
+        );
+        if (touchesUnknownFields) {
+          setPendingUnknownFieldsPush(push);
+          return;
+        }
 
-        const commits = commitsSections.items
-          .map(commit => ({
-            id: commit.value.id,
-            message: commit.value.name,
-            files: commit.children?.map(file => file.value.name) || [],
-          }))
-          .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
-
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.recommendCommitsSaved,
-          properties: {
-            group_count: commits.length,
-            file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
-          },
-        });
-        commitsFetcher.submit({
-          projectId,
-          commits: commits.map(commit => ({
-            message: commit.message,
-            files: commit.files,
-          })),
-          push,
-        });
+        submitGeneratedCommits(push);
       }}
       className="flex flex-1 flex-col gap-6 overflow-hidden"
     >
@@ -761,6 +780,16 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           <Icon icon="exclamation-triangle" /> {operationError}
         </p>
       ) : null}
+      {pendingUnknownFieldsPush !== null && (
+        <ConfirmUnknownFieldsCommitModal
+          onConfirm={() => {
+            const push = pendingUnknownFieldsPush;
+            setPendingUnknownFieldsPush(null);
+            submitGeneratedCommits(push);
+          }}
+          onClose={() => setPendingUnknownFieldsPush(null)}
+        />
+      )}
     </form>
   );
 };
@@ -808,6 +837,13 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   // Holds the pending commit details while we ask the user whether to stage all
   // changes (VSCode-like behaviour when nothing is staged).
   const [pendingCommit, setPendingCommit] = useState<{ message: string; push: boolean } | null>(null);
+  // Holds the pending commit while we ask the user to confirm committing files with unknown fields.
+  // `stageAll` is set when the commit still needs to stage every change first.
+  const [pendingUnknownFieldsCommit, setPendingUnknownFieldsCommit] = useState<{
+    message: string;
+    push: boolean;
+    stageAll: boolean;
+  } | null>(null);
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
   // Set when a commit succeeded but the push that followed it failed — the
@@ -926,6 +962,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           // message), ask whether to stage all changes and commit them directly.
           if (stagedCount === 0) {
             setPendingCommit({ message, push });
+            return;
+          }
+
+          if (changes.staged.some(change => change.originHasUnknownFields)) {
+            setPendingUnknownFieldsCommit({ message, push, stageAll: false });
             return;
           }
 
@@ -1399,11 +1440,30 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           onConfirm={async () => {
             const pending = pendingCommit;
             setPendingCommit(null);
+            // Confirm before staging so cancelling leaves the staging area untouched.
+            if (changes.unstaged.some(change => change.originHasUnknownFields)) {
+              setPendingUnknownFieldsCommit({ ...pending, stageAll: true });
+              return;
+            }
             // Stage every change, then commit (and push) directly.
             await stageChanges(changes.unstaged.map(entry => entry.path));
             submitCommit(pending.message, pending.push);
           }}
           onClose={() => setPendingCommit(null)}
+        />
+      )}
+
+      {pendingUnknownFieldsCommit && (
+        <ConfirmUnknownFieldsCommitModal
+          onConfirm={async () => {
+            const pending = pendingUnknownFieldsCommit;
+            setPendingUnknownFieldsCommit(null);
+            if (pending.stageAll) {
+              await stageChanges(changes.unstaged.map(entry => entry.path));
+            }
+            submitCommit(pending.message, pending.push);
+          }}
+          onClose={() => setPendingUnknownFieldsCommit(null)}
         />
       )}
     </>
@@ -1653,6 +1713,7 @@ const OriginalGitProjectStagingModal: FC<
     previewDiffItem?.undiscardable && !previewDiffItem.staged && isPreviewDiffItemInChangesList
       ? previewDiffItem.filepath
       : null;
+  const hasUnknownFields = previewDiffItem && previewDiffItem.unknownFieldRanges.length > 0;
 
   return (
     <>
@@ -1794,7 +1855,7 @@ const OriginalGitProjectStagingModal: FC<
                       <Heading className="flex items-center gap-2 font-bold">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                           <div
-                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-5 w-5 items-center justify-center rounded-s-sm px-2`}
                           >
                             <Icon icon={scopeToIconMap[previewDiffItem.scope]} />
                           </div>
@@ -1813,7 +1874,15 @@ const OriginalGitProjectStagingModal: FC<
                           </BasicButton>
                         )}
                       </Heading>
-                      {undiscardableFilePath && <UndiscardableChangeWarning />}
+                      {hasUnknownFields && (
+                        <WarningBanner icon="triangle-exclamation" data-testid="unknown-fields-diff-warning">
+                          The remote version of this file has fields not recognized by this version of Insomnia.
+                          Committing changes to this file from this version of Insomnia may break or remove
+                          functionality for your collaborators. We recommend upgrading.
+                        </WarningBanner>
+                      )}
+                      {/* Show undiscardable change warning if the file is undiscardable and has no unknown field ranges */}
+                      {undiscardableFilePath && !hasUnknownFields && <UndiscardableChangeWarning />}
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
@@ -1822,12 +1891,14 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
+
                       {previewDiffItem && (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor
                             original={previewDiffItem.diff.before}
                             modified={previewDiffItem.diff.after}
                             highlightSystemChange
+                            originalHighlights={previewDiffItem.unknownFieldRanges}
                           />
                         </div>
                       )}
@@ -1853,7 +1924,6 @@ const OriginalGitProjectStagingModal: FC<
       {showConfirmDiscardAndPullModal && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
-          showUndiscardableWarning={Boolean(undiscardableFilePath)}
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1869,7 +1939,13 @@ const OriginalGitProjectStagingModal: FC<
       {discardData && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
-          showUndiscardableWarning={undiscardableFilePath !== null && discardData.paths.includes(undiscardableFilePath)}
+          showUndiscardableWarning={
+            // Only show the undiscardable warning if there are no unknown fields, there is an undiscardable file, and it is the only file being discarded.
+            !hasUnknownFields &&
+            undiscardableFilePath !== null &&
+            discardData.filesCount === 1 &&
+            discardData.paths.includes(undiscardableFilePath)
+          }
           onConfirm={async () => {
             await undoUnstagedChangesFetcher.submit({
               projectId,
@@ -1898,11 +1974,10 @@ const OriginalGitProjectStagingModal: FC<
 };
 
 const UndiscardableChangeWarning = () => (
-  <p className="rounded-sm border border-solid border-(--hl-md) bg-[rgba(var(--color-warning-rgb),0.5)] p-(--padding-sm) text-base">
-    <Icon icon="exclamation-triangle" className="mr-2" />
+  <WarningBanner icon="exclamation-triangle">
     This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
     other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
-  </p>
+  </WarningBanner>
 );
 
 interface ConfirmModalProps {
@@ -2062,6 +2137,72 @@ const CreateBranchAndPushModal = ({
                 </Button>
               </div>
             </form>
+          )}
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
+  );
+};
+
+// Warns before committing changes to files whose committed version has fields this
+// version of Insomnia doesn't recognize, since re-saving them here would drop those fields.
+const ConfirmUnknownFieldsCommitModal = ({ onConfirm, onClose }: Omit<ConfirmModalProps, 'message'>) => {
+  return (
+    <ModalOverlay
+      isOpen
+      onOpenChange={isOpen => {
+        !isOpen && onClose?.();
+      }}
+      isDismissable
+      className="fixed top-[50%] left-0 z-10 flex h-(--visual-viewport-height) w-full translate-y-[-50%] items-center justify-center bg-black/30"
+    >
+      <Modal
+        onOpenChange={isOpen => {
+          !isOpen && onClose?.();
+        }}
+        className="flex w-full max-w-2xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
+      >
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse">
+          {({ close }) => (
+            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <Heading slot="title" className="flex items-center gap-2 text-2xl">
+                  <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
+                  Unrecognized Fields
+                </Heading>
+
+                <Button
+                  aria-label="Close"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  onPress={close}
+                >
+                  <Icon icon="x" />
+                </Button>
+              </div>
+              <div className="">
+                The commit will modify files with unknown fields. Committing any changes to them from here may break or
+                remove functionality for your collaborators. Are you sure you want to continue?
+              </div>
+              <div className="flex h-10 shrink-0 items-center justify-end gap-2">
+                <Button
+                  className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
+                  onPress={() => close?.()}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  data-testid="unknown-fields-commit-confirm-button"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                  onPress={() => {
+                    if (typeof onConfirm === 'function') {
+                      onConfirm();
+                    }
+                  }}
+                >
+                  Continue
+                </Button>
+              </div>
+            </div>
           )}
         </Dialog>
       </Modal>
