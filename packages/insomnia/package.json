@@ -51,9 +51,9 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
     "@apidevtools/swagger-parser": "12.1.0",
-    "@bufbuild/protobuf": "^1.10.0",
-    "@connectrpc/connect": "^1.6.1",
-    "@connectrpc/connect-node": "^1.6.1",
+    "@bufbuild/protobuf": "^2.2.0",
+    "@connectrpc/connect": "^2.0.0",
+    "@connectrpc/connect-node": "^2.0.0",
     "@customerio/cdp-analytics-browser": "^0.5.9",
     "@faker-js/faker": "^10.6.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -162,7 +162,7 @@
     "ws": "^8.18.1",
     "xpath": "0.0.34",
     "yaml": "^2.7.1",
-    "zod": "^3.25.75"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.17.5",
