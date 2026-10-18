@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CookieObject, mergeCookieJar } from '../../../../insomnia-scripting-environment/src/objects';
 import { getRenderedRequestAndContext } from '../../common/render';
+import { relabelUntaggedCookies } from '../network';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
@@ -81,12 +82,9 @@ describe('cookie templating by source (manual vs response) across a script run',
     const bridgedCookie = roundTripped.cookies.find(c => c.key === 'poc');
     expect(bridgedCookie?.source).toBe('response'); // <-- tag survives the bridge round-trip
 
-    // This is savePatchesMadeByScript's fail-closed fallback in network.ts: an untagged cookie
-    // is only trusted as 'manual' if it's genuinely new (no matching id in the pre-script jar).
-    const originalCookieIds = new Set(cookieJar.cookies.map(c => c.id));
-    const relabeled = roundTripped.cookies.map(cookie =>
-      cookie.source ? cookie : { ...cookie, source: originalCookieIds.has(cookie.id) ? 'response' as const : 'manual' as const },
-    );
+    // Exercise the real fail-closed fallback from network.ts: an untagged cookie is only
+    // trusted as 'manual' if it's genuinely new (no matching id in the pre-script jar).
+    const relabeled = relabelUntaggedCookies(cookieJar, roundTripped.cookies);
     await services.cookieJar.update(cookieJar, { cookies: relabeled });
 
     const persisted = await services.cookieJar.getOrCreateForParentId(workspace._id);

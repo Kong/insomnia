@@ -401,6 +401,16 @@ export const tryToExecutePreRequestScript = async (
 // The rule for the global environment:
 //  - If no global environment is selected, no operation
 //  - If one global environment is selected, it persists content to the selected global environment (base or sub).
+export function relabelUntaggedCookies(originalCookieJar: CookieJar, cookies: Cookie[]) {
+  const originalCookieIds = new Set(originalCookieJar.cookies.map(cookie => cookie.id));
+  return cookies.map(cookie => {
+    if (cookie.source) {
+      return cookie;
+    }
+    return { ...cookie, source: originalCookieIds.has(cookie.id) ? ('response' as const) : ('manual' as const) };
+  });
+}
+
 export async function savePatchesMadeByScript(patches: {
   mutatedContext: TransformedExecuteScriptContext;
   environment: Environment;
@@ -433,13 +443,10 @@ export async function savePatchesMadeByScript(patches: {
     // arrives untagged, fail closed: only a cookie the script genuinely created (no matching id
     // in the jar as it stood before the script ran) is trusted as 'manual'; anything that
     // existed before but lost its tag is treated as 'response' rather than assumed trustworthy.
-    const originalCookieIds = new Set(originalCookieJar.cookies.map(cookie => cookie.id));
-    const cookies = [...(responseCookies || []), ...mutatedContext.cookieJar.cookies].map(cookie => {
-      if (cookie.source) {
-        return cookie;
-      }
-      return { ...cookie, source: originalCookieIds.has(cookie.id) ? ('response' as const) : ('manual' as const) };
-    });
+    const cookies = relabelUntaggedCookies(originalCookieJar, [
+      ...(responseCookies || []),
+      ...mutatedContext.cookieJar.cookies,
+    ]);
     await services.cookieJar.update(mutatedContext.cookieJar, { cookies });
   }
   // when base environment is activated, `mutatedContext.environment` points to it
