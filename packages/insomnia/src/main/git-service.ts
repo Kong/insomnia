@@ -33,6 +33,7 @@ import type { AutoResolvedConflict, MergeConflict } from 'insomnia-vcs';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
+import { assertSafeSyncedDoc } from '~/common/synced-doc-validation';
 import { invariant } from '~/common/utils/invariant';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
@@ -1227,7 +1228,9 @@ export async function importLegacyInsomniaFolder({
       return {};
     }
 
-    // Process each legacy file and migrate it to the database
+    // Phase 1: read and validate every file before anything is written, so a hostile or broken
+    // file cannot leave the database partially migrated.
+    const legacyDocs: { filePath: string; doc: BaseModel }[] = [];
     for (const legacyInsomniaFile of legacyInsomniaFiles) {
       const fileContents = await fsClient.promises.readFile(legacyInsomniaFile.filePath, 'utf8');
 
@@ -1242,6 +1245,9 @@ export async function importLegacyInsomniaFolder({
 
       // Parse the YAML file to get the document
       const doc: BaseModel = YAML.parse(fileContents);
+
+      // The repo is untrusted: _id/parentId end up in on-disk names (e.g. the gitFilePath below)
+      assertSafeSyncedDoc(doc);
 
       // Validate that the document ID matches the file path
       if (!legacyInsomniaFile.filePath.includes(doc._id)) {
@@ -1262,6 +1268,11 @@ export async function importLegacyInsomniaFolder({
         continue;
       }
 
+      legacyDocs.push({ filePath: legacyInsomniaFile.filePath, doc });
+    }
+
+    // Phase 2: write
+    for (const { filePath, doc } of legacyDocs) {
       // Special handling for workspaces: ensure they're associated with the correct project
       if (models.workspace.isWorkspace(doc)) {
         console.log('[git] setting workspace parent to be that of the active project', {
@@ -1291,7 +1302,7 @@ export async function importLegacyInsomniaFolder({
 
       // Track the removal of the legacy file
       changes.push({
-        path: legacyInsomniaFile.filePath,
+        path: filePath,
         // It existed and was removed from the git repository
         status: [1, 0, 1], // Deleted from working directory
       });
@@ -1561,139 +1572,142 @@ export const cloneGitRepoAction = async ({
       }
       const bufferId = await database.bufferChanges();
 
-      let gitRepository = await services.gitRepository.create(repoSettingsPatch);
+      try {
+        let gitRepository = await services.gitRepository.create(repoSettingsPatch);
 
-      async function getProject() {
-        if (cloneIntoProjectId) {
-          const project = await services.project.getById(cloneIntoProjectId);
-          invariant(project, 'Project not found');
+        async function getProject() {
+          if (cloneIntoProjectId) {
+            const project = await services.project.getById(cloneIntoProjectId);
+            invariant(project, 'Project not found');
 
-          await services.project.update(project, {
-            remoteId: null,
+            await services.project.update(project, {
+              remoteId: null,
+              gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
+            });
+
+            return project;
+          }
+
+          const project = await services.project.create({
+            name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
+            parentId: organizationId,
             gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
           });
 
           return project;
         }
 
-        const project = await services.project.create({
-          name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
-          parentId: organizationId,
-          gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
+        const project = await getProject();
+
+        // Give the app-managed folder a readable name derived from the project's
+        // name up front, instead of leaving it as the bare-id `git_<hex>` folder
+        // until the next app-startup backfill pass (see `backfillManagedFolderSlug`).
+        // Irrelevant when the user picked a `directory` — that folder name is theirs.
+        if (!gitRepository.directory) {
+          const slug = slugify(project.name);
+          if (slug) {
+            gitRepository = await services.gitRepository.update(gitRepository, { folderSlug: slug });
+          }
+        }
+
+        const fsClient = await getGitFSClient({
+          projectId: project._id,
+          gitRepositoryId: gitRepository._id,
+          directory: gitRepository.directory,
+          folderSlug: gitRepository.folderSlug,
         });
 
-        return project;
-      }
+        const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
 
-      const project = await getProject();
+        if (gitRepository.needsFullClone) {
+          // The watcher isn't started until after this block, so blocked-write
+          // reports would otherwise be dropped silently (reportWriteBlocked is
+          // a no-op with no watcher registered yet). Collect them directly so
+          // a clone whose commit holds an escaping symlink/path is reported as
+          // a failure instead of silently dropping the file and reporting success.
+          const cloneBlockedWrites: BlockedWrite[] = [];
+          fsClient.startCollectBlockedWrites(cloneBlockedWrites);
+          try {
+            await GitVCS.initFromClone({
+              repoId: gitRepository._id,
+              url: uri,
+              credentialsId: gitRepository.credentialsId,
+              directory: GIT_CLONE_DIR,
+              fs: fsClient,
+              gitDirectory: GIT_INTERNAL_DIR,
+              ref,
+              repoPath: repoBaseDir,
+            });
+          } finally {
+            fsClient.stopCollectBlockedWrites();
+          }
 
-      // Give the app-managed folder a readable name derived from the project's
-      // name up front, instead of leaving it as the bare-id `git_<hex>` folder
-      // until the next app-startup backfill pass (see `backfillManagedFolderSlug`).
-      // Irrelevant when the user picked a `directory` — that folder name is theirs.
-      if (!gitRepository.directory) {
-        const slug = slugify(project.name);
-        if (slug) {
-          gitRepository = await services.gitRepository.update(gitRepository, { folderSlug: slug });
-        }
-      }
+          if (cloneBlockedWrites.length > 0) {
+            const errors =
+              cloneBlockedWrites.length === 1
+                ? [`Blocked write outside the repository: ${path.basename(cloneBlockedWrites[0].relPath)}`]
+                : [`Blocked ${cloneBlockedWrites.length} writes outside the repository`];
+            return { errors, gitRepository: repoSettingsPatch };
+          }
 
-      const fsClient = await getGitFSClient({
-        projectId: project._id,
-        gitRepositoryId: gitRepository._id,
-        directory: gitRepository.directory,
-        folderSlug: gitRepository.folderSlug,
-      });
-
-      const repoBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory, gitRepository.folderSlug);
-
-      if (gitRepository.needsFullClone) {
-        // The watcher isn't started until after this block, so blocked-write
-        // reports would otherwise be dropped silently (reportWriteBlocked is
-        // a no-op with no watcher registered yet). Collect them directly so
-        // a clone whose commit holds an escaping symlink/path is reported as
-        // a failure instead of silently dropping the file and reporting success.
-        const cloneBlockedWrites: BlockedWrite[] = [];
-        fsClient.startCollectBlockedWrites(cloneBlockedWrites);
-        try {
-          await GitVCS.initFromClone({
+          await services.gitRepository.update(gitRepository, {
+            needsFullClone: false,
+          });
+        } else {
+          await GitVCS.init({
             repoId: gitRepository._id,
-            url: uri,
-            credentialsId: gitRepository.credentialsId,
+            uri,
             directory: GIT_CLONE_DIR,
             fs: fsClient,
             gitDirectory: GIT_INTERNAL_DIR,
-            ref,
+            credentialsId: gitRepository.credentialsId,
             repoPath: repoBaseDir,
           });
-        } finally {
-          fsClient.stopCollectBlockedWrites();
         }
 
-        if (cloneBlockedWrites.length > 0) {
-          const errors =
-            cloneBlockedWrites.length === 1
-              ? [`Blocked write outside the repository: ${path.basename(cloneBlockedWrites[0].relPath)}`]
-              : [`Blocked ${cloneBlockedWrites.length} writes outside the repository`];
-          return { errors, gitRepository: repoSettingsPatch };
+        await GitVCS.setAuthor();
+        await GitVCS.addRemote(uri);
+
+        const hasLegacyInsomniaDir = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
+        if (hasLegacyInsomniaDir) {
+          await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
         }
 
-        await services.gitRepository.update(gitRepository, {
-          needsFullClone: false,
+        // Start watcher — it automatically imports all YAML files during creation
+        const cloneBaseDir = repoBaseDir;
+
+        // If the project already has a ruleset in the DB (e.g. cloud → git migration),
+        // write it to disk now so its mtime is newer than the cloned file. This ensures
+        // the cloud ruleset is preserved and it shows up as a diff in the commit modal rather than being silently replaced by the repo's file.
+        const existingRuleset = await services.projectLintRuleset.getByParentId(project._id);
+        if (existingRuleset) {
+          const rulesetPath = path.join(cloneBaseDir, '.spectral.yaml');
+          await writeFileWithinDir(cloneBaseDir, rulesetPath, existingRuleset.rulesetContent);
+        }
+
+        await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
+
+        const updateRepository = await services.gitRepository.getById(gitRepository._id);
+        invariant(updateRepository, 'Git Repository not found');
+
+        await services.gitRepository.update(updateRepository, {
+          cachedGitLastCommitTime: Date.now(),
+          cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
         });
-      } else {
-        await GitVCS.init({
-          repoId: gitRepository._id,
-          uri,
-          directory: GIT_CLONE_DIR,
-          fs: fsClient,
-          gitDirectory: GIT_INTERNAL_DIR,
-          credentialsId: gitRepository.credentialsId,
-          repoPath: repoBaseDir,
+
+        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+          ...vcsEventProperties('git', 'clone'),
+          providerName,
+          repoId: repoSettingsPatch._id,
         });
+
+        return {
+          organizationId,
+          projectId: project._id,
+        };
+      } finally {
+        await database.flushChanges(bufferId);
       }
-
-      await GitVCS.setAuthor();
-      await GitVCS.addRemote(uri);
-
-      const hasLegacyInsomniaDir = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
-      if (hasLegacyInsomniaDir) {
-        await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
-      }
-
-      // Start watcher — it automatically imports all YAML files during creation
-      const cloneBaseDir = repoBaseDir;
-
-      // If the project already has a ruleset in the DB (e.g. cloud → git migration),
-      // write it to disk now so its mtime is newer than the cloned file. This ensures
-      // the cloud ruleset is preserved and it shows up as a diff in the commit modal rather than being silently replaced by the repo's file.
-      const existingRuleset = await services.projectLintRuleset.getByParentId(project._id);
-      if (existingRuleset) {
-        const rulesetPath = path.join(cloneBaseDir, '.spectral.yaml');
-        await writeFileWithinDir(cloneBaseDir, rulesetPath, existingRuleset.rulesetContent);
-      }
-
-      await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
-
-      const updateRepository = await services.gitRepository.getById(gitRepository._id);
-      invariant(updateRepository, 'Git Repository not found');
-
-      await services.gitRepository.update(updateRepository, {
-        cachedGitLastCommitTime: Date.now(),
-        cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
-      });
-
-      await database.flushChanges(bufferId);
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-        ...vcsEventProperties('git', 'clone'),
-        providerName,
-        repoId: repoSettingsPatch._id,
-      });
-
-      return {
-        organizationId,
-        projectId: project._id,
-      };
     }
 
     const project = await services.project.getById(projectId);
@@ -1756,141 +1770,146 @@ export const cloneGitRepoAction = async ({
     const bufferId = await database.bufferChanges();
     let workspaceId = '';
     let scope: 'design' | 'collection' = models.workspace.WorkspaceScopeKeys.design;
-    // If no workspace exists we create a new one
-    if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
-      // Create a new workspace
+    try {
+      // If no workspace exists we create a new one
+      if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
+        // Create a new workspace
 
-      const workspace = await services.workspace.create({
-        name: repoSettingsPatch.uri?.split('/').pop(),
-        scope: scope,
-        parentId: project._id,
-        description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
-      });
-      await services.apiSpec.getOrCreateForParentId(workspace._id);
+        const workspace = await services.workspace.create({
+          name: repoSettingsPatch.uri?.split('/').pop(),
+          scope: scope,
+          parentId: project._id,
+          description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
+        });
+        await services.apiSpec.getOrCreateForParentId(workspace._id);
 
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-        ...vcsEventProperties('git', 'clone', 'no directory found'),
-        providerName: provider,
-        repoId: repoSettingsPatch._id,
-      });
-
-      workspaceId = workspace._id;
-
-      const newRepo = await services.gitRepository.create(repoSettingsPatch);
-      const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
-      await services.workspaceMeta.update(meta, {
-        gitRepositoryId: newRepo._id,
-      });
-    } else {
-      // Clone all entities from the repository
-      const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-      const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
-
-      if (workspaces.length === 0) {
         trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-          ...vcsEventProperties('git', 'clone', 'no workspaces found'),
+          ...vcsEventProperties('git', 'clone', 'no directory found'),
           providerName: provider,
           repoId: repoSettingsPatch._id,
         });
 
-        return {
-          errors: ['No workspaces found in repository'],
-        };
-      }
+        workspaceId = workspace._id;
 
-      if (workspaces.length > 1) {
-        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-          ...vcsEventProperties('git', 'clone', 'multiple workspaces found'),
-          providerName: provider,
-          repoId: repoSettingsPatch._id,
+        const newRepo = await services.gitRepository.create(repoSettingsPatch);
+        const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+        await services.workspaceMeta.update(meta, {
+          gitRepositoryId: newRepo._id,
         });
+      } else {
+        // Clone all entities from the repository
+        const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
+        const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
 
-        return {
-          errors: ['Multiple workspaces found in repository. Expected one.'],
-        };
-      }
+        if (workspaces.length === 0) {
+          trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+            ...vcsEventProperties('git', 'clone', 'no workspaces found'),
+            providerName: provider,
+            repoId: repoSettingsPatch._id,
+          });
 
-      // Only one workspace
-      const workspacePath = path.join(workspaceBase, workspaces[0]);
-      const workspaceJson = await inMemoryFsClient.promises.readFile(workspacePath);
-      const workspace = YAML.parse(workspaceJson.toString());
-      workspaceId = workspace._id;
-      scope =
-        workspace.scope === models.workspace.WorkspaceScopeKeys.collection
-          ? models.workspace.WorkspaceScopeKeys.collection
-          : models.workspace.WorkspaceScopeKeys.design;
-      // Check if the workspace already exists
-      const existingWorkspace = await services.workspace.getById(workspace._id);
-
-      if (existingWorkspace) {
-        const project = await services.project.getById(existingWorkspace.parentId);
-        if (!project) {
           return {
-            errors: [
-              'It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.',
-            ],
+            errors: ['No workspaces found in repository'],
           };
         }
 
-        const organizationId = project?.parentId;
+        if (workspaces.length > 1) {
+          trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+            ...vcsEventProperties('git', 'clone', 'multiple workspaces found'),
+            providerName: provider,
+            repoId: repoSettingsPatch._id,
+          });
 
-        return {
-          existingWorkspace: {
-            organizationId,
-            workspaceId: existingWorkspace._id,
-            projectId: project._id,
-          },
-        };
+          return {
+            errors: ['Multiple workspaces found in repository. Expected one.'],
+          };
+        }
+
+        // Only one workspace
+        const workspacePath = path.join(workspaceBase, workspaces[0]);
+        const workspaceJson = await inMemoryFsClient.promises.readFile(workspacePath);
+        const workspace = YAML.parse(workspaceJson.toString());
+        // The repo is untrusted: refuse an unsafe _id before it is used to create any metadata
+        assertSafeSyncedDoc({ ...workspace, type: models.workspace.type, parentId: null });
+        workspaceId = workspace._id;
+        scope =
+          workspace.scope === models.workspace.WorkspaceScopeKeys.collection
+            ? models.workspace.WorkspaceScopeKeys.collection
+            : models.workspace.WorkspaceScopeKeys.design;
+        // Check if the workspace already exists
+        const existingWorkspace = await services.workspace.getById(workspace._id);
+
+        if (existingWorkspace) {
+          const project = await services.project.getById(existingWorkspace.parentId);
+          if (!project) {
+            return {
+              errors: [
+                'It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.',
+              ],
+            };
+          }
+
+          const organizationId = project?.parentId;
+
+          return {
+            existingWorkspace: {
+              organizationId,
+              workspaceId: existingWorkspace._id,
+              projectId: project._id,
+            },
+          };
+        }
+
+        // Store GitRepository settings and set it as active
+        const gitRepository = await services.gitRepository.create(repoSettingsPatch);
+        const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+        await services.workspaceMeta.update(meta, {
+          gitRepositoryId: gitRepository._id,
+        });
+
+        const routableFS = await getGitFSClient({
+          projectId,
+          workspaceId,
+          gitRepositoryId: gitRepository._id,
+        });
+        const wsRepoBaseDir = await getRepoBaseDir(gitRepository._id);
+
+        // Configure basic info
+        if (gitRepository.needsFullClone) {
+          await GitVCS.initFromClone({
+            repoId: gitRepository._id,
+            url: uri,
+            credentialsId: gitRepository.credentialsId,
+            directory: GIT_CLONE_DIR,
+            fs: routableFS,
+            gitDirectory: GIT_INTERNAL_DIR,
+            repoPath: wsRepoBaseDir,
+          });
+
+          await services.gitRepository.update(gitRepository, {
+            needsFullClone: false,
+          });
+        } else {
+          await GitVCS.init({
+            repoId: gitRepository._id,
+            uri,
+            directory: GIT_CLONE_DIR,
+            fs: routableFS,
+            gitDirectory: GIT_INTERNAL_DIR,
+            credentialsId: gitRepository.credentialsId,
+            legacyDiff: true,
+            repoPath: wsRepoBaseDir,
+          });
+        }
+
+        await GitVCS.setAuthor();
+        await GitVCS.addRemote(uri);
       }
 
-      // Store GitRepository settings and set it as active
-      const gitRepository = await services.gitRepository.create(repoSettingsPatch);
-      const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
-      await services.workspaceMeta.update(meta, {
-        gitRepositoryId: gitRepository._id,
-      });
-
-      const routableFS = await getGitFSClient({
-        projectId,
-        workspaceId,
-        gitRepositoryId: gitRepository._id,
-      });
-      const wsRepoBaseDir = await getRepoBaseDir(gitRepository._id);
-
-      // Configure basic info
-      if (gitRepository.needsFullClone) {
-        await GitVCS.initFromClone({
-          repoId: gitRepository._id,
-          url: uri,
-          credentialsId: gitRepository.credentialsId,
-          directory: GIT_CLONE_DIR,
-          fs: routableFS,
-          gitDirectory: GIT_INTERNAL_DIR,
-          repoPath: wsRepoBaseDir,
-        });
-
-        await services.gitRepository.update(gitRepository, {
-          needsFullClone: false,
-        });
-      } else {
-        await GitVCS.init({
-          repoId: gitRepository._id,
-          uri,
-          directory: GIT_CLONE_DIR,
-          fs: routableFS,
-          gitDirectory: GIT_INTERNAL_DIR,
-          credentialsId: gitRepository.credentialsId,
-          legacyDiff: true,
-          repoPath: wsRepoBaseDir,
-        });
-      }
-
-      await GitVCS.setAuthor();
-      await GitVCS.addRemote(uri);
+    } finally {
+      // Flush DB changes, also when exiting early
+      await database.flushChanges(bufferId);
     }
-
-    // Flush DB changes
-    await database.flushChanges(bufferId);
     trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
       ...vcsEventProperties('git', 'clone'),
       providerName: provider,

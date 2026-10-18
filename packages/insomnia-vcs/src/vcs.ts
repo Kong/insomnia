@@ -16,6 +16,13 @@ import {
 import * as crypt from './crypt';
 import { assertSession, runGraphQL } from './session';
 import { getStore } from './store/current-store';
+import {
+  assertValidBackendProjectId,
+  assertValidBlobId,
+  assertValidSnapshotId,
+  blobKey,
+  isValidSnapshotId,
+} from './store-keys';
 import type {
   BackendProject,
   Branch,
@@ -120,6 +127,7 @@ export class VCS {
   }
 
   async setBackendProject(backendProject: BackendProject) {
+    assertValidBackendProjectId(backendProject.id);
     this._backendProject = backendProject;
     console.debug(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
@@ -1013,6 +1021,7 @@ export class VCS {
       );
 
       for (const blob of blobs) {
+        assertValidBlobId(blob.id);
         const encryptedResult = JSON.parse(blob.content);
         result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
       }
@@ -1322,6 +1331,7 @@ export class VCS {
   }
 
   async _assertSnapshot(id: string) {
+    assertValidSnapshotId(id);
     const snapshot: Snapshot | null = await getStore().getItem(
       `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
     );
@@ -1338,6 +1348,11 @@ export class VCS {
   }
 
   async _getSnapshot(id: string) {
+    // Not a valid snapshot id (e.g. the 'n/a' sentinel), so it can't exist in the store
+    if (!isValidSnapshotId(id)) {
+      return null;
+    }
+
     const snapshot: Snapshot | null = await getStore().getItem(
       `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
     );
@@ -1357,10 +1372,13 @@ export class VCS {
   }
 
   async _storeSnapshot(snapshot: Snapshot) {
+    assertValidSnapshotId(snapshot.id);
     return getStore().setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot);
   }
 
   async _storeSnapshots(snapshots: Snapshot[]) {
+    // Validate every id up front so a bad id can't result in a partial write
+    snapshots.forEach(s => assertValidSnapshotId(s.id));
     const promises: Promise<Snapshot>[] = [];
 
     for (const snapshot of snapshots) {
@@ -1398,10 +1416,8 @@ export class VCS {
     await getStore().setItem(`/projects/${this._backendProjectId()}/head.json`, head);
   }
 
-  _getBlob(blobId: string) {
-    return getStore().getItem(
-      `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-    ) as Promise<BaseModel | null>;
+  async _getBlob(blobId: string) {
+    return getStore().getItem(blobKey(this._backendProjectId(), blobId)) as Promise<BaseModel | null>;
   }
 
   async _getBlobs(ids: string[]) {
@@ -1415,51 +1431,40 @@ export class VCS {
   }
 
   async _storeBlob(blobId: string, content: Record<string, any> | null) {
-    return getStore().setItem(
-      `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-      content,
-    );
+    return getStore().setItem(blobKey(this._backendProjectId(), blobId), content);
   }
 
   async _storeBlobs(blobsToStore: Record<string, string>) {
+    // Validate every id up front so a bad id can't result in a partial write
+    Object.keys(blobsToStore).forEach(assertValidBlobId);
     const promises: Promise<any>[] = [];
 
     for (const blobId of Object.keys(blobsToStore)) {
       const buff = Buffer.from(blobsToStore[blobId], 'utf8');
-      promises.push(
-        getStore().setItem(
-          `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-          buff,
-        ),
-      );
+      promises.push(getStore().setItem(blobKey(this._backendProjectId(), blobId), buff));
     }
 
     await Promise.all(promises);
   }
 
   async _storeBlobsBuffer(decryptedBlobs: Record<string, Buffer>) {
+    // Validate every id up front so a bad id can't result in a partial write
+    Object.keys(decryptedBlobs).forEach(assertValidBlobId);
     const promises: Promise<any>[] = [];
 
     for (const blobId of Object.keys(decryptedBlobs)) {
-      promises.push(
-        getStore().setItemRaw(
-          `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-          decryptedBlobs[blobId],
-        ),
-      );
+      promises.push(getStore().setItemRaw(blobKey(this._backendProjectId(), blobId), decryptedBlobs[blobId]));
     }
 
     await Promise.all(promises);
   }
 
   async _getBlobRaw(blobId: string) {
-    return getStore().getItemRaw(
-      `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-    );
+    return getStore().getItemRaw(blobKey(this._backendProjectId(), blobId));
   }
 
   async _hasBlob(blobId: string) {
-    return getStore().hasItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
+    return getStore().hasItem(blobKey(this._backendProjectId(), blobId));
   }
 
   getActiveBackendProject() {
@@ -1480,5 +1485,10 @@ function _generateSnapshotID(parentId: string, backendProjectId: string, state: 
 }
 
 function encodeBranchName(branchName: string) {
+  // Branch names can come from the sync server; never let one influence the path beyond its own file name
+  if (/[\\\0]/.test(branchName) || branchName.split('/').some(part => part === '..' || part === '.')) {
+    throw new Error('Invalid branch name');
+  }
+
   return branchName.replaceAll('/', '~');
 }

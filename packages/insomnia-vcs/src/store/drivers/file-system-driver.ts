@@ -123,10 +123,57 @@ export default class FileSystemDriver implements BaseDriver {
     return keys;
   }
 
+  /**
+   * Resolve a store key to an absolute path, guaranteeing the result stays inside this._directory.
+   * Keys can embed server-supplied identifiers, so they are treated as untrusted.
+   */
   async _getKeyPath(key: string) {
+    if (typeof key !== 'string' || key.includes('\0')) {
+      throw new Error('Invalid store key');
+    }
+
     const p = path.join(this._directory, key);
+    this._assertLexicallyInside(p, key);
+
+    // Make sure the base directory exists so that it can be canonicalized
+    await fs.mkdir(this._directory, { recursive: true });
+    const realBase = await fs.realpath(this._directory);
+
+    // Existing ancestors may be symlinks that point outside the store. Check the nearest
+    // existing ancestor BEFORE creating any directories.
+    let ancestor = path.dirname(p);
+    for (;;) {
+      try {
+        const realAncestor = await fs.realpath(ancestor);
+        this._assertInside(realBase, realAncestor, key);
+        break;
+      } catch (err) {
+        if (!(err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT')) {
+          throw err;
+        }
+
+        const parent = path.dirname(ancestor);
+        if (parent === ancestor) {
+          throw err;
+        }
+        ancestor = parent;
+      }
+    }
+
     // Create base directory
     await fs.mkdir(path.dirname(p), { recursive: true });
     return p;
+  }
+
+  _assertLexicallyInside(resolvedPath: string, key: string) {
+    this._assertInside(path.resolve(this._directory), path.resolve(resolvedPath), key);
+  }
+
+  _assertInside(base: string, target: string, key: string) {
+    const rel = path.relative(base, target);
+
+    if (rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
+      throw new Error(`Store key escapes the store directory: ${JSON.stringify(key)}`);
+    }
   }
 }

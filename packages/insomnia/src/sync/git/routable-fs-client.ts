@@ -23,6 +23,19 @@ type Methods =
  */
 export function routableFSClient(defaultFS: git.PromiseFsClient, otherFS: Record<string, git.PromiseFsClient>) {
   const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
+    // isomorphic-git calls symlink(target, filepath): the first argument is the stored link text,
+    // not a path. Keep it verbatim and route on the link location instead.
+    if (method === 'symlink') {
+      const [linkLocation, ...rest] = args;
+      const location = path.normalize(linkLocation);
+      for (const prefix of Object.keys(otherFS)) {
+        if (location.indexOf(path.normalize(prefix)) === 0) {
+          return otherFS[prefix].promises.symlink!(filePath, location, ...rest);
+        }
+      }
+      return defaultFS.promises.symlink!(filePath, location, ...rest);
+    }
+
     filePath = path.normalize(filePath);
 
     // Route by path prefix: if a prefix matches (e.g. '.insomnia' or '.git')
