@@ -4,6 +4,7 @@ import { deterministicStringify, generateId } from 'insomnia-data/common';
 
 import { runGraphQL } from './session';
 import { getStore } from './store/current-store';
+import { assertValidBackendProjectId, isValidBackendProjectId } from './store-keys';
 import type { BackendProject, BackendProjectWithTeams, BackendProjectWithTeamsAndTeamProjectId, Branch } from './types';
 
 // These helpers never read a VCS instance's active `_backendProject` — they operate on an
@@ -12,10 +13,12 @@ import type { BackendProject, BackendProjectWithTeams, BackendProjectWithTeamsAn
 // activating a workspace-scoped VCS instance.
 
 export async function getBackendProjectById(projectId: string): Promise<BackendProject | null> {
+  assertValidBackendProjectId(projectId);
   return getStore().getItem(`/projects/${projectId}/meta.json`);
 }
 
 export async function storeBackendProject(project: BackendProject) {
+  assertValidBackendProjectId(project.id);
   let existingProject: BackendProject | null = null;
   try {
     existingProject = await getBackendProjectById(project.id);
@@ -32,6 +35,7 @@ export async function storeBackendProject(project: BackendProject) {
 }
 
 export async function removeProject(project: BackendProject) {
+  assertValidBackendProjectId(project.id);
   console.log(`[sync] Remove local project ${project.id}`);
   return getStore().removeItem(`/projects/${project.id}/meta.json`);
 }
@@ -42,6 +46,12 @@ export async function localBackendProjects(): Promise<BackendProject[]> {
 
   for (const key of keys) {
     const id = path.basename(key);
+
+    // Ignore anything in the store that isn't a well-formed project id
+    if (!isValidBackendProjectId(id)) {
+      continue;
+    }
+
     const p = await getBackendProjectById(id);
 
     if (p === null) {
@@ -56,6 +66,7 @@ export async function localBackendProjects(): Promise<BackendProject[]> {
 }
 
 export async function getBranches(backendProjectId: string): Promise<Branch[]> {
+  assertValidBackendProjectId(backendProjectId);
   const branches: Branch[] = [];
 
   for (const p of await getStore().keys(`/projects/${backendProjectId}/branches/`)) {
@@ -143,6 +154,7 @@ export async function removeBackendProjectsForRoot(rootDocumentId: string) {
 
 // Archives a remote backend project by id, without requiring it to be pulled locally first.
 export async function archiveBackendProject(backendProjectId: string) {
+  assertValidBackendProjectId(backendProjectId);
   await runGraphQL(
     `
       mutation ($id: ID!) {

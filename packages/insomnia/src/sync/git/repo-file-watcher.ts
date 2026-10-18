@@ -50,6 +50,8 @@ import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
+import { assertSafeSyncedDoc } from '../../common/synced-doc-validation';
+import { assertRealPathContained } from './contained-path';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -280,6 +282,8 @@ class RepoFileWatcher {
 
           // Path-traversal guard
           if (isPathOutsideRepo(this.repoDir, absPath)) return;
+          // Symlink guard: the lexical check above does not see links inside the repo that point out of it
+          if (!(await this.isRealPathInsideRepo(absPath))) return;
 
           // Get the most recently modified DB document in this workspace\u2019s tree
           const allDocs = await db.getWithDescendants(workspace);
@@ -512,6 +516,11 @@ class RepoFileWatcher {
         continue;
       }
 
+      if (!(await this.isRealPathInsideRepo(absPath))) {
+        console.warn('[repo-file-watcher] Refusing to write workspace file through a symlink leaving the repo:', gitFilePath);
+        continue;
+      }
+
       if (this.hasProblem(absPath)) {
         continue;
       }
@@ -601,6 +610,11 @@ class RepoFileWatcher {
 
       const hash = contentHash(ruleset.rulesetContent);
       if (this.lastWrittenHash.get(absPath) === hash) {
+        return;
+      }
+
+      if (!(await this.isRealPathInsideRepo(absPath))) {
+        console.warn('[repo-file-watcher] Refusing to write the lint ruleset through a symlink leaving the repo');
         return;
       }
 
@@ -863,6 +877,20 @@ class RepoFileWatcher {
       return null;
     }
 
+    // The repo is untrusted and the imported ids are preserved: they later end up in on-disk names.
+    // Validate every doc before anything is deleted or written so a hostile file cannot partially apply.
+    try {
+      docs.forEach(assertSafeSyncedDoc);
+    } catch (err) {
+      this.addProblem(normalised, {
+        filePath: absPath,
+        relPath: this.toPosixRelPath(absPath),
+        kind: 'parse-error',
+        message: err instanceof Error ? err.message : String(err),
+      });
+      return null;
+    }
+
     this.clearProblem(normalised);
     return docs;
   }
@@ -978,7 +1006,21 @@ class RepoFileWatcher {
     this.clearProblem(normalisedPath);
   }
 
+  /** Whether `absPath` still resolves inside the repo once symlinks are followed (a leaf symlink is followed too). */
+  private async isRealPathInsideRepo(absPath: string, followLeaf = true): Promise<boolean> {
+    try {
+      await assertRealPathContained(this.repoDir, absPath, followLeaf);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private async removeWorkspaceFileFromDisk(workspaceId: string, normalisedPath: string): Promise<void> {
+    if (!(await this.isRealPathInsideRepo(normalisedPath, false))) {
+      console.warn('[repo-file-watcher] Refusing to remove a file through a symlink leaving the repo:', normalisedPath);
+      return;
+    }
     try {
       await fs.promises.unlink(normalisedPath);
       console.log('[repo-file-watcher] Removed workspace file from disk:', workspaceId, normalisedPath);
@@ -1129,6 +1171,9 @@ class RepoFileWatcher {
     // Path-traversal guard
     const rel = path.relative(this.repoDir, absPath);
     if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      return;
+    }
+    if (!(await this.isRealPathInsideRepo(absPath))) {
       return;
     }
 
