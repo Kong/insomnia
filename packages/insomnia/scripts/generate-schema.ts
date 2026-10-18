@@ -56,6 +56,9 @@ const OPTIONAL_PREPROCESSED_FIELDS = new Set(['expires']);
  *   non-deterministic and break the CI drift check.
  * - Drops `OPTIONAL_PREPROCESSED_FIELDS` from `required` arrays so the schema
  *   matches what the parser actually accepts.
+ * - Drops the non-standard `format: "starts_with"` that Zod 4 emits for
+ *   `z.string().startsWith()`. Strict Ajv rejects unknown formats; the sibling
+ *   `pattern` already enforces the prefix.
  */
 const normalizeSchema = (node: unknown): void => {
   if (Array.isArray(node)) {
@@ -65,6 +68,9 @@ const normalizeSchema = (node: unknown): void => {
   if (node && typeof node === 'object') {
     const obj = node as Record<string, unknown>;
     delete obj.default;
+    if (obj.format === 'starts_with') {
+      delete obj.format;
+    }
     if (Array.isArray(obj.required)) {
       obj.required = obj.required.filter(key => !OPTIONAL_PREPROCESSED_FIELDS.has(key as string));
     }
