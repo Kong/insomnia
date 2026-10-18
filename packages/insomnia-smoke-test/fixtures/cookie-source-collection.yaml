@@ -1,0 +1,58 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: cookieSource
+meta:
+  id: wrk_c00c1e5000000000000000000000a001
+  created: 1741133210975
+  modified: 1742840304001
+collection:
+  - url: http://localhost:4010/cookies
+    name: echo-cookies
+    meta:
+      id: req_c00c1e5000000000000000000000a002
+      created: 1741133214878
+      modified: 1742840346014
+      isPrivate: false
+      sortKey: -1741133214878
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: false
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_c00c1e5000000000000000000000a003
+    created: 1741133210977
+    modified: 1742840291561
+  cookies:
+    - id: "100000000000001"
+      key: cookieManual
+      value: "{{ 'rendered' }}"
+      domain: localhost
+      path: /
+      secure: false
+      httpOnly: false
+      hostOnly: true
+      source: manual
+    - id: "100000000000002"
+      key: cookieResponse
+      value: "{{ 'rendered' }}"
+      domain: localhost
+      path: /
+      secure: false
+      httpOnly: false
+      hostOnly: true
+      source: response
+    - id: "100000000000003"
+      key: cookieUntagged
+      value: "{{ 'rendered' }}"
+      domain: localhost
+      path: /
+      secure: false
+      httpOnly: false
+      hostOnly: true
