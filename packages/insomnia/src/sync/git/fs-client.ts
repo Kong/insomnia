@@ -99,18 +99,70 @@ export const fsClient = (basePath: string, onBlockedWrite?: BlockedWriteHandler)
   // the same way — `unlink` removes the link itself rather than following
   // it, `lstat`/`readlink` intentionally inspect the link itself, and
   // `mkdir`/`rmdir`/`symlink` fail outright against an existing leaf of the
-  // wrong type — so only these three get the extra guard. The
-  // `lstat`-then-`open`/`read`/`stat` here has a narrow TOCTOU window, same
+  // wrong type — so only these three get the extra guard.
+  //
+  // A leaf symlink is only refused when it is unsafe: the fully resolved
+  // target (`realpath`, so chains are followed to the end) must stay inside
+  // the *real* path of `basePath` (basePath itself may sit under a symlink,
+  // e.g. macOS /var -> /private/var). Links that fail to resolve (broken,
+  // loops) are refused, since the OS would create/follow whatever they name.
+  // In-repo links are legitimate git content (mode 120000) and are allowed
+  // without calling `onBlockedWrite`. For `write`, a link that resolves into
+  // the repo's `.git` directory is also refused: git-sync's own `.git`
+  // access always uses direct paths, so a link into it can only be an
+  // attempt to plant hooks/config.
+  //
+  // The `lstat`/`realpath`-then-`open`/`read`/`stat` here has a narrow TOCTOU
+  // window (the link can be swapped between the check and the call), same
   // class already accepted by `writeFileWithinDir`'s Windows fallback in
   // safe-fs-write.ts.
+  const isOutside = (relative: string) =>
+    relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative);
+
+  const isSafeSymlinkTarget = async (linkPath: string, verb: string): Promise<boolean> => {
+    let realTarget: string;
+    let realBase: string;
+    try {
+      realTarget = await fs.promises.realpath(linkPath);
+      realBase = await fs.promises.realpath(basePath);
+    } catch {
+      return false;
+    }
+    const relative = path.relative(realBase, realTarget);
+    if (isOutside(relative)) {
+      return false;
+    }
+    if (verb === 'write') {
+      const gitRelative = path.relative(path.join(realBase, '.git'), realTarget);
+      if (!isOutside(gitRelative)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // True when a write whose own path is NOT under `.git` reaches it through
+  // an in-repo symlinked directory (e.g. `hooks-link -> .git/hooks`).
+  const intoGitViaLink = async (absPath: string): Promise<boolean> => {
+    const realBase = await fs.promises.realpath(basePath).catch(() => null);
+    const realDir = await fs.promises.realpath(path.dirname(absPath)).catch(() => null);
+    if (!realBase || !realDir) {
+      return false;
+    }
+    const gitDir = path.join(realBase, '.git');
+    const lexicalDir = path.join(realBase, path.relative(path.resolve(basePath), path.dirname(absPath)));
+    return !isOutside(path.relative(gitDir, realDir)) && isOutside(path.relative(gitDir, lexicalDir));
+  };
+
   const wrapFollowsLeaf =
     (fn: FSWraps, verb: string) =>
     async (filePath: string, ...args: any[]) => {
       const modifiedPath = await resolveOrReport(filePath);
 
       const leaf = await fs.promises.lstat(modifiedPath).catch(() => null);
-      if (leaf?.isSymbolicLink()) {
-        const message = `[fsClient] Refusing to ${verb} through a pre-existing symlink: ${filePath}`;
+      const unsafeLeaf = leaf?.isSymbolicLink() && !(await isSafeSymlinkTarget(modifiedPath, verb));
+      if (unsafeLeaf || (verb === 'write' && (await intoGitViaLink(modifiedPath)))) {
+        const message = `[fsClient] Refusing to ${verb} through a symlink that resolves outside the repository: ${filePath}`;
         onBlockedWrite?.(filePath, message);
         throw new Error(message);
       }

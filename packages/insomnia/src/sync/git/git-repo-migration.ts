@@ -32,7 +32,7 @@ import type { GitRepository, WorkspaceMeta } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
-import { assertPathWithinDir } from '../../main/safe-fs-write';
+import { assertPathWithinDir, writeFileWithinDir } from '../../main/safe-fs-write';
 import { CURRENT_MIGRATION_VERSION } from './git-migration-version';
 
 export { CURRENT_MIGRATION_VERSION };
@@ -342,12 +342,20 @@ async function flushWorkspacesToDisk(baseDir: string, projectId: string, logger?
           }
 
           // The tmp file lives in the same (now-verified) directory as
-          // absPath. `rename` atomically replaces absPath's directory entry
-          // without ever dereferencing it, so even if absPath's own final
-          // component were a symlink, this never writes through it.
+          // absPath, but the tmp leaf itself is repo-controlled: a planted
+          // symlink at `<absPath>.migration.tmp` would be followed by a plain
+          // `writeFile`. A stale or planted link is removed first (`unlink`
+          // removes the link itself, never its target) so it can't wedge
+          // future runs, then the write goes through `writeFileWithinDir`,
+          // which refuses to follow a symlink at the leaf (O_NOFOLLOW).
+          // `rename` atomically replaces absPath's directory entry without
+          // ever dereferencing it, so it never writes through absPath either.
           const tmpPath = `${absPath}.migration.tmp`;
           await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-          await fs.promises.writeFile(tmpPath, yamlContent, 'utf8');
+          if ((await fs.promises.lstat(tmpPath).catch(() => null))?.isSymbolicLink()) {
+            await fs.promises.unlink(tmpPath);
+          }
+          await writeFileWithinDir(baseDir, tmpPath, yamlContent, 'utf8');
           await fs.promises.rename(tmpPath, absPath).catch(async err => {
             await fs.promises.unlink(tmpPath).catch(() => {});
             throw err;
