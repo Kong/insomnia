@@ -9,9 +9,9 @@ import { getRenderedRequestAndContext } from '../render';
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
 
-// An imported collection's cookie jar never carries Insomnia's `source` field -- it's an
-// Insomnia-internal concept that no import format (Postman, HAR, curl, or even Insomnia's own
-// v5 CookieSchema) writes out. This is accepted, documented behavior (see the migration comment
+// An imported collection's cookie jar never carries Insomnia's `source` field -- third-party
+// import formats (Postman, HAR, curl) don't write it. Insomnia's own v5 export does; the
+// round-trip suite below pins that. Absence stays accepted, documented behavior (see the migration comment
 // in insomnia-data/node-src/database/init-model/cookie-jar.ts): importing a collection already
 // means trusting it with sandboxed script execution, so a template value arriving via an
 // imported cookie is not a new capability an attacker doesn't already have from a malicious
