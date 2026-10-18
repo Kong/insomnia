@@ -11,9 +11,9 @@ export interface InsomniaCookieExtensions {
   lastAccessed?: Date;
   pathIsDefault?: boolean;
   // 'manual'/'response' provenance from the Insomnia CookieJar model. Must round-trip through
-  // the script sandbox unchanged: a response-sourced cookie that loses this tag here gets
-  // relabeled 'manual' (trusted) by savePatchesMadeByScript, re-enabling template rendering of
-  // a value a server planted via Set-Cookie.
+  // the script sandbox unchanged: a cookie that loses this tag here is relabeled by
+  // savePatchesMadeByScript's id-based fallback ('response' for a pre-existing id), so a manual
+  // cookie silently stops template rendering.
   source?: 'manual' | 'response';
 }
 
