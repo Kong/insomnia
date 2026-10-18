@@ -137,9 +137,7 @@
                     ]
                   }
                 },
-                "required": [
-                  "source"
-                ]
+                "required": []
               }
             }
           }
@@ -701,9 +699,7 @@
                     ]
                   }
                 },
-                "required": [
-                  "source"
-                ]
+                "required": []
               }
             }
           }

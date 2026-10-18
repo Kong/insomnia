@@ -45,9 +45,9 @@ if (!globalThis.crypto) {
  * (so they are optional in practice) are still emitted as `required`, because
  * Zod cannot see through the preprocess wrapper when computing optionality.
  * The parser accepts these fields when absent, so the published schema must
- * not require them. Currently only `expires` on cookies is affected.
+ * not require them. Currently `expires` and `source` on cookies are affected.
  */
-const OPTIONAL_PREPROCESSED_FIELDS = new Set(['expires']);
+const OPTIONAL_PREPROCESSED_FIELDS = new Set(['expires', 'source']);
 
 /**
  * Recursively normalizes the generated JSON Schema:
