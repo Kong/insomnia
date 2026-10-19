@@ -5,6 +5,7 @@ import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-
 import {
   collectLeafValues,
   createSensitiveValueCollector,
+  getConfidentialBasicAuthHeaderValue,
   isDerivedFromConfidentialValues,
   redactConfidentialText,
   redactDeep,
@@ -132,6 +133,24 @@ describe('isDerivedFromConfidentialValues', () => {
 
   it('ignores undefined and empty inputs', () => {
     expect(isDerivedFromConfidentialValues(['hunter2'], [undefined, ''])).toBe(false);
+  });
+});
+
+describe('getConfidentialBasicAuthHeaderValue', () => {
+  it('returns the Basic header value when a credential is confidential', () => {
+    expect(getConfidentialBasicAuthHeaderValue(['hunter2'], { username: 'user', password: 'hunter2' })).toBe(
+      `Basic ${btoa('user:hunter2')}`,
+    );
+  });
+
+  it('honours the latin1 encoding the header is sent with', () => {
+    expect(
+      getConfidentialBasicAuthHeaderValue(['pässword'], { username: 'user', password: 'pässword', useISO88591: true }),
+    ).toBe(`Basic ${btoa('user:pässword')}`);
+  });
+
+  it('returns null when no credential is confidential', () => {
+    expect(getConfidentialBasicAuthHeaderValue([], { username: 'user', password: 'hunter2' })).toBeNull();
   });
 });
 

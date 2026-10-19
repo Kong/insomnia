@@ -18,7 +18,7 @@ import orderedJSON from 'json-order';
 
 import {
   collectLeafValues,
-  isDerivedFromConfidentialValues,
+  getConfidentialBasicAuthHeaderValue,
   type SensitiveValueCollector,
 } from '~/common/network/sensitive-value-collector';
 import { type ConfidentialValueKind, getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
@@ -35,7 +35,6 @@ import type {
 } from '~/common/templating/types';
 import * as templatingUtils from '~/common/templating/utils';
 
-import { getBasicAuthHeader } from '../network/basic-auth/get-header';
 import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../network/network';
 import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
@@ -917,10 +916,12 @@ export async function getRenderedRequestAndContext({
   // the plaintext credentials registered during render, so the timeline would show it in the clear.
   // Register the derived header too, but only when a credential actually was confidential.
   if (sensitiveValueCollector && renderedRequest.authentication?.type === 'basic') {
-    const { username, password, useISO88591 } = renderedRequest.authentication;
-    if (isDerivedFromConfidentialValues(sensitiveValueCollector.values, [username, password])) {
-      const encoding = useISO88591 ? 'latin1' : 'utf8';
-      sensitiveValueCollector.register(getBasicAuthHeader(username, password, encoding).value);
+    const headerValue = getConfidentialBasicAuthHeaderValue(
+      sensitiveValueCollector.values,
+      renderedRequest.authentication,
+    );
+    if (headerValue) {
+      sensitiveValueCollector.register(headerValue);
     }
   }
 

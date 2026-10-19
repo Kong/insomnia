@@ -1,6 +1,6 @@
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
+import { shouldShowRevealToggle } from '~/common/templating/confidential-value-policy';
 import type { VariableSourceMeta } from '~/common/templating/types';
 import { normalizeToDotAndBracketNotation } from '~/common/templating/utils';
 
@@ -44,8 +44,6 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource
   const [source, setSource] = useState<VariableSourceMeta>();
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
-  // The reveal toggle only matters when the masked preview hid a confidential value. A revealed render
-  // can't tell, so keep the last masked verdict (the toggle stays visible to hide the value again).
   const [hasMaskedValue, setHasMaskedValue] = useState(false);
 
   useEffect(() => {
@@ -58,14 +56,14 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource
         if (cancelled) {
           return;
         }
-        !isRevealed && setHasMaskedValue(p.includes(CONFIDENTIAL_MASK_VALUE));
+        setHasMaskedValue(prev => shouldShowRevealToggle(prev, { isRevealed, preview: p }));
         setPreview(p);
         setError('');
       } catch (e) {
         if (cancelled) {
           return;
         }
-        !isRevealed && setHasMaskedValue(false);
+        setHasMaskedValue(prev => shouldShowRevealToggle(prev, { isRevealed }));
         setPreview('');
         setError(e.message);
       }

@@ -55,6 +55,7 @@ import type { SendActionRuntime } from '~/common/network/send-action-runtime';
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import type { SensitiveValueCollector } from '~/common/templating/types';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
+import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 
 
 export type { SensitiveValueCollector };
@@ -172,6 +173,19 @@ export function isDerivedFromConfidentialValues(
   inputs: (string | undefined)[],
 ): boolean {
   return inputs.some(input => !!input && redactConfidentialText(input, values) !== input);
+}
+
+// The Basic Auth header value to register alongside the confidential credentials it was built from,
+// or null when neither credential is confidential. Shared by every place that sends Basic Auth so the
+// guard can't drift between them; callers differ only in where they register the value.
+export function getConfidentialBasicAuthHeaderValue(
+  values: readonly string[],
+  { username, password, useISO88591 }: { username?: string; password?: string; useISO88591?: boolean },
+): string | null {
+  if (!isDerivedFromConfidentialValues(values, [username, password])) {
+    return null;
+  }
+  return getBasicAuthHeader(username, password, useISO88591 ? 'latin1' : 'utf8').value;
 }
 
 // A registered value rarely reaches disk in its raw form. Timeline lines are written as NDJSON,

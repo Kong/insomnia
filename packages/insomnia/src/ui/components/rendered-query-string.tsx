@@ -67,7 +67,8 @@ const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const 
 // The confidential mask (••••••) is non-ASCII, so URL encoding would mangle it: punycode in the
 // host (xn--nvgaaaaa) and percent-encoding elsewhere. Swap it for a lowercase ASCII placeholder
 // (hostnames get lowercased) before building/encoding the URL, and restore it afterwards.
-const MASK_PLACEHOLDER = 'insomniaconfidentialmaskplaceholder';
+// The random suffix keeps restoreMask from turning user text that happens to match into bullets.
+const MASK_PLACEHOLDER = `confidentialmask${crypto.randomUUID().replaceAll('-', '')}`;
 const protectMask = (value: string) => value.replaceAll(CONFIDENTIAL_MASK_VALUE, MASK_PLACEHOLDER);
 const restoreMask = (value: string) => value.replaceAll(MASK_PLACEHOLDER, CONFIDENTIAL_MASK_VALUE);
 const protectParamsMask = <T extends { name: string; value: string }>(params: T[]) =>
@@ -104,14 +105,15 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
 
         const mergedParams = protectParamsMask([...parameters, ...renderedAuthQueryParams]);
         const qs = buildQueryStringFromParams(mergedParams, false, { encodeParams: request.settingEncodeUrl });
-        let fullUrl = joinUrlAndQueryString(url, qs);
-        if (fullUrl.length > MAX_URL_LENGTH) {
-          setTooLong(true);
-          fullUrl = fullUrl.slice(0, MAX_URL_LENGTH);
-        } else {
-          setTooLong(false);
-        }
+        const fullUrl = joinUrlAndQueryString(url, qs);
+        // Truncate only after restoreMask, so the cut can't leave a partial placeholder behind.
         const encoded = restoreMask(smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true }));
+        if (encoded.length > MAX_URL_LENGTH) {
+          setTooLong(true);
+          setPreviewString(encoded.slice(0, MAX_URL_LENGTH));
+          return;
+        }
+        setTooLong(false);
         setPreviewString(encoded === '' ? defaultPreview : encoded);
       } catch (error: unknown) {
         console.warn(error);
