@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { McpEvent } from '~/main/mcp/types';
 
 import {
+  findAccumulatedListResult,
   findFirstMatchEventData,
   findLatestListResult,
   METHOD_INITIALIZE,
@@ -14,13 +15,13 @@ import {
 
 const BASE = { _id: 'evt', requestId: 'req_1', timestamp: 0 };
 
-const outgoing = (method: string, id: number): McpEvent =>
+const outgoing = (method: string, id: number, cursor?: string): McpEvent =>
   ({
     ...BASE,
     type: 'message',
     direction: 'OUTGOING',
     method,
-    data: { jsonrpc: '2.0', id, method, params: {} },
+    data: { jsonrpc: '2.0', id, method, params: cursor ? { cursor } : {} },
   }) as McpEvent;
 
 const incomingResult = (method: string, id: number, result: unknown): McpEvent =>
@@ -70,6 +71,110 @@ describe('findFirstMatchEventData', () => {
     ];
 
     expect(findFirstMatchEventData(events, METHOD_INITIALIZE)).toEqual({ capabilities: { tools: {} } });
+  });
+});
+
+describe('findAccumulatedListResult', () => {
+  // Latest-first ordering, as produced by the main process's event log.
+  const latestFirst = (...chronological: McpEvent[][]) => chronological.flat().reverse();
+  const page = (id: number, result: unknown, cursor?: string) => [
+    outgoing(METHOD_LIST_TOOLS, id, cursor),
+    incomingResult(METHOD_LIST_TOOLS, id, result),
+  ];
+
+  it('returns undefined when no page has arrived', () => {
+    expect(findAccumulatedListResult([], METHOD_LIST_TOOLS)).toBeUndefined();
+    expect(findAccumulatedListResult([outgoing(METHOD_LIST_TOOLS, 1)], METHOD_LIST_TOOLS)).toBeUndefined();
+  });
+
+  it('combines every page of a cursor chain and keeps the last cursor', () => {
+    const events = latestFirst(
+      page(1, { tools: [validTool('a')], nextCursor: 'c1' }),
+      page(2, { tools: [validTool('b')], nextCursor: 'c2' }, 'c1'),
+      page(3, { tools: [validTool('c')] }, 'c2'),
+    );
+
+    expect(findAccumulatedListResult(events, METHOD_LIST_TOOLS)).toEqual({
+      data: { tools: [validTool('a'), validTool('b'), validTool('c')] },
+    });
+    expect(findAccumulatedListResult(events.slice(2), METHOD_LIST_TOOLS)?.data.nextCursor).toBe('c2');
+  });
+
+  it('starts over at the latest request without a cursor (refresh)', () => {
+    const events = latestFirst(
+      page(1, { tools: [validTool('a')], nextCursor: 'c1' }),
+      page(2, { tools: [validTool('b')] }, 'c1'),
+      page(3, { tools: [validTool('fresh')], nextCursor: 'c9' }),
+    );
+
+    expect(findAccumulatedListResult(events, METHOD_LIST_TOOLS)).toEqual({
+      data: { tools: [validTool('fresh')], nextCursor: 'c9' },
+    });
+  });
+
+  it('accumulates skipped-entry errors across pages with a combined count', () => {
+    const events = latestFirst(
+      page(1, { tools: [validTool('a'), { name: 'bad1' }], nextCursor: 'c1' }),
+      page(2, { tools: [validTool('b'), { name: 'bad2' }, { name: 'bad3' }] }, 'c1'),
+    );
+    const outcome = findAccumulatedListResult(events, METHOD_LIST_TOOLS);
+
+    expect(outcome?.data.tools).toEqual([validTool('a'), validTool('b')]);
+    expect(outcome?.error?.title).toBe('3 entries were skipped because they do not match the MCP schema.');
+    expect(outcome?.error?.entries?.map(e => e.label)).toEqual(['bad1', 'bad2', 'bad3']);
+  });
+
+  it('drops skipped-entry errors from before a refresh', () => {
+    const events = latestFirst(
+      page(1, { tools: [{ name: 'bad' }], nextCursor: 'c1' }),
+      page(2, { tools: [validTool('fresh')] }),
+    );
+
+    expect(findAccumulatedListResult(events, METHOD_LIST_TOOLS)).toEqual({ data: { tools: [validTool('fresh')] } });
+  });
+
+  it('keeps items and the previous cursor when a Load More page fails as a whole', () => {
+    const events = latestFirst(page(1, { tools: [validTool('a')], nextCursor: 'c1' }), [
+      outgoing(METHOD_LIST_TOOLS, 2, 'c1'),
+      incomingErrorEvent(2, 'Error', 'boom'),
+    ]);
+    const outcome = findAccumulatedListResult(events, METHOD_LIST_TOOLS);
+
+    expect(outcome?.data).toEqual({ tools: [validTool('a')], nextCursor: 'c1' });
+    expect(outcome?.error).toEqual({ title: 'Error: boom' });
+  });
+
+  it('clears a failed page error once the retry of the same cursor succeeds', () => {
+    const events = latestFirst(
+      page(1, { tools: [validTool('a')], nextCursor: 'c1' }),
+      [outgoing(METHOD_LIST_TOOLS, 2, 'c1'), incomingErrorEvent(2, 'Error', 'boom')],
+      page(3, { tools: [validTool('b')] }, 'c1'),
+    );
+
+    expect(findAccumulatedListResult(events, METHOD_LIST_TOOLS)).toEqual({
+      data: { tools: [validTool('a'), validTool('b')] },
+    });
+  });
+
+  it('ignores a page whose response has not arrived yet', () => {
+    const events = latestFirst(page(1, { tools: [validTool('a')], nextCursor: 'c1' }), [
+      outgoing(METHOD_LIST_TOOLS, 2, 'c1'),
+    ]);
+
+    expect(findAccumulatedListResult(events, METHOD_LIST_TOOLS)).toEqual({
+      data: { tools: [validTool('a')], nextCursor: 'c1' },
+    });
+  });
+
+  it('does not mix pages of different methods', () => {
+    const events = latestFirst(
+      page(1, { tools: [validTool('a')], nextCursor: 'c1' }),
+      [outgoing(METHOD_LIST_PROMPTS, 2), incomingResult(METHOD_LIST_PROMPTS, 2, { prompts: [{ name: 'p' }] })],
+      page(3, { tools: [validTool('b')] }, 'c1'),
+    );
+
+    expect(findAccumulatedListResult(events, METHOD_LIST_TOOLS)?.data.tools).toEqual([validTool('a'), validTool('b')]);
+    expect(findAccumulatedListResult(events, METHOD_LIST_PROMPTS)?.data.prompts).toEqual([{ name: 'p' }]);
   });
 });
 
