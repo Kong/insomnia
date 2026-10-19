@@ -2,16 +2,13 @@ import { expect, test } from '../../../misc/fixtures';
 import { connectTo, wholeFailureTitle } from './helpers';
 
 const wholeInvalidTools: Record<string, unknown> = {
-  // 'tools is not an array': { tools: 'not-an-array' },
-  // 'tools is null': { tools: null },
-  'tools is missing': {},
-  // 'nextCursor has the wrong type': { tools: [], nextCursor: 123 },
+  'tools is not an array': { tools: 'not-an-array' },
+  'tools is null': { tools: null },
+  'nextCursor has the wrong type': { tools: [], nextCursor: 123 },
 };
 
 for (const [variant, result] of Object.entries(wholeInvalidTools)) {
   test(`Verify a Whole tools/list Response Invalid (${variant}) Shows a Title-Only Error`, async ({ user }) => {
-    // Open app bug: a result without `tools` is never shown, so no error panel appears.
-    test.fail(variant === 'tools is missing', 'INS-4062');
     const { mcpClientFlow } = user.flowManager;
     const client = await connectTo(user, { 'tools/list': { result } });
 
