@@ -1,7 +1,8 @@
 import path from 'node:path';
 
-import { expect, type Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 
+import { copyFixtureDatabase } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 import {
   cleanupExportDir,
@@ -283,19 +284,31 @@ test.describe('Export', () => {
     }
   });
 
-  test('Exports the requests that pass validation and reports the ones that do not', async ({ insomnia, page }) => {
-    const projectName = 'Export Partial Validation Test';
-    const fixtureFile = FIXTURE_FILES[0];
-    await insomnia.projectPage.createProject(projectName, 'local');
-    await insomnia.projectPage.importFixture(fixtureFile);
-    await insomnia.workspacePage.goBackToProject();
+  // Seeds the app database with a collection whose Request A holds a null authentication —
+  // a shape old versions and plugins write, and the v5 schema rejects for requests. No UI
+  // flow can produce it, so it is baked into the fixture database instead.
+  const testWithPartialExportDb = test.extend({
+    dataPath: async ({ dataPath }, use) => {
+      await copyFixtureDatabase('export-partial-db', dataPath);
+      await use(dataPath);
+    },
+  });
+
+  const testWithAllBrokenExportDb = test.extend({
+    dataPath: async ({ dataPath }, use) => {
+      await copyFixtureDatabase('export-all-broken-db', dataPath);
+      await use(dataPath);
+    },
+  });
+
+  testWithPartialExportDb('Exports the requests that pass validation and reports the ones that do not', async ({
+    insomnia,
+    page,
+  }) => {
+    await insomnia.sidebar.selectProject('Export Partial Fixture');
+    await insomnia.projectPage.waitForProjectDashboard();
     const filesGrid = page.getByLabel('Files');
     await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
-
-    // A null authentication is a shape old versions and plugins write, and the v5 schema
-    // rejects it for requests. Written straight to the database because no UI flow can
-    // produce it.
-    await breakRequestAuthentication(page, 'Request A');
 
     const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-partial-export.yaml');
@@ -315,17 +328,14 @@ test.describe('Export', () => {
     }
   });
 
-  test('Writes no file and reports the failure when nothing can be exported', async ({ insomnia, page }) => {
-    const projectName = 'Export Nothing Valid Test';
-    const fixtureFile = FIXTURE_FILES[0];
-    await insomnia.projectPage.createProject(projectName, 'local');
-    await insomnia.projectPage.importFixture(fixtureFile);
-    await insomnia.workspacePage.goBackToProject();
+  testWithAllBrokenExportDb('Writes no file and reports the failure when nothing can be exported', async ({
+    insomnia,
+    page,
+  }) => {
+    await insomnia.sidebar.selectProject('Export Partial Fixture');
+    await insomnia.projectPage.waitForProjectDashboard();
     const filesGrid = page.getByLabel('Files');
     await expect.soft(filesGrid.getByLabel('Collection A')).toBeVisible();
-
-    await breakRequestAuthentication(page, 'Request A');
-    await breakRequestAuthentication(page, 'Request B');
 
     const tempDir = createTempExportDir();
     const exportFilePath = path.join(tempDir, 'Collection-A-empty-export.yaml');
@@ -341,23 +351,4 @@ test.describe('Export', () => {
     }
   });
 });
-
-/**
- * Gives the named request an authentication the v5 schema rejects, straight through the data
- * bridge. Importing a file reassigns resource ids, so the request is looked up by name.
- */
-async function breakRequestAuthentication(page: Page, requestName: string) {
-  await page.evaluate(async name => {
-    const requests = (await window.database.invoke('find', 'Request', {}, { created: 1 }, 0)) as {
-      _id: string;
-      name: string;
-    }[];
-    const request = requests.find(candidate => candidate.name === name);
-    if (!request) {
-      throw new Error(`Request not found: ${name}`);
-    }
-
-    await window.database.invoke('docUpdate', request, { authentication: null });
-  }, requestName);
-}
 
