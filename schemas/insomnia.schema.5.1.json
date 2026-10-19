@@ -3,7 +3,7 @@
   "$id": "https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json",
   "title": "Insomnia File",
   "description": "JSON Schema for Insomnia v5.1 files (.insomnia / .yaml). Validates collections, API specs, mock servers, global environments and MCP clients. Generated from the Insomnia source of truth — do not edit by hand.",
-  "anyOf": [
+  "oneOf": [
     {
       "type": "object",
       "properties": {
@@ -149,8 +149,7 @@
                       }
                     ]
                   }
-                },
-                "required": []
+                }
               }
             }
           }
@@ -195,13 +194,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -260,13 +255,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -378,13 +369,9 @@
             "type": "object",
             "properties": {
               "path": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "disabled": {
@@ -488,13 +475,9 @@
                       ]
                     },
                     "requestId": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "code": {
@@ -731,8 +714,7 @@
                       }
                     ]
                   }
-                },
-                "required": []
+                }
               }
             }
           }
@@ -777,13 +759,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -842,13 +820,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -1098,13 +1072,9 @@
                       ]
                     },
                     "requestId": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "code": {
@@ -1122,13 +1092,9 @@
             "type": "object",
             "properties": {
               "path": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "disabled": {
@@ -1410,13 +1376,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -1475,13 +1437,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -1677,7 +1635,7 @@
             "authentication": {
               "anyOf": [
                 {
-                  "anyOf": [
+                  "oneOf": [
                     {
                       "type": "object",
                       "properties": {
@@ -2233,13 +2191,9 @@
               "additionalProperties": {}
             },
             "color": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "string",
+                "null"
               ]
             },
             "subEnvironments": {
@@ -2298,13 +2252,9 @@
                     ]
                   },
                   "color": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "kvPairData": {
@@ -2512,13 +2462,9 @@
                 "type": "boolean"
               },
               "konnectRouteKey": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "konnectManagedHeaderNames": {
@@ -2584,13 +2530,9 @@
                 "type": "object",
                 "properties": {
                   "mimeType": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "null"
                     ]
                   },
                   "text": {
@@ -2617,13 +2559,9 @@
                           "type": "boolean"
                         },
                         "multiline": {
-                          "anyOf": [
-                            {
-                              "type": "boolean"
-                            },
-                            {
-                              "type": "string"
-                            }
+                          "type": [
+                            "boolean",
+                            "string"
                           ]
                         },
                         "id": {
@@ -2703,7 +2641,7 @@
               "authentication": {
                 "anyOf": [
                   {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -3145,13 +3083,9 @@
                 "type": "boolean"
               },
               "konnectRouteKey": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "konnectManagedHeaderNames": {
@@ -3317,7 +3251,7 @@
               "authentication": {
                 "anyOf": [
                   {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -3819,13 +3753,9 @@
                 "type": "boolean"
               },
               "konnectRouteKey": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "konnectManagedHeaderNames": {
@@ -3934,7 +3864,7 @@
               "authentication": {
                 "anyOf": [
                   {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -4530,7 +4460,7 @@
               "authentication": {
                 "anyOf": [
                   {
-                    "anyOf": [
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -5059,13 +4989,9 @@
                 ]
               },
               "konnectRouteId": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "method": {},
@@ -5080,19 +5006,11 @@
     "__schema1": {
       "anyOf": [
         {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
           ]
         },
         {
@@ -5104,13 +5022,9 @@
         {
           "type": "object",
           "propertyNames": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
+            "type": [
+              "string",
+              "number"
             ]
           },
           "additionalProperties": {
