@@ -1232,6 +1232,7 @@ getChanges(): Promise<{ staged: string[]; unstaged: string[] }>  // file names (
 stageChanges(fileNames: string[]): Promise<void>         // stages each file individually from the Commit modal; fileNames as listed, e.g. "foo.yaml"
 unstageChanges(fileNames: string[]): Promise<void>       // unstages each file individually
 discardAllChanges(): Promise<void>                       // discards every uncommitted local change
+discardChangeAfterReview(fileName: string): Promise<void>  // opens the file's diff, clicks Discard, confirms, closes the modal — does NOT wait for the row to leave the unstaged list, so it works for a change that comes straight back (see "Undiscardable change" below)
 createBranch(branch: string): Promise<void>              // creates + checks out a new local branch
 createBranchExpectingError(branch: string): Promise<string>  // submits a duplicate/invalid branch name, returns the validation error text under "New branch name", closes the modal
 getBranches(): Promise<{ local: string[]; remote: string[] }>  // local + remote-only branch lists from the Branches modal, then closes it
@@ -1245,6 +1246,29 @@ deleteBranch(branch: string, switchToBranch = "master"): Promise<void>  // check
 ```
 
 **Direct `gitSyncPage` calls with no Flow wrapper** (the real specs use these — destructure `gitSyncPage` from `user.pageManager`): `openCommitDialog()`/`closeCommitDialog()`/`isCommitDialogOpen()`, `commitStaged(message?)` (fills the Message field, **clearing it when omitted** since it keeps its text between attempts), `getStagedChanges()`/`getUnstagedChanges()`, `stageChange(fileName)`/`unstageChange(fileName)`, `openHistory()`/`getLatestCommit()`/`closeHistory()`, `getCurrentBranch()`. The "Stage All Changes" prompt — shown when Commit is clicked with **nothing staged** — has `getStageAllPromptText()` (waits for it; text contains "There are no staged changes to commit"), `cancelStageAllPrompt()` (leaves the modal open, nothing committed), and `confirmStageAllPrompt()` ("Yes": stages everything + commits, waits for the modal to close). `isCommitDisabled()` was removed — the Commit button is no longer disabled with nothing staged, it opens this prompt instead. `openCommitDialog()` now also waits for at least one change row, so reading staged/unstaged right after it can't see a still-empty list.
+
+**Undiscardable-change warning (INS-3830) — direct `gitSyncPage` calls, no Flow wrapper** (specs in `tests/git-sync/undiscardable-change/`, a family directory with a shared `helpers.ts`). All of these need `openCommitDialog()` first and leave the dialog open unless noted; `closeCommitDialog()` is only needed before the next `openCommitDialog()`/menu use, not at the end of a test:
+
+```ts
+// enums/git-change-list.ts — GitChangeList.Staged = "Staged changes" | GitChangeList.Unstaged = "Unstaged changes"
+openChangeDiff(list: GitChangeList, fileName: string): Promise<void>  // clicks the row and waits for the diff pane (Stage/Unstage this file button); the warning flag arrives with the diff, so once this resolves its presence/absence is settled
+isUndiscardableWarningVisibleInDiff(): Promise<boolean>               // "This change is only Insomnia internally reformatting the file…" banner above the diff
+openDiscardConfirmation(fileName: string): Promise<void>              // clicks Discard on an unstaged row, waits for the "Discard Changes" dialog, does not confirm
+getDiscardConfirmationText(): Promise<string>                         // the dialog's text
+isUndiscardableWarningVisibleInDiscardDialog(): Promise<boolean>
+confirmDiscard(): Promise<void>                                       // confirms without waiting for the row to disappear (unlike discardChange(), which does)
+cancelDiscard(): Promise<void>
+hasUncommittedChanges(): Promise<boolean>                             // reads the Git Sync menu's Commit item (disabled = clean tree); opens/closes the menu itself, no Commit dialog needed. Poll it — it lags the watcher
+```
+
+Always pass `GitChangeList.Staged`/`.Unstaged` (never the raw "Staged changes" string) to `openChangeDiff`, and note `getChanges()`/`openCommitDialog()` **throw/time out on a clean tree** (the Commit item is disabled), so never use them to assert "nothing changed" — use `hasUncommittedChanges()`.
+
+**Facts learned building these specs:**
+- The Commit modal only lists **`.yaml`** files (`git-vcs.ts` filters on extension). A "non-Insomnia file" must be a non-Insomnia `.yaml` (e.g. `openapi: 3.0.0…`), never README.md.
+- Seed a remote file **before** creating the Git project: `pushServerFile({ path, content })` then `workspaceFlow.create(new Project(…, ProjectType.Git), GIT_CREDENTIAL.name)` — the clone imports it and the watcher re-exports it, so a non-canonical file shows up as an unstaged change with no `pull()` needed.
+- A hand-reordered / old-schema Insomnia file is built by `buildReorderedCollectionFile(name, { oldSchema? })` in `tests/git-sync/undiscardable-change/helpers.ts` (folders listed against their `created` order; `oldSchema` drops `schema_version` and adds a header `id`). Copy that helper's shape for any other "file Insomnia rewrites" fixture; `buildCollectionFile()` from git-fixtures is already canonical-ish and won't trigger it.
+- To modify a file on disk (e.g. a non-Insomnia yaml), pass `{ cloneParentDir: fs.mkdtempSync(path.join(os.tmpdir(), "…")) }` as the 3rd arg of the Git `workspaceFlow.create()`; the clone is the single sub-directory inside it (`path.join(dir, fs.readdirSync(dir)[0])`). Added/deleted files are easiest via the UI (`workspaceFlow.create(project, collection, fileName)` / `workspaceFlow.delete(collection)`).
+- After a discard of an undiscardable file the change reappears asynchronously — poll `getChanges().unstaged` for it rather than reading once.
 
 `Commit` (`models/commit.ts`): `{ message: string; id?: string }` — positional constructor (`new Commit(message)`), `id` populated after `commit()`/`commitAndPush()` read it back from the History modal's row `data-key` (the real git OID).
 

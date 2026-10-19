@@ -1,3 +1,4 @@
+import { GitChangeList } from "../enums/git-change-list";
 import { Commit } from "../models/commit";
 import { BaseFlow } from "./base.flow";
 
@@ -125,6 +126,21 @@ export class GitSyncFlow extends BaseFlow {
         : undefined,
       message,
     );
+  }
+
+  /**
+   * Opens a file's diff and discards it, confirming the dialog, without
+   * waiting for the file to leave the unstaged list (so it also works for a
+   * change that comes straight back), then closes the modal.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   */
+  async discardChangeAfterReview(fileName: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await gitSyncPage.openCommitDialog();
+    await gitSyncPage.openChangeDiff(GitChangeList.Unstaged, fileName);
+    await gitSyncPage.openDiscardConfirmation(fileName);
+    await gitSyncPage.confirmDiscard();
+    await gitSyncPage.closeCommitDialog();
   }
 
   /**

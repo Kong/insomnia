@@ -1,35 +1,38 @@
-import { expect } from "@playwright/test";
+import { expect } from '@playwright/test';
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { BasePage } from "./base.page";
+import { GitChangeList } from '../enums/git-change-list';
+import { DEFAULT_TIMEOUT } from '../misc/constants';
+import { BasePage } from './base.page';
 
 export class GitSyncPage extends BasePage {
-  private readonly syncDropdownButton = this.page.getByTestId("git-dropdown");
-  private readonly syncMenu = this.page.getByRole("menu", {
-    name: "Git Sync",
+  private readonly syncDropdownButton = this.page.getByTestId('git-dropdown');
+  private readonly syncMenu = this.page.getByRole('menu', {
+    name: 'Git Sync',
   });
-  private readonly commitDialog = this.page.getByRole("dialog", {
-    name: "Commit Changes",
+  private readonly commitDialog = this.page.getByRole('dialog', {
+    name: 'Commit Changes',
   });
-  private readonly branchesDialog = this.page.getByRole("dialog", {
-    name: "Branches",
+  private readonly branchesDialog = this.page.getByRole('dialog', {
+    name: 'Branches',
   });
-  private readonly stageAllPrompt = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Stage All Changes" });
-  private readonly mergeConflictsDialog = this.page.getByRole("dialog", {
-    name: "Resolve conflicts",
+  private readonly stageAllPrompt = this.page.getByRole('dialog').filter({ hasText: 'Stage All Changes' });
+  private readonly mergeConflictsDialog = this.page.getByRole('dialog', {
+    name: 'Resolve conflicts',
   });
   private readonly historyDialog = this.page
-    .getByRole("dialog")
-    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
+    .getByRole('dialog')
+    .filter({ has: this.page.getByRole('heading', { name: 'History' }) });
 
-  private readonly changeRow = (
-    list: "Staged changes" | "Unstaged changes",
-    fileName: string,
-  ) =>
+  private readonly discardDialog = this.page
+    .getByRole('dialog')
+    .filter({ has: this.page.getByRole('heading', { name: 'Discard Changes' }) });
+  private readonly undiscardableWarning = this.page.getByText(
+    'This change is only Insomnia internally reformatting the file',
+  );
+
+  private readonly changeRow = (list: GitChangeList, fileName: string) =>
     this.commitDialog
-      .getByRole("grid", { name: list, exact: true })
+      .getByRole('grid', { name: list, exact: true })
       .locator('[role="row"][data-key]')
       .filter({ hasText: fileName });
 
@@ -43,9 +46,9 @@ export class GitSyncPage extends BasePage {
    */
   async navigate(): Promise<void> {
     await this.page
-      .getByText("Setup Git Credentials")
+      .getByText('Setup Git Credentials')
       .or(this.syncDropdownButton)
-      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -65,9 +68,7 @@ export class GitSyncPage extends BasePage {
    */
   async switchBranch(branch: string): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu
-      .getByRole("menuitemradio", { name: branch, exact: true })
-      .click();
+    await this.syncMenu.getByRole('menuitemradio', { name: branch, exact: true }).click();
     await expect(this.syncDropdownButton).toContainText(branch, {
       timeout: DEFAULT_TIMEOUT,
     });
@@ -78,9 +79,7 @@ export class GitSyncPage extends BasePage {
    */
   async fetch(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu
-      .getByRole("menuitemradio", { name: "Fetch", exact: true })
-      .click();
+    await this.syncMenu.getByRole('menuitemradio', { name: 'Fetch', exact: true }).click();
   }
 
   /**
@@ -90,9 +89,7 @@ export class GitSyncPage extends BasePage {
    */
   async pull(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu
-      .getByRole("menuitemradio", { name: "Pull", exact: true })
-      .click();
+    await this.syncMenu.getByRole('menuitemradio', { name: 'Pull', exact: true }).click();
   }
 
   /**
@@ -101,10 +98,8 @@ export class GitSyncPage extends BasePage {
    */
   async push(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu
-      .getByRole("menuitemradio", { name: "Push", exact: true })
-      .click();
-    await expect(this.page.getByText("Push completed")).toBeVisible({
+    await this.syncMenu.getByRole('menuitemradio', { name: 'Push', exact: true }).click();
+    await expect(this.page.getByText('Push completed')).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -126,29 +121,23 @@ export class GitSyncPage extends BasePage {
   async openCommitDialog(): Promise<void> {
     await expect(async () => {
       await this.openSyncMenu();
-      const commitItem = this.syncMenu.getByRole("menuitemradio", {
-        name: "Commit",
+      const commitItem = this.syncMenu.getByRole('menuitemradio', {
+        name: 'Commit',
         exact: true,
       });
       try {
         await expect(commitItem).toBeEnabled({ timeout: 3000 });
       } catch (error) {
-        await this.page.keyboard.press("Escape");
+        await this.page.keyboard.press('Escape');
         throw error;
       }
       await commitItem.click();
     }).toPass({ timeout: DEFAULT_TIMEOUT * 3 });
     await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    await expect(this.commitDialog).not.toHaveAttribute(
-      "data-loading",
-      "true",
-      {
-        timeout: DEFAULT_TIMEOUT,
-      },
-    );
-    await expect(
-      this.commitDialog.locator('[role="row"][data-key]').first(),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(this.commitDialog).not.toHaveAttribute('data-loading', 'true', {
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await expect(this.commitDialog.locator('[role="row"][data-key]').first()).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -163,14 +152,14 @@ export class GitSyncPage extends BasePage {
    */
   private async stageAllChanges(): Promise<void> {
     await this.commitDialog
-      .getByRole("grid", { name: "Unstaged changes" })
-      .getByRole("row")
+      .getByRole('grid', { name: 'Unstaged changes' })
+      .getByRole('row')
       .first()
-      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
     await this.commitDialog.locator('button[name="Stage all changes"]').click();
-    await expect(
-      this.commitDialog.getByRole("heading", { name: /^Staged changes [1-9]/ }),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(this.commitDialog.getByRole('heading', { name: /^Staged changes [1-9]/ })).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
@@ -180,12 +169,8 @@ export class GitSyncPage extends BasePage {
    */
   async commit(message: string): Promise<void> {
     await this.stageAllChanges();
-    await this.commitDialog
-      .getByRole("textbox", { name: "Message" })
-      .fill(message);
-    await this.commitDialog
-      .getByRole("button", { name: "Commit", exact: true })
-      .click();
+    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message);
+    await this.commitDialog.getByRole('button', { name: 'Commit', exact: true }).click();
     await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -200,16 +185,10 @@ export class GitSyncPage extends BasePage {
    */
   async commitAndPush(message: string): Promise<void> {
     await this.stageAllChanges();
-    await this.commitDialog
-      .getByRole("textbox", { name: "Message" })
-      .fill(message);
-    await this.commitDialog
-      .getByRole("button", { name: "Commit and push" })
-      .click();
+    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message);
+    await this.commitDialog.getByRole('button', { name: 'Commit and push' }).click();
     await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-    await expect(
-      this.page.getByText("Changes committed and pushed"),
-    ).toBeVisible({
+    await expect(this.page.getByText('Changes committed and pushed')).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -236,7 +215,7 @@ export class GitSyncPage extends BasePage {
    * @returns The staged file names
    */
   async getStagedChanges(): Promise<string[]> {
-    return this.readChangeRows("Staged changes");
+    return this.readChangeRows(GitChangeList.Staged);
   }
 
   /**
@@ -245,7 +224,7 @@ export class GitSyncPage extends BasePage {
    * @returns The unstaged file names
    */
   async getUnstagedChanges(): Promise<string[]> {
-    return this.readChangeRows("Unstaged changes");
+    return this.readChangeRows(GitChangeList.Unstaged);
   }
 
   /**
@@ -255,10 +234,10 @@ export class GitSyncPage extends BasePage {
    * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async stageChange(fileName: string): Promise<void> {
-    const row = this.changeRow("Unstaged changes", fileName);
+    const row = this.changeRow(GitChangeList.Unstaged, fileName);
     await row.hover();
     await row.locator('button[name="Stage change"]').click();
-    await expect(this.changeRow("Staged changes", fileName)).toBeVisible({
+    await expect(this.changeRow(GitChangeList.Staged, fileName)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -270,10 +249,10 @@ export class GitSyncPage extends BasePage {
    * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async unstageChange(fileName: string): Promise<void> {
-    const row = this.changeRow("Staged changes", fileName);
+    const row = this.changeRow(GitChangeList.Staged, fileName);
     await row.hover();
     await row.locator('button[name="Unstage change"]').click();
-    await expect(this.changeRow("Unstaged changes", fileName)).toBeVisible({
+    await expect(this.changeRow(GitChangeList.Unstaged, fileName)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -285,9 +264,9 @@ export class GitSyncPage extends BasePage {
    */
   async unstageAllChanges(): Promise<void> {
     await this.commitDialog.locator('button[name="Unstage all changes"]').click();
-    await expect(
-      this.commitDialog.getByRole("heading", { name: /^Staged changes 0/ }),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(this.commitDialog.getByRole('heading', { name: /^Staged changes 0/ })).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
@@ -297,11 +276,97 @@ export class GitSyncPage extends BasePage {
    * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async discardChange(fileName: string): Promise<void> {
-    const row = this.changeRow("Unstaged changes", fileName);
+    const row = this.changeRow(GitChangeList.Unstaged, fileName);
     await row.hover();
     await row.locator('button[name="Discard change"]').click();
-    await this.page.getByTestId("discard-changes-confirm-button").click();
+    await this.page.getByTestId('discard-changes-confirm-button').click();
     await expect(row).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Clicks a file's row in the open Commit modal to open its diff, and
+   * waits for the diff pane (its Stage/Unstage this-file button) to render
+   * — the undiscardable flag arrives with the same loader data as the
+   * diff, so once the pane is up the warning's presence is settled.
+   * Requires `openCommitDialog()` to have been called first.
+   * @param list - Which list the file is in
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   */
+  async openChangeDiff(list: GitChangeList, fileName: string): Promise<void> {
+    await this.changeRow(list, fileName).click();
+    await expect(
+      this.commitDialog.getByRole('button', {
+        name: list === GitChangeList.Staged ? 'Unstage this file' : 'Stage this file',
+      }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Reads whether the open Commit modal's diff pane shows the "can't be
+   * discarded" warning. Requires `openChangeDiff()` to have been called.
+   * @returns True if the warning banner is visible in the diff pane
+   */
+  async isUndiscardableWarningVisible(): Promise<boolean> {
+    return this.commitDialog.getByText('This change is only Insomnia internally reformatting the file').isVisible();
+  }
+
+  /**
+   * Clicks Discard on a file's row and waits for the confirmation dialog,
+   * without confirming. Requires `openCommitDialog()` to have been called.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   */
+  async openDiscardConfirmation(fileName: string): Promise<void> {
+    const row = this.changeRow(GitChangeList.Unstaged, fileName);
+    await row.hover();
+    await row.locator('button[name="Discard change"]').click();
+    await expect(this.discardDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Reads the open Discard confirmation dialog's body text.
+   * @returns The dialog's text content
+   */
+  async getDiscardConfirmationText(): Promise<string> {
+    return (await this.discardDialog.innerText()).trim();
+  }
+
+  /**
+   * Reads whether the open Discard confirmation dialog shows the "can't be
+   * discarded" warning.
+   * @returns True if the warning is visible in the dialog
+   */
+  async isUndiscardableWarningVisibleInDiscardDialog(): Promise<boolean> {
+    return this.discardDialog.getByText('This change is only Insomnia internally reformatting the file').isVisible();
+  }
+
+  /**
+   * Confirms the open Discard dialog without waiting for the file to leave
+   * the unstaged list (a file whose change can't be discarded comes back).
+   */
+  async confirmDiscard(): Promise<void> {
+    await this.page.getByTestId('discard-changes-confirm-button').click();
+    await expect(this.discardDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Cancels the open Discard confirmation dialog.
+   */
+  async cancelDiscard(): Promise<void> {
+    await this.discardDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(this.discardDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Reads whether the Git Sync menu's "Commit" item is enabled, i.e.
+   * whether anything is uncommitted. Opens and closes the menu.
+   * @returns True if there are uncommitted changes
+   */
+  async hasUncommittedChanges(): Promise<boolean> {
+    await this.openSyncMenu();
+    const enabled = await this.syncMenu.getByRole('menuitemradio', { name: 'Commit', exact: true }).isEnabled();
+    await this.page.keyboard.press('Escape');
+    await expect(this.syncMenu).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    return enabled;
   }
 
   /**
@@ -314,12 +379,8 @@ export class GitSyncPage extends BasePage {
    * @param message - The commit message; omit to submit with an empty message
    */
   async commitStaged(message?: string): Promise<void> {
-    await this.commitDialog
-      .getByRole("textbox", { name: "Message" })
-      .fill(message ?? "");
-    await this.commitDialog
-      .getByRole("button", { name: "Commit", exact: true })
-      .click();
+    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message ?? '');
+    await this.commitDialog.getByRole('button', { name: 'Commit', exact: true }).click();
   }
 
   /**
@@ -337,7 +398,7 @@ export class GitSyncPage extends BasePage {
    */
   async getStageAllPromptText(): Promise<string> {
     await expect(this.stageAllPrompt).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    return (await this.stageAllPrompt.innerText()).replaceAll("\n", " ");
+    return (await this.stageAllPrompt.innerText()).replaceAll('\n', ' ');
   }
 
   /**
@@ -345,7 +406,7 @@ export class GitSyncPage extends BasePage {
    * Commit modal open and nothing committed.
    */
   async cancelStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByRole("button", { name: "Cancel" }).click();
+    await this.stageAllPrompt.getByRole('button', { name: 'Cancel' }).click();
     await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -354,7 +415,7 @@ export class GitSyncPage extends BasePage {
    * change and commits it, then waits for the Commit modal to close.
    */
   async confirmStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByRole("button", { name: "Yes" }).click();
+    await this.stageAllPrompt.getByRole('button', { name: 'Yes' }).click();
     await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -362,9 +423,9 @@ export class GitSyncPage extends BasePage {
    * Waits until the Commit modal's staged list holds no files.
    */
   async waitForNothingStaged(): Promise<void> {
-    await expect(
-      this.commitDialog.getByRole("heading", { name: /^Staged changes 0/ }),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(this.commitDialog.getByRole('heading', { name: /^Staged changes 0/ })).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
@@ -375,14 +436,12 @@ export class GitSyncPage extends BasePage {
    */
   async discardAllChanges(): Promise<void> {
     await this.commitDialog
-      .getByRole("grid", { name: "Unstaged changes" })
-      .getByRole("row")
+      .getByRole('grid', { name: 'Unstaged changes' })
+      .getByRole('row')
       .first()
-      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
-    await this.commitDialog
-      .locator('button[name="Discard all changes"]')
-      .click();
-    await this.page.getByTestId("discard-changes-confirm-button").click();
+      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    await this.commitDialog.locator('button[name="Discard all changes"]').click();
+    await this.page.getByTestId('discard-changes-confirm-button').click();
     await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -397,7 +456,7 @@ export class GitSyncPage extends BasePage {
    */
   async openHistory(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu.getByText("History", { exact: true }).click();
+    await this.syncMenu.getByText('History', { exact: true }).click();
     await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -417,18 +476,16 @@ export class GitSyncPage extends BasePage {
    * for the log to finish loading.
    * @returns The latest commit's id and message, or undefined if the log is empty
    */
-  async getLatestCommit(): Promise<
-    { id: string; message: string } | undefined
-  > {
+  async getLatestCommit(): Promise<{ id: string; message: string } | undefined> {
     const row = this.historyDialog.locator('[role="row"][data-key]').first();
     try {
       await expect(row).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     } catch {
       return undefined;
     }
-    const id = await row.getAttribute("data-key");
+    const id = await row.getAttribute('data-key');
     if (!id) return undefined;
-    const message = await row.getByRole("rowheader").innerText();
+    const message = await row.getByRole('rowheader').innerText();
     return { id, message };
   }
 
@@ -436,7 +493,7 @@ export class GitSyncPage extends BasePage {
    * Closes the History modal via Escape.
    */
   async closeHistory(): Promise<void> {
-    await this.page.keyboard.press("Escape");
+    await this.page.keyboard.press('Escape');
     await expect(this.historyDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -445,9 +502,7 @@ export class GitSyncPage extends BasePage {
    */
   async openBranchesDialog(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu
-      .getByRole("menuitemradio", { name: "Branches", exact: true })
-      .click();
+    await this.syncMenu.getByRole('menuitemradio', { name: 'Branches', exact: true }).click();
     await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -460,12 +515,8 @@ export class GitSyncPage extends BasePage {
    * @param branch - The new branch's name
    */
   async createBranch(branch: string): Promise<void> {
-    await this.branchesDialog
-      .getByRole("textbox", { name: "New branch name:" })
-      .fill(branch);
-    await this.branchesDialog
-      .getByRole("button", { name: "Create", exact: true })
-      .click();
+    await this.branchesDialog.getByRole('textbox', { name: 'New branch name:' }).fill(branch);
+    await this.branchesDialog.getByRole('button', { name: 'Create', exact: true }).click();
     await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -478,8 +529,8 @@ export class GitSyncPage extends BasePage {
    */
   async checkoutBranch(branch: string): Promise<void> {
     await this.branchesDialog
-      .getByRole("row", { name: branch, exact: true })
-      .getByRole("button", { name: "Checkout" })
+      .getByRole('row', { name: branch, exact: true })
+      .getByRole('button', { name: 'Checkout' })
       .click();
   }
 
@@ -489,12 +540,12 @@ export class GitSyncPage extends BasePage {
    * @param branch - The branch to delete
    */
   async deleteBranch(branch: string): Promise<void> {
-    const row = this.branchesDialog.getByRole("row", {
+    const row = this.branchesDialog.getByRole('row', {
       name: branch,
       exact: true,
     });
-    await row.getByRole("button", { name: "Delete" }).click();
-    await row.getByRole("button", { name: "Confirm" }).click();
+    await row.getByRole('button', { name: 'Delete' }).click();
+    await row.getByRole('button', { name: 'Confirm' }).click();
   }
 
   /**
@@ -503,11 +554,8 @@ export class GitSyncPage extends BasePage {
    * @param branch - The branch to merge in
    */
   async mergeBranch(branch: string): Promise<void> {
-    await this.branchesDialog
-      .getByLabel(branch, { exact: true })
-      .getByRole("button", { name: "Merge" })
-      .click();
-    await this.page.getByRole("button", { name: "Confirm" }).click();
+    await this.branchesDialog.getByLabel(branch, { exact: true }).getByRole('button', { name: 'Merge' }).click();
+    await this.page.getByRole('button', { name: 'Confirm' }).click();
   }
 
   /**
@@ -518,12 +566,8 @@ export class GitSyncPage extends BasePage {
    * @param branch - The branch name to attempt to create
    */
   async submitNewBranch(branch: string): Promise<void> {
-    await this.branchesDialog
-      .getByRole("textbox", { name: "New branch name:" })
-      .fill(branch);
-    await this.branchesDialog
-      .getByRole("button", { name: "Create", exact: true })
-      .click();
+    await this.branchesDialog.getByRole('textbox', { name: 'New branch name:' }).fill(branch);
+    await this.branchesDialog.getByRole('button', { name: 'Create', exact: true }).click();
   }
 
   /**
@@ -533,7 +577,7 @@ export class GitSyncPage extends BasePage {
    * @returns The error text
    */
   async getNewBranchError(): Promise<string> {
-    const error = this.branchesDialog.locator("form p");
+    const error = this.branchesDialog.locator('form p');
     await expect(error).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await error.innerText()).trim();
   }
@@ -545,7 +589,7 @@ export class GitSyncPage extends BasePage {
    * @returns The local branch names
    */
   async getLocalBranches(): Promise<string[]> {
-    return this.readBranchRows("Branches list");
+    return this.readBranchRows('Branches list');
   }
 
   /**
@@ -555,10 +599,8 @@ export class GitSyncPage extends BasePage {
    * @returns The remote-only branch names
    */
   async getRemoteBranches(): Promise<string[]> {
-    await expect(
-      this.branchesDialog.getByText("Fetching remote branches..."),
-    ).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-    return this.readBranchRows("Remote Branches list");
+    await expect(this.branchesDialog.getByText('Fetching remote branches...')).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    return this.readBranchRows('Remote Branches list');
   }
 
   /**
@@ -569,10 +611,10 @@ export class GitSyncPage extends BasePage {
    */
   async checkoutRemoteBranch(branch: string): Promise<void> {
     await this.branchesDialog
-      .getByRole("grid", { name: "Remote Branches list", exact: true })
-      .getByRole("row")
+      .getByRole('grid', { name: 'Remote Branches list', exact: true })
+      .getByRole('row')
       .filter({ hasText: branch })
-      .getByRole("button", { name: "Fetch and checkout" })
+      .getByRole('button', { name: 'Fetch and checkout' })
       .click();
     await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
@@ -586,26 +628,22 @@ export class GitSyncPage extends BasePage {
    * close. Call after `mergeBranch()` or `pull()` hit conflicts.
    * @param version - "Current" keeps the local change, "Incoming" takes the merged-in one
    */
-  async resolveMergeConflicts(version: "Current" | "Incoming"): Promise<void> {
+  async resolveMergeConflicts(version: 'Current' | 'Incoming'): Promise<void> {
     await expect(this.mergeConflictsDialog).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
-    const rows = this.mergeConflictsDialog
-      .getByRole("grid", { name: "Conflicted changes" })
-      .getByRole("row");
+    const rows = this.mergeConflictsDialog.getByRole('grid', { name: 'Conflicted changes' }).getByRole('row');
     const count = await rows.count();
     for (let i = 0; i < count; i++) {
       await rows.nth(i).click();
       await this.mergeConflictsDialog
-        .getByRole("button", {
+        .getByRole('button', {
           name: `Take all ${version.toLowerCase()} changes`,
         })
         .click();
-      await this.page.getByRole("button", { name: "Confirm" }).click();
+      await this.page.getByRole('button', { name: 'Confirm' }).click();
     }
-    await this.mergeConflictsDialog
-      .getByRole("button", { name: "Resolve conflicts" })
-      .click();
+    await this.mergeConflictsDialog.getByRole('button', { name: 'Resolve conflicts' }).click();
     await expect(this.mergeConflictsDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -615,30 +653,27 @@ export class GitSyncPage extends BasePage {
    * Closes the Branches modal.
    */
   async closeBranchesDialog(): Promise<void> {
-    await this.page.getByTestId("close-git-project-branches-modal").click();
+    await this.page.getByTestId('close-git-project-branches-modal').click();
     await this.page
-      .getByTestId("git-project-branches-modal-overlay")
-      .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
+      .getByTestId('git-project-branches-modal-overlay')
+      .waitFor({ state: 'hidden', timeout: DEFAULT_TIMEOUT });
   }
 
-  private async readChangeRows(
-    list: "Staged changes" | "Unstaged changes",
-  ): Promise<string[]> {
-    const rows = this.commitDialog
-      .getByRole("grid", { name: list, exact: true })
-      .locator('[role="row"][data-key]');
+  private async readChangeRows(list: GitChangeList): Promise<string[]> {
+    const rows = this.commitDialog.getByRole('grid', { name: list, exact: true }).locator('[role="row"][data-key]');
     const texts = await rows.allInnerTexts();
-    return texts.map((text) => text.split("\n")[0].trim());
+    return texts.map(text => text.split('\n')[0].trim());
   }
 
-  private async readBranchRows(
-    list: "Branches list" | "Remote Branches list",
-  ): Promise<string[]> {
-    const rows = this.branchesDialog
-      .getByRole("grid", { name: list, exact: true })
-      .locator('[role="row"][data-key]');
+  private async readBranchRows(list: 'Branches list' | 'Remote Branches list'): Promise<string[]> {
+    const rows = this.branchesDialog.getByRole('grid', { name: list, exact: true }).locator('[role="row"][data-key]');
     const texts = await rows.allInnerTexts();
-    return texts.map((text) => text.split("\n")[0].replace(/\s*\*$/, "").trim());
+    return texts.map(text =>
+      text
+        .split('\n')[0]
+        .replace(/\s*\*$/, '')
+        .trim(),
+    );
   }
 
   private async openSyncMenu(): Promise<void> {
