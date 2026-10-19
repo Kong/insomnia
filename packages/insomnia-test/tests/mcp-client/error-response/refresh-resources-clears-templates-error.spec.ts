@@ -7,7 +7,7 @@ import { McpClient } from '../../../models/mcp-client';
 import { Project } from '../../../models/project';
 
 test('Verify Refresh on Resources Clears a Resource Templates Error Once the Server Is Fixed', async ({ user }) => {
-  test.fail();
+  test.fail(true, "INS-4065");
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { mcpClientPage } = user.pageManager;
   const resources = { result: { resources: [{ name: 'valid-resource', uri: 'file:///valid.txt' }] } };
