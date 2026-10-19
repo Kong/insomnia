@@ -201,6 +201,19 @@ describe('edge cases', () => {
     expect(await render('{{ list[0] }}', { context: { list: ['first', 'second'] } })).toBe('first');
   });
 
+  // Arrays and objects render as JSON instead of LiquidJS's default concatenation
+  it('renders arrays as JSON', async () => {
+    expect(await render('{{ list }}', { context: { list: ['a', 'b'] } })).toBe('["a","b"]');
+  });
+
+  it('renders objects as JSON', async () => {
+    expect(await render('{{ obj }}', { context: { obj: { a: 1, nested: ['x'] } } })).toBe('{"a":1,"nested":["x"]}');
+  });
+
+  it('leaves scalars and null untouched', async () => {
+    expect(await render('{{ n }}|{{ s }}|{{ nullish }}', { context: { n: 42, s: 'x', nullish: null } })).toBe('42|x|');
+  });
+
   // Multi-level dot traversal must resolve to the leaf value
   it('renders deeply nested values', async () => {
     expect(await render('{{ a.b.c }}', { context: { a: { b: { c: 'deep' } } } })).toBe('deep');
