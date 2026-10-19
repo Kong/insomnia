@@ -11,6 +11,7 @@ import { models } from 'insomnia-data';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
+import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import { RenderError } from '~/common/templating/render-error';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -63,6 +64,15 @@ const MAX_URL_LENGTH = 10 * 1024;
 
 const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const } };
 
+// The confidential mask (••••••) is non-ASCII, so URL encoding would mangle it: punycode in the
+// host (xn--nvgaaaaa) and percent-encoding elsewhere. Swap it for a lowercase ASCII placeholder
+// (hostnames get lowercased) before building/encoding the URL, and restore it afterwards.
+const MASK_PLACEHOLDER = 'insomniaconfidentialmaskplaceholder';
+const protectMask = (value: string) => value.replaceAll(CONFIDENTIAL_MASK_VALUE, MASK_PLACEHOLDER);
+const restoreMask = (value: string) => value.replaceAll(MASK_PLACEHOLDER, CONFIDENTIAL_MASK_VALUE);
+const protectParamsMask = <T extends { name: string; value: string }>(params: T[]) =>
+  params.map(param => ({ ...param, name: protectMask(param.name), value: protectMask(param.value) }));
+
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
   const [tooLong, setTooLong] = useState(false);
@@ -87,9 +97,12 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         }
 
         const { parameters, pathParameters, authQueryParams: renderedAuthQueryParams } = result;
-        const url = models.request.applyPathParametersToUrl(result.url, pathParameters);
+        const url = models.request.applyPathParametersToUrl(
+          protectMask(result.url),
+          pathParameters && protectParamsMask(pathParameters),
+        );
 
-        const mergedParams = [...parameters, ...renderedAuthQueryParams];
+        const mergedParams = protectParamsMask([...parameters, ...renderedAuthQueryParams]);
         const qs = buildQueryStringFromParams(mergedParams, false, { encodeParams: request.settingEncodeUrl });
         let fullUrl = joinUrlAndQueryString(url, qs);
         if (fullUrl.length > MAX_URL_LENGTH) {
@@ -98,7 +111,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         } else {
           setTooLong(false);
         }
-        const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true });
+        const encoded = restoreMask(smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true }));
         setPreviewString(encoded === '' ? defaultPreview : encoded);
       } catch (error: unknown) {
         console.warn(error);
