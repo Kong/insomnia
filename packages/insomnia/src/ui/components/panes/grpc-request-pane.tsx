@@ -86,7 +86,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
       const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
       setGrpcState({ ...grpcState, methods });
-    } else if (activeRequest.url && activeRequest.reflectionApi) {
+    } else if (activeRequest.url && activeRequest.reflectionApi && !activeRequest.reflectionApi.enabled) {
+      // Intentionally skipped when the buf reflection API is enabled: loading would send the API key on pane open.
+      // In that case methods are only loaded when the user clicks the reflection refresh button.
       const requestGroups = (
         await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
       ).filter(isRequestGroup);
