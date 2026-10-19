@@ -819,7 +819,10 @@ const ProjectNavigationSidebarInner = (
       // The target row may be virtualized out; wait for it to mount before requesting the rename.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setRenameTargetKey(targetKey);
+          const mounted = parentRef.current?.querySelector(`[data-key="${targetKey}"]`);
+          if (mounted) {
+            setRenameTargetKey(targetKey);
+          }
         });
       });
     },

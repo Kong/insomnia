@@ -173,7 +173,10 @@ export const SidebarWorkspaceDropdown = ({
   useEffect(() => {
     if (isRenaming) {
       onRename?.();
-      openRenameModal();
+      if (!isScratchpadWorkspace) {
+        // Only open the rename modal if the workspace is not a scratchpad
+        openRenameModal();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to a new rename request
   }, [isRenaming]);
