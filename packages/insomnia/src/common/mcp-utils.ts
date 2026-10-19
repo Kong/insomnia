@@ -266,6 +266,9 @@ const labelForListItem = (item: unknown): string | undefined => {
   return undefined;
 };
 
+const skippedEntriesTitle = (count: number) =>
+  `${count} ${count === 1 ? 'entry' : 'entries'} ${count === 1 ? 'was' : 'were'} skipped because they do not match the MCP schema.`;
+
 // Validates a list result against its schema.
 // If the whole envelope is invalid (e.g. the items are not even an array), the entire list fails to render.
 // If only some entries are malformed, the valid entries are still returned and the malformed ones are summarized as an error.
@@ -310,12 +313,7 @@ const validateListResult = (method: string, result: unknown): McpListResult => {
   }
   return {
     data: cleanedResult,
-    error: {
-      title: `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} ${
-        entries.length === 1 ? 'was' : 'were'
-      } skipped because they do not match the MCP schema.`,
-      entries,
-    },
+    error: { title: skippedEntriesTitle(entries.length), entries },
   };
 };
 
@@ -330,12 +328,16 @@ export const findFirstMatchEventData = (mcpEvents: McpEvent[], method: string) =
   return;
 };
 
-// Correlates the outgoing list request  with its matching incoming response by request id, then validates the response
-export const findLatestListResult = (mcpEvents: McpEvent[], method: string): McpListResult | undefined => {
-  const outgoingEvent = mcpEvents.find(
-    event => 'method' in event && event.method === method && event.direction === 'OUTGOING',
-  ) as McpMessageEvent | undefined;
-  const outgoingRequestId = outgoingEvent && 'id' in outgoingEvent.data ? outgoingEvent.data.id : undefined;
+const isListRequestEvent = (event: McpEvent, method: string): event is McpMessageEvent =>
+  'method' in event && event.method === method && event.direction === 'OUTGOING';
+
+// Correlates one outgoing list request with its matching incoming response by request id, then validates the response
+const findListPageResult = (
+  mcpEvents: McpEvent[],
+  outgoingEvent: McpMessageEvent,
+  method: string,
+): McpListResult | undefined => {
+  const outgoingRequestId = 'id' in outgoingEvent.data ? outgoingEvent.data.id : undefined;
   if (outgoingRequestId === undefined) {
     return undefined;
   }
@@ -364,6 +366,68 @@ export const findLatestListResult = (mcpEvents: McpEvent[], method: string): Mcp
   }
   const result = 'result' in incomingEvent.data ? incomingEvent.data.result : undefined;
   return validateListResult(method, result);
+};
+
+// Finds the result of the latest list request for a method (a single page)
+export const findLatestListResult = (mcpEvents: McpEvent[], method: string): McpListResult | undefined => {
+  const outgoingEvent = mcpEvents.find(event => isListRequestEvent(event, method)) as McpMessageEvent | undefined;
+  return outgoingEvent ? findListPageResult(mcpEvents, outgoingEvent, method) : undefined;
+};
+
+const getRequestCursor = (outgoingEvent: McpMessageEvent): string | undefined => {
+  const params = 'params' in outgoingEvent.data ? outgoingEvent.data.params : undefined;
+  const cursor = isRecord(params) ? params.cursor : undefined;
+  return typeof cursor === 'string' && cursor.length > 0 ? cursor : undefined;
+};
+
+// Rebuilds the full paginated list from the event log by replaying every list request in order:
+// a request without a cursor starts a fresh list, a request with a cursor appends the next page.
+// Skipped-entry errors accumulate across pages. A page that fails as a whole contributes no items and
+// keeps the previous cursor (so Load More can retry), and its error clears once a later page succeeds.
+export const findAccumulatedListResult = (mcpEvents: McpEvent[], method: string): McpListResult | undefined => {
+  const config = PRIMITIVE_LIST_CONFIG[method];
+  if (!config) {
+    return findLatestListResult(mcpEvents, method);
+  }
+  // mcpEvents is latest-first
+  const outgoingEvents = mcpEvents.filter(event => isListRequestEvent(event, method)).reverse() as McpMessageEvent[];
+  let items: unknown[] = [];
+  let nextCursor: string | undefined;
+  let skippedEntries: McpListEntryError[] = [];
+  let pageFailure: McpListValidationError | undefined;
+  let hasPage = false;
+  for (const outgoingEvent of outgoingEvents) {
+    const page = findListPageResult(mcpEvents, outgoingEvent, method);
+    if (!page) {
+      continue;
+    }
+    hasPage = true;
+    if (getRequestCursor(outgoingEvent) === undefined) {
+      items = [];
+      nextCursor = undefined;
+      skippedEntries = [];
+    }
+    pageFailure = undefined;
+    if (page.data === undefined) {
+      pageFailure = page.error;
+      continue;
+    }
+    items.push(...(page.data[config.itemsKey] as unknown[]));
+    nextCursor = page.data.nextCursor;
+    skippedEntries.push(...(page.error?.entries || []));
+  }
+  if (!hasPage) {
+    return undefined;
+  }
+  const skippedError =
+    skippedEntries.length > 0
+      ? { title: skippedEntriesTitle(skippedEntries.length), entries: skippedEntries }
+      : undefined;
+  const error = combineListErrors(skippedError, pageFailure);
+  return {
+    data: { [config.itemsKey]: items, ...(nextCursor && { nextCursor }) },
+    ...(error && { error }),
+  };
 };
 
 export const isResourceTemplate = (resource: Resource | ResourceTemplate): resource is ResourceTemplate => {

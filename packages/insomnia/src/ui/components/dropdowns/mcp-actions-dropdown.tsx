@@ -14,7 +14,6 @@ interface Props {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onRefreshPrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
-  onLoadMorePrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
 }
 interface actionList {
   name: string;
@@ -35,7 +34,6 @@ export const McpActionsDropdown = ({
   isOpen,
   onOpenChange,
   onRefreshPrimitive,
-  onLoadMorePrimitive,
   triggerRef,
 }: Props) => {
   const { type } = item;
@@ -59,10 +57,10 @@ export const McpActionsDropdown = ({
       }
     } catch {
       // A schema-invalid response throws here, but the request/response is still logged as an
-      // event, so onRefreshPrimitive/onLoadMorePrimitive re-derive the real data/error from the
-      // event log below regardless of whether this call succeeded or threw.
+      // event, so onRefreshPrimitive re-derives the real data/error from the event log below
+      // regardless of whether this call succeeded or threw.
     }
-    await (couldRefresh ? onRefreshPrimitive(type) : onLoadMorePrimitive(type));
+    await onRefreshPrimitive(type);
   };
 
   const mcpPrimitiveActionList: actionList[] = [
@@ -73,7 +71,7 @@ export const McpActionsDropdown = ({
       items: [
         {
           id: 'Refresh',
-          name: 'Refresh',
+          name: 'Reload',
           icon: 'refresh',
           action: handleRefreshPrimitive,
         },
@@ -124,7 +122,7 @@ export const McpActionsDropdown = ({
                   let itemName = name;
                   let itemIcon = icon;
                   if (id === 'Refresh') {
-                    itemName = couldRefresh ? 'Refresh' : 'Load More';
+                    itemName = couldRefresh ? 'Reload' : 'Load More';
                     itemIcon = couldRefresh ? 'refresh' : 'chevron-down';
                   }
                   return (
