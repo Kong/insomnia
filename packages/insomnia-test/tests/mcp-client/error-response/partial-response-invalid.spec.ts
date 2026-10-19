@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -31,14 +32,14 @@ for (const [variant, { tools, skipped }] of Object.entries(partialInvalidTools))
     const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
     await mcpClientFlow.connect(client);
 
-    const error = await mcpClientFlow.getListError(client, 'tools');
+    const error = await mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
     expect(error.title).toMatch(skippedTitle(2));
     expect(error.entries.map(entry => entry.label)).toEqual(skipped);
     for (const entry of error.entries) {
       expect(entry.reason).not.toBe('');
     }
     await expect
-      .poll(() => mcpClientPage.getPrimitives('tools'), {
+      .poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Tools), {
         timeout: DEFAULT_TIMEOUT,
       })
       .toEqual(['valid-tool']);

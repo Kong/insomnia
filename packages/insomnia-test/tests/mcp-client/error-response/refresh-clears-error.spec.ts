@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
 import { type McpListConfig, scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -19,14 +20,14 @@ test('Verify Refresh Clears the Error Once the Server Returns Valid Data', async
   );
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
-  await mcpClientFlow.getListError(client, 'tools');
+  await mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
 
   await scriptMcpListServer(key, valid);
-  await mcpClientFlow.refresh(client, 'tools');
-  await expect.poll(() => mcpClientPage.getCapabilityErrorCount('tools')).toBe(0);
-  await expect.poll(() => mcpClientPage.getPrimitives('tools'), { timeout: DEFAULT_TIMEOUT }).toEqual(['valid-tool']);
+  await mcpClientFlow.refresh(client, McpPrimitiveType.Tools);
+  await expect.poll(() => mcpClientPage.getCapabilityErrorCount(McpPrimitiveType.Tools)).toBe(0);
+  await expect.poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Tools), { timeout: DEFAULT_TIMEOUT }).toEqual(['valid-tool']);
 
   await scriptMcpListServer(key, invalid);
-  await mcpClientFlow.refresh(client, 'tools');
-  expect((await mcpClientFlow.getListError(client, 'tools')).title).toBe(wholeFailureTitle('tools/list'));
+  await mcpClientFlow.refresh(client, McpPrimitiveType.Tools);
+  expect((await mcpClientFlow.getListError(client, McpPrimitiveType.Tools)).title).toBe(wholeFailureTitle('tools/list'));
 });

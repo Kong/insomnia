@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -26,20 +27,20 @@ test('Verify Invalid resources/list and prompts/list Are Reported Like tools/lis
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
-  const resourcesError = await mcpClientFlow.getListError(client, 'resources');
+  const resourcesError = await mcpClientFlow.getListError(client, McpPrimitiveType.Resources);
   expect(resourcesError.title).toMatch(skippedTitle(2));
   expect(resourcesError.entries.map(entry => entry.label)).toEqual(['no-uri-resource', 'numeric-uri-resource']);
   await expect
-    .poll(() => mcpClientPage.getPrimitives('resources'), {
+    .poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Resources), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toEqual(['valid-resource']);
 
-  expect(await mcpClientFlow.getListError(client, 'prompts')).toEqual({
+  expect(await mcpClientFlow.getListError(client, McpPrimitiveType.Prompts)).toEqual({
     title: wholeFailureTitle('prompts/list'),
     entries: [],
   });
-  expect(await mcpClientPage.getPrimitives('prompts')).toEqual([]);
+  expect(await mcpClientPage.getPrimitives(McpPrimitiveType.Prompts)).toEqual([]);
 });
 
 test('Verify a prompts/list Whose prompts Is an Object Is a Whole-Response Error', async ({ user }) => {
@@ -51,7 +52,7 @@ test('Verify a prompts/list Whose prompts Is an Object Is a Whole-Response Error
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
-  expect(await user.flowManager.mcpClientFlow.getListError(client, 'prompts')).toEqual({
+  expect(await user.flowManager.mcpClientFlow.getListError(client, McpPrimitiveType.Prompts)).toEqual({
     title: wholeFailureTitle('prompts/list'),
     entries: [],
   });
@@ -70,11 +71,11 @@ test('Verify a Prompt with Bad arguments Is Skipped While Valid Prompts Are List
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
-  const error = await mcpClientFlow.getListError(client, 'prompts');
+  const error = await mcpClientFlow.getListError(client, McpPrimitiveType.Prompts);
   expect(error.title).toMatch(skippedTitle(1));
   expect(error.entries.map(entry => entry.label)).toEqual(['bad-args-prompt']);
   await expect
-    .poll(() => user.pageManager.mcpClientPage.getPrimitives('prompts'), {
+    .poll(() => user.pageManager.mcpClientPage.getPrimitives(McpPrimitiveType.Prompts), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toEqual(['valid-prompt']);

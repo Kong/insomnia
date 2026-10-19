@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -23,7 +24,7 @@ test('Verify Refresh on Resources Clears a Resource Templates Error Once the Ser
   const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
-  await mcpClientFlow.getListError(client, 'resources');
+  await mcpClientFlow.getListError(client, McpPrimitiveType.Resources);
 
   await scriptMcpListServer(key, {
     'resources/list': resources,
@@ -31,7 +32,7 @@ test('Verify Refresh on Resources Clears a Resource Templates Error Once the Ser
       result: { resourceTemplates: [{ uriTemplate: 'file:///{path}', name: 'valid-template' }] },
     },
   });
-  await mcpClientFlow.refresh(client, 'resources');
+  await mcpClientFlow.refresh(client, McpPrimitiveType.Resources);
 
-  await expect.poll(() => mcpClientPage.getCapabilityErrorCount('resources'), { timeout: DEFAULT_TIMEOUT }).toBe(0);
+  await expect.poll(() => mcpClientPage.getCapabilityErrorCount(McpPrimitiveType.Resources), { timeout: DEFAULT_TIMEOUT }).toBe(0);
 });

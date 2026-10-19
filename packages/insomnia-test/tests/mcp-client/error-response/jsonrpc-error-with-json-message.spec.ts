@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -15,7 +16,7 @@ test('Verify a JSON-RPC Error Whose Message Is a JSON String Is Shown Readably',
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
-  const error = await user.flowManager.mcpClientFlow.getListError(client, 'tools');
+  const error = await user.flowManager.mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
 
   expect(error.title).toContain('boom');
   expect(error.title).not.toContain('[object Object]');

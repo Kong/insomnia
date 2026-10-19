@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -21,6 +22,6 @@ test('Verify a Server-Initiated Request Reusing the tools/list Request Id Does N
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
-  await expect.poll(() => mcpClientPage.getPrimitives('tools'), { timeout: DEFAULT_TIMEOUT }).toEqual(['valid-tool']);
-  expect(await mcpClientPage.getCapabilityErrorCount('tools')).toBe(0);
+  await expect.poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Tools), { timeout: DEFAULT_TIMEOUT }).toEqual(['valid-tool']);
+  expect(await mcpClientPage.getCapabilityErrorCount(McpPrimitiveType.Tools)).toBe(0);
 });

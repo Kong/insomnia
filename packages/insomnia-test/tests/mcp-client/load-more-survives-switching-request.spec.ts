@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 
+import { McpPrimitiveType } from "../../enums/mcp-capability";
 import { ProjectType } from "../../enums/project-types";
 import { DEFAULT_TIMEOUT, expect, MCP_SERVER, test } from "../../misc/fixtures";
 import { scriptMcpListServer } from "../../misc/mcp-list-server";
@@ -39,9 +40,9 @@ test("Verify Loaded Pages Are Kept After Switching to Another MCP Client and Bac
     new McpClient(faker.string.alphanumeric(10), url),
   );
   await mcpClientFlow.connect(client);
-  await mcpClientFlow.loadMore(client, "resources");
+  await mcpClientFlow.loadMore(client, McpPrimitiveType.Resources);
   await expect
-    .poll(() => mcpClientPage.getPrimitives("resources"), {
+    .poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Resources), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toEqual(["item-1", "item-2"]);
@@ -50,10 +51,10 @@ test("Verify Loaded Pages Are Kept After Switching to Another MCP Client and Bac
     project,
     new McpClient(faker.string.alphanumeric(10), MCP_SERVER),
   );
-  await mcpClientFlow.getListAction(client, "resources");
+  await mcpClientFlow.getListAction(client, McpPrimitiveType.Resources);
 
   await expect
-    .poll(() => mcpClientPage.getPrimitives("resources"), {
+    .poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Resources), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toEqual(["item-1", "item-2"]);

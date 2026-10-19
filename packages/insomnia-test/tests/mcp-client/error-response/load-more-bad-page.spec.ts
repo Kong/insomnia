@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpListAction, McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -8,19 +9,19 @@ import { Project } from '../../../models/project';
 
 const loadMoreVariants = [
   {
-    type: 'tools',
+    type: McpPrimitiveType.Tools,
     method: 'tools/list',
     entry: (name: string) => ({ name, inputSchema: { type: 'object' } }),
     badEntry: { name: 'bad-tool' },
   },
   {
-    type: 'prompts',
+    type: McpPrimitiveType.Prompts,
     method: 'prompts/list',
     entry: (name: string) => ({ name }),
     badEntry: { name: 'bad-prompt', arguments: 'x' },
   },
   {
-    type: 'resources',
+    type: McpPrimitiveType.Resources,
     method: 'resources/list',
     entry: (name: string) => ({ name, uri: `file:///${name}.txt` }),
     badEntry: { name: 'bad-resource' },
@@ -30,8 +31,8 @@ const loadMoreVariants = [
 // Open app bugs: listTools() / listPrompts() do not forward the cursor, so Load More re-requests the first page.
 // Resources forwards it and passes.
 const knownBugs: Partial<Record<(typeof loadMoreVariants)[number]['type'], string>> = {
-  tools: 'INS-4060',
-  prompts: 'INS-4061',
+  [McpPrimitiveType.Tools]: 'INS-4060',
+  [McpPrimitiveType.Prompts]: 'INS-4061',
 };
 
 for (const { type, method, entry, badEntry } of loadMoreVariants) {
@@ -51,12 +52,12 @@ for (const { type, method, entry, badEntry } of loadMoreVariants) {
     const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
     await mcpClientFlow.connect(client);
     await expect.poll(() => mcpClientPage.getPrimitives(type), { timeout: DEFAULT_TIMEOUT }).toEqual(['item-1']);
-    expect(await mcpClientFlow.getListAction(client, type)).toBe('Load More');
+    expect(await mcpClientFlow.getListAction(client, type)).toBe(McpListAction.LoadMore);
 
     await mcpClientFlow.loadMore(client, type);
     await expect
       .poll(() => mcpClientPage.getPrimitives(type), { timeout: DEFAULT_TIMEOUT })
       .toEqual(['item-1', 'item-2']);
-    expect(await mcpClientFlow.getListAction(client, type)).toBe('Refresh');
+    expect(await mcpClientFlow.getListAction(client, type)).toBe(McpListAction.Refresh);
   });
 }

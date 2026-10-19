@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -19,18 +20,18 @@ test('Verify the Error Panel of a Partially Invalid List Follows Expand and Coll
   const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
-  await mcpClientFlow.getListError(client, 'tools');
-  await expect.poll(() => mcpClientPage.hasCapability('prompts')).toBe(true);
+  await mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
+  await expect.poll(() => mcpClientPage.hasCapability(McpPrimitiveType.Prompts)).toBe(true);
 
-  const panelBox = await mcpClientPage.getCapabilityErrorBounds('tools');
-  const nextCapabilityBox = await mcpClientPage.getCapabilityBounds('prompts');
+  const panelBox = await mcpClientPage.getCapabilityErrorBounds(McpPrimitiveType.Tools);
+  const nextCapabilityBox = await mcpClientPage.getCapabilityBounds(McpPrimitiveType.Prompts);
   expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(nextCapabilityBox.y + 1);
 
-  await mcpClientFlow.toggleCapability(client, 'tools');
-  await expect.poll(() => mcpClientPage.getCapabilityErrorCount('tools')).toBe(0);
+  await mcpClientFlow.toggleCapability(client, McpPrimitiveType.Tools);
+  await expect.poll(() => mcpClientPage.getCapabilityErrorCount(McpPrimitiveType.Tools)).toBe(0);
 
-  await mcpClientFlow.toggleCapability(client, 'tools');
-  await expect.poll(() => mcpClientPage.getCapabilityErrorCount('tools')).toBe(1);
+  await mcpClientFlow.toggleCapability(client, McpPrimitiveType.Tools);
+  await expect.poll(() => mcpClientPage.getCapabilityErrorCount(McpPrimitiveType.Tools)).toBe(1);
 });
 
 test('Verify the Error Panel of an Empty List Stays Visible Without a Collapse Caret', async ({ user }) => {
@@ -42,9 +43,9 @@ test('Verify the Error Panel of an Empty List Stays Visible Without a Collapse C
   const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
-  await mcpClientFlow.getListError(client, 'tools');
+  await mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
 
-  expect(await mcpClientPage.hasCaret('tools')).toBe(false);
-  await mcpClientFlow.toggleCapability(client, 'tools');
-  await expect.poll(() => mcpClientPage.getCapabilityErrorCount('tools')).toBe(1);
+  expect(await mcpClientPage.hasCaret(McpPrimitiveType.Tools)).toBe(false);
+  await mcpClientFlow.toggleCapability(client, McpPrimitiveType.Tools);
+  await expect.poll(() => mcpClientPage.getCapabilityErrorCount(McpPrimitiveType.Tools)).toBe(1);
 });

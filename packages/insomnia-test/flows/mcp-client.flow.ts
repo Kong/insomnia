@@ -1,11 +1,12 @@
 import { expect } from "@playwright/test";
 
+import { type McpCapabilityType, McpListAction } from "../enums/mcp-capability";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { McpClient } from "../models/mcp-client";
 import type { Project } from "../models/project";
 import type { ResponseView } from "../models/response";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
-import type { McpCapabilityError, McpCapabilityType } from "../pages/mcp-client.page";
+import type { McpCapabilityError } from "../pages/mcp-client.page";
 import type { PageManager } from "../pages/page-manager";
 import { BaseFlow } from "./base.flow";
 import type { FlowContext } from "./flow-context";
@@ -223,7 +224,7 @@ export class McpClientFlow extends BaseFlow {
    */
   async refresh(client: McpClient, type: McpCapabilityType): Promise<void> {
     await this.open(client);
-    await this.pageManager.mcpClientPage.clickCapabilityAction(type, "Refresh");
+    await this.pageManager.mcpClientPage.clickCapabilityAction(type, McpListAction.Refresh);
   }
 
   /**
@@ -235,7 +236,7 @@ export class McpClientFlow extends BaseFlow {
    */
   async loadMore(client: McpClient, type: McpCapabilityType): Promise<void> {
     await this.open(client);
-    await this.pageManager.mcpClientPage.clickCapabilityAction(type, "Load More");
+    await this.pageManager.mcpClientPage.clickCapabilityAction(type, McpListAction.LoadMore);
   }
 
   /**
@@ -245,7 +246,7 @@ export class McpClientFlow extends BaseFlow {
    * @param type - Which capability item's actions menu to read
    * @returns `Refresh`, or `Load More` while a `nextCursor` is pending
    */
-  async getListAction(client: McpClient, type: McpCapabilityType): Promise<string> {
+  async getListAction(client: McpClient, type: McpCapabilityType): Promise<McpListAction> {
     await this.open(client);
     return this.pageManager.mcpClientPage.getCapabilityActionName(type);
   }

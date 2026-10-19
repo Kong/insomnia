@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -21,7 +22,7 @@ for (const rpcError of jsonRpcErrors) {
     const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
     await mcpClientFlow.connect(client);
 
-    const error = await user.flowManager.mcpClientFlow.getListError(client, 'tools');
+    const error = await user.flowManager.mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
     expect(error.title).toContain(rpcError.message);
     expect(error.entries).toEqual([]);
   });

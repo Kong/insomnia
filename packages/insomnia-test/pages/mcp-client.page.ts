@@ -1,12 +1,9 @@
 import { expect, type Locator } from '@playwright/test';
 
+import type { McpListAction} from '../enums/mcp-capability';
+import { type McpCapabilityType, type McpPrimitiveType } from '../enums/mcp-capability';
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from '../misc/constants';
 import { RequestPage } from './request.page';
-
-/** The capability items of the MCP sidebar; Resource Templates are listed under `resources`. */
-export type McpCapabilityType = 'tools' | 'resources' | 'prompts';
-/** The primitive kinds a sidebar row can belong to (the prefix of its `data-key`). */
-export type McpPrimitiveType = McpCapabilityType | 'resourceTemplates';
 
 /** The error panel embedded in a capability item's row. */
 export interface McpCapabilityError {
@@ -245,7 +242,7 @@ export class McpClientPage extends RequestPage {
    * @param type - Which capability item's menu to open
    * @param action - `Refresh`, or `Load More` once the server returned a `nextCursor`
    */
-  async clickCapabilityAction(type: McpCapabilityType, action: 'Refresh' | 'Load More'): Promise<void> {
+  async clickCapabilityAction(type: McpCapabilityType, action: McpListAction): Promise<void> {
     const capabilityItem = this.getCapabilityItem(type);
     await capabilityItem.hover({ position: { x: 60, y: 10 } });
     await capabilityItem.locator(`[data-testid="Dropdown-${type}"]`).click();
@@ -258,12 +255,12 @@ export class McpClientPage extends RequestPage {
    * Opens the menu to read it and closes it again.
    * @param type - Which capability item's menu to read
    */
-  async getCapabilityActionName(type: McpCapabilityType): Promise<string> {
+  async getCapabilityActionName(type: McpCapabilityType): Promise<McpListAction> {
     const capabilityItem = this.getCapabilityItem(type);
     await capabilityItem.hover({ position: { x: 60, y: 10 } });
     await capabilityItem.locator(`[data-testid="Dropdown-${type}"]`).click();
     const item = this.page.locator(this.ACTIONS_MENU).locator('[role^="menuitem"]').first();
-    const name = (await item.innerText()).trim();
+    const name = (await item.innerText()).trim() as McpListAction;
     await this.page.keyboard.press('Escape');
     await expect(item).toBeHidden();
     return name;

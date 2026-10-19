@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -32,13 +33,13 @@ test('Verify Load More Whose Next Page Has an Invalid Entry Lists the Skipped En
   const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
-  await expect.poll(() => mcpClientPage.getPrimitives('resources'), { timeout: DEFAULT_TIMEOUT }).toEqual(['item-1']);
+  await expect.poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Resources), { timeout: DEFAULT_TIMEOUT }).toEqual(['item-1']);
 
-  await mcpClientFlow.loadMore(client, 'resources');
+  await mcpClientFlow.loadMore(client, McpPrimitiveType.Resources);
   await expect
-    .poll(() => mcpClientPage.getPrimitives('resources'), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => mcpClientPage.getPrimitives(McpPrimitiveType.Resources), { timeout: DEFAULT_TIMEOUT })
     .toEqual(['item-1', 'item-2']);
-  const error = await mcpClientFlow.getListError(client, 'resources');
+  const error = await mcpClientFlow.getListError(client, McpPrimitiveType.Resources);
 
   expect(error.entries.map(entry => entry.label)).toEqual(['bad-resource']);
 });

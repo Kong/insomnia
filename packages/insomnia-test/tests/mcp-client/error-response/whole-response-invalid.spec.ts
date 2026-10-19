@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 
+import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
 import { expect, test } from '../../../misc/fixtures';
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
@@ -21,11 +22,11 @@ for (const [variant, result] of Object.entries(wholeInvalidTools)) {
     const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
     await mcpClientFlow.connect(client);
 
-    expect(await mcpClientFlow.getListError(client, 'tools')).toEqual({
+    expect(await mcpClientFlow.getListError(client, McpPrimitiveType.Tools)).toEqual({
       title: wholeFailureTitle('tools/list'),
       entries: [],
     });
-    expect(await user.pageManager.mcpClientPage.getPrimitives('tools')).toEqual([]);
+    expect(await user.pageManager.mcpClientPage.getPrimitives(McpPrimitiveType.Tools)).toEqual([]);
   });
 }
 
@@ -39,8 +40,8 @@ test('Verify a tools/list Result That Is Not an Object Shows an Error and Lists 
   // The MCP SDK rejects a non-object `result` before the pane's own
   // validation runs, so the title is the SDK's ZodError, not the agreed
   // "does not match the MCP schema" wording.
-  const error = await user.flowManager.mcpClientFlow.getListError(client, 'tools');
+  const error = await user.flowManager.mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
   expect(error.title).not.toBe('');
   expect(error.entries).toEqual([]);
-  expect(await user.pageManager.mcpClientPage.getPrimitives('tools')).toEqual([]);
+  expect(await user.pageManager.mcpClientPage.getPrimitives(McpPrimitiveType.Tools)).toEqual([]);
 });
