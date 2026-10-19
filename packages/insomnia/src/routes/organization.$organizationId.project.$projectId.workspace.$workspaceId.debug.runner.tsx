@@ -29,7 +29,7 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
-import { buildRunnerItemKey, type RunnerItemStatus, type RunnerLiveItem } from '~/common/runner-feedback';
+import { buildRunnerItemKey, type RequestRow, type RunnerItemStatus, type RunnerLiveItem } from '~/common/runner-feedback';
 import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
@@ -136,15 +136,6 @@ export const repositionInArray = (allItems: string[], itemsToMove: string[], tar
   }
   return items;
 };
-
-export interface RequestRow {
-  id: string;
-  name: string;
-  ancestors: { id: string; name: string }[];
-  method: string;
-  url: string;
-  parentId: string;
-}
 
 const defaultAdvancedConfig = {
   bail: true,
