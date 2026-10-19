@@ -7,7 +7,7 @@ import { McpClient } from '../../../models/mcp-client';
 import { Project } from '../../../models/project';
 import { validTool } from './helpers';
 
-test('Verify Invalid Entries With the Same Name and Issue Are All Listed Without Duplicate Key Warnings', async ({
+test('Verify Invalid Entries With the Same Name and Issue Are All Listed', async ({
   user,
 }) => {
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
