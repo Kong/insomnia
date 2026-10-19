@@ -4,6 +4,8 @@ import type {
   ChangeBufferEvent,
   CollectionWorkspaceChildren,
   OrganizationData,
+  Project,
+  Workspace,
   WorkspaceChildren,
   WorkspaceChildrenForScope,
   WorkspaceMeta,
@@ -38,6 +40,39 @@ export const workspaceChildrenQuery = <S extends WorkspaceScope | undefined = un
   queryOptions({
     queryKey: workspaceChildrenKeys.byWorkspaceId(workspaceId),
     queryFn: async () => (await services.appData.getWorkspaceChildren([workspaceId], scope)).get(workspaceId),
+  });
+
+export const untrackedProjectsKeys = {
+  all: ['untracked-projects'],
+  byTrackedOrganizationIds: (trackedOrganizationIds: string[]) => [
+    ...untrackedProjectsKeys.all,
+    ...trackedOrganizationIds,
+  ],
+};
+
+export interface UntrackedProjectsData {
+  untrackedProjects: (Project & { workspacesCount: number })[];
+  untrackedWorkspaces: Workspace[];
+}
+
+// Projects whose parent is none of the tracked organizations, and workspaces with no project.
+// Invalidated by `updateAppDataOnDbChanges` on any project / workspace change.
+export const untrackedProjectsQuery = (trackedOrganizationIds: string[]) =>
+  queryOptions({
+    queryKey: untrackedProjectsKeys.byTrackedOrganizationIds(trackedOrganizationIds),
+    queryFn: async (): Promise<UntrackedProjectsData> => {
+      const [projects, untrackedWorkspaces] = await Promise.all([
+        services.project.list({ parentId: { $nin: trackedOrganizationIds } }),
+        services.workspace.list({ parentId: null }),
+      ]);
+      const untrackedProjects = await Promise.all(
+        projects.map(async project => ({
+          ...project,
+          workspacesCount: await services.workspace.count({ parentId: project._id }),
+        })),
+      );
+      return { untrackedProjects, untrackedWorkspaces };
+    },
   });
 
 const COLLECTION_REQUEST_DOC_TYPES: string[] = [
@@ -258,6 +293,7 @@ function updateCollectionChildrenWithUpdatedDoc(
 export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: ChangeBufferEvent[]) {
   const organizationIdsToRevalidate = new Set<string>();
   const workspaceIdsToRevalidate = new Set<string>();
+  let shouldRevalidateUntrackedProjects = false;
 
   // We do not use the patches here because some db operations do not contain patches like git repo file watcher
   for (const [event, doc] of changes) {
@@ -266,6 +302,7 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
     }
 
     if (doc.type === models.project.type) {
+      shouldRevalidateUntrackedProjects = true;
       organizationIdsToRevalidate.add(doc.parentId);
       // The project may have moved from a different, already-cached organization (e.g. the Konnect
       // migration re-parents projects across organizations) — find and revalidate its old one too,
@@ -281,6 +318,7 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
     }
 
     if (doc.type === models.workspace.type) {
+      shouldRevalidateUntrackedProjects = true;
       const { organizationId } = findOrganizationAndProjectIdForWorkspace(queryClient, doc) || {};
       if (organizationId) {
         organizationIdsToRevalidate.add(organizationId);
@@ -393,4 +431,7 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
       refetchType: 'all',
     }),
   );
+  if (shouldRevalidateUntrackedProjects) {
+    queryClient.invalidateQueries({ queryKey: untrackedProjectsKeys.all });
+  }
 }
