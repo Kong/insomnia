@@ -88,7 +88,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       if (mockServerType === 'self-hosted') {
         const mockServerUrl = workspaceData.mockServerUrl;
-        invariant(typeof mockServerUrl === 'string' && mockServerUrl.trim() !== '', 'Mock Server URL is required');
+        invariant(
+          typeof mockServerUrl === 'string' && mockServerUrl.trim().replace(/\/+$/, '') !== '',
+          'Mock Server URL is required',
+        );
       }
     }
 
