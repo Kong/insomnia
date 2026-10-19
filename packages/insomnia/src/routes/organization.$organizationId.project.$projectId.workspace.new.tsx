@@ -315,7 +315,7 @@ async function createMockServer(
       mockServerPatch.useInsomniaCloud = true;
     } else {
       mockServerPatch.useInsomniaCloud = false;
-      mockServerPatch.url = workspaceData.mockServerUrl!;
+      mockServerPatch.url = workspaceData.mockServerUrl!.trim().replace(/\/+$/, '');
     }
 
     await services.environment.getOrCreateForParentId(workspace._id);

@@ -44,7 +44,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     let mockServerUrl = mockServer.url;
 
     if (patch.mockServerUrl && typeof patch.mockServerUrl === 'string') {
-      mockServerUrl = patch.mockServerUrl;
+      mockServerUrl = patch.mockServerUrl.trim().replace(/\/+$/, '');
     }
 
     await services.mockServer.update(mockServer, {
