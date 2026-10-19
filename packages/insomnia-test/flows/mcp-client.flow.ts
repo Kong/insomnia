@@ -250,6 +250,16 @@ export class McpClientFlow extends BaseFlow {
     return this.pageManager.mcpClientPage.getCapabilityActionName(type);
   }
 
+  /**
+   * Opens the given MCP Client node and filters its sidebar primitives by name.
+   * @param client - The MCP Client to operate on
+   * @param text - The filter text to enter
+   */
+  async filterCapabilities(client: McpClient, text: string): Promise<void> {
+    await this.open(client);
+    await this.pageManager.mcpClientPage.setCapabilityFilter(text);
+  }
+
   private async open(client: McpClient): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.findItemNode(client);

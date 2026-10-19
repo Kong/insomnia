@@ -9,7 +9,7 @@ import express from 'express';
 import * as z from 'zod/v4';
 
 import { certPath } from './certs';
-import type { McpListConfig, McpListReply } from './mcp-list-server';
+import type { McpListConfig, McpListMethod, McpListReply } from './mcp-list-server';
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(certPath('localhost-key.pem')),
@@ -163,7 +163,7 @@ app.put('/mcp-list/:key/config', (req, res) => {
 app.post('/mcp-list/:key', (req, res) => {
   const { id, method, params } = req.body ?? {};
   // Notifications carry no id and expect no JSON-RPC response.
-  if (id === undefined) {
+  if (id === undefined || method === undefined) {
     res.status(202).end();
     return;
   }
@@ -180,13 +180,21 @@ app.post('/mcp-list/:key', (req, res) => {
     return;
   }
   if (method in EMPTY_LISTS) {
-    const script = listConfigs.get(req.params.key)?.[method as keyof McpListConfig];
+    const config = listConfigs.get(req.params.key);
+    const script = config?.[method as McpListMethod];
     const reply: McpListReply =
       script === undefined
         ? { result: EMPTY_LISTS[method] }
         : 'pages' in script
           ? (script.pages[params?.cursor ?? ''] ?? { result: EMPTY_LISTS[method] })
           : script;
+    if (method === 'tools/list' && config?.serverRequestReusingToolsListId) {
+      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' });
+      res.write(`event: message\ndata: ${JSON.stringify({ jsonrpc: '2.0', id, ...reply })}\n\n`);
+      res.write(`event: message\ndata: ${JSON.stringify({ jsonrpc: '2.0', id, method: 'roots/list' })}\n\n`);
+      res.end();
+      return;
+    }
     res.json({ jsonrpc: '2.0', id, ...reply });
     return;
   }

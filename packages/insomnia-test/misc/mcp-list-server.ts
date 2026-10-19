@@ -5,9 +5,16 @@ export type McpListReply = { result: unknown } | { error: { code: number; messag
 /** A reply for every request, or one per `params.cursor` (`""` is the first page). */
 export type McpListScript = McpListReply | { pages: Record<string, McpListReply> };
 
-export type McpListConfig = Partial<
-  Record<'tools/list' | 'resources/list' | 'resources/templates/list' | 'prompts/list', McpListScript>
->;
+export type McpListMethod = 'tools/list' | 'resources/list' | 'resources/templates/list' | 'prompts/list';
+
+export type McpListConfig = Partial<Record<McpListMethod, McpListScript>> & {
+  /**
+   * Makes the `tools/list` reply stream a server-initiated `roots/list`
+   * request right after the result, reusing the `tools/list` request's
+   * JSON-RPC id (the two directions have independent id spaces, so this is legal).
+   */
+  serverRequestReusingToolsListId?: boolean;
+};
 
 /**
  * Gives a test its own scriptable endpoint on `misc/mcp-server.ts` and

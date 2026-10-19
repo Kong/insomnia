@@ -98,6 +98,15 @@ export class McpClientPage extends RequestPage {
   }
 
   /**
+   * Types into the server capability filter input, narrowing the sidebar
+   * primitives by name.
+   * @param text - The filter text to enter
+   */
+  async setCapabilityFilter(text: string): Promise<void> {
+    await this.page.locator(this.FILTER_INPUT).fill(text);
+  }
+
+  /**
    * Sets the value of a tool argument input on the "params" tab. Arguments
    * are rendered as a JSON-schema form, so each field's input is located
    * by an id of `root_<name>`.
