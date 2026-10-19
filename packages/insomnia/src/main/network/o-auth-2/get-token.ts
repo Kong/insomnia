@@ -14,10 +14,10 @@ import type {
   ResponseTimelineEntry,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { invariant } from '~/common/utils/invariant';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
 import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
