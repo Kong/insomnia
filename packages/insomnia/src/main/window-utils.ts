@@ -25,18 +25,20 @@ import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
-import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
+import {
+  createPluginWindow,
+  destroyOrCreatePluginWindow,
+  togglePluginWindowVisibility,
+} from './plugin-window';
 import { isTrustedAppOrigin } from './trusted-origin';
+import { browserWindows } from './window-registry';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-export function getMainWindow(): ElectronBrowserWindow | null {
-  return browserWindows.get('Insomnia') ?? null;
-}
+
 let hiddenWindowIsBusy = false;
 interface Bounds {
   height?: number;
@@ -658,16 +660,13 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: 'Show/hide plugin browser window ',
         click: () => {
-          const pluginWindow = getPluginWindow();
-          invariant(pluginWindow, 'pluginWindow is not defined');
-          pluginWindow.isVisible() ? pluginWindow.hide() : pluginWindow.show();
+          togglePluginWindowVisibility();
         },
       },
       {
         label: 'Stop/start plugin browser window ',
         click: () => {
-          const pluginWindow = getPluginWindow();
-          pluginWindow ? destroyPluginWindow() : createPluginWindow();
+          destroyOrCreatePluginWindow();
         },
       },
       {
@@ -852,8 +851,8 @@ export function createWindowsAndReturnMain() {
   // that Playwright's firstWindow() always returns the main app window. Creating
   // it on did-finish-load still parses the 12 MB bundle well before any user
   // plugin call would occur.
-  mainWindow.webContents.once('did-finish-load', () => createPluginWindow());
+  mainWindow.webContents.once('did-finish-load', () => {
+    createPluginWindow();
+  });
   return mainWindow;
 }
-
-export { destroyPluginWindow };
