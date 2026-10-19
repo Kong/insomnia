@@ -8,38 +8,10 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import type { WorkspaceFileIssue } from '~/main/git-service';
 import { scrollElementIntoView } from '~/ui/utils';
 
-import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
+import { type BaseTab, TAB_CONTEXT_MENU_COMMAND, type TabType, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
-import { TAB_CONTEXT_MENU_COMMAND } from './tab-list';
 
-export type TabType =
-  | 'request'
-  | 'folder'
-  | 'environment'
-  | 'mockServer'
-  | 'mockRoute'
-  | 'document'
-  | 'collection'
-  | 'runner'
-  | 'test'
-  | 'testSuite';
-export interface BaseTab {
-  type: TabType;
-  name: string;
-  url: string;
-  organizationId: string;
-  projectId: string;
-  workspaceId: string;
-  projectName: string;
-  workspaceName: string;
-  id: string;
-  // tag is used to display the request method in the tab
-  // method is used to display the tag color
-  tag?: string;
-  method?: string;
-  temporary?: boolean;
-}
 
 const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
   GET: 'text-(--color-font-surprise) bg-[rgba(var(--color-surprise-rgb),0.5)]',
