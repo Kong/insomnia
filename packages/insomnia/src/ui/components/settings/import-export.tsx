@@ -1,8 +1,5 @@
 import { format } from 'date-fns';
-import {
-  convertApiSpecSyntax,
-  detectApiSpecSyntax,
-} from 'insomnia/src/common/api-specs';
+import { convertApiSpecSyntax, detectApiSpecSyntax } from 'insomnia/src/common/api-specs';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
@@ -26,13 +23,13 @@ import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$or
 import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
 import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useUntrackedProjects } from '~/ui/hooks/use-untracked-projects';
 
 const VALUE_YAML = 'yaml';
 const VALUE_JSON = 'json';
@@ -714,17 +711,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const { features } = useOrganizationPermissions();
   const { isEnterprisePlan } = usePlanData();
 
-  const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
-
-  useEffect(() => {
-    const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
-    if (isIdleAndUninitialized) {
-      untrackedProjectsFetcher.load();
-    }
-  }, [untrackedProjectsFetcher, organizationId]);
-
-  const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
-  const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
+  const { untrackedProjects, untrackedWorkspaces } = useUntrackedProjects();
 
   const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
@@ -755,8 +742,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const activeProject = projectLoaderData?.activeProject;
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
-  const organizationName =
-    organizations.find(org => org.id === organizationId)?.name || 'Organization';
+  const organizationName = organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
