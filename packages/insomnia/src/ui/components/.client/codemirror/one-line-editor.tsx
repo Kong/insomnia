@@ -378,6 +378,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         // moved to another control (e.g. Tab from the URL bar to Send) — until the editor holds focus
         // or the window elapses.
         const deadline = Date.now() + 500;
+        // The control that held focus when we mounted (typically the "Add" button that triggered this
+        // editor). It keeps focus until we take it, so it must not be mistaken for the user having
+        // deliberately moved elsewhere.
+        const initialActiveElement = document.activeElement;
         const ensureFocus = () => {
           const cm = codeMirror.current;
           if (!cm) {
@@ -399,6 +403,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             const role = active?.getAttribute('role');
             const userMovedToAnotherControl =
               !!active &&
+              active !== initialActiveElement &&
               (active.tagName === 'INPUT' ||
                 active.tagName === 'TEXTAREA' ||
                 active.tagName === 'SELECT' ||
