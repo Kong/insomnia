@@ -22,7 +22,11 @@ import vkBeautify from 'vkbeautify';
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
-import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import {
+  containsExternalVaultTag,
+  extractNunjucksTagFromCoords,
+  replaceVaultTagIdIfNeeded,
+} from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
@@ -34,6 +38,7 @@ import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
+import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
@@ -42,6 +47,7 @@ import { jsonPrettify } from '~/ui/utils/prettify/json';
 import { queryXPath } from '~/ui/utils/xpath/query';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
+import { hideVariableSourceTooltip, isVariableSourceTooltipInside } from './extensions/variable-source-tooltip';
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
@@ -288,6 +294,7 @@ export const CodeEditor = memo(
         [indentChars],
       );
       const { handleRender, handleGetRenderContext } = useNunjucks();
+      const openVariableSource = useOpenVariableSource();
       const isNunjucksEnabled = enableNunjucks && handleRender;
       const shouldTruncateLongLines = !!readOnly && !!truncateLongLines;
 
@@ -392,7 +399,7 @@ export const CodeEditor = memo(
             // baseline so restore can tell an unchanged model (reuse the cached
             // value + history) from an externally-updated one (use fresh defaultValue).
             value: readOnly ? undefined : codeMirror.current.getValue(),
-            valueSeed: readOnly ? undefined : defaultValue ?? '',
+            valueSeed: readOnly ? undefined : (defaultValue ?? ''),
             selections: codeMirror.current.listSelections(),
             cursor: codeMirror.current.getCursor(),
             history: codeMirror.current.getHistory(),
@@ -489,10 +496,17 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste && change.origin === 'paste' && change.update) {
-            const translatedText = onPaste(change.text.join('\n')).split('\n');
-
-            change.update(change.from, change.to, translatedText);
+          if (change.origin === 'paste' && change.update) {
+            let translatedText = change.text.join('\n');
+            if (onPaste) {
+              translatedText = onPaste(translatedText);
+            }
+            if (containsExternalVaultTag(translatedText)) {
+              translatedText = replaceVaultTagIdIfNeeded(translatedText);
+            }
+            if (translatedText !== change.text.join('\n')) {
+              change.update(change.from, change.to, translatedText.split('\n'));
+            }
           }
         });
 
@@ -567,6 +581,7 @@ export const CodeEditor = memo(
             handleGetRenderContext,
             settings.showVariableSourceAndValue,
             id,
+            openVariableSource,
           );
         }
         // Make URLs clickable
@@ -635,6 +650,7 @@ export const CodeEditor = memo(
         indentWithTabs,
         extraKeys,
         handleRender,
+        openVariableSource,
         mode,
         getAutocompleteConstants,
         getAutocompleteSnippets,
@@ -651,6 +667,10 @@ export const CodeEditor = memo(
       ]);
 
       const cleanUpEditor = useCallback(() => {
+        // Hide only a tooltip anchored inside this editor; another editor's tooltip survives.
+        if (isVariableSourceTooltipInside(codeMirror.current?.getWrapperElement() ?? null)) {
+          hideVariableSourceTooltip();
+        }
         codeMirror.current?.toTextArea();
         codeMirror.current?.closeHintDropdown();
         codeMirror.current = null;
@@ -659,6 +679,13 @@ export const CodeEditor = memo(
       useMount(() => {
         initEditor();
       });
+      useEffect(() => {
+        // If the wrapper's layout is still settling when initEditor's initial
+        // setValue runs (e.g. inside react-resizable-panels not yet stable),
+        // CodeMirror can leave the rendered line stuck. Force one once layout has painted.
+        const raf = requestAnimationFrame(() => codeMirror.current?.refresh());
+        return () => cancelAnimationFrame(raf);
+      }, []);
       useUnmount(() => {
         persistState();
         cleanUpEditor();

@@ -66,6 +66,21 @@ const postmanToNunjucksLookup = fakerTags
   .map(tag => ({ [tag]: `{% faker '${tag}' %}` }))
   .reduce((acc, obj) => ({ ...acc, ...obj }), {});
 
+// Postman allows a description to be either raw text or an object holding the text and its
+// format. Docs only ever hold text, so unwrap the object form.
+const postmanDescriptionToString = (description: unknown): string => {
+  if (typeof description === 'string') {
+    return description;
+  }
+  if (description !== null && typeof description === 'object' && 'content' in description) {
+    const { content } = description;
+    if (typeof content === 'string') {
+      return content;
+    }
+  }
+  return '';
+};
+
 export const transformPostmanToNunjucksString = (inputString?: string | null) => {
   if (!inputString) {
     return '';
@@ -79,21 +94,26 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
   return normaliseJsonPath(replaceFaker);
 };
 
-// old: {{ arr-name-with-dash }}
-// new: {{ _['arr-name-with-dash'] }}
+const VALID_IDENTIFIER = /^[\p{ID_Start}_$][\p{ID_Continue}$\u200C\u200D]*$/u;
+
+// Variable names can contain anything (dashes, spaces, dots, leading digits...), but Nunjucks only reads a
+// valid identifier as a plain lookup, so every other name has to use bracket notation.
+// old: {{ arr-name-with-dash }}, {{ my var }}, {{ 1st.name }}
+// new: {{ _['arr-name-with-dash'] }}, {{ _['my var'] }}, {{ _['1st.name'] }}
 export const normaliseJsonPath = (input?: string) => {
   if (!input) {
     return '';
   }
-  if (!input.includes('-')) {
+  if (!input.includes('{{')) {
     return input;
   }
-  // Use a regular expression to find and replace the pattern
-  return input.replace(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
-    // Replace hyphens with underscores within the match
-    const replaced = forceBracketNotation('_', match);
-    // Return the replaced pattern within the curly braces
-    return `{{${replaced}}}`;
+  return input.replace(/{{\s*([^{}]*?)\s*}}/g, (match, name: string) => {
+    // If the name is empty or a valid identifier, leave it as is.
+    if (!name || VALID_IDENTIFIER.test(name)) {
+      return match;
+    }
+    // Otherwise, force bracket notation for the name.
+    return `{{${forceBracketNotation('_', name)}}}`;
   });
 };
 
@@ -141,7 +161,6 @@ export class ImportPostman {
   };
 
   importItems = (items: PostmanCollection['item'], parentId = '__WORKSPACE_ID__'): ImportRequest[] => {
-    // @ts-expect-error this is because there are devergent behaviors for how the function treats this collection.  This is handled appropriately in the function itself in different branches.
     return items.reduce((accumulator: ImportRequest[], item: Item | Folder) => {
       if (Object.prototype.hasOwnProperty.call(item, 'request')) {
         return [...accumulator, this.importRequestItem(item as Item, parentId)];
@@ -240,7 +259,7 @@ export class ImportPostman {
       _id: `__REQ_${requestCount++}__`,
       _type: 'request',
       name,
-      description: (request.description as string) || '',
+      description: postmanDescriptionToString(request.description),
       url: transformPostmanToNunjucksString(this.importUrl(request.url)),
       parameters: parameters,
       pathParameters,
@@ -249,7 +268,7 @@ export class ImportPostman {
         name: transformPostmanToNunjucksString(key),
         value: transformPostmanToNunjucksString(value),
         ...(disabled !== undefined ? { disabled } : {}),
-        ...(description !== undefined ? { description } : {}),
+        ...(description !== undefined ? { description: postmanDescriptionToString(description) } : {}),
       })),
       body,
       authentication,
@@ -294,7 +313,7 @@ export class ImportPostman {
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
-      description: description || '',
+      description: postmanDescriptionToString(description),
       preRequestScript,
       afterResponseScript,
       authentication,
@@ -320,7 +339,7 @@ export class ImportPostman {
       _id: `__GRP_${requestGroupCount++}__`,
       _type: 'request_group',
       name,
-      description: typeof description === 'string' ? description : '',
+      description: postmanDescriptionToString(description),
       authentication,
       preRequestScript,
       afterResponseScript,

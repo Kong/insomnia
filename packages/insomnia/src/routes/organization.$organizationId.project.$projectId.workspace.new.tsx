@@ -88,17 +88,21 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       if (mockServerType === 'self-hosted') {
         const mockServerUrl = workspaceData.mockServerUrl;
-        invariant(typeof mockServerUrl === 'string' && mockServerUrl.trim() !== '', 'Mock Server URL is required');
+        invariant(
+          typeof mockServerUrl === 'string' && mockServerUrl.trim().replace(/\/+$/, '') !== '',
+          'Mock Server URL is required',
+        );
       }
     }
 
     const flushId = await database.bufferChanges();
 
-    const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+    const workspaceName = name || (scope === 'collection' ? 'My API Collection' : 'my-spec.yaml');
 
     const workspace = await services.workspace.create({
       name: workspaceName,
-      scope,
+      // There will be no design scope workspaces in the future, so we are mapping design to collection with apiSpec for now
+      scope: scope === 'design' ? 'collection' : scope,
       parentId: projectId,
     });
 
@@ -314,7 +318,7 @@ async function createMockServer(
       mockServerPatch.useInsomniaCloud = true;
     } else {
       mockServerPatch.useInsomniaCloud = false;
-      mockServerPatch.url = workspaceData.mockServerUrl!;
+      mockServerPatch.url = workspaceData.mockServerUrl!.trim().replace(/\/+$/, '');
     }
 
     await services.environment.getOrCreateForParentId(workspace._id);

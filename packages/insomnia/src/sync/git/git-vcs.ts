@@ -467,13 +467,8 @@ export class GitVCS {
       head: cleanedHead, // Content from HEAD (last commit)
       workdir: blobs[2], // Content from working directory
       stage: cleanedStage, // Content from staging area (index)
-      // Untouched blobs, before schema migration and property-order normalization.
-      // The normalized copies above are only safe to render, not to reason about.
-      raw: {
-        head: blobs[1],
-        workdir: blobs[2],
-        stage: blobs[3],
-      },
+      rawHead: blobs[1], // Content from HEAD exactly as committed, before migration/normalization
+      rawStage: blobs[3], // Content from staging area exactly as staged, before migration/normalization
       oids: {
         head: blobs[4],
         workdir: blobs[5],
@@ -989,6 +984,16 @@ export class GitVCS {
     );
 
     return enhancedStatus;
+  }
+
+  async readFileAtHead(filepath: string): Promise<string | null> {
+    try {
+      const oid = await git.resolveRef({ ...this._baseOpts, ref: 'HEAD' });
+      const { blob } = await git.readBlob({ ...this._baseOpts, oid, filepath });
+      return Buffer.from(blob).toString('utf8');
+    } catch {
+      return null;
+    }
   }
 
   classifyStatus(head: git.StageStatus, workdir: git.WorkdirStatus, stage: git.StageStatus): FileStatus {

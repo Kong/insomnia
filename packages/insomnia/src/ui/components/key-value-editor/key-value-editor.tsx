@@ -265,25 +265,6 @@ export const KeyValueEditor: FC<Props> = ({
     },
   });
 
-  /* When the user presses a letter key and then immediately presses the space bar.
-  The keydown event for the space key was stopped from propagating during the capture phase by the ListBox component
-  That is why the inner editor fails to respond to the immediate space press behavior. 
-  Here we add a wrapper to the outer ListBox and add a wrapper to the inner editor and listen to the keydown event in both wrapper
-  When the user presses the space key, we change the event.key property with non-breakable space in the outer wrapper
-  and change it back in the inner wrapper.
-  */
-  const onKeyDownOuter = useCallback<React.KeyboardEventHandler>(event => {
-    if (event.key === ' ') {
-      event.key = '\u00A0';
-    }
-  }, []);
-
-  const onKeyDownInner = useCallback<React.KeyboardEventHandler>(event => {
-    if (event.key === '\u00A0') {
-      event.key = ' ';
-    }
-  }, []);
-
   return (
     <Fragment>
       <Toolbar className="content-box sticky top-0 z-10 flex h-(--line-height-sm) shrink-0 border-b border-(--hl-md) bg-(--color-bg) text-(--font-size-sm)">
@@ -330,6 +311,7 @@ export const KeyValueEditor: FC<Props> = ({
         <ListBox
           aria-label="Key-value pairs readonly"
           selectionMode="none"
+          disallowTypeAhead
           dependencies={[showDescription]}
           className="relative flex w-full flex-1 flex-col overflow-y-auto pt-1"
           items={initialReadOnlyItems}
@@ -433,7 +415,6 @@ export const KeyValueEditor: FC<Props> = ({
         </ListBox>
       )}
       <div
-        onKeyDownCapture={onKeyDownOuter}
         // Clicking anywhere on the blank row drops the cursor into its name editor so the
         // user can immediately start typing, unless they clicked directly on an editor or
         // control.
@@ -451,6 +432,7 @@ export const KeyValueEditor: FC<Props> = ({
         <ListBox
           aria-label="Key-value pairs"
           selectionMode="none"
+          disallowTypeAhead
           className="relative flex w-full flex-1 flex-col overflow-y-auto pt-1"
           dragAndDropHooks={dragAndDropHooks}
           dependencies={[upsertPair, showDescription, blankId]}
@@ -550,7 +532,7 @@ export const KeyValueEditor: FC<Props> = ({
                 >
                   <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
                 </div>
-                <div onKeyDownCapture={onKeyDownInner}>
+                <div>
                   <OneLineEditor
                     ref={isBlank ? blankNameEditorRef : undefined}
                     id={'key-value-editor__name' + pair.id}
@@ -571,9 +553,9 @@ export const KeyValueEditor: FC<Props> = ({
                     }}
                   />
                 </div>
-                <div onKeyDownCapture={onKeyDownInner}>{valueEditor}</div>
+                <div>{valueEditor}</div>
                 {showDescription && (
-                  <div onKeyDownCapture={onKeyDownInner}>
+                  <div>
                     <OneLineEditor
                       id={'key-value-editor__description' + pair.id}
                       historyKey={'key-value-editor__description' + pair.id}

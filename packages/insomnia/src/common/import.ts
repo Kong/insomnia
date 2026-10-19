@@ -568,11 +568,11 @@ export const importResourcesToWorkspace = async ({
           parentId: ResourceIdMap.get(resource.parentId),
         };
         if (models.grpcRequest.isGrpcRequest(resource)) {
-          await services.grpcRequest.create(objectToWrite);
+          await services.grpcRequest.create(objectToWrite as Partial<GrpcRequest>);
         } else if (models.unitTest.isUnitTest(resource)) {
-          await services.unitTest.create(objectToWrite);
+          await services.unitTest.create(objectToWrite as Partial<UnitTest>);
         } else if (isRequest(resource)) {
-          await services.request.create(objectToWrite);
+          await services.request.create(objectToWrite as Partial<Request>);
         } else {
           await db.docCreate(model.type, objectToWrite);
         }
@@ -611,7 +611,7 @@ export const importResourcesToNewWorkspace = async ({
   if (apiSpecResource || isApiSpecImport(resourceCacheItem.importer)) {
     newWorkspace = await services.workspace.create({
       name: workspaceToImport?.name,
-      scope: 'design',
+      scope: workspaceToImport?.scope ?? 'collection',
       parentId: projectId,
     });
 
@@ -626,7 +626,7 @@ export const importResourcesToNewWorkspace = async ({
     });
   } else {
     newWorkspace = await services.workspace.create({
-      name: workspaceToImport?.name || 'Imported Collection',
+      name: workspaceToImport?.name || 'Imported API Collection',
       scope: workspaceToImport?.scope || 'collection',
       parentId: projectId,
     });
@@ -662,11 +662,11 @@ export const importResourcesToNewWorkspace = async ({
         parentId: newParentId,
       };
       if (models.grpcRequest.isGrpcRequest(resource)) {
-        await services.grpcRequest.create(objectToWrite);
+        await services.grpcRequest.create(objectToWrite as Partial<GrpcRequest>);
       } else if (models.unitTest.isUnitTest(resource)) {
-        await services.unitTest.create(objectToWrite);
+        await services.unitTest.create(objectToWrite as Partial<UnitTest>);
       } else if (isRequest(resource)) {
-        await services.request.create(objectToWrite);
+        await services.request.create(objectToWrite as Partial<Request>);
       } else {
         await db.docCreate(model.type, objectToWrite);
       }

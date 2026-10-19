@@ -45,7 +45,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
     it('maps v5 schema types to workspace scopes', () => {
       expect(insomniaSchemaTypeToScope('collection.insomnia.rest/5.0')).toBe('collection');
       expect(insomniaSchemaTypeToScope('environment.insomnia.rest/5.0')).toBe('environment');
-      expect(insomniaSchemaTypeToScope('spec.insomnia.rest/5.0')).toBe('design');
+      expect(insomniaSchemaTypeToScope('spec.insomnia.rest/5.0')).toBe('collection');
       expect(insomniaSchemaTypeToScope('mock.insomnia.rest/5.0')).toBe('mock-server');
       expect(insomniaSchemaTypeToScope('mcpClient.insomnia/5.0')).toBe('mcp');
     });
@@ -201,6 +201,51 @@ collection: []
       });
     });
 
+    // Check exported key order for workspaces
+    it.each(['collection', 'design', 'environment'] as const)(
+      'exports environments with a stable key order for %s scope',
+      async scope => {
+        const workspace = await services.workspace.create({
+          _id: `wrk_env_order_${scope}`,
+          name: 'Env Order Workspace',
+          parentId: 'proj_test',
+          scope,
+        });
+
+        const baseEnvironment = await services.environment.create({
+          _id: `env_base_${scope}`,
+          name: 'Base Environment',
+          parentId: workspace._id,
+          data: { api_url: 'https://api.example.com' },
+          color: '#ff0000',
+        });
+        await services.environment.create({
+          _id: `env_sub_${scope}`,
+          name: 'Sub Environment',
+          parentId: baseEnvironment._id,
+          data: { api_url: 'https://sub.example.com' },
+          color: '#00ff00',
+        });
+
+        if (scope === 'design') {
+          await services.apiSpec.getOrCreateForParentId(workspace._id, {
+            _id: 'spec_env_order',
+            contents: '{"openapi": "3.0.0"}',
+            contentType: 'json',
+          });
+        }
+
+        const result = await getInsomniaV5DataExport({
+          workspaceId: workspace._id,
+          includePrivateEnvironments: false,
+        });
+
+        const { environments } = YAML.parse(result);
+        expect(Object.keys(environments)).toEqual(['name', 'meta', 'data', 'color', 'subEnvironments']);
+        expect(Object.keys(environments.subEnvironments[0])).toEqual(['name', 'meta', 'data', 'color']);
+      },
+    );
+
     it('handles empty workspace gracefully', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_empty_test',
@@ -325,6 +370,57 @@ collection: []
       expect(parsed.server.url).toBe('http://localhost:3000');
     });
 
+    // Check exported key order for mock server and routes
+    it('exports mock server and mock routes with a stable key order', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_mock_order',
+        name: 'Mock Order Workspace',
+        parentId: 'proj_test',
+        scope: 'mock-server',
+      });
+
+      const server = await services.mockServer.create({
+        _id: 'mock_order',
+        name: 'Order Server',
+        parentId: workspace._id,
+        url: 'http://localhost:3000',
+        useInsomniaCloud: false,
+      });
+
+      await services.mockRoute.create({
+        _id: 'route_order',
+        name: '/ping',
+        parentId: server._id,
+        body: '{"ok":true}',
+        headers: [{ name: 'X-Mock', value: '1', description: 'mock header', disabled: false }],
+        method: 'GET',
+        mimeType: 'application/json',
+        statusCode: 201,
+        statusText: 'Created',
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(Object.keys(parsed)).toEqual(['type', 'schema_version', 'name', 'meta', 'server', 'routes']);
+      expect(Object.keys(parsed.server)).toEqual(['meta', 'url', 'useInsomniaCloud']);
+      expect(parsed.routes).toHaveLength(1);
+      expect(Object.keys(parsed.routes[0])).toEqual([
+        'name',
+        'meta',
+        'body',
+        'headers',
+        'method',
+        'mimeType',
+        'statusCode',
+        'statusText',
+      ]);
+      expect(Object.keys(parsed.routes[0].headers[0])).toEqual(['name', 'value', 'description', 'disabled']);
+    });
+
     it('handles mcp client scope', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_mcp',
@@ -393,6 +489,287 @@ collection: []
       expect(parsed.mcpRequest.transportType).toBe('stdio');
       expect(parsed.mcpRequest.env).toHaveLength(2);
       expect(parsed.mcpRequest.roots).toHaveLength(1);
+    });
+
+    it('exports mcp request with a stable key order', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_mcp_order',
+        name: 'MCP Order Workspace',
+        parentId: 'proj_test',
+        scope: 'mcp',
+      });
+
+      await services.environment.create({
+        _id: 'env_mcp_order',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.mcpRequest.create({
+        _id: 'mcp-request_order',
+        name: 'Order MCP client',
+        parentId: workspace._id,
+        url: 'npx mcp-client stdio',
+        transportType: 'stdio',
+        headers: [{ name: 'X-MCP', value: '1' }],
+        authentication: { type: 'basic', username: 'user', password: 'pass' },
+        env: [{ id: 'var1', name: 'foo', value: 'bar', type: EnvironmentKvPairDataType.STRING, enabled: true }],
+        roots: [{ uri: 'file:///workspace' }],
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const { mcpRequest } = YAML.parse(result);
+      expect(Object.keys(mcpRequest)).toEqual([
+        'name',
+        'url',
+        'transportType',
+        'headers',
+        'authentication',
+        'meta',
+        'env',
+        'roots',
+      ]);
+      expect(Object.keys(mcpRequest.env[0])).toEqual(['id', 'name', 'value', 'type', 'enabled']);
+      expect(Object.keys(mcpRequest.roots[0])).toEqual(['uri']);
+    });
+
+    it('exports collection items and cookie jar with a stable key order', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_items_order',
+        name: 'Items Order Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_items_order',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const auth = { type: 'basic', username: 'user', password: 'pass' } as const;
+      const headers = [{ name: 'X-Order', value: '1', description: 'header', disabled: false }];
+      const parameters = [
+        { name: 'q', value: '1', description: 'param', disabled: false, type: 'text', multiline: false },
+      ];
+      const pathParameters = [{ name: 'id', value: '1' }];
+
+      const folder = await services.requestGroup.create({
+        _id: 'fld_order',
+        name: 'folder-order',
+        parentId: workspace._id,
+        authentication: auth,
+        environment: { foo: 'bar' },
+        environmentPropertyOrder: { '&': ['foo'] },
+        headers,
+        preRequestScript: 'pre',
+        afterResponseScript: 'after',
+        metaSortKey: 1,
+      });
+      await services.request.create({
+        _id: 'req_order',
+        name: 'request-order',
+        parentId: folder._id,
+        url: 'https://example.com',
+        method: 'POST',
+        body: {
+          mimeType: 'multipart/form-data',
+          text: 'text',
+          fileName: 'file.txt',
+          params: [
+            {
+              name: 'p',
+              value: 'v',
+              description: 'body param',
+              disabled: false,
+              multiline: false,
+              fileName: 'f.txt',
+              type: 'file',
+            },
+          ],
+        },
+        parameters,
+        headers,
+        authentication: auth,
+        preRequestScript: 'pre',
+        afterResponseScript: 'after',
+        pathParameters,
+        metaSortKey: 2,
+      });
+      await services.grpcRequest.create({
+        _id: 'greq_order',
+        name: 'grpc-order',
+        parentId: workspace._id,
+        url: 'grpcb.in:9000',
+        protoFileId: 'pf_order',
+        protoMethodName: '/hello.HelloService/SayHello',
+        body: { text: '{}' },
+        metadata: [{ name: 'X-Order', value: '1' }],
+        reflectionApi: { enabled: true, url: 'http://reflection', apiKey: 'key', module: 'module' },
+        metaSortKey: 3,
+      });
+      await services.webSocketRequest.create({
+        _id: 'ws-req_order',
+        name: 'websocket-order',
+        parentId: workspace._id,
+        url: 'wss://example.com',
+        authentication: auth,
+        headers,
+        parameters,
+        pathParameters,
+        metaSortKey: 4,
+      });
+      await services.socketIORequest.create({
+        _id: 'socketio-req_order',
+        name: 'socketio-order',
+        parentId: workspace._id,
+        url: 'https://example.com',
+        settingPath: '/socket',
+        authentication: auth,
+        headers,
+        parameters,
+        pathParameters,
+        eventListeners: [{ id: 'listener1', eventName: 'join', desc: 'on join', isOpen: true }],
+        metaSortKey: 5,
+      });
+
+      const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+      await services.cookieJar.update(cookieJar, {
+        cookies: [
+          {
+            id: 'cookie1',
+            key: 'k',
+            value: 'v',
+            expires: null,
+            domain: 'example.com',
+            path: '/',
+            secure: true,
+            httpOnly: true,
+          },
+        ],
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      const findItem = (name: string) => parsed.collection.find((item: { name: string }) => item.name === name);
+
+      const exportedFolder = findItem('folder-order');
+      expect(Object.keys(exportedFolder)).toEqual([
+        'name',
+        'meta',
+        'children',
+        'scripts',
+        'authentication',
+        'environment',
+        'environmentPropertyOrder',
+        'headers',
+      ]);
+      expect(Object.keys(exportedFolder.scripts)).toEqual(['preRequest', 'afterResponse']);
+
+      const exportedRequest = exportedFolder.children[0];
+      expect(Object.keys(exportedRequest)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'method',
+        'body',
+        'parameters',
+        'headers',
+        'authentication',
+        'scripts',
+        'settings',
+        'pathParameters',
+      ]);
+      expect(Object.keys(exportedRequest.body)).toEqual(['mimeType', 'text', 'fileName', 'params']);
+      expect(Object.keys(exportedRequest.body.params[0])).toEqual([
+        'name',
+        'value',
+        'description',
+        'disabled',
+        'multiline',
+        'fileName',
+        'type',
+      ]);
+      expect(Object.keys(exportedRequest.parameters[0])).toEqual([
+        'name',
+        'value',
+        'description',
+        'disabled',
+        'type',
+        'multiline',
+      ]);
+      expect(Object.keys(exportedRequest.settings)).toEqual([
+        'renderRequestBody',
+        'encodeUrl',
+        'followRedirects',
+        'cookies',
+        'rebuildPath',
+      ]);
+      expect(Object.keys(exportedRequest.settings.cookies)).toEqual(['send', 'store']);
+
+      const exportedGrpc = findItem('grpc-order');
+      expect(Object.keys(exportedGrpc)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'body',
+        'metadata',
+        'protoFileId',
+        'protoMethodName',
+        'reflectionApi',
+      ]);
+      expect(Object.keys(exportedGrpc.reflectionApi)).toEqual(['enabled', 'url', 'apiKey', 'module']);
+
+      const exportedWebSocket = findItem('websocket-order');
+      expect(Object.keys(exportedWebSocket)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'settings',
+        'authentication',
+        'headers',
+        'parameters',
+        'pathParameters',
+      ]);
+      expect(Object.keys(exportedWebSocket.settings)).toEqual(['encodeUrl', 'cookies', 'followRedirects']);
+      expect(Object.keys(exportedWebSocket.settings.cookies)).toEqual(['store', 'send']);
+
+      const exportedSocketIO = findItem('socketio-order');
+      expect(Object.keys(exportedSocketIO)).toEqual([
+        'url',
+        'name',
+        'meta',
+        'settings',
+        'authentication',
+        'headers',
+        'parameters',
+        'pathParameters',
+        'eventListeners',
+      ]);
+      expect(Object.keys(exportedSocketIO.settings)).toEqual(['encodeUrl', 'cookies', 'path']);
+      expect(Object.keys(exportedSocketIO.settings.cookies)).toEqual(['store', 'send']);
+      expect(Object.keys(exportedSocketIO.eventListeners[0])).toEqual(['id', 'eventName', 'desc', 'isOpen']);
+
+      expect(Object.keys(parsed.cookieJar)).toEqual(['name', 'meta', 'cookies']);
+      expect(Object.keys(parsed.cookieJar.cookies[0])).toEqual([
+        'id',
+        'key',
+        'value',
+        'domain',
+        'path',
+        'secure',
+        'httpOnly',
+      ]);
     });
 
     it('returns empty string for unknown workspace', async () => {

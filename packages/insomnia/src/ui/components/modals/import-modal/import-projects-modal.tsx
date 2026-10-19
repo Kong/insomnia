@@ -9,13 +9,13 @@ import * as reactUse from 'react-use';
 import type { ScanResult } from '~/common/import';
 import { importScannedResources } from '~/routes/import.resources';
 import { scanImportResources } from '~/routes/import.scan';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { createProject } from '~/routes/organization.$organizationId.project.new';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Modal, type ModalHandle } from '~/ui/components/base/modal';
 import { ModalHeader } from '~/ui/components/base/modal-header';
 import { Icon } from '~/ui/components/icon';
 import { Button } from '~/ui/components/themed-button';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { showModal } from '..';
@@ -503,9 +503,9 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
     modalRef.current?.show();
   }, []);
 
-  const organizationData = useOrganizationLoaderData();
+  const organizations = useOrganizations();
   const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.name || 'Organization';
+    organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [projectItems, setProjectItems] = useState<ProjectImportItem[]>([]);
   const [processingUIStatus, setProcessingUiStatus] = useState<'loading' | 'importing' | 'error' | 'complete'>(

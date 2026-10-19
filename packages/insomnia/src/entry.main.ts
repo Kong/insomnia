@@ -123,7 +123,9 @@ app.on('ready', async () => {
   disableSpellcheckerDownload();
 
   // Default-deny web-API permissions; only allow-listed ones are granted (see permission-policy.ts).
-  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => callback(isPermissionAllowed(permission)));
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) =>
+    callback(isPermissionAllowed(permission)),
+  );
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(permission));
 
   if (isDevelopment()) {
@@ -345,6 +347,7 @@ const _launchApp = async () => {
 async function _createModelInstances() {
   await services.stats.get();
   await services.settings.getOrCreate();
+
   try {
     const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);

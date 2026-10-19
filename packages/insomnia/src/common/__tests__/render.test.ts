@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
 import type { Environment, Workspace } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
@@ -9,6 +9,37 @@ import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
+
+// Minimal base context for value-only buildRenderContext calls; source
+// attribution is only recorded for contexts built through getRenderContext.
+const stubBaseContext = {
+  getMeta: () => ({}),
+  getPurpose: () => {},
+  getExtraInfo: () => {},
+  getEnvironmentId: () => {},
+  getGlobalEnvironmentId: () => {},
+  getProjectId: () => {},
+};
+// The context returned by buildRenderContext carries these getters plus the
+// source maps accessor.
+const stubContextGetters = {
+  getMeta: expect.any(Function),
+  getPurpose: expect.any(Function),
+  getExtraInfo: expect.any(Function),
+  getEnvironmentId: expect.any(Function),
+  getGlobalEnvironmentId: expect.any(Function),
+  getProjectId: expect.any(Function),
+};
+const makeBaseContext = (
+  purpose: 'preview' | 'send' | 'no-render' | 'script',
+  hideSecretValuesInPreviewAndConsole = true,
+  forceReveal?: boolean,
+) =>
+  ({
+    getMeta: () => ({}),
+    getPurpose: () => purpose,
+    getSettings: () => ({ dataFolders: [], hideSecretValuesInPreviewAndConsole, forceReveal }),
+  }) as any;
 
 describe('render tests', () => {
   beforeEach(async () => {
@@ -61,8 +92,14 @@ describe('render tests', () => {
         })
         .build();
 
-      const context = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
+      const context = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors: [],
+        rootEnvironment,
+      });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         value: 'ThisIsATopSecretValue',
         hashed: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
         replaced: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
@@ -76,6 +113,273 @@ describe('render tests', () => {
   });
 
   describe('buildRenderContext()', () => {
+    it('preserves legacy vault masking for no-render', async () => {
+      const rootEnvironment = envBuilder
+        .data({ [models.environment.vaultEnvironmentPath]: { token: 'encrypted-value' } })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'encrypted-value',
+            type: EnvironmentKvPairDataType.SECRET,
+            enabled: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('no-render'),
+      });
+
+      expect(context.vault.token).toBe(models.environment.vaultEnvironmentMaskValue);
+    });
+
+    it('masks confidential values in preview while preserving JSON shape and derived variables', async () => {
+      const rootEnvironment = envBuilder
+        .data({
+          token: 'top-secret',
+          config: { token: 'nested-secret', enabled: true, retries: 3, empty: null, values: ['secret'] },
+          authorization: 'Bearer {{ token }}',
+        })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_config',
+            name: 'config',
+            value: '{}',
+            type: EnvironmentKvPairDataType.JSON,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe(models.environment.vaultEnvironmentMaskValue);
+      expect(context.config).toEqual({
+        token: models.environment.vaultEnvironmentMaskValue,
+        enabled: models.environment.vaultEnvironmentMaskValue,
+        retries: models.environment.vaultEnvironmentMaskValue,
+        empty: models.environment.vaultEnvironmentMaskValue,
+        values: [models.environment.vaultEnvironmentMaskValue],
+      });
+      expect(context.authorization).toBe(`Bearer ${models.environment.vaultEnvironmentMaskValue}`);
+    });
+
+    it('uses the last enabled KV row and higher-priority public layers to clear confidentiality', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'root-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_confidential',
+            name: 'token',
+            value: 'root-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_public',
+            name: 'token',
+            value: 'root-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: false,
+          },
+        ])
+        .build();
+      const subEnvironment = envBuilder.data({ token: 'sub-public' }).build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        subEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe('sub-public');
+    });
+
+    it('masks a higher-priority confidential value that overrides a public value', async () => {
+      const rootEnvironment = envBuilder.data({ token: 'root-public' }).build();
+      const subEnvironment = envBuilder
+        .data({ token: 'sub-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_sub',
+            name: 'token',
+            value: 'sub-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        subEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe(models.environment.vaultEnvironmentMaskValue);
+    });
+
+    it('reveals confidential values in preview when the local setting is disabled', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview', false),
+      });
+
+      expect(context.token).toBe('top-secret');
+    });
+
+    it('ignores disabled confidential rows', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'visible' })
+        .kvPairData([
+          {
+            id: 'envPair_disabled',
+            name: 'token',
+            value: 'visible',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: false,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(context.token).toBe('visible');
+    });
+
+    it('script purpose reveals confidential values', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('script'),
+      });
+
+      expect(context.token).toBe('top-secret');
+    });
+
+    it('forceReveal in preview bypasses hideSecretValuesInPreviewAndConsole', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const context = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview', true, true),
+      });
+
+      expect(context.token).toBe('top-secret');
+    });
+
+    it('does not mutate vault data object when preview masking runs', async () => {
+      const rootEnvironment = envBuilder
+        .data({ [models.environment.vaultEnvironmentPath]: { token: 'encrypted-value' } })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'encrypted-value',
+            type: EnvironmentKvPairDataType.SECRET,
+            enabled: true,
+          },
+        ])
+        .build();
+
+      await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+
+      expect(rootEnvironment.data[models.environment.vaultEnvironmentPath].token).toBe('encrypted-value');
+    });
+
+    it('does not mutate environment data when preview masking precedes a send render', async () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'top-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_token',
+            name: 'token',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const previewContext = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('preview'),
+      });
+      const sendContext = await renderUtils.buildRenderContext({
+        rootEnvironment,
+        baseContext: makeBaseContext('send'),
+      });
+
+      expect(previewContext.token).toBe(models.environment.vaultEnvironmentMaskValue);
+      expect(sendContext.token).toBe('top-secret');
+      expect(rootEnvironment.data.token).toBe('top-secret');
+      expect(rootEnvironment.kvPairData?.[0].value).toBe('top-secret');
+    });
+
     it('cascades properly', async () => {
       const ancestors = [
         reqGroupBuilder.environment({ foo: 'parent', ancestor: true }).build(),
@@ -85,9 +389,16 @@ describe('render tests', () => {
       const rootEnvironment = envBuilder.data({ foo: 'root', root: true }).build();
       const subEnvironment = envBuilder.data({ foo: 'sub', sub: true }).build();
 
-      const context = await renderUtils.buildRenderContext({ ancestors, rootEnvironment, subEnvironment });
+      const context = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors,
+        rootEnvironment,
+        subEnvironment,
+      });
 
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         foo: 'parent',
         ancestor: true,
         root: true,
@@ -95,12 +406,33 @@ describe('render tests', () => {
       });
     });
 
+    it('does not mutate the ancestors array passed by the caller', async () => {
+      const ancestors = [
+        reqGroupBuilder.environment({ foo: 'parent', ancestor: true }).build(),
+        reqGroupBuilder.environment({ foo: 'grandparent', ancestor: true }).build(),
+      ];
+      const originalOrder = [...ancestors];
+
+      // Calling buildRenderContext twice with the same array (e.g. a prefill
+      // pass followed by the real render pass) must yield the same result
+      // both times. A previous bug reversed `ancestors` in place, so the
+      // second call would see an already-reversed array and flip precedence.
+      const firstContext = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
+      const secondContext = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
+
+      expect(ancestors).toEqual(originalOrder);
+      expect(firstContext.foo).toBe('parent');
+      expect(secondContext.foo).toBe('parent');
+    });
+
     it('rendered recursive should not infinite loop', async () => {
       const ancestors = [reqGroupBuilder.environment({ recursive: '{{ recursive }}/hello' }).build()];
 
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         recursive: '{{ recursive }}/hello/hello/hello/hello/hello/hello/hello/hello',
       });
     });
@@ -132,8 +464,15 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors, rootEnvironment: root, subEnvironment: sub });
+      const context = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors,
+        rootEnvironment: root,
+        subEnvironment: sub,
+      });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         proto: 'https',
         domain: 'folder.com',
         port: 7000,
@@ -153,8 +492,15 @@ describe('render tests', () => {
           .build(),
       ];
 
-      const context = await renderUtils.buildRenderContext({ ancestors, rootEnvironment: root, subEnvironment: sub });
+      const context = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors,
+        rootEnvironment: root,
+        subEnvironment: sub,
+      });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         url: 'insomnia.rest/sub/folder',
         name: 'folder',
       });
@@ -172,8 +518,10 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         d: '/d',
         c: '/c/d',
         b: '/b/c/d',
@@ -191,8 +539,10 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         sibling: 'sibling',
         test: 'sibling/hello',
       });
@@ -213,8 +563,10 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         grandparent: 'grandparent',
         test: 'grandparent parent',
       });
@@ -235,8 +587,10 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         base_url: 'https://insomnia.rest/resource',
       });
     });
@@ -265,7 +619,7 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(await renderUtils.render('{{ urls.admin }}/foo', context)).toBe('https://parent.com/admin/foo');
       expect(await renderUtils.render('{{ urls.test }}/foo', context)).toBe('https://parent.com/test/foo');
     });
@@ -285,8 +639,10 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         parent: 'parent',
         test: 'parent grandparent',
       });
@@ -309,8 +665,10 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         users: [
           {
             name: 'Foo',
@@ -344,9 +702,20 @@ describe('render tests', () => {
       const rootEnvironment = envBuilder.name('Parent').data(obj).dataPropertyOrder(order).build();
       const subEnvironment = envBuilder.name('Sub').data(obj).dataPropertyOrder(order).build();
 
-      const groupCtx = await renderUtils.buildRenderContext({ ancestors: [requestGroup] });
-      const rootCtx = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
-      const subCtx = await renderUtils.buildRenderContext({ ancestors: [], subEnvironment });
+      const groupCtx = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors: [requestGroup],
+      });
+      const rootCtx = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors: [],
+        rootEnvironment,
+      });
+      const subCtx = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors: [],
+        subEnvironment,
+      });
 
       const expected = {
         users: [
@@ -360,9 +729,10 @@ describe('render tests', () => {
           },
         ],
       };
-      expect(groupCtx).toEqual(expected);
-      expect(rootCtx).toEqual(expected);
-      expect(subCtx).toEqual(expected);
+      const expectedContext = { ...stubContextGetters, ...expected, getKeysContext: expect.any(Function) };
+      expect(groupCtx).toEqual(expectedContext);
+      expect(rootCtx).toEqual(expectedContext);
+      expect(subCtx).toEqual(expectedContext);
     });
 
     it('merges nested properties when rendering', async () => {
@@ -390,8 +760,10 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const context = await renderUtils.buildRenderContext({ ancestors });
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext, ancestors });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         parent: 'parent',
         test: 'parent grandparent',
         nested: {
@@ -434,8 +806,15 @@ describe('render tests', () => {
           base_url: 'ignore this',
         })
         .build();
-      const context = await renderUtils.buildRenderContext({ ancestors, rootEnvironment, subEnvironment });
+      const context = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors,
+        rootEnvironment,
+        subEnvironment,
+      });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         base_url: 'https://insomnia.rest',
         url: 'https://insomnia.rest/resource',
         ancestor: true,
@@ -457,8 +836,14 @@ describe('render tests', () => {
           '&': ['value', 'hashed', 'replaced', 'consume'],
         })
         .build();
-      const context = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
+      const context = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors: [],
+        rootEnvironment,
+      });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         value: 'ThisIsATopSecretValue',
         hashed: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
         replaced: 'cat',
@@ -477,8 +862,14 @@ describe('render tests', () => {
           secret: 'ThisIsATopSecretValue',
         })
         .build();
-      const context = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
+      const context = await renderUtils.buildRenderContext({
+        baseContext: stubBaseContext,
+        ancestors: [],
+        rootEnvironment,
+      });
       expect(context).toEqual({
+        ...stubContextGetters,
+        getKeysContext: expect.any(Function),
         hash_input: '123456789012345ThisIsATopSecretValue',
         hash_input_expected: '123456789012345ThisIsATopSecretValue',
         orderId: 123_456_789_012_345,
@@ -491,8 +882,8 @@ describe('render tests', () => {
     });
 
     it('works with minimal parameters', async () => {
-      const context = await renderUtils.buildRenderContext({});
-      expect(context).toEqual({});
+      const context = await renderUtils.buildRenderContext({ baseContext: stubBaseContext });
+      expect(context).toEqual({ ...stubContextGetters, getKeysContext: expect.any(Function) });
     });
   });
 
@@ -734,6 +1125,95 @@ describe('render tests', () => {
           },
         }),
       );
+    });
+  });
+
+  describe('getRenderContext()', () => {
+    it('keys source from the closest folder when nested folders define the same variable', async () => {
+      const workspace = { _id: 'wrk_render_source_test', type: models.workspace.type, parentId: 'proj_test' };
+      const outerFolder = reqGroupBuilder.environment({ foo: 'outer' }).name('outer').build();
+      const innerFolder = reqGroupBuilder.environment({ foo: 'inner' }).name('inner').build();
+      const request = { _id: 'req_render_source_test', type: models.request.type, parentId: innerFolder._id };
+      // withAncestors order: the request first, then ancestors outwards
+      const ancestors = [request, innerFolder, outerFolder, workspace];
+
+      const context = await renderUtils.getRenderContext({
+        request: request as unknown as Request,
+        environment: envBuilder.data({}).build(),
+        baseEnvironment: envBuilder.data({}).build(),
+        ancestors: ancestors as unknown as RenderContextAncestor[],
+        purpose: 'send',
+      });
+
+      const { keyContext, keyContextMeta } = context.getKeysContext();
+      // The value is rendered from the closest folder; the source label must match it
+      expect(keyContext['_.foo']).toBe('Folder Environment : inner');
+      expect(keyContextMeta?.['_.foo']?.label).toBe('Folder Environment : inner');
+    });
+
+    it('registers vault secrets from a private sub environment under the vault namespace', async () => {
+      const workspace = { _id: 'wrk_render_source_test', type: models.workspace.type, parentId: 'proj_test' };
+      // Vault secrets can only be defined in private sub environments; the base
+      // environment can never hold them.
+      const baseEnvironment = envBuilder._id('env_base_render_source_test').name('base').data({}).build();
+      const subEnvironment = envBuilder
+        ._id('env_sub_render_source_test')
+        .name('sub')
+        .data({ [models.environment.vaultEnvironmentPath]: { sealedVar: 'sealed' } })
+        .build();
+      const request = { _id: 'req_render_source_test', type: models.request.type, parentId: workspace._id };
+      const ancestors = [request, workspace];
+
+      const context = await renderUtils.getRenderContext({
+        request: request as unknown as Request,
+        environment: subEnvironment,
+        baseEnvironment,
+        ancestors: ancestors as unknown as RenderContextAncestor[],
+        purpose: 'send',
+      });
+
+      const { keyContext, keyContextMeta } = context.getKeysContext();
+      // Sealed values surface under the runtime `vault` namespace with the owning
+      // sub environment as their source...
+      expect(keyContext['_.vault.sealedVar']).toBe('Collection Environment : sub');
+      expect(keyContextMeta?.['_.vault.sealedVar']?.label).toBe('Collection Environment : sub');
+      // ...and the reserved key backing the vault namespace is never exposed.
+      const reservedKey = `_.${models.environment.vaultEnvironmentPath}`;
+      expect(keyContext[reservedKey]).toBeUndefined();
+      expect(keyContextMeta?.[reservedKey]).toBeUndefined();
+    });
+
+    it('lets a legacy plaintext vault key win over sealed values from later environments', async () => {
+      const workspace = { _id: 'wrk_render_source_test', type: models.workspace.type, parentId: 'proj_test' };
+      // A root `vault` key is rejected by the KV editor but can arrive through
+      // import and sync, which perform no reserved-key validation.
+      const baseEnvironment = envBuilder
+        ._id('env_base_render_source_test')
+        .name('base')
+        .data({ [models.environment.vaultEnvironmentRuntimePath]: { bothVar: 'legacy' } })
+        .build();
+      const subEnvironment = envBuilder
+        ._id('env_sub_render_source_test')
+        .name('sub')
+        .data({ [models.environment.vaultEnvironmentPath]: { bothVar: 'sealed' } })
+        .build();
+      const request = { _id: 'req_render_source_test', type: models.request.type, parentId: workspace._id };
+      const ancestors = [request, workspace];
+
+      const context = await renderUtils.getRenderContext({
+        request: request as unknown as Request,
+        environment: subEnvironment,
+        baseEnvironment,
+        ancestors: ancestors as unknown as RenderContextAncestor[],
+        purpose: 'send',
+      });
+
+      const { keyContext, keyContextMeta } = context.getKeysContext();
+      // The runtime spreads legacy `vault` values over merged sealed values, so the
+      // base environment's legacy key is what the template actually resolves to.
+      expect(keyContext['_.vault.bothVar']).toBe('Collection Environment : base');
+      expect(keyContextMeta?.['_.vault.bothVar']?.label).toBe('Collection Environment : base');
+      expect(keyContextMeta?.['_.vault.bothVar']?.environmentId).toBe(baseEnvironment._id);
     });
   });
 });

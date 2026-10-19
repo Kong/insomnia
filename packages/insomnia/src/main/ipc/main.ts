@@ -32,7 +32,7 @@ import type {
   MockRouteData,
   ModelConfig,
 } from '~/common/plugins/types';
-import type { RenderedRequest } from '~/common/templating/types';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
@@ -90,6 +90,7 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
+import { resolveUserDataFolder } from './path-guard';
 import type { secretStorageBridgeAPI } from './secret-storage';
 import { registerTemplatingDbAuthIpcHandler } from './templating-db-auth';
 
@@ -319,11 +320,13 @@ export interface RendererToMainBridgeAPI {
     requestId: string;
     environmentId?: string;
     addContentLength?: boolean;
+    purpose?: RenderPurpose;
   }) => Promise<any>;
   exportHarRequest: (options: {
     requestId: string;
     environmentOrWorkspaceId: string;
     addContentLength?: boolean;
+    purpose?: RenderPurpose;
   }) => Promise<any>;
   exportHarCurrentRequest: (options: { requestId: string; responseId: string }) => Promise<any>;
   exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) => Promise<string>;
@@ -566,19 +569,19 @@ export function registerMainHandlers() {
 
   ipcMainHandle(
     'exportHarWithRequest',
-    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean }) => {
+    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean; purpose?: RenderPurpose }) => {
       const request = await services.request.getById(options.requestId);
       if (!request) {
         throw new Error(`Request ${options.requestId} not found`);
       }
-      return exportHarWithRequest(request, options.environmentId, options.addContentLength);
+      return exportHarWithRequest(request, options.environmentId, options.addContentLength, options.purpose);
     },
   );
 
   ipcMainHandle(
     'exportHarRequest',
-    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) => {
-      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength);
+    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean; purpose?: RenderPurpose }) => {
+      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength, options.purpose);
     },
   );
 
@@ -633,7 +636,7 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const folderPath = path.join(app.getPath('userData'), options.folder);
+    const folderPath = resolveUserDataFolder(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
     try {
       return await readDir(_, { path: folderPath });

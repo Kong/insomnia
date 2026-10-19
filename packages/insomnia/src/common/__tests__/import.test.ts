@@ -288,7 +288,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
     const disableLogs = console.log;
-    console.log = () => { };
+    console.log = () => {};
     const scanResult = await importUtil.scanResources([
       {
         contentStr: content,
@@ -605,7 +605,7 @@ describe('export/import round-trip is deterministic', () => {
     });
 
     const { workspace } = await roundTrip(sourceWorkspace._id);
-    expect(workspace.scope).toBe('design');
+    expect(workspace.scope).toBe('collection');
 
     const importedSpec = await services.apiSpec.getByParentId(workspace._id);
     expect(importedSpec).toBeTruthy();

@@ -340,7 +340,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       data.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
     );
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
-  const header = shouldImportToWorkspace
+  const header = shouldImportToWorkspace && workspaceName
     ? `Import to "${workspaceName}" Workspace`
     : projectName
       ? `Import to "${projectName}" Project`
@@ -379,6 +379,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
             defaultProjectId={defaultProjectId}
+            defaultWorkspaceId={defaultWorkspaceId}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -474,17 +475,22 @@ const ScanResourcesForm = ({
   const [selectedTab, setSelectedTab] = useState(from?.type || 'uri');
   const [message, setMessage] = useState('');
 
+  const fromType = from?.type;
+  const fromDefaultValue = from?.defaultValue;
   useEffect(() => {
+    // Only validate a pre-populated cURL; validating an empty value would show
+    // a spurious "Invalid cURL request" on a freshly opened, empty cURL tab.
+    if (fromType !== 'curl' || !fromDefaultValue) {
+      return;
+    }
     let isMounted = true;
-    const fn = async () => {
-      const { message: msg } = await validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
+    validateCurl(fromDefaultValue).then(({ message: msg }) => {
       isMounted && setMessage(msg);
-    };
-    fn();
+    });
     return () => {
       isMounted = false;
     };
-  }, [from]);
+  }, [fromType, fromDefaultValue]);
   const isValidCurl = (selectedTab === 'curl' && message && message.startsWith('Detected')) || selectedTab !== 'curl';
   return (
     <Fragment>
@@ -636,6 +642,7 @@ const ImportResourcesForm = ({
   disabled,
   loading,
   defaultProjectId,
+  defaultWorkspaceId,
   isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
@@ -649,6 +656,7 @@ const ImportResourcesForm = ({
   disabled: boolean;
   loading: boolean;
   defaultProjectId: string;
+  defaultWorkspaceId?: string;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
   const { organizationId } = useParams() as {
@@ -679,6 +687,24 @@ const ImportResourcesForm = ({
       });
     }
   }, [organizationId, selectedProjectId, workspacesFetcher]);
+  // Preselect the API Collection the modal was opened from (e.g. pasting a
+  // cURL inside a workspace). Waits for the workspace list so the
+  // preselect only applies to collections the select actually offers, and
+  // applies exactly once so revalidation cannot override the user's choice.
+  const didPreselectRef = useRef(false);
+  useEffect(() => {
+    if (didPreselectRef.current || !defaultWorkspaceId || !workspacesFetcher.data) {
+      return;
+    }
+    const isOffered = workspacesFetcher.data.files.some(
+      file =>
+        file.workspace?._id === defaultWorkspaceId && (file.scope === 'collection' || file.scope === 'design'),
+    );
+    if (isOffered) {
+      didPreselectRef.current = true;
+      setSelectedWorkspaceId(defaultWorkspaceId);
+    }
+  }, [defaultWorkspaceId, workspacesFetcher.data]);
   // List collections for active project, sorted by last modified timestamp descending
   // Should we list design or mcp?
   const selectedNewProject = !selectedProjectId;
@@ -760,14 +786,14 @@ const ImportResourcesForm = ({
             <div className="form-row mt-2">
               <div className="form-control form-control--outlined">
                 <label>
-                  Select Collection:
+                  Select API Collection:
                   <select
-                    aria-label="Select Collection"
+                    aria-label="Select API Collection"
                     name="workspaceId"
                     value={selectedWorkspaceId}
                     onChange={e => setSelectedWorkspaceId(e.target.value)}
                   >
-                    <option value="">-- New Collection --</option>
+                    <option value="">-- New API Collection --</option>
                     {workspacesForActiveProject.map(w => (
                       <option key={w._id} value={w._id}>
                         {w.name} - {formatDistanceToNowStrict(w.lastModifiedTimestamp)}

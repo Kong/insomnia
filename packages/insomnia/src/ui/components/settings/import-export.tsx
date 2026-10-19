@@ -1,4 +1,8 @@
 import { format } from 'date-fns';
+import {
+  convertApiSpecSyntax,
+  detectApiSpecSyntax,
+} from 'insomnia/src/common/api-specs';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
@@ -19,7 +23,6 @@ import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } f
 import { href, useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
 import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
@@ -27,10 +30,12 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
+import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { usePlanData } from '~/ui/hooks/use-plan';
 
 const VALUE_YAML = 'yaml';
+const VALUE_JSON = 'json';
 const VALUE_HAR = 'har';
 
 export type SelectedFormat = typeof VALUE_HAR | typeof VALUE_YAML;
@@ -90,7 +95,7 @@ const showSaveExportedFileDialog = async ({
   selectedFormat,
 }: {
   exportedFileNamePrefix: string;
-  selectedFormat: SelectedFormat;
+  selectedFormat: SelectedFormat | typeof VALUE_JSON;
 }) => {
   const date = format(Date.now(), 'yyyy-MM-dd-HH-mm-ss');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
@@ -354,6 +359,77 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           message: 'Export failed due to an unexpected error',
         });
         return;
+      }
+    },
+  });
+};
+
+export const exportSpecificationToFile = async (workspace: Workspace) => {
+  const apiSpec = await services.apiSpec.getByParentId(workspace._id);
+  if (!apiSpec?.contents) {
+    showModal(AlertModal, {
+      title: 'Cannot export',
+      message: (
+        <>
+          This <strong>{getWorkspaceLabel(workspace).singular.toLowerCase()}</strong> does not contain an OpenAPI
+          specification to export.
+        </>
+      ),
+    });
+    return;
+  }
+
+  showModal(SelectModal, {
+    title: 'Select Specification Format',
+    value: VALUE_YAML,
+    options: [
+      {
+        name: 'YAML',
+        value: VALUE_YAML,
+      },
+      {
+        name: 'JSON',
+        value: VALUE_JSON,
+      },
+    ],
+    message: 'Which format would you like to export as?',
+    onDone: async selectedFormat => {
+      if (selectedFormat !== VALUE_YAML && selectedFormat !== VALUE_JSON) {
+        return;
+      }
+
+      let specification = apiSpec.contents;
+      if (detectApiSpecSyntax(specification) !== selectedFormat) {
+        try {
+          specification = convertApiSpecSyntax(specification, selectedFormat);
+        } catch {
+          showError({
+            title: 'Export Failed',
+            message: `The specification is not valid, cannot convert to ${selectedFormat.toUpperCase()}`,
+          });
+          return;
+        }
+      }
+
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: workspace.name,
+        selectedFormat,
+      });
+      if (!fileName) {
+        return;
+      }
+
+      try {
+        await writeExportedFileToFileSystem(fileName, specification);
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.dataExport,
+          properties: { type: selectedFormat, scope: workspace.scope },
+        });
+      } catch {
+        showError({
+          title: 'Export Failed',
+          message: 'Export failed due to an unexpected error',
+        });
       }
     },
   });
@@ -633,8 +709,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     projectId: string;
     workspaceId?: string;
   };
-  const organizationData = useOrganizationLoaderData();
-  const organizations = organizationData?.organizations || [];
+  const organizations = useOrganizations();
 
   const { features } = useOrganizationPermissions();
   const { isEnterprisePlan } = usePlanData();
@@ -681,7 +756,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
   const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.name || 'Organization';
+    organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);

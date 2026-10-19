@@ -2,16 +2,18 @@ import { models } from 'insomnia-data';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
-import type { RenderPurpose } from '~/common/templating/types';
+import type { RenderPurpose, VariableSourceMeta } from '~/common/templating/types';
 
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
   defaultValue: string;
   onChange: (arg: string) => void;
+  variableSource?: VariableSourceMeta;
+  onOpenSource?: () => void;
 }
 
-export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
+export const VariableEditor: FC<Props> = ({ onChange, defaultValue, variableSource, onOpenSource }) => {
   const [purpose, setPurpose] = useState<RenderPurpose | ''>('');
   const useNunjuckOptions = useMemo(() => {
     const renderContext = purpose === '' ? {} : { purpose };
@@ -103,6 +105,24 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
           Live Preview
           <textarea className={`${error ? 'danger' : ''}`} value={preview || error} readOnly />
         </label>
+        {variableSource && (
+          <div className="mt-1 flex items-center gap-2 text-xs" data-testid="variable-source-row">
+            <span className="text-[0.7rem] uppercase tracking-wide opacity-60">Source</span>
+            <span className="min-w-0 flex-1 truncate italic" title={variableSource.label}>
+              {variableSource.label}
+            </span>
+            {variableSource.workspaceId && onOpenSource && (
+              <button
+                type="button"
+                className="flex shrink-0 cursor-pointer items-center gap-1 font-medium underline-offset-2 hover:underline"
+                data-testid="variable-source-open"
+                onClick={onOpenSource}
+              >
+                Open <i className="fa fa-arrow-right text-[0.65rem]" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
