@@ -4,7 +4,7 @@ import { connectTo, validTool } from './helpers';
 test('Verify a Server-Initiated Request Reusing the tools/list Request Id Does Not Produce a Tools Error', async ({
   user,
 }) => {
-  test.fail();
+  test.fail(true, "INS-4066");
   const { mcpClientPage } = user.pageManager;
   await connectTo(user, {
     'tools/list': { result: { tools: [validTool] } },
