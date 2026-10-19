@@ -40,7 +40,7 @@
     "fuzzysort": "^1.9.0",
     "graphql": "^16.10.0",
     "uuid": "^11.1.1",
-    "zod": "^3.25.75"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@getinsomnia/node-libcurl": "3.3.0",
