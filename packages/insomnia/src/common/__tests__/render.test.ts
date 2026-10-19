@@ -1415,6 +1415,51 @@ describe('render tests', () => {
     });
   });
 
+  describe('getRenderedRequestAndContext()', () => {
+    const renderBasicAuthRequest = async (isConfidential: boolean) => {
+      const workspace = await services.workspace.create();
+      const environment = await services.environment.create({
+        parentId: workspace._id,
+        data: { password: 'top-secret' },
+        kvPairData: [
+          {
+            id: 'envPair_password',
+            name: 'password',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential,
+          },
+        ],
+      });
+      const request = await services.request.create({
+        parentId: workspace._id,
+        url: 'http://localhost',
+        authentication: { type: 'basic', username: 'user', password: '{{ _.password }}' },
+      });
+      const collector = createSensitiveValueCollector(true)!;
+      await renderUtils.getRenderedRequestAndContext({
+        request,
+        environment: environment._id,
+        purpose: 'send',
+        sensitiveValueCollector: collector,
+      });
+      return collector;
+    };
+
+    it('registers the derived Basic Auth header when a credential is confidential', async () => {
+      const collector = await renderBasicAuthRequest(true);
+
+      expect(collector.values).toContain(`Basic ${btoa('user:top-secret')}`);
+    });
+
+    it('does not register the Basic Auth header when no credential is confidential', async () => {
+      const collector = await renderBasicAuthRequest(false);
+
+      expect(collector.values).not.toContain(`Basic ${btoa('user:top-secret')}`);
+    });
+  });
+
   describe('getRenderContext()', () => {
     it('keys source from the closest folder when nested folders define the same variable', async () => {
       const workspace = { _id: 'wrk_render_source_test', type: models.workspace.type, parentId: 'proj_test' };

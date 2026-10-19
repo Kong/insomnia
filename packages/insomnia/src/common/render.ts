@@ -16,7 +16,11 @@ import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import { setDefaultProtocol } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 
-import { collectLeafValues, type SensitiveValueCollector } from '~/common/network/sensitive-value-collector';
+import {
+  collectLeafValues,
+  isDerivedFromConfidentialValues,
+  type SensitiveValueCollector,
+} from '~/common/network/sensitive-value-collector';
 import { type ConfidentialValueKind, getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
@@ -31,6 +35,7 @@ import type {
 } from '~/common/templating/types';
 import * as templatingUtils from '~/common/templating/utils';
 
+import { getBasicAuthHeader } from '../network/basic-auth/get-header';
 import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../network/network';
 import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
@@ -906,6 +911,17 @@ export async function getRenderedRequestAndContext({
     renderedRequest.authentication.disabled
   ) {
     renderedRequest.authentication = {};
+  }
+
+  // The Basic Auth header is built later (getAuthHeader) as base64(user:pass), which never matches
+  // the plaintext credentials registered during render, so the timeline would show it in the clear.
+  // Register the derived header too, but only when a credential actually was confidential.
+  if (sensitiveValueCollector && renderedRequest.authentication?.type === 'basic') {
+    const { username, password, useISO88591 } = renderedRequest.authentication;
+    if (isDerivedFromConfidentialValues(sensitiveValueCollector.values, [username, password])) {
+      const encoding = useISO88591 ? 'latin1' : 'utf8';
+      sensitiveValueCollector.register(getBasicAuthHeader(username, password, encoding).value);
+    }
   }
 
   // Default the proto if it doesn't exist
