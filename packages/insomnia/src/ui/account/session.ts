@@ -5,11 +5,23 @@ import { models, services } from 'insomnia-data';
 import { getCurrentSessionId, type SessionData, setSessionData, unsetSessionData } from '~/common/account/session';
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '~/common/constants';
 import { getRuntime } from '~/runtimes';
+import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
+import { serverQueryClient } from '~/ui/context/app/server-data-context';
 
 // Re-export the isomorphic session core so renderer callers have a single
 // import surface. The functions defined below touch `window`/`window.main`
 // and therefore must live in the renderer context.
 export * from '~/common/account/session';
+
+/**
+ * Drops all cached query data. The query clients are app-wide singletons that outlive the
+ * organization subtree, so session changes must reset them explicitly to avoid leaking one
+ * account's data into the next.
+ */
+export function clearQueryCaches() {
+  dbQueryClient.clear();
+  serverQueryClient.clear();
+}
 
 /** Creates a session from a sessionId and derived symmetric key. */
 export async function absorbKey(sessionId: string, key: string) {
@@ -54,6 +66,7 @@ export async function logout(clearCredentials = false) {
   }
 
   await unsetSessionData();
+  clearQueryCaches();
   if (clearCredentials) {
     await _removeAllCredentials();
   }

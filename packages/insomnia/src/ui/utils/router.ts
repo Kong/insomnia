@@ -2,7 +2,7 @@ import type { Organization } from 'insomnia-api';
 import type { GitProject, GitRepository } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
-import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
+import { href, matchPath, type PathMatch, type ShouldRevalidateFunction, useFetcher } from 'react-router';
 
 import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
@@ -212,3 +212,28 @@ export const createFetcherLoadHook =
       load,
     } as Override<typeof fetcher, { load: ReturnType<T> }>;
   };
+
+/**
+ * `shouldRevalidate` for loaders whose data is owned by TanStack Query: the loader only prefetches
+ * and guards navigation, so mutations (action / fetcher POST) don't need to re-run it — results
+ * flow back through `db.changes` or query invalidation instead.
+ * It still re-runs when the route params change (the guard must see the new target, including an
+ * action that redirects to a different project/workspace) and on explicit `revalidate()` calls.
+ */
+export const skipActionRevalidation: ShouldRevalidateFunction = ({
+  formMethod,
+  currentParams,
+  nextParams,
+  defaultShouldRevalidate,
+}) => {
+  const isMutation = !!formMethod && formMethod !== 'GET';
+  if (isMutation && haveSameParams(currentParams, nextParams)) {
+    return false;
+  }
+  return defaultShouldRevalidate;
+};
+
+const haveSameParams = (a: Record<string, string | undefined>, b: Record<string, string | undefined>) => {
+  const aKeys = Object.keys(a);
+  return aKeys.length === Object.keys(b).length && aKeys.every(key => a[key] === b[key]);
+};
