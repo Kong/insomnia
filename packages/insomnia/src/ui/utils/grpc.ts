@@ -1,3 +1,7 @@
+import type { ServiceError, StatusObject } from '@grpc/grpc-js';
+
+import type { GrpcMethodInfo } from '~/main/ipc/grpc';
+
 const GRPC_CONNECTION_ERROR_STRINGS = {
   SERVER_SELF_SIGNED: 'self signed certificate in certificate chain',
   CLIENT_CERT_REQUIRED: 'CERTIFICATE_REQUIRED',
@@ -56,4 +60,20 @@ export function getGrpcConnectionErrorDetails(error: Error) {
     title,
     message,
   };
+}
+
+export interface GrpcMessage {
+  id: string;
+  text: string;
+  created: number;
+}
+
+export interface GrpcRequestState {
+  requestId: string;
+  running: boolean;
+  requestMessages: GrpcMessage[];
+  responseMessages: GrpcMessage[];
+  status?: StatusObject;
+  error?: ServiceError;
+  methods: GrpcMethodInfo[];
 }
