@@ -3,6 +3,8 @@ import type { AESMessage } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getRuntime } from '~/runtimes';
+import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
+import { serverQueryClient } from '~/ui/context/app/server-data-context';
 
 import {
   absorbKey,
@@ -178,6 +180,16 @@ describe('logout', () => {
 
     expect(getWindowMain().loginStateChange).toHaveBeenCalledOnce();
     expect(getWindowMain().loginStateChange).toHaveBeenCalledWith(false);
+  });
+
+  it('clears the query caches', async () => {
+    dbQueryClient.setQueryData(['db-key'], 'stale');
+    serverQueryClient.setQueryData(['server-key'], 'stale');
+
+    await logout();
+
+    expect(dbQueryClient.getQueryData(['db-key'])).toBeUndefined();
+    expect(serverQueryClient.getQueryData(['server-key'])).toBeUndefined();
   });
 
   it('does not throw if the API call fails', async () => {
