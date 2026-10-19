@@ -38,7 +38,7 @@ import type {
 import { EnvironmentKvPairDataType, models } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
 
-import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
+import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/export-types';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import { maskVaultEnvironmentData } from '~/common/utils/environment-utils';
