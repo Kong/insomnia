@@ -1,4 +1,4 @@
-import type { QueryClient } from '@tanstack/react-query';
+import { type QueryClient, queryOptions } from '@tanstack/react-query';
 import type {
   BaseModel,
   ChangeBufferEvent,
@@ -20,6 +20,25 @@ export const workspaceChildrenKeys = {
   all: ['workspaceChildrenAndMetas'],
   byWorkspaceId: (workspaceId: string) => [...workspaceChildrenKeys.all, workspaceId],
 };
+
+// Query options shared by hooks (`useDBQuery`) and route loaders (`dbQueryClient.ensureQueryData`),
+// so both read and write the same cache entry.
+export const organizationDataQuery = (organizationId: string) =>
+  queryOptions({
+    queryKey: organizationDataKeys.byOrganizationId(organizationId),
+    queryFn: () => services.appData.getOrganizationData(organizationId),
+  });
+
+// `scope` only narrows which loader runs on the main process; a workspace's scope never changes, so
+// the result is the same with or without it and the cache key intentionally omits it.
+export const workspaceChildrenQuery = <S extends WorkspaceScope | undefined = undefined>(
+  workspaceId: string,
+  scope?: S,
+) =>
+  queryOptions({
+    queryKey: workspaceChildrenKeys.byWorkspaceId(workspaceId),
+    queryFn: async () => (await services.appData.getWorkspaceChildren([workspaceId], scope)).get(workspaceId),
+  });
 
 const COLLECTION_REQUEST_DOC_TYPES: string[] = [
   models.request.type,
