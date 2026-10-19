@@ -11,7 +11,6 @@ import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organizatio
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
-import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useEditorHistoryTabCleanup } from '~/ui/components/.client/codemirror/editor-history-cleanup';
 import { CommandPalette } from '~/ui/components/command-palette';
@@ -35,6 +34,7 @@ import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
+import { useUntrackedProjects } from '~/ui/hooks/use-untracked-projects';
 import { refreshKonnectAccess } from '~/ui/organization-utils';
 import type { AsyncTask } from '~/ui/utils/router';
 
@@ -185,7 +185,6 @@ const Component = () => {
   const navigate = useNavigate();
   const isScratchpadWorkspace =
     workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData.activeWorkspace);
-  const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId?: string;
@@ -220,13 +219,6 @@ const Component = () => {
   }, [organizationId, asyncTaskList, syncOrgsAndProjects]);
 
   useEffect(() => {
-    const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
-    if (isIdleAndUninitialized) {
-      untrackedProjectsFetcher.load();
-    }
-  }, [organizationId, untrackedProjectsFetcher]);
-
-  useEffect(() => {
     window.main.setCurrentOrganizationId(organizationId);
     return () => window.main.setCurrentOrganizationId(undefined);
   }, [organizationId]);
@@ -243,8 +235,7 @@ const Component = () => {
     });
   }, [userSession.accountId]);
 
-  const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
-  const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
+  const { untrackedProjects, untrackedWorkspaces } = useUntrackedProjects();
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
   const isScratchPad = organizationId === models.organization.SCRATCHPAD_ORGANIZATION_ID;
   const isLocalOrganization = models.organization.isLocalOrganizationId(organizationId);
