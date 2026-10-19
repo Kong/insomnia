@@ -143,6 +143,17 @@ describe('secureReadFile', () => {
     await expect(secureReadFile(innocuousHardLink)).rejects.toThrow(/cannot access/);
   });
 
+  it('reads a file whose name literally contains a malformed percent sequence, instead of throwing URIError', async () => {
+    // `a%zz` is not valid percent-encoding; this used to throw `URIError: URI malformed`.
+    const { secureReadFile } = await import('../secure-read-file');
+    const responsesDir = path.join(userDataDir, 'responses');
+    fs.mkdirSync(responsesDir, { recursive: true });
+    const file = path.join(responsesDir, 'a%zz.txt');
+    fs.writeFileSync(file, 'literal-percent');
+
+    await expect(secureReadFile(file)).resolves.toBe('literal-percent');
+  });
+
   it('rejects a symlink inside the allowed directory that resolves outside every allowed root', async () => {
     const { secureReadFile } = await import('../secure-read-file');
     const outsideDir = fs.mkdtempSync(path.join(TEST_ROOT, 'outside-'));
