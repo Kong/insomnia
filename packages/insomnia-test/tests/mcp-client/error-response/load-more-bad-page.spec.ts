@@ -1,5 +1,10 @@
+import { faker } from '@faker-js/faker';
+
+import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
-import { connectTo } from './helpers';
+import { scriptMcpListServer } from '../../../misc/mcp-list-server';
+import { McpClient } from '../../../models/mcp-client';
+import { Project } from '../../../models/project';
 
 const loadMoreVariants = [
   {
@@ -32,9 +37,9 @@ const knownBugs: Partial<Record<(typeof loadMoreVariants)[number]['type'], strin
 for (const { type, method, entry, badEntry } of loadMoreVariants) {
   test(`Verify Load More on ${type} with a Bad Page Keeps Loaded Entries and Clears the Cursor`, async ({ user }) => {
     test.fail(type in knownBugs, knownBugs[type]);
-    const { mcpClientFlow } = user.flowManager;
+    const { mcpClientFlow, workspaceFlow } = user.flowManager;
     const { mcpClientPage } = user.pageManager;
-    const client = await connectTo(user, {
+    const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
       [method]: {
         pages: {
           '': { result: { [type]: [entry('item-1')], nextCursor: 'page-2' } },
@@ -42,6 +47,9 @@ for (const { type, method, entry, badEntry } of loadMoreVariants) {
         },
       },
     });
+    const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+    const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
+    await mcpClientFlow.connect(client);
     await expect.poll(() => mcpClientPage.getPrimitives(type), { timeout: DEFAULT_TIMEOUT }).toEqual(['item-1']);
     expect(await mcpClientFlow.getListAction(client, type)).toBe('Load More');
 

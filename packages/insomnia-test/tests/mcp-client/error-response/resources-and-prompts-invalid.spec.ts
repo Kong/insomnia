@@ -1,10 +1,16 @@
+import { faker } from '@faker-js/faker';
+
+import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
-import { connectTo, skippedTitle, wholeFailureTitle } from './helpers';
+import { scriptMcpListServer } from '../../../misc/mcp-list-server';
+import { McpClient } from '../../../models/mcp-client';
+import { Project } from '../../../models/project';
+import { skippedTitle, wholeFailureTitle } from './helpers';
 
 test('Verify Invalid resources/list and prompts/list Are Reported Like tools/list', async ({ user }) => {
-  const { mcpClientFlow } = user.flowManager;
+  const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { mcpClientPage } = user.pageManager;
-  const client = await connectTo(user, {
+  const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
     'resources/list': {
       result: {
         resources: [
@@ -16,6 +22,9 @@ test('Verify Invalid resources/list and prompts/list Are Reported Like tools/lis
     },
     'prompts/list': { result: { prompts: 'none' } },
   });
+  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
+  await mcpClientFlow.connect(client);
 
   const resourcesError = await mcpClientFlow.getListError(client, 'resources');
   expect(resourcesError.title).toMatch(skippedTitle(2));
@@ -34,9 +43,13 @@ test('Verify Invalid resources/list and prompts/list Are Reported Like tools/lis
 });
 
 test('Verify a prompts/list Whose prompts Is an Object Is a Whole-Response Error', async ({ user }) => {
-  const client = await connectTo(user, {
+  const { mcpClientFlow, workspaceFlow } = user.flowManager;
+  const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
     'prompts/list': { result: { prompts: {} } },
   });
+  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
+  await mcpClientFlow.connect(client);
 
   expect(await user.flowManager.mcpClientFlow.getListError(client, 'prompts')).toEqual({
     title: wholeFailureTitle('prompts/list'),
@@ -45,14 +58,17 @@ test('Verify a prompts/list Whose prompts Is an Object Is a Whole-Response Error
 });
 
 test('Verify a Prompt with Bad arguments Is Skipped While Valid Prompts Are Listed', async ({ user }) => {
-  const { mcpClientFlow } = user.flowManager;
-  const client = await connectTo(user, {
+  const { mcpClientFlow, workspaceFlow } = user.flowManager;
+  const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
     'prompts/list': {
       result: {
         prompts: [{ name: 'valid-prompt' }, { name: 'bad-args-prompt', arguments: 'x' }],
       },
     },
   });
+  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
+  await mcpClientFlow.connect(client);
 
   const error = await mcpClientFlow.getListError(client, 'prompts');
   expect(error.title).toMatch(skippedTitle(1));

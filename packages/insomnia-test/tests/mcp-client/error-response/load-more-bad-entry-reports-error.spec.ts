@@ -1,13 +1,18 @@
+import { faker } from '@faker-js/faker';
+
+import { ProjectType } from '../../../enums/project-types';
 import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
-import { connectTo } from './helpers';
+import { scriptMcpListServer } from '../../../misc/mcp-list-server';
+import { McpClient } from '../../../models/mcp-client';
+import { Project } from '../../../models/project';
 
 test('Verify Load More Whose Next Page Has an Invalid Entry Lists the Skipped Entry in the Error Panel', async ({
   user,
 }) => {
-  test.fail(true, "INS-4064");
-  const { mcpClientFlow } = user.flowManager;
+  test.fail(true, 'INS-4064');
+  const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { mcpClientPage } = user.pageManager;
-  const client = await connectTo(user, {
+  const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
     'resources/list': {
       pages: {
         '': {
@@ -24,6 +29,9 @@ test('Verify Load More Whose Next Page Has an Invalid Entry Lists the Skipped En
       },
     },
   });
+  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
+  await mcpClientFlow.connect(client);
   await expect.poll(() => mcpClientPage.getPrimitives('resources'), { timeout: DEFAULT_TIMEOUT }).toEqual(['item-1']);
 
   await mcpClientFlow.loadMore(client, 'resources');
