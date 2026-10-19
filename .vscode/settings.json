@@ -1,4 +1,8 @@
 {
+  "files.watcherExclude": {
+    "**/.react-router/**": true,
+    "**/.vite-port": true
+  },
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "files.associations": {
     "*.db": "ndjson",

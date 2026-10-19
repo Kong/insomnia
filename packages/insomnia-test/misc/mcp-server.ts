@@ -9,6 +9,7 @@ import express from 'express';
 import * as z from 'zod/v4';
 
 import { certPath } from './certs';
+import type { McpListConfig, McpListReply } from './mcp-list-server';
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(certPath('localhost-key.pem')),
@@ -132,6 +133,68 @@ app.get('/mcp', (_req, res) => {
       id: null,
     }),
   );
+});
+
+// ---------------------------------------------------------------------------
+// Scriptable list-response server (INS-3647).
+//
+// Every test talks to its own `/mcp-list/<key>` endpoint and scripts what the
+// list requests answer through `PUT /mcp-list/<key>/config`, so malformed
+// payloads can be served and switched between Refresh clicks. Unscripted list
+// methods answer with a valid empty list.
+//
+// Config shape: { [method]: Reply | { pages: { [cursor]: Reply } } } where
+// `Reply` is `{ result }` (any JSON, sent verbatim) or `{ error: { code, message } }`.
+// For `pages`, the empty-string cursor is the first page.
+// ---------------------------------------------------------------------------
+const EMPTY_LISTS: Record<string, unknown> = {
+  'tools/list': { tools: [] },
+  'resources/list': { resources: [] },
+  'resources/templates/list': { resourceTemplates: [] },
+  'prompts/list': { prompts: [] },
+};
+const listConfigs = new Map<string, McpListConfig>();
+
+app.put('/mcp-list/:key/config', (req, res) => {
+  listConfigs.set(req.params.key, req.body ?? {});
+  res.status(204).end();
+});
+
+app.post('/mcp-list/:key', (req, res) => {
+  const { id, method, params } = req.body ?? {};
+  // Notifications carry no id and expect no JSON-RPC response.
+  if (id === undefined) {
+    res.status(202).end();
+    return;
+  }
+  if (method === 'initialize') {
+    res.json({
+      jsonrpc: '2.0',
+      id,
+      result: {
+        protocolVersion: params?.protocolVersion,
+        capabilities: { tools: {}, resources: {}, prompts: {} },
+        serverInfo: { name: 'mcp-list-mock', version: '1.0.0' },
+      },
+    });
+    return;
+  }
+  if (method in EMPTY_LISTS) {
+    const script = listConfigs.get(req.params.key)?.[method as keyof McpListConfig];
+    const reply: McpListReply =
+      script === undefined
+        ? { result: EMPTY_LISTS[method] }
+        : 'pages' in script
+          ? (script.pages[params?.cursor ?? ''] ?? { result: EMPTY_LISTS[method] })
+          : script;
+    res.json({ jsonrpc: '2.0', id, ...reply });
+    return;
+  }
+  res.json({ jsonrpc: '2.0', id, error: { code: -32_601, message: 'Method not found' } });
+});
+
+app.get('/mcp-list/:key', (_req, res) => {
+  res.writeHead(405).end();
 });
 
 const PORT = process.env.MCP_PORT || 4020;

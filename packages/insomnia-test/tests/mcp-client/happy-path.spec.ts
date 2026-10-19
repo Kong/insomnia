@@ -38,6 +38,7 @@ test("Verify Create MCP Client", async ({ user }) => {
   );
   await mcpClientFlow.connect(mcpClient);
   const tools = await mcpClientFlow.getTools(mcpClient);
+  expect(await user.pageManager.mcpClientPage.getCapabilityErrorCount("tools")).toBe(0);
   expect(tools).toEqual(
     expect.arrayContaining([
       "read_wiki_structure",

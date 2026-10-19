@@ -3,8 +3,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import grpc from "@grpc/grpc-js";
-import protoLoader from "@grpc/proto-loader";
+import * as grpc from "@grpc/grpc-js";
+import * as protoLoader from "@grpc/proto-loader";
 import { ReflectionService } from "@grpc/reflection";
 
 import { certPath } from "./certs";

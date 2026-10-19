@@ -1,0 +1,54 @@
+import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
+import { connectTo } from './helpers';
+
+const loadMoreVariants = [
+  {
+    type: 'tools',
+    method: 'tools/list',
+    entry: (name: string) => ({ name, inputSchema: { type: 'object' } }),
+    badEntry: { name: 'bad-tool' },
+  },
+  {
+    type: 'prompts',
+    method: 'prompts/list',
+    entry: (name: string) => ({ name }),
+    badEntry: { name: 'bad-prompt', arguments: 'x' },
+  },
+  {
+    type: 'resources',
+    method: 'resources/list',
+    entry: (name: string) => ({ name, uri: `file:///${name}.txt` }),
+    badEntry: { name: 'bad-resource' },
+  },
+] as const;
+
+// Open app bugs: listTools() / listPrompts() do not forward the cursor, so Load More re-requests the first page.
+// Resources forwards it and passes.
+const knownBugs: Partial<Record<(typeof loadMoreVariants)[number]['type'], string>> = {
+  tools: 'INS-4060',
+  prompts: 'INS-4061',
+};
+
+for (const { type, method, entry, badEntry } of loadMoreVariants) {
+  test(`Verify Load More on ${type} with a Bad Page Keeps Loaded Entries and Clears the Cursor`, async ({ user }) => {
+    test.fail(type in knownBugs, knownBugs[type]);
+    const { mcpClientFlow } = user.flowManager;
+    const { mcpClientPage } = user.pageManager;
+    const client = await connectTo(user, {
+      [method]: {
+        pages: {
+          '': { result: { [type]: [entry('item-1')], nextCursor: 'page-2' } },
+          'page-2': { result: { [type]: [entry('item-2'), badEntry] } },
+        },
+      },
+    });
+    await expect.poll(() => mcpClientPage.getPrimitives(type), { timeout: DEFAULT_TIMEOUT }).toEqual(['item-1']);
+    expect(await mcpClientFlow.getListAction(client, type)).toBe('Load More');
+
+    await mcpClientFlow.loadMore(client, type);
+    await expect
+      .poll(() => mcpClientPage.getPrimitives(type), { timeout: DEFAULT_TIMEOUT })
+      .toEqual(['item-1', 'item-2']);
+    expect(await mcpClientFlow.getListAction(client, type)).toBe('Refresh');
+  });
+}
