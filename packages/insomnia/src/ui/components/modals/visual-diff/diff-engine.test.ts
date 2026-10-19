@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { stringify } from 'yaml';
 
-import { computeFieldChanges, computeVisualDiff, ownFields } from './diff-engine';
+import { computeFieldChanges, computeVisualDiff, diffByKey, ownFields } from './diff-engine';
 
 const file = (collection: unknown[]) =>
   stringify({ type: 'collection.insomnia.rest/5.0', name: 'C', meta: { id: 'wrk_1' }, collection });
@@ -76,5 +76,34 @@ describe('computeVisualDiff - file-level sections', () => {
     expect(
       computeVisualDiff(stringify({ name: 'a', rules: {} }), stringify({ name: 'b', rules: {} })).entities,
     ).toEqual([]);
+  });
+});
+
+describe('diffByKey', () => {
+  const userAgent = { name: 'User-Agent', value: 'insomnia/12.1.0', disabled: false };
+  const customUserAgent = { name: 'User-Agent', value: '123', disabled: true };
+  const accept = { name: 'Accept', value: '*/*' };
+  const rows = (before: unknown[], after: unknown[]) =>
+    diffByKey(before as any[], after as any[], 'name').map(({ key, status }) => `${key}: ${status}`);
+
+  it('tells same-named items apart by their order, so a change to either one shows', () => {
+    const changedFirst = { ...userAgent, disabled: true };
+    const changedSecond = { ...customUserAgent, value: '456' };
+
+    expect(rows([userAgent, customUserAgent], [changedFirst, customUserAgent])).toEqual(['User-Agent (1): modified']);
+    expect(rows([userAgent, customUserAgent], [changedFirst, changedSecond])).toEqual([
+      'User-Agent (1): modified',
+      'User-Agent (2): modified',
+    ]);
+  });
+
+  it('numbers a name repeated on only one side on both, so adding or removing the last one reads as such', () => {
+    expect(rows([userAgent, accept], [userAgent, accept, customUserAgent])).toEqual(['User-Agent (2): added']);
+    expect(rows([userAgent, customUserAgent], [userAgent])).toEqual(['User-Agent (2): removed']);
+  });
+
+  it('keeps the plain name for items whose name is not repeated', () => {
+    const before = [userAgent, customUserAgent, accept];
+    expect(rows(before, [userAgent, customUserAgent, { ...accept, value: 'a' }])).toEqual(['Accept: modified']);
   });
 });

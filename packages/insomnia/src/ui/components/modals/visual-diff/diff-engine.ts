@@ -236,11 +236,10 @@ export function diffByKey<T extends Record<string, any>>(
 ): KeyedDiffRow[] {
   const rows: KeyedDiffRow[] = [];
 
-  const beforeMap = new Map<string, T>();
-  (before ?? []).forEach((item, i) => beforeMap.set(String(item?.[keyField] ?? `#${i}`), item));
-
-  const afterMap = new Map<string, T>();
-  (after ?? []).forEach((item, i) => afterMap.set(String(item?.[keyField] ?? `#${i}`), item));
+  const keyOf = (item: T, i: number) => String(item?.[keyField] ?? `#${i}`);
+  const repeatedKeys = new Set([...findRepeatedKeys(before, keyOf), ...findRepeatedKeys(after, keyOf)]);
+  const beforeMap = mapByKey(before, keyOf, repeatedKeys);
+  const afterMap = mapByKey(after, keyOf, repeatedKeys);
 
   afterMap.forEach((afterItem, key) => {
     const beforeItem = beforeMap.get(key);
@@ -258,6 +257,40 @@ export function diffByKey<T extends Record<string, any>>(
   });
 
   return rows;
+}
+
+function findRepeatedKeys<T>(items: T[] = [], keyOf: (item: T, i: number) => string): Set<string> {
+  const seen = new Set<string>();
+  const repeated = new Set<string>();
+  (items ?? []).forEach((item, i) => {
+    const key = keyOf(item, i);
+    (seen.has(key) ? repeated : seen).add(key);
+  });
+  return repeated;
+}
+
+// Items sharing a key (eg. two `User-Agent` headers) are told apart by their order among that key,
+// as "User-Agent (1)" and "User-Agent (2)" — otherwise the later one would hide the earlier one. A
+// key repeated on either side is numbered on both, so the first still matches the first when a
+// second one is added or removed.
+function mapByKey<T>(
+  items: T[] = [],
+  keyOf: (item: T, i: number) => string,
+  repeatedKeys: ReadonlySet<string>,
+): Map<string, T> {
+  const map = new Map<string, T>();
+  const occurrences = new Map<string, number>();
+  (items ?? []).forEach((item, i) => {
+    const key = keyOf(item, i);
+    if (!repeatedKeys.has(key)) {
+      map.set(key, item);
+      return;
+    }
+    const occurrence = (occurrences.get(key) ?? 0) + 1;
+    occurrences.set(key, occurrence);
+    map.set(`${key} (${occurrence})`, item);
+  });
+  return map;
 }
 
 // Diffs a plain key/value record (eg. environment `data`) by key
