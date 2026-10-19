@@ -243,9 +243,8 @@ export function docsTab(diff: EntityDiff): DiffTabDef | null {
 
 // A card's tabs followed by the Settings catch-all, which shows every changed field that neither
 // the card's header (`headerPaths`) nor one of its tabs shows — so no change is ever hidden. That
-// includes a field a tab is meant to cover but found nothing to show for (eg. two headers with the
-// same name collapse onto one key, or headers that were only reordered): it's shown as raw
-// before/after values instead.
+// includes a field a tab is meant to cover but found nothing to show for (eg. headers that were only
+// reordered): it's shown as raw before/after values instead.
 export function withSettingsTab(
   diff: EntityDiff,
   headerPaths: ReadonlySet<string>,
