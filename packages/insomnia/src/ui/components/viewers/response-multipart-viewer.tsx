@@ -12,7 +12,7 @@ import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
-import { ResponseViewer } from './response-viewer';
+import type { ResponseViewerProps } from './response-viewer-props';
 
 interface Props {
   download: (prettify: boolean) => void;
@@ -25,6 +25,7 @@ interface Props {
   filterHistory: string[];
   editorFontSize: number;
   url: string;
+  BodyViewer: FC<ResponseViewerProps>;
 }
 
 export const ResponseMultipartViewer: FC<Props> = ({
@@ -38,6 +39,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
   url,
   bodyBuffer,
   contentType,
+  BodyViewer,
 }) => {
   const [parts, setParts] = useState<Part[]>([]);
   const [selectedPart, setSelectedPart] = useState<Part>();
@@ -189,7 +191,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
         </Dropdown>
       </div>
       <div className="tall wide">
-        <ResponseViewer
+        <BodyViewer
           bytes={selectedPart.bytes || 0}
           contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
           disableHtmlPreviewJs={disableHtmlPreviewJs}
