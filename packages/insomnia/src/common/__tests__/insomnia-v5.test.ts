@@ -152,6 +152,61 @@ collection: []
         type: 'Workspace',
       });
     });
+
+    it('fills the apiSpec fileName from the design document name', () => {
+      const designDocData = `
+type: spec.insomnia.rest/5.0
+name: My Design Document
+meta:
+  id: wrk_test
+spec:
+  contents:
+    openapi: 3.0.0
+    info:
+      title: Test Spec
+      version: 1.0.0
+`;
+      const result = importInsomniaV5Data(designDocData);
+      const apiSpec = result.find(r => r.type === 'ApiSpec');
+      // The v5 spec format does not serialize ApiSpec.fileName; without this
+      // fallback every git round-trip blanks it out and repair-database
+      // restamps `modified` of every design document on startup.
+      expect(apiSpec).toMatchObject({ fileName: 'My Design Document' });
+    });
+
+    it('uses spec.file as the apiSpec fileName when present', () => {
+      const specData = `
+type: spec.insomnia.rest/5.0
+name: My Design Document
+meta:
+  id: wrk_test
+spec:
+  file: my-spec.yaml
+  meta:
+    id: spc_test
+`;
+      const result = importInsomniaV5Data(specData);
+      const apiSpec = result.find(r => r.type === 'ApiSpec');
+      expect(apiSpec).toMatchObject({ fileName: 'my-spec.yaml' });
+    });
+
+    it('falls back to the design document name when spec.file is empty', () => {
+      const specData = `
+type: spec.insomnia.rest/5.0
+name: My Design Document
+meta:
+  id: wrk_test
+spec:
+  file: ''
+  meta:
+    id: spc_test
+`;
+      const result = importInsomniaV5Data(specData);
+      const apiSpec = result.find(r => r.type === 'ApiSpec');
+      // fileName '' is indistinguishable from "not set" for repair-database;
+      // falling back here avoids a pointless restamp of `modified` on startup.
+      expect(apiSpec).toMatchObject({ fileName: 'My Design Document' });
+    });
   });
 
   describe('getInsomniaV5DataExport', () => {
