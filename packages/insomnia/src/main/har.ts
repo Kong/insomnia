@@ -4,7 +4,7 @@ import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { RenderError } from '~/common/templating/render-error';
-import type { RenderedRequest } from '~/common/templating/types';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { smartEncodeUrl } from '~/common/utils/url/querystring';
 import { getAuthHeader } from '~/main/network/get-auth-header';
@@ -218,7 +218,7 @@ export async function exportHarResponse(response?: Response) {
   return harResponse;
 }
 
-export async function exportHarRequest(requestId: string, environmentOrWorkspaceId: string, addContentLength = false) {
+export async function exportHarRequest(requestId: string, environmentOrWorkspaceId: string, addContentLength = false, purpose?: RenderPurpose) {
   const request = await services.request.getById(requestId);
   let environmentId: string;
   if (models.environment.isEnvironmentId(environmentOrWorkspaceId)) {
@@ -239,12 +239,12 @@ export async function exportHarRequest(requestId: string, environmentOrWorkspace
     return null;
   }
 
-  return exportHarWithRequest(request, environmentId, addContentLength);
+  return exportHarWithRequest(request, environmentId, addContentLength, purpose);
 }
 
-export async function exportHarWithRequest(request: Request, environmentId?: string, addContentLength = false) {
+export async function exportHarWithRequest(request: Request, environmentId?: string, addContentLength = false, purpose?: RenderPurpose) {
   try {
-    const renderResult = await getRenderedRequestAndContext({ request, environment: environmentId });
+    const renderResult = await getRenderedRequestAndContext({ request, environment: environmentId, purpose });
     const renderedRequest = await getRuntime().network.applyRequestHooks(renderResult.request, renderResult.context);
     parseGraphQLReqeustBody(renderedRequest);
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
