@@ -41,7 +41,19 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
 
   const skippedCount = skipped.reduce((total, outcome) => total + outcome.result.errors.length, 0);
 
-  console.error('[export] entities skipped during export', skipped);
+  // The YAML itself is left out — it can be megabytes and the toast already carries the user-facing report.
+  console.error(
+    '[export] entities skipped during export',
+    skipped.map(({ workspaceName, result }) => ({
+      workspaceName,
+      yamlWritten: result.yaml !== '',
+      entities: result.errors.map(error =>
+        `${error.entityType} "${error.name}" at ${error.path || '(root)'}: ${error.issues
+          .map(issue => issue.message)
+          .join('; ')}`,
+      ),
+    })),
+  );
 
   showToast(
     {
