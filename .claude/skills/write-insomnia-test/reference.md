@@ -1252,7 +1252,7 @@ deleteBranch(branch: string, switchToBranch = "master"): Promise<void>  // check
 ```ts
 // enums/git-change-list.ts — GitChangeList.Staged = "Staged changes" | GitChangeList.Unstaged = "Unstaged changes"
 openChangeDiff(list: GitChangeList, fileName: string): Promise<void>  // clicks the row and waits for the diff pane (Stage/Unstage this file button); the warning flag arrives with the diff, so once this resolves its presence/absence is settled
-isUndiscardableWarningVisibleInDiff(): Promise<boolean>               // "This change is only Insomnia internally reformatting the file…" banner above the diff
+isUndiscardableWarningVisible(): Promise<boolean>               // "This change is only Insomnia internally reformatting the file…" banner above the diff
 openDiscardConfirmation(fileName: string): Promise<void>              // clicks Discard on an unstaged row, waits for the "Discard Changes" dialog, does not confirm
 getDiscardConfirmationText(): Promise<string>                         // the dialog's text
 isUndiscardableWarningVisibleInDiscardDialog(): Promise<boolean>
