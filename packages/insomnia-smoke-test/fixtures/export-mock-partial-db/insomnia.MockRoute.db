@@ -1,0 +1,2 @@
+{"_id":"mock-route_ok","type":"MockRoute","parentId":"mock_mock_partial","modified":1792400000000,"created":1792400000000,"name":"/ok","body":"{}","headers":[],"method":"GET","mimeType":"application/json","statusCode":200,"statusText":"OK"}
+{"_id":"mock-route_broken","type":"MockRoute","parentId":"mock_mock_partial","modified":1792400000000,"created":1792400000000,"name":"/broken","body":"{}","headers":[],"method":"GET","mimeType":"application/json","statusCode":"not-a-number","statusText":"OK"}
