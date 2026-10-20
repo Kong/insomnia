@@ -102,7 +102,8 @@ export const TabbedDiffCard: FC<{ diff: EntityDiff; header: ReactNode; tabs: Dif
   header,
   tabs,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  // A card with nothing below its header (eg. only the name or URL changed) starts collapsed.
+  const [isExpanded, setIsExpanded] = useState(tabs.length > 0);
   const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
 
   const activeTabId = selectedTabId && tabs.some(t => t.id === selectedTabId) ? selectedTabId : tabs[0]?.id;
