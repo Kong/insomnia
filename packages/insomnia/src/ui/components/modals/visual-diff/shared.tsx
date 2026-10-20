@@ -165,7 +165,8 @@ function diffLanguage(value: unknown, text: string) {
 
 // A long value changed on both sides gets a highlighted diff, so the changed parts stand out.
 // Otherwise before/after are laid side-by-side when there's room for both (flex-wrap falls back
-// to stacked once the combined width no longer fits the container).
+// to stacked once the combined width no longer fits the container). Either way a long value
+// scrolls inside a capped height (as `InlineDiffEditor` does), so one value can't stretch the card.
 export const ValueChange: FC<{ before: unknown; after: unknown }> = ({ before, after }) => {
   const hasBefore = before !== undefined;
   const hasAfter = after !== undefined;
@@ -179,12 +180,12 @@ export const ValueChange: FC<{ before: unknown; after: unknown }> = ({ before, a
   return (
     <div className="flex flex-wrap items-start gap-2 text-sm">
       {hasBefore && (
-        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font) line-through">
+        <pre className="max-h-96 min-w-40 flex-1 overflow-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font) line-through">
           {formatValue(before)}
         </pre>
       )}
       {hasAfter && (
-        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font)">
+        <pre className="max-h-96 min-w-40 flex-1 overflow-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font)">
           {formatValue(after)}
         </pre>
       )}

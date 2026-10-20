@@ -12,7 +12,8 @@ const MAX_PLACEHOLDER_LINES = 12;
 // Read-only side-by-side diff for a long before/after value inside a card (eg. a request body or
 // an API spec), with changed words highlighted and unchanged regions folded away. The editor is
 // only created once it scrolls near the viewport — a file can have dozens of these, and creating
-// them all at once freezes the UI — and then grows to fit its content instead of scrolling.
+// them all at once freezes the UI — and then grows to fit its content, scrolling past `max-h-96` so
+// one large change can't stretch the card.
 export const InlineDiffEditor = ({
   original,
   modified,
@@ -62,8 +63,8 @@ export const InlineDiffEditor = ({
       folding: false,
       wordWrap: 'on',
       diffWordWrap: 'on',
-      // The editor is as tall as its content, so wheel events should scroll the card list instead.
-      scrollbar: { vertical: 'hidden', alwaysConsumeMouseWheel: false },
+      // Past its top or bottom, the wheel scrolls the card list instead.
+      scrollbar: { alwaysConsumeMouseWheel: false },
       hideUnchangedRegions: { enabled: true, contextLineCount: 2, minimumLineCount: 3, revealLineCount: 20 },
       theme: isLightTheme ? 'vs' : 'vs-dark',
     });
@@ -100,7 +101,7 @@ export const InlineDiffEditor = ({
   return (
     <div
       ref={containerRef}
-      className="w-full overflow-hidden rounded-xs bg-(--color-bg)"
+      className="max-h-96 w-full overflow-hidden rounded-xs bg-(--color-bg)"
       style={{ height: Math.min(MAX_PLACEHOLDER_LINES, lineCount) * LINE_HEIGHT + 8 }}
     />
   );
