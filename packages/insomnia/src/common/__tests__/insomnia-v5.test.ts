@@ -693,6 +693,20 @@ spec:
         eventListeners: [{ id: 'listener1', eventName: 'join', desc: 'on join', isOpen: true }],
         metaSortKey: 5,
       });
+      await services.webSocketPayload.create({
+        _id: 'ws-payload_order',
+        parentId: 'ws-req_order',
+        name: 'payload-order',
+        value: '{"ping":1}',
+        mode: 'application/json',
+      });
+      await services.socketIOPayload.create({
+        _id: 'socket-io-payload_order',
+        parentId: 'socketio-req_order',
+        eventName: 'chat message',
+        ack: true,
+        args: [{ id: 'arg1', value: '"world"', mode: 'application/json' }],
+      });
 
       const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
       await services.cookieJar.update(cookieJar, {
@@ -795,9 +809,13 @@ spec:
         'headers',
         'parameters',
         'pathParameters',
+        'body',
       ]);
       expect(Object.keys(exportedWebSocket.settings)).toEqual(['encodeUrl', 'cookies', 'followRedirects']);
       expect(Object.keys(exportedWebSocket.settings.cookies)).toEqual(['store', 'send']);
+      expect(Object.keys(exportedWebSocket.body)).toEqual(['meta', 'name', 'value', 'mode']);
+      expect(Object.keys(exportedWebSocket.body.meta)).toEqual(['id', 'created', 'modified']);
+      expect(exportedWebSocket.body.meta.id).toBe('ws-payload_order');
 
       const exportedSocketIO = findItem('socketio-order');
       expect(Object.keys(exportedSocketIO)).toEqual([
@@ -810,10 +828,15 @@ spec:
         'parameters',
         'pathParameters',
         'eventListeners',
+        'body',
       ]);
       expect(Object.keys(exportedSocketIO.settings)).toEqual(['encodeUrl', 'cookies', 'path']);
       expect(Object.keys(exportedSocketIO.settings.cookies)).toEqual(['store', 'send']);
       expect(Object.keys(exportedSocketIO.eventListeners[0])).toEqual(['id', 'eventName', 'desc', 'isOpen']);
+      expect(Object.keys(exportedSocketIO.body)).toEqual(['meta', 'eventName', 'ack', 'args']);
+      expect(Object.keys(exportedSocketIO.body.meta)).toEqual(['id', 'created', 'modified']);
+      expect(exportedSocketIO.body.meta.id).toBe('socket-io-payload_order');
+      expect(Object.keys(exportedSocketIO.body.args[0])).toEqual(['id', 'value', 'mode']);
 
       expect(Object.keys(parsed.cookieJar)).toEqual(['name', 'meta', 'cookies']);
       expect(Object.keys(parsed.cookieJar.cookies[0])).toEqual([

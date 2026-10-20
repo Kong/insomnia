@@ -28,9 +28,11 @@ import type {
   RequestGroup,
   RequestHeader,
   RequestParameter,
+  SocketIOPayload,
   SocketIORequest,
   UnitTest,
   UnitTestSuite,
+  WebSocketPayload,
   WebSocketRequest,
   Workspace,
   WorkspaceScope,
@@ -130,6 +132,72 @@ function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRe
     isPrivate: resource.isPrivate,
     description: resource.description,
     sortKey: resource.metaSortKey,
+  };
+}
+
+/**
+ * Maps a payload document's metadata to v5 export format.
+ *
+ * Deliberately narrower than `mapMeta`: a payload has no description and no sort order, and
+ * `filterEmptyValue` keeps `""`, `false` and `0`, so reusing `mapMeta` would add three
+ * meaningless lines to every exported payload.
+ */
+function mapPayloadMeta(payload: SocketIOPayload | WebSocketPayload) {
+  return {
+    id: payload._id,
+    created: payload.created,
+    modified: payload.modified,
+  };
+}
+
+/**
+ * Maps a Socket.IO request's payload document to the v5 `body` field.
+ *
+ * Merely opening a Socket.IO request creates an empty payload document (via
+ * `services.socketIOPayload.getOrCreateByParentId`), so an untouched payload is omitted
+ * entirely — otherwise every repo would gain a spurious `body:` block and a git diff. This
+ * cannot be delegated to `removeEmptyFields`, which preserves `""` and `false`.
+ */
+function mapSocketIOBody(payload?: SocketIOPayload): Insomnia_SocketIORequest['body'] {
+  if (!payload) {
+    return;
+  }
+
+  const args = payload.args ?? [];
+  const isUntouched = !payload.eventName && !payload.ack && args.every(arg => !arg.value);
+
+  if (isUntouched) {
+    return;
+  }
+
+  return {
+    meta: mapPayloadMeta(payload),
+    eventName: payload.eventName ?? '',
+    ack: payload.ack ?? false,
+    // Emit every arg once any of them has content, so arg ids, order and per-arg mode survive
+    args,
+  };
+}
+
+/**
+ * Maps a WebSocket request's payload document to the v5 `body` field. See `mapSocketIOBody`
+ * for why an untouched payload is omitted.
+ */
+function mapWebSocketBody(payload?: WebSocketPayload): Insomnia_WebsocketRequest['body'] {
+  if (!payload) {
+    return;
+  }
+
+  const defaults = models.webSocketPayload.init();
+  if (payload.name === defaults.name && payload.value === defaults.value && payload.mode === defaults.mode) {
+    return;
+  }
+
+  return {
+    meta: mapPayloadMeta(payload),
+    name: payload.name,
+    value: payload.value,
+    mode: payload.mode,
   };
 }
 
@@ -560,9 +628,9 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
 
 function getCollection(
   file: InsomniaFile,
-): (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] {
+): (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] {
   if (file.type === 'collection.insomnia.rest/5.0' || file.type === 'spec.insomnia.rest/5.0') {
-    const resources: (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] = [];
+    const resources: (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] = [];
 
     function walkCollection(
       collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
@@ -689,6 +757,29 @@ function getCollection(
             };
 
             resources.push(websocketRequest);
+
+            if (data.body) {
+              const webSocketPayload: WithExportType<WebSocketPayload> = {
+                // The id must be unique per payload: `importResourcesToNewWorkspace` keys its id
+                // map by `_id`, so a shared literal placeholder would collapse every payload in
+                // the file into one. The owning request's id is unique either way.
+                ...mapMetaToInsomniaMeta(
+                  data.body.meta || {
+                    id: `__WEBSOCKET_PAYLOAD_ID__${websocketRequest._id}`,
+                  },
+                ),
+                type: 'WebSocketPayload',
+                _type: 'websocket_payload',
+                // Must be the request's id as it appears in this same flat array, so that the
+                // import's second pass can resolve it through the id map
+                parentId: websocketRequest._id,
+                name: data.body.name,
+                value: data.body.value,
+                mode: data.body.mode,
+              };
+
+              resources.push(webSocketPayload);
+            }
           } else {
             const socketIORequest = SocketIORequestSchema.safeParse(item);
             if (socketIORequest.success) {
@@ -718,6 +809,27 @@ function getCollection(
               };
 
               resources.push(socketIO);
+
+              if (data.body) {
+                const socketIOPayload: WithExportType<SocketIOPayload> = {
+                  // See the WebSocket payload above for why the request's id is used as a suffix
+                  ...mapMetaToInsomniaMeta(
+                    data.body.meta || {
+                      id: `__SOCKET_IO_PAYLOAD_ID__${socketIO._id}`,
+                    },
+                  ),
+                  type: 'SocketIOPayload',
+                  _type: 'socketio_payload',
+                  parentId: socketIO._id,
+                  // A Socket.IO payload has no user-facing name; '' is the base model's default
+                  name: '',
+                  eventName: data.body.eventName,
+                  ack: data.body.ack,
+                  args: data.body.args,
+                };
+
+                resources.push(socketIOPayload);
+              }
             }
           }
         }
@@ -921,6 +1033,16 @@ export async function getInsomniaV5DataExport({
       return false;
     });
 
+    // Payload documents are children of their request rather than collection nodes of their own,
+    // so they are looked up by parentId while building the owning request's node, and are never
+    // passed to `getCollectionFromResources`.
+    const socketIOPayloadsByRequestId = new Map(
+      exportableResources.filter(models.socketIOPayload.isSocketIOPayload).map(payload => [payload.parentId, payload]),
+    );
+    const webSocketPayloadsByRequestId = new Map(
+      exportableResources.filter(models.webSocketPayload.isWebSocketPayload).map(payload => [payload.parentId, payload]),
+    );
+
     /**
      * Recursively builds a collection structure from flat resource list
      * This function converts the flat list of resources into a hierarchical structure
@@ -1006,6 +1128,7 @@ export async function getInsomniaV5DataExport({
               headers: mapHeaders(resource.headers),
               parameters: mapParameters(resource.parameters),
               pathParameters: resource.pathParameters,
+              body: mapWebSocketBody(webSocketPayloadsByRequestId.get(resource._id)),
             };
             collection.push(webSocketRequest);
           } else if (models.socketIORequest.isSocketIORequest(resource)) {
@@ -1026,6 +1149,7 @@ export async function getInsomniaV5DataExport({
               parameters: mapParameters(resource.parameters),
               pathParameters: resource.pathParameters,
               eventListeners: resource.eventListeners,
+              body: mapSocketIOBody(socketIOPayloadsByRequestId.get(resource._id)),
             };
             collection.push(socketIORequest);
           } else if (models.grpcRequest.isGrpcRequest(resource)) {
