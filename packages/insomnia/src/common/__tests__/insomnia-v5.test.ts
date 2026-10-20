@@ -400,6 +400,43 @@ spec:
       expect(parsed.spec).toBeDefined();
     });
 
+    // A Socket.IO request used to be dropped from a design doc's export, which in a Git Sync
+    // project meant `deleteOrphans` removed the request itself on the next sync
+    it('exports Socket.IO requests from a design workspace', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_design_socketio',
+        name: 'Design Workspace',
+        parentId: 'proj_test',
+        scope: 'design',
+      });
+      await services.environment.create({
+        _id: 'env_design_socketio',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+      await services.apiSpec.getOrCreateForParentId(workspace._id, {
+        _id: 'spec_design_socketio',
+        contents: '{"openapi": "3.0.0"}',
+        contentType: 'json',
+      });
+      await services.socketIORequest.create({
+        _id: 'socketio-req_design',
+        name: 'design-socketio',
+        parentId: workspace._id,
+        url: 'https://socket.example.com',
+        metaSortKey: 1,
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection.map((item: { name: string }) => item.name)).toContain('design-socketio');
+    });
+
     it('handles mock server scope', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_mock',

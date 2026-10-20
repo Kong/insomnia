@@ -1429,7 +1429,8 @@ export async function getInsomniaV5DataExport({
               models.requestGroup.isRequestGroup(resource) ||
               models.request.isRequest(resource) ||
               models.webSocketRequest.isWebSocketRequest(resource) ||
-              models.grpcRequest.isGrpcRequest(resource),
+              models.grpcRequest.isGrpcRequest(resource) ||
+              models.socketIORequest.isSocketIORequest(resource),
           ),
           workspace._id,
         ),
