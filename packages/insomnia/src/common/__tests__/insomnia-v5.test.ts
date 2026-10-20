@@ -375,7 +375,7 @@ collection: []
 
       const parsed = YAML.parse(result);
       expect(parsed.type).toBe('spec.insomnia.rest/5.0');
-      expect(parsed.spec).toBeUndefined();
+      expect(parsed.spec).toEqual({ contents: {} });
       expect(parsed.collection).toHaveLength(1);
       expect(errors).toEqual([]);
       expect(tryImportV5Data(result).error).toBeUndefined();

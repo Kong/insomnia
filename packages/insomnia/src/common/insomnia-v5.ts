@@ -923,7 +923,7 @@ export async function getInsomniaV5DataExport({
      * here was not isolated by the code above, so the export yields nothing rather than a
      * file that only looks complete.
      */
-    const finalize = (doc: InsomniaFile): InsomniaV5ExportResult => {
+    const finalize = (doc: InsomniaFile, emptySpecSection = false): InsomniaV5ExportResult => {
       const parsed = InsomniaFileSchema.safeParse(doc);
 
       if (!parsed.success) {
@@ -937,7 +937,14 @@ export async function getInsomniaV5DataExport({
         return { yaml: '', errors };
       }
 
-      return { yaml: stringify(removeEmptyFields(parsed.data)), errors };
+      const cleaned = removeEmptyFields(parsed.data);
+      // removeEmptyFields drops an empty spec, but a legacy design document should
+      // keep the section so it round-trips like the importer's default.
+      if (emptySpecSection) {
+        cleaned.spec = { contents: {} };
+      }
+
+      return { yaml: stringify(cleaned), errors };
     };
 
     /**
@@ -1536,7 +1543,7 @@ export async function getInsomniaV5DataExport({
         ),
       };
 
-      return finalize(specDoc);
+      return finalize(specDoc, apiSpecResources.length === 0);
     } else if (workspace.scope === 'environment') {
       const environments = parseSection(
         () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
