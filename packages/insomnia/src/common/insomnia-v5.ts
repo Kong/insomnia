@@ -1600,7 +1600,12 @@ export async function getInsomniaV5DataExport({
       const mcpRequestSection = parseSection(
         () => getMcpRequestFromResources(mcpRequest),
         McpRequestSchema,
-        { entityId: mcpRequest._id, entityType: mcpRequest.type, name: mcpRequest.name, path: 'mcpRequest' },
+        {
+          entityId: mcpRequest._id,
+          entityType: mcpRequest.type,
+          name: mcpRequest.name || workspace.name,
+          path: 'mcpRequest',
+        },
       );
 
       // Each mcp workspace holds exactly one request, which is the whole document.
