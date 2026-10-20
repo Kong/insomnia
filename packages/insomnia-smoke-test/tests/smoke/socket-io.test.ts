@@ -20,6 +20,11 @@ test('can make socket.io connection', async ({ app, page, insomnia }) => {
 
   await insomnia.navigationSidebar.clickRequestOrFolder('Socket.IO Request');
   await expect.soft(page.locator('.app')).toContainText('http://localhost:4020');
+
+  // The body lives in its own document, so it only survives the import if the v5 file carries it
+  await expect.soft(page.getByLabel('Event Name')).toHaveValue('hello');
+  await expect.soft(page.locator('[data-testid="CodeEditor"]:visible').first()).toContainText('world');
+
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('Connected', { ignoreCase: true });
   await page.getByRole('tab', { name: 'Console' }).click();
