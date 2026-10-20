@@ -3476,22 +3476,26 @@ export const diffFileLoader = async ({
           after: fileStatus.workdir,
         };
 
-    // Analyse the untouched blobs so reordering isn't masked by the normalization
-    // applied for rendering.
-    const rawBefore = staged ? fileStatus.rawHead : fileStatus.rawStage || fileStatus.rawHead;
-    const rawAfter = staged ? fileStatus.rawStage : fileStatus.workdir;
+    // The change analysis parses both files, so only pay for it when Debug Mode is on.
+    let diagnostics: GitDiffDiagnostics | undefined;
+    if ((await services.settings.get()).debugMode) {
+      // Analyse the untouched blobs so reordering isn't masked by the normalization
+      // applied for rendering.
+      const rawBefore = staged ? fileStatus.rawHead : fileStatus.rawStage || fileStatus.rawHead;
+      const rawAfter = staged ? fileStatus.rawStage : fileStatus.workdir;
 
-    const diagnostics: GitDiffDiagnostics = {
-      appVersion: getAppVersion(),
-      filepath,
-      staged,
-      comparing: staged ? 'HEAD (last commit) → index (staged)' : 'index/HEAD (committed) → working copy (on disk)',
-      beforeOid: (staged ? fileStatus.oids.head : fileStatus.oids.stage || fileStatus.oids.head) ?? null,
-      afterOid: (staged ? fileStatus.oids.stage : fileStatus.oids.workdir) ?? null,
-      displayNormalized: (rawBefore ?? '') !== (diff.before ?? ''),
-      committedYaml: rawBefore ?? null,
-      report: buildInsomniaChangeReport(rawBefore, rawAfter),
-    };
+      diagnostics = {
+        appVersion: getAppVersion(),
+        filepath,
+        staged,
+        comparing: staged ? 'HEAD (last commit) → index (staged)' : 'index/HEAD (committed) → working copy (on disk)',
+        beforeOid: (staged ? fileStatus.oids.head : fileStatus.oids.stage || fileStatus.oids.head) ?? null,
+        afterOid: (staged ? fileStatus.oids.stage : fileStatus.oids.workdir) ?? null,
+        displayNormalized: (rawBefore ?? '') !== (diff.before ?? ''),
+        committedYaml: rawBefore ?? null,
+        report: buildInsomniaChangeReport(rawBefore, rawAfter),
+      };
+    }
 
     const { name, scope } = getPreviewItemNameAndScope(diff);
 
