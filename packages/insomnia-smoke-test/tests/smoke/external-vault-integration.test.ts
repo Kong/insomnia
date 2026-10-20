@@ -64,12 +64,7 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
   await page.locator('#close-add-cloud-credential-modal').click();
 
   // close the settings
-  await page.locator('.app').press('Escape');
-  // dismiss any remaining modal overlay before interacting with the sidebar
-  await page
-    .locator('[data-close-modal="true"]')
-    .click()
-    .catch(() => {});
+  await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
   // used in request
   await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');
@@ -91,18 +86,21 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
   // test aws vault tag
   await page.locator(`[data-template^="${externalVaultTestCases.aws.tagPrefix}"]`).click();
   await page.getByLabel('Credential For Vault Service').selectOption(awsCredentialName);
+  await page.getByRole('dialog').getByRole('button', { name: 'Reveal value' }).click();
   const previewText = page.getByRole('dialog').getByLabel('Live Preview');
   await expect.soft(previewText).toHaveText(externalVaultTestCases.aws.expectedResult);
   await page.getByRole('button', { name: 'Done' }).click();
   // test gcp vault tag
   await page.locator(`[data-template^="${externalVaultTestCases.gcp.tagPrefix}"]`).click();
   await page.getByLabel('Credential For Vault Service').selectOption(gcpCredentialName);
+  await page.getByRole('dialog').getByRole('button', { name: 'Reveal value' }).click();
   const gcpPreviewText = page.getByRole('dialog').getByLabel('Live Preview');
   await expect.soft(gcpPreviewText).toHaveText(externalVaultTestCases.gcp.expectedResult);
   await page.getByRole('button', { name: 'Done' }).click();
   // test hashicorp vault tag
   await page.locator(`[data-template^="${externalVaultTestCases.hashicorp.tagPrefix}"]`).click();
   await page.getByLabel('Credential For Vault Service').selectOption(hashicorpCredentialName);
+  await page.getByRole('dialog').getByRole('button', { name: 'Reveal value' }).click();
   const hashicorpPreviewText = page.getByRole('dialog').getByLabel('Live Preview');
   await expect.soft(hashicorpPreviewText).toHaveText(externalVaultTestCases.hashicorp.expectedResult);
   await page.getByRole('button', { name: 'Done' }).click();

@@ -29,7 +29,10 @@ async function _applyApiSpecName(workspace: Workspace) {
   const apiSpec = await apiSpecServices.getByParentId(workspace._id);
   const existsAndFilenameIsDefaultOrMissing =
     apiSpec && (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName);
-  if (existsAndFilenameIsDefaultOrMissing) {
+  // A backfill that would write the existing value changes nothing but would
+  // still restamp `modified`, which git sync serializes into YAML and shows up
+  // as a modified file. Skip no-op writes.
+  if (existsAndFilenameIsDefaultOrMissing && apiSpec.fileName !== workspace.name) {
     await apiSpecServices.update(apiSpec, { fileName: workspace.name });
   }
 }
