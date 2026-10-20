@@ -58,6 +58,7 @@ import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
 import type { FlatItem } from './types';
 import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
+import { useRenameModal } from './use-rename-modal';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
 
@@ -656,8 +657,7 @@ const ProjectNavigationSidebarInner = (
   const [isShortcutCreateOpen, setIsShortcutCreateOpen] = useState(false);
   // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
-  // Grid list item id of the row that the rename shortcut is targeting.
-  const [renameTargetKey, setRenameTargetKey] = useState<string | null>(null);
+  const showRenameModal = useRenameModal();
   const visibleFlatItems = useMemo(() => {
     const notHidden = flatItems.filter(i => !i.hidden);
     if (!focusedWorkspaceId) {
@@ -814,6 +814,7 @@ const ProjectNavigationSidebarInner = (
       });
 
       const targetKey = getSidebarGridListItemId(targetItem);
+      // scroll to focused item if it is not currently visible
       virtualizer.scrollToIndex(visibleFlatItems.indexOf(targetItem), { align: 'auto' });
 
       // The target row may be virtualized out; wait for it to mount before requesting the rename.
@@ -821,7 +822,7 @@ const ProjectNavigationSidebarInner = (
         requestAnimationFrame(() => {
           const mounted = parentRef.current?.querySelector(`[data-key="${targetKey}"]`);
           if (mounted) {
-            setRenameTargetKey(targetKey);
+            showRenameModal(targetItem);
           }
         });
       });
@@ -921,6 +922,7 @@ const ProjectNavigationSidebarInner = (
                       forceShowTrigger
                       isOpen={isFocusedWorkspaceMenuOpen}
                       onOpenChange={setIsFocusedWorkspaceMenuOpen}
+                      onRename={() => showRenameModal(focusedWorkspaceItem)}
                     />
                   )}
                 </div>
@@ -1167,8 +1169,7 @@ const ProjectNavigationSidebarInner = (
                           }}
                           highlighted={item.doc._id === onboardingEnvWorkspaceId}
                           nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
-                          isRenaming={renameTargetKey === getSidebarGridListItemId(item)}
-                          onRename={() => setRenameTargetKey(null)}
+                          onRename={() => showRenameModal(item)}
                         />
                       )}
 
@@ -1179,8 +1180,7 @@ const ProjectNavigationSidebarInner = (
                           item={item}
                           onToggleFolder={toggleRequestGroups}
                           depthOffset={treeDepthOffset}
-                          isRenaming={renameTargetKey === getSidebarGridListItemId(item)}
-                          onRename={() => setRenameTargetKey(null)}
+                          onRename={() => showRenameModal(item)}
                         />
                       )}
 
