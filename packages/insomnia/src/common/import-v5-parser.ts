@@ -82,10 +82,13 @@ export const CookieJarSchema = z.object({
 const { name, data, color, dataPropertyOrder, ...rest } = environment.baseEnvironmentSchema.omit({
   metaSortKey: true,
 }).shape;
+// Names of the confidential variables in `data`; see getConfidentialKeys in insomnia-v5.ts.
+const confidentialKeys = z.array(z.string()).optional();
 export const EnvironmentSchema = z.object({
   name,
   meta: MetaSchema.optional(),
   data,
+  confidentialKeys,
   color,
   subEnvironments: z
     .array(
@@ -93,6 +96,7 @@ export const EnvironmentSchema = z.object({
         name,
         meta: MetaSchema.optional(),
         data,
+        confidentialKeys,
         dataPropertyOrder,
         color,
         ...rest,
@@ -201,6 +205,7 @@ export const RequestGroupSchema = z.object({
     })
     .optional(),
   ...restRequestGroupSchemaShape,
+  confidentialKeys,
 });
 
 const {

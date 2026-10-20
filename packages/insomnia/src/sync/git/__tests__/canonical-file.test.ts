@@ -179,6 +179,19 @@ routes:
       expect(await getCanonicalInsomniaFileContent(canonicalContent!)).toBe(canonicalContent);
     });
 
+    it('keeps confidentialKeys through the round-trip so the flag survives Git Sync', async () => {
+      const content = `${buildCollection([{ id: 'fld_a', name: 'Folder A', created: 2000 }])}  data:
+    token: secret
+    host: example.com
+  confidentialKeys:
+    - token
+`;
+      const canonicalContent = await getCanonicalInsomniaFileContent(content);
+      expect(canonicalContent).toBe(await exportThroughDatabase(content));
+      expect(YAML.parse(canonicalContent!).environments.confidentialKeys).toEqual(['token']);
+      expect(await getCanonicalInsomniaFileContent(canonicalContent!)).toBe(canonicalContent);
+    });
+
     it('does not read from, write to or notify the app database', async () => {
       await db.update({ _id: 'req_app', type: models.request.type, parentId: 'wrk_app' } as BaseModel);
       const appChanges: unknown[] = [];
