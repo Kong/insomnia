@@ -15,8 +15,6 @@ import { useParams } from 'react-router';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-group-actions-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
-import { showModal } from '~/ui/components/modals';
-import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import type {
   CollectionChildFlatItem,
   PinnedRequestFlatItem,
@@ -114,7 +112,7 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
   ) : null;
 };
 
-const getRequestNameOrFallback = (
+export const getRequestNameOrFallback = (
   doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
 ): string => {
   return !models.requestGroup.isRequestGroup(doc)
@@ -129,9 +127,16 @@ interface RequestNodeProps {
   // Number of ancestor indent levels to strip when the sidebar is focused on a
   // single collection (the project and workspace rows are no longer shown).
   depthOffset?: number;
+  onRename: () => void;
 }
 
-export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }: RequestNodeProps) => {
+export const RequestNode = ({
+  item,
+  onToggleFolder,
+  className,
+  depthOffset = 0,
+  onRename,
+}: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
   const isPinnedRequest = kind === 'pinnedRequest';
   const isLastPinned = item.kind === 'pinnedRequest' && item.isLastPinned;
@@ -202,16 +207,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       {models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestGroupActionsDropdown
           requestGroup={doc}
-          onRename={() =>
-            showModal(PromptModal, {
-              title: `Rename ${getRequestNameOrFallback(doc)}`,
-              defaultValue: getRequestNameOrFallback(doc),
-              submitName: 'Rename',
-              selectText: true,
-              label: 'Name',
-              onComplete: newName => patchGroup(doc._id, { name: newName }),
-            })
-          }
+          onRename={onRename}
           activeProject={project}
           activeWorkspace={workspace}
           isOpen={isContextMenuOpen}
@@ -221,16 +217,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       {!models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestActionsDropdown
           request={doc}
-          onRename={() =>
-            showModal(PromptModal, {
-              title: `Rename ${getRequestNameOrFallback(doc)}`,
-              defaultValue: getRequestNameOrFallback(doc),
-              submitName: 'Rename',
-              selectText: true,
-              label: 'Name',
-              onComplete: newName => patchRequest(doc._id, { name: newName }),
-            })
-          }
+          onRename={onRename}
           activeProject={project}
           activeWorkspace={workspace}
           isPinned={item.pinned}
