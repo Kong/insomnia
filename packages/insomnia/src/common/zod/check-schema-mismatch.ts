@@ -100,7 +100,7 @@ function collectIssues(issues: readonly z.core.$ZodIssue[], basePath: PropertyKe
 // cache the strict schema to avoid rebuilding it multiple times
 const strictSchemaCache = new WeakMap<z.ZodTypeAny, z.ZodTypeAny>();
 
-function getStrictSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
+export function getStrictSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
   let strictSchema = strictSchemaCache.get(schema);
   if (!strictSchema) {
     strictSchema = deepStrict(schema);
