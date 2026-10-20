@@ -345,6 +345,42 @@ collection: []
       expect(parsed.spec).toBeDefined();
     });
 
+    it('exports a design workspace that has no API spec', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_design_no_spec',
+        name: 'Legacy Design Workspace',
+        parentId: 'proj_test',
+        scope: 'design',
+      });
+
+      await services.environment.create({
+        _id: 'env_design_no_spec',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.request.create({
+        _id: 'req_design_no_spec',
+        name: 'Legacy Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/legacy',
+        method: 'GET',
+      });
+
+      const { yaml: result, errors } = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.type).toBe('spec.insomnia.rest/5.0');
+      expect(parsed.spec).toBeUndefined();
+      expect(parsed.collection).toHaveLength(1);
+      expect(errors).toEqual([]);
+      expect(tryImportV5Data(result).error).toBeUndefined();
+    });
+
     it('handles mock server scope', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_mock',

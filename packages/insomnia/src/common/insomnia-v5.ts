@@ -1490,16 +1490,12 @@ export async function getInsomniaV5DataExport({
 
       return finalize({ type: 'collection.insomnia.rest/5.0', ...collectionSections, spec: specSection });
     } else if (workspace.scope === 'design') {
-      if (apiSpecResources.length === 0) {
-        return fail(apiSpecIdentity, 'Design workspace has no API spec to export');
-      }
-
-      const specSection = parseSection(() => getSpecFromResources(apiSpecResources), SpecSchema, apiSpecIdentity);
-
-      // The document is the spec; there is nothing left to export without it.
-      if (!specSection) {
-        return { yaml: '', errors };
-      }
+      // Legacy design workspaces can lose their spec. Export the rest instead of
+      // failing the workspace: the importer treats a missing spec as an empty one.
+      const specSection =
+        apiSpecResources.length > 0
+          ? parseSection(() => getSpecFromResources(apiSpecResources), SpecSchema, apiSpecIdentity)
+          : undefined;
 
       const errorsBeforeCollection = errors.length;
       const designCollection = getCollectionFromResources(
@@ -1532,7 +1528,7 @@ export async function getInsomniaV5DataExport({
           cookieJarIdentity,
         ),
         environments: parseSection(getOptionalEnvironments, EnvironmentSchema, environmentsIdentity),
-        spec: specSection,
+        spec: specSection ?? {},
         testSuites: getTestSuitesFromResources(
           exportableResources.filter(
             resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource),
