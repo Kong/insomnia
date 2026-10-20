@@ -375,6 +375,10 @@ function getCookieJar(file: InsomniaFile): [CookieJar] | [] {
 
 function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
   if ('spec' in file && file.spec) {
+    // The `{ contents }` shape of the v5 spec format does not carry
+    // ApiSpec.fileName. Fall back to the file name so a git round-trip does
+    // not blank it out and trigger repair-database to rewrite (and restamp
+    // `modified` of) every spec.
     return [
       {
         ...mapMetaToInsomniaMeta(
@@ -385,7 +389,7 @@ function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
         type: 'ApiSpec',
         name: file.name || 'Api Spec',
         _type: 'api_spec',
-        fileName: 'file' in file.spec ? file.spec.file : '',
+        fileName: ('file' in file.spec ? file.spec.file : undefined) || file.name || '',
         contentType: 'json',
         contents: 'contents' in file.spec && file.spec.contents ? stringify(file.spec.contents) : '',
         parentId: file.meta?.id || '__WORKSPACE_ID__',
