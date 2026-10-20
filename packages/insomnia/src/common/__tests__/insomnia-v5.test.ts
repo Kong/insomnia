@@ -5,7 +5,7 @@
  * ensuring they work correctly and handle edge cases properly.
  */
 
-import type { Request } from 'insomnia-data';
+import type { Environment, Request } from 'insomnia-data';
 import { EnvironmentKvPairDataType, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
@@ -965,6 +965,79 @@ collection: []
       expect(result).toBe('');
       expect(errors).toHaveLength(1);
       expect(errors[0].entityId).toBe('req_design_all_broken');
+    });
+
+    it('drops a section that fails validation and exports the rest', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_section_broken',
+        name: 'Broken Section Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      const baseEnvironment = await services.environment.create({
+        _id: 'env_section_broken',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.request.create({
+        _id: 'req_section_ok',
+        name: 'Healthy Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/ok',
+        method: 'GET',
+      });
+
+      // A null data object is not a shape the export schema accepts, but NeDB can hold it.
+      await services.environment.update(baseEnvironment, { data: null as unknown as Environment['data'] });
+
+      const { yaml: result, errors } = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.environments).toBeUndefined();
+      expect(tryImportV5Data(result).error).toBeUndefined();
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchObject({
+        entityId: 'env_section_broken',
+        entityType: 'Environment',
+        name: 'Base Env',
+        path: 'environments',
+      });
+    });
+
+    it('exports a collection that has no environment', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_no_environment',
+        name: 'No Environment Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.request.create({
+        _id: 'req_no_environment',
+        name: 'Healthy Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/ok',
+        method: 'GET',
+      });
+
+      const { yaml: result, errors } = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.environments).toBeUndefined();
+      expect(errors).toEqual([]);
+      expect(tryImportV5Data(result).error).toBeUndefined();
     });
   });
 

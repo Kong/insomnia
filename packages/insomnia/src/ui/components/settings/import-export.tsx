@@ -178,6 +178,8 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
       }
 
       try {
+        let exportSucceeded = false;
+
         switch (selectedFormat) {
           case VALUE_HAR: {
             const fileName = await showSaveExportedFileDialog({
@@ -194,6 +196,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             });
 
             await writeExportedFileToFileSystem(fileName, stringifiedExport);
+            exportSucceeded = true;
 
             break;
           }
@@ -234,6 +237,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             }
 
             showExportSkippedEntitiesToast(outcomes);
+            exportSucceeded = outcomes.some(({ result }) => result.yaml !== '');
             break;
           }
 
@@ -241,7 +245,10 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
           }
         }
-        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.exportCompleted });
+
+        if (exportSucceeded) {
+          window.main.trackAnalyticsEvent({ event: AnalyticsEvent.exportCompleted });
+        }
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -870,9 +877,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
           }
 
           showExportAllDataCompleteModal(outcomes);
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.exportAllCollections,
-          });
+
+          if (outcomes.some(({ result }) => result.yaml !== '')) {
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.exportAllCollections,
+            });
+          }
         }}
         aria-label="Export all data"
       >
@@ -937,9 +947,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 }
 
                 showExportAllDataCompleteModal(outcomes);
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.exportAllCollections,
-                });
+
+                if (outcomes.some(({ result }) => result.yaml !== '')) {
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.exportAllCollections,
+                  });
+                }
               }}
               aria-label="Export all data"
             >

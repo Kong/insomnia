@@ -24,18 +24,19 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
     return;
   }
 
-  // Keyed by the failing entity id: identical display lines from different entities stay unique.
-  const lines = skipped.flatMap(({ workspaceName, result }) => {
+  // Keyed by outcome and error position: entity ids may be missing (section-level errors)
+  // and the same entity id can appear in more than one outcome.
+  const lines = skipped.flatMap(({ workspaceName, result }, outcomeIndex) => {
     const prefix = workspaceName ? `${workspaceName}: ` : '';
 
-    const entityLines = result.errors.map(error => ({
-      key: `${error.entityId}:${error.issues[0]?.path ?? ''}`,
+    const entityLines = result.errors.map((error, errorIndex) => ({
+      key: `${outcomeIndex}:${errorIndex}`,
       line: `${prefix}${error.name} (${error.entityType}) — ${error.issues[0]?.message ?? 'failed schema validation'}`,
     }));
 
     // A workspace that produced nothing still has to say which entities are to blame.
     return result.yaml === ''
-      ? [{ key: `${result.errors[0]?.entityId}:export-failed`, line: `${prefix}export failed, no file was written` }, ...entityLines]
+      ? [{ key: `${outcomeIndex}:export-failed`, line: `${prefix}export failed, no file was written` }, ...entityLines]
       : entityLines;
   });
 

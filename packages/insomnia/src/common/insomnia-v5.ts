@@ -1016,6 +1016,49 @@ export async function getInsomniaV5DataExport({
     ): CollectionEntries {
       const collection: CollectionEntries = [];
 
+      /** Validates one entry and pushes it, or reports it as skipped. */
+      const pushEntry = (
+        entry:
+          | Insomnia_Request
+          | Insomnia_RequestGroup
+          | Insomnia_WebsocketRequest
+          | Insomnia_SocketIORequest
+          | Insomnia_GRPCRequest,
+        resource: Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest,
+        path: string,
+        children?: CollectionEntries,
+      ) => {
+        const parsed = CollectionEntrySchema.safeParse(entry);
+
+        if (parsed.success) {
+          collection.push(parsed.data);
+          return;
+        }
+
+        const skippedDescendants = countEntries(children);
+
+        errors.push({
+          entityId: resource._id,
+          entityType: resource.type,
+          name: resource.name,
+          path,
+          issues: [
+            ...toIssues(parsed.error),
+            // A folder carries its whole subtree, so say what else went with it.
+            ...(skippedDescendants > 0
+              ? [
+                  {
+                    path: '',
+                    message: `skipped together with ${skippedDescendants} nested ${
+                      skippedDescendants === 1 ? 'entity' : 'entities'
+                    }`,
+                  },
+                ]
+              : []),
+          ],
+        });
+      };
+
       // Filter resources based on requestIds filter and parent relationship
       resources
         .filter(resource => {
@@ -1029,166 +1072,103 @@ export async function getInsomniaV5DataExport({
         .filter(resource => resource.parentId === parentId)
         .forEach((resource, index) => {
           const path = `${parentPath}[${index}]`;
-          const children = models.requestGroup.isRequestGroup(resource)
-            ? getCollectionFromResources(resources, resource._id, `${path}.children`)
-            : undefined;
 
-          const entry = mapCollectionEntry(resource, children);
-
-          if (!entry) {
-            return;
-          }
-
-          const parsed = CollectionEntrySchema.safeParse(entry);
-
-          if (!parsed.success) {
-            const skippedDescendants = countEntries(children);
-
-            errors.push({
-              entityId: resource._id,
-              entityType: resource.type,
+          // Convert HTTP requests to v5 format
+          if (models.request.isRequest(resource)) {
+            const request: Insomnia_Request = {
+              url: resource.url,
               name: resource.name,
-              path,
-              issues: [
-                ...toIssues(parsed.error),
-                // A folder carries its whole subtree, so say what else went with it.
-                ...(skippedDescendants > 0
-                  ? [
-                      {
-                        path: '',
-                        message: `skipped together with ${skippedDescendants} nested ${
-                          skippedDescendants === 1 ? 'entity' : 'entities'
-                        }`,
-                      },
-                    ]
-                  : []),
-              ],
-            });
-            return;
+              meta: mapMeta(resource),
+              method: resource.method,
+              body: mapBody(resource.body),
+              parameters: mapParameters(resource.parameters),
+              headers: mapHeaders(resource.headers),
+              authentication: resource.authentication,
+              scripts: getScriptFromResources(resource),
+              settings: {
+                renderRequestBody: !resource.settingDisableRenderRequestBody,
+                encodeUrl: resource.settingEncodeUrl,
+                followRedirects: resource.settingFollowRedirects,
+                cookies: {
+                  send: resource.settingSendCookies,
+                  store: resource.settingStoreCookies,
+                },
+                rebuildPath: resource.settingRebuildPath,
+              },
+              pathParameters: resource.pathParameters,
+            };
+            pushEntry(request, resource, path);
+          } else if (models.requestGroup.isRequestGroup(resource)) {
+            // Convert request groups (folders) to v5 format
+            const children = getCollectionFromResources(resources, resource._id, `${path}.children`); // Recursively build children
+            const requestGroup: Insomnia_RequestGroup = {
+              name: resource.name,
+              meta: mapGroupMeta(resource),
+              children,
+              scripts: getScriptFromResources(resource),
+              authentication: resource.authentication,
+              environment: resource.environment,
+              environmentPropertyOrder: resource.environmentPropertyOrder,
+              headers: mapHeaders(resource.headers),
+            };
+            pushEntry(requestGroup, resource, path, children);
+          } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
+            // Convert WebSocket requests to v5 format
+            const webSocketRequest: Insomnia_WebsocketRequest = {
+              url: resource.url,
+              name: resource.name,
+              meta: mapMeta(resource),
+              settings: {
+                encodeUrl: resource.settingEncodeUrl,
+                followRedirects: resource.settingFollowRedirects,
+                cookies: {
+                  send: resource.settingSendCookies,
+                  store: resource.settingStoreCookies,
+                },
+                useProxy: resource.settingUseProxy,
+              },
+              authentication: resource.authentication,
+              headers: mapHeaders(resource.headers),
+              parameters: mapParameters(resource.parameters),
+              pathParameters: resource.pathParameters,
+            };
+            pushEntry(webSocketRequest, resource, path);
+          } else if (models.socketIORequest.isSocketIORequest(resource)) {
+            const socketIORequest: Insomnia_SocketIORequest = {
+              url: resource.url,
+              name: resource.name,
+              meta: mapMeta(resource),
+              settings: {
+                encodeUrl: resource.settingEncodeUrl,
+                cookies: {
+                  send: resource.settingSendCookies,
+                  store: resource.settingStoreCookies,
+                },
+                path: resource.settingPath,
+              },
+              authentication: resource.authentication,
+              headers: mapHeaders(resource.headers),
+              parameters: mapParameters(resource.parameters),
+              pathParameters: resource.pathParameters,
+              eventListeners: resource.eventListeners,
+            };
+            pushEntry(socketIORequest, resource, path);
+          } else if (models.grpcRequest.isGrpcRequest(resource)) {
+            const grpcRequest: Insomnia_GRPCRequest = {
+              url: resource.url,
+              name: resource.name,
+              meta: mapMeta(resource),
+              body: resource.body,
+              metadata: mapHeaders(resource.metadata),
+              protoFileId: resource.protoFileId || '',
+              protoMethodName: resource.protoMethodName,
+              reflectionApi: resource.reflectionApi,
+            };
+            pushEntry(grpcRequest, resource, path);
           }
-
-          collection.push(parsed.data);
         });
 
       return collection;
-    }
-
-    /**
-     * Converts one resource to its v5 representation, or `undefined` for resource types
-     * that the collection format cannot represent.
-     */
-    function mapCollectionEntry(
-      resource: Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest,
-      children: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
-    ):
-      | Insomnia_Request
-      | Insomnia_RequestGroup
-      | Insomnia_WebsocketRequest
-      | Insomnia_SocketIORequest
-      | Insomnia_GRPCRequest
-      | undefined {
-      // Convert HTTP requests to v5 format
-      if (models.request.isRequest(resource)) {
-        const request: Insomnia_Request = {
-          url: resource.url,
-          name: resource.name,
-          meta: mapMeta(resource),
-          method: resource.method,
-          body: mapBody(resource.body),
-          parameters: mapParameters(resource.parameters),
-          headers: mapHeaders(resource.headers),
-          authentication: resource.authentication,
-          scripts: getScriptFromResources(resource),
-          settings: {
-            renderRequestBody: !resource.settingDisableRenderRequestBody,
-            encodeUrl: resource.settingEncodeUrl,
-            followRedirects: resource.settingFollowRedirects,
-            cookies: {
-              send: resource.settingSendCookies,
-              store: resource.settingStoreCookies,
-            },
-            rebuildPath: resource.settingRebuildPath,
-          },
-          pathParameters: resource.pathParameters,
-        };
-        return request;
-      }
-
-      if (models.requestGroup.isRequestGroup(resource)) {
-        // Convert request groups (folders) to v5 format
-        const requestGroup: Insomnia_RequestGroup = {
-          name: resource.name,
-          meta: mapGroupMeta(resource),
-          children: children as Insomnia_RequestGroup['children'],
-          scripts: getScriptFromResources(resource),
-          authentication: resource.authentication,
-          environment: resource.environment,
-          environmentPropertyOrder: resource.environmentPropertyOrder,
-          headers: mapHeaders(resource.headers),
-        };
-        return requestGroup;
-      }
-
-      if (models.webSocketRequest.isWebSocketRequest(resource)) {
-        // Convert WebSocket requests to v5 format
-        const webSocketRequest: Insomnia_WebsocketRequest = {
-          url: resource.url,
-          name: resource.name,
-          meta: mapMeta(resource),
-          settings: {
-            encodeUrl: resource.settingEncodeUrl,
-            followRedirects: resource.settingFollowRedirects,
-            cookies: {
-              send: resource.settingSendCookies,
-              store: resource.settingStoreCookies,
-            },
-            useProxy: resource.settingUseProxy,
-          },
-          authentication: resource.authentication,
-          headers: mapHeaders(resource.headers),
-          parameters: mapParameters(resource.parameters),
-          pathParameters: resource.pathParameters,
-        };
-        return webSocketRequest;
-      }
-
-      if (models.socketIORequest.isSocketIORequest(resource)) {
-        const socketIORequest: Insomnia_SocketIORequest = {
-          url: resource.url,
-          name: resource.name,
-          meta: mapMeta(resource),
-          settings: {
-            encodeUrl: resource.settingEncodeUrl,
-            cookies: {
-              send: resource.settingSendCookies,
-              store: resource.settingStoreCookies,
-            },
-            path: resource.settingPath,
-          },
-          authentication: resource.authentication,
-          headers: mapHeaders(resource.headers),
-          parameters: mapParameters(resource.parameters),
-          pathParameters: resource.pathParameters,
-          eventListeners: resource.eventListeners,
-        };
-        return socketIORequest;
-      }
-
-      if (models.grpcRequest.isGrpcRequest(resource)) {
-        const grpcRequest: Insomnia_GRPCRequest = {
-          url: resource.url,
-          name: resource.name,
-          meta: mapMeta(resource),
-          body: resource.body,
-          metadata: mapHeaders(resource.metadata),
-          protoFileId: resource.protoFileId || '',
-          protoMethodName: resource.protoMethodName,
-          reflectionApi: resource.reflectionApi,
-        };
-        return grpcRequest;
-      }
-
-      return;
     }
 
     function getScriptFromResources(resource: Request | RequestGroup) {
@@ -1278,6 +1258,10 @@ export async function getInsomniaV5DataExport({
       }))[0];
     }
 
+    /**
+     * Test suites are an optional section, like environments: a suite that fails
+     * validation is dropped and reported but does not abort the rest of the export.
+     */
     function getTestSuitesFromResources(
       resources: (UnitTestSuite | UnitTest)[],
     ): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] {
@@ -1433,23 +1417,31 @@ export async function getInsomniaV5DataExport({
     const environmentsIdentity: ExportEntityIdentity = {
       entityId: baseEnvironment?._id,
       entityType: models.environment.type,
-      name: baseEnvironment?.name ?? '',
+      name: baseEnvironment?.name || workspace.name,
       path: 'environments',
     };
     const cookieJarResources = exportableResources.filter(models.cookieJar.isCookieJar);
     const cookieJarIdentity: ExportEntityIdentity = {
       entityId: cookieJarResources[0]?._id,
       entityType: models.cookieJar.type,
-      name: cookieJarResources[0]?.name ?? '',
+      name: cookieJarResources[0]?.name || workspace.name,
       path: 'cookieJar',
     };
     const apiSpecResources = exportableResources.filter(models.apiSpec.isApiSpec);
     const apiSpecIdentity: ExportEntityIdentity = {
       entityId: apiSpecResources[0]?._id,
       entityType: models.apiSpec.type,
-      name: apiSpecResources[0]?.name ?? '',
+      name: apiSpecResources[0]?.name || workspace.name,
       path: 'spec',
     };
+    /**
+     * Environments are optional outside the environment scope. A workspace with none is a
+     * valid export; only environment data without a base environment is a section error.
+     */
+    const getOptionalEnvironments = () =>
+      environmentResources.length > 0
+        ? getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment)
+        : undefined;
 
     if (workspace.scope === 'collection') {
       const collectionTestSuites = exportableResources.filter(
@@ -1485,11 +1477,7 @@ export async function getInsomniaV5DataExport({
         meta: mapWorkspaceMeta(workspace),
         collection,
         cookieJar: parseSection(() => getCookieJarFromResources(cookieJarResources), CookieJarSchema, cookieJarIdentity),
-        environments: parseSection(
-          () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
-          EnvironmentSchema,
-          environmentsIdentity,
-        ),
+        environments: parseSection(getOptionalEnvironments, EnvironmentSchema, environmentsIdentity),
         testSuites: getTestSuitesFromResources(collectionTestSuites),
       };
 
@@ -1543,11 +1531,7 @@ export async function getInsomniaV5DataExport({
           CookieJarSchema,
           cookieJarIdentity,
         ),
-        environments: parseSection(
-          () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
-          EnvironmentSchema,
-          environmentsIdentity,
-        ),
+        environments: parseSection(getOptionalEnvironments, EnvironmentSchema, environmentsIdentity),
         spec: specSection,
         testSuites: getTestSuitesFromResources(
           exportableResources.filter(
@@ -1631,11 +1615,7 @@ export async function getInsomniaV5DataExport({
         meta: mapWorkspaceMeta(workspace),
         // each mcp workspace has exactly one mcpRequest
         mcpRequest: mcpRequestSection,
-        environments: parseSection(
-          () => getEnvironmentsFromResources(environmentResources, includePrivateEnvironments, baseEnvironment),
-          EnvironmentSchema,
-          environmentsIdentity,
-        ),
+        environments: parseSection(getOptionalEnvironments, EnvironmentSchema, environmentsIdentity),
       };
 
       return finalize(mcpClientDoc);
