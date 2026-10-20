@@ -19,10 +19,10 @@ vi.mock('../../../common/insomnia-v5', () => ({
 const REPO_ID = 'git_repo_test';
 const PROJECT_ID = 'proj_test';
 
-const makeRegistry = () =>
+const makeRegistry = (onProblemsChanged = vi.fn()) =>
   new RepoFileWatcherRegistry({
     onDbSynced: vi.fn(),
-    onProblemsChanged: vi.fn(),
+    onProblemsChanged,
   });
 
 const createWorkspaceWithMeta = async (gitFilePath: string, gitFileLastSyncTime: number | null) => {
@@ -288,6 +288,8 @@ describe('RepoFileWatcher incomplete exports', () => {
   // file is deleted by deleteOrphans on the next import, and one workspace whose export
   // is incomplete must not stop the remaining ones from being written.
   it('skips the workspaces it cannot export completely and still writes the others', async () => {
+    const onProblemsChanged = vi.fn();
+    registry = makeRegistry(onProblemsChanged);
     const incomplete = await createWorkspaceWithMeta('insomnia.wrk_incomplete.yaml', null);
     await createWorkspaceWithMeta('insomnia.wrk_complete.yaml', null);
 
@@ -315,5 +317,36 @@ describe('RepoFileWatcher incomplete exports', () => {
     const completeContent = await fs.promises.readFile(path.join(repoDir, 'insomnia.wrk_complete.yaml'), 'utf8');
     expect(completeContent).toContain('Complete');
     expect(await services.workspace.getById(incomplete._id)).not.toBeNull();
+
+    // The skipped export is surfaced as a file issue for the project banner and tab.
+    expect(registry.getProblems(REPO_ID)).toEqual([
+      expect.objectContaining({
+        kind: 'export-error',
+        relPath: 'insomnia.wrk_incomplete.yaml',
+        message: expect.stringContaining('Broken Request (Request)'),
+      }),
+    ]);
+    expect(onProblemsChanged).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceIssues: [
+          expect.objectContaining({
+            workspaceId: incomplete._id,
+            kind: 'export-error',
+          }),
+        ],
+      }),
+    );
+
+    // A later successful export clears the issue and writes the file.
+    vi.mocked(getInsomniaV5DataExport).mockResolvedValue({
+      yaml: 'type: collection.insomnia.rest/5.0\nname: Recovered\n',
+      errors: [],
+    });
+    await registry.flushNow(REPO_ID);
+
+    expect(registry.getProblems(REPO_ID)).toEqual([]);
+    expect(await fs.promises.readFile(path.join(repoDir, 'insomnia.wrk_incomplete.yaml'), 'utf8')).toContain(
+      'Recovered',
+    );
   });
 });

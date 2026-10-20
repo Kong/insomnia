@@ -82,6 +82,8 @@ const workspaceFileIssueModalText = {
     summary:
       'Recent changes introduced schema errors in the Insomnia file for this page. Resolve the file using the CLI to unlock this page.',
   },
+  // Export failures must not block the page: the user needs to edit the entity that failed.
+  'export-error': null,
 } as const;
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {

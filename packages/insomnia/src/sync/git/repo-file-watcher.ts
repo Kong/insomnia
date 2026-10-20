@@ -48,7 +48,7 @@ import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
-import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
+import { type ExportEntityError, getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
 import { SyncQueue } from './sync-queue';
 
@@ -56,7 +56,7 @@ const POLL_INTERVAL_MS = 10_000;
 const DEBOUNCE_MS = 300;
 const GIT_DIR = '.git';
 
-export type FileIssueKind = 'conflict' | 'parse-error';
+export type FileIssueKind = 'conflict' | 'parse-error' | 'export-error';
 
 export interface FileIssue {
   /** Absolute path to the problematic file. */
@@ -142,7 +142,7 @@ class RepoFileWatcher {
   private docToWorkspace = new Map<string, string>();
 
   /**
-   * Files that could not be imported due to conflicts or parse errors.
+   * Files that could not be synced: import conflicts/parse errors, or incomplete exports.
    * Keyed by normalised absolute path. Cleared when the file is
    * successfully imported or deleted.
    */
@@ -310,11 +310,7 @@ class RepoFileWatcher {
           // Never write a partial export here: an entity missing from the file would be
           // treated as deleted by deleteOrphans on the next import.
           if (exportErrors.length > 0 || !yamlContent.trim()) {
-            console.warn(
-              '[repo-file-watcher] Skipping flush, export could not cover the whole workspace:',
-              workspace._id,
-              exportErrors.map(error => `${error.name} (${error.entityType})`),
-            );
+            this.reportExportProblem(absPath, exportErrors);
             return;
           }
 
@@ -323,6 +319,7 @@ class RepoFileWatcher {
 
           const hash = contentHash(yamlContent);
           const normalised = path.normalize(absPath);
+          this.clearProblem(normalised);
           this.lastWrittenHash.set(normalised, hash);
           this.lastSyncMtime.set(normalised, Date.now() + 1);
 
@@ -541,11 +538,7 @@ class RepoFileWatcher {
         // be treated as deleted by deleteOrphans on the next import. `continue` — the same
         // condition for one workspace must not stop the remaining ones from being written.
         if (exportErrors.length > 0 || !yamlContent.trim()) {
-          console.warn(
-            '[repo-file-watcher] Skipping flush, export could not cover the whole workspace:',
-            workspace._id,
-            exportErrors.map(error => `${error.name} (${error.entityType})`),
-          );
+          this.reportExportProblem(absPath, exportErrors);
           continue;
         }
 
@@ -569,6 +562,7 @@ class RepoFileWatcher {
 
         await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
         await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+        this.clearProblem(absPath);
 
         if (isRename) {
           await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
@@ -1159,11 +1153,7 @@ class RepoFileWatcher {
       // Never write a partial export into the repo: an entity missing from the file would
       // be treated as deleted by deleteOrphans on the next import.
       if (exportErrors.length > 0 || !yamlContent.trim()) {
-        console.warn(
-          '[repo-file-watcher] Skipping flush, export could not cover the whole workspace:',
-          workspace._id,
-          exportErrors.map(error => `${error.name} (${error.entityType})`),
-        );
+        this.reportExportProblem(absPath, exportErrors);
         return;
       }
 
@@ -1171,6 +1161,7 @@ class RepoFileWatcher {
       await fs.promises.writeFile(absPath, yamlContent, 'utf8');
 
       const normalised = path.normalize(absPath);
+      this.clearProblem(normalised);
       this.lastWrittenHash.set(normalised, contentHash(yamlContent));
       const stat = await fs.promises.stat(absPath);
       this.lastSyncMtime.set(normalised, stat.mtimeMs);
@@ -1213,11 +1204,33 @@ class RepoFileWatcher {
   // Problem tracking
   // ---------------------------------------------------------------------------
 
-  /** Record a problem (conflict or parse error) for the given file path. */
+  /** Record a file problem for the given path and notify the renderer. */
   private addProblem(normalised: string, issue: FileIssue): void {
     this.problemFiles.set(normalised, issue);
     console.warn(`[repo-file-watcher] ${issue.kind}: ${issue.relPath} — ${issue.message}`);
     this.notifyProblemsChanged();
+  }
+
+  /**
+   * Record an incomplete export. The file on disk is left untouched, so the
+   * renderer needs this to explain why the workspace has no pending diff.
+   */
+  private reportExportProblem(absPath: string, errors: ExportEntityError[]): void {
+    const normalised = path.normalize(absPath);
+    // A blocking import problem already explains why this file is out of sync.
+    if (this.problemFiles.has(normalised)) {
+      return;
+    }
+
+    const entities = errors.map(error => `${error.name || '(unnamed)'} (${error.entityType})`).join(', ');
+    this.addProblem(normalised, {
+      filePath: absPath,
+      relPath: this.toPosixRelPath(absPath),
+      kind: 'export-error',
+      message: entities
+        ? `Export incomplete; skipped: ${entities}. The file was not written.`
+        : 'Export produced no content. The file was not written.',
+    });
   }
 
   /** Clear a previously recorded problem for the given file path. */
@@ -1232,9 +1245,14 @@ class RepoFileWatcher {
     return Array.from(this.problemFiles.values());
   }
 
-  /** Return true when a normalized file path currently has a blocking import problem. */
+  /**
+   * Return true when a normalized file path has a blocking import problem.
+   * Export errors are informational: the file on disk is still valid, and the
+   * next successful export must be allowed to clear the issue and write.
+   */
   private hasProblem(normalisedPath: string): boolean {
-    return this.problemFiles.has(normalisedPath);
+    const issue = this.problemFiles.get(normalisedPath);
+    return issue !== undefined && issue.kind !== 'export-error';
   }
 
   /** Return the current problems mapped to workspace-level issues. */
@@ -1374,7 +1392,7 @@ export class RepoFileWatcherRegistry {
   }
 
   /**
-   * Return a snapshot of all current file problems (conflicts, parse errors)
+   * Return a snapshot of all current file problems (conflicts, parse errors, incomplete exports)
    * for the given repo. Returns an empty array if the watcher is not running.
    */
   getProblems(repoId: string): FileIssue[] {
