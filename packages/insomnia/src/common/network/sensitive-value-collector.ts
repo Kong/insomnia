@@ -176,8 +176,9 @@ export function isDerivedFromConfidentialValues(
 }
 
 // The Basic Auth header value to register alongside the confidential credentials it was built from,
-// or null when neither credential is confidential. Shared by every place that sends Basic Auth so the
-// guard can't drift between them; callers differ only in where they register the value.
+// or null when neither credential is confidential. Shared by every place that sends Basic Auth (request
+// render, SSE curl, WebSocket, MCP url bar, OAuth2 token request) so the guard can't drift between them;
+// callers differ only in where they register the value.
 export function getConfidentialBasicAuthHeaderValue(
   values: readonly string[],
   { username, password, useISO88591 }: { username?: string; password?: string; useISO88591?: boolean },
