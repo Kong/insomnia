@@ -16,6 +16,11 @@ import type {
 import { database as db, models, services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
+import {
+  createSensitiveValueCollector,
+  redactResponsePatch,
+  withRedaction,
+} from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
@@ -27,6 +32,7 @@ import { type DefaultBrowserRedirectParam, escapeRegex } from '../../../common/m
 import { getAuthObjectOrNull, isAuthEnabled } from '../../../network/authentication';
 import { getBasicAuthHeader } from '../../../network/basic-auth/get-header';
 import {
+  defaultSendActionRuntime,
   fetchMcpRequestData,
   fetchRequestData,
   fetchRequestGroupData,
@@ -629,7 +635,16 @@ const sendAccessTokenRequest = async (
     created: Date.now(),
   };
 
-  const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
+  const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const renderResult = await tryToInterpolateRequest({
+    request: newRequest,
+    environment: environment._id,
+    // This is a real send. Without an explicit purpose the confidential-value policy is
+    // fail-closed, so a credential coming from a confidential variable or a SECRET vault
+    // entry would be interpolated into the token request as •••••• instead of its value.
+    purpose: 'send',
+    sensitiveValueCollector: collector,
+  });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   const response = await sendCurlAndWriteTimeline(
@@ -639,10 +654,13 @@ const sendAccessTokenRequest = async (
     { ...settings, validateSSL: settings.validateAuthSSL },
     timelinePath,
     responseId,
+    // Omitting the runtime does not skip the timeline, it falls back to the non-redacting
+    // default -- so the rendered credential would be written to disk in cleartext.
+    withRedaction(defaultSendActionRuntime, collector),
   );
   const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 
-  return await services.response.create(responsePatch);
+  return await services.response.create(redactResponsePatch(responsePatch, collector));
 };
 
 export const encodePKCE = (buffer: Buffer) => {

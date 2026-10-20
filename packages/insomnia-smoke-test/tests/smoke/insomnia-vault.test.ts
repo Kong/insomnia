@@ -159,6 +159,13 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('Base Environment1').click();
     await page.locator('body').click();
 
+    // secret values are masked in the console by default; turn it off so the test can verify the decrypted values
+    await insomnia.statusbar.openPreferences();
+    const hideSecretsCheckbox = page.getByRole('checkbox', { name: 'Hide Secret Values in Preview/Console' }).first();
+    await hideSecretsCheckbox.click();
+    await expect.soft(hideSecretsCheckbox).not.toBeChecked();
+    await insomnia.preferencesPage.closePreferences();
+
     // activate request and validate newly created vault env has been applied
     await insomnia.navigationSidebar.clickRequestOrFolder('normal');
     await page.getByRole('button', { name: 'Send' }).click();
