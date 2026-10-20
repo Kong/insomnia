@@ -69,9 +69,38 @@ export function withRedaction(
   }
 
   return {
-    appendTimeline: (timelinePath, logs) => runtime.appendTimeline(timelinePath, logs.map(line => collector.redact(line))),
-    appendTimelineOnError: (timelinePath, data) => runtime.appendTimelineOnError(timelinePath, collector.redact(data)),
+    appendTimeline: (timelinePath, logs) =>
+      runtime.appendTimeline(timelinePath, logs.map(line => redactTimelineLine(line, collector))),
+    appendTimelineOnError: (timelinePath, data) =>
+      runtime.appendTimelineOnError(
+        timelinePath,
+        data
+          .split('\n')
+          .map(line => redactTimelineLine(line, collector))
+          .join('\n'),
+      ),
   };
+}
+
+// Timeline lines are NDJSON entries ({ value, name, timestamp }). Redacting the raw line would also
+// hit the JSON structure: a confidential `1` turns `"timestamp":1760941234567` into
+// `"timestamp":••••••76094••••••234567`, the line no longer parses, and deserializeNDJSON silently
+// drops it -- leaving the Console tab empty. So the line is parsed and only its string leaves are
+// redacted (redactDeep never touches numbers or keys) before it is serialized again. `name` is the
+// entry type the Console tab dispatches on, so it is kept as is. Lines that aren't a JSON object
+// fall back to plain text redaction.
+export function redactTimelineLine(line: string, collector: SensitiveValueCollector): string {
+  let entry: unknown;
+  try {
+    entry = JSON.parse(line);
+  } catch {
+    return collector.redact(line);
+  }
+  if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+    return collector.redact(line);
+  }
+  const redacted = redactDeep(entry as Record<string, unknown>, collector.values);
+  return JSON.stringify('name' in entry ? { ...redacted, name: entry.name } : redacted);
 }
 
 // Registers every scalar leaf of `value` that can show up verbatim in a timeline line.

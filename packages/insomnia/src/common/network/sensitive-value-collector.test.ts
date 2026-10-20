@@ -367,6 +367,18 @@ describe('withRedaction', () => {
     expect(runtime.appendTimelineOnError).toHaveBeenCalledWith('/tmp/timeline', 'auth failed for ••••••');
   });
 
+  it('keeps NDJSON timeline entries parseable when a short numeric value is confidential', async () => {
+    const runtime = makeRuntime();
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('1');
+    const line = JSON.stringify({ value: 'id=1', name: 'HeaderOut', timestamp: 1_760_941_234_567 });
+
+    await withRedaction(runtime, collector).appendTimeline('/tmp/timeline', [line]);
+
+    const [[, [written]]] = runtime.appendTimeline.mock.calls as unknown as [[string, string[]]];
+    expect(JSON.parse(written)).toEqual({ value: 'id=••••••', name: 'HeaderOut', timestamp: 1_760_941_234_567 });
+  });
+
   it('picks up values registered after the wrapper was constructed', async () => {
     const runtime = makeRuntime();
     const collector = createSensitiveValueCollector(true)!;
