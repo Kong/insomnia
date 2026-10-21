@@ -15,7 +15,7 @@ import {
 import type { SerializablePlugin } from '~/common/plugins/bridge-types';
 import { resolvePluginExecutionMode } from '~/common/plugins/sandbox-mode';
 import { validatePluginName } from '~/common/utils/plugin-name';
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 import { reload } from '~/ui/templating/renderer-safe';
 

@@ -27,7 +27,6 @@ import {
   extractNunjucksTagFromCoords,
   replaceVaultTagIdIfNeeded,
 } from '~/common/templating/utils';
-import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -40,6 +39,7 @@ import { useNunjucks, type UseNunjucksOptions } from '~/ui/context/nunjucks/use-
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 import { ednPrettify } from '~/ui/utils/prettify/edn';
