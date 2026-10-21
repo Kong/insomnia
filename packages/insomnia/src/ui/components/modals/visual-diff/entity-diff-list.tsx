@@ -6,7 +6,7 @@ import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stag
 
 import { showToast } from '../../toast-notification';
 import { CookieJarDiffCard } from './cookie-jar-diff-card';
-import { computeVisualDiff } from './diff-engine';
+import { computeVisualDiff, getBaseEnvironmentId } from './diff-engine';
 import { applyEntityChange, hasOnlyWorkspaceIdentity } from './entity-splice';
 import { EnvironmentDiffCard } from './environment-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
@@ -62,6 +62,7 @@ export const EntityDiffList: FC<Props> = ({
   onShowTextView,
 }) => {
   const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
+  const baseEnvironmentId = useMemo(() => getBaseEnvironmentId(after), [after]);
   const stagePartialContentFetcher = useGitProjectStagePartialContentActionFetcher();
   const discardPartialContentFetcher = useGitProjectDiscardPartialContentActionFetcher();
   const [pending, setPending] = useState<{ entityId: string; action: NonNullable<EntityCardPendingAction> } | null>(null);
@@ -184,6 +185,10 @@ export const EntityDiffList: FC<Props> = ({
           // file appearing or disappearing, which the file-level actions handle (and staging a new
           // file's first entity carries its identity along anyway).
           const isFileIdentityChange = diff.type === 'workspace' && diff.status !== 'modified';
+          // Insomnia recreates a workspace's base environment and cookie jar as soon as they're missing,
+          // so discarding one that was just added (eg. in a new file) would be undone right away.
+          const isRecreatedIfDiscarded =
+            diff.status === 'added' && (diff.type === 'cookie_jar' || diff.id === baseEnvironmentId);
           const actionProps = {
             staged,
             pendingAction: pending?.entityId === diff.id ? pending.action : null,
@@ -192,7 +197,10 @@ export const EntityDiffList: FC<Props> = ({
             // No per-entity discard when the working-tree file is gone (deleted
             // workspace): it would resurrect the file with just this one entity.
             // The file-level discard restores it whole.
-            onDiscard: staged || !after || isFileIdentityChange ? undefined : () => handleDiscard(diff.id),
+            onDiscard:
+              staged || !after || isFileIdentityChange || isRecreatedIfDiscarded
+                ? undefined
+                : () => handleDiscard(diff.id),
           };
 
           switch (diff.type) {
