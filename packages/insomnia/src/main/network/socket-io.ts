@@ -18,7 +18,6 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { redactConfidentialText, redactDeep } from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
 
 import { version } from '../../../package.json';
@@ -26,6 +25,7 @@ import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
+import { createSensitiveValuesRegistry } from './sensitive-values-registry';
 
 export interface SocketIOpenEvent {
   _id: string;
@@ -91,46 +91,15 @@ const SocketIOConnections = new Map<string, Socket>();
 const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
-// Confidential values to redact from timeline/event-log writes before they reach disk (T10).
-// Only grows for the lifetime of a connection (each open/send IPC call merges in more values);
-// cleaned up in deleteRequestMaps.
-const sensitiveValuesByRequestId = new Map<string, Set<string>>();
-
-const registerSensitiveValues = (requestId: string, values: string[] | undefined) => {
-  if (!values || values.length === 0) {
-    return;
-  }
-  let set = sensitiveValuesByRequestId.get(requestId);
-  if (!set) {
-    set = new Set();
-    sensitiveValuesByRequestId.set(requestId, set);
-  }
-  for (const value of values) {
-    if (value) {
-      set.add(value);
-    }
-  }
-};
-
-// A new connection starts from a fresh value set: a connect that never reached its cleanup leaves
-// its values behind, and merging could neither drop those nor empty the set once the setting is off.
-const resetSensitiveValues = (requestId: string, values: string[] | undefined) => {
-  sensitiveValuesByRequestId.delete(requestId);
-  registerSensitiveValues(requestId, values);
-};
-
-const redactForRequest = (requestId: string, text: string): string => {
-  const values = sensitiveValuesByRequestId.get(requestId);
-  if (!values || values.size === 0) {
-    return text;
-  }
-  return redactConfidentialText(text, [...values]);
-};
+// Confidential values to redact from timeline/event-log writes before they reach disk.
+// Only grows for the lifetime of a connection (each open/send IPC call merges in more
+// values); cleaned up in deleteRequestMaps.
+const sensitiveValues = createSensitiveValuesRegistry();
 
 const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
   timelineFileStreams
     .get(requestId)
-    ?.write(JSON.stringify({ ...entry, value: redactForRequest(requestId, entry.value) }) + '\n');
+    ?.write(JSON.stringify({ ...entry, value: sensitiveValues.redactText(requestId, entry.value) }) + '\n');
 };
 
 const writeSocketIOEventLog = (
@@ -138,8 +107,7 @@ const writeSocketIOEventLog = (
   event: SocketIOEvent,
   opts: { clearRequestIdMap?: boolean } = {},
 ) => {
-  const values = sensitiveValuesByRequestId.get(requestId);
-  const redactedEvent = values && values.size > 0 ? redactDeep(event, [...values]) : event;
+  const redactedEvent = sensitiveValues.redactEvent(requestId, event);
   writeEventLogAndNotify({
     requestId,
     data: JSON.stringify(redactedEvent) + '\n',
@@ -313,7 +281,7 @@ const openSocketIOConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
-  resetSensitiveValues(options.requestId, options.sensitiveValues);
+  sensitiveValues.reset(options.requestId, options.sensitiveValues);
 
   // fallback to base environment
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
@@ -420,7 +388,7 @@ const openSocketIOConnection = async (
         timelinePath,
         eventLogPath: responseBodyPath,
         elapsedTime: performance.now() - start,
-        url: redactForRequest(options.requestId, url),
+        url: sensitiveValues.redactText(options.requestId, url),
       };
 
       const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
@@ -461,7 +429,7 @@ const openSocketIOConnection = async (
         timestamp: Date.now(),
       };
       // Redact up front: deleteRequestMaps drops this request's value set below.
-      const redactedMessage = redactForRequest(request._id, error.message || 'Something went wrong');
+      const redactedMessage = sensitiveValues.redactText(request._id, error.message || 'Something went wrong');
       deleteRequestMaps(request._id, error.message, errorEvent);
       createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
     });
@@ -481,7 +449,7 @@ const openSocketIOConnection = async (
       timestamp: Date.now(),
     };
     // See the comment above: redact before deleteRequestMaps clears the value set.
-    const redactedMessage = redactForRequest(request._id, e.message || 'Something went wrong');
+    const redactedMessage = sensitiveValues.redactText(request._id, e.message || 'Something went wrong');
     deleteRequestMaps(request._id, e.message, errorEvent);
     createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
   }
@@ -501,7 +469,7 @@ const deleteRequestMaps = async (
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   SocketIOConnections.delete(requestId);
-  sensitiveValuesByRequestId.delete(requestId);
+  sensitiveValues.clear(requestId);
 };
 
 const getSocketIOReadyState = async (options: { requestId: string }): Promise<boolean> => {
@@ -557,7 +525,7 @@ const sendWebSocketEvent = async (options: {
     return;
   }
 
-  registerSensitiveValues(options.requestId, options.sensitiveValues);
+  sensitiveValues.register(options.requestId, options.sensitiveValues);
   sendPayload(socket, options);
 };
 

@@ -9,11 +9,7 @@ import { models, services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import {
-  isDerivedFromConfidentialValues,
-  redactConfidentialText,
-  redactDeep,
-} from '~/common/network/sensitive-value-collector';
+import { isDerivedFromConfidentialValues } from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
@@ -25,6 +21,7 @@ import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { getAuthHeader } from './get-auth-header';
 import { createConfiguredCurlInstance } from './libcurl-promise';
+import { createSensitiveValuesRegistry } from './sensitive-values-registry';
 
 export interface CurlConnection extends Curl {
   _id: string;
@@ -75,53 +72,19 @@ const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-// Mirrors websocket.ts / socket-io.ts: the renderer renders the request and ships the
-// confidential values it registered alongside it, because these writes happen in the main
-// process, outside any SendActionRuntime/appendTimeline abstraction. Only grows for the
-// lifetime of a connection; cleaned up in deleteRequestMaps. Setting OFF ⇒ the renderer sends
-// nothing ⇒ nothing is redacted.
-const sensitiveValuesByRequestId = new Map<string, Set<string>>();
-
-const registerSensitiveValues = (requestId: string, values: string[] | undefined) => {
-  if (!values || values.length === 0) {
-    return;
-  }
-  let set = sensitiveValuesByRequestId.get(requestId);
-  if (!set) {
-    set = new Set();
-    sensitiveValuesByRequestId.set(requestId, set);
-  }
-  for (const value of values) {
-    if (value) {
-      set.add(value);
-    }
-  }
-};
-
-// A new connection starts from a fresh value set: a connect that never reached its cleanup leaves
-// its values behind, and merging could neither drop those nor empty the set once the setting is off.
-const resetSensitiveValues = (requestId: string, values: string[] | undefined) => {
-  sensitiveValuesByRequestId.delete(requestId);
-  registerSensitiveValues(requestId, values);
-};
-
-const redactForRequest = (requestId: string, text: string): string => {
-  const values = sensitiveValuesByRequestId.get(requestId);
-  if (!values || values.size === 0) {
-    return text;
-  }
-  return redactConfidentialText(text, [...values]);
-};
+// Confidential values to redact from timeline/event-log writes before they reach disk.
+// Only grows for the lifetime of a connection (each open/send IPC call merges in more
+// values); cleaned up in deleteRequestMaps.
+const sensitiveValues = createSensitiveValuesRegistry();
 
 const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
   timelineFileStreams
     .get(requestId)
-    ?.write(JSON.stringify({ ...entry, value: redactForRequest(requestId, entry.value) }) + '\n');
+    ?.write(JSON.stringify({ ...entry, value: sensitiveValues.redactText(requestId, entry.value) }) + '\n');
 };
 
 const writeCurlEventLog = (requestId: string, event: CurlEvent, opts: { clearRequestIdMap?: boolean } = {}) => {
-  const values = sensitiveValuesByRequestId.get(requestId);
-  const redactedEvent = values && values.size > 0 ? redactDeep(event, [...values]) : event;
+  const redactedEvent = sensitiveValues.redactEvent(requestId, event);
   writeEventLogAndNotify({
     requestId,
     data: JSON.stringify(redactedEvent) + '\n',
@@ -192,7 +155,7 @@ const openCurlConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(requestId, responseId);
-  resetSensitiveValues(requestId, options.sensitiveValues);
+  sensitiveValues.reset(requestId, options.sensitiveValues);
 
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
@@ -222,14 +185,14 @@ const openCurlConnection = async (
     // getAuthHeader builds the Basic header here, after the render that registered the
     // credentials, so its base64 has to be registered before anything writes it out.
     const auth = getAuthObjectOrNull(req.authentication);
-    const registeredValues = [...(sensitiveValuesByRequestId.get(requestId) ?? [])];
+    const registeredValues = sensitiveValues.getValues(requestId);
     if (
       authHeader?.value &&
       auth?.type === 'basic' &&
       isAuthEnabled(req.authentication) &&
       isDerivedFromConfidentialValues(registeredValues, [auth.username, auth.password])
     ) {
-      registerSensitiveValues(requestId, [authHeader.value]);
+      sensitiveValues.register(requestId, [authHeader.value]);
     }
     authTimeline?.forEach(entry => writeTimelineEntry(requestId, entry));
 
@@ -264,7 +227,7 @@ const openCurlConnection = async (
       CurlConnections.get(requestId)?.close();
       // Captured before deleteRequestMaps drops this request's registered values. A curl
       // error message readily echoes the rendered URL.
-      const redactedErrorMessage = redactForRequest(requestId, error.message);
+      const redactedErrorMessage = sensitiveValues.redactText(requestId, error.message);
       deleteRequestMaps(requestId, redactedErrorMessage, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
@@ -329,7 +292,7 @@ const openCurlConnection = async (
           headers: responseHeaders,
           // The Response document is persisted separately from the timeline, and this is the
           // rendered URL, so a confidential value interpolated into it would land in NeDB.
-          url: redactForRequest(requestId, req.url),
+          url: sensitiveValues.redactText(requestId, req.url),
           statusCode,
           statusMessage,
           httpVersion,
@@ -403,7 +366,7 @@ const openCurlConnection = async (
 
     // Same ordering constraint as the 'error' handler above: redact before deleteRequestMaps
     // drops this request's registered values.
-    const redactedMessage = redactForRequest(requestId, e.message || '');
+    const redactedMessage = sensitiveValues.redactText(requestId, e.message || '');
     deleteRequestMaps(requestId, redactedMessage || 'Something went wrong opening curl connection');
     createErrorResponse(
       responseId,
@@ -448,7 +411,7 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Cur
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   CurlConnections.delete(requestId);
-  sensitiveValuesByRequestId.delete(requestId);
+  sensitiveValues.clear(requestId);
 };
 
 const getCurlReadyState = async (options: { requestId: string }): Promise<CurlConnection['isOpen']> => {

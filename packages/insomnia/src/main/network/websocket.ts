@@ -22,11 +22,7 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
-import {
-  isDerivedFromConfidentialValues,
-  redactConfidentialText,
-  redactDeep,
-} from '~/common/network/sensitive-value-collector';
+import { isDerivedFromConfidentialValues } from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
@@ -41,6 +37,7 @@ import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
+import { createSensitiveValuesRegistry } from './sensitive-values-registry';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -85,51 +82,19 @@ const WebSocketConnections = new Map<string, WebSocket>();
 const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
-// Confidential values to redact from timeline/event-log writes before they reach disk (T10).
-// Only grows for the lifetime of a connection (each open/send IPC call merges in more values);
-// cleaned up in deleteRequestMaps.
-const sensitiveValuesByRequestId = new Map<string, Set<string>>();
-
-const registerSensitiveValues = (requestId: string, values: string[] | undefined) => {
-  if (!values || values.length === 0) {
-    return;
-  }
-  let set = sensitiveValuesByRequestId.get(requestId);
-  if (!set) {
-    set = new Set();
-    sensitiveValuesByRequestId.set(requestId, set);
-  }
-  for (const value of values) {
-    if (value) {
-      set.add(value);
-    }
-  }
-};
-
-// A new connection starts from a fresh value set: a connect that never reached its cleanup leaves
-// its values behind, and merging could neither drop those nor empty the set once the setting is off.
-const resetSensitiveValues = (requestId: string, values: string[] | undefined) => {
-  sensitiveValuesByRequestId.delete(requestId);
-  registerSensitiveValues(requestId, values);
-};
-
-const redactForRequest = (requestId: string, text: string): string => {
-  const values = sensitiveValuesByRequestId.get(requestId);
-  if (!values || values.size === 0) {
-    return text;
-  }
-  return redactConfidentialText(text, [...values]);
-};
+// Confidential values to redact from timeline/event-log writes before they reach disk.
+// Only grows for the lifetime of a connection (each open/send IPC call merges in more
+// values); cleaned up in deleteRequestMaps.
+const sensitiveValues = createSensitiveValuesRegistry();
 
 const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
   timelineFileStreams
     .get(requestId)
-    ?.write(JSON.stringify({ ...entry, value: redactForRequest(requestId, entry.value) }) + '\n');
+    ?.write(JSON.stringify({ ...entry, value: sensitiveValues.redactText(requestId, entry.value) }) + '\n');
 };
 
 const writeWsEventLog = (requestId: string, event: WebSocketEvent, opts: { clearRequestIdMap?: boolean } = {}) => {
-  const values = sensitiveValuesByRequestId.get(requestId);
-  const redactedEvent = values && values.size > 0 ? redactDeep(event, [...values]) : event;
+  const redactedEvent = sensitiveValues.redactEvent(requestId, event);
   writeEventLogAndNotify({
     requestId,
     data: JSON.stringify(redactedEvent) + '\n',
@@ -232,7 +197,7 @@ const openWebSocketConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
-  resetSensitiveValues(options.requestId, options.sensitiveValues);
+  sensitiveValues.reset(options.requestId, options.sensitiveValues);
 
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
@@ -269,9 +234,9 @@ const openWebSocketConnection = async (
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
         headers.push(basicAuthHeader);
-        const registeredValues = [...(sensitiveValuesByRequestId.get(options.requestId) ?? [])];
+        const registeredValues = sensitiveValues.getValues(options.requestId);
         if (basicAuthHeader.value && isDerivedFromConfidentialValues(registeredValues, [username, password])) {
-          registerSensitiveValues(options.requestId, [basicAuthHeader.value]);
+          sensitiveValues.register(options.requestId, [basicAuthHeader.value]);
         }
       }
       if (options.authentication.type === 'apikey') {
@@ -392,7 +357,7 @@ const openWebSocketConnection = async (
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: redactForRequest(options.requestId, url),
+        url: sensitiveValues.redactText(options.requestId, url),
         statusCode,
         statusMessage,
         httpVersion,
@@ -447,7 +412,7 @@ const openWebSocketConnection = async (
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: redactForRequest(options.requestId, url),
+        url: sensitiveValues.redactText(options.requestId, url),
         statusCode,
         statusMessage,
         httpVersion,
@@ -528,7 +493,7 @@ const openWebSocketConnection = async (
       };
 
       // Redact up front: deleteRequestMaps drops this request's value set below.
-      const redactedMessage = redactForRequest(request._id, message || 'Something went wrong');
+      const redactedMessage = sensitiveValues.redactText(request._id, message || 'Something went wrong');
       deleteRequestMaps(request._id, message, errorEvent);
       sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
       if (error.code) {
@@ -539,7 +504,7 @@ const openWebSocketConnection = async (
     console.error('unhandled error:', e);
 
     // See the comment above: redact before deleteRequestMaps clears the value set.
-    const redactedMessage = redactForRequest(request._id, e.message || 'Something went wrong');
+    const redactedMessage = sensitiveValues.redactText(request._id, e.message || 'Something went wrong');
     deleteRequestMaps(request._id, e.message || 'Something went wrong');
     createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
   }
@@ -608,7 +573,7 @@ const deleteRequestMaps = async (
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   WebSocketConnections.delete(requestId);
-  sensitiveValuesByRequestId.delete(requestId);
+  sensitiveValues.clear(requestId);
 };
 
 const getWebSocketReadyState = async (options: { requestId: string }): Promise<boolean> => {
@@ -661,7 +626,7 @@ const sendWebSocketEvent = async (options: {
     return;
   }
 
-  registerSensitiveValues(options.requestId, options.sensitiveValues);
+  sensitiveValues.register(options.requestId, options.sensitiveValues);
   sendPayload(ws, options);
 };
 
