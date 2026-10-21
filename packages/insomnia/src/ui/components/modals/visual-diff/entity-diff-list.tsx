@@ -42,10 +42,11 @@ interface Props {
   actionGate: ActionGate;
   // Whether an action, here or file-level, is still in flight: every card's buttons wait for it.
   isActionInFlight: boolean;
-  // Set when either side isn't a file as Insomnia writes it (eg. edited by hand): `invalid` doesn't match the
-  // Insomnia file format at all, `non-canonical` does but Insomnia would write it differently.
-  formatIssue?: 'invalid' | 'non-canonical' | null;
+  // Set when the diff already has a warning saying more than the format warning would (eg. unrecognized fields).
+  hideFormatWarning?: boolean;
 }
+
+type FormatIssue = Awaited<ReturnType<typeof window.main.git.fileFormatIssueLoader>>;
 
 // Shown instead of cards when there are none to show; the Text view still has the full diff.
 const TextViewHint: FC<{ message: string; onShowTextView: () => void }> = ({ message, onShowTextView }) => (
@@ -71,9 +72,32 @@ export const EntityDiffList: FC<Props> = ({
   onShowTextView,
   actionGate,
   isActionInFlight,
-  formatIssue,
+  hideFormatWarning,
 }) => {
   const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
+
+  // Whether either side isn't a file as Insomnia writes it (eg. edited by hand): `invalid` doesn't match the
+  // Insomnia file format at all, `non-canonical` does but Insomnia would write it differently. Checked in the
+  // background, as it replays both sides through import -> export, so it doesn't hold up showing the diff.
+  // Kept per file, so a refresh after an action doesn't flash the warning, and another file never shows it.
+  const fileKey = `${filepath}:${staged}`;
+  const [formatCheck, setFormatCheck] = useState<{ fileKey: string; issue: FormatIssue } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    window.main.git
+      .fileFormatIssueLoader({ projectId, workspaceId, filepath, staged })
+      .then(issue => {
+        if (!cancelled) {
+          setFormatCheck({ fileKey, issue });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, workspaceId, filepath, staged, fileKey, before, after]);
+  const formatIssue = formatCheck?.fileKey === fileKey ? formatCheck.issue : null;
+
   const baseEnvironmentId = useMemo(() => getBaseEnvironmentId(after), [after]);
   const stagePartialContentFetcher = useGitProjectStagePartialContentActionFetcher();
   const discardPartialContentFetcher = useGitProjectDiscardPartialContentActionFetcher();
@@ -187,7 +211,7 @@ export const EntityDiffList: FC<Props> = ({
 
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-hidden">
-      {formatIssue === 'non-canonical' && (
+      {formatIssue === 'non-canonical' && !hideFormatWarning && (
         // Cards are matched up by id and actions splice entities into a file written the way Insomnia exports it,
         // so a file in any other shape (eg. edited by hand) can show incomplete cards and lose what isn't an entity.
         <WarningBanner className="shrink-0 text-sm" data-testid="visual-diff-format-warning">

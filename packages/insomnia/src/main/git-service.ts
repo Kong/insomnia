@@ -3510,8 +3510,6 @@ export type GitDiffResult =
       staged: boolean;
       /** True when the unstaged change reappears after every discard and can only be resolved by committing it */
       undiscardable?: boolean;
-      /** Set when either side isn't a file as Insomnia writes it (eg. edited by hand), which the Visual view can't reliably show or act on */
-      formatIssue?: InsomniaFileFormatIssue | null;
     }
   | {
       errors: string[];
@@ -3579,18 +3577,6 @@ export const diffFileLoader = async ({
       }
     }
 
-    let formatIssue: InsomniaFileFormatIssue | null = null;
-    try {
-      // The raw contents: `diff.before` is migrated and reordered for display
-      const sides = staged
-        ? [fileStatus.rawHead, fileStatus.rawStage]
-        : [fileStatus.rawStage || fileStatus.rawHead, fileStatus.workdir];
-      const issues = await Promise.all(sides.map(getInsomniaFileFormatIssue));
-      formatIssue = issues.includes('invalid') ? 'invalid' : issues.includes('non-canonical') ? 'non-canonical' : null;
-    } catch (err) {
-      console.warn('[git] Failed to check the format of the file', filepath, err);
-    }
-
     return {
       name: name || filepath,
       diff,
@@ -3602,13 +3588,43 @@ export const diffFileLoader = async ({
       scope,
       staged,
       undiscardable,
-      formatIssue,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';
     return {
       errors: [errorMessage],
     };
+  }
+};
+
+/**
+ * Whether either side of a file's diff isn't a file as Insomnia writes it (eg. edited by hand), which the
+ * Visual view can't reliably show or act on. Kept out of `diffFileLoader` so the import -> export replay it
+ * takes doesn't hold up showing the diff.
+ */
+export const fileFormatIssueLoader = async ({
+  projectId,
+  workspaceId,
+  filepath,
+  staged,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  staged: boolean;
+}): Promise<InsomniaFileFormatIssue | null> => {
+  try {
+    await getGitRepository({ workspaceId, projectId });
+    const fileStatus = await GitVCS.fileStatus(filepath);
+    // The raw contents: the diff's `before` is migrated and reordered for display
+    const sides = staged
+      ? [fileStatus.rawHead, fileStatus.rawStage]
+      : [fileStatus.rawStage || fileStatus.rawHead, fileStatus.workdir];
+    const issues = await Promise.all(sides.map(getInsomniaFileFormatIssue));
+    return issues.includes('invalid') ? 'invalid' : issues.includes('non-canonical') ? 'non-canonical' : null;
+  } catch (err) {
+    console.warn('[git] Failed to check the format of the file', filepath, err);
+    return null;
   }
 };
 
@@ -4130,6 +4146,7 @@ export interface GitServiceAPI {
   stagePartialContent: typeof stagePartialContentAction;
   discardPartialContent: typeof discardPartialContentAction;
   diffFileLoader: typeof diffFileLoader;
+  fileFormatIssueLoader: typeof fileFormatIssueLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
@@ -4246,6 +4263,9 @@ export const registerGitServiceAPI = () => {
     discardPartialContentAction(options),
   );
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
+  ipcMainHandle('git.fileFormatIssueLoader', (_, options: Parameters<typeof fileFormatIssueLoader>[0]) =>
+    fileFormatIssueLoader(options),
+  );
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
     getRepositoryDirectoryTree(options),
   );
