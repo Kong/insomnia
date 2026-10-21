@@ -191,7 +191,7 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
               {models.mcpRequest.isMcpRequestId(tab.id) ? tab.workspaceName : tab.name}
             </span>
             {fileIssue && (
-              <span className="mr-2 flex shrink-0 items-center text-(--color-warning)">
+              <span className="mr-2 flex shrink-0 items-center text-(--color-warning)" title={fileIssue.message}>
                 <Icon icon="triangle-exclamation" />
               </span>
             )}

@@ -27,7 +27,8 @@ async function exportThroughDatabase(content: string) {
   }
   const workspace = data.find(models.workspace.isWorkspace);
   expect(workspace).toBeDefined();
-  return getInsomniaV5DataExport({ workspaceId: workspace!._id, includePrivateEnvironments: false });
+  const { yaml } = await getInsomniaV5DataExport({ workspaceId: workspace!._id, includePrivateEnvironments: false });
+  return yaml;
 }
 
 const buildCollection = (folders: { id: string; name: string; created: number }[]) => `type: collection.insomnia.rest/5.0

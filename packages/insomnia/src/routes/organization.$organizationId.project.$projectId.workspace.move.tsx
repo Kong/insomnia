@@ -27,10 +27,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     // duplicate the workspace to the new project
     const newProject = (await services.project.getById(newProjectId)) as Project;
-    const workspaceExport = await getInsomniaV5DataExport({
+    const { yaml: workspaceExport, errors: exportErrors } = await getInsomniaV5DataExport({
       workspaceId: oldWorkspace._id,
       includePrivateEnvironments: true,
     });
+
+    // The export feeds the import below, so anything missing from it is lost for good.
+    // Refuse the move instead of quietly moving an incomplete workspace.
+    invariant(
+      exportErrors.length === 0 && workspaceExport,
+      `workspace export failed schema validation: ${exportErrors
+        .map(error => `${error.name} (${error.entityType})`)
+        .join(', ')}`,
+    );
 
     const data = importInsomniaV5Data(workspaceExport);
 
@@ -58,6 +67,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       workspaceScope: newWorkspace.scope,
     };
   } catch (error) {
+    // The duplicate modal renders this action's returned error inline (fetcher.data.error); do not stack a second error modal on top of it.
     return {
       error: 'Failed to duplicate workspace: ' + (error instanceof Error ? error.message : String(error)),
     };

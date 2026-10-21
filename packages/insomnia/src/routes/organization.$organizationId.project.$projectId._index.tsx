@@ -64,6 +64,12 @@ import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
 
+const FILE_ISSUE_LABELS = {
+  conflict: 'Merge in progress',
+  'parse-error': 'Invalid schema',
+  'export-error': 'Export failed',
+} as const;
+
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
@@ -108,7 +114,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const projectFileIssues = Object.values(issuesByWorkspaceId);
   const hasProjectFileIssues = projectFileIssues.length > 0;
   const projectFileIssuesMessage =
-    'There are issues with one or more Insomnia files in this project. Use the git CLI and your local file system to resolve them and continue.';
+    'There are issues with one or more Insomnia files in this project. Resolve them in Insomnia or with the git CLI to continue.';
 
   const [workspaceListFilter, setWorkspaceListFilter] = reactUse.useLocalStorage(
     `${projectId}:workspace-list-filter`,
@@ -680,9 +686,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                           </div>
                         )}
                         {item.fileIssue && (
-                          <div className="inline-flex w-fit items-center gap-2 text-sm text-[rgba(var(--color-warning-rgb),0.8)] outline-hidden">
+                          <div
+                            className="inline-flex w-fit items-center gap-2 text-sm text-[rgba(var(--color-warning-rgb),0.8)] outline-hidden"
+                            title={item.fileIssue.message}
+                          >
                             <Icon className="text-(--color-warning)" icon="triangle-exclamation" />
-                            <span>{item.fileIssue.kind === 'conflict' ? 'Merge in progress' : 'Invalid schema'}</span>
+                            <span>{FILE_ISSUE_LABELS[item.fileIssue.kind]}</span>
                           </div>
                         )}
                       </div>
