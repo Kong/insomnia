@@ -280,6 +280,10 @@ test.describe('Variable source and live preview across environment levels', () =
     await expect.soft(livePreview).toHaveValue('plain text');
     await expect.soft(sourceRow).toBeHidden();
 
+    // Inherited Object.prototype keys are not variables: no Source row.
+    await customTemplate.fill('{{ constructor }}');
+    await expect.soft(sourceRow).toBeHidden();
+
     await customTemplate.fill('{{  _.subOnlyVar  }}');
     await expect.soft(sourceRow).toContainText('Collection Environment : Base Environment');
 

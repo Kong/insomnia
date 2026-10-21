@@ -22,7 +22,10 @@ const getTemplateSource = (
   if (!match) {
     return undefined;
   }
-  return keyContextMeta?.[normalizeToDotAndBracketNotation(match[1].replace(/\\/g, ''))];
+  const key = normalizeToDotAndBracketNotation(match[1].replace(/\\/g, ''));
+  // keyContextMeta is a plain object, so keys such as `constructor` or `__proto__`
+  // would otherwise resolve through Object.prototype.
+  return keyContextMeta && Object.prototype.hasOwnProperty.call(keyContextMeta, key) ? keyContextMeta[key] : undefined;
 };
 
 export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource }) => {
