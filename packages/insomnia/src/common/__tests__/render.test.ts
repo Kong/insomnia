@@ -1458,6 +1458,33 @@ describe('render tests', () => {
 
       expect(collector.values).not.toContain(`Basic ${btoa('user:top-secret')}`);
     });
+
+    it('does not prepend a default scheme to a URL that starts with the mask', async () => {
+      const workspace = await services.workspace.create();
+      const environment = await services.environment.create({
+        parentId: workspace._id,
+        data: { baseUrl: 'https://api.example.com' },
+        kvPairData: [
+          {
+            id: 'envPair_baseUrl',
+            name: 'baseUrl',
+            value: 'https://api.example.com',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ],
+      });
+      const request = await services.request.create({ parentId: workspace._id, url: '{{ _.baseUrl }}/users' });
+
+      const { request: renderedRequest } = await renderUtils.getRenderedRequestAndContext({
+        request,
+        environment: environment._id,
+        purpose: 'preview',
+      });
+
+      expect(renderedRequest.url).toBe('••••••/users');
+    });
   });
 
   describe('getRenderContext()', () => {

@@ -11,9 +11,9 @@ import { models } from 'insomnia-data';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
-import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import { RenderError } from '~/common/templating/render-error';
-import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
+import { encodeProtectedUrl, protectMask, restoreMask } from '~/common/utils/url/confidential-mask';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
@@ -64,28 +64,8 @@ const MAX_URL_LENGTH = 10 * 1024;
 
 const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const } };
 
-// The confidential mask (••••••) is non-ASCII, so URL encoding would mangle it: punycode in the
-// host (xn--nvgaaaaa) and percent-encoding elsewhere. Swap it for a lowercase ASCII placeholder
-// (hostnames get lowercased) before building/encoding the URL, and restore it afterwards.
-// The random suffix keeps restoreMask from turning user text that happens to match into bullets.
-const MASK_PLACEHOLDER = `confidentialmask${crypto.randomUUID().replaceAll('-', '')}`;
-const protectMask = (value: string) => value.replaceAll(CONFIDENTIAL_MASK_VALUE, MASK_PLACEHOLDER);
-const restoreMask = (value: string) => value.replaceAll(MASK_PLACEHOLDER, CONFIDENTIAL_MASK_VALUE);
 const protectParamsMask = <T extends { name: string; value: string }>(params: T[]) =>
   params.map(param => ({ ...param, name: protectMask(param.name), value: protectMask(param.value) }));
-
-// When the URL starts with the mask, the confidential value may already carry its own scheme
-// (e.g. a `{{ _.baseUrl }}` of `https://api.example.com`). smartEncodeUrl would then see no scheme
-// and prepend `http://`, showing `http://••••••` for a URL that is really `https://...`. Encode with
-// a temporary scheme and drop it again, so the preview shows just the mask.
-const TEMPORARY_SCHEME = 'http://';
-const encodeMaskedUrl = (url: string, encode: boolean | undefined, options: { strictNullHandling: boolean }) => {
-  if (!url.startsWith(MASK_PLACEHOLDER)) {
-    return smartEncodeUrl(url, encode, options);
-  }
-  const encoded = smartEncodeUrl(`${TEMPORARY_SCHEME}${url}`, encode, options);
-  return encoded.startsWith(TEMPORARY_SCHEME) ? encoded.slice(TEMPORARY_SCHEME.length) : encoded;
-};
 
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
@@ -120,7 +100,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         const qs = buildQueryStringFromParams(mergedParams, false, { encodeParams: request.settingEncodeUrl });
         const fullUrl = joinUrlAndQueryString(url, qs);
         // Truncate only after restoreMask, so the cut can't leave a partial placeholder behind.
-        const encoded = restoreMask(encodeMaskedUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true }));
+        const encoded = restoreMask(encodeProtectedUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true }));
         if (encoded.length > MAX_URL_LENGTH) {
           setTooLong(true);
           setPreviewString(encoded.slice(0, MAX_URL_LENGTH));

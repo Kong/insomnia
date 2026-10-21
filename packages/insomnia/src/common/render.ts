@@ -21,7 +21,11 @@ import {
   getConfidentialBasicAuthHeaderValue,
   type SensitiveValueCollector,
 } from '~/common/network/sensitive-value-collector';
-import { type ConfidentialValueKind, getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
+import {
+  CONFIDENTIAL_MASK_VALUE,
+  type ConfidentialValueKind,
+  getConfidentialValuePolicy,
+} from '~/common/templating/confidential-value-policy';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
 import { RenderError } from '~/common/templating/render-error';
@@ -925,8 +929,12 @@ export async function getRenderedRequestAndContext({
     }
   }
 
-  // Default the proto if it doesn't exist
-  renderedRequest.url = setDefaultProtocol(renderedRequest.url);
+  // Default the proto if it doesn't exist. A URL starting with the mask (preview/export renders only;
+  // send never masks) may hide a confidential value that carries its own scheme, e.g. a baseUrl of
+  // `https://api.example.com`, so defaulting would show `http://••••••` for an https URL. Leave it as is.
+  if (!renderedRequest.url.trimStart().startsWith(CONFIDENTIAL_MASK_VALUE)) {
+    renderedRequest.url = setDefaultProtocol(renderedRequest.url);
+  }
 
   renderedRequest.url = applyPathParametersToUrl(renderedRequest.url, renderedRequest.pathParameters);
 
