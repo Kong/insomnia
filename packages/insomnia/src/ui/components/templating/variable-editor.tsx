@@ -1,17 +1,31 @@
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import type { VariableSourceMeta } from '~/common/templating/types';
+import { normalizeToDotAndBracketNotation } from '~/common/templating/utils';
 
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
   defaultValue: string;
   onChange: (arg: string) => void;
-  variableSource?: VariableSourceMeta;
-  onOpenSource?: () => void;
+  onOpenSource?: (source: VariableSourceMeta) => void;
 }
 
-export const VariableEditor: FC<Props> = ({ onChange, defaultValue, variableSource, onOpenSource }) => {
+// The Source row must describe the variable that backs the preview right now, so
+// it is re-derived from the template. Only a template that is exactly one
+// variable reference has a single source.
+const getTemplateSource = (
+  template: string,
+  keyContextMeta?: Record<string, VariableSourceMeta>,
+): VariableSourceMeta | undefined => {
+  const match = /^\{\{\s*([^{}]+?)\s*\}\}$/.exec(template.trim());
+  if (!match) {
+    return undefined;
+  }
+  return keyContextMeta?.[normalizeToDotAndBracketNotation(match[1].replace(/\\/g, ''))];
+};
+
+export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource }) => {
   // Always use 'preview' purpose; masking is controlled by the policy layer.
   // forceReveal lets the user bypass hideSecretValuesInPreviewAndConsole for this
   // session only — it is orthogonal to purpose and does not affect send/script paths.
@@ -22,27 +36,40 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, variableSour
   );
   const { handleRender, handleGetRenderContext } = useNunjucks(nunjucksOptions);
   const [selected, setSelected] = useState(defaultValue);
-  const [options, setOptions] = useState<{ name: string; value: any }[]>([]);
+  const [options, setOptions] = useState<{ name: string; value: unknown }[]>([]);
+  const [source, setSource] = useState<VariableSourceMeta>();
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let isMounted = true;
+    // Ignore results from superseded runs (e.g. fast switching) so the preview and
+    // source always describe the same template.
+    let cancelled = false;
     const syncInterpolation = async () => {
       try {
         const p = await handleRender(selected);
-        isMounted && setPreview(p);
-        isMounted && setError('');
+        if (cancelled) {
+          return;
+        }
+        setPreview(p);
+        setError('');
       } catch (e) {
-        isMounted && setPreview('');
-        isMounted && setError(e.message);
+        if (cancelled) {
+          return;
+        }
+        setPreview('');
+        setError(e.message);
       }
-      const context = await handleGetRenderContext();
-      isMounted && setOptions(context.keys.sort((a, b) => (a.name < b.name ? -1 : 1)));
+      const { context, keys } = await handleGetRenderContext();
+      if (cancelled) {
+        return;
+      }
+      setOptions(keys.sort((a, b) => (a.name < b.name ? -1 : 1)));
+      setSource(getTemplateSource(selected, context.getKeysContext().keyContextMeta));
     };
     syncInterpolation();
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
   }, [handleGetRenderContext, handleRender, selected]);
 
@@ -93,18 +120,18 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, variableSour
           Live Preview
           <textarea className={`${error ? 'danger' : ''}`} value={preview || error} readOnly />
         </label>
-        {variableSource && (
+        {source && (
           <div className="mt-1 flex items-center gap-2 text-xs" data-testid="variable-source-row">
             <span className="text-[0.7rem] tracking-wide uppercase opacity-60">Source</span>
-            <span className="min-w-0 flex-1 truncate italic" title={variableSource.label}>
-              {variableSource.label}
+            <span className="min-w-0 flex-1 truncate italic" title={source.label}>
+              {source.label}
             </span>
-            {variableSource.workspaceId && onOpenSource && (
+            {source.workspaceId && onOpenSource && (
               <button
                 type="button"
                 className="flex shrink-0 cursor-pointer items-center gap-1 font-medium underline-offset-2 hover:underline"
                 data-testid="variable-source-open"
-                onClick={onOpenSource}
+                onClick={() => onOpenSource(source)}
               >
                 Open <i className="fa fa-arrow-right text-[0.65rem]" />
               </button>
