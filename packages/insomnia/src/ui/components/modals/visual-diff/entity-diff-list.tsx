@@ -1,0 +1,206 @@
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
+
+import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stage-entity';
+
+import { showToast } from '../../toast-notification';
+import { CookieJarDiffCard } from './cookie-jar-diff-card';
+import { computeVisualDiff } from './diff-engine';
+import { applyEntityChange, hasOnlyWorkspaceIdentity } from './entity-splice';
+import { EnvironmentDiffCard } from './environment-diff-card';
+import { GenericEntityDiffCard } from './generic-entity-diff-card';
+import { GrpcDiffCard } from './grpc-diff-card';
+import { McpDiffCard } from './mcp-diff-card';
+import { MockRouteDiffCard } from './mock-route-diff-card';
+import { RequestDiffCard } from './request-diff-card';
+import { RequestGroupDiffCard } from './request-group-diff-card';
+import type { EntityCardPendingAction } from './shared';
+import { SocketIODiffCard } from './socket-io-diff-card';
+import { WebSocketDiffCard } from './websocket-diff-card';
+
+interface Props {
+  before: string;
+  after: string;
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  // Whether this diff is HEAD..INDEX (staged, `before`=head/`after`=stage) or
+  // INDEX..WORKDIR (unstaged, `before`=stage/`after`=workdir) — determines the
+  // direction of "stage"/"unstage" and which side each entity's action pulls from.
+  staged: boolean;
+  // Called after any per-entity action (stage/unstage) finishes, so the
+  // parent can refresh the file list and this file's diff. Actions stay locked
+  // until the returned promise settles, since the next one must compute from the
+  // refreshed `before`/`after`.
+  onEntityChanged?: () => Promise<unknown> | void;
+  // Switches the preview to the Text view, which shows exactly what git will commit.
+  onShowTextView: () => void;
+}
+
+// Shown instead of cards when there are none to show; the Text view still has the full diff.
+const TextViewHint: FC<{ message: string; onShowTextView: () => void }> = ({ message, onShowTextView }) => (
+  <div className="flex h-full flex-1 items-center justify-center p-4 text-center text-(--hl)">
+    <span>
+      {message}{' '}
+      <Button onPress={onShowTextView} className="cursor-pointer text-(--color-font) underline hover:brightness-125">
+        Open the Text view
+      </Button>{' '}
+      to see the raw diff.
+    </span>
+  </div>
+);
+
+export const EntityDiffList: FC<Props> = ({
+  before,
+  after,
+  projectId,
+  workspaceId,
+  filepath,
+  staged,
+  onEntityChanged,
+  onShowTextView,
+}) => {
+  const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
+  const stagePartialContentFetcher = useGitProjectStagePartialContentActionFetcher();
+  const [pending, setPending] = useState<{ entityId: string; action: NonNullable<EntityCardPendingAction> } | null>(null);
+
+  const stageErrors = stagePartialContentFetcher.state === 'idle' ? stagePartialContentFetcher.data?.errors : undefined;
+  useEffect(() => {
+    if (stageErrors?.length) {
+      showToast({
+        status: 'error',
+        title: staged ? 'Failed to unstage changes' : 'Failed to stage changes',
+        description: stageErrors.join('\n'),
+      });
+    }
+    // `staged` deliberately omitted: only a new action result should toast, not a view switch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageErrors]);
+
+  // Synchronous guard on top of `pending`: two clicks landing before the re-render
+  // that disables the buttons would otherwise both compute from the same diff.
+  const isBusyRef = useRef(false);
+
+  const runAction = useCallback(
+    async (entityId: string, action: NonNullable<EntityCardPendingAction>, perform: () => Promise<unknown>) => {
+      if (isBusyRef.current) {
+        return;
+      }
+      isBusyRef.current = true;
+      setPending({ entityId, action });
+      try {
+        await perform();
+        await onEntityChanged?.();
+      } finally {
+        isBusyRef.current = false;
+        setPending(null);
+      }
+    },
+    [onEntityChanged],
+  );
+
+  const handleStage = useCallback(
+    (entityId: string) =>
+      runAction(entityId, 'stage', () => {
+        // Unstaged view: graft the entity's workdir state onto the current index.
+        // Staged view: graft the entity's HEAD state back onto the index (ie. unstage it).
+        const content = staged
+          ? applyEntityChange(after, before, entityId)
+          : applyEntityChange(before, after, entityId);
+        // The side the index moves towards has no file (staging a deleted file, unstaging a new one). Once only the
+        // workspace identity is left, which has no card to stage on its own, take the file out of the index (`null`)
+        // rather than leave an empty file there.
+        const target = staged ? before : after;
+        return stagePartialContentFetcher.submit({
+          filepath,
+          content: !target && hasOnlyWorkspaceIdentity(content) ? null : content,
+          projectId,
+          workspaceId,
+        });
+      }),
+    [runAction, staged, before, after, filepath, projectId, workspaceId, stagePartialContentFetcher],
+  );
+
+  if (unparseable) {
+    return <TextViewHint message="Unable to parse this file for a visual diff." onShowTextView={onShowTextView} />;
+  }
+
+  if (entities.length === 0) {
+    // Also covers metadata-only (eg. timestamps) and formatting-only changes, and non-Insomnia files
+    // such as the project's .spectral.yaml lint ruleset — not just moves.
+    return (
+      <TextViewHint
+        message="No requests, folders, environments or settings changed — this file only has changes the Visual view doesn't show, like moves, reordering, timestamps or formatting."
+        onShowTextView={onShowTextView}
+      />
+    );
+  }
+
+  const summary = entities.reduce(
+    (acc, entity) => {
+      acc[entity.status] += 1;
+      return acc;
+    },
+    { added: 0, removed: 0, modified: 0 },
+  );
+
+  return (
+    <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+      <div className="flex shrink-0 items-center gap-3 text-xs">
+        <span className="font-semibold text-(--color-font)">
+          {entities.length} {entities.length === 1 ? 'entity' : 'entities'} changed
+        </span>
+        {summary.added > 0 && <span className="text-(--color-success)">{summary.added} added</span>}
+        {summary.modified > 0 && <span className="text-(--color-notice)">{summary.modified} modified</span>}
+        {summary.removed > 0 && <span className="text-(--color-danger)">{summary.removed} removed</span>}
+      </div>
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+        {entities.map(diff => {
+          // A file's identity (type/name/meta) can't be added or removed on its own: that's the whole
+          // file appearing or disappearing, which the file-level actions handle (and staging a new
+          // file's first entity carries its identity along anyway).
+          const isFileIdentityChange = diff.type === 'workspace' && diff.status !== 'modified';
+          const actionProps = {
+            staged,
+            pendingAction: pending?.entityId === diff.id ? pending.action : null,
+            isDisabled: pending !== null,
+            onStage: isFileIdentityChange ? undefined : () => handleStage(diff.id),
+          };
+
+          switch (diff.type) {
+            case 'request': {
+              return <RequestDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'request_group': {
+              return <RequestGroupDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'websocket_request': {
+              return <WebSocketDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'socketio_request': {
+              return <SocketIODiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'grpc_request': {
+              return <GrpcDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'mcp_request': {
+              return <McpDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'mock_route': {
+              return <MockRouteDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'cookie_jar': {
+              return <CookieJarDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'environment': {
+              return <EnvironmentDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            default: {
+              return <GenericEntityDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+          }
+        })}
+      </div>
+    </div>
+  );
+};

@@ -2,8 +2,14 @@ import type { Request } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
+import {
+  createSensitiveValueCollector,
+  redactResponsePatch,
+  withRedaction,
+} from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
 import {
+  defaultSendActionRuntime,
   fetchRequestData,
   responseTransform,
   sendCurlAndWriteTimeline,
@@ -35,7 +41,15 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     stepName: 'Rendering request',
   });
 
-  const renderResult = await tryToInterpolateRequest({ request: req, environment: environment._id, purpose: 'send' });
+  // Renders with purpose 'send', so confidential values are real here and need the same
+  // timeline/response redaction the main send path gets.
+  const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const renderResult = await tryToInterpolateRequest({
+    request: req,
+    environment: environment._id,
+    purpose: 'send',
+    sensitiveValueCollector: collector,
+  });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   window.main.completeExecutionStep({ requestId: req._id });
@@ -51,10 +65,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     settings,
     timelinePath,
     responseId,
+    withRedaction(defaultSendActionRuntime, collector),
   );
 
   const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
-  await services.response.create(response);
+  await services.response.create(redactResponsePatch(response, collector));
   window.main.completeExecutionStep({ requestId: req._id });
   return null;
 }

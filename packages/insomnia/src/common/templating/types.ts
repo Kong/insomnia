@@ -66,6 +66,14 @@ export interface SerializedCookie {
 
 // TODO: check if we still need no-render, since we do not have any entry points that require it
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
+
+export interface SensitiveValueCollector {
+  register(value: string): void;
+  redact(text: string): string;
+  readonly isEmpty: boolean;
+  /** Snapshot of every registered raw value, for cross-IPC transfer (e.g. to the main process for WS/SocketIO/MCP timeline redaction). */
+  readonly values: readonly string[];
+}
 export type PluginToMainAPIPaths =
   | 'readFile'
   | 'nodeOS'
@@ -144,6 +152,7 @@ export interface BaseRenderContextOptions {
   // When true the user has explicitly clicked reveal in the VariableEditor;
   // this bypasses hideSecretValuesInPreviewAndConsole for the current render only.
   forceReveal?: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
 }
 export type RenderContextAncestor =
   | Request
@@ -292,6 +301,7 @@ export interface BaseRenderContext {
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;
+  getSensitiveValueCollector?: () => SensitiveValueCollector | null;
   [key: string]: any;
 }
 
@@ -402,4 +412,5 @@ export interface RenderInputType {
   context: BaseRenderContext;
   path: string;
   ignoreUndefinedEnvVariable: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
 }

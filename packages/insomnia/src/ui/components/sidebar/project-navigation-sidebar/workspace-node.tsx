@@ -16,6 +16,8 @@ interface WorkspaceNodeProps {
   onSortOrderChange: (newSortOrder: SortOrder) => void;
   highlighted?: boolean;
   nodeRef?: Ref<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
+  onRename: () => void;
+  onDelete: () => void;
 }
 
 export const WorkspaceNode = ({
@@ -25,6 +27,8 @@ export const WorkspaceNode = ({
   onSortOrderChange,
   highlighted,
   nodeRef,
+  onRename,
+  onDelete,
 }: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId, hasUncommittedChanges, hasUnpushedChanges } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
@@ -76,6 +80,8 @@ export const WorkspaceNode = ({
           onSortOrderChange={onSortOrderChange}
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
+          onRename={onRename}
+          onDelete={onDelete}
         />
       </div>
     </div>

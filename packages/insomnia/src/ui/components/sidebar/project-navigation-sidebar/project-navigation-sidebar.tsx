@@ -57,7 +57,9 @@ import { getSidebarGridListItemId } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
 import type { FlatItem } from './types';
+import { useDeleteModal } from './use-delete-modal';
 import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
+import { useRenameModal } from './use-rename-modal';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
 
@@ -656,6 +658,16 @@ const ProjectNavigationSidebarInner = (
   const [isShortcutCreateOpen, setIsShortcutCreateOpen] = useState(false);
   // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
+  const showRenameModal = useRenameModal();
+  const { showDeleteModal, deleteModal } = useDeleteModal({
+    onDeleteProject: projectId => deleteProjectFetcher.submit({ organizationId, projectId }),
+    // Leave focus mode when its collection is deleted, otherwise the view is left empty
+    onWorkspaceDeleted: workspaceId => {
+      if (workspaceId === focusedWorkspaceId) {
+        clearFocusState();
+      }
+    },
+  });
   const visibleFlatItems = useMemo(() => {
     const notHidden = flatItems.filter(i => !i.hidden);
     if (!focusedWorkspaceId) {
@@ -726,30 +738,41 @@ const ProjectNavigationSidebarInner = (
     }
   }, [selectedItemId]);
 
+  // Find the row the user currently has focused via arrow up/down in the sidebar.
+  const getFocusedItem = () => {
+    const activeElement = document.activeElement;
+    const focusedRow =
+      activeElement && parentRef.current?.contains(activeElement)
+        ? (activeElement.closest('[data-key]') as HTMLElement | null)
+        : null;
+    const focusedKey = focusedRow?.dataset.key ?? null;
+    const focusedItem = focusedKey
+      ? visibleFlatItems.find(item => getSidebarGridListItemId(item) === focusedKey)
+      : null;
+    const selectedFlatItem = selectedItemId
+      ? visibleFlatItems.find(item => getSidebarGridListItemId(item) === selectedItemId)
+      : null;
+    return {
+      focusedItem,
+      selectedFlatItem,
+    };
+  };
+
   useKeyboardShortcuts(() => parentRef.current!, {
     sidebar_showCreateDropdown: event => {
       if (isKonnectOrganization) {
         return;
       }
 
-      // Find the row the user currently has focused via arrow up/down in the sidebar.
-      const activeElement = document.activeElement;
-      const focusedRow =
-        activeElement && parentRef.current?.contains(activeElement)
-          ? (activeElement.closest('[data-key]') as HTMLElement | null)
-          : null;
-      const focusedKey = focusedRow?.dataset.key ?? null;
-      const focusedItem = focusedKey
-        ? visibleFlatItems.find(item => item.doc._id === focusedKey && item.kind !== 'pinnedRequest')
-        : null;
-      const selectedFlatItem = selectedItemId
-        ? visibleFlatItems.find(item => item.doc._id === selectedItemId && item.kind !== 'pinnedRequest')
-        : null;
+      const { focusedItem, selectedFlatItem } = getFocusedItem();
       // If the user has a row focused, use that as the target item; otherwise, use the selected item.
       const targetItem = focusedItem ?? selectedFlatItem;
       if (
         !targetItem ||
-        (targetItem.kind !== 'project' && targetItem.kind !== 'workspace' && targetItem.kind !== 'collectionChild')
+        (targetItem.kind !== 'project' &&
+          targetItem.kind !== 'workspace' &&
+          targetItem.kind !== 'collectionChild' &&
+          targetItem.kind !== 'pinnedRequest')
       ) {
         return;
       }
@@ -778,6 +801,68 @@ const ProjectNavigationSidebarInner = (
           setIsShortcutCreateOpen(true);
         });
       });
+    },
+    sidebar_rename: event => {
+      const { focusedItem, selectedFlatItem } = getFocusedItem();
+      const targetItem = focusedItem ?? selectedFlatItem;
+      if (
+        !targetItem ||
+        (targetItem.kind !== 'workspace' &&
+          targetItem.kind !== 'collectionChild' &&
+          targetItem.kind !== 'pinnedRequest')
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.keyboardShortcutUsed,
+        properties: {
+          source: 'navigation-sidebar',
+          action: 'rename',
+        },
+      });
+
+      const targetKey = getSidebarGridListItemId(targetItem);
+      // scroll to focused item if it is not currently visible
+      virtualizer.scrollToIndex(visibleFlatItems.indexOf(targetItem), { align: 'auto' });
+
+      // The target row may be virtualized out; wait for it to mount before requesting the rename.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const mounted = parentRef.current?.querySelector(`[data-key="${targetKey}"]`);
+          if (mounted) {
+            showRenameModal(targetItem);
+          }
+        });
+      });
+    },
+    sidebar_deleteItem: event => {
+      // Only act when a row itself is focused, not an inner control (button/input), so Backspace keeps editing text.
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || active.closest('[data-key]') !== active) {
+        return;
+      }
+      const { focusedItem } = getFocusedItem();
+      if (
+        !focusedItem ||
+        (focusedItem.kind !== 'project' &&
+          focusedItem.kind !== 'workspace' &&
+          focusedItem.kind !== 'collectionChild' &&
+          focusedItem.kind !== 'pinnedRequest')
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.keyboardShortcutUsed,
+        properties: {
+          source: 'navigation-sidebar',
+          action: 'deleteItem',
+        },
+      });
+      showDeleteModal(focusedItem);
     },
   });
 
@@ -874,6 +959,8 @@ const ProjectNavigationSidebarInner = (
                       forceShowTrigger
                       isOpen={isFocusedWorkspaceMenuOpen}
                       onOpenChange={setIsFocusedWorkspaceMenuOpen}
+                      onRename={() => showRenameModal(focusedWorkspaceItem)}
+                      onDelete={() => showDeleteModal(focusedWorkspaceItem)}
                     />
                   )}
                 </div>
@@ -1096,12 +1183,7 @@ const ProjectNavigationSidebarInner = (
                               return newProjectWorkspaceSortOrder;
                             })
                           }
-                          onDeleteProject={projectId =>
-                            deleteProjectFetcher.submit({
-                              organizationId,
-                              projectId,
-                            })
-                          }
+                          onDelete={() => showDeleteModal(item)}
                         />
                       )}
 
@@ -1120,17 +1202,21 @@ const ProjectNavigationSidebarInner = (
                           }}
                           highlighted={item.doc._id === onboardingEnvWorkspaceId}
                           nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
+                          onRename={() => showRenameModal(item)}
+                          onDelete={() => showDeleteModal(item)}
                         />
                       )}
 
                       {item.kind === 'pinnedHeader' && <PinnedHeaderNode depthOffset={treeDepthOffset} />}
 
-                      {item.kind === 'collectionChild' && (
-                        <RequestNode item={item} onToggleFolder={toggleRequestGroups} depthOffset={treeDepthOffset} />
-                      )}
-
-                      {item.kind === 'pinnedRequest' && (
-                        <RequestNode item={item} onToggleFolder={toggleRequestGroups} depthOffset={treeDepthOffset} />
+                      {(item.kind === 'collectionChild' || item.kind === 'pinnedRequest') && (
+                        <RequestNode
+                          item={item}
+                          onToggleFolder={toggleRequestGroups}
+                          depthOffset={treeDepthOffset}
+                          onRename={() => showRenameModal(item)}
+                          onDelete={() => showDeleteModal(item)}
+                        />
                       )}
 
                       {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
@@ -1171,7 +1257,6 @@ const ProjectNavigationSidebarInner = (
               }}
             />
           )}
-
         </>
       )}
 
@@ -1187,6 +1272,7 @@ const ProjectNavigationSidebarInner = (
       {showSidebarFocusOnboarding && focusedWorkspaceHeaderNode && (
         <SidebarFocusOnboarding triggerElement={focusedWorkspaceHeaderNode} onDismiss={dismissSidebarFocusOnboarding} />
       )}
+      {deleteModal}
     </div>
   );
 };
