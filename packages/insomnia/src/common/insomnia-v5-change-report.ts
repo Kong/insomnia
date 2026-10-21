@@ -93,7 +93,10 @@ interface CollectedEntity {
   kind: string;
   name: string;
   path: string;
+  /** Identifies the parent slot by the parent's id, so renaming a parent doesn't change it. */
   container: string;
+  /** Human readable form of `container` (parent names), for display only. */
+  containerLabel: string;
   index: number;
   leaves: Map<string, string>;
 }
@@ -152,8 +155,12 @@ function collectEntities(root: unknown): Map<string, CollectedEntity> {
     if (Array.isArray(value)) {
       const allEntities = value.length > 0 && value.every(item => entityId(item) !== undefined);
       if (allEntities) {
-        const container = `${owner.path} › ${fieldPath || 'items'}`;
-        value.forEach((item, index) => walkEntity(item as Record<string, unknown>, owner, container, index));
+        const slot = fieldPath || 'items';
+        const container = `${owner.id} › ${slot}`;
+        const containerLabel = `${owner.path} › ${slot}`;
+        value.forEach((item, index) =>
+          walkEntity(item as Record<string, unknown>, owner, container, containerLabel, index),
+        );
         return;
       }
       value.forEach((item, index) => walkValue(item, `${fieldPath}[${index}]`, owner));
@@ -162,7 +169,13 @@ function collectEntities(root: unknown): Map<string, CollectedEntity> {
 
     if (value && typeof value === 'object') {
       if (fieldPath !== '' && entityId(value) !== undefined) {
-        walkEntity(value as Record<string, unknown>, owner, `${owner.path} › ${fieldPath}`, 0);
+        walkEntity(
+          value as Record<string, unknown>,
+          owner,
+          `${owner.id} › ${fieldPath}`,
+          `${owner.path} › ${fieldPath}`,
+          0,
+        );
         return;
       }
       for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
@@ -178,6 +191,7 @@ function collectEntities(root: unknown): Map<string, CollectedEntity> {
     value: Record<string, unknown>,
     parent: CollectedEntity | null,
     container: string,
+    containerLabel: string,
     index: number,
   ): void => {
     const id = entityId(value) as string;
@@ -189,6 +203,7 @@ function collectEntities(root: unknown): Map<string, CollectedEntity> {
       name,
       path: parent ? `${parent.path} / ${label}` : label,
       container,
+      containerLabel,
       index,
       leaves: new Map(),
     };
@@ -200,7 +215,7 @@ function collectEntities(root: unknown): Map<string, CollectedEntity> {
   };
 
   if (entityId(root) !== undefined) {
-    walkEntity(root as Record<string, unknown>, null, '(file root)', 0);
+    walkEntity(root as Record<string, unknown>, null, '(file root)', '(file root)', 0);
   } else if (root && typeof root === 'object') {
     const synthetic: CollectedEntity = {
       id: '(file)',
@@ -208,6 +223,7 @@ function collectEntities(root: unknown): Map<string, CollectedEntity> {
       name: '(file)',
       path: '(file)',
       container: '(file root)',
+      containerLabel: '(file root)',
       index: 0,
       leaves: new Map(),
     };
@@ -325,8 +341,8 @@ export function buildInsomniaChangeReport(
     if (beforeEntity.container !== afterEntity.container) {
       moved.push({
         ...toRef(afterEntity),
-        fromContainer: beforeEntity.container,
-        toContainer: afterEntity.container,
+        fromContainer: beforeEntity.containerLabel,
+        toContainer: afterEntity.containerLabel,
       });
     }
 
@@ -398,7 +414,7 @@ function detectReordering(
     afterCommon.forEach((entity, toIndex) => {
       const fromIndex = beforeCommon.findIndex(candidate => candidate.id === entity.id);
       if (fromIndex !== -1 && fromIndex !== toIndex) {
-        reordered.push({ ...toRef(entity), container, fromIndex, toIndex });
+        reordered.push({ ...toRef(entity), container: entity.containerLabel, fromIndex, toIndex });
       }
     });
   }

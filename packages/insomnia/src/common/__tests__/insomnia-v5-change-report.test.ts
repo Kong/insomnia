@@ -126,6 +126,89 @@ ${requestBlock()
     expect(buildInsomniaChangeReport(committed, committed).verdict).toBe('identical');
   });
 
+  describe('parent identity', () => {
+    const child = (id: string, name: string) => `      - url: ""
+        name: ${name}
+        meta:
+          id: ${id}
+          created: 1
+          modified: 1
+          isPrivate: false
+          description: ""
+          sortKey: -1
+        method: GET
+`;
+    const folder = (id: string, name: string, children: string[]) => `  - name: ${name}
+    meta:
+      id: ${id}
+      created: 1
+      modified: 1
+      sortKey: -1
+      description: ""
+    children:
+${children.join('')}`;
+
+    it('does not report descendants as moved when their parent folder is renamed', () => {
+      const before = file(folder('fld_1', 'Old name', [child('req_1', 'A'), child('req_2', 'B')]));
+      const after = file(folder('fld_1', 'New name', [child('req_1', 'A'), child('req_2', 'B')]));
+
+      const report = buildInsomniaChangeReport(before, after);
+
+      expect(report.moved).toEqual([]);
+      expect(report.reordered).toEqual([]);
+      expect(report.contentChanged.map(entry => [entry.id, entry.fields.map(field => field.field)])).toEqual([
+        ['fld_1', ['name']],
+      ]);
+    });
+
+    it('still detects a reorder inside a renamed parent', () => {
+      const before = file(folder('fld_1', 'Old name', [child('req_1', 'A'), child('req_2', 'B')]));
+      const after = file(folder('fld_1', 'New name', [child('req_2', 'B'), child('req_1', 'A')]));
+
+      const report = buildInsomniaChangeReport(before, after);
+
+      expect(report.moved).toEqual([]);
+      expect(report.reordered.map(entry => [entry.id, entry.fromIndex, entry.toIndex])).toEqual([
+        ['req_2', 1, 0],
+        ['req_1', 0, 1],
+      ]);
+      // The label shown to the user uses the parent's current name.
+      expect(report.reordered[0].container).toContain('New name');
+    });
+
+    it('keeps same-named parents apart', () => {
+      const before = file(
+        folder('fld_1', 'Same', [child('req_1', 'A'), child('req_2', 'B')]) +
+          folder('fld_2', 'Same', [child('req_3', 'C'), child('req_4', 'D')]),
+      );
+      const after = file(
+        folder('fld_1', 'Same', [child('req_2', 'B'), child('req_1', 'A')]) +
+          folder('fld_2', 'Same', [child('req_3', 'C'), child('req_4', 'D')]),
+      );
+
+      const report = buildInsomniaChangeReport(before, after);
+
+      expect(report.reordered.map(entry => [entry.id, entry.fromIndex, entry.toIndex])).toEqual([
+        ['req_2', 1, 0],
+        ['req_1', 0, 1],
+      ]);
+    });
+
+    it('still reports a real move to another folder with the parents’ names', () => {
+      const before = file(folder('fld_1', 'From', [child('req_1', 'A')]) + folder('fld_2', 'To', [child('req_2', 'B')]));
+      const after = file(
+        folder('fld_1', 'From', []).replace('children:\n', 'children: []\n') +
+          folder('fld_2', 'To', [child('req_2', 'B'), child('req_1', 'A')]),
+      );
+
+      const report = buildInsomniaChangeReport(before, after);
+
+      expect(report.moved.map(entry => [entry.id, entry.fromContainer, entry.toContainer])).toEqual([
+        ['req_1', expect.stringContaining('From'), expect.stringContaining('To')],
+      ]);
+    });
+  });
+
   it('surfaces a parse failure instead of throwing', () => {
     const report = buildInsomniaChangeReport(committed, 'invalid: yaml: content: [unclosed');
 
