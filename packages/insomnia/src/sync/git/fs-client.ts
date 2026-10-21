@@ -1,5 +1,6 @@
 import fs from 'node:fs';
-import path from 'node:path';
+
+import { assertRealPathContained, resolveContainedPath } from './contained-path';
 
 type FSWraps =
   | typeof fs.promises.readFile
@@ -18,35 +19,40 @@ export const fsClient = (basePath: string) => {
   console.log(`[fsClient] Created in ${basePath}`);
   fs.mkdirSync(basePath, { recursive: true });
 
+  // `followLeaf: false` is for operations that act on a symlink itself rather than what it points to.
   const wrap =
-    (fn: FSWraps) =>
+    (fn: FSWraps, followLeaf = true) =>
     async (filePath: string, ...args: any[]) => {
-      const modifiedPath = path.join(basePath, path.normalize(filePath));
+      const modifiedPath = resolveContainedPath(basePath, filePath);
+      await assertRealPathContained(basePath, modifiedPath, followLeaf);
 
       // @ts-expect-error -- TSCONVERSION
       return fn(modifiedPath, ...args);
     };
 
+  // isomorphic-git calls `symlink(target, filepath)`. The target is the stored link text and must be
+  // kept verbatim (it may legitimately be relative or point outside the repo); only the location of
+  // the link is confined. Writes through a link that resolves outside basePath are refused by `wrap`.
   const wrapSymlink =
     (fn: typeof fs.promises.symlink) =>
-    async (filePath: string, target: string, ...args: any[]) => {
-      const modifiedPath = path.join(basePath, path.normalize(filePath));
-      const modifiedTarget = path.join(basePath, path.normalize(target));
+    async (target: string, filePath: string, ...args: any[]) => {
+      const linkPath = resolveContainedPath(basePath, filePath);
+      await assertRealPathContained(basePath, linkPath, false);
 
-      return fn(modifiedPath, modifiedTarget, ...args);
+      return fn(target, linkPath, ...args);
     };
 
   return {
     promises: {
       readFile: wrap(fs.promises.readFile),
       writeFile: wrap(fs.promises.writeFile),
-      unlink: wrap(fs.promises.unlink),
+      unlink: wrap(fs.promises.unlink, false),
       readdir: wrap(fs.promises.readdir),
       mkdir: wrap(fs.promises.mkdir),
-      rmdir: wrap(fs.promises.rmdir),
+      rmdir: wrap(fs.promises.rmdir, false),
       stat: wrap(fs.promises.stat),
-      lstat: wrap(fs.promises.lstat),
-      readlink: wrap(fs.promises.readlink),
+      lstat: wrap(fs.promises.lstat, false),
+      readlink: wrap(fs.promises.readlink, false),
       symlink: wrapSymlink(fs.promises.symlink),
     },
   };

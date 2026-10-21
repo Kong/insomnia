@@ -8,6 +8,7 @@ import { getUpdateUrl } from '~/main/updates';
 
 import { version } from '../../package.json';
 import { getClientString } from '../common/constants';
+import { isPathInsideDir } from './ipc/path-guard';
 
 export async function backupIfNewerVersionAvailable() {
   try {
@@ -59,10 +60,28 @@ export async function backup() {
   }
 }
 
+// `version` comes from the renderer; it must name a single directory directly under `backups/`.
+const resolveBackupVersionPath = (dataPath: string, version: string): string => {
+  const backupsDir = path.join(dataPath, 'backups');
+  const versionPath = path.resolve(backupsDir, version);
+  if (
+    typeof version !== 'string' ||
+    !version ||
+    version === '.' ||
+    version === '..' ||
+    /[/\\\0]/.test(version) ||
+    path.dirname(versionPath) !== path.resolve(backupsDir) ||
+    !isPathInsideDir(versionPath, backupsDir)
+  ) {
+    throw new Error('restoreBackup: invalid backup version');
+  }
+  return versionPath;
+};
+
 export async function restoreBackup(version: string) {
+  const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
+  const versionPath = resolveBackupVersionPath(dataPath, version);
   try {
-    const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-    const versionPath = path.join(dataPath, 'backups', version);
     const files = await readdir(versionPath);
     if (!files.length) {
       console.log('[main] No backup found at:', versionPath);
