@@ -5,6 +5,7 @@ import { useGitProjectDiscardPartialContentActionFetcher } from '~/routes/git.di
 import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stage-entity';
 
 import { showToast } from '../../toast-notification';
+import { WarningBanner } from '../../warning-banner';
 import type { ActionGate } from './action-gate';
 import { CookieJarDiffCard } from './cookie-jar-diff-card';
 import { computeVisualDiff, getBaseEnvironmentId } from './diff-engine';
@@ -41,6 +42,9 @@ interface Props {
   actionGate: ActionGate;
   // Whether an action, here or file-level, is still in flight: every card's buttons wait for it.
   isActionInFlight: boolean;
+  // Set when either side isn't a file as Insomnia writes it (eg. edited by hand): `invalid` doesn't match the
+  // Insomnia file format at all, `non-canonical` does but Insomnia would write it differently.
+  formatIssue?: 'invalid' | 'non-canonical' | null;
 }
 
 // Shown instead of cards when there are none to show; the Text view still has the full diff.
@@ -67,6 +71,7 @@ export const EntityDiffList: FC<Props> = ({
   onShowTextView,
   actionGate,
   isActionInFlight,
+  formatIssue,
 }) => {
   const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
   const baseEnvironmentId = useMemo(() => getBaseEnvironmentId(after), [after]);
@@ -152,6 +157,15 @@ export const EntityDiffList: FC<Props> = ({
     return <TextViewHint message="Unable to parse this file for a visual diff." onShowTextView={onShowTextView} />;
   }
 
+  if (formatIssue === 'invalid') {
+    return (
+      <TextViewHint
+        message="This file doesn't match the Insomnia file format, so the Visual view can't show it."
+        onShowTextView={onShowTextView}
+      />
+    );
+  }
+
   if (entities.length === 0) {
     // Also covers metadata-only (eg. timestamps) and formatting-only changes, and non-Insomnia files
     // such as the project's .spectral.yaml lint ruleset — not just moves.
@@ -173,6 +187,19 @@ export const EntityDiffList: FC<Props> = ({
 
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+      {formatIssue === 'non-canonical' && (
+        // Cards are matched up by id and actions splice entities into a file written the way Insomnia exports it,
+        // so a file in any other shape (eg. edited by hand) can show incomplete cards and lose what isn't an entity.
+        <WarningBanner className="shrink-0 text-sm" data-testid="visual-diff-format-warning">
+          This file isn't in the format Insomnia writes. It may have been edited by hand or by another version of
+          Insomnia. Cards may be incomplete, and staging or discarding a card rewrites the whole file the way Insomnia
+          exports it, losing comments, formatting and unrecognized fields.{' '}
+          <Button onPress={onShowTextView} className="cursor-pointer underline hover:brightness-125">
+            Open the Text view
+          </Button>{' '}
+          to see the exact changes.
+        </WarningBanner>
+      )}
       <div className="flex shrink-0 items-center gap-3 text-xs">
         <span className="font-semibold text-(--color-font)">
           {entities.length} {entities.length === 1 ? 'entity' : 'entities'} changed

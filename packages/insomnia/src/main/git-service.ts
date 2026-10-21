@@ -51,7 +51,12 @@ import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import { buildInsomniaChangeReport, type InsomniaChangeReport } from '../common/insomnia-v5-change-report';
 import { checkStrictSchemaMatch } from '../common/zod/check-schema-mismatch';
 import { findUnknownFieldRanges, type UnknownFieldRange } from '../common/zod/find-unknown-field-ranges';
-import { canonicalizeInsomniaFileContent, isUndiscardableChange } from '../sync/git/canonical-file';
+import {
+  canonicalizeInsomniaFileContent,
+  getInsomniaFileFormatIssue,
+  type InsomniaFileFormatIssue,
+  isUndiscardableChange,
+} from '../sync/git/canonical-file';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -3505,6 +3510,8 @@ export type GitDiffResult =
       staged: boolean;
       /** True when the unstaged change reappears after every discard and can only be resolved by committing it */
       undiscardable?: boolean;
+      /** Set when either side isn't a file as Insomnia writes it (eg. edited by hand), which the Visual view can't reliably show or act on */
+      formatIssue?: InsomniaFileFormatIssue | null;
     }
   | {
       errors: string[];
@@ -3572,6 +3579,18 @@ export const diffFileLoader = async ({
       }
     }
 
+    let formatIssue: InsomniaFileFormatIssue | null = null;
+    try {
+      // The raw contents: `diff.before` is migrated and reordered for display
+      const sides = staged
+        ? [fileStatus.rawHead, fileStatus.rawStage]
+        : [fileStatus.rawStage || fileStatus.rawHead, fileStatus.workdir];
+      const issues = await Promise.all(sides.map(getInsomniaFileFormatIssue));
+      formatIssue = issues.includes('invalid') ? 'invalid' : issues.includes('non-canonical') ? 'non-canonical' : null;
+    } catch (err) {
+      console.warn('[git] Failed to check the format of the file', filepath, err);
+    }
+
     return {
       name: name || filepath,
       diff,
@@ -3583,6 +3602,7 @@ export const diffFileLoader = async ({
       scope,
       staged,
       undiscardable,
+      formatIssue,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';

@@ -1956,6 +1956,7 @@ const OriginalGitProjectStagingModal: FC<
                           onShowTextView={() => setDiffViewMode('text')}
                           actionGate={actionGate}
                           isActionInFlight={isActionInFlight}
+                          formatIssue={previewDiffItem.formatIssue}
                         />
                       )}
                     </div>
