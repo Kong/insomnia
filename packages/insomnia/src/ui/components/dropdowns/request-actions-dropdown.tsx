@@ -8,7 +8,7 @@ import type {
   WebSocketRequest,
   Workspace,
 } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
@@ -17,7 +17,6 @@ import { useParams } from 'react-router';
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRootLoaderData } from '~/root';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
-import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -28,7 +27,6 @@ import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
-import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -45,6 +43,7 @@ interface Props {
   triggerRef?: React.RefObject<HTMLDivElement>;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
+  onDelete: () => void;
 }
 
 export const RequestActionsDropdown = ({
@@ -56,6 +55,7 @@ export const RequestActionsDropdown = ({
   triggerRef,
   onOpenChange,
   onRename,
+  onDelete,
 }: Props) => {
   const workspaceId = activeWorkspace._id;
   const projectId = activeProject._id;
@@ -64,7 +64,6 @@ export const RequestActionsDropdown = ({
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
-  const deleteRequestFetcher = useRequestDeleteActionFetcher();
 
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -188,27 +187,6 @@ export const RequestActionsDropdown = ({
     patchRequestMeta(request._id, { pinned: !isPinned });
   };
 
-  const deleteRequest = () => {
-    showModal(AskModal, {
-      title: 'Delete Request',
-      message: `Do you really want to delete "${request.name}"?`,
-      yesText: 'Delete',
-      noText: 'Cancel',
-      color: 'danger',
-      onDone: async (isYes: boolean) => {
-        if (isYes) {
-          services.stats.incrementDeletedRequests();
-          deleteRequestFetcher.submit({
-            organizationId,
-            projectId,
-            workspaceId,
-            id: request._id,
-          });
-        }
-      },
-    });
-  };
-
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
 
@@ -300,7 +278,7 @@ export const RequestActionsDropdown = ({
         {
           id: 'Delete',
           name: 'Delete',
-          action: deleteRequest,
+          action: onDelete,
           icon: 'trash',
           hint: hotKeyRegistry.request_showDelete,
         },

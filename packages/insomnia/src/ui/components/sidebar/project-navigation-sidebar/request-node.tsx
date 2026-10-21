@@ -128,6 +128,7 @@ interface RequestNodeProps {
   // single collection (the project and workspace rows are no longer shown).
   depthOffset?: number;
   onRename: () => void;
+  onDelete: () => void;
 }
 
 export const RequestNode = ({
@@ -136,6 +137,7 @@ export const RequestNode = ({
   className,
   depthOffset = 0,
   onRename,
+  onDelete,
 }: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
   const isPinnedRequest = kind === 'pinnedRequest';
@@ -208,6 +210,7 @@ export const RequestNode = ({
         <RequestGroupActionsDropdown
           requestGroup={doc}
           onRename={onRename}
+          onDelete={onDelete}
           activeProject={project}
           activeWorkspace={workspace}
           isOpen={isContextMenuOpen}
@@ -218,6 +221,7 @@ export const RequestNode = ({
         <RequestActionsDropdown
           request={doc}
           onRename={onRename}
+          onDelete={onDelete}
           activeProject={project}
           activeWorkspace={workspace}
           isPinned={item.pinned}
