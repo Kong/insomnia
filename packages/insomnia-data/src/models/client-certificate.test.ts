@@ -1,8 +1,6 @@
-import type { ClientCertificate } from 'insomnia-data';
-import { models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
-import { filterClientCertificates } from '../certificate';
+import { type ClientCertificate, filterClientCertificates, type } from './client-certificate';
 
 describe('filterClientCertificates', () => {
   const requestUrl = 'https://www.example.com:1234';
@@ -18,7 +16,7 @@ describe('filterClientCertificates', () => {
       disabled: false,
       isPrivate: true,
       modified: 0,
-      type: models.clientCertificate.type,
+      type,
       created: 0,
       name: '',
     },
@@ -33,7 +31,7 @@ describe('filterClientCertificates', () => {
       disabled: false,
       isPrivate: true,
       modified: 0,
-      type: models.clientCertificate.type,
+      type,
       created: 0,
       name: '',
     },
@@ -51,7 +49,7 @@ describe('filterClientCertificates', () => {
       disabled: false,
       isPrivate: true,
       modified: 0,
-      type: models.clientCertificate.type,
+      type,
       created: 0,
       name: '',
     },

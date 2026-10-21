@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import type { PluginTemplateTag } from 'insomnia/src/common/templating/types';
+import { fakerFunctions } from 'insomnia-data/common';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 
@@ -8,7 +9,6 @@ import { invariant } from '~/common/utils/invariant';
 import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 
 import { CONFIDENTIAL_MASK_VALUE } from './confidential-value-policy';
-import { fakerFunctions } from './faker-functions';
 
 const JSONBigStringParser = JSONBig({ storeAsString: true });
 

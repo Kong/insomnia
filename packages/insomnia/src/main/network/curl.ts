@@ -5,7 +5,7 @@ import type { Readable } from 'node:stream';
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
 import type { Response } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
@@ -14,7 +14,6 @@ import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
-import { filterClientCertificates } from '../../network/certificate';
 import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -151,7 +150,11 @@ const openCurlConnection = async (
     const settings = await services.settings.get();
     const start = performance.now();
     const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
-    const filteredClientCertificates = filterClientCertificates(clientCertificates, req.url, 'https:');
+    const filteredClientCertificates = models.clientCertificate.filterClientCertificates(
+      clientCertificates,
+      req.url,
+      'https:',
+    );
 
     const { header: authHeader, timeline: authTimeline } = await getAuthHeader(req, req.url);
     authTimeline?.forEach(entry => timelineFileStreams.get(requestId)?.write(JSON.stringify(entry) + '\n'));
