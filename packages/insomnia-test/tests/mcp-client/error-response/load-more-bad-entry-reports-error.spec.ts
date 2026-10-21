@@ -10,7 +10,6 @@ import { Project } from '../../../models/project';
 test('Verify Load More Whose Next Page Has an Invalid Entry Lists the Skipped Entry in the Error Panel', async ({
   user,
 }) => {
-  test.fail(true, 'INS-4064');
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { mcpClientPage } = user.pageManager;
   const url = await scriptMcpListServer(faker.string.alphanumeric(12), {

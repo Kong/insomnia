@@ -10,7 +10,6 @@ import { Project } from "../../models/project";
 test("Verify Loaded Pages Are Kept After Switching to Another MCP Client and Back", async ({
   user,
 }) => {
-  test.fail(true, "INS-4069");
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { mcpClientPage } = user.pageManager;
 

@@ -28,16 +28,8 @@ const loadMoreVariants = [
   },
 ] as const;
 
-// Open app bugs: listTools() / listPrompts() do not forward the cursor, so Load More re-requests the first page.
-// Resources forwards it and passes.
-const knownBugs: Partial<Record<(typeof loadMoreVariants)[number]['type'], string>> = {
-  [McpPrimitiveType.Tools]: 'INS-4060',
-  [McpPrimitiveType.Prompts]: 'INS-4061',
-};
-
 for (const { type, method, entry, badEntry } of loadMoreVariants) {
   test(`Verify Load More on ${type} with a Bad Page Keeps Loaded Entries and Clears the Cursor`, async ({ user }) => {
-    test.fail(type in knownBugs, knownBugs[type]);
     const { mcpClientFlow, workspaceFlow } = user.flowManager;
     const { mcpClientPage } = user.pageManager;
     const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
@@ -58,6 +50,6 @@ for (const { type, method, entry, badEntry } of loadMoreVariants) {
     await expect
       .poll(() => mcpClientPage.getPrimitives(type), { timeout: DEFAULT_TIMEOUT })
       .toEqual(['item-1', 'item-2']);
-    expect(await mcpClientFlow.getListAction(client, type)).toBe(McpListAction.Refresh);
+    expect(await mcpClientFlow.getListAction(client, type)).toBe(McpListAction.Reload);
   });
 }

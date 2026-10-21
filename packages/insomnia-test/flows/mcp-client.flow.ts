@@ -1,16 +1,16 @@
-import { expect } from "@playwright/test";
+import { expect } from '@playwright/test';
 
-import { type McpCapabilityType, McpListAction } from "../enums/mcp-capability";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { McpClient } from "../models/mcp-client";
-import type { Project } from "../models/project";
-import type { ResponseView } from "../models/response";
-import type { OAuth2Tokens } from "../pages/auth-tab.page";
-import type { McpCapabilityError } from "../pages/mcp-client.page";
-import type { PageManager } from "../pages/page-manager";
-import { BaseFlow } from "./base.flow";
-import type { FlowContext } from "./flow-context";
-import type { WorkspaceFlow } from "./workspace.flow";
+import { type McpCapabilityType, McpListAction } from '../enums/mcp-capability';
+import { DEFAULT_TIMEOUT } from '../misc/constants';
+import { McpClient } from '../models/mcp-client';
+import type { Project } from '../models/project';
+import type { ResponseView } from '../models/response';
+import type { OAuth2Tokens } from '../pages/auth-tab.page';
+import type { McpCapabilityError } from '../pages/mcp-client.page';
+import type { PageManager } from '../pages/page-manager';
+import { BaseFlow } from './base.flow';
+import type { FlowContext } from './flow-context';
+import type { WorkspaceFlow } from './workspace.flow';
 
 export class McpClientFlow extends BaseFlow {
   /**
@@ -133,16 +133,8 @@ export class McpClientFlow extends BaseFlow {
     await mcpClientPage.navigate();
     await mcpClientPage.setUrl(client.url);
     // The tree node is the MCP workspace; the URL lives on its McpRequest child.
-    const requestId = await this.waitForChildDocId(
-      "insomnia.McpRequest.db",
-      node!._id,
-    );
-    await this.waitForUrlPersisted(
-      "insomnia.McpRequest.db",
-      mcpClientPage,
-      requestId,
-      client.url,
-    );
+    const requestId = await this.waitForChildDocId('insomnia.McpRequest.db', node!._id);
+    await this.waitForUrlPersisted('insomnia.McpRequest.db', mcpClientPage, requestId, client.url);
     if (client.authentication) {
       await this.applyAuthentication(mcpClientPage.auth, client.authentication);
     }
@@ -156,10 +148,8 @@ export class McpClientFlow extends BaseFlow {
    * @param item - The MCP Client name, or an object with name and optional id to match
    * @returns The matching McpClient with `id` and `url` populated, or undefined if not found
    */
-  async get(
-    item: string | { name: string; id?: string },
-  ): Promise<McpClient | undefined> {
-    const identity = typeof item === "string" ? { name: item } : item;
+  async get(item: string | { name: string; id?: string }): Promise<McpClient | undefined> {
+    const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
@@ -197,10 +187,7 @@ export class McpClientFlow extends BaseFlow {
    * @param type - Which capability item (Tools / Resources / Prompts) to read
    * @returns The panel's title and per-entry bullets
    */
-  async getListError(
-    client: McpClient,
-    type: McpCapabilityType,
-  ): Promise<McpCapabilityError> {
+  async getListError(client: McpClient, type: McpCapabilityType): Promise<McpCapabilityError> {
     await this.open(client);
     return this.pageManager.mcpClientPage.getCapabilityError(type);
   }
@@ -224,7 +211,7 @@ export class McpClientFlow extends BaseFlow {
    */
   async refresh(client: McpClient, type: McpCapabilityType): Promise<void> {
     await this.open(client);
-    await this.pageManager.mcpClientPage.clickCapabilityAction(type, McpListAction.Refresh);
+    await this.pageManager.mcpClientPage.clickCapabilityAction(type, McpListAction.Reload);
   }
 
   /**
