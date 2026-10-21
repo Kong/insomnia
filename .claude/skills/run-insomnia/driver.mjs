@@ -152,6 +152,14 @@ const BUILTIN_PROFILES = {
       KONNECT_API_URL: ECHO,
       KONNECT_API_REGIONS: 'us',
       INSOMNIA_SKIP_ONBOARDING: 'true',
+      // NOT a credential, despite looking like one to a secret scanner. This is
+      // the same deterministic keypair the smoke tests use - see
+      // packages/insomnia-smoke-test/playwright/test.ts, where it has lived
+      // since 2023. ui/auth-session-provider.client.ts generates a fresh
+      // sealed-box keypair on every page load; these two vars only pin it so the
+      // browser-login handshake is reproducible. The keypair is the client half
+      // of that handshake - the real secret is the session token the website
+      // seals to it. It is registered with no service and grants no access.
       INSOMNIA_PUBLIC_KEY: 'txb/w8DASTpPQqeHE/hpI3ABKzit+pv5n2We5dbtYRo=',
       INSOMNIA_SECRET_KEY: 'Tb1QKsI3wVZxhS8TuQESHB2x7f68PzeTzTMmLpnnFVU=',
       INSOMNIA_SESSION: JSON.stringify(SESSION),
