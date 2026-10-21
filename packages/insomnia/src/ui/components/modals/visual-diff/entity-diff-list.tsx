@@ -1,10 +1,11 @@
-import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { useGitProjectDiscardPartialContentActionFetcher } from '~/routes/git.discard-entity';
 import { useGitProjectStagePartialContentActionFetcher } from '~/routes/git.stage-entity';
 
 import { showToast } from '../../toast-notification';
+import type { ActionGate } from './action-gate';
 import { CookieJarDiffCard } from './cookie-jar-diff-card';
 import { computeVisualDiff, getBaseEnvironmentId } from './diff-engine';
 import { applyEntityChange, hasOnlyWorkspaceIdentity } from './entity-splice';
@@ -36,6 +37,10 @@ interface Props {
   onEntityChanged?: () => Promise<unknown> | void;
   // Switches the preview to the Text view, which shows exactly what git will commit.
   onShowTextView: () => void;
+  // Shared with the file-level actions, so a card's action never overlaps one of them on the same file.
+  actionGate: ActionGate;
+  // Whether an action, here or file-level, is still in flight: every card's buttons wait for it.
+  isActionInFlight: boolean;
 }
 
 // Shown instead of cards when there are none to show; the Text view still has the full diff.
@@ -60,6 +65,8 @@ export const EntityDiffList: FC<Props> = ({
   staged,
   onEntityChanged,
   onShowTextView,
+  actionGate,
+  isActionInFlight,
 }) => {
   const { entities, unparseable } = useMemo(() => computeVisualDiff(before, after), [before, after]);
   const baseEnvironmentId = useMemo(() => getBaseEnvironmentId(after), [after]);
@@ -87,26 +94,21 @@ export const EntityDiffList: FC<Props> = ({
     }
   }, [discardErrors]);
 
-  // Synchronous guard on top of `pending`: two clicks landing before the re-render
-  // that disables the buttons would otherwise both compute from the same diff.
-  const isBusyRef = useRef(false);
-
+  // Every action computes from the diff on screen, so one clicked while another is in flight (even
+  // before the re-render that disables the buttons) is skipped: that one is about to change the diff.
   const runAction = useCallback(
     async (entityId: string, action: NonNullable<EntityCardPendingAction>, perform: () => Promise<unknown>) => {
-      if (isBusyRef.current) {
-        return;
-      }
-      isBusyRef.current = true;
-      setPending({ entityId, action });
-      try {
-        await perform();
-        await onEntityChanged?.();
-      } finally {
-        isBusyRef.current = false;
-        setPending(null);
-      }
+      await actionGate.tryRun(async () => {
+        setPending({ entityId, action });
+        try {
+          await perform();
+          await onEntityChanged?.();
+        } finally {
+          setPending(null);
+        }
+      });
     },
-    [onEntityChanged],
+    [actionGate, onEntityChanged],
   );
 
   const handleStage = useCallback(
@@ -192,7 +194,7 @@ export const EntityDiffList: FC<Props> = ({
           const actionProps = {
             staged,
             pendingAction: pending?.entityId === diff.id ? pending.action : null,
-            isDisabled: pending !== null,
+            isDisabled: isActionInFlight,
             onStage: isFileIdentityChange ? undefined : () => handleStage(diff.id),
             // No per-entity discard when the working-tree file is gone (deleted
             // workspace): it would resurrect the file with just this one entity.
