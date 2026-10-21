@@ -19,8 +19,8 @@ import { useLocalStorage } from 'react-use';
 
 import {
   combineListErrors,
+  findAccumulatedListResult,
   findFirstMatchEventData,
-  findLatestListResult,
   getDefaultServerCapabilities,
   type McpListValidationError,
   type McpServerData,
@@ -237,7 +237,7 @@ export const McpPane = () => {
     prompts: METHOD_LIST_PROMPTS,
   };
 
-  // Re-derives a single primitive's data/error/nextCursor from the event log
+  // Re-derives a single primitive's full paginated data/error/nextCursor from the event log
   const getPrimitiveListResult = async (
     type: McpServerPrimitiveTypes,
   ): Promise<{
@@ -251,7 +251,7 @@ export const McpPane = () => {
       return { data: [] };
     }
     const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
-    const result = findLatestListResult(allEvents, method);
+    const result = findAccumulatedListResult(allEvents, method);
     return {
       data: (result?.data?.[type] as McpServerData['primitives'][McpServerPrimitiveTypes]) || [],
       error: result?.error,
@@ -272,18 +272,6 @@ export const McpPane = () => {
     setPrimitiveErrors(prev => ({
       ...prev,
       [type]: error,
-    }));
-    updatePrimitiveNextCursor(nextCursor, type);
-  };
-
-  const loadMorePrimitiveData = async (type: McpServerPrimitiveTypes) => {
-    const { data, nextCursor } = await getPrimitiveListResult(type);
-    setMcpServerData(prev => ({
-      serverCapabilities: prev['serverCapabilities'],
-      primitives: {
-        ...prev['primitives'],
-        [type]: [...prev['primitives'][type], ...data],
-      },
     }));
     updatePrimitiveNextCursor(nextCursor, type);
   };
@@ -361,10 +349,10 @@ export const McpPane = () => {
         const allEvents = await window.main.mcp.event.findMany({ responseId: activeResponseId });
         const serverCapabilities =
           findFirstMatchEventData(allEvents, METHOD_INITIALIZE)?.capabilities || getDefaultServerCapabilities();
-        const toolsResult = findLatestListResult(allEvents, METHOD_LIST_TOOLS);
-        const resourcesResult = findLatestListResult(allEvents, METHOD_LIST_RESOURCES);
-        const resourceTemplatesResult = findLatestListResult(allEvents, METHOD_LIST_RESOURCE_TEMPLATES);
-        const promptsResult = findLatestListResult(allEvents, METHOD_LIST_PROMPTS);
+        const toolsResult = findAccumulatedListResult(allEvents, METHOD_LIST_TOOLS);
+        const resourcesResult = findAccumulatedListResult(allEvents, METHOD_LIST_RESOURCES);
+        const resourceTemplatesResult = findAccumulatedListResult(allEvents, METHOD_LIST_RESOURCE_TEMPLATES);
+        const promptsResult = findAccumulatedListResult(allEvents, METHOD_LIST_PROMPTS);
         const tools = toolsResult?.data?.tools || [];
         const resources = resourcesResult?.data?.resources || [];
         const resourceTemplates = resourceTemplatesResult?.data?.resourceTemplates || [];
@@ -514,7 +502,6 @@ export const McpPane = () => {
                         item={item}
                         collapsedPrimitives={collapsedPrimitives}
                         onRefreshPrimitive={updatePrimitiveData}
-                        onLoadMorePrimitive={loadMorePrimitiveData}
                         allowSubscribeResources={allowSubscribeResources}
                         subscribeResources={subscribeResources || []}
                         handleSubscribe={handleSubscribe}
@@ -569,7 +556,6 @@ const CollectionGridListItem = (props: {
   subscribeResources: string[];
   handleSubscribe: (item: ResourceItem) => void;
   onRefreshPrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
-  onLoadMorePrimitive: (type: McpServerPrimitiveTypes) => Promise<void>;
   isSelected: boolean;
 }) => {
   const {
@@ -605,10 +591,10 @@ const CollectionGridListItem = (props: {
       textValue={label}
       data-testid={`test-${uniqueId}`}
       style={style}
-      ref={triggerRef}
     >
       <div className="flex h-full w-full flex-col overflow-hidden">
         <div
+          ref={triggerRef}
           onContextMenu={e => {
             e.preventDefault();
             setIsContextMenuOpen(true);
