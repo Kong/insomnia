@@ -6,17 +6,45 @@ import * as reactUse from 'react-use';
 import { scratchPadTutorialList } from '~/routes/organization.$organizationId.project.$projectId.tutorial.$panel';
 import { Icon } from '~/ui/components/icon';
 
+export const DISMISS_SNOOZE_DAYS = 14;
+export const NOT_RIGHT_NOW_SNOOZE_DAYS = 120;
+export const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+interface SignUpTipDismissedState {
+  dismissed: boolean;
+  dismissedAt: number;
+  // Days to hide the tip after dismissedAt; absent in older stored values (defaults to DISMISS_SNOOZE_DAYS)
+  snoozeDays?: number;
+}
+
+export const shouldShowSignUpTip = (state: SignUpTipDismissedState | undefined, now: number) => {
+  if (!state || !state.dismissed) {
+    return true;
+  }
+
+  // localStorage content is untrusted: fall back to the default for missing or invalid values
+  const snoozeDays =
+    Number.isFinite(state.snoozeDays) && (state.snoozeDays as number) > 0
+      ? (state.snoozeDays as number)
+      : DISMISS_SNOOZE_DAYS;
+
+  return now - state.dismissedAt >= snoozeDays * MS_PER_DAY;
+};
+
 export const ScratchPadTutorialPanel = () => {
-  const [signUpTipDismissedState, setSignUpTipDismissedState] = reactUse.useLocalStorage<{
-    dismissed: boolean;
-    dismissedAt: number;
-  }>('scratchpad-sign-up-tip-dismissed', { dismissed: false, dismissedAt: 0 });
+  const [signUpTipDismissedState, setSignUpTipDismissedState] = reactUse.useLocalStorage<SignUpTipDismissedState>(
+    'scratchpad-sign-up-tip-dismissed',
+    { dismissed: false, dismissedAt: 0 },
+  );
 
   const [currentTime] = useState(() => Date.now());
 
-  const handleDismiss = () => {
-    setSignUpTipDismissedState({ dismissed: true, dismissedAt: Date.now() });
+  const snoozeSignUpTip = (snoozeDays: number) => {
+    setSignUpTipDismissedState({ dismissed: true, dismissedAt: Date.now(), snoozeDays });
   };
+
+  const handleDismiss = () => snoozeSignUpTip(DISMISS_SNOOZE_DAYS);
+  const handleNotRightNow = () => snoozeSignUpTip(NOT_RIGHT_NOW_SNOOZE_DAYS);
 
   const {
     organizationId,
@@ -34,19 +62,14 @@ export const ScratchPadTutorialPanel = () => {
     navigate(href('/auth/login'));
   };
 
-  const shouldShowSignUpTip = useMemo(() => {
-    if (!signUpTipDismissedState || !signUpTipDismissedState.dismissed) {
-      return true;
-    }
-
-    const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
-
-    return currentTime - signUpTipDismissedState.dismissedAt >= twoWeeksInMs;
-  }, [signUpTipDismissedState, currentTime]);
+  const showSignUpTip = useMemo(
+    () => shouldShowSignUpTip(signUpTipDismissedState, currentTime),
+    [signUpTipDismissedState, currentTime],
+  );
 
   return (
     <>
-      {shouldShowSignUpTip ? (
+      {showSignUpTip ? (
         <div className="m-2 rounded-lg border! border-solid border-(--hl-sm) bg-(--color-bg) p-4">
           <div className="flex flex-col items-start justify-between">
             <div className="flex w-full justify-between">
@@ -62,12 +85,20 @@ export const ScratchPadTutorialPanel = () => {
             <p className="mb-4 text-sm text-(--color-font-secondary)">
               Create multiple API collections, MCP clients, manage projects, and collaborate with your team.
             </p>
-            <Button
-              onPress={handleSignUp}
-              className="rounded-md bg-(--color-surprise) px-4 py-2 text-sm font-medium text-white transition-colors"
-            >
-              Sign up for free
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onPress={handleSignUp}
+                className="rounded-md bg-(--color-surprise) px-4 py-2 text-sm font-medium text-white transition-colors"
+              >
+                Sign up for free
+              </Button>
+              <Button
+                onPress={handleNotRightNow}
+                className="rounded-md px-4 py-2 text-sm font-medium text-(--color-font-secondary) transition-colors hover:bg-(--hl-xs) hover:text-(--color-font) focus:outline-hidden"
+              >
+                Not right now
+              </Button>
+            </div>
           </div>
         </div>
       ) : null}
