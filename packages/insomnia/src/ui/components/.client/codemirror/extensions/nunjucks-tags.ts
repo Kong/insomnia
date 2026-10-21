@@ -1,12 +1,7 @@
 import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '~/common/misc';
-import type {
-  HandleRender,
-  OpenVariableSource,
-  RenderContextAndKeys,
-  VariableSourceMeta,
-} from '~/common/templating/types';
+import type { HandleRender, OpenVariableSource, RenderContextAndKeys } from '~/common/templating/types';
 import { tokenizeTag } from '~/common/templating/utils';
 import { showModal } from '~/ui/components/modals/index';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
@@ -203,26 +198,14 @@ async function _highlightNunjucksTags(
         scheduleHideVariableSourceTooltip();
       });
       activeMarks.push(mark);
-      el.addEventListener('click', async () => {
+      el.addEventListener('click', () => {
         if (readOnly) return;
-        // Only variables resolve to a source environment; tags do not.
-        let variableSource: VariableSourceMeta | undefined;
-        if (!tok.string.includes('{%')) {
-          try {
-            const context = await renderContextWithCacheKey();
-            const cleaned = tok.string.replace(/\\/g, '').replace(/^{{/, '').replace(/}}$/, '').trim();
-            variableSource = context.context.getKeysContext().keyContextMeta?.[cleaned];
-          } catch {
-            // Render failed; open the modal without source info.
-          }
-        }
         hideVariableSourceTooltip();
         // Define the dialog HTML
         showModal(NunjucksModal, {
           // @ts-expect-error not a known property of TextMarkerOptions
           template: mark.__template,
           editorId,
-          variableSource,
           onOpenSource: onOpenVariableSource,
           onDone: (template: string | null) => {
             const pos = mark.find();
