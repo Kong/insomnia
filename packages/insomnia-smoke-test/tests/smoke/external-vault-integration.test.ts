@@ -1,7 +1,24 @@
 import { expect } from '@playwright/test';
 
-import { getFixturePath, loadFixture } from '../../playwright/paths';
-import { test } from '../../playwright/test';
+import { getFixturePath, loadFixture, seedSettings } from '../../playwright/paths';
+import { test as baseTest } from '../../playwright/test';
+
+// An external vault tag's result is a confidential value: with "Hide Secret Values in
+// Preview/Console" on (its default) it is masked in the tag preview and redacted out of the
+// timeline the Console tab renders. This spec is about the vault integration itself -- that
+// the provider value is really fetched and really reaches the request -- so it turns the
+// setting off and asserts on the plaintext. Redaction has its own spec, see
+// confidential-redaction.test.ts.
+const test = baseTest.extend({
+  dataPath: async ({ dataPath }, use) => {
+    // seedSettings rewrites the whole settings doc, so repeat the harness default it drops.
+    await seedSettings(dataPath, {
+      sidebarFocusForCollections: false,
+      hideSecretValuesInPreviewAndConsole: false,
+    });
+    await use(dataPath);
+  },
+});
 
 test('Setup external vault and used in request', async ({ app, page, insomnia }) => {
   // import request collection and replace the template tag file path with the actual fixture file path
@@ -86,21 +103,18 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
   // test aws vault tag
   await page.locator(`[data-template^="${externalVaultTestCases.aws.tagPrefix}"]`).click();
   await page.getByLabel('Credential For Vault Service').selectOption(awsCredentialName);
-  await page.getByRole('dialog').getByRole('button', { name: 'Reveal value' }).click();
   const previewText = page.getByRole('dialog').getByLabel('Live Preview');
   await expect.soft(previewText).toHaveText(externalVaultTestCases.aws.expectedResult);
   await page.getByRole('button', { name: 'Done' }).click();
   // test gcp vault tag
   await page.locator(`[data-template^="${externalVaultTestCases.gcp.tagPrefix}"]`).click();
   await page.getByLabel('Credential For Vault Service').selectOption(gcpCredentialName);
-  await page.getByRole('dialog').getByRole('button', { name: 'Reveal value' }).click();
   const gcpPreviewText = page.getByRole('dialog').getByLabel('Live Preview');
   await expect.soft(gcpPreviewText).toHaveText(externalVaultTestCases.gcp.expectedResult);
   await page.getByRole('button', { name: 'Done' }).click();
   // test hashicorp vault tag
   await page.locator(`[data-template^="${externalVaultTestCases.hashicorp.tagPrefix}"]`).click();
   await page.getByLabel('Credential For Vault Service').selectOption(hashicorpCredentialName);
-  await page.getByRole('dialog').getByRole('button', { name: 'Reveal value' }).click();
   const hashicorpPreviewText = page.getByRole('dialog').getByLabel('Live Preview');
   await expect.soft(hashicorpPreviewText).toHaveText(externalVaultTestCases.hashicorp.expectedResult);
   await page.getByRole('button', { name: 'Done' }).click();

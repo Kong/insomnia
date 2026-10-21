@@ -35,7 +35,6 @@ import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
-import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -63,6 +62,7 @@ interface Props {
   isOpen: boolean;
   forceShowTrigger?: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  onRename: () => void;
 }
 
 interface ActionItem {
@@ -92,6 +92,7 @@ export const SidebarWorkspaceDropdown = ({
   isOpen,
   onOpenChange,
   forceShowTrigger = false,
+  onRename,
 }: Props) => {
   const projectId = project._id;
   const workspaceId = workspace._id;
@@ -104,7 +105,6 @@ export const SidebarWorkspaceDropdown = ({
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
 
-  const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
@@ -277,20 +277,7 @@ export const SidebarWorkspaceDropdown = ({
         id: 'Rename',
         name: 'Rename',
         icon: 'pen-to-square' as IconName,
-        action: () =>
-          showModal(PromptModal, {
-            title: `Rename ${getWorkspaceLabel(workspace).singular}`,
-            defaultValue: workspaceName,
-            submitName: 'Rename',
-            selectText: true,
-            label: 'Name',
-            onComplete: (name: string) =>
-              updateWorkspaceFetcher.submit({
-                organizationId,
-                projectId,
-                patch: { name, workspaceId },
-              }),
-          }),
+        action: onRename,
       },
       {
         id: 'Export',

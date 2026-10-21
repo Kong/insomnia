@@ -5,14 +5,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Icon } from '../../icon';
 import type { EntityDiff } from './diff-engine';
 import type { DiffTabDef } from './diff-tabs';
-import {
-  CardHeaderActions,
-  ChangeChip,
-  CollapseToggleButton,
-  DiffCardShell,
-  type EntityCardActionProps,
-  StatusDot,
-} from './shared';
+import { ChangeChip, CollapseToggleButton, DiffCardShell, StatusBadge, StatusDot } from './shared';
 
 // The header starts right after the collapse toggle (h-6 + gap-1 = pl-7); everything below it sits
 // slightly further in, so a card's content never hangs to the left of its title.
@@ -102,12 +95,15 @@ export const EntityHeader: FC<{ current: EntityHeaderLine; previous?: EntityHead
   </div>
 );
 
-// Card layout shared by every entity type with tabbed sections: header + actions,
+// Card layout shared by every entity type with tabbed sections: header + status,
 // collapsible into clickable chips, expanding into tabs that mirror the app's editor.
-export const TabbedDiffCard: FC<
-  { diff: EntityDiff; header: ReactNode; tabs: DiffTabDef[] } & EntityCardActionProps
-> = ({ diff, header, tabs, ...actionProps }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+export const TabbedDiffCard: FC<{ diff: EntityDiff; header: ReactNode; tabs: DiffTabDef[] }> = ({
+  diff,
+  header,
+  tabs,
+}) => {
+  // A card with nothing below its header (eg. only the name or URL changed) starts collapsed.
+  const [isExpanded, setIsExpanded] = useState(tabs.length > 0);
   const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
 
   const activeTabId = selectedTabId && tabs.some(t => t.id === selectedTabId) ? selectedTabId : tabs[0]?.id;
@@ -124,7 +120,7 @@ export const TabbedDiffCard: FC<
           <CollapseToggleButton isExpanded={isExpanded} onPress={() => setIsExpanded(!isExpanded)} />
           {header}
         </div>
-        <CardHeaderActions status={diff.status} {...actionProps} />
+        <StatusBadge status={diff.status} />
       </div>
 
       {!isExpanded && tabs.length > 0 && (

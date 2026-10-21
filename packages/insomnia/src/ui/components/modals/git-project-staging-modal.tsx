@@ -1936,10 +1936,6 @@ const OriginalGitProjectStagingModal: FC<
                         <EntityDiffList
                           before={previewDiffItem.diff.before}
                           after={previewDiffItem.diff.after}
-                          projectId={projectId}
-                          filepath={previewDiffItem.filepath}
-                          staged={previewDiffItem.staged}
-                          onEntityChanged={afterEntityChange}
                           onShowTextView={() => setDiffViewMode('text')}
                         />
                       )}

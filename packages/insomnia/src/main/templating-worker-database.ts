@@ -31,7 +31,17 @@ import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-s
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
-import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
+import {
+  createSensitiveValueCollector,
+  redactResponsePatch,
+  withRedaction,
+} from '../common/network/sensitive-value-collector';
+import {
+  defaultSendActionRuntime,
+  fetchRequestData,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+} from '../network/network';
 import { curlRequest } from './network/libcurl-promise';
 import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
@@ -769,11 +779,15 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     const { request, environment, settings, clientCertificates, caCert, timelinePath, responseId } =
       await fetchRequestData(body.request._id);
 
+    // Renders with purpose 'send', so confidential values are real here and need the same
+    // timeline/response redaction the main send path gets.
+    const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
     const renderResult = await tryToInterpolateRequest({
       request,
       environment: environment._id,
       purpose: 'send',
       extraInfo: body.extraInfo,
+      sensitiveValueCollector: collector,
     });
     const response = await sendCurlAndWriteTimeline(
       renderResult.request,
@@ -782,8 +796,12 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
       settings,
       timelinePath,
       responseId,
+      withRedaction(defaultSendActionRuntime, collector),
     );
-    return await services.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
+    return await services.response.create(
+      redactResponsePatch({ ...response, bodyCompression: null }, collector),
+      settings.maxHistoryResponses,
+    );
   },
   // use libcurl to send request without side effects(do not write to database about request and response)
   //

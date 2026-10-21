@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { type EntityDiff, ownFields } from './diff-engine';
 import { compactTabs, type DiffTabDef, fieldChangesTab } from './diff-tabs';
-import { type EntityCardActionProps, entityTypeLabel } from './shared';
+import { entityTypeLabel } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 function withoutName(node: any) {
@@ -26,7 +26,7 @@ export function buildGenericTabs(diff: EntityDiff): DiffTabDef[] {
 }
 
 // Fallback card for entity types without a purpose-built layout (eg. file-level sections).
-export const GenericEntityDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
+export const GenericEntityDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
   const header = buildHeaderLines(diff, { watchedPaths: [] });
   const typeBadge = { label: entityTypeLabel(diff.type), className: 'bg-(--hl-sm) text-(--hl)' };
 
@@ -35,7 +35,6 @@ export const GenericEntityDiffCard: FC<{ diff: EntityDiff } & EntityCardActionPr
       diff={diff}
       header={<EntityHeader current={{ ...header.current, badge: typeBadge }} previous={header.previous} />}
       tabs={buildGenericTabs(diff)}
-      {...actionProps}
     />
   );
 };

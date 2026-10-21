@@ -1,7 +1,7 @@
 import { models, services } from 'insomnia-data';
 
 import { getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
-import type { RenderPurpose } from '~/common/templating/types';
+import type { RenderPurpose, SensitiveValueCollector } from '~/common/templating/types';
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 
@@ -12,12 +12,19 @@ import { getRuntime } from '~/runtimes';
  *
  * Given an object the result is always a fresh copy; a non-object input is returned as is.
  */
-export async function maskOrDecryptVaultDataIfNecessary(
-  vaultEnvironmentData: any,
-  renderPurpose?: RenderPurpose,
-  hideSecretValues?: boolean,
-  forceReveal?: boolean,
-) {
+export async function maskOrDecryptVaultDataIfNecessary({
+  vaultEnvironmentData,
+  renderPurpose,
+  hideSecretValues,
+  forceReveal,
+  sensitiveValueCollector,
+}: {
+  vaultEnvironmentData: any;
+  renderPurpose?: RenderPurpose;
+  hideSecretValues?: boolean;
+  forceReveal?: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
+}) {
   // getConfidentialValuePolicy is the single decision point for reveal/mask across all render surfaces
   const shouldDecrypt =
     getConfidentialValuePolicy({ purpose: renderPurpose, hideSecretValues, forceReveal }) === 'reveal';
@@ -34,6 +41,9 @@ export async function maskOrDecryptVaultDataIfNecessary(
       for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
         const encryptedValue = vaultEnvironmentData[vaultContextKey];
         decryptedData[vaultContextKey] = await getRuntime().crypto.decryptSecretValue(encryptedValue, symmetricKey);
+        if (sensitiveValueCollector && typeof decryptedData[vaultContextKey] === 'string') {
+          sensitiveValueCollector.register(decryptedData[vaultContextKey]);
+        }
       }
       return decryptedData;
     }

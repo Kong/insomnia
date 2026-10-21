@@ -2,7 +2,6 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { FC, ReactNode } from 'react';
 import { Button } from 'react-aria-components';
 
-import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import type { EntityChangeStatus, VisualDiffEntityType } from './diff-engine';
 import { InlineDiffEditor } from './inline-diff-editor';
@@ -107,67 +106,6 @@ export const CollapseToggleButton: FC<{ isExpanded: boolean; onPress: () => void
   </Button>
 );
 
-export type EntityCardPendingAction = 'stage' | 'discard' | null;
-
-// Props every visual diff card accepts for its per-entity stage/unstage/discard actions.
-export interface EntityCardActionProps {
-  staged: boolean;
-  // This card's own in-flight action, if any (drives its spinner).
-  pendingAction: EntityCardPendingAction;
-  // True while any card's action is in flight: every action computes from the
-  // currently loaded diff, so a second one must wait for the refresh.
-  isDisabled: boolean;
-  // Omitted (along with onDiscard) when the entity can't be acted on independently of its file.
-  onStage?: () => void;
-  // Only provided for unstaged changes — staged changes can't be discarded from the index view.
-  onDiscard?: () => Promise<void>;
-  // Replaces the Discard button's "Confirm" prompt, eg. to warn that more than this card is affected.
-  discardConfirmMessage?: string;
-}
-
-const CARD_ACTION_BUTTON_CLASS =
-  'flex items-center gap-1 rounded-xs bg-(--hl-xs) px-2 py-1 text-xs font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50';
-
-// Groups the status badge with the per-entity discard/stage/unstage actions,
-// shown at the top-right of every visual diff card.
-export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardActionProps> = ({
-  status,
-  staged,
-  pendingAction,
-  isDisabled,
-  onStage,
-  onDiscard,
-  discardConfirmMessage = 'Confirm',
-}) => {
-  const isStaging = pendingAction === 'stage';
-  return (
-    <div className="flex shrink-0 items-center gap-2">
-      <StatusBadge status={status} />
-      {!staged && onDiscard && (
-        <PromptButton
-          className={CARD_ACTION_BUTTON_CLASS}
-          disabled={isDisabled}
-          confirmMessage={discardConfirmMessage}
-          loadingMessage="Discarding"
-          // On success the card disappears with the refresh; on failure a toast explains — so no "done" text.
-          doneMessage=""
-          referToOnClickReturnValue
-          onClick={onDiscard}
-        >
-          <Icon icon="rotate-left" />
-          Discard
-        </PromptButton>
-      )}
-      {onStage && (
-        <Button isDisabled={isDisabled} onPress={onStage} className={CARD_ACTION_BUTTON_CLASS}>
-          <Icon icon={isStaging ? 'spinner' : staged ? 'minus' : 'plus'} className={isStaging ? 'animate-spin' : ''} />
-          {staged ? 'Unstage' : 'Stage'}
-        </Button>
-      )}
-    </div>
-  );
-};
-
 export const DiffCardShell: FC<{ status: EntityChangeStatus; children: ReactNode }> = ({ status, children }) => {
   const borderColor =
     status === 'added'
@@ -227,7 +165,8 @@ function diffLanguage(value: unknown, text: string) {
 
 // A long value changed on both sides gets a highlighted diff, so the changed parts stand out.
 // Otherwise before/after are laid side-by-side when there's room for both (flex-wrap falls back
-// to stacked once the combined width no longer fits the container).
+// to stacked once the combined width no longer fits the container). Either way a long value
+// scrolls inside a capped height (as `InlineDiffEditor` does), so one value can't stretch the card.
 export const ValueChange: FC<{ before: unknown; after: unknown }> = ({ before, after }) => {
   const hasBefore = before !== undefined;
   const hasAfter = after !== undefined;
@@ -241,12 +180,12 @@ export const ValueChange: FC<{ before: unknown; after: unknown }> = ({ before, a
   return (
     <div className="flex flex-wrap items-start gap-2 text-sm">
       {hasBefore && (
-        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font) line-through">
+        <pre className="max-h-96 min-w-40 flex-1 overflow-auto rounded-xs bg-(--color-danger)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font) line-through">
           {formatValue(before)}
         </pre>
       )}
       {hasAfter && (
-        <pre className="min-w-40 flex-1 overflow-x-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font)">
+        <pre className="max-h-96 min-w-40 flex-1 overflow-auto rounded-xs bg-(--color-success)/10 px-2 py-1 whitespace-pre-wrap text-(--color-font)">
           {formatValue(after)}
         </pre>
       )}
