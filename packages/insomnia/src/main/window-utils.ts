@@ -10,17 +10,20 @@ import {
   dialog,
   ipcMain,
   Menu,
+  type MenuItem,
   type MenuItemConstructorOptions,
   MessageChannelMain,
   screen,
   shell,
 } from 'electron';
+import { models, services } from 'insomnia-data';
 import { isLinux, isMac } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
+import { type ChangeBufferEvent, database as db } from '../common/database';
 import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
@@ -38,6 +41,39 @@ export function getMainWindow(): ElectronBrowserWindow | null {
   return browserWindows.get('Insomnia') ?? null;
 }
 let hiddenWindowIsBusy = false;
+
+// Every open window has its own copy of the menu, so keep them all in sync with the Debug Mode setting.
+const debugModeMenuItems = new Set<MenuItem>();
+let isWatchingDebugMode = false;
+
+const getDebugModeLabel = (debugMode: boolean) => `${debugMode ? 'Disable' : 'Enable'} Debug Mode`;
+
+function trackDebugModeMenuItem(menuItem: MenuItem | null, window: ElectronBrowserWindow) {
+  if (!menuItem) {
+    return;
+  }
+  debugModeMenuItems.add(menuItem);
+  window.on('closed', () => debugModeMenuItems.delete(menuItem));
+
+  services.settings.get().then(({ debugMode }) => {
+    menuItem.label = getDebugModeLabel(debugMode);
+  });
+
+  if (isWatchingDebugMode) {
+    return;
+  }
+  isWatchingDebugMode = true;
+  db.onChange(async (changes: ChangeBufferEvent[]) => {
+    for (const [event, doc] of changes) {
+      if (event === 'update' && models.settings.isSettings(doc)) {
+        debugModeMenuItems.forEach(item => {
+          item.label = getDebugModeLabel(doc.debugMode);
+        });
+      }
+    }
+  });
+}
+
 interface Bounds {
   height?: number;
   width?: number;
@@ -513,6 +549,14 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
+        id: 'toggle-debug-mode',
+        label: getDebugModeLabel(false),
+        click: async () => {
+          const { debugMode } = await services.settings.get();
+          await services.settings.patch({ debugMode: !debugMode });
+        },
+      },
+      {
         type: 'separator',
       },
       {
@@ -746,12 +790,14 @@ export function createWindow(): ElectronBrowserWindow {
     template.push(developerMenu);
   }
 
+  const menu = Menu.buildFromTemplate(template);
   if (isMac) {
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    Menu.setApplicationMenu(menu);
   } else {
     // setMenu only works for Windows and Linux
-    mainBrowserWindow.setMenu(Menu.buildFromTemplate(template));
+    mainBrowserWindow.setMenu(menu);
   }
+  trackDebugModeMenuItem(menu.getMenuItemById('toggle-debug-mode'), mainBrowserWindow);
 
   return mainBrowserWindow;
 }
