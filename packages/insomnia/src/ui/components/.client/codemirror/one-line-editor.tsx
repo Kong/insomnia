@@ -380,8 +380,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         const deadline = Date.now() + 500;
         // The control that held focus when we mounted (typically the "Add" button that triggered this
         // editor). It keeps focus until we take it, so it must not be mistaken for the user having
-        // deliberately moved elsewhere.
-        const initialActiveElement = document.activeElement;
+        // deliberately moved elsewhere. Cleared once the editor holds focus, so a later deliberate
+        // return to that control is respected.
+        let initialActiveElement = document.activeElement;
         const ensureFocus = () => {
           const cm = codeMirror.current;
           if (!cm) {
@@ -421,6 +422,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             }
             cm.focus();
             cm.getDoc().setCursor(cm.getDoc().lineCount(), 0);
+          } else {
+            initialActiveElement = null;
           }
           if (Date.now() < deadline) {
             requestAnimationFrame(ensureFocus);
