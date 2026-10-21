@@ -1,4 +1,5 @@
 import { GitChangeList } from "../enums/git-change-list";
+import { GitDiffView } from "../enums/git-diff-view";
 import { Commit } from "../models/commit";
 import { BaseFlow } from "./base.flow";
 
@@ -141,6 +142,59 @@ export class GitSyncFlow extends BaseFlow {
     await gitSyncPage.openDiscardConfirmation(fileName);
     await gitSyncPage.confirmDiscard();
     await gitSyncPage.closeCommitDialog();
+  }
+
+  /**
+   * Opens the Commit modal (if it isn't already open), selects a file in
+   * the given list and switches its diff pane to the Visual (Beta) view.
+   * @param list - Which list the file is in
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   */
+  async openVisualDiff(list: GitChangeList, fileName: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    if (!(await gitSyncPage.isCommitDialogOpen())) {
+      await gitSyncPage.openCommitDialog();
+    }
+    await gitSyncPage.openChangeDiff(list, fileName);
+    await gitSyncPage.switchDiffView(GitDiffView.Visual);
+  }
+
+  /**
+   * Stages one entity from its card in the Visual view of an unstaged file.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async stageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
+    await gitSyncPage.stageEntity(entityName, typeLabel);
+  }
+
+  /**
+   * Unstages one entity from its card in the Visual view of a staged file.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async unstageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await this.openVisualDiff(GitChangeList.Staged, fileName);
+    await gitSyncPage.unstageEntity(entityName, typeLabel);
+  }
+
+  /**
+   * Discards one entity from its card in the Visual view of an unstaged
+   * file, confirming the prompt.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async discardEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
+    await gitSyncPage.startEntityDiscard(entityName, typeLabel);
+    await gitSyncPage.confirmEntityDiscard(entityName, typeLabel);
   }
 
   /**

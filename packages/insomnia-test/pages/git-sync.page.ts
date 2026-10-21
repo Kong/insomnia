@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 
 import { GitChangeList } from '../enums/git-change-list';
+import { GitDiffView } from '../enums/git-diff-view';
 import { DEFAULT_TIMEOUT } from '../misc/constants';
 import { BasePage } from './base.page';
 
@@ -28,6 +29,17 @@ export class GitSyncPage extends BasePage {
     .filter({ has: this.page.getByRole('heading', { name: 'Discard Changes' }) });
   private readonly undiscardableWarning = this.page.getByText(
     'This change is only Insomnia internally reformatting the file',
+  );
+
+  private readonly entityCard = (entityName: string, typeLabel?: string) => {
+    const card = this.commitDialog
+      .locator('div.border-l-2')
+      .filter({ has: this.page.locator('span.font-semibold').getByText(entityName, { exact: true }) });
+    return typeLabel ? card.filter({ has: this.page.getByText(typeLabel, { exact: true }) }) : card;
+  };
+
+  private readonly visualDiffNotice = this.commitDialog.getByText(
+    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed/,
   );
 
   private readonly changeRow = (list: GitChangeList, fileName: string) =>
@@ -299,6 +311,317 @@ export class GitSyncPage extends BasePage {
         name: list === GitChangeList.Staged ? 'Unstage this file' : 'Stage this file',
       }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Switches the open Commit modal's diff pane between the Text and Visual
+   * (Beta) views. Requires `openChangeDiff()` to have been called first.
+   * @param view - The view to show
+   */
+  async switchDiffView(view: GitDiffView): Promise<void> {
+    await this.commitDialog.getByRole('button', { name: view, exact: true }).click();
+  }
+
+  /**
+   * Reads which diff view the open Commit modal's diff pane is showing,
+   * from the view switch's highlighted button.
+   * @returns The active view
+   */
+  async getDiffView(): Promise<GitDiffView> {
+    const visualClass = (await this.commitDialog.getByRole('button', { name: GitDiffView.Visual, exact: true }).getAttribute('class')) ?? '';
+    return visualClass.includes('bg-(--hl-sm)') ? GitDiffView.Visual : GitDiffView.Text;
+  }
+
+  /**
+   * Reads whether the diff pane's view switch offers a given view.
+   * @param view - The view to look for
+   * @returns True if a button with that label is visible
+   */
+  async hasDiffViewOption(view: GitDiffView): Promise<boolean> {
+    return this.commitDialog.getByRole('button', { name: view, exact: true }).isVisible();
+  }
+
+  /**
+   * Waits for the Visual view to settle (cards, or one of its notices) and
+   * reads every entity card's name, in display order. Requires the Visual
+   * view to be showing.
+   * @returns The entity names, one per card
+   */
+  async getEntityCardNames(): Promise<string[]> {
+    await this.commitDialog
+      .locator('div.border-l-2')
+      .first()
+      .or(this.visualDiffNotice)
+      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    const cards = this.commitDialog.locator('div.border-l-2');
+    const count = await cards.count();
+    const result: string[] = [];
+    for (let i = 0; i < count; i++) {
+      result.push((await cards.nth(i).locator('span.font-semibold').first().innerText()).trim());
+    }
+    return result;
+  }
+
+  /**
+   * Reads the action buttons shown on an entity's card, e.g. ["Discard", "Stage"].
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns The buttons' labels
+   */
+  async getEntityCardActions(entityName: string, typeLabel?: string): Promise<string[]> {
+    const labels = await this.entityCard(entityName, typeLabel).locator('button').allInnerTexts();
+    return labels.map(label => label.trim()).filter(label => /^(Stage|Unstage|Discard|Confirm.*)$/.test(label));
+  }
+
+  /**
+   * Reads the full text of an entity's card (header, tabs, field diffs).
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns The card's text
+   */
+  async getEntityCardText(entityName: string, typeLabel?: string): Promise<string> {
+    return (await this.entityCard(entityName, typeLabel).innerText()).trim();
+  }
+
+  /**
+   * Reads the change-section tab labels on an entity's card, e.g. ["Params 1", "Headers 2"].
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns The tab labels
+   */
+  async getEntityCardTabs(entityName: string, typeLabel?: string): Promise<string[]> {
+    const labels = await this.entityCard(entityName, typeLabel).getByRole('tab').allInnerTexts();
+    return labels.map(label => label.replaceAll('\n', ' ').trim());
+  }
+
+  /**
+   * Selects a change-section tab on an entity's card.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @param tab - The tab's label without its count, e.g. "Secrets"
+   */
+  async selectEntityCardTab(entityName: string, tab: string, typeLabel?: string): Promise<void> {
+    await this.entityCard(entityName, typeLabel).getByRole('tab', { name: new RegExp(`^\\s*${tab}`) }).click();
+  }
+
+  /**
+   * Reads a card's header: its method badge, name and URL texts, and
+   * whether the three share one line (their boxes overlap vertically).
+   * Only meaningful for cards with a badge and URL, e.g. a request's.
+   * @param entityName - The entity's name as shown on its card
+   * @returns The header's texts and whether they sit on one line
+   */
+  async getEntityCardHeader(entityName: string): Promise<{ badge: string; name: string; url: string; onOneLine: boolean }> {
+    const header = this.entityCard(entityName).locator('div.items-baseline').first();
+    const badge = header.locator('span').nth(0);
+    const name = header.locator('span.font-semibold');
+    const url = header.locator('span.font-mono');
+    const boxes = [await badge.boundingBox(), await name.boundingBox(), await url.boundingBox()];
+    const onOneLine = boxes.every(
+      box => box !== null && box.y < boxes[1]!.y + boxes[1]!.height && box.y + box.height > boxes[1]!.y,
+    );
+    return {
+      badge: (await badge.innerText()).trim(),
+      name: (await name.innerText()).trim(),
+      url: (await url.innerText()).trim(),
+      onOneLine,
+    };
+  }
+
+  /**
+   * Scrolls an entity card's (optionally tab-selected) long-value diff into
+   * view, waits for its lazily created Monaco diff editor, and reads how
+   * it rendered: how many editors, how many folded unchanged regions, and
+   * how many lines the changed (right) side actually draws.
+   * @param entityName - The entity's name as shown on its card
+   * @param tab - A change-section tab to select first, e.g. "Body"; omit for the card's current tab
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns The compact diff's editor count, folded region count and drawn line count
+   */
+  async getEntityCardCompactDiff(
+    entityName: string,
+    tab?: string,
+    typeLabel?: string,
+  ): Promise<{ editors: number; foldedRegions: number; drawnLines: number }> {
+    const card = this.entityCard(entityName, typeLabel);
+    if (tab) {
+      await this.selectEntityCardTab(entityName, tab, typeLabel);
+    }
+    const editor = card.locator('.monaco-diff-editor').first();
+    await editor.scrollIntoViewIfNeeded();
+    await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(editor.locator('.diff-hidden-lines').first()).toBeAttached({ timeout: DEFAULT_TIMEOUT });
+    return {
+      editors: await card.locator('.monaco-diff-editor').count(),
+      foldedRegions: await editor.locator('.diff-hidden-lines').count(),
+      drawnLines: await editor.locator('.modified .view-line').count(),
+    };
+  }
+
+  /**
+   * Reads whether an entity card currently shows a compact Monaco diff
+   * (long values) rather than the plain inline before/after form.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns True if the card contains a compact diff editor
+   */
+  async hasEntityCardCompactDiff(entityName: string, typeLabel?: string): Promise<boolean> {
+    return (await this.entityCard(entityName, typeLabel).locator('.monaco-diff-editor').count()) > 0;
+  }
+
+  /**
+   * Reads the Visual view's "N entities changed" summary line.
+   * @returns The summary text, e.g. "3 entities changed"
+   */
+  async getEntitySummary(): Promise<string> {
+    return (await this.commitDialog.getByText(/^\d+ (entity|entities) changed$/).innerText()).trim();
+  }
+
+  /**
+   * Stages one entity from its card in the Visual view (Unstaged side) and
+   * waits for its card to leave the list.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async stageEntity(entityName: string, typeLabel?: string): Promise<void> {
+    await this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Stage', exact: true }).click();
+    await expect(this.entityCard(entityName, typeLabel)).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Clicks Stage on several entities' cards within one browser task, i.e.
+   * before the Visual view can re-render in between — the way a fast
+   * double click would — then waits for the first entity's card to leave
+   * the list. Every click after the first lands while its action is still
+   * pending.
+   * @param entityNames - The entities' names as shown on their cards, first one wins
+   */
+  async stageEntitiesInQuickSuccession(entityNames: string[]): Promise<void> {
+    await this.commitDialog.evaluate((root, names) => {
+      for (const name of names) {
+        const card = [...root.querySelectorAll('div.border-l-2')].find(candidate =>
+          [...candidate.querySelectorAll('span.font-semibold')].some(span => span.textContent?.trim() === name),
+        );
+        const button = [...(card?.querySelectorAll('button') ?? [])].find(candidate => candidate.textContent?.trim() === 'Stage');
+        button?.click();
+      }
+    }, entityNames);
+    await expect(this.entityCard(entityNames[0])).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Clicks Stage on an entity's card and then "Stage this file" within one
+   * browser task, so the file-level action fires while the entity action is
+   * still pending.
+   * @param entityName - The entity's name as shown on its card
+   */
+  async stageEntityThenFileInQuickSuccession(entityName: string): Promise<void> {
+    await this.commitDialog.evaluate((root, name) => {
+      const card = [...root.querySelectorAll('div.border-l-2')].find(candidate =>
+        [...candidate.querySelectorAll('span.font-semibold')].some(span => span.textContent?.trim() === name),
+      );
+      const entityButton = [...(card?.querySelectorAll('button') ?? [])].find(candidate => candidate.textContent?.trim() === 'Stage');
+      const fileButton = [...root.querySelectorAll('button')].find(candidate => candidate.textContent?.trim() === 'Stage this file');
+      entityButton?.click();
+      fileButton?.click();
+    }, entityName);
+  }
+
+  /**
+   * Unstages one entity from its card in the Visual view (Staged side) and
+   * waits for its card to leave the list.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async unstageEntity(entityName: string, typeLabel?: string): Promise<void> {
+    await this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Unstage', exact: true }).click();
+    await expect(this.entityCard(entityName, typeLabel)).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Clicks Discard on an entity's card, without confirming. The button
+   * turns into a confirmation prompt that lapses after about 2 seconds.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async startEntityDiscard(entityName: string, typeLabel?: string): Promise<void> {
+    const confirmButton = this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ });
+    await expect(async () => {
+      await this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Discard', exact: true }).click();
+      await expect(confirmButton).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Reads the label of the confirmation prompt shown after
+   * `startEntityDiscard()`, e.g. "Confirm" or "Confirm (discards its contents too)".
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns The prompt's label
+   */
+  async getEntityDiscardConfirmLabel(entityName: string, typeLabel?: string): Promise<string> {
+    return (await this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ }).innerText()).trim();
+  }
+
+  /**
+   * Confirms a pending entity discard and waits for its card to leave the list.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async confirmEntityDiscard(entityName: string, typeLabel?: string): Promise<void> {
+    await this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ }).click();
+    await expect(this.entityCard(entityName, typeLabel)).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Waits for an entity's confirmation prompt to lapse back to "Discard".
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async waitForEntityDiscardPromptToLapse(entityName: string, typeLabel?: string): Promise<void> {
+    await expect(this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Discard', exact: true })).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Reads whether an entity has a card in the Visual view right now.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns True if its card is visible
+   */
+  async isEntityCardVisible(entityName: string, typeLabel?: string): Promise<boolean> {
+    return this.entityCard(entityName, typeLabel).isVisible();
+  }
+
+  /**
+   * Reads the notice the Visual view shows instead of cards ("Unable to
+   * parse this file for a visual diff." or "No requests, folders,
+   * environments or settings changed…"). Waits for it to appear.
+   * @returns The notice text
+   */
+  async getVisualDiffNotice(): Promise<string> {
+    const notice = this.visualDiffNotice.locator('xpath=..');
+    await expect(notice).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await notice.innerText()).replaceAll('\n', ' ').trim();
+  }
+
+  /**
+   * Clicks the "Open the Text view" link in a Visual view notice.
+   */
+  async openTextViewFromNotice(): Promise<void> {
+    await this.commitDialog.getByRole('button', { name: 'Open the Text view' }).click();
+  }
+
+  /**
+   * Reads the title and description of the error toast an entity action
+   * raises ("Failed to stage/unstage/discard changes").
+   * @returns The toast's text
+   */
+  async getErrorToastText(): Promise<string> {
+    const toast = this.page.getByText(/Failed to (stage|unstage|discard) changes/);
+    await expect(toast).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await toast.innerText()).trim();
   }
 
   /**
