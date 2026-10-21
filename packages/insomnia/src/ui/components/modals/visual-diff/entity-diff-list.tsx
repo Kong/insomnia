@@ -191,13 +191,12 @@ export const EntityDiffList: FC<Props> = ({
         // Cards are matched up by id and actions splice entities into a file written the way Insomnia exports it,
         // so a file in any other shape (eg. edited by hand) can show incomplete cards and lose what isn't an entity.
         <WarningBanner className="shrink-0 text-sm" data-testid="visual-diff-format-warning">
-          This file isn't in the format Insomnia writes. It may have been edited by hand or by another version of
-          Insomnia. Cards may be incomplete, and staging or discarding a card rewrites the whole file the way Insomnia
-          exports it, losing comments, formatting and unrecognized fields.{' '}
+          This file isn&apos;t in the format Insomnia writes, eg. it was edited by hand or by another version. Cards may
+          be incomplete, and staging or discarding a card rewrites the whole file, losing comments and formatting.{' '}
           <Button onPress={onShowTextView} className="cursor-pointer underline hover:brightness-125">
             Open the Text view
           </Button>{' '}
-          to see the exact changes.
+          for the exact changes.
         </WarningBanner>
       )}
       <div className="flex shrink-0 items-center gap-3 text-xs">

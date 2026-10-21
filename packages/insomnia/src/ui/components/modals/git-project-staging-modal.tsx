@@ -1956,7 +1956,14 @@ const OriginalGitProjectStagingModal: FC<
                           onShowTextView={() => setDiffViewMode('text')}
                           actionGate={actionGate}
                           isActionInFlight={isActionInFlight}
-                          formatIssue={previewDiffItem.formatIssue}
+                          // One warning above the diff at most: unrecognized fields, or a change that is only Insomnia
+                          // reformatting the file, already have their own, which say more than the format warning would.
+                          formatIssue={
+                            previewDiffItem.formatIssue === 'non-canonical' &&
+                            (hasUnknownFields || undiscardableFilePath)
+                              ? null
+                              : previewDiffItem.formatIssue
+                          }
                         />
                       )}
                     </div>
