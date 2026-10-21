@@ -28,6 +28,7 @@ import {
   unsupportedMethodPrefix,
 } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
+import { redactConfidentialText, redactDeep } from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
 import type {
   CommonMcpOptions,
@@ -94,6 +95,9 @@ export type ConnectionContext = {
   environmentId: string | null;
   // Connection options
   options: OpenMcpClientConnectionOptions;
+  // Confidential values to redact from timeline/event-log writes before they reach disk (T10).
+  // Monotonically grows for the lifetime of the connection; never shrinks.
+  sensitiveValues: Set<string>;
 } & (ConnectedState | ConnectingState | DisconnectedState);
 
 export const activeConnectionContexts = new Map<string, ConnectionContext | NotReadyConnectionContext>();
@@ -156,6 +160,7 @@ export const createConnectionContext = async (
     mcpServerSamplingRequests,
     mcpRequestAbortControllers,
     options,
+    sensitiveValues: new Set(options.sensitiveValues),
     status: 'connecting',
     client: null,
   };
@@ -216,13 +221,19 @@ export function updateMcpConnectionState(
   }
 }
 
-export const writeTimeline = (context: ConnectionContext, chunk: string) => {
-  const { timelineStream } = context;
+export const writeTimeline = (
+  context: ConnectionContext,
+  entry: { value: string; name: string; timestamp: number },
+) => {
+  const { timelineStream, sensitiveValues } = context;
 
   // The write stream may be closed when closing the connection
-  if (!timelineStream.closed) {
-    timelineStream.write(chunk + '\n');
+  if (timelineStream.closed) {
+    return;
   }
+  const redactedValue =
+    sensitiveValues.size > 0 ? redactConfidentialText(entry.value, [...sensitiveValues]) : entry.value;
+  timelineStream.write(JSON.stringify({ ...entry, value: redactedValue }) + '\n');
 };
 
 export const writeEventLogAndNotify = (
@@ -236,7 +247,7 @@ export const writeEventLogAndNotify = (
     channel?: string;
   } = {},
 ) => {
-  const { requestId, responseId, eventLogStream, pendingEventIds } = context;
+  const { requestId, responseId, eventLogStream, pendingEventIds, sensitiveValues } = context;
 
   const eventData: McpEvent = {
     ...data,
@@ -244,7 +255,10 @@ export const writeEventLogAndNotify = (
     requestId,
     timestamp: Date.now(),
   };
-  const stringifiedData = JSON.stringify(eventData);
+  // Redact only the copy that gets written to disk; the pending-event bookkeeping below uses the
+  // original eventData so request/response ids used for JSON-RPC tracking are never mangled.
+  const redactedEventData = sensitiveValues.size > 0 ? redactDeep(eventData, [...sensitiveValues]) : eventData;
+  const stringifiedData = JSON.stringify(redactedEventData);
   const dataToWrite = newLine ? stringifiedData + '\n' : stringifiedData;
   // The write stream may be ended when closing the connection
   if (!eventLogStream.writableEnded) {
