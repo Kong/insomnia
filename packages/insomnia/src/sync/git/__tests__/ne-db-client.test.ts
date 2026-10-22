@@ -409,6 +409,7 @@ invalid: [unclosed array
         [
           'ApiSpec',
           'Environment',
+          'Example',
           'GrpcRequest',
           'MockRoute',
           'MockServer',

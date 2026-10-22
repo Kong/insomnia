@@ -1,4 +1,5 @@
 import type {
+  Example,
   GrpcRequest,
   McpRequest,
   MockRoute,
@@ -28,6 +29,7 @@ export type NavigationResource =
   | McpRequest
   | MockServer
   | MockRoute
+  | Example
   | UnitTest
   | UnitTestSuite;
 
@@ -43,6 +45,12 @@ const NAVIGATION_ROUTES = [
     path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
     getResourceId: params => params.requestId,
     getResource: (resourceId: string) => services.helpers.getRequestById(resourceId),
+  },
+  {
+    id: 'example',
+    path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/example/:exampleId',
+    getResourceId: params => params.exampleId,
+    getResource: (resourceId: string) => services.example.getById(resourceId),
   },
   {
     id: 'runner',
@@ -182,6 +190,7 @@ const getRouteIdForResource = (resource: NavigationResource): NavigationRoute['i
   if (models.mcpRequest.isMcpRequest(resource)) return 'request';
   if (models.requestGroup.isRequestGroup(resource)) return 'request-group';
   if (models.mockRoute.isMockRoute(resource)) return 'mock-route';
+  if (models.example.isExample(resource)) return 'example';
   if (models.unitTest.isUnitTest(resource)) return 'unit-test';
   if (models.unitTestSuite.isUnitTestSuite(resource)) return 'unit-test-suite';
   if (models.workspace.isWorkspace(resource)) {
@@ -290,6 +299,20 @@ export function buildResourceUrl({
         projectId,
         workspaceId,
         mockRouteId: resource!._id,
+      });
+      break;
+    }
+    case 'example': {
+      if (!projectId || !workspaceId || !resource) {
+        return '';
+      }
+
+      url = href(route.path, {
+        organizationId,
+        projectId,
+        workspaceId,
+        requestId: resource!.parentId,
+        exampleId: resource!._id,
       });
       break;
     }

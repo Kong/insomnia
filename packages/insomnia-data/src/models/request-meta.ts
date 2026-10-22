@@ -24,6 +24,8 @@ export interface BaseRequestMeta {
   activeMcpPrimitive?: string | null;
   streamSummaryPath: string | null;
   streamSummaryRenderMarkdown: boolean;
+  // Whether the request's children (examples) are collapsed in the sidebar.
+  collapsed: boolean;
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
@@ -45,5 +47,6 @@ export function init() {
     activeMcpPrimitive: null,
     streamSummaryPath: null,
     streamSummaryRenderMarkdown: false,
+    collapsed: false,
   };
 }

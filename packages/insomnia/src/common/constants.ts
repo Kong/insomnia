@@ -81,6 +81,11 @@ export const CDN_INVALIDATION_TTL = 10_000; // 10 seconds
 
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
+
+// Examples travel with the collection (git history, exports, workspace reads),
+// so a much smaller body already deserves a heads-up. Postman refuses example
+// responses of 5 MB or more; this is a soft warning, not a limit.
+export const LARGE_EXAMPLE_RESPONSE_MB = 1;
 export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX =
   /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$~'(),]*/;

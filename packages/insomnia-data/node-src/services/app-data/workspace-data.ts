@@ -5,6 +5,7 @@ import type {
   DesignWorkspaceChildren,
   Environment,
   EnvironmentWorkspaceChildren,
+  Example,
   GrpcRequestMeta,
   McpRequest,
   McpWorkspaceChildren,
@@ -48,6 +49,7 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
     allRequestsAndMetaByWorkspaceId.set(workspaceId, {
       data: {
         requestsAndGroups: [],
+        examples: [],
       },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
@@ -152,6 +154,16 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
     }
   });
 
+  // Examples are only supported on HTTP requests
+  const examples = await database.find<Example>(models.example.type, {
+    parentId: { $in: reqs.map(r => r._id) },
+  });
+  examples.forEach(example => {
+    const workspaceId = requestToWorkspaceId.get(example.parentId);
+    const workspaceData = workspaceId ? allRequestsAndMetaByWorkspaceId.get(workspaceId) : undefined;
+    workspaceData?.data.examples.push(models.example.toExampleSummary(example));
+  });
+
   return allRequestsAndMetaByWorkspaceId;
 };
 
@@ -167,6 +179,7 @@ export const getAllDesignChildrenByWorkspaceIds = async (workspaceIds: string[])
         data: {
           apiSpec: apiSpecs.find(apiSpec => apiSpec.parentId === workspaceId),
           requestsAndGroups: designRequestsAndMetas.get(workspaceId)?.data.requestsAndGroups || [],
+          examples: designRequestsAndMetas.get(workspaceId)?.data.examples || [],
         },
         dataMetas: {
           allRequestMetas: designRequestsAndMetas.get(workspaceId)?.dataMetas.allRequestMetas || [],
