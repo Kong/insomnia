@@ -89,18 +89,26 @@ export function withRedaction(
 // redacted (redactDeep never touches numbers or keys) before it is serialized again. `name` is the
 // entry type the Console tab dispatches on, so it is kept as is. Lines that aren't a JSON object
 // fall back to plain text redaction.
+//
+// Some callers hand over lines that still carry their NDJSON newline (a script's console output
+// does; serializeNDJSON().split('\n') does not), and appendTimelineLines joins with '\n' without
+// adding a terminator. Re-serializing would drop that newline, gluing the batch's last line to the
+// first line of the next append -- both then fail to parse and vanish from the Console tab. So the
+// trailing whitespace is kept exactly as it came in.
 export function redactTimelineLine(line: string, collector: SensitiveValueCollector): string {
+  const content = line.trimEnd();
+  const lineEnding = line.slice(content.length);
   let entry: unknown;
   try {
-    entry = JSON.parse(line);
+    entry = JSON.parse(content);
   } catch {
-    return collector.redact(line);
+    return collector.redact(content) + lineEnding;
   }
   if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
-    return collector.redact(line);
+    return collector.redact(content) + lineEnding;
   }
   const redacted = redactDeep(entry as Record<string, unknown>, collector.values);
-  return JSON.stringify('name' in entry ? { ...redacted, name: entry.name } : redacted);
+  return JSON.stringify('name' in entry ? { ...redacted, name: entry.name } : redacted) + lineEnding;
 }
 
 // Registers every scalar leaf of `value` that can show up verbatim in a timeline line.

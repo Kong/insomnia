@@ -379,6 +379,21 @@ describe('withRedaction', () => {
     expect(JSON.parse(written)).toEqual({ value: 'id=••••••', name: 'HeaderOut', timestamp: 1_760_941_234_567 });
   });
 
+  it("keeps a script log line's trailing newline, which separates it from the next appended batch", async () => {
+    const runtime = makeRuntime();
+    const collector = createSensitiveValueCollector(true)!;
+    // Console.dumpLogsAsArray emits each row with its NDJSON newline already attached, and
+    // appendTimelineLines joins with '\n' without adding a terminator -- dropping it here would
+    // glue this line to the first line of the request timeline written right after.
+    const line = JSON.stringify({ value: 'executing pre-request script', name: 'Text', timestamp: 1 }) + '\n';
+
+    await withRedaction(runtime, collector).appendTimeline('/tmp/timeline', [line]);
+
+    const [[, [written]]] = runtime.appendTimeline.mock.calls as unknown as [[string, string[]]];
+    expect(written.endsWith('\n')).toBe(true);
+    expect(JSON.parse(written)).toEqual({ value: 'executing pre-request script', name: 'Text', timestamp: 1 });
+  });
+
   it('picks up values registered after the wrapper was constructed', async () => {
     const runtime = makeRuntime();
     const collector = createSensitiveValueCollector(true)!;
