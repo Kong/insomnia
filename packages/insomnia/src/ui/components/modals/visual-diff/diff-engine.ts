@@ -440,6 +440,12 @@ function collectEntities(file: any): Map<string, CollectedEntity> {
   return map;
 }
 
+// The id of the file's base environment, which shares the `environment` type with its sub-environments.
+export function getBaseEnvironmentId(text: string): string | undefined {
+  const id = safeParseYaml(text)?.environments?.meta?.id;
+  return typeof id === 'string' ? id : undefined;
+}
+
 // Parses YAML text into a plain object, swallowing parse errors and
 // returning `undefined` instead so a malformed/empty side of the diff
 // degrades gracefully rather than throwing.

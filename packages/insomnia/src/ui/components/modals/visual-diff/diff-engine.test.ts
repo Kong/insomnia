@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { stringify } from 'yaml';
 
-import { computeFieldChanges, computeVisualDiff, diffByKey, ownFields } from './diff-engine';
+import { computeFieldChanges, computeVisualDiff, diffByKey, getBaseEnvironmentId, ownFields } from './diff-engine';
 
 const file = (collection: unknown[]) =>
   stringify({ type: 'collection.insomnia.rest/5.0', name: 'C', meta: { id: 'wrk_1' }, collection });
@@ -105,5 +105,27 @@ describe('diffByKey', () => {
   it('keeps the plain name for items whose name is not repeated', () => {
     const before = [userAgent, customUserAgent, accept];
     expect(rows(before, [userAgent, customUserAgent, { ...accept, value: 'a' }])).toEqual(['Accept: modified']);
+  });
+});
+
+describe('getBaseEnvironmentId', () => {
+  it('finds the base environment, not one of its sub-environments', () => {
+    const withEnvironments = stringify({
+      type: 'collection.insomnia.rest/5.0',
+      meta: { id: 'wrk_1' },
+      environments: {
+        name: 'Base Environment',
+        meta: { id: 'env_base' },
+        subEnvironments: [{ meta: { id: 'env_sub' } }],
+      },
+    });
+
+    expect(getBaseEnvironmentId(withEnvironments)).toBe('env_base');
+  });
+
+  it('is undefined for a file without environments, an empty side or content that does not parse', () => {
+    expect(getBaseEnvironmentId(file([]))).toBeUndefined();
+    expect(getBaseEnvironmentId('')).toBeUndefined();
+    expect(getBaseEnvironmentId('name: [\n')).toBeUndefined();
   });
 });
