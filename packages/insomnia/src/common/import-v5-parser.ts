@@ -88,7 +88,6 @@ export const EnvironmentSchema = z.object({
   name,
   meta: MetaSchema.optional(),
   data,
-  confidentialKeys,
   color,
   subEnvironments: z
     .array(
@@ -96,15 +95,16 @@ export const EnvironmentSchema = z.object({
         name,
         meta: MetaSchema.optional(),
         data,
-        confidentialKeys,
         dataPropertyOrder,
         color,
         ...rest,
+        confidentialKeys,
       }),
     )
     .optional(),
   dataPropertyOrder,
   ...rest,
+  confidentialKeys,
 });
 
 const {
