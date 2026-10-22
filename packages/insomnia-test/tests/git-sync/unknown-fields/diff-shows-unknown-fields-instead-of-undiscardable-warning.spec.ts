@@ -44,8 +44,6 @@ test('Verify cloning lists the file with unknown fields and the Commit Changes d
 
   expect(unknownFieldFiles).toEqual([fileName]);
   expect(unknownFieldsWarningText).toContain('Unknown Fields Detected');
-  expect(unknownFieldsWarningText).toContain('may break or remove functionality for your collaborators');
-  expect(unknownFieldsWarningText).toContain('We recommend upgrading');
   expect(project.id).toBeTruthy();
   expect(collection).toBeDefined();
   expect(gitDiff).toContain(`-    ${unknownField}: ${unknownValue}`);

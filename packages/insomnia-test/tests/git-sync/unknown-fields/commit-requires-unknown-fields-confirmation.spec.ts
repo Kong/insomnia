@@ -31,6 +31,8 @@ test('Verify committing a staged file with unknown fields asks for confirmation,
     .poll(async () => (await gitSyncFlow.getChanges()).unstaged, { timeout: DEFAULT_TIMEOUT })
     .toContain(fileName);
 
+  const headFileBefore = execSync(`git show HEAD:${fileName}`, { cwd: cloneDir, encoding: 'utf8' });
+  const localFileBefore = fs.readFileSync(path.join(cloneDir, fileName), 'utf8');
   const commitCountBefore = Number(execSync('git rev-list --count HEAD', { cwd: cloneDir, encoding: 'utf8' }));
   await gitSyncFlow.stageChanges([fileName]);
   const message = faker.lorem.sentence();
@@ -54,6 +56,8 @@ test('Verify committing a staged file with unknown fields asks for confirmation,
     { cloneParentDir: fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-unknown-fields-')) },
   );
 
+  expect(headFileBefore).toContain(unknownField);
+  expect(localFileBefore).not.toContain(unknownField);
   expect(hasStagedUndiscardableWarning).toBe(false);
   expect(confirmationText).toContain('Unrecognized Fields');
   expect(confirmationText).not.toContain(UNDISCARDABLE_WARNING_TEXT);
