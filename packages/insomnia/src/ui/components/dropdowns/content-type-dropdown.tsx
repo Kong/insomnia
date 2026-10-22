@@ -34,6 +34,7 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../analytics';
+import { useExampleEditorContext } from '../../context/example-editor-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -42,9 +43,13 @@ import { AlertModal } from '../modals/alert-modal';
 const EMPTY_MIME_TYPE = null;
 
 export const ContentTypeDropdown: FC = () => {
-  const { activeRequest } = useRequestLoaderData()! as RequestLoaderData;
-  const patchRequest = useRequestPatcher();
-  const { requestId } = useParams() as { requestId: string };
+  const exampleEditor = useExampleEditorContext();
+  const loaderData = useRequestLoaderData() as RequestLoaderData | undefined;
+  const routePatchRequest = useRequestPatcher();
+  const { requestId: routeRequestId } = useParams() as { requestId: string };
+  const requestId = exampleEditor ? exampleEditor.exampleId : routeRequestId;
+  const activeRequest = exampleEditor ? exampleEditor.request : loaderData!.activeRequest;
+  const patchRequest = exampleEditor ? exampleEditor.patchRequest : routePatchRequest;
   const handleChangeMimeType = async (mimeType: string | null) => {
     const { body } = activeRequest;
     const hasMimeType = 'mimeType' in body;

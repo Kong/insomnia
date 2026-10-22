@@ -88,6 +88,12 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
       );
     }
 
+    if (type === 'example') {
+      // Examples are documents, not HTTP calls: match the sidebar node icon
+      // instead of reusing the request method badge.
+      return <Icon icon="code" />;
+    }
+
     if (type === 'folder') {
       return <Icon icon="folder" />;
     }

@@ -25,6 +25,7 @@ const lookupMimeType = (path: string) => {
   };
   return mimeMap[ext || ''];
 };
+import { useExampleEditorContext } from '../../../context/example-editor-context';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';
@@ -45,8 +46,11 @@ interface Props {
 }
 
 export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
-  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
-  const patchRequest = useRequestPatcher();
+  const exampleEditor = useExampleEditorContext();
+  const { workspaceId, requestId: routeRequestId } = useParams() as { workspaceId: string; requestId: string };
+  const routePatchRequest = useRequestPatcher();
+  const requestId = exampleEditor ? exampleEditor.exampleId : routeRequestId;
+  const patchRequest = exampleEditor ? exampleEditor.patchRequest : routePatchRequest;
   const handleRawChange = useCallback(
     (rawValue: string) => {
       const body =

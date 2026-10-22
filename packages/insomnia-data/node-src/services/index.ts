@@ -5,6 +5,7 @@ import * as clientCertificateService from './client-certificate';
 import * as cloudCredentialService from './cloud-credential';
 import * as cookieJarService from './cookie-jar';
 import * as environmentService from './environment';
+import * as exampleService from './example';
 import * as gitCredentialsService from './git-credentials';
 import * as gitRepositoryService from './git-repository';
 import * as grpcRequestService from './grpc-request';
@@ -59,6 +60,7 @@ export const servicesNodeImpl = {
   mcpPayload: mcpPayloadService,
   cookieJar: cookieJarService,
   environment: environmentService,
+  example: exampleService,
   mcpRequest: mcpRequestService,
   mcpResponse: mcpResponseService,
   oAuth2Token: oAuth2TokenService,
