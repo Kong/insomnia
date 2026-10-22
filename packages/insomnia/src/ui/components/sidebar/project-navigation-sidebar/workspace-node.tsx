@@ -8,6 +8,7 @@ import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-work
 import { Icon } from '../../icon';
 import { ACTIVE_BORDER_CLASS, GUIDE_LINE_CSS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 import { type WorkspaceFlatItem } from './types';
+import { UncommittedChangesIndicator } from './uncommitted-changes-indicator';
 
 interface WorkspaceNodeProps {
   item: WorkspaceFlatItem;
@@ -66,11 +67,7 @@ export const WorkspaceNode = ({
 
         <span className="min-w-0 flex-1 truncate text-base">{workspaceName}</span>
       </div>
-      {(hasUncommittedChanges || hasUnpushedChanges) && (
-        <div className="flex aspect-square h-6 shrink-0 items-center justify-center">
-          <Icon icon="circle" className="h-2 w-2" color="var(--color-warning)" />
-        </div>
-      )}
+      {(hasUncommittedChanges || hasUnpushedChanges) && <UncommittedChangesIndicator />}
       <div className="shrink-0">
         <SidebarWorkspaceDropdown
           workspace={doc}
