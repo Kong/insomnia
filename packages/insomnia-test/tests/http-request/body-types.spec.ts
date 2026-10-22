@@ -174,7 +174,10 @@ test("Send HTTP Request with No Body explicitly selected", async ({ user }) => {
 test("Send HTTP Request with multipart/form-data Body including a file field", async ({
   user,
 }) => {
-  const { workspaceFlow, httpRequestFlow } = user.flowManager;
+  const { workspaceFlow, httpRequestFlow, preferencesFlow } = user.flowManager;
+
+  // Insomnia only reads files from allow-listed directories (Preferences -> General -> Security).
+  await preferencesFlow.set({ dataFolders: [path.dirname(uploadFilePath)] });
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),

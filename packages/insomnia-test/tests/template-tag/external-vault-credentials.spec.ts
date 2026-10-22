@@ -32,6 +32,8 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
   const gcpCredentialName = faker.string.alphanumeric(10);
   const hashicorpCredentialName = faker.string.alphanumeric(10);
   await preferencesFlow.set({
+    // Live Preview masks vault values as •••••• by default; the spec asserts the resolved value.
+    hideSecretValuesInPreviewAndConsole: false,
     cloudCredentials: [
       {
         provider: "aws",
