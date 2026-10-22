@@ -62,6 +62,7 @@ export type HandleChannels =
   | 'git.deleteGitBranch'
   | 'git.diff'
   | 'git.diffFileLoader'
+  | 'git.fileFormatIssueLoader'
   | 'git.discardChanges'
   | 'git.fetchGitRemoteBranches'
   | 'git.getProjectGitFileIssues'

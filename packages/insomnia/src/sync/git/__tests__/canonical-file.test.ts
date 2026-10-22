@@ -12,6 +12,7 @@ import { getInsomniaV5DataExport, tryImportV5Data } from '../../../common/insomn
 import {
   canonicalizeInsomniaFileContent,
   getCanonicalInsomniaFileContent,
+  getInsomniaFileFormatIssue,
   isUndiscardableChange,
 } from '../canonical-file';
 
@@ -143,6 +144,37 @@ routes:
 
       expect(await getCanonicalInsomniaFileContent(mockWithoutServer)).toContain('__MOCK_SERVER_ID__');
       expect(await canonicalizeInsomniaFileContent(mockWithoutServer)).toBe(mockWithoutServer);
+    });
+  });
+
+  describe('getInsomniaFileFormatIssue', () => {
+    it('finds no issue in a file Insomnia wrote itself', async () => {
+      expect(await getInsomniaFileFormatIssue(await exportThroughDatabase(reorderedCollection))).toBeNull();
+    });
+
+    it('flags a valid file Insomnia would write differently, eg. one edited by hand', async () => {
+      const exported = await exportThroughDatabase(reorderedCollection);
+      const withComment = exported.replace('collection:\n', 'collection:\n  # added by hand\n');
+      const withDuplicateId = buildCollection([
+        { id: 'fld_a', name: 'Folder A', created: 2000 },
+        { id: 'fld_a', name: 'Folder A copy', created: 3000 },
+      ]);
+
+      expect(await getInsomniaFileFormatIssue(reorderedCollection)).toBe('non-canonical');
+      expect(await getInsomniaFileFormatIssue(withComment)).toBe('non-canonical');
+      expect(await getInsomniaFileFormatIssue(withDuplicateId)).toBe('non-canonical');
+    });
+
+    it('flags an Insomnia file that does not match the file format', async () => {
+      const notAList = 'type: collection.insomnia.rest/5.0\nname: C\ncollection: not a list\n';
+
+      expect(await getInsomniaFileFormatIssue(notAList)).toBe('invalid');
+    });
+
+    it('ignores empty sides and files that are not Insomnia files', async () => {
+      expect(await getInsomniaFileFormatIssue(null)).toBeNull();
+      expect(await getInsomniaFileFormatIssue('')).toBeNull();
+      expect(await getInsomniaFileFormatIssue('openapi: 3.0.0\ninfo:\n  title: Spec\n')).toBeNull();
     });
   });
 
