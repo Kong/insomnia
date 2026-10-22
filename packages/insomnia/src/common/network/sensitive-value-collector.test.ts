@@ -5,6 +5,7 @@ import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-
 import {
   collectLeafValues,
   createSensitiveValueCollector,
+  getConfidentialBasicAuthHeaderValue,
   isDerivedFromConfidentialValues,
   redactConfidentialText,
   redactDeep,
@@ -132,6 +133,24 @@ describe('isDerivedFromConfidentialValues', () => {
 
   it('ignores undefined and empty inputs', () => {
     expect(isDerivedFromConfidentialValues(['hunter2'], [undefined, ''])).toBe(false);
+  });
+});
+
+describe('getConfidentialBasicAuthHeaderValue', () => {
+  it('returns the Basic header value when a credential is confidential', () => {
+    expect(getConfidentialBasicAuthHeaderValue(['hunter2'], { username: 'user', password: 'hunter2' })).toBe(
+      `Basic ${btoa('user:hunter2')}`,
+    );
+  });
+
+  it('honours the latin1 encoding the header is sent with', () => {
+    expect(
+      getConfidentialBasicAuthHeaderValue(['pässword'], { username: 'user', password: 'pässword', useISO88591: true }),
+    ).toBe(`Basic ${btoa('user:pässword')}`);
+  });
+
+  it('returns null when no credential is confidential', () => {
+    expect(getConfidentialBasicAuthHeaderValue([], { username: 'user', password: 'hunter2' })).toBeNull();
   });
 });
 
@@ -346,6 +365,33 @@ describe('withRedaction', () => {
     await withRedaction(runtime, collector).appendTimelineOnError('/tmp/timeline', 'auth failed for mysecret');
 
     expect(runtime.appendTimelineOnError).toHaveBeenCalledWith('/tmp/timeline', 'auth failed for ••••••');
+  });
+
+  it('keeps NDJSON timeline entries parseable when a short numeric value is confidential', async () => {
+    const runtime = makeRuntime();
+    const collector = createSensitiveValueCollector(true)!;
+    collector.register('1');
+    const line = JSON.stringify({ value: 'id=1', name: 'HeaderOut', timestamp: 1_760_941_234_567 });
+
+    await withRedaction(runtime, collector).appendTimeline('/tmp/timeline', [line]);
+
+    const [[, [written]]] = runtime.appendTimeline.mock.calls as unknown as [[string, string[]]];
+    expect(JSON.parse(written)).toEqual({ value: 'id=••••••', name: 'HeaderOut', timestamp: 1_760_941_234_567 });
+  });
+
+  it("keeps a script log line's trailing newline, which separates it from the next appended batch", async () => {
+    const runtime = makeRuntime();
+    const collector = createSensitiveValueCollector(true)!;
+    // Console.dumpLogsAsArray emits each row with its NDJSON newline already attached, and
+    // appendTimelineLines joins with '\n' without adding a terminator -- dropping it here would
+    // glue this line to the first line of the request timeline written right after.
+    const line = JSON.stringify({ value: 'executing pre-request script', name: 'Text', timestamp: 1 }) + '\n';
+
+    await withRedaction(runtime, collector).appendTimeline('/tmp/timeline', [line]);
+
+    const [[, [written]]] = runtime.appendTimeline.mock.calls as unknown as [[string, string[]]];
+    expect(written.endsWith('\n')).toBe(true);
+    expect(JSON.parse(written)).toEqual({ value: 'executing pre-request script', name: 'Text', timestamp: 1 });
   });
 
   it('picks up values registered after the wrapper was constructed', async () => {

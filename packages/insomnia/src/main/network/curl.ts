@@ -9,7 +9,7 @@ import { models, services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { isDerivedFromConfidentialValues } from '~/common/network/sensitive-value-collector';
+import { getConfidentialBasicAuthHeaderValue } from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
@@ -185,14 +185,12 @@ const openCurlConnection = async (
     // getAuthHeader builds the Basic header here, after the render that registered the
     // credentials, so its base64 has to be registered before anything writes it out.
     const auth = getAuthObjectOrNull(req.authentication);
-    const registeredValues = sensitiveValues.getValues(requestId);
-    if (
-      authHeader?.value &&
-      auth?.type === 'basic' &&
-      isAuthEnabled(req.authentication) &&
-      isDerivedFromConfidentialValues(registeredValues, [auth.username, auth.password])
-    ) {
-      sensitiveValues.register(requestId, [authHeader.value]);
+    if (authHeader?.value && auth?.type === 'basic' && isAuthEnabled(req.authentication)) {
+      const registeredValues = sensitiveValues.getValues(requestId);
+      const headerValue = getConfidentialBasicAuthHeaderValue(registeredValues, auth);
+      if (headerValue) {
+        sensitiveValues.register(requestId, [headerValue]);
+      }
     }
     authTimeline?.forEach(entry => writeTimelineEntry(requestId, entry));
 

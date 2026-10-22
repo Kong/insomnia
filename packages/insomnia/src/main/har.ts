@@ -3,10 +3,11 @@ import type { BaseModel, Cookie, Request, RequestGroup, Response, Workspace } fr
 import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import { RenderError } from '~/common/templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
-import { smartEncodeUrl } from '~/common/utils/url/querystring';
+import { encodeUrlKeepingMask } from '~/common/utils/url/confidential-mask';
 import { getAuthHeader } from '~/main/network/get-auth-header';
 import { secureReadFile } from '~/main/secure-read-file';
 import { getRuntime } from '~/runtimes';
@@ -257,8 +258,39 @@ export async function exportHarWithRequest(request: Request, environmentId?: str
   }
 }
 
+// Auth types whose header is computed from the credentials (an encoding or a signature) instead of
+// carrying them verbatim. With a masked credential the computed header is a valid-looking but useless
+// value -- base64(••••••:••••••), or a signature over the mask -- that hides the mask from the user
+// (and a masked private key makes the signers throw). Signatures over a masked URL are just as useless.
+// Show the mask instead of computing anything.
+const getMaskedAuthHeader = (renderedRequest: RenderedRequest) => {
+  const { authentication } = renderedRequest;
+  if (!authentication || authentication.disabled) {
+    return null;
+  }
+  const isMasked = (value: unknown) => typeof value === 'string' && value.includes(CONFIDENTIAL_MASK_VALUE);
+  const hasMaskedCredential = Object.values(authentication).some(isMasked);
+  switch (authentication.type) {
+    case 'basic': {
+      return hasMaskedCredential ? { name: 'Authorization', value: `Basic ${CONFIDENTIAL_MASK_VALUE}` } : null;
+    }
+    case 'asap': {
+      return hasMaskedCredential ? { name: 'Authorization', value: CONFIDENTIAL_MASK_VALUE } : null;
+    }
+    case 'oauth1':
+    case 'hawk': {
+      return hasMaskedCredential || isMasked(renderedRequest.url)
+        ? { name: 'Authorization', value: CONFIDENTIAL_MASK_VALUE }
+        : null;
+    }
+    default: {
+      return null;
+    }
+  }
+};
+
 export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequest, addContentLength = false) {
-  const url = smartEncodeUrl(renderedRequest.url, renderedRequest.settingEncodeUrl);
+  const url = encodeUrlKeepingMask(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (addContentLength) {
     const hasContentLengthHeader = filterHeaders(renderedRequest.headers, 'Content-Length').length > 0;
@@ -275,7 +307,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
 
   // Set auth header if we have it
   if (!hasAuthHeader(renderedRequest.headers)) {
-    const { header } = await getAuthHeader(renderedRequest, url);
+    const header = getMaskedAuthHeader(renderedRequest) ?? (await getAuthHeader(renderedRequest, url)).header;
 
     if (header) {
       renderedRequest.headers.push({

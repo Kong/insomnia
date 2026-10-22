@@ -12,7 +12,8 @@ import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
 import { RenderError } from '~/common/templating/render-error';
-import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
+import { encodeProtectedUrl, protectMask, restoreMask } from '~/common/utils/url/confidential-mask';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
@@ -63,6 +64,9 @@ const MAX_URL_LENGTH = 10 * 1024;
 
 const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const } };
 
+const protectParamsMask = <T extends { name: string; value: string }>(params: T[]) =>
+  params.map(param => ({ ...param, name: protectMask(param.name), value: protectMask(param.value) }));
+
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
   const [tooLong, setTooLong] = useState(false);
@@ -87,18 +91,22 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         }
 
         const { parameters, pathParameters, authQueryParams: renderedAuthQueryParams } = result;
-        const url = models.request.applyPathParametersToUrl(result.url, pathParameters);
+        const url = models.request.applyPathParametersToUrl(
+          protectMask(result.url),
+          pathParameters && protectParamsMask(pathParameters),
+        );
 
-        const mergedParams = [...parameters, ...renderedAuthQueryParams];
+        const mergedParams = protectParamsMask([...parameters, ...renderedAuthQueryParams]);
         const qs = buildQueryStringFromParams(mergedParams, false, { encodeParams: request.settingEncodeUrl });
-        let fullUrl = joinUrlAndQueryString(url, qs);
-        if (fullUrl.length > MAX_URL_LENGTH) {
+        const fullUrl = joinUrlAndQueryString(url, qs);
+        // Truncate only after restoreMask, so the cut can't leave a partial placeholder behind.
+        const encoded = restoreMask(encodeProtectedUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true }));
+        if (encoded.length > MAX_URL_LENGTH) {
           setTooLong(true);
-          fullUrl = fullUrl.slice(0, MAX_URL_LENGTH);
-        } else {
-          setTooLong(false);
+          setPreviewString(encoded.slice(0, MAX_URL_LENGTH));
+          return;
         }
-        const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true });
+        setTooLong(false);
         setPreviewString(encoded === '' ? defaultPreview : encoded);
       } catch (error: unknown) {
         console.warn(error);

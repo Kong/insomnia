@@ -6,7 +6,7 @@ import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-compo
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
-import { isDerivedFromConfidentialValues } from '~/common/network/sensitive-value-collector';
+import { getConfidentialBasicAuthHeaderValue } from '~/common/network/sensitive-value-collector';
 import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import type { McpReadyState } from '~/main/mcp/types';
 import { _buildBearerHeader } from '~/network/authentication';
@@ -121,8 +121,9 @@ export const McpUrlActionBar = ({
           const encoding = useISO88591 ? 'latin1' : 'utf8';
           const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
           headers.push(basicAuthHeader);
-          if (basicAuthHeader.value && isDerivedFromConfidentialValues(sensitiveValues, [username, password])) {
-            sensitiveValues.push(basicAuthHeader.value);
+          const confidentialHeaderValue = getConfidentialBasicAuthHeaderValue(sensitiveValues, authentication);
+          if (confidentialHeaderValue) {
+            sensitiveValues.push(confidentialHeaderValue);
           }
         } else if (authentication.type === 'bearer' && authentication.token) {
           const { token, prefix } = authentication;

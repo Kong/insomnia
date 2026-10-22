@@ -1,5 +1,6 @@
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
+import { shouldShowRevealToggle } from '~/common/templating/confidential-value-policy';
 import type { VariableSourceMeta } from '~/common/templating/types';
 import { normalizeToDotAndBracketNotation } from '~/common/templating/utils';
 
@@ -43,6 +44,7 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource
   const [source, setSource] = useState<VariableSourceMeta>();
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
+  const [hasMaskedValue, setHasMaskedValue] = useState(false);
 
   useEffect(() => {
     // Ignore results from superseded runs (e.g. fast switching) so the preview and
@@ -54,12 +56,14 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource
         if (cancelled) {
           return;
         }
+        setHasMaskedValue(prev => shouldShowRevealToggle(prev, { isRevealed, preview: p }));
         setPreview(p);
         setError('');
       } catch (e) {
         if (cancelled) {
           return;
         }
+        setHasMaskedValue(prev => shouldShowRevealToggle(prev, { isRevealed }));
         setPreview('');
         setError(e.message);
       }
@@ -74,7 +78,7 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource
     return () => {
       cancelled = true;
     };
-  }, [handleGetRenderContext, handleRender, selected]);
+  }, [handleGetRenderContext, handleRender, isRevealed, selected]);
 
   const isCustomTemplateSelected = !options.find(v => selected === `{{ ${v.name} }}`);
   return (
@@ -111,14 +115,16 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource
         </div>
       )}
       <div className="form-control form-control--outlined">
-        <button
-          type="button"
-          style={{ zIndex: 10, position: 'relative' }}
-          className="txt-sm pull-right icon inline-block"
-          onClick={() => setIsRevealed(prev => !prev)}
-        >
-          {isRevealed ? <i className="fa-regular fa-eye-slash" /> : <i className="fa-regular fa-eye" />}
-        </button>
+        {hasMaskedValue && (
+          <button
+            type="button"
+            style={{ zIndex: 10, position: 'relative' }}
+            className="txt-sm pull-right icon inline-block"
+            onClick={() => setIsRevealed(prev => !prev)}
+          >
+            {isRevealed ? <i className="fa-regular fa-eye-slash" /> : <i className="fa-regular fa-eye" />}
+          </button>
+        )}
         <label>
           Live Preview
           <textarea className={`${error ? 'danger' : ''}`} value={preview || error} readOnly />

@@ -55,6 +55,7 @@ import type { SendActionRuntime } from '~/common/network/send-action-runtime';
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import type { SensitiveValueCollector } from '~/common/templating/types';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
+import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 
 
 export type { SensitiveValueCollector };
@@ -68,9 +69,46 @@ export function withRedaction(
   }
 
   return {
-    appendTimeline: (timelinePath, logs) => runtime.appendTimeline(timelinePath, logs.map(line => collector.redact(line))),
-    appendTimelineOnError: (timelinePath, data) => runtime.appendTimelineOnError(timelinePath, collector.redact(data)),
+    appendTimeline: (timelinePath, logs) =>
+      runtime.appendTimeline(timelinePath, logs.map(line => redactTimelineLine(line, collector))),
+    appendTimelineOnError: (timelinePath, data) =>
+      runtime.appendTimelineOnError(
+        timelinePath,
+        data
+          .split('\n')
+          .map(line => redactTimelineLine(line, collector))
+          .join('\n'),
+      ),
   };
+}
+
+// Timeline lines are NDJSON entries ({ value, name, timestamp }). Redacting the raw line would also
+// hit the JSON structure: a confidential `1` turns `"timestamp":1760941234567` into
+// `"timestamp":••••••76094••••••234567`, the line no longer parses, and deserializeNDJSON silently
+// drops it -- leaving the Console tab empty. So the line is parsed and only its string leaves are
+// redacted (redactDeep never touches numbers or keys) before it is serialized again. `name` is the
+// entry type the Console tab dispatches on, so it is kept as is. Lines that aren't a JSON object
+// fall back to plain text redaction.
+//
+// Some callers hand over lines that still carry their NDJSON newline (a script's console output
+// does; serializeNDJSON().split('\n') does not), and appendTimelineLines joins with '\n' without
+// adding a terminator. Re-serializing would drop that newline, gluing the batch's last line to the
+// first line of the next append -- both then fail to parse and vanish from the Console tab. So the
+// trailing whitespace is kept exactly as it came in.
+export function redactTimelineLine(line: string, collector: SensitiveValueCollector): string {
+  const content = line.trimEnd();
+  const lineEnding = line.slice(content.length);
+  let entry: unknown;
+  try {
+    entry = JSON.parse(content);
+  } catch {
+    return collector.redact(content) + lineEnding;
+  }
+  if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+    return collector.redact(content) + lineEnding;
+  }
+  const redacted = redactDeep(entry as Record<string, unknown>, collector.values);
+  return JSON.stringify('name' in entry ? { ...redacted, name: entry.name } : redacted) + lineEnding;
 }
 
 // Registers every scalar leaf of `value` that can show up verbatim in a timeline line.
@@ -172,6 +210,20 @@ export function isDerivedFromConfidentialValues(
   inputs: (string | undefined)[],
 ): boolean {
   return inputs.some(input => !!input && redactConfidentialText(input, values) !== input);
+}
+
+// The Basic Auth header value to register alongside the confidential credentials it was built from,
+// or null when neither credential is confidential. Shared by every place that sends Basic Auth (request
+// render, SSE curl, WebSocket, MCP url bar, OAuth2 token request) so the guard can't drift between them;
+// callers differ only in where they register the value.
+export function getConfidentialBasicAuthHeaderValue(
+  values: readonly string[],
+  { username, password, useISO88591 }: { username?: string; password?: string; useISO88591?: boolean },
+): string | null {
+  if (!isDerivedFromConfidentialValues(values, [username, password])) {
+    return null;
+  }
+  return getBasicAuthHeader(username, password, useISO88591 ? 'latin1' : 'utf8').value;
 }
 
 // A registered value rarely reaches disk in its raw form. Timeline lines are written as NDJSON,

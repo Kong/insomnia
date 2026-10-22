@@ -19,6 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   createSensitiveValueCollector,
+  getConfidentialBasicAuthHeaderValue,
   redactResponsePatch,
   withRedaction,
 } from '~/common/network/sensitive-value-collector';
@@ -645,6 +646,18 @@ const sendAccessTokenRequest = async (
     purpose: 'send',
     sensitiveValueCollector: collector,
   });
+  // Unless credentialsInBody is set, the caller sends clientId/clientSecret as a Basic header built
+  // before this render. Its base64 never matches the plaintext secret registered above, so register it
+  // too. A request that didn't send the header never contains the value, so this is harmless then.
+  if (collector) {
+    const basicHeaderValue = getConfidentialBasicAuthHeaderValue(collector.values, {
+      username: authentication.clientId,
+      password: authentication.clientSecret,
+    });
+    if (basicHeaderValue) {
+      collector.register(basicHeaderValue);
+    }
+  }
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   const response = await sendCurlAndWriteTimeline(

@@ -22,7 +22,7 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
-import { isDerivedFromConfidentialValues } from '~/common/network/sensitive-value-collector';
+import { getConfidentialBasicAuthHeaderValue } from '~/common/network/sensitive-value-collector';
 import type { RenderedRequest } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
@@ -235,8 +235,9 @@ const openWebSocketConnection = async (
         const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
         headers.push(basicAuthHeader);
         const registeredValues = sensitiveValues.getValues(options.requestId);
-        if (basicAuthHeader.value && isDerivedFromConfidentialValues(registeredValues, [username, password])) {
-          sensitiveValues.register(options.requestId, [basicAuthHeader.value]);
+        const confidentialHeaderValue = getConfidentialBasicAuthHeaderValue(registeredValues, options.authentication);
+        if (confidentialHeaderValue) {
+          sensitiveValues.register(options.requestId, [confidentialHeaderValue]);
         }
       }
       if (options.authentication.type === 'apikey') {
