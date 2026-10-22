@@ -50,6 +50,22 @@ test.describe('Focus and keyboard navigation', () => {
     await expect.soft(page.locator(focusedEditorWithChild('key-value-editor__name'))).toHaveCount(1);
   });
 
+  test('clicking Add moves focus off the Add button so typing lands in the new Name cell', async ({ page }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    await page.getByRole('tab', { name: 'Params' }).click();
+    const addButton = page.getByTestId('request-pane').getByRole('button', { name: 'Add', exact: true });
+    await addButton.click();
+
+    // The Add button keeps focus until the new editor takes it; the autofocus re-grab must not treat
+    // it as the user having deliberately moved to another control.
+    await expect.soft(page.locator(focusedEditorWithChild('key-value-editor__name'))).toHaveCount(1);
+    await expect.soft(addButton).not.toBeFocused();
+
+    await page.keyboard.type('smoke-key');
+    await expect.soft(page.locator('.editor__container:has([id^="key-value-editor__name"]) .CodeMirror-code').first()).toHaveText('smoke-key');
+  });
+
   test('the KV environment editor focuses the blank row Name', async ({ page }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
