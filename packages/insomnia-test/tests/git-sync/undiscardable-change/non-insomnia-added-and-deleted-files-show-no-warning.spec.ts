@@ -10,7 +10,7 @@ import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '.
 import { Collection } from '../../../models/collection';
 import { Project } from '../../../models/project';
 
-test('Verify a modified non-Insomnia file and an added or deleted file show no undiscardable warning', async ({
+test('Verify a modified non-Insomnia file and an added or deleted file show no undiscardable warning or unknown fields UI, and commit without confirmation', async ({
   user,
 }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
@@ -20,7 +20,7 @@ test('Verify a modified non-Insomnia file and an added or deleted file show no u
   await pushServerFile({ path: otherFileName, content: `openapi: 3.0.0\ninfo:\n  title: ${faker.string.alpha(10)}\n` });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-undiscardable-'));
-  const project = await workspaceFlow.create(
+  const { project, unknownFieldFiles } = await workspaceFlow.cloneWithScanReport(
     new Project(faker.string.alphanumeric(10), ProjectType.Git),
     GIT_CREDENTIAL.name,
     { cloneParentDir },
@@ -44,13 +44,21 @@ test('Verify a modified non-Insomnia file and an added or deleted file show no u
     .toBeGreaterThanOrEqual(3);
   const unstaged = (await gitSyncFlow.getChanges()).unstaged;
   const warnings = [];
+  const unknownFieldsStates = [];
   for (const file of unstaged) {
     await gitSyncPage.openCommitDialog();
     await gitSyncPage.openChangeDiff(GitChangeList.Unstaged, file);
     warnings.push(await gitSyncPage.isUndiscardableWarningVisible());
+    unknownFieldsStates.push({
+      hasBanner: await gitSyncPage.isUnknownFieldsDiffWarningVisible(),
+      highlightCount: await gitSyncPage.getUnknownFieldHighlightCount(),
+    });
     await gitSyncPage.closeCommitDialog();
   }
+  const message = faker.string.alphanumeric(10);
+  const commit = await gitSyncFlow.commit(message);
 
+  expect(unknownFieldFiles).toEqual([]);
   expect(unstaged).toEqual(
     expect.arrayContaining([
       expect.stringContaining(otherFileName),
@@ -59,4 +67,6 @@ test('Verify a modified non-Insomnia file and an added or deleted file show no u
     ]),
   );
   expect(warnings).toEqual(unstaged.map(() => false));
+  expect(unknownFieldsStates).toEqual(unstaged.map(() => ({ hasBanner: false, highlightCount: 0 })));
+  expect(commit.message).toBe(message);
 });

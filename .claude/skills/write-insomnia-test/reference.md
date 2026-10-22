@@ -1481,7 +1481,7 @@ cancelUnknownFieldsConfirmation(): Promise<void>
 confirmUnknownFieldsCommit(name: string): Promise<void>         // Continue; waits for `name`'s row to leave the modal
 ```
 
-The current build does **not** block committing an incompatible doc (INS-4014 open question) — `incompatible-remote-document.spec.ts` asserts only the icon tooltip and red banner. Real examples: `remote-document-with-unknown-fields.spec.ts` (icon, banner, highlight, cancel → still staged → confirm), `incompatible-remote-document.spec.ts`.
+Committing an incompatible doc is intentionally **not** blocked — `incompatible-remote-document.spec.ts` asserts the icon tooltip and red banner, then that committing still succeeds (the current behavior is the intended one). Real examples: `remote-document-with-unknown-fields.spec.ts` (icon, banner, highlight, cancel → still staged → confirm), `incompatible-remote-document.spec.ts`.
 
 ### Project dashboard — unsynced-file delete (INS-2026 fix, PR #10477)
 
