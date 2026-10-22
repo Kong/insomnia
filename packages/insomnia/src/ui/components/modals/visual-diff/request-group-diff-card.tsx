@@ -10,7 +10,7 @@ import {
   scriptsTab,
   withSettingsTab,
 } from './diff-tabs';
-import { FieldDiffRow } from './shared';
+import { type EntityCardActionProps, FieldDiffRow } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // `children` never shows up here: nested requests/folders are entities with their own cards.
@@ -58,8 +58,15 @@ export function buildRequestGroupTabs(diff: EntityDiff): DiffTabDef[] {
   ]);
 }
 
-export const RequestGroupDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const RequestGroupDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const header = buildHeaderLines(diff, { icon: 'folder', watchedPaths: [] });
 
-  return <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildRequestGroupTabs(diff)} />;
+  return (
+    <TabbedDiffCard
+      diff={diff}
+      header={<EntityHeader {...header} />}
+      tabs={buildRequestGroupTabs(diff)}
+      {...actionProps}
+    />
+  );
 };

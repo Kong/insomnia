@@ -56,6 +56,7 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { GitChangeAnalysis } from '~/ui/components/git/git-change-analysis';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
 import { ConfirmUnknownFieldsCommitModal } from '~/ui/components/modals/confirm-unknown-fields-commit-modal';
@@ -1685,6 +1686,21 @@ const OriginalGitProjectStagingModal: FC<
     }
   }
 
+  // After staging/unstaging/discarding a single entity out of the currently-previewed
+  // file, refresh both the file list (staged/unstaged buckets) and the diff itself so
+  // the entity's card disappears/updates without switching away from this view.
+  function afterEntityChange() {
+    return Promise.all([
+      gitChangesFetcher.load({ projectId }),
+      fileToDiff &&
+        diffChangesFetcherLoad({
+          projectId,
+          filePath: fileToDiff.path,
+          staged: fileToDiff.staged,
+        }),
+    ]);
+  }
+
   async function stageChanges(paths: string[]) {
     await stageChangesFetcher.submit({
       projectId,
@@ -1908,6 +1924,7 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
+                      {previewDiffItem.diagnostics && <GitChangeAnalysis diagnostics={previewDiffItem.diagnostics} />}
                       {diffViewMode === 'text' ? (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor
@@ -1921,6 +1938,10 @@ const OriginalGitProjectStagingModal: FC<
                         <EntityDiffList
                           before={previewDiffItem.diff.before}
                           after={previewDiffItem.diff.after}
+                          projectId={projectId}
+                          filepath={previewDiffItem.filepath}
+                          staged={previewDiffItem.staged}
+                          onEntityChanged={afterEntityChange}
                           onShowTextView={() => setDiffViewMode('text')}
                         />
                       )}

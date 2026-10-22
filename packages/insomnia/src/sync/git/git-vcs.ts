@@ -348,7 +348,7 @@ export class GitVCS {
 
     // Use isomorphic-git's walk API to traverse the HEAD, WORKDIR, and STAGE trees for the given file.
     // This is adapted from isomorphic-git's statusMatrix logic.
-    const [blobs]: [[string, string, string, string]] = await git.walk({
+    const [blobs]: [[string, string, string, string, string, string, string]] = await git.walk({
       ...baseOpts,
       // trees: HEAD (last commit), WORKDIR (current files), STAGE (index)
       trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
@@ -451,7 +451,7 @@ export class GitVCS {
         });
 
         // Return an array: [filepath, headContent, workdirContent, stageContent]
-        return [filepath, ...blobsAsStrings];
+        return [filepath, ...blobsAsStrings, headOid ?? null, workdirOid ?? null, stageOid ?? null];
       },
     });
 
@@ -469,6 +469,11 @@ export class GitVCS {
       stage: cleanedStage, // Content from staging area (index)
       rawHead: blobs[1], // Content from HEAD exactly as committed, before migration/normalization
       rawStage: blobs[3], // Content from staging area exactly as staged, before migration/normalization
+      oids: {
+        head: blobs[4],
+        workdir: blobs[5],
+        stage: blobs[6],
+      },
     };
 
     return diff;
@@ -2079,6 +2084,21 @@ export class GitVCS {
     for (const change of changes) {
       await git.resetIndex({ ...this._baseOpts, filepath: change.path });
     }
+  }
+
+  // Sets the git index entry for `filepath` to `content` directly, independent of
+  // whatever is currently on disk in the working directory. Used to stage/unstage a
+  // single entity out of a file that bundles many entities (eg. a whole workspace
+  // export) without staging the rest of that file's changes. `null` removes the
+  // file from the index, leaving the working directory untouched.
+  async stagePartialContent(filepath: string, content: string | null) {
+    const normalizedFilepath = convertToPosixSep(path.join('.', filepath));
+    if (content === null) {
+      await git.remove({ ...this._baseOpts, filepath: normalizedFilepath });
+      return;
+    }
+    const oid = await git.writeBlob({ ...this._baseOpts, blob: new TextEncoder().encode(content) });
+    await git.updateIndex({ ...this._baseOpts, filepath: normalizedFilepath, oid, add: true });
   }
 
   async discardChanges(changes: { path: string; status: Status }[]) {

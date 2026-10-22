@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import { getRequestBadgeClassName } from '../../tags/method-tag';
 import { diffByKey, type EntityDiff } from './diff-engine';
 import { authTab, type DiffTabDef, docsTab, keyValueTab, withSettingsTab } from './diff-tabs';
+import type { EntityCardActionProps } from './shared';
 import { buildHeaderLines, EntityHeader, TabbedDiffCard } from './tabbed-diff-card';
 
 // Fields shown in the card's header; every other changed field is shown by a tab or the Settings catch-all.
@@ -46,12 +47,14 @@ function connectionOf(node: any) {
   return `${node.transportType === 'stdio' ? 'STDIO' : 'HTTP'} ${node.url || '(no url)'}`;
 }
 
-export const McpDiffCard: FC<{ diff: EntityDiff }> = ({ diff }) => {
+export const McpDiffCard: FC<{ diff: EntityDiff } & EntityCardActionProps> = ({ diff, ...actionProps }) => {
   const header = buildHeaderLines(diff, {
     badgeOf: () => MCP_BADGE,
     detailOf: connectionOf,
     watchedPaths: ['url', 'transportType'],
   });
 
-  return <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildMcpTabs(diff)} />;
+  return (
+    <TabbedDiffCard diff={diff} header={<EntityHeader {...header} />} tabs={buildMcpTabs(diff)} {...actionProps} />
+  );
 };
