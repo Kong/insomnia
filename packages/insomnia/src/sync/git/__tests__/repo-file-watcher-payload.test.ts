@@ -26,7 +26,7 @@ const REQUEST_ID = 'socketio-req_payload';
 const PAYLOAD_ID = 'socket-io-payload_payload';
 const YAML_PATH = 'insomnia.wrk_payload.yaml';
 
-const collectionYaml = ({ withBody = true, withRequest = true } = {}) => `type: collection.insomnia.rest/5.0
+const collectionYaml = ({ withBody = true, withRequest = true, requestName = 'Rooms' } = {}) => `type: collection.insomnia.rest/5.0
 schema_version: "5.1"
 name: Payload Collection
 meta:
@@ -37,7 +37,7 @@ collection:${
   withRequest
     ? `
   - url: https://socket.example.com
-    name: Rooms
+    name: ${requestName}
     meta:
       id: ${REQUEST_ID}
       created: 1000
@@ -101,15 +101,23 @@ describe('RepoFileWatcher keeps Socket.IO payloads through fs→db syncs', () =>
     });
   });
 
-  // A second import of the same file is what a `git pull` or `checkout` triggers — the exact
-  // moment the payload used to be deleted as an orphan
-  it('keeps the payload when the same file is re-imported', async () => {
+  // Re-importing the file is what a `git pull` or `checkout` triggers — the exact moment the
+  // payload used to be deleted as an orphan.
+  //
+  // The edit has to change the file: `readIfChanged` dedups on a content hash, so re-importing
+  // byte-identical content returns early and `deleteOrphans` never runs at all.
+  it('keeps the payload when an unrelated edit re-imports the file', async () => {
     await fs.promises.writeFile(absPath, collectionYaml(), 'utf8');
     await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
 
+    await fs.promises.writeFile(absPath, collectionYaml({ requestName: 'Rooms renamed' }), 'utf8');
     await registry.importAllFiles(REPO_ID);
     await registry.flushNow(REPO_ID);
 
+    // Proves the import actually ran, so the payload assertion below is not vacuous
+    await expect(services.socketIORequest.getById(REQUEST_ID)).resolves.toMatchObject({
+      name: 'Rooms renamed',
+    });
     await expect(services.socketIOPayload.getByParentId(REQUEST_ID)).resolves.toMatchObject({
       _id: PAYLOAD_ID,
       eventName: 'chat message',

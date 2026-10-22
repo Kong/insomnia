@@ -579,9 +579,12 @@ describe('RequestCollectionSchema (recursive union)', () => {
     expect(parsed).toMatchObject({ eventListeners: [{ id: 'ev1', eventName: 'join' }] });
   });
 
+  // `eventListeners` is dropped so the body guard is the only thing rejecting the WebSocket
+  // branch here — otherwise this would pass on the strength of the eventListeners guard alone
   it('keeps the body of a Socket.IO item that has no meta', () => {
     const item = makeSocketIORequest({
       meta: undefined,
+      eventListeners: undefined,
       body: { eventName: 'chat', ack: true, args: [{ id: 'a1', value: '"hi"', mode: 'application/json' }] },
     });
     const [parsed] = RequestCollectionSchema.parse([item]);

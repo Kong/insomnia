@@ -21,7 +21,10 @@ test('can make socket.io connection', async ({ app, page, insomnia }) => {
   await insomnia.navigationSidebar.clickRequestOrFolder('Socket.IO Request');
   await expect.soft(page.locator('.app')).toContainText('http://localhost:4020');
 
-  // The body lives in its own document, so it only survives the import if the v5 file carries it
+  // The body lives in its own document, so it only survives the import if the v5 file carries it.
+  // Params is the initially selected tab and react-aria unmounts the panels it is not showing,
+  // so the Body tab has to be opened before any of it can be asserted.
+  await page.getByRole('tab', { name: 'Body' }).click();
   await expect.soft(page.getByLabel('Event Name')).toHaveValue('hello');
   await expect.soft(page.locator('[data-testid="CodeEditor"]:visible').first()).toContainText('world');
 

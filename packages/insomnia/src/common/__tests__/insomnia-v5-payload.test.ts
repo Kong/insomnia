@@ -5,7 +5,7 @@
  */
 
 import type { Workspace } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
@@ -86,6 +86,32 @@ describe('Socket.IO / WebSocket payloads in the v5 format', () => {
         { id: 'arg2', value: '', mode: 'text/plain' },
       ]);
     });
+
+    // Arg rows and content types are configuration in their own right. Calling these untouched
+    // would omit the body, and the next sync's `deleteOrphans` would then delete the payload.
+    it('emits a body for an arg the user added but left blank', async () => {
+      await createSocketIORequest();
+      const { args } = models.socketIOPayload.init();
+      await services.socketIOPayload.create({
+        parentId: SOCKET_IO_REQUEST_ID,
+        args: [...args, { id: 'arg2', value: '', mode: args[0].mode }],
+      });
+
+      expect(findNode(await exportWorkspace(), 'socketio-request').body.args).toHaveLength(2);
+    });
+
+    it('emits a body when only an arg content type changed', async () => {
+      await createSocketIORequest();
+      const { args } = models.socketIOPayload.init();
+      await services.socketIOPayload.create({
+        parentId: SOCKET_IO_REQUEST_ID,
+        args: [{ ...args[0], mode: 'text/plain' }],
+      });
+
+      expect(findNode(await exportWorkspace(), 'socketio-request').body.args).toMatchObject([
+        { value: '', mode: 'text/plain' },
+      ]);
+    });
   });
 
   describe('import', () => {
@@ -147,6 +173,79 @@ collection:
       expect(payloads).toHaveLength(2);
       expect(payloads[0]._id).not.toBe(payloads[1]._id);
       expect(payloads[0].parentId).not.toBe(payloads[1].parentId);
+    });
+
+    // Git Sync writes imported documents to the database verbatim, so a generated payload id has
+    // to survive the export that validates it. A non-conforming one throws inside
+    // `InsomniaFileSchema.parse`, which empties the export — and an empty export is skipped by
+    // every flush site, silently stopping db-to-fs sync for the whole workspace.
+    it('re-exports a body that arrived without a body.meta', async () => {
+      const yaml = `type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Payload Workspace
+meta:
+  id: ${WORKSPACE_ID}
+collection:
+  - url: https://socket.example.com
+    name: socketio-request
+    meta:
+      id: ${SOCKET_IO_REQUEST_ID}
+    body:
+      eventName: chat message
+      args:
+        - id: arg1
+          value: '"world"'
+  - url: wss://echo.example.com
+    name: websocket-request
+    meta:
+      id: ${WEBSOCKET_REQUEST_ID}
+    body:
+      value: '{"ping":1}'
+`;
+
+      for (const doc of importInsomniaV5Data(yaml)) {
+        await db.update(doc);
+      }
+
+      const reExported = await exportWorkspace();
+
+      expect(reExported).not.toBe('');
+      expect(findNode(reExported, 'socketio-request').body).toMatchObject({ eventName: 'chat message' });
+      expect(findNode(reExported, 'websocket-request').body).toMatchObject({ value: '{"ping":1}' });
+    });
+
+    // The union guards keep the two realtime types apart inside `RequestCollectionSchema`, but
+    // `walkCollection` routes with the base schemas, so this has to be asserted end to end
+    it('keeps a Socket.IO item without meta on the Socket.IO branch', () => {
+      const yaml = `type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: No Meta
+meta:
+  id: wrk_no_meta
+collection:
+  - url: https://socket.example.com
+    name: Rooms
+    eventListeners:
+      - id: ev1
+        eventName: joined
+    body:
+      eventName: chat message
+      ack: true
+      args:
+        - id: arg1
+          value: '"world"'
+`;
+
+      const resources = importInsomniaV5Data(yaml);
+
+      expect(resources.map(resource => resource.type)).toEqual(
+        expect.arrayContaining(['SocketIORequest', 'SocketIOPayload']),
+      );
+      expect(resources.map(resource => resource.type)).not.toContain('WebSocketPayload');
+      expect(resources.find(resource => resource.type === 'SocketIOPayload')).toMatchObject({
+        eventName: 'chat message',
+        ack: true,
+      });
     });
   });
 

@@ -163,8 +163,17 @@ function mapSocketIOBody(payload?: SocketIOPayload): Insomnia_SocketIORequest['b
     return;
   }
 
+  // Compared against the model's own defaults rather than just checking for empty values: an arg
+  // the user added but left blank, or whose content type they changed, is real configuration.
+  // Calling it untouched would drop it from the file and let `deleteOrphans` delete the payload
+  // on the next sync. `init()` cannot be compared wholesale — it mints a fresh arg id each call.
+  const defaults = models.socketIOPayload.init();
   const args = payload.args ?? [];
-  const isUntouched = !payload.eventName && !payload.ack && args.every(arg => !arg.value);
+  const isUntouched =
+    !payload.eventName &&
+    !payload.ack &&
+    args.length === defaults.args.length &&
+    args.every((arg, index) => !arg.value && arg.mode === defaults.args[index].mode);
 
   if (isUntouched) {
     return;
@@ -626,6 +635,33 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
   return [];
 }
 
+/**
+ * Tells a Socket.IO collection node apart from a WebSocket one.
+ *
+ * `WebsocketRequestSchema.safeParse` cannot do this on its own: once `metaSortKey` is
+ * destructured out neither schema has a required field, and `z.object` strips unknown keys, so a
+ * Socket.IO item parses cleanly as a WebSocket request and silently loses its `eventListeners`
+ * and `body`. The `z.undefined()` guards on `RequestCollectionSchema` keep the two apart inside
+ * the union, but `walkCollection` routes with the base schemas, so it needs its own check.
+ *
+ * `meta.id` is authoritative when present — every Insomnia-generated file has it. Otherwise fall
+ * back to keys only one of the two can carry. An item with none of them is genuinely
+ * indistinguishable and stays on the WebSocket branch, as it did before.
+ */
+function isSocketIOCollectionNode(item: Record<string, any>): boolean {
+  if (models.socketIORequest.isSocketIORequestId(item.meta?.id)) {
+    return true;
+  }
+  if (models.webSocketRequest.isWebSocketRequestId(item.meta?.id)) {
+    return false;
+  }
+  if (item.eventListeners || item.settings?.path !== undefined) {
+    return true;
+  }
+  const body = item.body;
+  return Boolean(body && ('eventName' in body || 'ack' in body || 'args' in body));
+}
+
 function getCollection(
   file: InsomniaFile,
 ): (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] {
@@ -731,7 +767,7 @@ function getCollection(
           resources.push(grpcRequest);
         } else {
           const wbRequest = WebsocketRequestSchema.safeParse(item);
-          if (wbRequest.success) {
+          if (wbRequest.success && !isSocketIOCollectionNode(item)) {
             const data = wbRequest.data;
             const websocketRequest: WithExportType<WebSocketRequest> = {
               ...mapMetaToInsomniaMeta(
@@ -760,12 +796,17 @@ function getCollection(
 
             if (data.body) {
               const webSocketPayload: WithExportType<WebSocketPayload> = {
-                // The id must be unique per payload: `importResourcesToNewWorkspace` keys its id
-                // map by `_id`, so a shared literal placeholder would collapse every payload in
-                // the file into one. The owning request's id is unique either way.
+                // Derived from the owning request's id rather than a shared literal placeholder:
+                // `importResourcesToNewWorkspace` keys its id map by `_id`, so a shared one would
+                // collapse every payload in the file into a single document.
+                //
+                // It must also carry the model's own prefix. Git Sync persists this `_id`
+                // verbatim, and the next export validates it against `WebsocketRequestBodySchema`
+                // — a non-conforming id throws there, which empties the export and silently stops
+                // db-to-fs sync for the whole workspace.
                 ...mapMetaToInsomniaMeta(
                   data.body.meta || {
-                    id: `__WEBSOCKET_PAYLOAD_ID__${websocketRequest._id}`,
+                    id: `${models.webSocketPayload.prefix}_${websocketRequest._id}`,
                   },
                 ),
                 type: 'WebSocketPayload',
@@ -812,10 +853,11 @@ function getCollection(
 
               if (data.body) {
                 const socketIOPayload: WithExportType<SocketIOPayload> = {
-                  // See the WebSocket payload above for why the request's id is used as a suffix
+                  // See the WebSocket payload above for why the id is prefixed and derived from
+                  // the owning request
                   ...mapMetaToInsomniaMeta(
                     data.body.meta || {
-                      id: `__SOCKET_IO_PAYLOAD_ID__${socketIO._id}`,
+                      id: `${models.socketIOPayload.prefix}_${socketIO._id}`,
                     },
                   ),
                   type: 'SocketIOPayload',
