@@ -181,9 +181,10 @@ const routeChat: HandleCall<any, any> = (call: any) => {
 export const startGRPCServer = (port: number) => {
   return new Promise<void>((resolve, reject) => {
     const server = new grpc.Server();
+    const reflectionService = new ReflectionService(packageDefinition);
 
     // Enable reflection
-    new ReflectionService(packageDefinition).addToServer(server);
+    reflectionService.addToServer(server);
 
     // @ts-expect-error generated from proto file
     server.addService(routeguide.RouteGuide.service, {
@@ -211,7 +212,7 @@ export const startGRPCServer = (port: number) => {
     const serverWithTLS = new grpc.Server();
 
     // Enable reflection
-    new ReflectionService(packageDefinition).addToServer(serverWithTLS);
+    reflectionService.addToServer(serverWithTLS);
 
     // @ts-expect-error generated from proto file
     serverWithTLS.addService(routeguide.RouteGuide.service, {
