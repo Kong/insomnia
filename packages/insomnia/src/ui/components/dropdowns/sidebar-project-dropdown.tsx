@@ -43,7 +43,7 @@ const workspaceSortOrder: WorkspaceSortOrder[] = [
 ];
 
 interface Props {
-  project: Project & { hasUncommittedOrUnpushedChanges?: boolean; gitRepository?: GitRepository };
+  project: Project & { gitRepository?: GitRepository };
   organizationId: string;
   storageRules: StorageRules;
   sortOrder: WorkspaceSortOrder;
@@ -213,11 +213,6 @@ export const ProjectDropdown: FC<Props> = ({
           </Tooltip>
         </TooltipTrigger>
       )}
-      {project.hasUncommittedOrUnpushedChanges && (
-        <div className="flex aspect-square h-6 shrink-0 items-center justify-center">
-          <Icon icon="circle" className="h-2 w-2" color="var(--color-warning)" />
-        </div>
-      )}
       <MenuTrigger
         isOpen={isOpen}
         onOpenChange={isOpen => {
@@ -226,7 +221,7 @@ export const ProjectDropdown: FC<Props> = ({
       >
         <Button
           aria-label="Project Actions"
-          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
+          className="invisible flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:visible data-pressed:opacity-100"
         >
           <Icon icon="ellipsis" />
         </Button>
