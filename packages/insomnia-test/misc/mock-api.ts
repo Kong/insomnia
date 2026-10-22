@@ -996,6 +996,43 @@ async function handleAdmin(req: http.IncomingMessage, res: http.ServerResponse, 
       projectId: state.newCommitProjectId,
     });
   }
+  if (
+    url.pathname === "/_admin/cloud-sync/seed-project" &&
+    req.method === "POST"
+  ) {
+    const body = await readJsonBody<{
+      sessionId: string;
+      name: string;
+      docs: { _id: string; name?: string }[];
+    }>(req);
+    const state = getCloudSyncState(body.sessionId);
+    const workspaceDoc = body.docs[0];
+    const project: CloudSyncProject = {
+      id: `proj_${crypto.randomBytes(16).toString("hex")}`,
+      name: body.name,
+      rootDocumentId: workspaceDoc._id,
+      teamProjectId: PROJECT_ID,
+      teams: CLOUD_SYNC_TEAMS,
+    };
+    const stateEntries = body.docs.map((doc) => {
+      const content = JSON.stringify(doc);
+      const blob = crypto.createHash("sha1").update(content).digest("hex");
+      state.newBlobs[blob] = content;
+      return { blob, key: doc._id, name: doc.name ?? "" };
+    });
+    state.newProjects.push(project);
+    state.newSnapshots[project.id] = [
+      {
+        ...CLOUD_SYNC_SNAPSHOT_COMMON,
+        created: new Date().toISOString(),
+        id: crypto.randomBytes(20).toString("hex"),
+        name: "Initial Snapshot",
+        parent: "",
+        state: stateEntries,
+      },
+    ];
+    return sendJson(res, 200, { id: project.id });
+  }
   if (url.pathname === "/_admin/cloud-sync/reset" && req.method === "POST") {
     const body = await readJsonBody(req);
     resetCloudSyncState(body.sessionId);

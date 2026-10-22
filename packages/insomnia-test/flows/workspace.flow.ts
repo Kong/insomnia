@@ -953,10 +953,34 @@ export class WorkspaceFlow extends BaseFlow {
     await projectSettingsPage.confirmOpenFolder();
   }
 
+  /**
+   * Clones a Git Sync Project like `create(item, credentialName, repo)`, but
+   * reads the "Unknown Fields Detected" warning off the post-scan screen
+   * before confirming the clone.
+   * @param item - The Project to create (type must be ProjectType.Git)
+   * @param credentialName - The display name of the credential to use, e.g. "Custom Git Credential"
+   * @param repo - Overrides for the repo to clone; `uri` defaults to the injected `gitRepoUrl`, `branch` defaults to "master"
+   * @returns The created Project, and the warning's file list and text (both empty when the scan found no unknown fields)
+   */
+  async cloneWithScanReport(
+    item: Project,
+    credentialName: string,
+    repo?: Partial<GitRepoConnection>,
+  ): Promise<{ project: Project; unknownFieldFiles: string[]; unknownFieldsWarningText: string }> {
+    const report = { unknownFieldFiles: [] as string[], unknownFieldsWarningText: '' };
+    const project = await this.cloneFromRemote(item, credentialName, repo, async () => {
+      const { projectSettingsPage } = this.pageManager;
+      report.unknownFieldFiles = await projectSettingsPage.getUnknownFieldFiles();
+      report.unknownFieldsWarningText = await projectSettingsPage.getUnknownFieldsWarningText();
+    });
+    return { project, ...report };
+  }
+
   private async cloneFromRemote(
     project: Project,
     credentialName: string,
     repo?: Partial<GitRepoConnection>,
+    onScanned?: () => Promise<void>,
   ): Promise<Project> {
     const uri = repo?.uri ?? this.gitRepoUrl;
     if (!uri) {
@@ -978,6 +1002,7 @@ export class WorkspaceFlow extends BaseFlow {
       await projectSettingsPage.chooseCloneLocation(repo.cloneParentDir);
     }
     await projectSettingsPage.submitScanForFiles();
+    await onScanned?.();
     await projectSettingsPage.confirmClone();
 
     return this.assertCreated(await this.getProject(project.name), project.name);

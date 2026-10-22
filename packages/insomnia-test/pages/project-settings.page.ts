@@ -24,6 +24,13 @@ export class ProjectSettingsPage extends BasePage {
     name: "Scan for files",
     exact: true,
   });
+  private readonly confirmCloneButton = this.dialog.getByRole("button", {
+    name: /^(Clone Project|Clone and Migrate|Create Blank Project|Create)$/,
+  });
+  private readonly unknownFieldsWarning = this.dialog
+    .locator("div")
+    .filter({ has: this.page.getByRole("heading", { name: "Unknown Fields Detected" }) })
+    .last();
   private readonly openLocalFolderModeButton = this.dialog.getByRole(
     "button",
     { name: "Open local folder" },
@@ -149,12 +156,40 @@ export class ProjectSettingsPage extends BasePage {
    * export, an empty repo, or neither).
    */
   async confirmClone(): Promise<void> {
-    await this.dialog
-      .getByRole("button", {
-        name: /^(Clone Project|Clone and Migrate|Create Blank Project|Create)$/,
-      })
-      .click();
+    await this.confirmCloneButton.click();
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Reads the file paths listed under the post-scan "Unknown Fields
+   * Detected" warning. Requires `submitScanForFiles()` to have been called.
+   * Waits for the scan to finish first, so an
+   * empty result means no warning, not a scan still in flight.
+   * @returns The listed file paths; empty when no warning is shown
+   */
+  async getUnknownFieldFiles(): Promise<string[]> {
+    await this.waitForScanResult();
+    return (await this.unknownFieldsWarning.locator("li").allInnerTexts()).map((text) => text.trim());
+  }
+
+  /**
+   * Reads the full text of the post-scan "Unknown Fields Detected" warning.
+   * Requires `submitScanForFiles()` to have been called.
+   * @returns The warning's text; empty when no warning is shown
+   */
+  async getUnknownFieldsWarningText(): Promise<string> {
+    await this.waitForScanResult();
+    if (!(await this.unknownFieldsWarning.isVisible())) {
+      return "";
+    }
+    return (await this.unknownFieldsWarning.innerText()).trim();
+  }
+
+  private async waitForScanResult(): Promise<void> {
+    await expect(this.dialog.getByText("Scanning remote repo for Insomnia files")).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await expect(this.confirmCloneButton).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

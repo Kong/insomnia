@@ -59,6 +59,7 @@ create(parent: Project, item: Collection, fileName?: string): Promise<Collection
 create(parent: Project, item: McpClient): Promise<McpClient>
 create(parent: Project, item: Environment): Promise<Environment>
 create(item: Project, credentialName: string, repo?: Partial<GitRepoConnection>): Promise<Project>   // clones a Git Sync project with an explicit credential; repo.uri defaults to the injected gitRepoUrl, branch to "master"
+cloneWithScanReport(item: Project, credentialName: string, repo?: Partial<GitRepoConnection>): Promise<{ project: Project; unknownFieldFiles: string[]; unknownFieldsWarningText: string }>   // same clone as the overload above, but reads the post-scan "Unknown Fields Detected" warning (file list + text, both empty when the scan found none) before confirming; use instead of `create()` whenever a spec asserts on the Create Project screen's warning (INS-3039)
 // Project.folderPath (3rd ctor arg) routes create(project) to "Open local folder" mode
 
 get<T = WorkspaceItem>(item: string | { name: string; id?: string }, parent?: Project | Collection): Promise<T | undefined>
@@ -1228,6 +1229,7 @@ switchBranch(branch: string): Promise<void>            // checks out `branch` di
 commit(message: string): Promise<Commit>                // stages all changes, commits (no push), reads the commit back from History
 commitAndPush(message: string): Promise<Commit>          // stages all changes, commits + pushes, reads the commit back from History
 commitStaged(message: string): Promise<Commit>           // commits ONLY what is already staged (stages nothing for you), waits for the staged list to empty, reads the commit back from History
+commitStagedConfirmingUnknownFields(message: string): Promise<Commit>  // like commitStaged(), but clicks through the "Unrecognized Fields" confirmation after Commit; use for a staged file whose HEAD content has unknown fields — plain commitStaged() would hang on that modal
 getChanges(): Promise<{ staged: string[]; unstaged: string[] }>  // file names ("foo.yaml") listed in the Commit modal, then closes it
 stageChanges(fileNames: string[]): Promise<void>         // stages each file individually from the Commit modal; fileNames as listed, e.g. "foo.yaml"
 unstageChanges(fileNames: string[]): Promise<void>       // unstages each file individually
@@ -1269,6 +1271,28 @@ Always pass `GitChangeList.Staged`/`.Unstaged` (never the raw "Staged changes" s
 - A hand-reordered / old-schema Insomnia file is built by `buildReorderedCollectionFile(name, { oldSchema? })` in `tests/git-sync/undiscardable-change/helpers.ts` (folders listed against their `created` order; `oldSchema` drops `schema_version` and adds a header `id`). Copy that helper's shape for any other "file Insomnia rewrites" fixture; `buildCollectionFile()` from git-fixtures is already canonical-ish and won't trigger it.
 - To modify a file on disk (e.g. a non-Insomnia yaml), pass `{ cloneParentDir: fs.mkdtempSync(path.join(os.tmpdir(), "…")) }` as the 3rd arg of the Git `workspaceFlow.create()`; the clone is the single sub-directory inside it (`path.join(dir, fs.readdirSync(dir)[0])`). Added/deleted files are easiest via the UI (`workspaceFlow.create(project, collection, fileName)` / `workspaceFlow.delete(collection)`).
 - After a discard of an undiscardable file the change reappears asynchronously — poll `getChanges().unstaged` for it rather than reading once.
+
+**Unknown-fields warnings (INS-3039) — Git Sync** (specs in `tests/git-sync/unknown-fields/`, a family directory with a shared `helpers.ts`; shares the Commit modal with the undiscardable warning above, so the two are always asserted together — a file with unknown fields shows only the unknown-fields banner, never the undiscardable warning). Direct `gitSyncPage` calls (need `openCommitDialog()` + `openChangeDiff()` first, except the confirmation ones):
+
+```ts
+isUnknownFieldsDiffWarningVisible(): Promise<boolean>   // the prominent banner above the diff (data-testid unknown-fields-diff-warning)
+getUnknownFieldsDiffWarningText(): Promise<string>      // banner text, "" when not shown
+getUnknownFieldHighlightCount(): Promise<number>        // highlighted unknown-field lines in the diff editor (.unknown-field-line-bg)
+isUnknownFieldsConfirmationVisible(): Promise<boolean>  // the "Unrecognized Fields" modal shown when Commit is clicked
+getUnknownFieldsConfirmationText(): Promise<string>     // waits for the modal, returns its text
+cancelUnknownFieldsConfirmation(): Promise<void>        // Cancel: no commit, file stays staged
+confirmUnknownFieldsCommit(): Promise<void>             // Continue: creates the commit
+waitForCommitToFinish(): Promise<void>
+// ProjectSettingsPage (Create Project screen, after submitScanForFiles(); both wait for the scan to finish first)
+getUnknownFieldFiles(): Promise<string[]>               // files listed under "Unknown Fields Detected"; [] = no warning
+getUnknownFieldsWarningText(): Promise<string>          // warning text; "" = no warning
+```
+
+- Seed with `pushServerFile({ path, content: buildCollectionFileWithUnknownField(name, { requestName?, unknownField? }).content })` (`tests/git-sync/unknown-fields/helpers.ts`; returns `{ content, requestName, unknownField, unknownValue }`). Its file is deliberately also hand-reordered, so the diff is entirely Insomnia dropping the field — that is what makes "banner shown, undiscardable warning NOT shown" a meaningful assertion. The reorder-only / old-schema fixtures with **no** unknown fields are `buildReorderedCollectionFile` (see above).
+- Detection uses HEAD content and is **not** shown for deleted files; a commit that removes the unknown field is observable with `git show HEAD:<file>` in the clone (`cloneParentDir`) plus a second `cloneWithScanReport()` listing nothing.
+- `GitChangeList.Staged` works for `openChangeDiff()`; the confirmation still appears for staged files.
+- The negative cases (reorder-only file / older-schema file shows no unknown-fields UI) are not separate specs — they are extra assertions (`cloneWithScanReport()` → `unknownFieldFiles` `[]`, banner false, highlight count 0) inside `tests/git-sync/undiscardable-change/warning-in-diff-and-discard-confirmation.spec.ts` and `old-schema-file-flagged.spec.ts`.
+- Real examples: `diff-shows-unknown-fields-instead-of-undiscardable-warning.spec.ts` (clone scan + diff banner/highlight), `commit-requires-unknown-fields-confirmation.spec.ts` (staged diff → cancel/confirm → committed file/clean tree/fresh clone), `mixed-real-edit-and-unknown-field-file.spec.ts` (real edit + discard), `deleted-file-with-unknown-fields-shows-no-warnings.spec.ts`.
 
 **Visual (Beta) diff — per-entity Stage / Unstage / Discard (INS-3667, specs in `tests/git-sync/visual-diff/`, a family directory with a shared `helpers.ts`).** The Commit modal's diff pane has a Text / Visual (Beta) switch; Visual shows one card per changed entity (request, folder, environment, WebSocket, Socket.IO, gRPC, MCP, mock route, cookie jar) plus file-level cards (Workspace, API Spec, Unit Tests, CA Certificates, Mock Server). All of these need `openCommitDialog()`/`openVisualDiff()` first and leave the modal **open** afterwards — never call `gitSyncFlow.getChanges()` (it re-opens the modal and times out) while it is open; read `gitSyncPage.getStagedChanges()/getUnstagedChanges()` instead, and `closeCommitDialog()` before `hasUncommittedChanges()` (the Git Sync menu is blocked by the modal).
 
@@ -1435,6 +1459,29 @@ Real examples: `tests/git-sync/open-local-folder.spec.ts` (adopt + assert `.git`
 Covers Kong Cloud-backed workspace sync (branch/commit/history/push/pull/delete against a GraphQL VCS backend) — a categorically different subsystem from local Git Sync above, even though its sync dropdown trigger reuses the exact same `data-testid="git-dropdown"`/`aria-label="Git Sync"` (confirmed live: both `sync-dropdown.tsx` and `git-sync-dropdown.tsx` render it identically; whichever mounts depends on whether the active project is Cloud-synced or has a git repo attached). Tests live under `tests/cloud-sync/` and import from the ordinary `../../misc/fixtures` (no dedicated fixtures file — unlike Git Sync, nothing here needs a per-test repo).
 
 Every workspace this domain touches is a **pre-seeded fixture** on `misc/mock-api.js`'s `/graphql` mock (ported from insomnia-smoke-test's own `server/cloud-sync-api.ts`) — there is no `create()` overload for `ProjectType.Cloud`; a test always starts from `cloudSyncFlow.fetch(name)` with one of the three seeded names: `"My Collection R1"` (a Collection with one request, "New Request", body `foo=bar`), `"My Environment"` (an Environment-type workspace, Base Environment starts empty), `"My MCP Client"` (an MCP Client with one request). All three sit under a single local Project the app auto-creates on first launch ("Personal Workspace") — nothing needs pre-seeding on the local side, only the mock server's REST (`team-projects`) + GraphQL (`projects`) responses. A 4th fixture, **`"Ghost Collection"`**, is never meant to be `fetch()`'d — its own `rootDocumentId` is seeded to permanently disagree with the `wrk_*` key inside its one snapshot's `state[]`, simulating INS-2026's cross-workspace commit misalignment bug's end state, purely for exercising the dashboard-delete path below against a pre-existing "ghost" entry without reproducing the underlying race.
+
+### Seeding a custom remote project (`seedCloudSyncProject`, INS-3039 specs in `tests/cloud-sync/unknown-fields/`)
+
+The three named fixtures above can't carry a doc this version doesn't understand. `seedCloudSyncProject(name, docs)` (`misc/fixtures.ts`, backed by `misc/mock-api.ts`'s `POST /_admin/cloud-sync/seed-project`) adds a **remote-only** project to the session whose single "Initial Snapshot" holds `docs` exactly as given (workspace doc first; every doc needs `_id`, `parentId`, `type`). It appears as an unsynced file — call `await user.page.reload()` so the dashboard sees it, then `cloudSyncFlow.fetch(name)`; `resetCloudSyncState()` clears it. Build the docs with `buildCloudSyncDocs(collectionName, requestExtra)` (`tests/cloud-sync/unknown-fields/helpers.ts`, returns `{ docs, requestName }`): pass `{ futureField: "x" }` as `requestExtra` for an unknown-fields doc, or a value that breaks the request schema for a fundamentally incompatible one. A local edit (e.g. `workspaceFlow.rename(request, name)`) is what makes the doc show up in the Commit modal.
+
+```ts
+// pageManager.cloudSyncPage — Commit modal (all need openCommitDialog() first; rows are addressed by their visible name)
+openChangeDiff(name: string): Promise<void>                     // clicks the row, waits for the diff heading
+isUnknownFieldsDiffWarningVisible(): Promise<boolean>           // warning banner in the diff pane
+getUnknownFieldHighlightCount(): Promise<number>                // highlighted unknown-field lines
+getUnsupportedDocDiffErrorText(): Promise<string>               // red "unsupported" banner text, "" when absent (incompatible doc)
+getUnknownFieldsIconTooltip(name: string): Promise<string>      // hovers the row's "Unrecognized fields warning" icon; "" if no icon
+getUnsupportedItemIconTooltip(name: string): Promise<string>    // hovers the row's "Unsupported item error" icon; "" if no icon
+submitCommit(name: string, message: string): Promise<void>      // stages `name`, fills the message, clicks Commit — does NOT wait for the commit
+clickCommit(): Promise<void>                                    // Commit again with what is staged (e.g. after cancelling the confirmation)
+isChangeStaged(name: string): Promise<boolean>
+isUnknownFieldsConfirmationVisible(): Promise<boolean>          // "Unrecognized Fields" modal
+getUnknownFieldsConfirmationText(): Promise<string>
+cancelUnknownFieldsConfirmation(): Promise<void>
+confirmUnknownFieldsCommit(name: string): Promise<void>         // Continue; waits for `name`'s row to leave the modal
+```
+
+The current build does **not** block committing an incompatible doc (INS-4014 open question) — `incompatible-remote-document.spec.ts` asserts only the icon tooltip and red banner. Real examples: `remote-document-with-unknown-fields.spec.ts` (icon, banner, highlight, cancel → still staged → confirm), `incompatible-remote-document.spec.ts`.
 
 ### Project dashboard — unsynced-file delete (INS-2026 fix, PR #10477)
 
@@ -1857,6 +1904,7 @@ Domain-specific facts already have their own "Real example: ..." pointer inline 
 - `tests/document/custom-lint-ruleset/custom-lint-ruleset.spec.ts` — documenting a real app bug with `test.fail()` (§9a) instead of asserting the buggy behavior as if it were correct.
 - `tests/mock-server/auto-push.spec.ts` — proving a UI edit reached an external service by hitting that service directly (`fetch` + `expect.poll`) instead of trusting the app's own Test button; plus a `test.fail()` with no ticket yet.
 - `tests/git-sync/*.spec.ts` — pairing a UI-level assertion with an independent server-side ground-truth check (`getServerBranches()`/`getServerCommits()`), rather than trusting the app's own UI as the only source of truth.
+- `tests/git-sync/unknown-fields/commit-requires-unknown-fields-confirmation.spec.ts` — one chained spec for a flow whose steps share a precondition (stage → staged diff → cancel → confirm → verify committed file, clean tree and a fresh clone), instead of one spec per step; `tests/git-sync/undiscardable-change/old-schema-file-flagged.spec.ts` — a negative assertion from a sibling feature folded into an existing spec rather than a new file.
 - `tests/environment/json-raw-editor.spec.ts` / `tests/cloud-sync/discard-commit-push-and-restore.spec.ts` — verifying a write or revert actually persisted by reloading or re-navigating for a fresh read, instead of trusting an in-session read-back or an already-open editor's stale CodeMirror buffer.
 - `tests/workspace/url-bar-undo-survives-tab-switch.spec.ts` — real keystrokes via `typeUrl()` (not `setUrl()`) to build genuine CodeMirror undo history, and checking focus state via the app's own `data-focused` attribute (`BasePage.hasFocus()`) instead of `document.activeElement`, which doesn't reliably cross the Electron boundary.
 - `tests/preferences/vault-key-generation.spec.ts` — `test.extend({ vaultKey, vaultSalt })` to seed launch-time crypto state per spec (same `test.extend`-a-fixture-in-the-spec-file shape as `dataPath`/`skipOnboarding` above), backed by a mock server running a **real** crypto exchange (`@getinsomnia/srp-js`) rather than canned request/response pairs.

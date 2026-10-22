@@ -20,7 +20,10 @@ test('Verify a file from an older schema that Insomnia only normalizes is flagge
     }).content,
   });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  const { unknownFieldFiles, unknownFieldsWarningText } = await workspaceFlow.cloneWithScanReport(
+    new Project(faker.string.alphanumeric(10), ProjectType.Git),
+    GIT_CREDENTIAL.name,
+  );
   await expect
     .poll(async () => (await gitSyncFlow.getChanges()).unstaged, {
       timeout: DEFAULT_TIMEOUT,
@@ -30,5 +33,9 @@ test('Verify a file from an older schema that Insomnia only normalizes is flagge
   await gitSyncPage.openCommitDialog();
   await gitSyncPage.openChangeDiff(GitChangeList.Unstaged, fileName);
 
+  expect(unknownFieldFiles).toEqual([]);
+  expect(unknownFieldsWarningText).toBe('');
   expect(await gitSyncPage.isUndiscardableWarningVisible()).toBe(true);
+  expect(await gitSyncPage.isUnknownFieldsDiffWarningVisible()).toBe(false);
+  expect(await gitSyncPage.getUnknownFieldHighlightCount()).toBe(0);
 });

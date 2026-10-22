@@ -130,6 +130,35 @@ export class GitSyncFlow extends BaseFlow {
   }
 
   /**
+   * Like `commitStaged()`, but for staged files with unknown fields: after
+   * clicking Commit, continues past the "Unrecognized Fields" confirmation
+   * before reading the resulting commit back from History.
+   * @param message - The commit message
+   * @returns The created Commit, with `id` populated
+   */
+  async commitStagedConfirmingUnknownFields(message: string): Promise<Commit> {
+    const { gitSyncPage } = this.pageManager;
+    await gitSyncPage.openCommitDialog();
+    await gitSyncPage.commitStaged(message);
+    await gitSyncPage.confirmUnknownFieldsCommit();
+    await gitSyncPage.waitForCommitToFinish();
+    if (await gitSyncPage.isCommitDialogOpen()) {
+      await gitSyncPage.closeCommitDialog();
+    }
+
+    await gitSyncPage.openHistory();
+    const latest = await gitSyncPage.getLatestCommit();
+    await gitSyncPage.closeHistory();
+
+    return this.assertCreated(
+      latest
+        ? Object.assign(new Commit(latest.message), { id: latest.id })
+        : undefined,
+      message,
+    );
+  }
+
+  /**
    * Opens a file's diff and discards it, confirming the dialog, without
    * waiting for the file to leave the unstaged list (so it also works for a
    * change that comes straight back), then closes the modal.

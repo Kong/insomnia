@@ -31,6 +31,10 @@ export class GitSyncPage extends BasePage {
     'This change is only Insomnia internally reformatting the file',
   );
 
+  private readonly unknownFieldsConfirmDialog = this.page
+    .getByRole('dialog')
+    .filter({ has: this.page.getByRole('heading', { name: 'Unrecognized Fields' }) });
+
   private readonly entityCard = (entityName: string, typeLabel?: string) => {
     const card = this.commitDialog
       .locator('div.border-l-2')
@@ -663,6 +667,69 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
+   * Reads whether the open Commit modal's diff pane shows the unknown
+   * fields banner. Requires `openChangeDiff()` to have been called.
+   * @returns True if the banner is visible in the diff pane
+   */
+  async isUnknownFieldsDiffWarningVisible(): Promise<boolean> {
+    return this.commitDialog.getByTestId('unknown-fields-diff-warning').isVisible();
+  }
+
+  /**
+   * Reads the unknown fields banner's text from the open Commit modal's diff pane.
+   * @returns The banner's text, or an empty string when it isn't shown
+   */
+  async getUnknownFieldsDiffWarningText(): Promise<string> {
+    const banner = this.commitDialog.getByTestId('unknown-fields-diff-warning');
+    return (await banner.isVisible()) ? (await banner.innerText()).trim() : '';
+  }
+
+  /**
+   * Counts the diff editor's highlighted unknown-field lines in the open
+   * Commit modal. Requires `openChangeDiff()` to have been called.
+   * @returns The number of highlighted lines
+   */
+  async getUnknownFieldHighlightCount(): Promise<number> {
+    return this.commitDialog.locator('.unknown-field-line-bg').count();
+  }
+
+  /**
+   * Reads whether the "Unrecognized Fields" confirmation is open, as shown
+   * when committing a file whose committed version has unknown fields.
+   * @returns True if the confirmation dialog is visible
+   */
+  async isUnknownFieldsConfirmationVisible(): Promise<boolean> {
+    return this.unknownFieldsConfirmDialog.isVisible();
+  }
+
+  /**
+   * Waits for the "Unrecognized Fields" confirmation and reads its text.
+   * @returns The dialog's text content
+   */
+  async getUnknownFieldsConfirmationText(): Promise<string> {
+    await expect(this.unknownFieldsConfirmDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await this.unknownFieldsConfirmDialog.innerText()).trim();
+  }
+
+  /**
+   * Cancels the open "Unrecognized Fields" confirmation, leaving the
+   * commit not created.
+   */
+  async cancelUnknownFieldsConfirmation(): Promise<void> {
+    await this.unknownFieldsConfirmDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(this.unknownFieldsConfirmDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Continues past the open "Unrecognized Fields" confirmation, creating
+   * the commit.
+   */
+  async confirmUnknownFieldsCommit(): Promise<void> {
+    await this.page.getByTestId('unknown-fields-commit-confirm-button').click();
+    await expect(this.unknownFieldsConfirmDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Confirms the open Discard dialog without waiting for the file to leave
    * the unstaged list (a file whose change can't be discarded comes back).
    */
@@ -749,6 +816,22 @@ export class GitSyncPage extends BasePage {
     await expect(this.commitDialog.getByRole('heading', { name: /^Staged changes 0/ })).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
+  }
+
+  /**
+   * Waits until a commit has gone through: the Commit modal either closed
+   * (nothing left to commit) or still shows an empty staged list. A modal
+   * with nothing left to show closes itself shortly after the commit, so
+   * when it's still open this also gives it a moment to do so — closing it
+   * by hand while the commit is still being written is unreliable.
+   */
+  async waitForCommitToFinish(): Promise<void> {
+    await expect(async () => {
+      const isClosed = !(await this.commitDialog.isVisible());
+      const isStagedEmpty = await this.commitDialog.getByRole('heading', { name: /^Staged changes 0/ }).isVisible();
+      expect(isClosed || isStagedEmpty).toBe(true);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    await this.commitDialog.waitFor({ state: 'hidden', timeout: DEFAULT_TIMEOUT / 2 }).catch(() => {});
   }
 
   /**

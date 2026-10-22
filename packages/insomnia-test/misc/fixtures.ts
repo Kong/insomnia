@@ -203,6 +203,27 @@ export async function getCloudSyncProjectInfo(name: string): Promise<{
 }
 
 /**
+ * Adds a remote-only Cloud Sync project to misc/mock-api.ts for this
+ * worker's session, with a single "Initial Snapshot" holding `docs` exactly
+ * as given — so a spec controls what the remote blobs contain, e.g. a
+ * request with a field this version of Insomnia doesn't know, or one that
+ * fails its schema. It shows up as an unsynced file, fetchable by `name`
+ * via `cloudSyncFlow.fetch()`. `resetCloudSyncState()` clears it.
+ * @param name - The project's (and fetched collection's) name
+ * @param docs - The raw documents to store, workspace first; each needs an `_id` (its key in the snapshot) and its own `parentId`/`type`
+ */
+export async function seedCloudSyncProject(
+  name: string,
+  docs: { _id: string; name?: string }[],
+): Promise<void> {
+  await fetch(`${MOCK_API_SERVER}/_admin/cloud-sync/seed-project`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId: SESSION_ID, name, docs }),
+  });
+}
+
+/**
  * Resets misc/mock-api.ts's Vault Key mutable state (the stored SRP
  * salt/verifier from a prior generate/reset, and any in-flight unlock
  * exchange), scoped to this worker's SESSION_ID — same isolation as
