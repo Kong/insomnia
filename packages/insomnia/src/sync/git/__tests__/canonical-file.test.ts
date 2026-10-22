@@ -12,6 +12,7 @@ import { getInsomniaV5DataExport, tryImportV5Data } from '../../../common/insomn
 import {
   canonicalizeInsomniaFileContent,
   getCanonicalInsomniaFileContent,
+  getInsomniaFileFormatIssue,
   isUndiscardableChange,
 } from '../canonical-file';
 
@@ -146,6 +147,37 @@ routes:
     });
   });
 
+  describe('getInsomniaFileFormatIssue', () => {
+    it('finds no issue in a file Insomnia wrote itself', async () => {
+      expect(await getInsomniaFileFormatIssue(await exportThroughDatabase(reorderedCollection))).toBeNull();
+    });
+
+    it('flags a valid file Insomnia would write differently, eg. one edited by hand', async () => {
+      const exported = await exportThroughDatabase(reorderedCollection);
+      const withComment = exported.replace('collection:\n', 'collection:\n  # added by hand\n');
+      const withDuplicateId = buildCollection([
+        { id: 'fld_a', name: 'Folder A', created: 2000 },
+        { id: 'fld_a', name: 'Folder A copy', created: 3000 },
+      ]);
+
+      expect(await getInsomniaFileFormatIssue(reorderedCollection)).toBe('non-canonical');
+      expect(await getInsomniaFileFormatIssue(withComment)).toBe('non-canonical');
+      expect(await getInsomniaFileFormatIssue(withDuplicateId)).toBe('non-canonical');
+    });
+
+    it('flags an Insomnia file that does not match the file format', async () => {
+      const notAList = 'type: collection.insomnia.rest/5.0\nname: C\ncollection: not a list\n';
+
+      expect(await getInsomniaFileFormatIssue(notAList)).toBe('invalid');
+    });
+
+    it('ignores empty sides and files that are not Insomnia files', async () => {
+      expect(await getInsomniaFileFormatIssue(null)).toBeNull();
+      expect(await getInsomniaFileFormatIssue('')).toBeNull();
+      expect(await getInsomniaFileFormatIssue('openapi: 3.0.0\ninfo:\n  title: Spec\n')).toBeNull();
+    });
+  });
+
   describe('getCanonicalInsomniaFileContent', () => {
     it.each(insomniaFixtures)(
       'matches the real import/export pipeline for %s',
@@ -176,6 +208,19 @@ routes:
 
     it('is stable for content Insomnia generated itself', async () => {
       const canonicalContent = await getCanonicalInsomniaFileContent(reorderedCollection);
+      expect(await getCanonicalInsomniaFileContent(canonicalContent!)).toBe(canonicalContent);
+    });
+
+    it('keeps confidentialKeys through the round-trip so the flag survives Git Sync', async () => {
+      const content = `${buildCollection([{ id: 'fld_a', name: 'Folder A', created: 2000 }])}  data:
+    token: secret
+    host: example.com
+  confidentialKeys:
+    - token
+`;
+      const canonicalContent = await getCanonicalInsomniaFileContent(content);
+      expect(canonicalContent).toBe(await exportThroughDatabase(content));
+      expect(YAML.parse(canonicalContent!).environments.confidentialKeys).toEqual(['token']);
       expect(await getCanonicalInsomniaFileContent(canonicalContent!)).toBe(canonicalContent);
     });
 

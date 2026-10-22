@@ -1956,6 +1956,9 @@ const OriginalGitProjectStagingModal: FC<
                           onShowTextView={() => setDiffViewMode('text')}
                           actionGate={actionGate}
                           isActionInFlight={isActionInFlight}
+                          // One warning above the diff at most: unrecognized fields, or a change that is only Insomnia
+                          // reformatting the file, already have their own, which say more than the format warning would.
+                          hideFormatWarning={Boolean(hasUnknownFields || undiscardableFilePath)}
                         />
                       )}
                     </div>

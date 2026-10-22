@@ -22,9 +22,7 @@ import { hasSignificantChanges } from '~/common/significant-diff-detection';
  * or null if `content` is not an importable Insomnia file.
  */
 export async function getCanonicalInsomniaFileContent(content: string): Promise<string | null> {
-  const newLineIndex = content.indexOf('\n');
-  const firstLine = (newLineIndex === -1 ? content : content.slice(0, newLineIndex)).trim();
-  if (!InsomniaFileTypeValues.some(type => firstLine.includes(type))) {
+  if (!isInsomniaFileContent(content)) {
     return null;
   }
 
@@ -51,6 +49,32 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
   });
 
   return exportedContent || null;
+}
+
+// Whether `content` declares itself an Insomnia file on its first line (eg. `type: collection.insomnia.rest/5.0`).
+function isInsomniaFileContent(content: string) {
+  const newLineIndex = content.indexOf('\n');
+  const firstLine = (newLineIndex === -1 ? content : content.slice(0, newLineIndex)).trim();
+  return InsomniaFileTypeValues.some(type => firstLine.includes(type));
+}
+
+export type InsomniaFileFormatIssue = 'invalid' | 'non-canonical';
+
+/**
+ * How `content` differs from a file Insomnia writes itself: `invalid` when it's an Insomnia file that
+ * doesn't match the file format, `non-canonical` when it does but Insomnia would write it differently
+ * (eg. it was edited by hand — comments, formatting, order, missing or duplicated parts, unrecognized
+ * fields — or written by another version of Insomnia), and null when it's exactly what Insomnia writes,
+ * empty, or not an Insomnia file at all.
+ */
+export async function getInsomniaFileFormatIssue(content: string | null): Promise<InsomniaFileFormatIssue | null> {
+  if (!content || !isInsomniaFileContent(content)) {
+    return null;
+  }
+  if (tryImportV5Data(content).error) {
+    return 'invalid';
+  }
+  return (await getCanonicalInsomniaFileContent(content)) === content ? null : 'non-canonical';
 }
 
 /**

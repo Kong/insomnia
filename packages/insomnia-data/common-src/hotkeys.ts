@@ -26,7 +26,6 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_showGenerateCodeEditor: 'Generate Code',
   sidebar_focusFilter: 'Filter Sidebar',
   sidebar_showCreateDropdown: 'Open Create Dropdown',
-  sidebar_deleteItem: 'Delete Sidebar Item',
   sidebar_toggle: 'Toggle Sidebar',
   sidebar_rename: 'Rename Item',
   response_focus: 'Focus Response',
@@ -129,10 +128,6 @@ const defaultRegistry: HotKeyRegistry = {
   sidebar_showCreateDropdown: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.n.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.n.keyCode }],
-  },
-  sidebar_deleteItem: {
-    macKeys: [{ keyCode: keyboardKeys.delete.keyCode }, { keyCode: keyboardKeys.backspace.keyCode }],
-    winLinuxKeys: [{ keyCode: keyboardKeys.delete.keyCode }, { keyCode: keyboardKeys.backspace.keyCode }],
   },
   sidebar_toggle: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.backslash.keyCode }],

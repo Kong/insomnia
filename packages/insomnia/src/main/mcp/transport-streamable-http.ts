@@ -9,7 +9,7 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 import type { McpResponse, RequestHeader } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import type { Dispatcher } from 'undici';
+import { type Dispatcher, fetch as undiciFetch } from 'undici';
 
 import { redactConfidentialText } from '~/common/network/sensitive-value-collector';
 import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
@@ -20,6 +20,11 @@ import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from
 interface NodeRequestInit extends RequestInit {
   dispatcher?: Dispatcher;
 }
+
+// Use undici's own fetch: the global (Electron built-in) fetch ships an older undici whose handler API
+// is incompatible with dispatchers created by the installed undici.
+const dispatcherFetch = (url: string | URL, init: NodeRequestInit) =>
+  undiciFetch(url, init as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>;
 
 export const createStreamableHTTPTransport = async (
   context: ConnectionContext,
@@ -110,7 +115,7 @@ const wrappedFetch = async (
   const requestMethodLine = `${method.toUpperCase()} ${url} ${isJsonRequest && requestBody?.method ? `\nJSON-RPC Method: ${requestBody.method}` : ''}`;
   const headersOut = requestHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
   const start = performance.now();
-  const response = await fetch(url, {
+  const response = await dispatcherFetch(url, {
     ...init,
     dispatcher: await getFetchDispatcher(requestId),
   } as NodeRequestInit);
@@ -205,7 +210,7 @@ const wrappedFetch = async (
       };
       writeEventLogAndNotify(context, authRequestEvent);
       try {
-        const response = await fetch(url, {
+        const response = await dispatcherFetch(url, {
           ...init,
           dispatcher: await getFetchDispatcher(requestId),
         } as NodeRequestInit);

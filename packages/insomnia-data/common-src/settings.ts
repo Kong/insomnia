@@ -47,7 +47,6 @@ export type KeyboardShortcut =
   | 'request_showGenerateCodeEditor'
   | 'sidebar_focusFilter'
   | 'sidebar_showCreateDropdown'
-  | 'sidebar_deleteItem'
   | 'sidebar_toggle'
   | 'sidebar_rename'
   | 'response_focus'

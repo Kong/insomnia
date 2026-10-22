@@ -6,7 +6,7 @@
  */
 
 import type { Request } from 'insomnia-data';
-import { EnvironmentKvPairDataType, services } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
@@ -400,6 +400,43 @@ spec:
       expect(parsed.spec).toBeDefined();
     });
 
+    // A Socket.IO request used to be dropped from a design doc's export, which in a Git Sync
+    // project meant `deleteOrphans` removed the request itself on the next sync
+    it('exports Socket.IO requests from a design workspace', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_design_socketio',
+        name: 'Design Workspace',
+        parentId: 'proj_test',
+        scope: 'design',
+      });
+      await services.environment.create({
+        _id: 'env_design_socketio',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+      await services.apiSpec.getOrCreateForParentId(workspace._id, {
+        _id: 'spec_design_socketio',
+        contents: '{"openapi": "3.0.0"}',
+        contentType: 'json',
+      });
+      await services.socketIORequest.create({
+        _id: 'socketio-req_design',
+        name: 'design-socketio',
+        parentId: workspace._id,
+        url: 'https://socket.example.com',
+        metaSortKey: 1,
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection.map((item: { name: string }) => item.name)).toContain('design-socketio');
+    });
+
     it('handles mock server scope', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_mock',
@@ -693,6 +730,20 @@ spec:
         eventListeners: [{ id: 'listener1', eventName: 'join', desc: 'on join', isOpen: true }],
         metaSortKey: 5,
       });
+      await services.webSocketPayload.create({
+        _id: 'ws-payload_order',
+        parentId: 'ws-req_order',
+        name: 'payload-order',
+        value: '{"ping":1}',
+        mode: 'application/json',
+      });
+      await services.socketIOPayload.create({
+        _id: 'socket-io-payload_order',
+        parentId: 'socketio-req_order',
+        eventName: 'chat message',
+        ack: true,
+        args: [{ id: 'arg1', value: '"world"', mode: 'application/json' }],
+      });
 
       const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
       await services.cookieJar.update(cookieJar, {
@@ -795,9 +846,13 @@ spec:
         'headers',
         'parameters',
         'pathParameters',
+        'body',
       ]);
       expect(Object.keys(exportedWebSocket.settings)).toEqual(['encodeUrl', 'cookies', 'followRedirects']);
       expect(Object.keys(exportedWebSocket.settings.cookies)).toEqual(['store', 'send']);
+      expect(Object.keys(exportedWebSocket.body)).toEqual(['meta', 'name', 'value', 'mode']);
+      expect(Object.keys(exportedWebSocket.body.meta)).toEqual(['id', 'created', 'modified']);
+      expect(exportedWebSocket.body.meta.id).toBe('ws-payload_order');
 
       const exportedSocketIO = findItem('socketio-order');
       expect(Object.keys(exportedSocketIO)).toEqual([
@@ -810,10 +865,15 @@ spec:
         'parameters',
         'pathParameters',
         'eventListeners',
+        'body',
       ]);
       expect(Object.keys(exportedSocketIO.settings)).toEqual(['encodeUrl', 'cookies', 'path']);
       expect(Object.keys(exportedSocketIO.settings.cookies)).toEqual(['store', 'send']);
       expect(Object.keys(exportedSocketIO.eventListeners[0])).toEqual(['id', 'eventName', 'desc', 'isOpen']);
+      expect(Object.keys(exportedSocketIO.body)).toEqual(['meta', 'eventName', 'ack', 'args']);
+      expect(Object.keys(exportedSocketIO.body.meta)).toEqual(['id', 'created', 'modified']);
+      expect(exportedSocketIO.body.meta.id).toBe('socket-io-payload_order');
+      expect(Object.keys(exportedSocketIO.body.args[0])).toEqual(['id', 'value', 'mode']);
 
       expect(Object.keys(parsed.cookieJar)).toEqual(['name', 'meta', 'cookies']);
       expect(Object.keys(parsed.cookieJar.cookies[0])).toEqual([
@@ -833,6 +893,123 @@ spec:
         includePrivateEnvironments: false,
       });
       expect(result).toBe('');
+    });
+  });
+
+  describe('confidentialKeys', () => {
+    const kvPair = (name: string, value: string, isConfidential: boolean, enabled = true) => ({
+      id: `envPair_${name}_${value}`,
+      name,
+      value,
+      type: EnvironmentKvPairDataType.STRING,
+      enabled,
+      isConfidential,
+    });
+
+    it('exports the names of confidential variables for environments and folders', async () => {
+      const baseEnvironment = await services.environment.create({
+        _id: 'env_base',
+        name: 'Base Env',
+        parentId: 'wrk_test',
+        data: { token: 'secret', host: 'example.com', apiKey: 'key', renamed: 'public' },
+        environmentType: EnvironmentType.KVPAIR,
+        kvPairData: [
+          kvPair('token', 'secret', true),
+          kvPair('host', 'example.com', false),
+          kvPair('apiKey', 'key', true),
+          // only the last enabled row with a name takes effect
+          kvPair('renamed', 'old', true),
+          kvPair('renamed', 'public', false),
+          kvPair('disabled', 'value', true, false),
+        ],
+      });
+      await services.environment.create({
+        _id: 'env_sub',
+        name: 'Sub Env',
+        parentId: baseEnvironment._id,
+        data: { password: 'p@ss' },
+        environmentType: EnvironmentType.KVPAIR,
+        kvPairData: [kvPair('password', 'p@ss', true)],
+      });
+      await services.environment.create({
+        _id: 'env_json',
+        name: 'JSON Env',
+        parentId: baseEnvironment._id,
+        data: { stale: 'value' },
+        // kvPairData is not the source of truth in the JSON view
+        environmentType: EnvironmentType.JSON,
+        kvPairData: [kvPair('stale', 'value', true)],
+      });
+      await services.requestGroup.create({
+        _id: 'fld_confidential',
+        name: 'Folder',
+        parentId: 'wrk_test',
+        environment: { folderToken: 'folder-secret' },
+        environmentType: EnvironmentType.KVPAIR,
+        kvPairData: [kvPair('folderToken', 'folder-secret', true)],
+      });
+
+      const exported = YAML.parse(
+        await getInsomniaV5DataExport({ workspaceId: 'wrk_test', includePrivateEnvironments: false }),
+      );
+
+      expect(exported.environments.confidentialKeys).toEqual(['apiKey', 'token']);
+      const subEnvironments = Object.fromEntries(exported.environments.subEnvironments.map((e: any) => [e.name, e]));
+      expect(subEnvironments['Sub Env'].confidentialKeys).toEqual(['password']);
+      expect(subEnvironments['JSON Env']).not.toHaveProperty('confidentialKeys');
+      expect(exported.collection[0].confidentialKeys).toEqual(['folderToken']);
+    });
+
+    it('restores the table view and confidential flags from confidentialKeys', () => {
+      const result = importInsomniaV5Data(`
+type: collection.insomnia.rest/5.0
+name: Test Collection
+meta:
+  id: wrk_test
+collection:
+  - name: Folder
+    meta:
+      id: fld_confidential
+    environment:
+      folderToken: folder-secret
+    confidentialKeys:
+      - folderToken
+environments:
+  name: Base Env
+  meta:
+    id: env_base
+  data:
+    token: secret
+    host: example.com
+  confidentialKeys:
+    - token
+  subEnvironments:
+    - name: Sub Env
+      meta:
+        id: env_sub
+      data:
+        password: p@ss
+      confidentialKeys:
+        - password
+    - name: Plain Env
+      meta:
+        id: env_plain
+      data:
+        foo: bar
+`);
+      const byId = Object.fromEntries(result.map(doc => [doc._id, doc as any]));
+      const flags = (doc: any) =>
+        Object.fromEntries(doc.kvPairData.map((pair: any) => [pair.name, pair.isConfidential]));
+
+      expect(byId.env_base.environmentType).toBe(EnvironmentType.KVPAIR);
+      expect(flags(byId.env_base)).toEqual({ token: true, host: false });
+      expect(byId.env_sub.environmentType).toBe(EnvironmentType.KVPAIR);
+      expect(flags(byId.env_sub)).toEqual({ password: true });
+      expect(byId.fld_confidential.environmentType).toBe(EnvironmentType.KVPAIR);
+      expect(flags(byId.fld_confidential)).toEqual({ folderToken: true });
+      // files without confidentialKeys import exactly as before
+      expect(byId.env_plain).not.toHaveProperty('environmentType');
+      expect(byId.env_plain).not.toHaveProperty('kvPairData');
     });
   });
 

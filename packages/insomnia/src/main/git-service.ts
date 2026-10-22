@@ -51,7 +51,12 @@ import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import { buildInsomniaChangeReport, type InsomniaChangeReport } from '../common/insomnia-v5-change-report';
 import { checkStrictSchemaMatch } from '../common/zod/check-schema-mismatch';
 import { findUnknownFieldRanges, type UnknownFieldRange } from '../common/zod/find-unknown-field-ranges';
-import { canonicalizeInsomniaFileContent, isUndiscardableChange } from '../sync/git/canonical-file';
+import {
+  canonicalizeInsomniaFileContent,
+  getInsomniaFileFormatIssue,
+  type InsomniaFileFormatIssue,
+  isUndiscardableChange,
+} from '../sync/git/canonical-file';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -3592,6 +3597,37 @@ export const diffFileLoader = async ({
   }
 };
 
+/**
+ * Whether either side of a file's diff isn't a file as Insomnia writes it (eg. edited by hand), which the
+ * Visual view can't reliably show or act on. Kept out of `diffFileLoader` so the import -> export replay it
+ * takes doesn't hold up showing the diff.
+ */
+export const fileFormatIssueLoader = async ({
+  projectId,
+  workspaceId,
+  filepath,
+  staged,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  staged: boolean;
+}): Promise<InsomniaFileFormatIssue | null> => {
+  try {
+    await getGitRepository({ workspaceId, projectId });
+    const fileStatus = await GitVCS.fileStatus(filepath);
+    // The raw contents: the diff's `before` is migrated and reordered for display
+    const sides = staged
+      ? [fileStatus.rawHead, fileStatus.rawStage]
+      : [fileStatus.rawStage || fileStatus.rawHead, fileStatus.workdir];
+    const issues = await Promise.all(sides.map(getInsomniaFileFormatIssue));
+    return issues.includes('invalid') ? 'invalid' : issues.includes('non-canonical') ? 'non-canonical' : null;
+  } catch (err) {
+    console.warn('[git] Failed to check the format of the file', filepath, err);
+    return null;
+  }
+};
+
 interface GitRepoFile {
   id: string;
   name: string;
@@ -4110,6 +4146,7 @@ export interface GitServiceAPI {
   stagePartialContent: typeof stagePartialContentAction;
   discardPartialContent: typeof discardPartialContentAction;
   diffFileLoader: typeof diffFileLoader;
+  fileFormatIssueLoader: typeof fileFormatIssueLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
@@ -4226,6 +4263,9 @@ export const registerGitServiceAPI = () => {
     discardPartialContentAction(options),
   );
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
+  ipcMainHandle('git.fileFormatIssueLoader', (_, options: Parameters<typeof fileFormatIssueLoader>[0]) =>
+    fileFormatIssueLoader(options),
+  );
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
     getRepositoryDirectoryTree(options),
   );
