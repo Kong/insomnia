@@ -837,33 +837,6 @@ const ProjectNavigationSidebarInner = (
         });
       });
     },
-    sidebar_deleteItem: event => {
-      // Only act when a row itself is focused, not an inner control (button/input), so Backspace keeps editing text.
-      const active = document.activeElement;
-      if (!(active instanceof HTMLElement) || active.closest('[data-key]') !== active) {
-        return;
-      }
-      const { focusedItem } = getFocusedItem();
-      if (
-        !focusedItem ||
-        (focusedItem.kind !== 'project' &&
-          focusedItem.kind !== 'workspace' &&
-          focusedItem.kind !== 'collectionChild' &&
-          focusedItem.kind !== 'pinnedRequest')
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.keyboardShortcutUsed,
-        properties: {
-          source: 'navigation-sidebar',
-          action: 'deleteItem',
-        },
-      });
-      showDeleteModal(focusedItem);
-    },
   });
 
   const { hasKonnectPat } = settings;
@@ -991,7 +964,7 @@ const ProjectNavigationSidebarInner = (
             className="group/tree flex-1 overflow-y-auto pb-(--padding-sm)"
             data-testid="project-navigation-tree-container"
             onKeyDownCapture={(e: React.KeyboardEvent) => {
-              if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') {
+              if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Delete') {
                 return;
               }
               const active = document.activeElement;
@@ -1001,6 +974,29 @@ const ProjectNavigationSidebarInner = (
               // Only act when the row itself is focused, not an inner control (button/input).
               const rowEl = active.closest('[data-key]');
               if (!rowEl || rowEl !== active) {
+                return;
+              }
+              if (e.key === 'Delete') {
+                const { focusedItem } = getFocusedItem();
+                if (
+                  !focusedItem ||
+                  (focusedItem.kind !== 'project' &&
+                    focusedItem.kind !== 'workspace' &&
+                    focusedItem.kind !== 'collectionChild' &&
+                    focusedItem.kind !== 'pinnedRequest')
+                ) {
+                  return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.keyboardShortcutUsed,
+                  properties: {
+                    source: 'navigation-sidebar',
+                    action: 'deleteItem',
+                  },
+                });
+                showDeleteModal(focusedItem);
                 return;
               }
               const docId = (active.dataset.key || '').replace(/^pinned-request-/, '');
