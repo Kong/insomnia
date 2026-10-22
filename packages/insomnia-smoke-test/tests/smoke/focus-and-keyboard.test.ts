@@ -10,6 +10,7 @@ import { test } from '../../playwright/test';
 // - create/rename/settings dialogs focus the Name field
 // - the navigation sidebar expands/collapses folders with Left/Right arrows
 // - Cmd/Ctrl-N adds the new request inside the selected folder
+// - Delete on a focused sidebar row asks to delete it; Backspace never does
 //
 // CodeMirror-backed editors (OneLineEditor) expose focus via `data-focused="on"` on their
 // `.editor__container`, which is what these tests assert against.
@@ -148,6 +149,37 @@ test.describe('Focus and keyboard navigation', () => {
 
       await folderRow.press('ArrowRight');
       await expect.soft(page.getByLabel('Collapse test folder')).toBeVisible();
+    });
+
+    test('Delete on a focused sidebar row opens the delete confirmation, Backspace does not', async ({ page }) => {
+      const folderRow = page.locator('[role="row"]:has([data-testid="request-node-test folder"])');
+      const deleteDialog = page.getByRole('dialog').filter({ hasText: 'Delete Folder' });
+
+      // Backspace must not delete (it's reserved for editing text), even with a row focused.
+      await folderRow.focus();
+      await folderRow.press('Backspace');
+      await expect.soft(deleteDialog).toBeHidden();
+
+      // Delete on the focused row asks for confirmation; cancelling keeps the folder.
+      await folderRow.press('Delete');
+      await expect.soft(deleteDialog).toBeVisible();
+      await deleteDialog.getByRole('button', { name: 'Cancel' }).click();
+      await expect.soft(deleteDialog).toBeHidden();
+      await expect.soft(page.getByTestId('request-node-test folder')).toBeVisible();
+
+      // Confirming removes it.
+      await folderRow.press('Delete');
+      await deleteDialog.getByRole('button', { name: 'Delete' }).click();
+      await expect.soft(page.getByTestId('request-node-test folder')).toBeHidden();
+    });
+
+    test('Delete inside the sidebar filter edits text and does not open the delete confirmation', async ({
+      page,
+      insomnia,
+    }) => {
+      await insomnia.navigationSidebar.fillFilter('test');
+      await insomnia.navigationSidebar.filterInput.press('Delete');
+      await expect.soft(page.getByRole('dialog')).toBeHidden();
     });
 
     test('Cmd/Ctrl-N adds the request inside the selected folder', async ({ page }) => {
