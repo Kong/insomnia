@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { type ConfidentialValuePolicy, getConfidentialValuePolicy, shouldMaskExternalVaultTag } from './confidential-value-policy';
+import {
+  CONFIDENTIAL_MASK_VALUE,
+  type ConfidentialValuePolicy,
+  getConfidentialValuePolicy,
+  shouldMaskExternalVaultTag,
+  shouldShowRevealToggle,
+} from './confidential-value-policy';
 import type { RenderPurpose } from './types';
 
 const purposes: (RenderPurpose | undefined)[] = [
@@ -78,5 +84,20 @@ describe('shouldMaskExternalVaultTag', () => {
     expect(
       shouldMaskExternalVaultTag({ pluginName: PLUGIN, tagName: TAG, renderPurpose: 'preview', settings: { hideSecretValuesInPreviewAndConsole: true, forceReveal: true } }),
     ).toBe(false);
+  });
+});
+
+describe('shouldShowRevealToggle', () => {
+  it('shows the toggle when the masked preview hid a confidential value', () => {
+    expect(shouldShowRevealToggle(false, { isRevealed: false, preview: `Bearer ${CONFIDENTIAL_MASK_VALUE}` })).toBe(true);
+  });
+
+  it('hides the toggle when the masked preview has nothing masked', () => {
+    expect(shouldShowRevealToggle(true, { isRevealed: false, preview: 'Bearer public-token' })).toBe(false);
+  });
+
+  it('keeps the previous verdict while revealed, since real values carry no mask', () => {
+    expect(shouldShowRevealToggle(true, { isRevealed: true, preview: 'top-secret' })).toBe(true);
+    expect(shouldShowRevealToggle(false, { isRevealed: true, preview: 'top-secret' })).toBe(false);
   });
 });

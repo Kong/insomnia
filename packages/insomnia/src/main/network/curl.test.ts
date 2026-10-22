@@ -6,9 +6,29 @@ import path from 'node:path';
 import { Curl } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import { services } from 'insomnia-data';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerCurlHandlers } from './curl';
+
+// Captures every line written to a `.timeline` file so a test can assert what reached disk.
+// Spies on the module-level `fs`, so it relies on the `afterEach` restore below: without it a
+// later call would wrap the previous spy instead of the real function.
+const captureTimelineWrites = () => {
+  const lines: string[] = [];
+  const realCreateWriteStream = fs.createWriteStream;
+  vi.spyOn(fs, 'createWriteStream').mockImplementation((filePath: any, ...rest: any[]) => {
+    const stream = realCreateWriteStream.call(fs, filePath, ...rest);
+    if (String(filePath).endsWith('.timeline')) {
+      const originalWrite = stream.write.bind(stream);
+      stream.write = (chunk: any, ...args: any[]) => {
+        lines.push(String(chunk));
+        return originalWrite(chunk, ...args);
+      };
+    }
+    return stream;
+  });
+  return lines;
+};
 
 // `openCurlConnection` isn't exported (it's only wired up via `ipcMainHandle`), so we
 // register the real handlers once and pull the handler function out of the mocked
@@ -52,6 +72,10 @@ describe('openCurlConnection', () => {
     await services.settings.getOrCreate();
     const workspace = await services.workspace.create();
     workspaceId = workspace._id;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   const setOptCallsFor = (spy: ReturnType<typeof vi.spyOn>, option: string) =>
@@ -104,6 +128,49 @@ describe('openCurlConnection', () => {
 
     const postFieldsCalls = setOptCallsFor(setOptSpy, Curl.option.POSTFIELDS);
     expect(postFieldsCalls[0][1]).toBe('{"hello":"world"}');
+  });
+
+  // Both redaction tests register `Enable SSL validation` as the confidential value: it is a line
+  // `createConfiguredCurlInstance` always pushes onto the debug timeline (libcurl-promise.ts, from
+  // the default `settings.validateSSL: true`), so it is a value guaranteed to reach disk and can be
+  // asserted on in both directions without standing up a real connection.
+  //
+  // Regression: the value set used to be merged into, never replaced, and an empty array was a
+  // no-op. A connect that died before its cleanup therefore left its values behind forever, so a
+  // later connect kept redacting with them -- even after the user turned the hide setting off,
+  // which is exactly when the renderer sends an empty array.
+  it('starts a reconnect from a fresh value set, so values leaked by a failed connect stop redacting', async () => {
+    vi.spyOn(Curl.prototype, 'perform').mockImplementation(() => {});
+    const renderedRequest = baseRenderedRequest();
+    // The CA read sits before openCurlConnection's try block, so this rejection escapes without
+    // running the cleanup -- the connect registered its values and nothing ever clears them.
+    await services.caCertificate.create({ parentId: workspaceId, path: '/nonexistent/ca.pem' });
+    await expect(
+      openCurlConnection({}, { workspaceId, renderedRequest, sensitiveValues: ['Enable SSL validation'] }),
+    ).rejects.toThrow();
+
+    // Reconnect with the hide setting off: the renderer sends nothing, so nothing may be redacted.
+    // A second workspace just avoids the same CA certificate failing this connect too.
+    const { _id: otherWorkspaceId } = await services.workspace.create();
+    const lines = captureTimelineWrites();
+    await openCurlConnection({}, { workspaceId: otherWorkspaceId, renderedRequest, sensitiveValues: [] });
+
+    expect(lines.join('')).toContain('Enable SSL validation');
+    expect(lines.join('')).not.toContain('••••••');
+  });
+
+  it('redacts timeline lines with the values the current connect registered', async () => {
+    vi.spyOn(Curl.prototype, 'perform').mockImplementation(() => {});
+    const lines = captureTimelineWrites();
+
+    await openCurlConnection({}, {
+      workspaceId,
+      renderedRequest: baseRenderedRequest(),
+      sensitiveValues: ['Enable SSL validation'],
+    });
+
+    expect(lines.join('')).not.toContain('Enable SSL validation');
+    expect(lines.join('')).toContain('••••••');
   });
 
   it('keys the connection registry by the rendered request id, rejecting a second connect for the same id', async () => {

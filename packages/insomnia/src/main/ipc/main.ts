@@ -33,6 +33,7 @@ import type {
   ModelConfig,
 } from '~/common/plugins/types';
 import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
+import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
@@ -559,8 +560,10 @@ export function registerMainHandlers() {
   );
 
   ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
-    const snippet = new HTTPSnippet(options.har as any);
-    return snippet.convert(options.target, options.client) || '';
+    return convertHarRequestKeepingMask(
+      options.har as any,
+      har => new HTTPSnippet(har).convert(options.target, options.client) || '',
+    );
   });
 
   ipcMainHandle('getCodeSnippetTargets', async () => {

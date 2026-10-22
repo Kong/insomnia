@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { getFixturePath, loadFixture, seedSettings } from '../../playwright/paths';
 import { test as baseTest } from '../../playwright/test';
 
-// An external vault tag's result is a confidential value: with "Hide Secret Values in
+// An external vault tag's result is a confidential value: with "Hide Confidential values in
 // Preview/Console" on (its default) it is masked in the tag preview and redacted out of the
 // timeline the Console tab renders. This spec is about the vault integration itself -- that
 // the provider value is really fetched and really reaches the request -- so it turns the

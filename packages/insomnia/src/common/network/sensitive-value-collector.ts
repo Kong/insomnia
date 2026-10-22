@@ -32,7 +32,22 @@
 // maskOrDecryptVaultDataIfNecessary({ ..., sensitiveValueCollector }) inside tryToExecuteScript,
 // so those register into the same collector before their console.log output is written.
 //
-// WebSocket/SocketIO timeline redaction is deferred to a follow-up phase (T10).
+// WebSocket/SocketIO/SSE/MCP timeline & event-log redaction (T10) works differently, because those
+// writes happen in the main process, outside any SendActionRuntime/appendTimeline abstraction:
+//   renderer: tryToInterpolateRequestAndCollectSensitiveValues / renderRealtimeConnectPayload build a
+//     collector the same way, then read collector.values (a snapshot array) and send it over IPC
+//     alongside the already-rendered request (webSocket.open/event.send, socketIO.open/event.send,
+//     curl.open, mcp.connect). Setting OFF ⇒ collector is null ⇒ an empty array is sent ⇒ main
+//     redacts nothing.
+//   main: websocket.ts/socket-io.ts/curl.ts keep a Map<requestId, Set<string>>, mcp/common.ts keeps
+//     a Set<string> on ConnectionContext. Opening a connection *replaces* that request's set (MCP
+//     builds a fresh ConnectionContext instead); each later send merges its own values in. Replacing
+//     matters because a connect that never reaches its cleanup leaves its set behind, and a merge
+//     could neither drop those stale values nor empty the set once the setting is off. The set is
+//     used to redact every timeline/event-log write before it reaches disk via
+//     redactConfidentialText (single-line fields) or redactDeep (nested JSON payloads).
+// gRPC Stream tab messages never leave the renderer, so getRenderedGrpcRequestMessage takes a
+// sensitiveValueCollector directly and the caller redacts the display-only copy of the text.
 
 import type { RequestTestResult } from 'insomnia-data';
 
@@ -40,6 +55,7 @@ import type { SendActionRuntime } from '~/common/network/send-action-runtime';
 import { CONFIDENTIAL_MASK_VALUE } from '~/common/templating/confidential-value-policy';
 import type { SensitiveValueCollector } from '~/common/templating/types';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
+import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 
 
 export type { SensitiveValueCollector };
@@ -53,9 +69,46 @@ export function withRedaction(
   }
 
   return {
-    appendTimeline: (timelinePath, logs) => runtime.appendTimeline(timelinePath, logs.map(line => collector.redact(line))),
-    appendTimelineOnError: (timelinePath, data) => runtime.appendTimelineOnError(timelinePath, collector.redact(data)),
+    appendTimeline: (timelinePath, logs) =>
+      runtime.appendTimeline(timelinePath, logs.map(line => redactTimelineLine(line, collector))),
+    appendTimelineOnError: (timelinePath, data) =>
+      runtime.appendTimelineOnError(
+        timelinePath,
+        data
+          .split('\n')
+          .map(line => redactTimelineLine(line, collector))
+          .join('\n'),
+      ),
   };
+}
+
+// Timeline lines are NDJSON entries ({ value, name, timestamp }). Redacting the raw line would also
+// hit the JSON structure: a confidential `1` turns `"timestamp":1760941234567` into
+// `"timestamp":••••••76094••••••234567`, the line no longer parses, and deserializeNDJSON silently
+// drops it -- leaving the Console tab empty. So the line is parsed and only its string leaves are
+// redacted (redactDeep never touches numbers or keys) before it is serialized again. `name` is the
+// entry type the Console tab dispatches on, so it is kept as is. Lines that aren't a JSON object
+// fall back to plain text redaction.
+//
+// Some callers hand over lines that still carry their NDJSON newline (a script's console output
+// does; serializeNDJSON().split('\n') does not), and appendTimelineLines joins with '\n' without
+// adding a terminator. Re-serializing would drop that newline, gluing the batch's last line to the
+// first line of the next append -- both then fail to parse and vanish from the Console tab. So the
+// trailing whitespace is kept exactly as it came in.
+export function redactTimelineLine(line: string, collector: SensitiveValueCollector): string {
+  const content = line.trimEnd();
+  const lineEnding = line.slice(content.length);
+  let entry: unknown;
+  try {
+    entry = JSON.parse(content);
+  } catch {
+    return collector.redact(content) + lineEnding;
+  }
+  if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+    return collector.redact(content) + lineEnding;
+  }
+  const redacted = redactDeep(entry as Record<string, unknown>, collector.values);
+  return JSON.stringify('name' in entry ? { ...redacted, name: entry.name } : redacted) + lineEnding;
 }
 
 // Registers every scalar leaf of `value` that can show up verbatim in a timeline line.
@@ -145,6 +198,34 @@ export function redactConfidentialText(text: string, values: readonly string[]):
   return result;
 }
 
+// A derived credential (base64(user:pass) for Basic Auth) does not contain the plaintext inputs,
+// so it never matches the values the renderer registered and has to be registered separately.
+// Only do that when an input actually was confidential -- registering it unconditionally would
+// mask every Basic Auth header on every surface, including credentials nobody marked.
+//
+// No need to check the hide setting: with it off nothing is ever registered, so `values` is empty
+// and nothing looks confidential.
+export function isDerivedFromConfidentialValues(
+  values: readonly string[],
+  inputs: (string | undefined)[],
+): boolean {
+  return inputs.some(input => !!input && redactConfidentialText(input, values) !== input);
+}
+
+// The Basic Auth header value to register alongside the confidential credentials it was built from,
+// or null when neither credential is confidential. Shared by every place that sends Basic Auth (request
+// render, SSE curl, WebSocket, MCP url bar, OAuth2 token request) so the guard can't drift between them;
+// callers differ only in where they register the value.
+export function getConfidentialBasicAuthHeaderValue(
+  values: readonly string[],
+  { username, password, useISO88591 }: { username?: string; password?: string; useISO88591?: boolean },
+): string | null {
+  if (!isDerivedFromConfidentialValues(values, [username, password])) {
+    return null;
+  }
+  return getBasicAuthHeader(username, password, useISO88591 ? 'latin1' : 'utf8').value;
+}
+
 // A registered value rarely reaches disk in its raw form. Timeline lines are written as NDJSON,
 // so JSON.stringify escapes `"`, `\` and control characters, and a secret interpolated into a
 // URL is percent-encoded by the time curl echoes it back. `replaceAll` is a literal match, so a
@@ -167,6 +248,45 @@ function expandEncodedVariants(value: string): string[] {
   return variants.filter(variant => variant.length > 0);
 }
 
+// Recursively redacts string leaves of a plain object/array, preserving shape. Used where a field
+// (e.g. a WebSocket/MCP message payload) must be redacted *before* JSON.stringify so that quotes,
+// backslashes and newlines inside a registered value don't need to match their escaped form.
+// Other non-plain-object values (Buffer, ArrayBuffer, class instances, etc.) pass through
+// unchanged: they're either binary (nothing to redact) or not the kind of payload this covers.
+//
+// Errors are the exception. Event-log writers put the raw Error on the event's `error` field, and
+// JSON.stringify writes an Error's own *enumerable* properties -- socket.io-client attaches the
+// server's handshake data as `err.data` -- so an Error left alone can still put a registered value
+// on disk. Every caller only ever JSON.stringify's the result, so a plain object carrying the same
+// own enumerable properties serializes identically. A custom `toJSON` would not survive that swap,
+// so Errors defining one are left untouched.
+export function redactDeep<T>(value: T, values: readonly string[]): T {
+  if (typeof value === 'string') {
+    return redactConfidentialText(value, values) as unknown as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map(item => redactDeep(item, values)) as unknown as T;
+  }
+  if (value instanceof Error) {
+    if (typeof (value as { toJSON?: unknown }).toJSON === 'function') {
+      return value;
+    }
+    const result: Record<string, any> = {};
+    for (const [key, v] of Object.entries(value)) {
+      result[key] = redactDeep(v, values);
+    }
+    return result as unknown as T;
+  }
+  if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    const result: Record<string, any> = {};
+    for (const [key, v] of Object.entries(value)) {
+      result[key] = redactDeep(v, values);
+    }
+    return result as T;
+  }
+  return value;
+}
+
 export function createSensitiveValueCollector(hideSecretValues: boolean): SensitiveValueCollector | null {
   if (!hideSecretValues) {
     return null;
@@ -187,6 +307,9 @@ export function createSensitiveValueCollector(hideSecretValues: boolean): Sensit
     },
     get isEmpty() {
       return values.size === 0;
+    },
+    get values() {
+      return [...values];
     },
   };
 }

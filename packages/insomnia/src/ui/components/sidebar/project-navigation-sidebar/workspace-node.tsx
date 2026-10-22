@@ -17,6 +17,7 @@ interface WorkspaceNodeProps {
   highlighted?: boolean;
   nodeRef?: Ref<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
   onRename: () => void;
+  onDelete: () => void;
 }
 
 export const WorkspaceNode = ({
@@ -27,6 +28,7 @@ export const WorkspaceNode = ({
   highlighted,
   nodeRef,
   onRename,
+  onDelete,
 }: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId, hasUncommittedChanges, hasUnpushedChanges } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
@@ -79,6 +81,7 @@ export const WorkspaceNode = ({
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
           onRename={onRename}
+          onDelete={onDelete}
         />
       </div>
     </div>

@@ -7,7 +7,7 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 // End-to-end check that confidential values never reach disk while
-// "Hide Secret Values in Preview/Console" is on (its default).
+// "Hide Confidential values in Preview/Console" is on (its default).
 //
 // Unit tests cover the redaction helpers, but nothing covers the wiring: the collector is
 // built in the send route, filled from several places (environment pre-fill, vault decrypt,
@@ -22,6 +22,9 @@ import { test } from '../../playwright/test';
 const EXISTING_VALUE = 'confidential-value-alpha';
 const ROTATED_VALUE = 'confidential-value-rotated';
 const MASK = '••••••';
+// The derived form of the confidential ws request's credentials. Computed rather than
+// written out, so it cannot drift from the fixture if EXISTING_VALUE ever changes.
+const BASIC_AUTH_BASE64 = Buffer.from(`user:${EXISTING_VALUE}`, 'utf8').toString('base64');
 
 // Reads every timeline file, not just the newest: a chained request writes one timeline for
 // itself and another for the dependent request it re-sends, and both have to be clean.
@@ -36,7 +39,7 @@ const readAllTimelines = (dataPath: string) => {
 
 // Imports the fixture, marks `token` confidential through the editor, and sends the request.
 // Identical in both specs below, so the only variable between them is the setting.
-const runRedactionRequest = async (app: any, page: Page, insomnia: any) => {
+const importAndMarkConfidential = async (app: any, page: Page) => {
   const text = await loadFixture('confidential-redaction-collection.yaml');
   await app.evaluate(async ({ clipboard }: any, text: string) => clipboard.writeText(text), text);
 
@@ -62,6 +65,10 @@ const runRedactionRequest = async (app: any, page: Page, insomnia: any) => {
   await closeButton.click();
   await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
   await page.getByLabel('Manage API collection environments').press('Escape');
+};
+
+const runRedactionRequest = async (app: any, page: Page, insomnia: any) => {
+  await importAndMarkConfidential(app, page);
 
   await insomnia.navigationSidebar.clickRequestOrFolder('redaction request');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -116,6 +123,28 @@ test.describe('confidential value redaction', () => {
     expect.soft(timelines, 'nor the value the after-response script wrote').not.toContain(ROTATED_VALUE);
   });
 
+  // The Basic Auth header is base64(user:pass), which does not contain the plaintext
+  // password, so it is not covered by the values the renderer registered. The main process
+  // has to register that derived form itself -- but only when an input really was
+  // confidential, or it masks credentials nobody marked. This spec pins the first half;
+  // websocket.test.ts, which asserts a literal credential stays readable, pins the second.
+  test('redacts a Basic Auth header derived from a confidential value', async ({ app, page, dataPath, insomnia }) => {
+    await importAndMarkConfidential(app, page);
+
+    await insomnia.navigationSidebar.clickRequestOrFolder('confidential ws');
+    await page.getByText('Connect', { exact: true }).click();
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText(
+      '101 Switching Protocols',
+    );
+    await page.getByRole('tab', { name: 'Console' }).click();
+
+    const timelines = readAllTimelines(dataPath);
+    expect.soft(timelines, 'the base64 of the confidential credentials must not reach disk').not.toContain(
+      BASIC_AUTH_BASE64,
+    );
+    expect.soft(timelines, 'the header should be masked instead').toContain(`authorization: ${MASK}`);
+  });
+
   // Negative control for the spec above: with the setting off, the identical flow must write
   // the same values to disk in plaintext. That is the documented, asymmetric-by-design
   // behaviour -- turning the setting off persists secrets locally, it is not just a visual
@@ -126,9 +155,16 @@ test.describe('confidential value redaction', () => {
     // click + poll rather than uncheck(): the checkbox is controlled by the root loader's
     // settings, so it only flips once the patch has round-tripped. uncheck() verifies the
     // state immediately after its click and fails on that gap.
-    const hideSecretValues = page.getByLabel('Hide Secret Values in Preview/Console');
+    const hideSecretValues = page.getByLabel('Hide Confidential values in Preview/Console');
     await hideSecretValues.click();
     await expect.soft(hideSecretValues).not.toBeChecked();
+    // Turning the setting off raises a notice that confidential values now persist locally.
+    // Dismiss it before touching the preferences dialog underneath, or its own close button
+    // makes the one below ambiguous.
+    const visibilityNotice = page.getByText('Confidential Variables Are Now Visible', { exact: true });
+    await visibilityNotice.waitFor();
+    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+    await visibilityNotice.waitFor({ state: 'hidden' });
     await page.getByRole('button', { name: 'Close' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 

@@ -37,6 +37,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@seald-io/nedb": "^4.1.1",
     "clone": "^2.1.2",
     "deep-equal": "2.2.3",

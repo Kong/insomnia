@@ -57,6 +57,7 @@ import { getSidebarGridListItemId } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
 import type { FlatItem } from './types';
+import { useDeleteModal } from './use-delete-modal';
 import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
 import { useRenameModal } from './use-rename-modal';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
@@ -658,6 +659,15 @@ const ProjectNavigationSidebarInner = (
   // The item that the shortcut create dropdown is targeting by keyboard up and down arrow keys
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
   const showRenameModal = useRenameModal();
+  const { showDeleteModal, deleteModal } = useDeleteModal({
+    onDeleteProject: projectId => deleteProjectFetcher.submit({ organizationId, projectId }),
+    // Leave focus mode when its collection is deleted, otherwise the view is left empty
+    onWorkspaceDeleted: workspaceId => {
+      if (workspaceId === focusedWorkspaceId) {
+        clearFocusState();
+      }
+    },
+  });
   const visibleFlatItems = useMemo(() => {
     const notHidden = flatItems.filter(i => !i.hidden);
     if (!focusedWorkspaceId) {
@@ -827,6 +837,33 @@ const ProjectNavigationSidebarInner = (
         });
       });
     },
+    sidebar_deleteItem: event => {
+      // Only act when a row itself is focused, not an inner control (button/input), so Backspace keeps editing text.
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || active.closest('[data-key]') !== active) {
+        return;
+      }
+      const { focusedItem } = getFocusedItem();
+      if (
+        !focusedItem ||
+        (focusedItem.kind !== 'project' &&
+          focusedItem.kind !== 'workspace' &&
+          focusedItem.kind !== 'collectionChild' &&
+          focusedItem.kind !== 'pinnedRequest')
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.keyboardShortcutUsed,
+        properties: {
+          source: 'navigation-sidebar',
+          action: 'deleteItem',
+        },
+      });
+      showDeleteModal(focusedItem);
+    },
   });
 
   const { hasKonnectPat } = settings;
@@ -923,6 +960,7 @@ const ProjectNavigationSidebarInner = (
                       isOpen={isFocusedWorkspaceMenuOpen}
                       onOpenChange={setIsFocusedWorkspaceMenuOpen}
                       onRename={() => showRenameModal(focusedWorkspaceItem)}
+                      onDelete={() => showDeleteModal(focusedWorkspaceItem)}
                     />
                   )}
                 </div>
@@ -1145,12 +1183,7 @@ const ProjectNavigationSidebarInner = (
                               return newProjectWorkspaceSortOrder;
                             })
                           }
-                          onDeleteProject={projectId =>
-                            deleteProjectFetcher.submit({
-                              organizationId,
-                              projectId,
-                            })
-                          }
+                          onDelete={() => showDeleteModal(item)}
                         />
                       )}
 
@@ -1170,6 +1203,7 @@ const ProjectNavigationSidebarInner = (
                           highlighted={item.doc._id === onboardingEnvWorkspaceId}
                           nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
                           onRename={() => showRenameModal(item)}
+                          onDelete={() => showDeleteModal(item)}
                         />
                       )}
 
@@ -1181,6 +1215,7 @@ const ProjectNavigationSidebarInner = (
                           onToggleFolder={toggleRequestGroups}
                           depthOffset={treeDepthOffset}
                           onRename={() => showRenameModal(item)}
+                          onDelete={() => showDeleteModal(item)}
                         />
                       )}
 
@@ -1237,6 +1272,7 @@ const ProjectNavigationSidebarInner = (
       {showSidebarFocusOnboarding && focusedWorkspaceHeaderNode && (
         <SidebarFocusOnboarding triggerElement={focusedWorkspaceHeaderNode} onDismiss={dismissSidebarFocusOnboarding} />
       )}
+      {deleteModal}
     </div>
   );
 };

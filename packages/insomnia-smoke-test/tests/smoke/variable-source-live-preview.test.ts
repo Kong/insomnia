@@ -254,6 +254,48 @@ test.describe('Variable source and live preview across environment levels', () =
     });
   }
 
+  test('modal source follows the edited template and hides for non-variable content', async ({ page, insomnia }) => {
+    // This scenario's variable comes from the folder environment, while subOnlyVar
+    // comes from the collection environment: switching between them changes the source.
+    const folderScenario = SCENARIOS[2];
+    await insomnia.navigationSidebar.clickRequestOrFolder(folderScenario.request);
+    await selectEnvironment(page, insomnia, folderScenario);
+    await page.getByText('Body', { exact: true }).click();
+
+    const { modal, sourceRow, livePreview } = await openVariableModal(page, folderScenario.varSnippet);
+    await expect.soft(sourceRow).toContainText(folderScenario.source);
+    await expect.soft(livePreview).toHaveValue(folderScenario.value, { timeout: 15_000 });
+
+    // Switching the selected variable moves both the preview and the source.
+    const environmentVariable = modal.getByLabel('Environment Variable');
+    await environmentVariable.selectOption('{{ _.subOnlyVar }}');
+    await expect.soft(sourceRow).toContainText('Collection Environment : Base Environment');
+    await expect.soft(livePreview).toHaveValue('subOnly_base', { timeout: 15_000 });
+
+    // Editing a custom template re-derives the source on every change. Extra spaces
+    // keep the custom input mounted, so this exercises editing rather than a switch.
+    await environmentVariable.selectOption({ label: '-- Custom --' });
+    const customTemplate = modal.locator('input[type="text"]');
+    await customTemplate.fill('plain text');
+    await expect.soft(livePreview).toHaveValue('plain text');
+    await expect.soft(sourceRow).toBeHidden();
+
+    // Inherited Object.prototype keys are not variables: no Source row.
+    await customTemplate.fill('{{ constructor }}');
+    await expect.soft(sourceRow).toBeHidden();
+
+    await customTemplate.fill('{{  _.subOnlyVar  }}');
+    await expect.soft(sourceRow).toContainText('Collection Environment : Base Environment');
+
+    // Open must use the freshly derived source, not the one captured when the modal opened.
+    await sourceRow.getByTestId('variable-source-open').click();
+    const environmentsModal = page.getByRole('dialog').filter({ hasText: 'Manage Environments' });
+    await expect.soft(environmentsModal).toBeVisible();
+    await expect
+      .soft(page.getByRole('grid', { name: 'Environments' }).getByRole('row', { name: 'Base Environment' }))
+      .toHaveAttribute('aria-selected', 'true');
+  });
+
   test('hovering an undefined variable shows the render error instead of vanishing', async ({ page, insomnia }) => {
     // The global env is NOT activated here, so 'New Request' has neighboring
     // defined chips (exampleString -> collection base env) and error chips

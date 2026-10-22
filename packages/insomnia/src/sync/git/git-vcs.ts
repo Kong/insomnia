@@ -348,7 +348,7 @@ export class GitVCS {
 
     // Use isomorphic-git's walk API to traverse the HEAD, WORKDIR, and STAGE trees for the given file.
     // This is adapted from isomorphic-git's statusMatrix logic.
-    const [blobs]: [[string, string, string, string]] = await git.walk({
+    const [blobs]: [[string, string, string, string, string, string, string]] = await git.walk({
       ...baseOpts,
       // trees: HEAD (last commit), WORKDIR (current files), STAGE (index)
       trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
@@ -451,7 +451,7 @@ export class GitVCS {
         });
 
         // Return an array: [filepath, headContent, workdirContent, stageContent]
-        return [filepath, ...blobsAsStrings];
+        return [filepath, ...blobsAsStrings, headOid ?? null, workdirOid ?? null, stageOid ?? null];
       },
     });
 
@@ -469,6 +469,11 @@ export class GitVCS {
       stage: cleanedStage, // Content from staging area (index)
       rawHead: blobs[1], // Content from HEAD exactly as committed, before migration/normalization
       rawStage: blobs[3], // Content from staging area exactly as staged, before migration/normalization
+      oids: {
+        head: blobs[4],
+        workdir: blobs[5],
+        stage: blobs[6],
+      },
     };
 
     return diff;

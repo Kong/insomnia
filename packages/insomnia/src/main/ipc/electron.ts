@@ -289,6 +289,7 @@ export type RendererOnChannels =
   | 'nunjucks-context-menu-command'
   | 'nunjucks-context-menu-command'
   | 'reload-plugins'
+  | 'clear-all-response-history'
   | 'shell:open'
   | 'show-notification'
   | 'show-toast'

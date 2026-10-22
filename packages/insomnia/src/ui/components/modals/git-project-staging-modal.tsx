@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -56,6 +57,7 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { GitChangeAnalysis } from '~/ui/components/git/git-change-analysis';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
 import { ConfirmUnknownFieldsCommitModal } from '~/ui/components/modals/confirm-unknown-fields-commit-modal';
@@ -69,6 +71,7 @@ import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
 import { GitPullRequiredModal } from './git-pull-required-modal';
+import { createActionGate } from './visual-diff/action-gate';
 import { EntityDiffList } from './visual-diff/entity-diff-list';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
@@ -1553,6 +1556,9 @@ const OriginalGitProjectStagingModal: FC<
   const [showConfirmDiscardAndPullModal, setShowConfirmDiscardAndPullModal] = React.useState(false);
   const [discardData, setDiscardData] = React.useState<DiscardData | null>(null);
   const [diffViewMode, setDiffViewMode] = useState<'text' | 'visual'>('text');
+  const [isActionInFlight, setIsActionInFlight] = useState(false);
+  // One stage / unstage / discard at a time, across the file-level buttons and the Visual view's cards.
+  const actionGate = useMemo(() => createActionGate(setIsActionInFlight), []);
 
   const gitChangesFetcher = useGitProjectChangesFetcher();
   const gitCredentialsFetcher = useGitCredentialsLoaderFetcher();
@@ -1700,19 +1706,25 @@ const OriginalGitProjectStagingModal: FC<
     ]);
   }
 
+  // File-level actions don't depend on the diff on screen, so they wait for an action in flight rather
+  // than being dropped.
   async function stageChanges(paths: string[]) {
-    await stageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
+    await actionGate.runAfter(() =>
+      stageChangesFetcher.submit({
+        projectId,
+        paths,
+      }),
+    );
     afterStageOrUnstage(paths, true);
   }
 
   async function unstageChanges(paths: string[]) {
-    await unstageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
+    await actionGate.runAfter(() =>
+      unstageChangesFetcher.submit({
+        projectId,
+        paths,
+      }),
+    );
     afterStageOrUnstage(paths, false);
   }
 
@@ -1923,6 +1935,7 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
+                      {previewDiffItem.diagnostics && <GitChangeAnalysis diagnostics={previewDiffItem.diagnostics} />}
                       {diffViewMode === 'text' ? (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor
@@ -1936,7 +1949,13 @@ const OriginalGitProjectStagingModal: FC<
                         <EntityDiffList
                           before={previewDiffItem.diff.before}
                           after={previewDiffItem.diff.after}
+                          projectId={projectId}
+                          filepath={previewDiffItem.filepath}
+                          staged={previewDiffItem.staged}
+                          onEntityChanged={afterEntityChange}
                           onShowTextView={() => setDiffViewMode('text')}
+                          actionGate={actionGate}
+                          isActionInFlight={isActionInFlight}
                         />
                       )}
                     </div>
@@ -1962,10 +1981,12 @@ const OriginalGitProjectStagingModal: FC<
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
           onConfirm={async () => {
-            await undoUnstagedChangesFetcher.submit({
-              projectId,
-              paths: [...changes.unstaged.map(entry => entry.path), ...changes.staged.map(entry => entry.path)],
-            });
+            await actionGate.runAfter(() =>
+              undoUnstagedChangesFetcher.submit({
+                projectId,
+                paths: [...changes.unstaged.map(entry => entry.path), ...changes.staged.map(entry => entry.path)],
+              }),
+            );
 
             setShowConfirmDiscardAndPullModal(false);
             onPullAfterCommit();
@@ -1984,10 +2005,12 @@ const OriginalGitProjectStagingModal: FC<
             discardData.paths.includes(undiscardableFilePath)
           }
           onConfirm={async () => {
-            await undoUnstagedChangesFetcher.submit({
-              projectId,
-              paths: discardData.paths,
-            });
+            await actionGate.runAfter(() =>
+              undoUnstagedChangesFetcher.submit({
+                projectId,
+                paths: discardData.paths,
+              }),
+            );
 
             setDiscardData(null);
           }}

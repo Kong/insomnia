@@ -43,11 +43,12 @@ import {
 } from '~/sync/git/providers';
 import type { FileIssue, FileIssueKind } from '~/sync/git/repo-file-watcher';
 
-import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
+import { getAppVersion, INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
+import { buildInsomniaChangeReport, type InsomniaChangeReport } from '../common/insomnia-v5-change-report';
 import { checkStrictSchemaMatch } from '../common/zod/check-schema-mismatch';
 import { findUnknownFieldRanges, type UnknownFieldRange } from '../common/zod/find-unknown-field-ranges';
 import { canonicalizeInsomniaFileContent, isUndiscardableChange } from '../sync/git/canonical-file';
@@ -3471,6 +3472,24 @@ function getPreviewItemNameAndScope(previewDiffItem: { before: string; after: st
   };
 }
 
+export interface GitDiffDiagnostics {
+  appVersion: string;
+  filepath: string;
+  staged: boolean;
+  comparing: string;
+  beforeOid: string | null;
+  afterOid: string | null;
+  /**
+   * The diff editor renders HEAD/index after schema migration and property-order
+   * normalization against the working copy, which can hide reordering. True when
+   * that rewrite changed what is displayed.
+   */
+  displayNormalized: boolean;
+  /** Untouched committed blob, for support to export and share verbatim. */
+  committedYaml: string | null;
+  report: InsomniaChangeReport;
+}
+
 export type GitDiffResult =
   | {
       name: string;
@@ -3478,6 +3497,7 @@ export type GitDiffResult =
         before: string;
         after: string;
       };
+      diagnostics?: GitDiffDiagnostics;
       // Lines of `diff.before` holding fields this version of Insomnia doesn't recognize.
       unknownFieldRanges: UnknownFieldRange[];
       filepath: string;
@@ -3515,6 +3535,27 @@ export const diffFileLoader = async ({
           after: fileStatus.workdir,
         };
 
+    // The change analysis parses both files, so only pay for it when Debug Mode is on.
+    let diagnostics: GitDiffDiagnostics | undefined;
+    if ((await services.settings.get()).debugMode) {
+      // Analyse the untouched blobs so reordering isn't masked by the normalization
+      // applied for rendering.
+      const rawBefore = staged ? fileStatus.rawHead : fileStatus.rawStage || fileStatus.rawHead;
+      const rawAfter = staged ? fileStatus.rawStage : fileStatus.workdir;
+
+      diagnostics = {
+        appVersion: getAppVersion(),
+        filepath,
+        staged,
+        comparing: staged ? 'HEAD (last commit) → index (staged)' : 'index/HEAD (committed) → working copy (on disk)',
+        beforeOid: (staged ? fileStatus.oids.head : fileStatus.oids.stage || fileStatus.oids.head) ?? null,
+        afterOid: (staged ? fileStatus.oids.stage : fileStatus.oids.workdir) ?? null,
+        displayNormalized: (rawBefore ?? '') !== (diff.before ?? ''),
+        committedYaml: rawBefore ?? null,
+        report: buildInsomniaChangeReport(rawBefore, rawAfter),
+      };
+    }
+
     const { name, scope } = getPreviewItemNameAndScope(diff);
 
     let undiscardable = false;
@@ -3534,6 +3575,7 @@ export const diffFileLoader = async ({
     return {
       name: name || filepath,
       diff,
+      diagnostics,
       // Unknown fields live on the original side: saving from this version drops them from the modified side.
       // When the whole file was removed there is nothing to be dropped, so skip the calculation.
       unknownFieldRanges: diff.before && diff.after ? findUnknownFieldRanges(diff.before, InsomniaFileSchema) : [],

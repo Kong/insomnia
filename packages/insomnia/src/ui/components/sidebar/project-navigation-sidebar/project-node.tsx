@@ -18,7 +18,7 @@ interface ProjectNodeProps {
   onToggle: (projectId: string) => void;
   sortOrder: WorkspaceSortOrder;
   onSortOrderChange: (newSortOrder: WorkspaceSortOrder) => void;
-  onDeleteProject: (projectId: string) => void;
+  onDelete: () => void;
 }
 
 export const ProjectNode = ({
@@ -27,7 +27,7 @@ export const ProjectNode = ({
   onToggle,
   sortOrder,
   onSortOrderChange,
-  onDeleteProject,
+  onDelete,
 }: ProjectNodeProps) => {
   const { doc, collapsed, organizationId, showSyncStatus = false } = item;
   const { userSession } = useRootLoaderData()!;
@@ -97,7 +97,7 @@ export const ProjectNode = ({
           onSortOrderChange={onSortOrderChange}
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
-          onDeleteProject={onDeleteProject}
+          onDelete={onDelete}
         />
       )}
     </div>

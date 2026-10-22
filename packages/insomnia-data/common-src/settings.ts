@@ -47,6 +47,7 @@ export type KeyboardShortcut =
   | 'request_showGenerateCodeEditor'
   | 'sidebar_focusFilter'
   | 'sidebar_showCreateDropdown'
+  | 'sidebar_deleteItem'
   | 'sidebar_toggle'
   | 'sidebar_rename'
   | 'response_focus'
@@ -121,6 +122,8 @@ export interface Settings {
   autocompleteDelay: number;
   clearOAuth2SessionOnRestart: boolean;
   darkTheme: string;
+  /** If true, Insomnia shows extra diagnostic tools (e.g. the change analysis in the Git commit dialog). Toggled from the Help menu. */
+  debugMode: boolean;
   deviceId: string | null;
   disableHtmlPreviewJs: boolean;
 

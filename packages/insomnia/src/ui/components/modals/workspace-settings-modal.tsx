@@ -229,19 +229,28 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       {!models.workspace.isEnvironment(workspace) && !models.workspace.isMcp(workspace) && (
                         <>
                           <Heading>Actions</Heading>
-                          <PromptButton
-                            onClick={async () => {
-                              const docs = await db.getWithDescendants(workspace, [models.request.type]);
-                              const requests = docs.filter(models.request.isRequest);
-                              for (const req of requests) {
-                                await services.helpers.removeResponsesForRequest(req._id);
-                              }
-                              onClose();
-                            }}
-                            className="width-auto btn btn--clicky space-left inline-block"
-                          >
-                            <i className="fa fa-trash-o" /> Clear All Responses
-                          </PromptButton>
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-medium text-(--color-font)">Clear Response History</span>
+                              <p className="text-xs text-(--hl)">
+                                Delete the saved responses of all request in this{' '}
+                                {getWorkspaceLabel(workspace).singular.toLowerCase()}
+                              </p>
+                            </div>
+                            <PromptButton
+                              onClick={async () => {
+                                const docs = await db.getWithDescendants(workspace, [models.request.type]);
+                                const requests = docs.filter(models.request.isRequest);
+                                for (const req of requests) {
+                                  await services.helpers.removeResponsesForRequest(req._id);
+                                }
+                                onClose();
+                              }}
+                              className="flex h-8 w-40 shrink-0 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-3 text-sm transition-colors hover:bg-(--hl-xs)"
+                            >
+                              <i className="fa fa-trash-o" /> Clear
+                            </PromptButton>
+                          </div>
                         </>
                       )}
                     </>

@@ -7,6 +7,7 @@ import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { getAppBundlePlugins } from '~/common/constants';
+import { shouldShowRevealToggle } from '~/common/templating/confidential-value-policy';
 import { localTemplateTags } from '~/common/templating/local-template-tags';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
 import * as templateUtils from '~/common/templating/utils';
@@ -93,6 +94,7 @@ export const TagEditor: FC<Props> = props => {
     [isRevealed],
   );
   const { handleRender, handleGetRenderContext } = useNunjucks(nunjucksOptions);
+  const [hasMaskedValue, setHasMaskedValue] = useState(false);
 
   const isEditorMountedRef = useRef(true);
   useEffect(() => {
@@ -295,6 +297,7 @@ export const TagEditor: FC<Props> = props => {
     // Make rendering take at least this long so we can see a spinner
     await delay(300 - (Date.now() - start));
     setState(state => ({ ...state, rendering: false, preview }));
+    setHasMaskedValue(prev => shouldShowRevealToggle(prev, { isRevealed, preview }));
     props.onRenderingChange(false);
   }
 
@@ -733,14 +736,16 @@ export const TagEditor: FC<Props> = props => {
               })}
             />
           </button>
-          <Button
-            aria-label={isRevealed ? 'Hide value' : 'Reveal value'}
-            style={{ zIndex: 10, position: 'relative' }}
-            className="txt-sm pull-right icon mr-1 inline-block"
-            onPress={() => setIsRevealed(prev => !prev)}
-          >
-            <Icon icon={isRevealed ? 'eye-slash' : 'eye'} />
-          </Button>
+          {hasMaskedValue && (
+            <Button
+              aria-label={isRevealed ? 'Hide value' : 'Reveal value'}
+              style={{ zIndex: 10, position: 'relative' }}
+              className="txt-sm pull-right icon mr-2 inline-block"
+              onPress={() => setIsRevealed(prev => !prev)}
+            >
+              <Icon icon={isRevealed ? 'eye-slash' : 'eye'} />
+            </Button>
+          )}
           <label>
             Live Preview
             {previewElement}

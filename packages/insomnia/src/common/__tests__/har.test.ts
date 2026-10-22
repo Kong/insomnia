@@ -31,7 +31,8 @@ import { EnvironmentKvPairDataType } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
 import { getRenderedRequestAndContext } from '../../common/render';
-import { exportHar, exportHarResponse, exportHarWithRequest } from '../../main/har';
+import type { RenderedRequest } from '../../common/templating/types';
+import { exportHar, exportHarResponse, exportHarWithRenderedRequest, exportHarWithRequest } from '../../main/har';
 
 let cookieBridge: any;
 
@@ -504,6 +505,34 @@ describe('export', () => {
       // explicit export passes no purpose → fail-closed 'mask' → same behaviour as SECRET
       const { context } = await getRenderedRequestAndContext({ request, environment: baseEnv._id });
       expect((context as any).token).toBe(models.environment.vaultEnvironmentMaskValue);
+    });
+  });
+
+  describe('exportHarWithRenderedRequest()', () => {
+    const renderedRequest = (overrides: Partial<RenderedRequest>): RenderedRequest => ({
+      ...models.request.init(),
+      _id: 'req_masked',
+      type: models.request.type,
+      parentId: 'wrk_masked',
+      modified: 1,
+      created: 1,
+      isPrivate: false,
+      cookies: [],
+      cookieJar: { ...models.cookieJar.init(), _id: 'jar', type: models.cookieJar.type, parentId: 'wrk_masked', modified: 1, created: 1, isPrivate: false, cookies: [] },
+      suppressUserAgent: false,
+      ...overrides,
+    });
+
+    it('keeps a masked host as the mask and shows a masked Basic Auth header as the mask', async () => {
+      const har = await exportHarWithRenderedRequest(
+        renderedRequest({
+          url: '••••••/users',
+          authentication: { type: 'basic', username: '••••••', password: 'pass' },
+        }),
+      );
+
+      expect(har.url).toBe('••••••/users');
+      expect(har.headers).toContainEqual({ name: 'Authorization', value: 'Basic ••••••' });
     });
   });
 
