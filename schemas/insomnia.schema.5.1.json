@@ -310,6 +310,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -369,6 +375,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -892,6 +904,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -951,6 +969,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -1525,6 +1549,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1584,6 +1614,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -2348,6 +2384,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2407,6 +2449,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -5067,6 +5115,12 @@
                     "type": "null"
                   }
                 ]
+              },
+              "confidentialKeys": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
               "method": {},
               "url": {},

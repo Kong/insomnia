@@ -35,13 +35,13 @@ import type {
   Workspace,
   WorkspaceScope,
 } from 'insomnia-data';
-import { EnvironmentKvPairDataType, models } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
 import { parse, stringify } from 'yaml';
 
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
-import { maskVaultEnvironmentData } from '~/common/utils/environment-utils';
+import { getKVPairFromData, maskVaultEnvironmentData } from '~/common/utils/environment-utils';
 import { invariant } from '~/common/utils/invariant';
 
 import { database } from './database';
@@ -228,6 +228,56 @@ function filterEmptyValue(value: string | number | boolean | null | undefined) {
 }
 
 /**
+ * v5 files carry an environment's variables only as `data`, so its KV rows -- and the isConfidential
+ * flag that lives on them -- are rebuilt on import. `confidentialKeys` carries just the names of the
+ * confidential variables so the flag survives export/import, Duplicate / Move and Git Sync.
+ *
+ * Mirrors getDataFromKVPair: only the last enabled row with a given name takes effect. Sorted so the
+ * output is stable across import/export round-trips (canonical-file relies on that).
+ */
+function getConfidentialKeys(
+  environmentType: EnvironmentType | undefined,
+  kvPairData: EnvironmentKvPairData[] | undefined,
+): string[] {
+  if (environmentType !== EnvironmentType.KVPAIR || !kvPairData) {
+    return [];
+  }
+  const isConfidentialByName = new Map<string, boolean>();
+  for (const pair of kvPairData) {
+    if (pair.enabled && pair.name) {
+      isConfidentialByName.set(pair.name, !!pair.isConfidential);
+    }
+  }
+  return [...isConfidentialByName]
+    .filter(([, isConfidential]) => isConfidential)
+    .map(([name]) => name)
+    .sort();
+}
+
+/**
+ * Inverse of getConfidentialKeys: rebuilds the KV rows from `data` and flags the confidential ones.
+ * Confidential flags only exist in the table view, so the environment is restored as KVPAIR.
+ * Without confidentialKeys nothing is added, which keeps the import unchanged for every other file.
+ */
+function getKvPairFieldsFromConfidentialKeys(
+  data: Record<string, any>,
+  dataPropertyOrder: Record<string, any> | null | undefined,
+  confidentialKeys: string[] | undefined,
+): { environmentType?: EnvironmentType; kvPairData?: EnvironmentKvPairData[] } {
+  if (!confidentialKeys?.length) {
+    return {};
+  }
+  const confidentialNames = new Set(confidentialKeys);
+  return {
+    environmentType: EnvironmentType.KVPAIR,
+    kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null).map(pair => ({
+      ...pair,
+      isConfidential: confidentialNames.has(pair.name),
+    })),
+  };
+}
+
+/**
  * Recursively removes empty fields from an object or array
  * This is used to clean up export data by removing null, undefined, and empty objects
  * Special handling for folder structures to preserve empty children arrays
@@ -327,6 +377,11 @@ function getEnvironments(file: InsomniaFile): Environment[] {
       color: file.environments.color || null,
       data: (file.environments.data as Record<string, any>) || {},
       dataPropertyOrder: (file.environments.dataPropertyOrder as Record<string, any>) || undefined,
+      ...getKvPairFieldsFromConfidentialKeys(
+        (file.environments.data as Record<string, any>) || {},
+        file.environments.dataPropertyOrder,
+        file.environments.confidentialKeys,
+      ),
       name: file.environments.name || 'Base Environment',
     };
 
@@ -342,6 +397,11 @@ function getEnvironments(file: InsomniaFile): Environment[] {
         color: environment.color || null,
         data: (environment.data as Record<string, any>) || {},
         dataPropertyOrder: (environment.dataPropertyOrder as Record<string, any>) || undefined,
+        ...getKvPairFieldsFromConfidentialKeys(
+          (environment.data as Record<string, any>) || {},
+          environment.dataPropertyOrder,
+          environment.confidentialKeys,
+        ),
         name: environment.name || `Environment ${index}`,
         parentId: baseEnvironment._id,
       })) || [];
@@ -530,6 +590,11 @@ function getCollection(
             environment: (item.environment as Record<string, any>) || {},
             // 🚧 WARNING 🚧 If we set the order to an empty object instead of undefined it will remove the environment from the folder due to filtering logic (related to json-order)
             environmentPropertyOrder: (item.environmentPropertyOrder as Record<string, any>) || undefined,
+            ...getKvPairFieldsFromConfidentialKeys(
+              (item.environment as Record<string, any>) || {},
+              item.environmentPropertyOrder,
+              item.confidentialKeys,
+            ),
           };
 
           resources.push(requestGroup);
@@ -918,6 +983,7 @@ export async function getInsomniaV5DataExport({
               authentication: resource.authentication,
               environment: resource.environment,
               environmentPropertyOrder: resource.environmentPropertyOrder,
+              confidentialKeys: getConfidentialKeys(resource.environmentType, resource.kvPairData),
               headers: mapHeaders(resource.headers),
             };
             collection.push(requestGroup);
@@ -1023,6 +1089,7 @@ export async function getInsomniaV5DataExport({
           isPrivate: baseEnvironment.isPrivate,
         },
         data: baseEnvironment.data,
+        confidentialKeys: getConfidentialKeys(baseEnvironment.environmentType, baseEnvironment.kvPairData),
         color: baseEnvironment.color,
         subEnvironments: subEnvironments.map(maskVaultEnvironmentData).map(subEnvironment => ({
           name: subEnvironment.name,
@@ -1034,6 +1101,7 @@ export async function getInsomniaV5DataExport({
             sortKey: subEnvironment.metaSortKey,
           },
           data: subEnvironment.data,
+          confidentialKeys: getConfidentialKeys(subEnvironment.environmentType, subEnvironment.kvPairData),
           color: subEnvironment.color,
         })),
       };
