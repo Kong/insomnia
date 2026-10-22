@@ -194,12 +194,6 @@
               },
               "additionalProperties": {}
             },
-            "confidentialKeys": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
             "color": {
               "anyOf": [
                 {
@@ -250,12 +244,6 @@
                       "type": "string"
                     },
                     "additionalProperties": {}
-                  },
-                  "confidentialKeys": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
                   },
                   "dataPropertyOrder": {
                     "anyOf": [
@@ -322,6 +310,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -381,6 +375,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -788,12 +788,6 @@
               },
               "additionalProperties": {}
             },
-            "confidentialKeys": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
             "color": {
               "anyOf": [
                 {
@@ -844,12 +838,6 @@
                       "type": "string"
                     },
                     "additionalProperties": {}
-                  },
-                  "confidentialKeys": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
                   },
                   "dataPropertyOrder": {
                     "anyOf": [
@@ -916,6 +904,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -975,6 +969,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -1433,12 +1433,6 @@
               },
               "additionalProperties": {}
             },
-            "confidentialKeys": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
             "color": {
               "anyOf": [
                 {
@@ -1489,12 +1483,6 @@
                       "type": "string"
                     },
                     "additionalProperties": {}
-                  },
-                  "confidentialKeys": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
                   },
                   "dataPropertyOrder": {
                     "anyOf": [
@@ -1561,6 +1549,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1620,6 +1614,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -2268,12 +2268,6 @@
               },
               "additionalProperties": {}
             },
-            "confidentialKeys": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
             "color": {
               "anyOf": [
                 {
@@ -2324,12 +2318,6 @@
                       "type": "string"
                     },
                     "additionalProperties": {}
-                  },
-                  "confidentialKeys": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
                   },
                   "dataPropertyOrder": {
                     "anyOf": [
@@ -2396,6 +2384,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2455,6 +2449,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
