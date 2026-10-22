@@ -9,9 +9,10 @@ import { Collection } from '../../../models/collection';
 import { HttpRequest } from '../../../models/http-request';
 import { Project } from '../../../models/project';
 
-test('Verify discarding every request of a new file removes the file from Unstaged without leaving an empty shell', async ({ user }) => {
-  test.fail(true, "INS-4076");
+const BASE_ENVIRONMENT = 'Base Environment';
+const DEFAULT_JAR = 'Default Jar';
 
+test('Verify the Base Environment and Default Jar cards of a new collection file cannot be discarded', async ({ user }) => {
   const { gitSyncFlow, httpRequestFlow, preferencesFlow, workspaceFlow } = user.flowManager;
   const { gitSyncPage } = user.pageManager;
 
@@ -30,13 +31,24 @@ test('Verify discarding every request of a new file removes the file from Unstag
       ),
     );
   }
-
   await expect.poll(async () => gitSyncPage.hasUncommittedChanges(), { timeout: DEFAULT_TIMEOUT }).toBe(true);
 
   await gitSyncFlow.openVisualDiff(GitChangeList.Unstaged, fileName);
+  const requestActions = await gitSyncPage.getEntityCardActions(requests[0].name);
   for (const request of requests) {
     await gitSyncFlow.discardEntity(fileName, request.name);
   }
+  const remainingCards = await gitSyncPage.getEntityCardNames();
+  const environmentActions = await gitSyncPage.getEntityCardActions(BASE_ENVIRONMENT);
+  const jarActions = await gitSyncPage.getEntityCardActions(DEFAULT_JAR);
+  const unstaged = await gitSyncPage.getUnstagedChanges();
 
-  await expect.poll(async () => gitSyncPage.getUnstagedChanges(), { timeout: DEFAULT_TIMEOUT }).not.toContain(fileName);
+  expect(requestActions).toEqual(['Discard', 'Stage']);
+  expect(remainingCards).toContain(BASE_ENVIRONMENT);
+  expect(remainingCards).toContain(DEFAULT_JAR);
+  expect(remainingCards).not.toContain(requests[0].name);
+  expect(remainingCards).not.toContain(requests[1].name);
+  expect(environmentActions).toEqual(['Stage']);
+  expect(jarActions).toEqual(['Stage']);
+  expect(unstaged).toContain(fileName);
 });
