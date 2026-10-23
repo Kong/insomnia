@@ -22,7 +22,7 @@ test("Verify Connecting to an Unreachable MCP Server Lists No Tools", async ({
     project,
     new McpClient(faker.string.alphanumeric(10), unreachableUrl),
   );
-  await mcpClientFlow.connect(mcpClient);
+  await mcpClientFlow.connect(mcpClient, { expectConnected: false });
 
   await expect(mcpClientFlow.getTools(mcpClient)).rejects.toThrow();
   await expect

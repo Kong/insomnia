@@ -34,7 +34,9 @@ test("Verify Enabling a Proxy Routes Event Stream Requests Through It", async ({
     noProxy: "",
   });
 
-  const responseView = await eventStreamRequestFlow.send(request);
+  const responseView = await eventStreamRequestFlow.send(request, {
+    expectConnected: false,
+  });
 
   await expect
     .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
