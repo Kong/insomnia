@@ -340,4 +340,17 @@ test.describe('Variable source and live preview across environment levels', () =
     await expect.poll(() => Date.now() - hoverStartedAt >= 700, { timeout: 1000, intervals: [250] }).toBe(true);
     await expect.soft(tooltip).toBeVisible();
   });
+
+  test('project environment page attributes its own environments to the project', async ({ page, insomnia }) => {
+    // The environment page renders against the project environment workspace itself,
+    // so its base and sub environments must still read as project environments.
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
+    await insomnia.projectPage.importFixture('project-environment-source.yaml');
+    await insomnia.navigationSidebar.selectWorkspace('project-environment-source');
+    await page.getByLabel('Environments', { exact: true }).getByText('Source Sub Environment').click();
+
+    const { sourceRow, livePreview } = await openVariableModal(page, 'text_base');
+    await expect.soft(sourceRow).toContainText('Project Environment : Base Environment');
+    await expect.soft(livePreview).toHaveValue('fromProjectBase', { timeout: 15_000 });
+  });
 });

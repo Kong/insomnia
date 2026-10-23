@@ -1488,6 +1488,40 @@ describe('render tests', () => {
   });
 
   describe('getRenderContext()', () => {
+    it('attributes the environments of a project environment workspace to the project', async () => {
+      // The project environment page renders its own workspace, so its base and sub
+      // environments arrive as the workspace's own layers rather than as project ones.
+      const environmentWorkspace = {
+        _id: 'wrk_render_environment_workspace_test',
+        type: models.workspace.type,
+        scope: 'environment',
+        parentId: 'proj_test',
+      };
+      const baseEnvironment = envBuilder
+        ._id('env_base_render_environment_workspace_test')
+        .name('base')
+        .data({ fromBase: 'base' })
+        .build();
+      const subEnvironment = envBuilder
+        ._id('env_sub_render_environment_workspace_test')
+        .name('sub')
+        .data({ fromSub: 'sub' })
+        .build();
+
+      const context = await renderUtils.getRenderContext({
+        environment: subEnvironment,
+        baseEnvironment,
+        ancestors: [environmentWorkspace] as unknown as RenderContextAncestor[],
+        purpose: 'preview',
+      });
+
+      const { keyContext, keyContextMeta } = context.getKeysContext();
+      expect(keyContext['_.fromBase']).toBe('Project Environment : base');
+      expect(keyContext['_.fromSub']).toBe('Project Environment : sub');
+      expect(keyContextMeta?.['_.fromBase']?.environmentId).toBe(baseEnvironment._id);
+      expect(keyContextMeta?.['_.fromSub']?.environmentId).toBe(subEnvironment._id);
+    });
+
     it('keys source from the closest folder when nested folders define the same variable', async () => {
       const workspace = { _id: 'wrk_render_source_test', type: models.workspace.type, parentId: 'proj_test' };
       const outerFolder = reqGroupBuilder.environment({ foo: 'outer' }).name('outer').build();

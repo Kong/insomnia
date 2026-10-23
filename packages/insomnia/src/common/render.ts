@@ -135,6 +135,7 @@ export function buildEnvironmentRenderLayers({
   userUploadEnvironment,
   transientVariables,
   workspaceId,
+  isEnvironmentWorkspace,
 }: {
   ancestors?: RenderContextAncestor[];
   rootEnvironment?: Environment;
@@ -145,8 +146,12 @@ export function buildEnvironmentRenderLayers({
   transientVariables?: Environment;
   // Collection and folder layers attribute their source to this workspace.
   workspaceId?: string;
+  // True when the rendered workspace is a project environment file: its own base
+  // and sub environments are project environments, not collection environments.
+  isEnvironmentWorkspace?: boolean;
 }): EnvironmentRenderLayer[] {
   const environmentLayers: EnvironmentRenderLayer[] = [];
+  const workspaceEnvironmentLabel = isEnvironmentWorkspace ? 'Project Environment' : 'Collection Environment';
 
   if (rootGlobalEnvironment) {
     const ordered = orderedJSON.order(
@@ -198,7 +203,7 @@ export function buildEnvironmentRenderLayers({
       kvPairData: rootEnvironment.kvPairData,
       source: 'collection',
       meta: {
-        label: formatSourceLabel('Collection Environment', rootEnvironment.name),
+        label: formatSourceLabel(workspaceEnvironmentLabel, rootEnvironment.name),
         workspaceId: workspaceId,
         environmentId: rootEnvironment._id,
       },
@@ -220,7 +225,7 @@ export function buildEnvironmentRenderLayers({
       meta:
         subEnvironment._id !== rootEnvironment?._id
           ? {
-              label: formatSourceLabel('Collection Environment', subEnvironment.name),
+              label: formatSourceLabel(workspaceEnvironmentLabel, subEnvironment.name),
               workspaceId: workspaceId,
               environmentId: subEnvironment._id,
             }
@@ -356,6 +361,7 @@ export async function buildRenderContext({
   userUploadEnvironment,
   transientVariables,
   baseContext,
+  isEnvironmentWorkspace,
 }: {
   ancestors?: RenderContextAncestor[];
   rootEnvironment?: Environment;
@@ -365,6 +371,7 @@ export async function buildRenderContext({
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   baseContext: Omit<BaseRenderContext, 'getKeysContext'>;
+  isEnvironmentWorkspace?: boolean;
 }): Promise<BaseRenderContext> {
   // Per-key source attribution, recorded while the environments merge below so it
   // follows the same merge order and winners as the values.
@@ -379,6 +386,7 @@ export async function buildRenderContext({
     userUploadEnvironment,
     transientVariables,
     workspaceId: baseContext.getMeta().workspaceId,
+    isEnvironmentWorkspace,
   });
 
   // At this point, environments is a list of environments ordered
@@ -788,6 +796,9 @@ export async function getRenderContext({
     userUploadEnvironment,
     transientVariables,
     baseContext,
+    // On a project environment page the active workspace is the environment file
+    // itself; its own environments must not be attributed to a collection.
+    isEnvironmentWorkspace: models.workspace.isEnvironment(workspace),
   });
 }
 
