@@ -1,0 +1,10 @@
+{
+  "name": "insomnia-plugin-test",
+  "version": "0.0.1",
+  "private": true,
+  "insomnia": {
+    "name": "test",
+    "description": "Adds a context-menu action that shows the target item's name and type"
+  },
+  "main": "main.js"
+}
