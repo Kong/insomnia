@@ -403,13 +403,13 @@ export abstract class RequestPage extends TabPanelPage {
     if (await deleteAllBtn.isEnabled()) {
       await deleteAllBtn.click();
     }
-    const listbox = panel.locator('[role="listbox"]');
+    const options = panel.locator('[role="listbox"] [role="option"]');
     for (const pair of pairs) {
-      const key = await listbox
-        .locator('[role="option"]')
-        .last()
-        .getAttribute("data-key");
-      const row = listbox.locator(`[role="option"][data-key="${key}"]`);
+      // Locate the row by position, not by its `data-key`: a new row
+      // renders with a provisional `pair-blank_*` key that is swapped for
+      // the persisted id once its name is saved, so a key-based locator
+      // goes stale right before the value is typed and never resolves.
+      const row = options.nth((await options.count()) - 1);
       const setName = () =>
         this.setCodeMirrorValue(
           row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
