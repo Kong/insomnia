@@ -297,6 +297,12 @@ jobs:
             --verbose \
             --wait
 
+      - name: Work around stapling issue (actions/runner-images#14924)
+        if: runner.os == 'macOS'
+        run: |
+          echo "block return out quick proto udp from any to any port 443" | sudo pfctl -f -
+          sudo pfctl -E
+
       - name: Staple Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
         run: |
