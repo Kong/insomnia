@@ -88,6 +88,7 @@ environments:
       data:
         exampleString: subenvA0
         exampleNumber: 1111
+        globalSourcedVar: "{{ _['global-base'] }}"
         exampleObject:
           anotherString: subenvA1
           anotherNumber: 1111
