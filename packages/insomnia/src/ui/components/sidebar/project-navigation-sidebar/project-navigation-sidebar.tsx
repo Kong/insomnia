@@ -660,6 +660,7 @@ const ProjectNavigationSidebarInner = (
   const [shortcutTargetItemId, setShortcutTargetItemId] = useState<string | null>(null);
   const showRenameModal = useRenameModal();
   const { showDeleteModal, deleteModal } = useDeleteModal({
+    flatItems,
     onDeleteProject: projectId => deleteProjectFetcher.submit({ organizationId, projectId }),
     // Leave focus mode when its collection is deleted, otherwise the view is left empty
     onWorkspaceDeleted: workspaceId => {

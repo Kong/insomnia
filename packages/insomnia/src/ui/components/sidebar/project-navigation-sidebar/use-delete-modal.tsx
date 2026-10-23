@@ -1,5 +1,5 @@
 import { models, services } from 'insomnia-data';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
@@ -8,21 +8,42 @@ import { AskModal } from '~/ui/components/modals/ask-modal';
 import { WorkspaceDeleteModal } from '~/ui/components/modals/workspace-delete-modal';
 
 import { getRequestNameOrFallback } from './request-node';
-import type { CollectionChildFlatItem, PinnedRequestFlatItem, ProjectFlatItem, WorkspaceFlatItem } from './types';
+import type {
+  CollectionChildFlatItem,
+  FlatItem,
+  PinnedRequestFlatItem,
+  ProjectFlatItem,
+  WorkspaceFlatItem,
+} from './types';
 
 export type DeleteTargetItem = ProjectFlatItem | WorkspaceFlatItem | CollectionChildFlatItem | PinnedRequestFlatItem;
 
 interface Options {
+  // Unfiltered sidebar items, used to notice when the workspace being deleted is gone
+  flatItems: FlatItem[];
   onDeleteProject: (projectId: string) => void;
   onWorkspaceDeleted?: (workspaceId: string) => void;
 }
 
 // Returns a function to open the delete confirmation for projects, workspaces, request groups, and requests,
 // plus the element that hosts the workspace confirmation, which must be rendered once by the caller.
-export const useDeleteModal = ({ onDeleteProject, onWorkspaceDeleted }: Options) => {
+export const useDeleteModal = ({ flatItems, onDeleteProject, onWorkspaceDeleted }: Options) => {
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
   const deleteRequestGroupFetcher = useRequestGroupDeleteActionFetcher();
+  // Kept after closing so the modal can play its exit animation
   const [workspaceToDelete, setWorkspaceToDelete] = useState<WorkspaceFlatItem | null>(null);
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
+
+  // The workspace disappearing from the sidebar is the signal that the deletion succeeded.
+  // On failure (e.g. a remote error) it stays, so the modal remains open to show the error.
+  const isWorkspaceGone =
+    !!workspaceToDelete && !flatItems.some(i => i.kind === 'workspace' && i.doc._id === workspaceToDelete.doc._id);
+  useEffect(() => {
+    if (isWorkspaceModalOpen && isWorkspaceGone) {
+      setIsWorkspaceModalOpen(false);
+      onWorkspaceDeleted?.(workspaceToDelete.doc._id);
+    }
+  }, [isWorkspaceModalOpen, isWorkspaceGone, workspaceToDelete, onWorkspaceDeleted]);
 
   const showDeleteModal = (item: DeleteTargetItem) => {
     if (item.kind === 'project') {
@@ -65,6 +86,7 @@ export const useDeleteModal = ({ onDeleteProject, onWorkspaceDeleted }: Options)
         return;
       }
       setWorkspaceToDelete(item);
+      setIsWorkspaceModalOpen(true);
       return;
     }
 
@@ -113,11 +135,12 @@ export const useDeleteModal = ({ onDeleteProject, onWorkspaceDeleted }: Options)
 
   const deleteModal = workspaceToDelete && (
     <WorkspaceDeleteModal
+      key={workspaceToDelete.doc._id}
+      isOpen={isWorkspaceModalOpen}
       workspace={workspaceToDelete.doc}
       project={workspaceToDelete.project}
       organizationId={workspaceToDelete.organizationId}
-      onClose={() => setWorkspaceToDelete(null)}
-      onDeleted={() => onWorkspaceDeleted?.(workspaceToDelete.doc._id)}
+      onClose={() => setIsWorkspaceModalOpen(false)}
     />
   );
 

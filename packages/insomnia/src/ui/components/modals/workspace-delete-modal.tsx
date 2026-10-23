@@ -1,6 +1,5 @@
 import type { Project, Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { useEffect, useRef } from 'react';
 import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 import { href } from 'react-router';
 
@@ -13,38 +12,25 @@ interface Props {
   workspace: Workspace;
   project: Project;
   organizationId: string;
+  // Driven by the host: it closes once the workspace is gone, so the overlay can play its exit animation
+  isOpen: boolean;
   onClose: () => void;
-  onDeleted?: () => void;
 }
 
-export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClose, onDeleted }: Props) => {
+export const WorkspaceDeleteModal = ({ workspace, project, organizationId, isOpen, onClose }: Props) => {
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
   const workspaceId = workspace._id;
   const workspaceName = workspace.name;
 
-  // Close once the deletion succeeds (the action redirects, so no error data is returned)
-  const wasSubmitting = useRef(false);
-  useEffect(() => {
-    if (deleteWorkspaceFetcher.state !== 'idle') {
-      wasSubmitting.current = true;
-    } else if (wasSubmitting.current) {
-      wasSubmitting.current = false;
-      if (!deleteWorkspaceFetcher.data?.error) {
-        onDeleted?.();
-        onClose();
-      }
-    }
-  }, [deleteWorkspaceFetcher.state, deleteWorkspaceFetcher.data, onClose, onDeleted]);
-
   return (
     <ModalOverlay
-      isOpen
-      onOpenChange={() => onClose()}
+      isOpen={isOpen}
+      onOpenChange={open => !open && onClose()}
       isDismissable
-      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30 transition-opacity duration-150 data-exiting:opacity-0"
     >
       <Modal
-        onOpenChange={() => onClose()}
+        onOpenChange={open => !open && onClose()}
         className="max-h-full w-full max-w-2xl rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
         <Dialog className="outline-hidden">
