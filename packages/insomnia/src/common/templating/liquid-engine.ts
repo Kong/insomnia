@@ -1,4 +1,4 @@
-import type { Tag } from 'liquidjs';
+import type { Context, Tag } from 'liquidjs';
 import { Liquid, Tag as LiquidTag } from 'liquidjs';
 
 import type { Plugin } from '~/common/plugins/types';
@@ -13,6 +13,23 @@ export function stripLiquidComments(text: string): string {
 }
 
 /**
+ * Run a plugin tag without charging its wall-clock time against LiquidJS's renderLimit.
+ * Tags can wait on the user (prompts) or the network (requests), which is not template render work.
+ * LiquidJS keeps the deadline in a private `limit` field, so push it back by the elapsed time.
+ */
+export async function runExcludedFromRenderLimit<T>(ctx: Context, fn: () => Promise<T>): Promise<T> {
+  const start = performance.now();
+  try {
+    return await fn();
+  } finally {
+    const limiter = ctx.renderLimit as unknown as { limit: number };
+    if (Number.isFinite(limiter.limit)) {
+      limiter.limit += performance.now() - start;
+    }
+  }
+}
+
+/**
  * Build a configured LiquidJS engine.
  *
  * tagFactory is injected per environment (main vs worker) so each can provide
@@ -20,10 +37,12 @@ export function stripLiquidComments(text: string): string {
  */
 export function buildLiquidEngine(opts: {
   strictVariables?: boolean;
+  /** Overridable so tests can exercise the limit without waiting 10 s. */
+  renderLimitMs?: number;
   tagFactory: TagFactory;
   tags: { templateTag: PluginTemplateTag; plugin: Plugin }[];
 }): { engine: Liquid; tagMetadata: Map<string, PluginTemplateTag> } {
-  const { strictVariables = true, tagFactory, tags } = opts;
+  const { strictVariables = true, renderLimitMs = 10_000, tagFactory, tags } = opts;
 
   const engine = new Liquid({
     outputDelimiterLeft: '{{',
@@ -37,7 +56,7 @@ export function buildLiquidEngine(opts: {
     dynamicPartials: false, // Disable dynamic paths to prevent variable-interpolated includes.
 
     // hard-stop rendering after 10 s and cap object allocations.
-    renderLimit: 10_000,
+    renderLimit: renderLimitMs,
     memoryLimit: 10_000_000,
   });
 

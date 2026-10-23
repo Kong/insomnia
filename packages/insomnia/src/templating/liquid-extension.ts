@@ -11,6 +11,7 @@ import { Tag } from 'liquidjs';
 import { jarFromCookies } from '~/common/cookies';
 import type { Plugin } from '~/common/plugins/types';
 import { CONFIDENTIAL_MASK_VALUE, isExternalVaultTag, shouldMaskExternalVaultTag } from '~/common/templating/confidential-value-policy';
+import { runExcludedFromRenderLimit } from '~/common/templating/liquid-engine';
 import { resolveArg } from '~/common/templating/resolve-arg';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from '~/common/templating/types';
 import { decodeEncoding, tokenizeArgs } from '~/common/templating/utils';
@@ -112,7 +113,7 @@ export function createLiquidTag(
         return;
       }
 
-      const result = await Promise.resolve(ext.run(helperContext, ...args));
+      const result = await runExcludedFromRenderLimit(ctx, async () => ext.run(helperContext, ...args));
       const resultStr = result == null ? '' : String(result);
       // Register external vault tag results for timeline redaction when purpose='send'.
       if (isExternalVaultTag(plugin.name, ext.name) && resultStr.length > 0) {
