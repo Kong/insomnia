@@ -12,6 +12,8 @@ export function buildReorderedCollectionFile(
     { id: `fld_b${id}`, name: faker.string.alpha(10), created: 3000 },
     { id: `fld_a${id}`, name: faker.string.alpha(10), created: 2000 },
   ];
+  // Keep folders in canonical order so an old-schema file differs only by schema normalization.
+  if (options.oldSchema) folders.reverse();
   const content = [
     "type: collection.insomnia.rest/5.0",
     ...(options.oldSchema ? [] : ['schema_version: "5.1"']),

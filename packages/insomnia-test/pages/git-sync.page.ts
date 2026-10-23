@@ -810,6 +810,16 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
+   * Accepts the "Stage All Changes" prompt with "Yes" without waiting for the
+   * Commit modal to close, for when another confirmation (e.g. unknown
+   * fields) follows and keeps the modal open.
+   */
+  async acceptStageAllPrompt(): Promise<void> {
+    await this.stageAllPrompt.getByRole('button', { name: 'Yes' }).click();
+    await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Waits until the Commit modal's staged list holds no files.
    */
   async waitForNothingStaged(): Promise<void> {
