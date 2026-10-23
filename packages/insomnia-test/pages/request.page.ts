@@ -494,14 +494,21 @@ export abstract class RequestPage extends TabPanelPage {
         // missing row back-to-back would recreate the stale-row-list race.
         for (const { pair, index } of missing) {
           const row = rows.nth(index);
-          await this.setCodeMirrorValue(
-            row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-            pair.name,
-          );
-          await this.setCodeMirrorValue(
-            row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-            pair.value ?? "",
-          );
+          // The editor can already show the right text while the saved row
+          // list lacks it; re-setting identical text fires no save, so
+          // detour through a different value to force a fresh save.
+          const nameEditor = row
+            .locator(this.ONE_LINE_EDITOR)
+            .nth(0)
+            .locator(".CodeMirror");
+          const valueEditor = row
+            .locator(this.ONE_LINE_EDITOR)
+            .nth(1)
+            .locator(".CodeMirror");
+          await this.setCodeMirrorValue(nameEditor, `${pair.name}-`);
+          await this.setCodeMirrorValue(nameEditor, pair.name);
+          await this.setCodeMirrorValue(valueEditor, `${pair.value ?? ""}-`);
+          await this.setCodeMirrorValue(valueEditor, pair.value ?? "");
           await this.syncRowToggle(row, pair);
           await this.waitForPairPersisted(pair).catch(() => {});
         }
