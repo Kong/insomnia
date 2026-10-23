@@ -2,6 +2,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
+import { sync } from '~/ui/ipc';
 import { remoteCompareCache } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -20,13 +21,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof data.message === 'string', 'Message is required');
 
   try {
-    await window.main.sync.takeSnapshot(workspaceId, data.message);
+    await sync.takeSnapshot(workspaceId, data.message);
     if (data.push) {
       const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       invariant(project.remoteId, 'Project is not remote');
 
-      await window.main.sync.push(workspaceId, {
+      await sync.push(workspaceId, {
         teamId: project.parentId,
         teamProjectId: project.remoteId,
       });

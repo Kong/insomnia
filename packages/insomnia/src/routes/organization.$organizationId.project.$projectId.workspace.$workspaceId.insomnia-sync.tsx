@@ -2,6 +2,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
+import { sync } from '~/ui/ipc';
 import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync';
@@ -21,11 +22,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         backendProjectsToPull: [],
       };
     }
-    const allPulledBackendProjectsForRemoteId = (await window.main.sync.localBackendProjects()).filter(
+    const allPulledBackendProjectsForRemoteId = (await sync.localBackendProjects()).filter(
       p => p.id === remoteId,
     );
     // Remote backend projects are fetched from the backend since they are not stored locally
-    const allFetchedRemoteBackendProjectsForRemoteId = await window.main.sync.remoteBackendProjects({
+    const allFetchedRemoteBackendProjectsForRemoteId = await sync.remoteBackendProjects({
       teamId: organizationId,
       teamProjectId: remoteId,
     });
