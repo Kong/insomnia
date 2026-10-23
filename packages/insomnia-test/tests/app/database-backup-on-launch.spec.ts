@@ -1,7 +1,7 @@
-import { expect } from "@playwright/test";
-
 import * as fs from "node:fs";
 import path from "node:path";
+
+import { expect } from "@playwright/test";
 
 import { test } from "../../misc/fixtures";
 
