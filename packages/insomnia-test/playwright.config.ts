@@ -3,25 +3,14 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 import { ensureCerts } from "./misc/certs";
+import { USE_LOCAL_SOURCE } from "./misc/constants";
 
-// By default, misc/fixtures.ts launches the app straight out of the
-// sibling ../insomnia source checkout (its local `electron` binary against
-// packages/insomnia) instead of a packaged build — so the app under test
-// always reflects whatever's currently checked out there, not whichever
-// build happened to get installed last. That app's renderer loads from
-// this Vite dev server, so it has to be up before any test's Electron
-// instance launches.
-//
-// Opts out automatically whenever INSOMNIA_BINARY is set (CI always sets
-// it, pointing at that run's freshly built/cached binary — see
-// .github/workflows/playwright.yml), or explicitly via
-// INSOMNIA_DEV_MODE=false/0 to fall back to the packaged
-// /Applications/Insomnia.app build locally without pointing at a specific
-// binary.
-const isDevMode =
-  !process.env.INSOMNIA_BINARY &&
-  process.env.INSOMNIA_DEV_MODE !== "false" &&
-  process.env.INSOMNIA_DEV_MODE !== "0";
+// Which app the tests launch is picked by USE_LOCAL_SOURCE in misc/constants.ts
+// (INSOMNIA_BINARY, which CI always sets, overrides it). When it launches the
+// sibling ../insomnia source checkout, that app's renderer loads from the Vite
+// dev server below, so it has to be up before any test's Electron instance
+// launches.
+const isDevMode = !process.env.INSOMNIA_BINARY && USE_LOCAL_SOURCE;
 const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "insomnia");
 
 // The mock servers' TLS/mTLS key pairs are generated rather than committed.

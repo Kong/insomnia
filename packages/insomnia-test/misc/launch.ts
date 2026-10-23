@@ -4,26 +4,18 @@ import path from "node:path";
 import type { ElectronApplication } from "@playwright/test";
 import { _electron as electron } from "@playwright/test";
 
-import { MOCK_API_SERVER } from "./constants";
+import { MOCK_API_SERVER, USE_LOCAL_SOURCE } from "./constants";
 import { coverageLaunchEnv } from "./coverage";
 
 /**
- * By default, the `insomnia` fixture below launches the app straight out of
- * the sibling `../insomnia` source checkout (its local `electron` binary
+ * Which app the `insomnia` fixture launches is picked by `USE_LOCAL_SOURCE` in
+ * `constants.ts`: `false` → the installed `/Applications/Insomnia.app`, `true`
+ * → the sibling `../insomnia` source checkout (its local `electron` binary
  * against `packages/insomnia`, renderer served by the Vite dev server
- * `playwright.config.ts` starts under this same condition) instead of a
- * packaged build — so the app under test always reflects whatever's
- * currently checked out there, not whichever build happened to get
- * installed last. Opts out automatically whenever `INSOMNIA_BINARY` is set
- * (CI always sets it — see `.github/workflows/insomnia-test.yml`), or
- * explicitly via `INSOMNIA_DEV_MODE=false`/`0` to fall back to the packaged
- * `/Applications/Insomnia.app` build locally without pointing at a specific
- * binary.
+ * `playwright.config.ts` starts under this same condition). `INSOMNIA_BINARY`
+ * (CI always sets it — see `.github/workflows/insomnia-test.yml`) overrides both.
  */
-const INSOMNIA_DEV_MODE =
-  !process.env.INSOMNIA_BINARY &&
-  process.env.INSOMNIA_DEV_MODE !== "false" &&
-  process.env.INSOMNIA_DEV_MODE !== "0";
+const INSOMNIA_DEV_MODE = !process.env.INSOMNIA_BINARY && USE_LOCAL_SOURCE;
 const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "..", "insomnia");
 
 /**

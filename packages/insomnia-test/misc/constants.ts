@@ -69,3 +69,8 @@ export const OAUTH2_CLIENT_ID = "test-client-id";
 export const OAUTH2_CLIENT_SECRET = "test-client-secret";
 export const OAUTH2_USERNAME = "testuser";
 export const OAUTH2_PASSWORD = "testpass";
+
+// Which Insomnia the tests launch when INSOMNIA_BINARY is unset: false → the
+// installed /Applications/Insomnia.app, true → the sibling ../insomnia source
+// checkout (dev mode, served by a Vite dev server).
+export const USE_LOCAL_SOURCE = false;
