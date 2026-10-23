@@ -1,5 +1,5 @@
 import { type McpRequest, models } from 'insomnia-data';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useLocation, useParams } from 'react-router';
 
@@ -33,12 +33,24 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   const [environmentsModal, setEnvironmentsModal] = useState<{
     environmentId?: string;
     openedAtKey: string;
+    requestId: number;
   } | null>(null);
+  // Every "open" request bumps requestId so a request for an environment that is
+  // already loaded still reselects it (the modal stays mounted between requests).
+  const requestEnvironmentsModal = useCallback(
+    (environmentId?: string) =>
+      setEnvironmentsModal(prev => ({
+        environmentId,
+        openedAtKey: location.key,
+        requestId: (prev?.requestId ?? 0) + 1,
+      })),
+    [location.key],
+  );
   useEffect(() => {
     return uiEventBus.on(OPEN_ENVIRONMENTS_MODAL, environmentId => {
-      setEnvironmentsModal({ environmentId, openedAtKey: location.key });
+      requestEnvironmentsModal(environmentId);
     });
-  }, [location.key]);
+  }, [requestEnvironmentsModal]);
 
   // The modal belongs to the route it was opened on. "Open variable source" can
   // navigate to another surface (e.g. a folder environment) while the modal is
@@ -72,7 +84,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   useDocBodyKeyboardShortcuts({
-    environment_showEditor: () => setEnvironmentsModal({ openedAtKey: location.key }),
+    environment_showEditor: () => requestEnvironmentsModal(),
     environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     environment_showSwitchProjectMenu: () => setIsProjectEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
@@ -115,7 +127,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
                     });
                   }
                 }}
-                onOpenEnvironmentSettingsModal={() => setEnvironmentsModal({ openedAtKey: location.key })}
+                onOpenEnvironmentSettingsModal={() => requestEnvironmentsModal()}
               />
               {!isMcp && (
                 <Button
@@ -183,8 +195,8 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
       />
       {environmentsModal && (
         <WorkspaceEnvironmentsEditModal
-          key={environmentsModal.environmentId ?? 'active'}
           initialEnvironmentId={environmentsModal.environmentId}
+          selectionRequestId={environmentsModal.requestId}
           onClose={() => setEnvironmentsModal(null)}
         />
       )}
