@@ -35,7 +35,7 @@ import {
 } from '~/routes/git-credentials.complete-sign-in';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
-import { isLoggedIn } from '~/ui/account/session';
+import { clearQueryCaches, isLoggedIn } from '~/ui/account/session';
 import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -49,6 +49,7 @@ import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { VariableSourceTooltipHost } from '~/ui/components/variable-source-tooltip-host';
 import { AppHooks } from '~/ui/containers/app-hooks';
+import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
@@ -409,6 +410,9 @@ const Root = () => {
   useEffect(() => {
     const unsubLoggedIn = window.main.on('loggedIn', (_, isLoggedIn: boolean) => {
       if (!latestInSubmission.current) {
+        // Another window changed the session; this window's caches belong to the previous one.
+        // Only clear alongside the navigation below, which unmounts any observers of the old queries.
+        clearQueryCaches();
         if (!isLoggedIn) {
           // If the user just logged out, navigate to the login page
           navigate(href('/auth/login'));
@@ -813,25 +817,27 @@ const Root = () => {
 
   return (
     <ServerDataCacheProvider>
-      <div className="app">
-        <Outlet />
-        <Toaster />
-      </div>
-      <Modals />
-      <VariableSourceTooltipHost />
-      <AppHooks />
-      {/* triggered by insomnia://app/import and pasting a cURL with no focus */}
-      {importTrigger && (
-        <ImportModal
-          key={importTrigger.source.startedAt}
-          onHide={() => setImportTrigger(null)}
-          defaultProjectId={projectId}
-          organizationId={organizationId}
-          workspaceName={workspaceName}
-          defaultWorkspaceId={importTrigger.workspaceId}
-          from={importTrigger.source}
-        />
-      )}
+      <AppDataCacheProvider>
+        <div className="app">
+          <Outlet />
+          <Toaster />
+        </div>
+        <Modals />
+        <VariableSourceTooltipHost />
+        <AppHooks />
+        {/* triggered by insomnia://app/import and pasting a cURL with no focus */}
+        {importTrigger && (
+          <ImportModal
+            key={importTrigger.source.startedAt}
+            onHide={() => setImportTrigger(null)}
+            defaultProjectId={projectId}
+            organizationId={organizationId}
+            workspaceName={workspaceName}
+            defaultWorkspaceId={importTrigger.workspaceId}
+            from={importTrigger.source}
+          />
+        )}
+      </AppDataCacheProvider>
     </ServerDataCacheProvider>
   );
 };

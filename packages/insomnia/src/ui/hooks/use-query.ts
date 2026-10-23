@@ -1,5 +1,13 @@
-import type { QueriesOptions, QueriesResults, QueryKey, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import type {
+  QueriesOptions,
+  QueriesResults,
+  QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
+} from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 
 import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
@@ -12,6 +20,12 @@ export function useDBQuery<
   TQueryKey extends QueryKey = QueryKey,
 >(options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>): UseQueryResult<TData, TError> {
   return useQuery(options, useDBQueryClient());
+}
+
+export function useDBMutation<TData = unknown, TError = Error, TVariables = void, TContext = unknown>(
+  options: UseMutationOptions<TData, TError, TVariables, TContext>,
+): UseMutationResult<TData, TError, TVariables, TContext> {
+  return useMutation(options, useDBQueryClient());
 }
 
 export function useDBQueries<T extends any[], TCombinedResult = QueriesResults<T>>(options: {
@@ -29,4 +43,10 @@ export function useServerQuery<
   TQueryKey extends QueryKey = QueryKey,
 >(options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>): UseQueryResult<TData, TError> {
   return useQuery(options, useServerDataQueryClient());
+}
+
+export function useServerMutation<TData = unknown, TError = Error, TVariables = void, TContext = unknown>(
+  options: UseMutationOptions<TData, TError, TVariables, TContext>,
+): UseMutationResult<TData, TError, TVariables, TContext> {
+  return useMutation(options, useServerDataQueryClient());
 }
