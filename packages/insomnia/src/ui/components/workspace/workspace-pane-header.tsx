@@ -1,7 +1,7 @@
 import { type McpRequest, models } from 'insomnia-data';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -29,12 +29,27 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   // specific environment's source ("open variable source"). Rendered outside the
   // hasSettings gate so views without settings controls (e.g. the mock server) still
   // host it.
-  const [environmentsModal, setEnvironmentsModal] = useState<{ environmentId?: string } | null>(null);
+  const location = useLocation();
+  const [environmentsModal, setEnvironmentsModal] = useState<{
+    environmentId?: string;
+    openedAtKey: string;
+  } | null>(null);
   useEffect(() => {
     return uiEventBus.on(OPEN_ENVIRONMENTS_MODAL, environmentId => {
-      setEnvironmentsModal({ environmentId });
+      setEnvironmentsModal({ environmentId, openedAtKey: location.key });
     });
-  }, []);
+  }, [location.key]);
+
+  // The modal belongs to the route it was opened on. "Open variable source" can
+  // navigate to another surface (e.g. a folder environment) while the modal is
+  // mounted; keeping it open would cover the page it navigated to. Any navigation,
+  // including a search-only change such as ?tab=environment, gets a new key.
+  // Close before paint so the modal never flashes over the destination.
+  useLayoutEffect(() => {
+    if (environmentsModal && environmentsModal.openedAtKey !== location.key) {
+      setEnvironmentsModal(null);
+    }
+  }, [environmentsModal, location.key]);
 
   const realBreadcrumbs = useMemo(() => {
     if (breadcrumbs.length > 4) {
@@ -57,7 +72,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   useDocBodyKeyboardShortcuts({
-    environment_showEditor: () => setEnvironmentsModal({}),
+    environment_showEditor: () => setEnvironmentsModal({ openedAtKey: location.key }),
     environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     environment_showSwitchProjectMenu: () => setIsProjectEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
@@ -100,7 +115,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
                     });
                   }
                 }}
-                onOpenEnvironmentSettingsModal={() => setEnvironmentsModal({})}
+                onOpenEnvironmentSettingsModal={() => setEnvironmentsModal({ openedAtKey: location.key })}
               />
               {!isMcp && (
                 <Button

@@ -26,13 +26,24 @@ const expectSentVar = async (page: Page, field: string, expected: string) => {
   await expect.poll(() => sendAndGetVar(page, field), { timeout: 30_000 }).toBe(expected);
 };
 
-async function selectEnvironment(page: Page, insomnia: InsomniaApp, scenario: (typeof SCENARIOS)[number]) {
+type EnvironmentScenario = Pick<
+  (typeof SCENARIOS)[number],
+  'environmentPickerLabel' | 'environment' | 'request'
+>;
+
+async function selectEnvironment(page: Page, insomnia: InsomniaApp, scenario: EnvironmentScenario) {
   await page.getByLabel(scenario.environmentPickerLabel).click();
   await page.getByRole('option', { name: scenario.environment, exact: true }).click();
   // The popover stays open after selecting; dismiss it
   await page.locator('.app').press('Escape');
   // re-select the request so the request pane renders against the freshly-active environment
   await insomnia.navigationSidebar.clickRequestOrFolder(scenario.request);
+}
+
+async function openManageEnvironmentsModal(page: Page) {
+  await page.getByLabel('Select an API Collection Environment').click();
+  await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+  return page.getByRole('dialog', { name: 'Manage Environments' });
 }
 
 async function openVariableModal(page: Page, templateSnippet: string) {
@@ -352,5 +363,84 @@ test.describe('Variable source and live preview across environment levels', () =
     const { sourceRow, livePreview } = await openVariableModal(page, 'text_base');
     await expect.soft(sourceRow).toContainText('Project Environment : Base Environment');
     await expect.soft(livePreview).toHaveValue('fromProjectBase', { timeout: 15_000 });
+  });
+
+  test('tooltip Open is clickable inside the Manage Environments modal', async ({ page, insomnia }) => {
+    const requestName = 'cascade request no folder';
+    await insomnia.navigationSidebar.clickRequestOrFolder(requestName);
+    await selectEnvironment(page, insomnia, SCENARIOS[1]);
+    await page.getByText('Body', { exact: true }).click();
+
+    const environmentsDialog = await openManageEnvironmentsModal(page);
+    const environmentsGrid = page.getByRole('grid', { name: 'Environments' });
+    await expect.soft(environmentsGrid.getByRole('row', { name: 'SubEnvA' })).toHaveAttribute('aria-selected', 'true');
+
+    // SubEnvA's baseSourcedVar is a tag sourced from the base environment; the tooltip
+    // is portalled outside the modal, where an open modal marks it inert.
+    const variableChip = environmentsDialog.locator('[data-template*="baseOnlyVar"]');
+    await variableChip.waitFor({ state: 'visible' });
+    await variableChip.hover();
+    const tooltip = page.getByTestId('variable-source-tooltip');
+    await expect.soft(tooltip).toBeVisible();
+    await expect.soft(tooltip).toContainText('baseOnlyValue');
+
+    await tooltip.getByTestId('variable-source-tooltip-open').click();
+    await expect
+      .soft(environmentsGrid.getByRole('row', { name: 'Base Environment' }))
+      .toHaveAttribute('aria-selected', 'true');
+    // Opening a collection source replaces the dialog with one preselected to the
+    // source environment; it must not stack a second dialog on top.
+    await expect.soft(page.getByRole('dialog', { name: 'Manage Environments' })).toHaveCount(1);
+  });
+
+  test('tooltip Open closes the modal when it navigates to the source surface', async ({ page, insomnia }) => {
+    // This request lives in cascadeFolder, whose environment supplies folderOverride:
+    // the chip in SubEnvA's value resolves to the folder environment, so Open navigates
+    // to the folder pane instead of switching the modal's selection.
+    const folderScenario = SCENARIOS[2];
+    await insomnia.navigationSidebar.clickRequestOrFolder(folderScenario.request);
+    await selectEnvironment(page, insomnia, {
+      environmentPickerLabel: folderScenario.environmentPickerLabel,
+      environment: 'SubEnvA',
+      request: folderScenario.request,
+    });
+    await page.getByText('Body', { exact: true }).click();
+
+    const environmentsDialog = await openManageEnvironmentsModal(page);
+    const variableChip = environmentsDialog.locator('[data-template*="folderOverride"]');
+    await variableChip.waitFor({ state: 'visible' });
+    await variableChip.hover();
+
+    const tooltip = page.getByTestId('variable-source-tooltip');
+    await expect.soft(tooltip).toContainText('Folder Environment : cascadeFolder');
+    await tooltip.getByTestId('variable-source-tooltip-open').click();
+
+    await expect.soft(page).toHaveURL(/debug\/request-group\//);
+    await expect.soft(page.getByRole('tab', { name: 'Environment' })).toHaveAttribute('aria-selected', 'true');
+    await expect.soft(environmentsDialog).toBeHidden();
+  });
+
+  test('tooltip Open closes the modal when only the search changes', async ({ page, insomnia }) => {
+    // Open the folder pane itself, so navigating to its environment tab keeps the
+    // pathname and only swaps the search string.
+    const folderScenario = SCENARIOS[2];
+    await selectEnvironment(page, insomnia, {
+      environmentPickerLabel: folderScenario.environmentPickerLabel,
+      environment: 'SubEnvA',
+      request: 'cascadeFolder',
+    });
+
+    const environmentsDialog = await openManageEnvironmentsModal(page);
+    const variableChip = environmentsDialog.locator('[data-template*="folderOverride"]');
+    await variableChip.waitFor({ state: 'visible' });
+    await variableChip.hover();
+
+    const tooltip = page.getByTestId('variable-source-tooltip');
+    await expect.soft(tooltip).toContainText('Folder Environment : cascadeFolder');
+    await tooltip.getByTestId('variable-source-tooltip-open').click();
+
+    await expect.soft(page).toHaveURL(/debug\/request-group\//);
+    await expect.soft(page.getByRole('tab', { name: 'Environment' })).toHaveAttribute('aria-selected', 'true');
+    await expect.soft(environmentsDialog).toBeHidden();
   });
 });
