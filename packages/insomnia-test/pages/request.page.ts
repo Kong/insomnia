@@ -106,17 +106,31 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Clicks the Connect/Disconnect button to open a connection (for
    * streaming request types) and waits for it to flip to "Disconnect".
+   * If an error dialog (e.g. "Failed to Render Request") appears instead,
+   * throws using its text rather than waiting out the full timeout for a
+   * button that will never appear.
+   * @param options.expectConnected - Set to `false` when the connection is expected to be refused or to fail right away (unreachable server/proxy), so the button never stays on "Disconnect"; returns right after the click
    */
-  async connect(): Promise<void> {
+  async connect({
+    expectConnected = true,
+  }: { expectConnected?: boolean } = {}): Promise<void> {
     const connectButton = this.page
       .locator(this.PANE)
       .getByRole("button", { name: /^(Connect|Disconnect)$/ });
     await connectButton.click();
-    await expect(
-      this.page
-        .locator(this.PANE)
-        .getByRole("button", { name: "Disconnect", exact: true }),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    if (!expectConnected) return;
+
+    const disconnectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: "Disconnect", exact: true });
+    const dialog = this.page.getByRole("dialog").first();
+    await disconnectButton
+      .or(dialog)
+      .first()
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
   }
 
   /**
