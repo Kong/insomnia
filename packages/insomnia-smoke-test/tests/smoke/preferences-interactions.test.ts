@@ -13,6 +13,33 @@ test('Preferences through keyboard shortcut', async ({ page }) => {
   await page.locator('text=Insomnia Preferences').first().click();
 });
 
+test('Theme previews keep their own colors when the active theme changes', async ({ page }) => {
+  await page.locator('.app').press(process.platform === 'darwin' ? 'Meta+,' : 'Control+,');
+  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByRole('tab', { name: 'Themes' }).click();
+  await page.getByRole('checkbox', { name: 'Use OS color scheme' }).uncheck();
+
+  const preview = (name: string) => page.getByText(name, { exact: true }).locator('..').locator('.theme-preview');
+  const colors = [
+    { name: 'Designer Light', header: 'rgb(247, 250, 252)', sidebar: 'rgb(247, 250, 252)' },
+    { name: 'Simple Light', header: 'rgb(255, 255, 255)', sidebar: 'rgb(255, 255, 255)' },
+    { name: 'Purple', header: 'rgb(255, 255, 255)', sidebar: 'rgb(105, 94, 184)' },
+  ];
+
+  for (const active of ['Hyper', ...colors.map(theme => theme.name)]) {
+    await preview(active).click();
+
+    for (const { name, header, sidebar } of colors) {
+      await expect.soft(preview(name).locator('.theme--app-header--sub rect')).toHaveCSS('fill', header);
+      await expect
+        .soft(preview(name).locator('.theme--pane--sub > rect').first())
+        .toHaveCSS('fill', 'rgb(255, 255, 255)');
+      await expect.soft(preview(name).locator('.theme--sidebar--sub rect')).toHaveCSS('fill', sidebar);
+      await expect.soft(preview(name).locator('line').first()).toHaveCSS('stroke', 'rgba(130, 130, 130, 0.35)');
+    }
+  }
+});
+
 test('AI URL settings persist advanced options', async ({ page }) => {
   await page.evaluate(async () => {
     await window.main.llm.updateBackendConfig('url', {
