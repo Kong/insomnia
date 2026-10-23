@@ -16,6 +16,11 @@ const HTTPS_OPTIONS = {
   cert: fs.readFileSync(certPath('localhost-cert.pem')),
 };
 
+const CUSTOM_CA_HTTPS_OPTIONS = {
+  key: fs.readFileSync(certPath('mtls-server-key.pem')),
+  cert: fs.readFileSync(certPath('mtls-server-cert.pem')),
+};
+
 function getServer() {
   const server = new McpServer({ name: 'deepwiki-mock', version: '1.0.0' });
 
@@ -207,10 +212,14 @@ app.get('/mcp-list/:key', (_req, res) => {
 
 const PORT = process.env.MCP_PORT || 4020;
 const SECURE_PORT = process.env.MCP_SECURE_PORT || 4021;
+const CUSTOM_CA_PORT = process.env.MCP_CUSTOM_CA_PORT || 4022;
 
 app.listen(PORT, () => {
   process.stdout.write(`MCP mock server listening at http://localhost:${PORT}\n`);
 });
 https.createServer(HTTPS_OPTIONS, app).listen(SECURE_PORT, () => {
   process.stdout.write(`MCP mock server listening at https://localhost:${SECURE_PORT}\n`);
+});
+https.createServer(CUSTOM_CA_HTTPS_OPTIONS, app).listen(CUSTOM_CA_PORT, () => {
+  process.stdout.write(`MCP mock server listening at https://localhost:${CUSTOM_CA_PORT} (custom CA)\n`);
 });
