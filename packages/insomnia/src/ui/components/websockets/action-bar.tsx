@@ -71,6 +71,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
           suppressUserAgent: rendered.suppressUserAgent,
+          sensitiveValues: rendered.sensitiveValues,
         };
       }
 
@@ -90,6 +91,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
           suppressUserAgent: rendered.suppressUserAgent,
+          sensitiveValues: rendered.sensitiveValues,
         };
       }
 
@@ -183,6 +185,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           <div className="box-border h-full w-full px-(--padding-md)">
             <OneLineEditor
               id="websocket-url-bar"
+              historyKey={`websocket-url-bar::${requestId}`}
               ref={oneLineEditorRef}
               onKeyDown={createKeybindingsHandler({
                 Enter: () => handleSubmit(),

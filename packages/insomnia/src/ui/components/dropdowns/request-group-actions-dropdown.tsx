@@ -2,14 +2,13 @@ import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { Project, Request, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
-import React, { Fragment, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -21,7 +20,6 @@ import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
-import { AskModal } from '../modals/ask-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
@@ -33,6 +31,7 @@ interface Props extends Partial<DropdownProps> {
   activeWorkspace: Workspace;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
+  onDelete: () => void;
 }
 
 export const RequestGroupActionsDropdown = ({
@@ -41,6 +40,7 @@ export const RequestGroupActionsDropdown = ({
   isOpen,
   onOpenChange,
   onRename,
+  onDelete,
   activeProject,
   activeWorkspace,
 }: Props) => {
@@ -53,7 +53,6 @@ export const RequestGroupActionsDropdown = ({
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
   const duplicateRequestGroupFetcher = useRequestGroupDuplicateActionFetcher();
-  const deleteRequestGroupFetcher = useRequestGroupDeleteActionFetcher();
 
   const tabNavigate = useTabNavigate();
 
@@ -84,10 +83,22 @@ export const RequestGroupActionsDropdown = ({
       },
     });
 
-  const onOpen = async () => {
-    const actionPlugins = await plugins.getRequestGroupActions();
-    setActionPlugins(actionPlugins);
-  };
+  const onOpen = useCallback(async () => {
+    try {
+      const actionPlugins = await plugins.getRequestGroupActions();
+      setActionPlugins(actionPlugins);
+    } catch (error) {
+      setActionPlugins([]);
+      console.error('Failed to get request group plugin actions', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch the action plugins when the dropdown is opened
+    if (isOpen) {
+      onOpen();
+    }
+  }, [isOpen, onOpen]);
 
   const handleRequestGroupDuplicate = () => {
     showModal(PromptModal, {
@@ -106,22 +117,6 @@ export const RequestGroupActionsDropdown = ({
             name,
           },
         });
-      },
-    });
-  };
-
-  const handleDeleteFolder = async () => {
-    showModal(AskModal, {
-      title: 'Delete Folder',
-      message: `Do you really want to delete "${requestGroup.name}"?`,
-      yesText: 'Delete',
-      noText: 'Cancel',
-      color: 'danger',
-      onDone: async (isYes: boolean) => {
-        if (isYes) {
-          services.stats.incrementDeletedRequestsForDescendents(requestGroup);
-          deleteRequestGroupFetcher.submit({ organizationId, projectId, workspaceId, id: requestGroup._id });
-        }
       },
     });
   };
@@ -328,7 +323,7 @@ export const RequestGroupActionsDropdown = ({
           id: 'Delete',
           name: 'Delete',
           icon: 'trash',
-          action: () => handleDeleteFolder(),
+          action: onDelete,
         },
         {
           id: 'RunFolder',
@@ -357,13 +352,7 @@ export const RequestGroupActionsDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger
-        isOpen={isOpen}
-        onOpenChange={isOpen => {
-          isOpen && onOpen();
-          onOpenChange(isOpen);
-        }}
-      >
+      <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
           aria-label="Request Group Actions"

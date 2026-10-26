@@ -143,3 +143,45 @@ describe('migrateCreateHTTPHotKey()', () => {
     );
   });
 });
+
+describe('migratePluginSandboxFlag()', () => {
+  // The retired flag is not on the current Settings type, so stamp it via a loose cast.
+  const withLegacyFlag = (templateTagSandboxEnabled: boolean, pluginSandboxEnabled?: boolean): Settings =>
+    ({
+      hotKeyRegistry: newDefaultRegistry(),
+      templateTagSandboxEnabled,
+      ...(pluginSandboxEnabled === undefined ? {} : { pluginSandboxEnabled }),
+    }) as unknown as Settings;
+
+  const legacyField = (settings: Settings) =>
+    (settings as unknown as { templateTagSandboxEnabled?: boolean }).templateTagSandboxEnabled;
+
+  it('carries a prior template-tag opt-in forward to pluginSandboxEnabled and drops the stale field', () => {
+    const result = migrate(withLegacyFlag(true));
+
+    expect(result.pluginSandboxEnabled).toBe(true);
+    expect(legacyField(result)).toBeUndefined();
+  });
+
+  it('does not enable the sandbox for users who never opted in', () => {
+    const result = migrate(withLegacyFlag(false));
+
+    expect(result.pluginSandboxEnabled).toBeFalsy();
+    expect(legacyField(result)).toBeUndefined();
+  });
+
+  it('leaves an already-enabled pluginSandboxEnabled untouched', () => {
+    const result = migrate(withLegacyFlag(false, true));
+
+    expect(result.pluginSandboxEnabled).toBe(true);
+    expect(legacyField(result)).toBeUndefined();
+  });
+
+  it('is idempotent — a doc with no legacy field is unchanged', () => {
+    const settings = { hotKeyRegistry: newDefaultRegistry(), pluginSandboxEnabled: false } as unknown as Settings;
+    const result = migrate(settings);
+
+    expect(result.pluginSandboxEnabled).toBe(false);
+    expect(legacyField(result)).toBeUndefined();
+  });
+});

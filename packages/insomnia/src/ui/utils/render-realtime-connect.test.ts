@@ -6,12 +6,12 @@ import { database as db } from '../../common/database';
 import { renderRealtimeConnectPayload } from './render-realtime-connect';
 import type * as TryInterpolate from './try-interpolate';
 
-const { tryToInterpolateRequestOrShowRenderErrorModal } = vi.hoisted(() => ({
-  tryToInterpolateRequestOrShowRenderErrorModal: vi.fn(),
+const { tryToInterpolateRequestAndCollectSensitiveValues } = vi.hoisted(() => ({
+  tryToInterpolateRequestAndCollectSensitiveValues: vi.fn(),
 }));
 
 vi.mock('./try-interpolate', () => ({
-  tryToInterpolateRequestOrShowRenderErrorModal,
+  tryToInterpolateRequestAndCollectSensitiveValues,
 }));
 
 vi.mock('../components/modals', () => ({
@@ -24,14 +24,17 @@ describe('renderRealtimeConnectPayload', () => {
   let request: WebSocketRequest;
 
   const mockRendered = async (overrides: Record<string, unknown> = {}) => {
-    tryToInterpolateRequestOrShowRenderErrorModal.mockResolvedValue({
-      url: 'ws://localhost/api/chat/1234',
-      headers: [],
-      authentication: { type: 'none' },
-      parameters: [],
-      pathParameters: [{ name: 'id', value: '1234' }],
-      workspaceCookieJar: await services.cookieJar.getOrCreateForParentId(workspaceId),
-      ...overrides,
+    tryToInterpolateRequestAndCollectSensitiveValues.mockResolvedValue({
+      rendered: {
+        url: 'ws://localhost/api/chat/1234',
+        headers: [],
+        authentication: { type: 'none' },
+        parameters: [],
+        pathParameters: [{ name: 'id', value: '1234' }],
+        workspaceCookieJar: await services.cookieJar.getOrCreateForParentId(workspaceId),
+        ...overrides,
+      },
+      sensitiveValues: [],
     });
   };
 
@@ -85,7 +88,7 @@ describe('renderRealtimeConnectPayload', () => {
 
     await renderRealtimeConnectPayload({ request, environmentId, workspaceId });
 
-    expect(tryToInterpolateRequestOrShowRenderErrorModal).toHaveBeenCalledWith(
+    expect(tryToInterpolateRequestAndCollectSensitiveValues).toHaveBeenCalledWith(
       expect.objectContaining({
         payload: expect.objectContaining({
           authentication: expect.objectContaining({ type: 'bearer', token: 'folder-token' }),
@@ -96,7 +99,7 @@ describe('renderRealtimeConnectPayload', () => {
   });
 
   it('returns undefined when rendering fails', async () => {
-    tryToInterpolateRequestOrShowRenderErrorModal.mockImplementation(async () => {});
+    tryToInterpolateRequestAndCollectSensitiveValues.mockImplementation(async () => {});
 
     const result = await renderRealtimeConnectPayload({ request, environmentId, workspaceId });
 
@@ -150,8 +153,8 @@ describe('renderRealtimeConnectPayload integration', () => {
 
   it('templates path parameter values from environment variables', async () => {
     const actual = await vi.importActual<typeof TryInterpolate>('./try-interpolate');
-    tryToInterpolateRequestOrShowRenderErrorModal.mockImplementation(
-      actual.tryToInterpolateRequestOrShowRenderErrorModal,
+    tryToInterpolateRequestAndCollectSensitiveValues.mockImplementation(
+      actual.tryToInterpolateRequestAndCollectSensitiveValues,
     );
 
     const project = await services.project.create({
@@ -183,5 +186,59 @@ describe('renderRealtimeConnectPayload integration', () => {
     });
 
     expect(result?.url).toBe('ws://localhost/api/chat/5678');
+  });
+
+  it('does not render a response-sourced cookie value when preparing a realtime connect payload', async () => {
+    const actual = await vi.importActual<typeof TryInterpolate>('./try-interpolate');
+    tryToInterpolateRequestAndCollectSensitiveValues.mockImplementation(
+      actual.tryToInterpolateRequestAndCollectSensitiveValues,
+    );
+
+    const project = await services.project.create({
+      _id: 'proj_render_connect_cookie',
+      name: 'Render Connect Cookie Project',
+    });
+    const workspace = await services.workspace.create({
+      _id: 'wrk_render_connect_cookie',
+      name: 'Render Connect Cookie Workspace',
+      parentId: project._id,
+      scope: 'collection',
+    });
+    const environment = await services.environment.getOrCreateForParentId(workspace._id);
+
+    const templateCookieValue = "{% uuid 'v4' %}";
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
+      cookies: [
+        {
+          id: 'c_render_connect',
+          key: 'tracking',
+          value: templateCookieValue,
+          domain: 'localhost',
+          path: '/',
+          secure: false,
+          httpOnly: false,
+          expires: null,
+          source: 'response',
+        },
+      ],
+    });
+
+    const request = await services.webSocketRequest.create({
+      _id: 'ws-req_render_connect_cookie',
+      name: 'WS Cookie Test',
+      parentId: workspace._id,
+      url: 'ws://localhost/api/chat',
+      metaSortKey: 0,
+    });
+
+    const result = await renderRealtimeConnectPayload({
+      request,
+      environmentId: environment._id,
+      workspaceId: workspace._id,
+    });
+    const responseCookie = result?.workspaceCookieJar.cookies.find(c => c.key === 'tracking');
+
+    expect(responseCookie?.value).toBe(templateCookieValue);
   });
 });

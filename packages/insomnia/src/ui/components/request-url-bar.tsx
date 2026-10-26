@@ -31,6 +31,7 @@ import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/use-timeout-when';
+import { useGitVCSVersion } from '../hooks/use-vcs-version';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { MethodSelector } from './dropdowns/method-selector';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -45,7 +46,7 @@ const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  uniquenessKey: string;
+  historyKey: string;
   onPaste: (text: string) => void;
 }
 
@@ -55,7 +56,7 @@ export interface RequestUrlBarHandle {
 }
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
-  ({ handleAutocompleteUrls, uniquenessKey, onPaste }, ref) => {
+  ({ handleAutocompleteUrls, historyKey, onPaste }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
@@ -109,7 +110,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       setSearchParams({});
     }, [searchParams, setSearchParams]);
 
-    const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
+    const { activeWorkspace, activeEnvironment, activeGlobalEnvironment } = useWorkspaceLoaderData()!;
+    const gitVersion = useGitVCSVersion();
     const { settings } = useRootLoaderData()!;
     const { hotKeyRegistry } = settings;
     const {
@@ -148,7 +150,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
     const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
     const connectRequestFetcher = useRequestConnectActionFetcher();
-    const sendRequestFetcher = useDebugRequestSendActionFetcher();
+    // Add a key here for other components to track the send action state
+    const sendRequestFetcher = useDebugRequestSendActionFetcher({ key: `send-request-${activeRequest._id}` });
 
     const { updateTabById } = useInsomniaTabContext();
 
@@ -206,8 +209,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
                 headers: rendered.headers,
                 authentication: rendered.authentication,
+                body: rendered.body,
                 cookieJar: rendered.workspaceCookieJar,
                 suppressUserAgent: rendered.suppressUserAgent,
+                sensitiveValues: rendered.sensitiveValues,
               });
             rendered &&
               recordProjectRecentRequest({
@@ -307,17 +312,18 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             ref={methodDropdownRef}
             onChange={method => patchRequest(requestId, { method })}
             method={method}
+            placement="bottom start"
           />
         </div>
         <div className="flex flex-1 items-center p-1">
           <OneLineEditor
             id="request-url-bar"
             // Remount on request switch or environment change (switch/edit) so nunjucks
-            // previews refresh. Excludes the response id / sync versions that churn on
-            // send and local edits, which used to remount and blur the editor mid-edit.
-            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}`}
+            // previews refresh. The Git version is only updated by external file
+            // sync, so it refreshes defaultValue without remounting on local edits.
+            key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}::${gitVersion}`}
             // Stable across that remount, so undo history is restored from the cache.
-            uniquenessKey={uniquenessKey}
+            historyKey={historyKey}
             ref={inputRef}
             type="text"
             autoFocus={focusUrlOnMount}

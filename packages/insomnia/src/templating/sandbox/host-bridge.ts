@@ -60,6 +60,11 @@ export const BRIDGE_PATH_CAPABILITIES: Record<string, Capability> = {
   'cookieJar.getCookiesForUrl': 'models.read',
   'response.getLatestForRequestId': 'models.read',
   'response.getBodyBuffer': 'models.read',
+  // A response hook rewriting its own response body (context.response.setBody). Grouped with the
+  // other response operations at baseline: it's a bounded write — the plugin supplies only bytes,
+  // never the path (bodyPath is host-set and can't be redirected), matching the ungated in-process
+  // response-hook behavior. Not a general fs write (there is no fs-write capability).
+  'response.setBody': 'models.read',
   'settings.get': 'models.read',
 
   'nodeOS': 'util',
@@ -112,22 +117,6 @@ export const ALL_CAPABILITIES: Capability[] = [
  * the same information is already freely available through the built-in `os`/`base64` tags.
  */
 export const TEMPLATE_TAG_BASELINE_CAPABILITIES: Capability[] = ['render', 'models.read', 'util', 'crypto'];
-
-/**
- * Resolve the capability set a template-tag plugin gets: the baseline floor plus whatever known
- * capabilities it declared in `insomnia.permissions.capabilities`. Unknown names are dropped (they
- * map to no bridge path), so the resolved set only ever contains real `Capability` values — which
- * keeps the envelope clean for the P1 profile-ceiling intersection.
- */
-export const resolveTemplateTagCapabilities = (declaredCapabilities: string[] = []): string[] => {
-  const resolved: string[] = [...TEMPLATE_TAG_BASELINE_CAPABILITIES];
-  for (const name of declaredCapabilities) {
-    if (ALL_CAPABILITIES.includes(name as Capability) && !resolved.includes(name as Capability)) {
-      resolved.push(name);
-    }
-  }
-  return resolved;
-};
 
 /**
  * Wrap a `pluginToMainAPI`-shaped handler map so each path rejects unless its capability is granted.

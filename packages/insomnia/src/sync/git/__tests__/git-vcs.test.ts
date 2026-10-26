@@ -15,6 +15,21 @@ describe('Git-VCS', () => {
   });
 
   describe('common operations', () => {
+    it('setAuthor() does not write empty user.name/user.email into git config when no author is resolvable', async () => {
+      const fsClient = MemClient.createClient();
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+      });
+
+      await GitVCS.setAuthor();
+
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: 'user.name' })).toBeUndefined();
+      expect(await git.getConfig({ fs: fsClient, dir: GIT_CLONE_DIR, path: 'user.email' })).toBeUndefined();
+    });
+
     it('stage and unstage file', async () => {
       // Write the files to the repository directory
       const fsClient = MemClient.createClient();
@@ -254,6 +269,52 @@ First commit!
       expect((await GitVCS.log()).length).toBe(2);
       await GitVCS.checkout('main');
       expect((await GitVCS.log()).length).toBe(1);
+    });
+  });
+
+  describe('fileStatus()', () => {
+    it('returns the raw HEAD and index content alongside the migrated content', async () => {
+      const collectionYaml = path.join(GIT_INSOMNIA_DIR, 'collection.yaml');
+      // A schema 5.0 file: the 5.1 migration removes header ids and adds schema_version
+      const oldSchemaContent = `type: collection.insomnia.rest/5.0
+name: Test
+collection:
+  - name: Request
+    meta:
+      id: req_1
+    headers:
+      - id: pair_1
+        name: X-Test
+        value: test
+`;
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(collectionYaml, oldSchemaContent);
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+      const [change] = (await GitVCS.status()).unstaged;
+      await GitVCS.stageChanges([change]);
+      await GitVCS.commit('First commit!');
+
+      const stagedContent = oldSchemaContent.replace('value: test', 'value: staged');
+      await fsClient.promises.writeFile(collectionYaml, stagedContent);
+      await GitVCS.stageChanges([change]);
+      await fsClient.promises.writeFile(collectionYaml, oldSchemaContent.replace('value: test', 'value: workdir'));
+
+      const fileStatus = await GitVCS.fileStatus(change.path);
+
+      expect(fileStatus.rawHead).toBe(oldSchemaContent);
+      expect(fileStatus.rawStage).toBe(stagedContent);
+      expect(fileStatus.head).not.toBe(oldSchemaContent);
+      expect(fileStatus.head).not.toContain('pair_1');
+      expect(fileStatus.stage).not.toContain('pair_1');
     });
   });
 

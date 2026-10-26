@@ -1,10 +1,10 @@
 import type { Workspace } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import {
   clearResourceCache,
-  findExistingImportedSpec,
+  findExistingImportedWorkspace,
   findRequestInExistingWorkspace,
   importResourcesToProject,
   importResourcesToWorkspace,
@@ -62,14 +62,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
     if (!workspaceId && data.skipImportIfDuplicate) {
-      const existing = await findExistingImportedSpec(projectId, organizationId);
+      const existing = await findExistingImportedWorkspace(projectId, organizationId);
       if (existing) {
-        const matchedRequest = await findRequestInExistingWorkspace(
-          existing.workspace,
-          data.endpoint,
-          data.operationId,
-        );
-        clearResourceCache(); // skipping import to navigate to existing, avoid stale resource cache
+        const matchedRequest = models.apiSpec.isApiSpec(existing.model)
+          ? await findRequestInExistingWorkspace(existing.workspace, data.endpoint, data.operationId)
+          : existing.model;
+        clearResourceCache();
         return {
           done: true,
           singleImportedWorkspace: existing.workspace,

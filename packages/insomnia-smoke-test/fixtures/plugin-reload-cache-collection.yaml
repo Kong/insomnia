@@ -1,0 +1,41 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Plugin Reload Cache Collection
+meta:
+  id: wrk_5b0a100000000000000000000000001
+  created: 1751900000000
+  modified: 1751900000000
+collection:
+  - url: http://127.0.0.1:4010/echo
+    name: Warmup
+    meta:
+      id: req_5b0a100000000000000000000000002
+      created: 1751900000001
+      modified: 1751900000001
+      isPrivate: false
+      sortKey: -1751900000001
+    method: GET
+    headers:
+      - name: X-Warmup
+        value: "{% uuid 'v4' %}"
+  - url: http://127.0.0.1:4010/echo
+    name: Reload Probe
+    meta:
+      id: req_5b0a100000000000000000000000003
+      created: 1751900000002
+      modified: 1751900000002
+      isPrivate: false
+      sortKey: -1751900000002
+    method: GET
+    headers:
+      - name: X-Reload-Probe
+        value: "{% reloadprobe %}"
+environments:
+  name: Base Environment
+  meta:
+    id: env_5b0a100000000000000000000000004
+    created: 1751900000003
+    modified: 1751900000003
+    isPrivate: false
+  data:
+    placeholder: baseline

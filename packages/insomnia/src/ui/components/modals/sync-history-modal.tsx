@@ -1,3 +1,4 @@
+import type { Snapshot } from 'insomnia-vcs';
 import {
   Button,
   Cell,
@@ -16,7 +17,6 @@ import { useParams } from 'react-router';
 import { useRootLoaderData } from '~/root';
 import { useInsomniaSyncRestoreActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.restore';
 
-import type { Snapshot } from '../../../sync/types';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';

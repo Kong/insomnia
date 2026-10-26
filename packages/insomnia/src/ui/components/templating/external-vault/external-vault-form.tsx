@@ -3,6 +3,8 @@ import { models } from 'insomnia-data';
 import React, { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { HelpTooltip } from '~/ui/components/help-tooltip';
+
 import { debounce } from '../../../../common/misc';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';
@@ -22,13 +24,19 @@ import type {
 const cloudCredentialType = models.cloudCredential.type;
 
 export const ExternalVaultForm = (props: ArgConfigFormProps) => {
-  const { onChange, configValue, activeTagData, docs } = props;
+  const { onChange, configValue, activeTagData, vaultPluginData, docs, onConvertLegacyTag } = props;
   const [showModal, setShowModal] = useState(false);
   const provider = activeTagData.args[0].value as CloudProviderName;
   const formData = useMemo(() => {
     return JSON.parse(configValue) as ExternalVaultConfig;
   }, [configValue]);
-  const selectedCredentialId = activeTagData.args[1].value;
+  const selectedCredentialIdOrCredentialKey = activeTagData.args[1].value?.toString() || '';
+  const isLegacyCredentialTag = models.cloudCredential.isCloudCredentialId(selectedCredentialIdOrCredentialKey);
+  const selectedCredentialId = isLegacyCredentialTag
+    ? // legacy version to save cloud credential id in tag
+      selectedCredentialIdOrCredentialKey
+    : // new version to save cloud credential id in pluginData, and each tag will have a unique id as key to get the cloud credential id as value from pluginData
+      vaultPluginData.find(data => data.key === selectedCredentialIdOrCredentialKey)?.value?.toString() || '';
   const cloudCredentialDocs = (docs[cloudCredentialType] as CloudProviderCredential[]) || [];
   const selectedCredentialDoc = cloudCredentialDocs.find(d => d._id === selectedCredentialId);
 
@@ -86,10 +94,23 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
 
   return (
     <>
-      {selectedCredentialDoc && provider !== 'azure' && (
+      {isLegacyCredentialTag && (
+        <div className="-mt-[calc(var(--padding-sm))] flex items-center gap-2">
+          <Button
+            className="mt-0 flex h-full items-center justify-center px-2 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            onPress={() => onConvertLegacyTag(selectedCredentialIdOrCredentialKey)}
+          >
+            Convert to New Format
+          </Button>
+          <HelpTooltip>
+            Convert this tag to new format for reliable syncing in git & cloud sync projects. Note: once converted, the
+            tag will only work on this version of Insomnia or later.
+          </HelpTooltip>
+        </div>
+      )}
+      {selectedCredentialDoc && provider !== 'azure' && !isLegacyCredentialTag && (
         <Button
-          className="mb-(--padding-sm) flex h-full items-center justify-center gap-2 px-2 py-1 text-xs text-(--color-info) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          style={{ marginTop: 'calc(var(--padding-sm) * -1)' }}
+          className="-mt-[calc(var(--padding-sm))]flex h-full items-center justify-center gap-2 px-2 py-1 text-xs text-(--color-info) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => setShowModal(true)}
         >
           <Icon icon="edit" /> Edit Credential
@@ -101,7 +122,12 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
           provider={provider}
           providerCredential={selectedCredentialDoc}
           onClose={() => setShowModal(false)}
-          onComplete={() => onChange(configValue)}
+          onComplete={() =>
+            onChange(
+              // convert the configValue to base64 string to avoid special characters in the configValue
+              btoa(new TextEncoder().encode(configValue).reduce((data, byte) => data + String.fromCodePoint(byte), '')),
+            )
+          }
         />
       )}
     </>

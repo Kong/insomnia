@@ -70,7 +70,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
       authentication: {
         ...mcpRequest.authentication,
         ...auth,
-      },
+      } as RequestAuthentication,
     });
     // update local authentication copy
     this.authentication = {
@@ -174,8 +174,13 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     BrowserWindow.getAllWindows().forEach(window => {
       window.webContents.send('show-oauth-authorization-modal', relayUrl);
     });
+    const shouldOpenDefaultBrowser =
+      'grantType' in this.authentication && this.authentication.grantType === 'mcp_auth_flow'
+        ? !this.authentication.launchBrowserManually
+        : true;
     const redirectedResult = await authorizeUserInDefaultBrowser({
       url: relayUrl,
+      openDefaultBrowser: shouldOpenDefaultBrowser,
     });
     const redirectedTo = decryptOAuthResult(redirectedResult);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);

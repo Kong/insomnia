@@ -27,6 +27,8 @@ export interface SpecificQuery {
   $in?: (string | null)[];
   $nin?: string[];
   $ne?: string | null;
+  // NeDB's `$ne` also matches documents where the field is absent, so optional keys need this too.
+  $exists?: boolean;
 }
 
 export type Query<T extends BaseModel = BaseModel> = {

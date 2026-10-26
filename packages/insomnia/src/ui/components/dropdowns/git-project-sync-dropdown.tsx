@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitProject, GitRepository } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import type { MergeConflict } from 'insomnia-vcs';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -22,17 +22,14 @@ import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
-import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
-import type { MergeConflict } from '../../../sync/types';
 import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -73,17 +70,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const gitStatusFetcher = useGitProjectStatusActionFetcher();
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
 
-  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
-  useEffect(() => {
-    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
-      const load = storageRuleFetcher.load;
-      load({ organizationId });
-    }
-  }, [organizationId, storageRuleFetcher.load]);
-
-  const { storagePromise } = storageRuleFetcher.data || {};
-
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+  const storageRules = useOrganizationStorageRule(organizationId);
   const { credentials } = useGitCredentials();
 
   const [isPulling, setIsPulling] = useState(false);
@@ -102,12 +89,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   }, [providerName]);
 
   useEffect(() => {
-    if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
+    if (gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
       gitRepoDataFetcher.load({
         projectId,
       });
     }
-  }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId]);
+  }, [gitRepoDataFetcher, gitRepository?._id, organizationId, projectId]);
 
   const legacyInsomniaWorkspace =
     gitRepoDataFetcher.data &&
@@ -487,7 +474,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         revalidate();
 
         return {
-          success: false,
+          success: true,
         };
       }
     } catch (err) {
@@ -585,7 +572,27 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       label: 'Open folder',
       isDisabled: !repoPath,
       icon: 'folder-open',
-      action: () => window.shell.openPath(repoPath),
+      action: async () => {
+        if (!gitRepository?._id) {
+          return;
+        }
+        // Resolve (and confirm it still exists) before opening — unlike a plain
+        // `window.shell.openPath`, this never recreates a folder that was
+        // renamed, moved, or deleted outside Insomnia.
+        const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
+        if ('errors' in result && result.errors) {
+          showToast({
+            icon,
+            title: 'Folder not found',
+            description: result.errors.join(', '),
+            status: 'error',
+          });
+          return;
+        }
+        if (result.path) {
+          window.shell.openPath(result.path);
+        }
+      },
     },
     {
       id: 'branches',

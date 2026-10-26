@@ -1,10 +1,36 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defaultServerConditions, defineConfig } from 'vite';
+import { defaultServerConditions, defineConfig, type Plugin } from 'vite';
 
 import pkg from './package.json';
+
+function writePortFile(): Plugin {
+  const portFilePath = path.resolve(__dirname, '.vite-port');
+  return {
+    name: 'write-port-file',
+    configureServer(server) {
+      try { fs.unlinkSync(portFilePath); } catch {}
+      server.httpServer?.once('listening', () => {
+        const addr = server.httpServer?.address();
+        if (addr && typeof addr === 'object') {
+          fs.writeFileSync(portFilePath, String(addr.port));
+        }
+      });
+      const cleanup = () => {
+        try { fs.unlinkSync(portFilePath); } catch {}
+        process.exit(0);
+      };
+      process.once('SIGINT', cleanup);
+      process.once('SIGTERM', cleanup);
+      process.once('exit', () => {
+        try { fs.unlinkSync(portFilePath); } catch {}
+      });
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
@@ -45,7 +71,6 @@ export default defineConfig(({ mode }) => {
         '@stoplight/spectral-core',
         'isomorphic-git',
         'json-bigint',
-        '@faker-js/faker',
       ],
     },
     resolve: {
@@ -61,7 +86,7 @@ export default defineConfig(({ mode }) => {
         'buffer': path.resolve(__dirname, '../../node_modules/buffer'),
       },
     },
-    plugins: [reactRouter(), tailwindcss()],
+    plugins: [reactRouter(), tailwindcss(), writePortFile()],
     worker: {
       format: 'es',
     },

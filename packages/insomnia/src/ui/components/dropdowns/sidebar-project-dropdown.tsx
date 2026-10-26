@@ -2,7 +2,7 @@ import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { type FC, Fragment, useEffect, useState } from 'react';
+import React, { type FC, Fragment, useState } from 'react';
 import {
   Button,
   Collection,
@@ -22,16 +22,12 @@ import * as reactUse from 'react-use';
 import type { SORT_ORDERS } from '~/common/constants';
 import { sortOrderName } from '~/common/constants';
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { exportProjectToFile } from '~/ui/components/settings/import-export';
 
 import { Icon } from '../icon';
-import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
-import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
 import { createWorkspaceActionItems } from './actions/create-actions';
 
@@ -54,6 +50,7 @@ interface Props {
   onSortOrderChange: (newOrder: WorkspaceSortOrder) => void;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  onDelete: () => void;
 }
 
 interface ProjectActionItem {
@@ -74,6 +71,7 @@ export const ProjectDropdown: FC<Props> = ({
   onSortOrderChange,
   isOpen,
   onOpenChange,
+  onDelete,
 }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
@@ -87,8 +85,6 @@ export const ProjectDropdown: FC<Props> = ({
   const { workspaceId } = useParams() as { workspaceId?: string };
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
 
-  const deleteProjectFetcher = useProjectDeleteActionFetcher();
-
   const isRemoteProjectInconsistent = models.project.isRemoteProject(project) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
     !models.project.isRemoteProject(project) && !models.project.isGitProject(project) && !storageRules.enableLocalVault;
@@ -97,8 +93,6 @@ export const ProjectDropdown: FC<Props> = ({
 
   const createNewCollection = () =>
     setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar-dropdown' });
-  const createNewDocument = () =>
-    setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar-dropdown' });
   const canCreateMockServer = project?._id;
   const createNewMockServer = () =>
     canCreateMockServer &&
@@ -160,41 +154,12 @@ export const ProjectDropdown: FC<Props> = ({
       id: 'delete',
       name: 'Delete',
       icon: 'trash',
-      action: (projectId: string, projectName: string) => {
-        let title = 'Delete Project';
-        let message = `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`;
-        let yesText = 'Delete';
-
-        if (project.konnectControlPlaneId) {
-          title = 'Remove Project';
-          message = `Do you wish to remove your local copy of the "${projectName}" project? This will not affect anything in Konnect, or any other users.`;
-          yesText = 'Remove';
-        } else if (models.project.isGitProject(project)) {
-          message = `You are deleting the Git project "${projectName}". Deleting this project will not delete the remote repository but all your local changes will be lost. Do you really want to continue?`;
-        }
-
-        showModal(AskModal, {
-          title,
-          message,
-          yesText,
-          noText: 'Cancel',
-          color: 'danger',
-          onDone: async (isYes: boolean) => {
-            if (isYes) {
-              deleteProjectFetcher.submit({
-                organizationId,
-                projectId,
-              });
-            }
-          },
-        });
-      },
+      action: onDelete,
     },
   ];
 
   const createInProjectActionList: ProjectActionItem[] = createWorkspaceActionItems({
     createCollection: createNewCollection,
-    createDocument: createNewDocument,
     createMcpClient: createNewMcpClient,
     createMockServer: createNewMockServer,
     createEnvironment: createNewGlobalEnvironment,
@@ -220,15 +185,6 @@ export const ProjectDropdown: FC<Props> = ({
       items: projectActionList,
     },
   ];
-
-  useEffect(() => {
-    if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
-      showModal(AlertModal, {
-        title: 'Could not delete project',
-        message: deleteProjectFetcher.data.error,
-      });
-    }
-  }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
 
   reactUse.useUpdateEffect(() => {
     if (workspaceId && newWorkspaceModalState?.isOpen) {

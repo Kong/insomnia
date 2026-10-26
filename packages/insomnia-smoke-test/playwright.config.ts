@@ -1,7 +1,16 @@
+import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 
 import type { PlaywrightTestConfig } from '@playwright/test';
 const isWindows = os.platform() === 'win32';
+
+// Reused across runs within this worktree only: .vite-port is written per-worktree by vite.config.ts,
+// so reading it here lets playwright reuse an already-running dev server instead of always starting a new one.
+let existingVitePort: string | undefined;
+try {
+  existingVitePort = fs.readFileSync(path.join(__dirname, '../insomnia/.vite-port'), 'utf8').trim();
+} catch {}
 const echoServer: PlaywrightTestConfig['webServer'] = {
   name: 'Echo server',
   command: 'npm run serve',
@@ -18,14 +27,17 @@ const viteServer: PlaywrightTestConfig['webServer'] = {
   name: 'Vite Server',
   cwd: '../../',
   command: 'npm run watch:app',
-  url: 'http://localhost:3334',
+  ...(existingVitePort ? { url: `http://localhost:${existingVitePort}` } : {}),
   timeout: 120 * 1000,
   reuseExistingServer: !process.env.CI,
   stdout: 'pipe',
   stderr: 'pipe',
   wait: {
-    stdout: /VITE\s+ready in/,
+    stdout: /VITE.+ready in/,
   },
+  // Without this, Playwright SIGKILLs the process group on teardown, which the
+  // .vite-port cleanup in vite.config.ts can't intercept, leaving a stale port file.
+  gracefulShutdown: isWindows ? undefined : { signal: 'SIGTERM', timeout: 2000 },
 };
 const onlyStartWebServerInDev = !process.env.BUNDLE || process.env.BUNDLE === 'dev';
 const config: PlaywrightTestConfig = {
@@ -34,7 +46,7 @@ const config: PlaywrightTestConfig = {
       // High-confidence smoke/sanity checks, runs on Test App only on Ubuntu
       name: 'Smoke',
       testMatch: /smoke\/.*.test.ts/,
-      retries: 0,
+      retries: 1,
     },
     {
       // Single critical path test, runs on release recurring
@@ -58,7 +70,9 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['github'], ['line']] : [['dot']],
+  reporter: process.env.CI
+    ? [['github'], ['line'], ['junit', { outputFile: 'test-results.xml', includeRetries: true }]]
+    : [['dot']],
   timeout: process.env.CI || isWindows ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',

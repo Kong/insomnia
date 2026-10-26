@@ -37,12 +37,56 @@ const getTempPath = (name: string) => {
 
 type initOptions = DataStoreOptions & { dbPath?: string };
 
+type FlushChangesImpl = (id?: number, fake?: boolean) => Promise<ChangeBufferEvent[] | void>;
+
 /**
  * Create the NeDB database implementation for main process and Node.js.
+ * Every instance keeps its own collections and change listeners, so an extra
+ * instance (e.g. an in-memory scratch database) never affects another one.
  */
 export const createNedbDatabase = <O = initOptions>(
-  wrapper?: (nedbDatabase: IDatabase<initOptions>) => IDatabase<O>,
+  wrapper?: (nedbDatabase: IDatabase<initOptions>, internals: { flushChangesImpl: FlushChangesImpl }) => IDatabase<O>,
 ) => {
+  let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
+
+  // ~~~~~~~~~~~~~~~~ //
+  // Change Listeners //
+  // ~~~~~~~~~~~~~~~~ //
+  let bufferingChanges = false;
+  let bufferChangesId = 1;
+
+  let changeBuffer: ChangeBufferEvent[] = [];
+
+  let changeListeners: ChangeListener[] = [];
+
+  /** trigger all changeListeners */
+  const flushChangesImpl: FlushChangesImpl = async function (id = 0, fake = false) {
+    // Only flush if ID is 0 or the current flush ID is the same as passed
+    if (id !== 0 && bufferChangesId !== id) {
+      return;
+    }
+
+    bufferingChanges = false;
+    const changes = [...changeBuffer];
+    changeBuffer = [];
+
+    if (changes.length === 0) {
+      // No work to do
+      return;
+    }
+
+    if (fake) {
+      console.log(`[db] Dropped ${changes.length} changes.`);
+      return;
+    }
+    // Notify local listeners too
+    for (const fn of changeListeners) {
+      await fn(changes);
+    }
+
+    return changes;
+  };
+
   const originalDatabase: IDatabase<initOptions> = {
     batchModifyDocs: async function ({ upsert = [], remove = [] }: Operation) {
       const flushId = await database.bufferChanges();
@@ -102,56 +146,61 @@ export const createNedbDatabase = <O = initOptions>(
 
     /** duplicate doc and its descendents recursively */
     duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Partial<T> = {}) {
-      const flushId = await database.bufferChanges();
-      const descendantMap = models.getAllDescendantMap();
+      const flushId = await database.bufferChangesIndefinitely();
+      try {
+        const descendantMap = models.getAllDescendantMap();
 
-      const idMapping = new Map<string, string>();
-      const allDocs: { doc: BaseModel; parentId: string }[] = [];
+        const idMapping = new Map<string, string>();
+        const allDocs: { doc: BaseModel; parentId: string }[] = [];
 
-      async function collectDescendants(doc: BaseModel): Promise<void> {
-        const model = models.mustGetModel(doc.type);
-        idMapping.set(doc._id, generateId(model.prefix));
+        async function collectDescendants(doc: BaseModel): Promise<void> {
+          const model = models.mustGetModel(doc.type);
+          idMapping.set(doc._id, generateId(model.prefix));
 
-        const validChildTypes = (descendantMap[doc.type] ?? []).filter(t => models.canDuplicate(t));
-        for (const childType of validChildTypes) {
-          for (const child of await database.find(childType, { parentId: doc._id })) {
-            allDocs.push({ doc: child, parentId: doc._id });
-            await collectDescendants(child);
+          const validChildTypes = (descendantMap[doc.type] ?? []).filter(t => models.canDuplicate(t));
+          for (const childType of validChildTypes) {
+            for (const child of await database.find(childType, { parentId: doc._id })) {
+              allDocs.push({ doc: child, parentId: doc._id });
+              await collectDescendants(child);
+            }
           }
         }
-      }
-      await collectDescendants(originalDoc);
+        await collectDescendants(originalDoc);
 
-      const updateTime = Date.now();
+        const updateTime = Date.now();
 
-      // Duplicate the root document
-      const rootRewritten: T = models.rewriteReferences(originalDoc, idMapping);
-      const rootDoc = {
-        ...rootRewritten,
-        ...patch,
-        _id: idMapping.get(originalDoc._id)!,
-        modified: updateTime,
-        created: updateTime,
-        type: originalDoc.type,
-      };
-      const createdDoc = (await nedbBucket[originalDoc.type].insertAsync(rootDoc)) as T;
-
-      // Duplicate all descendants
-      for (const { doc, parentId } of allDocs) {
-        const rewritten = models.rewriteReferences(doc, idMapping);
-        const newDoc = {
-          ...rewritten,
-          _id: idMapping.get(doc._id)!,
-          parentId: idMapping.get(parentId)!,
+        // Duplicate the root document
+        const rootRewritten: T = models.rewriteReferences(originalDoc, idMapping);
+        const rootDoc = {
+          ...rootRewritten,
+          ...patch,
+          _id: idMapping.get(originalDoc._id)!,
           modified: updateTime,
           created: updateTime,
-          type: doc.type,
+          type: originalDoc.type,
         };
-        await nedbBucket[doc.type].insertAsync(newDoc);
-      }
+        const createdDoc = (await nedbBucket[originalDoc.type].insertAsync(rootDoc)) as T;
+        notifyOfChange('insert', createdDoc);
 
-      await database.flushChanges(flushId);
-      return createdDoc;
+        // Duplicate all descendants
+        for (const { doc, parentId } of allDocs) {
+          const rewritten = models.rewriteReferences(doc, idMapping);
+          const newDoc = {
+            ...rewritten,
+            _id: idMapping.get(doc._id)!,
+            parentId: idMapping.get(parentId)!,
+            modified: updateTime,
+            created: updateTime,
+            type: doc.type,
+          };
+          const createdDescendant = await nedbBucket[doc.type].insertAsync(newDoc);
+          notifyOfChange('insert', createdDescendant);
+        }
+
+        return createdDoc;
+      } finally {
+        await database.flushChanges(flushId);
+      }
     },
     findOne: async function <T extends BaseModel>(
       type: AllTypes,
@@ -572,46 +621,6 @@ export const createNedbDatabase = <O = initOptions>(
     }
   }
 
-  const database = wrapper ? wrapper(originalDatabase) : originalDatabase;
+  const database = wrapper ? wrapper(originalDatabase, { flushChangesImpl }) : originalDatabase;
   return database as IDatabase<O>;
-};
-
-let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
-
-// ~~~~~~~~~~~~~~~~ //
-// Change Listeners //
-// ~~~~~~~~~~~~~~~~ //
-let bufferingChanges = false;
-let bufferChangesId = 1;
-
-let changeBuffer: ChangeBufferEvent[] = [];
-
-let changeListeners: ChangeListener[] = [];
-
-/** trigger all changeListeners */
-export const flushChangesImpl = async function (id = 0, fake = false): Promise<ChangeBufferEvent[] | void> {
-  // Only flush if ID is 0 or the current flush ID is the same as passed
-  if (id !== 0 && bufferChangesId !== id) {
-    return;
-  }
-
-  bufferingChanges = false;
-  const changes = [...changeBuffer];
-  changeBuffer = [];
-
-  if (changes.length === 0) {
-    // No work to do
-    return;
-  }
-
-  if (fake) {
-    console.log(`[db] Dropped ${changes.length} changes.`);
-    return;
-  }
-  // Notify local listeners too
-  for (const fn of changeListeners) {
-    await fn(changes);
-  }
-
-  return changes;
 };

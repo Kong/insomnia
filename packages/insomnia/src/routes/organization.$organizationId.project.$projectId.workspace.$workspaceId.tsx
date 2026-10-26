@@ -1,5 +1,4 @@
 import type {
-  ApiSpec,
   CaCertificate,
   ClientCertificate,
   CookieJar,
@@ -33,6 +32,7 @@ import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project'
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -54,7 +54,6 @@ export interface WorkspaceLoaderData {
   subEnvironments: Environment[];
   globalBaseEnvironments: (Environment & { workspaceName: string })[];
   globalSubEnvironments: Environment[];
-  activeApiSpec: ApiSpec | null;
   activeMockServer?: MockServer | null;
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
@@ -147,7 +146,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
-  const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const activeMockServer = await services.mockServer.getByParentId(workspaceId);
 
@@ -281,11 +279,15 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   let vcsVersion = null;
   if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
     try {
-      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
+      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, workspaceId, activeWorkspace.name);
       if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
-        await pushSnapshotOnInitialize({ vcs: window.main.sync, workspace: activeWorkspace, project: activeProject });
+        await pushSnapshotOnInitialize({
+          vcs: syncVCSLikeForWorkspace(workspaceId),
+          workspace: activeWorkspace,
+          project: activeProject,
+        });
       }
-      vcsVersion = await window.main.sync.getVersion();
+      vcsVersion = await window.main.sync.getVersion(workspaceId);
     } catch (err) {
       console.warn('Failed to initialize VCS', err);
     }
@@ -323,7 +325,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     baseEnvironment,
     globalSubEnvironments,
     globalBaseEnvironments: globalBaseEnvironmentsWithWorkspaceName,
-    activeApiSpec,
     activeMockServer,
     clientCertificates,
     caCertificate: await services.caCertificate.getByParentId(workspaceId),

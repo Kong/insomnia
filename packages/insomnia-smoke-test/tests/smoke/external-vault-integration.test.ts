@@ -1,7 +1,24 @@
 import { expect } from '@playwright/test';
 
-import { getFixturePath, loadFixture } from '../../playwright/paths';
-import { test } from '../../playwright/test';
+import { getFixturePath, loadFixture, seedSettings } from '../../playwright/paths';
+import { test as baseTest } from '../../playwright/test';
+
+// An external vault tag's result is a confidential value: with "Hide Confidential values in
+// Preview/Console" on (its default) it is masked in the tag preview and redacted out of the
+// timeline the Console tab renders. This spec is about the vault integration itself -- that
+// the provider value is really fetched and really reaches the request -- so it turns the
+// setting off and asserts on the plaintext. Redaction has its own spec, see
+// confidential-redaction.test.ts.
+const test = baseTest.extend({
+  dataPath: async ({ dataPath }, use) => {
+    // seedSettings rewrites the whole settings doc, so repeat the harness default it drops.
+    await seedSettings(dataPath, {
+      sidebarFocusForCollections: false,
+      hideSecretValuesInPreviewAndConsole: false,
+    });
+    await use(dataPath);
+  },
+});
 
 test('Setup external vault and used in request', async ({ app, page, insomnia }) => {
   // import request collection and replace the template tag file path with the actual fixture file path
@@ -64,12 +81,7 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
   await page.locator('#close-add-cloud-credential-modal').click();
 
   // close the settings
-  await page.locator('.app').press('Escape');
-  // dismiss any remaining modal overlay before interacting with the sidebar
-  await page
-    .locator('[data-close-modal="true"]')
-    .click()
-    .catch(() => {});
+  await page.getByRole('button', { name: 'Modal Close Button' }).click();
 
   // used in request
   await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');

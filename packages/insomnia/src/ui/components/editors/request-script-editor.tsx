@@ -21,7 +21,7 @@ import { Icon } from '../icon';
 interface Props {
   onChange: (value: string) => void;
   defaultValue: string;
-  uniquenessKey: string;
+  historyKey: string;
   className?: string;
   onSnippetAdded?: (snippetName: string) => void;
 }
@@ -467,13 +467,7 @@ const snippetsMenus: SnippetMenuItem[] = [
   miscMenu,
 ];
 
-export const RequestScriptEditor: FC<Props> = ({
-  className,
-  defaultValue,
-  onChange,
-  uniquenessKey,
-  onSnippetAdded,
-}) => {
+export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChange, historyKey, onSnippetAdded }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
 
   // Inserts at the line below the cursor and moves to the line beneath
@@ -496,10 +490,10 @@ export const RequestScriptEditor: FC<Props> = ({
   return (
     <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
       <CodeEditor
-        id={`script-editor-${uniquenessKey}`}
-        key={uniquenessKey}
+        id={`script-editor-${historyKey}`}
+        key={historyKey}
         showPrettifyButton={true}
-        uniquenessKey={uniquenessKey}
+        historyKey={historyKey}
         defaultValue={defaultValue}
         className={className}
         onChange={onChange}

@@ -5,9 +5,10 @@ import { parse as urlParse } from 'node:url';
 import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
+import { ProxyScopes, setDefaultProtocol } from 'insomnia-data/common';
 
 import { getApiBaseURL } from '../common/constants';
-import { parseResolvedProxy, setDefaultProtocol, shouldBypassProxyForHost } from './network/libcurl-promise';
+import { parseResolvedProxy, shouldBypassProxyForHost } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
 
 export interface RegisterProtocolOptions {
@@ -28,6 +29,7 @@ export async function registerInsomniaProtocols() {
         standard: true,
         supportFetchAPI: true,
         stream: true,
+        corsEnabled: true,
       },
     },
     {
@@ -40,7 +42,7 @@ export async function registerInsomniaProtocols() {
     },
     {
       scheme: templatingWorkerDatabaseInterface,
-      privileges: { secure: true, standard: true, supportFetchAPI: true },
+      privileges: { secure: true, standard: true, supportFetchAPI: true, corsEnabled: true },
     },
   ]);
 
@@ -80,6 +82,8 @@ export async function registerInsomniaProtocols() {
             } else {
               curl.setOpt(Curl.option.PROXY, '');
             }
+          } else if (settings.proxyScope !== ProxyScopes.all) {
+            curl.setOpt(Curl.option.PROXY, '');
           } else {
             const { protocol, hostname } = urlParse(urlStr);
             const { httpProxy, httpsProxy, noProxy } = settings;

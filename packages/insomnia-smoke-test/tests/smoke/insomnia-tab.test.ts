@@ -33,6 +33,8 @@ test.describe('multiple-tab feature test', () => {
     // rename
     await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'foo', 'Tab sync collection');
 
+    // Sidebar is still focused on "Tab sync collection"; back out before switching collections.
+    await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       workspaceName: 'My first collection',
       actionName: 'HTTP Request',
@@ -40,9 +42,13 @@ test.describe('multiple-tab feature test', () => {
     await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'bar', 'My first collection');
 
     await insomnia.navigationSidebar.clickRequestOrFolder('bar');
+    // "foo" lives in "Tab sync collection"; sidebar is currently focused on "My first collection".
+    await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.clickRequestOrFolder('foo');
     const tabA = page.getByLabel('Insomnia Tabs').getByLabel('tab-foo', { exact: true });
     await expect.soft(tabA).toHaveAttribute('data-selected', 'true');
+    // "bar" lives in "My first collection"; clicking "foo" re-focused the sidebar on "Tab sync collection".
+    await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.clickRequestOrFolder('bar');
     const tabB = page.getByLabel('Insomnia Tabs').getByLabel('tab-bar', { exact: true });
     await expect.soft(tabB).toHaveAttribute('data-selected', 'true');
@@ -50,6 +56,8 @@ test.describe('multiple-tab feature test', () => {
     //change icon after change request method
     await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
     await insomnia.projectPage.createCollection('Method icon collection');
+    // Sidebar is now focused on "Method icon collection"; back out to reach "My first collection".
+    await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       workspaceName: 'My first collection',
       actionName: 'HTTP Request',
@@ -82,6 +90,9 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Select Workspace').selectOption({ label: 'My first collection' });
     await page.getByRole('dialog').getByRole('button', { name: 'Add' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    // The new request was added to "My first collection", but the sidebar is still focused on
+    // "Test add tab collection" (adding to another workspace via the modal doesn't navigate).
+    await insomnia.navigationSidebar.backToAllProjects();
     await expect.soft(insomnia.navigationSidebar.requestRow('New Request', 'My first collection')).toBeVisible();
 
     // close tab after delete a request

@@ -3,7 +3,7 @@ import { href } from 'react-router';
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
-import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 import { getSyncItems, remoteCompareCache, reparentSyncDelta } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -18,7 +18,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { syncItems } = await getSyncItems({ workspaceId });
   let delta;
   try {
-    delta = await window.main.sync.merge(syncItems, branch);
+    delta = await window.main.sync.merge(workspaceId, syncItems, branch);
   } catch (err) {
     if (err instanceof UserAbortResolveMergeConflictError) {
       return null;

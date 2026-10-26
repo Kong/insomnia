@@ -1,9 +1,10 @@
 import type { EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentType } from 'insomnia-data';
-import React, { type FC, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
+import { useSearchParams } from 'react-router';
 
-import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -33,6 +34,27 @@ export const RequestGroupPane: FC = () => {
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const patchGroup = useRequestGroupPatcher();
   const { toggleEnvironmentType } = useToggleEnvironmentType();
+  const allowSwitchEnvironment = !hasProtectedKvPairs(activeRequestGroup?.kvPairData);
+
+  // Deep-linkable inner tab selection, e.g. /debug/request-group/:id?tab=environment
+  // (used by the variable live preview "Open" action to land on the folder's env editor).
+  // Unknown values (stale/renamed deep links) fall back to the default tab instead of
+  // leaving the controlled Tabs without a selection.
+  const FOLDER_TAB_IDS = ['auth', 'headers', 'scripts', 'environment', 'docs'];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const isValidRequestedTab = requestedTab !== null && FOLDER_TAB_IDS.includes(requestedTab);
+  const [selectedTab, setSelectedTab] = useState<string>(isValidRequestedTab ? requestedTab : 'auth');
+  useEffect(() => {
+    if (isValidRequestedTab) {
+      setSelectedTab(requestedTab);
+      // Consume the param: the sidebar forwards current search params to the next
+      // folder navigation, and a stale tab=environment would override its tab choice.
+      const next = new URLSearchParams(searchParams);
+      next.delete('tab');
+      setSearchParams(next, { replace: true });
+    }
+  }, [isValidRequestedTab, requestedTab, searchParams, setSearchParams]);
 
   const saveChanges = () => {
     if (environmentEditorRef.current?.isValid()) {
@@ -69,7 +91,9 @@ export const RequestGroupPane: FC = () => {
       <Tabs
         aria-label="Request group tabs"
         className="flex h-full w-full flex-1 flex-col"
+        selectedKey={selectedTab}
         onSelectionChange={key => {
+          setSelectedTab(String(key));
           // Save environment changes when nav away from environment tab.
           if (key !== 'environment' && environmentEditorRef) {
             saveChanges();
@@ -143,12 +167,12 @@ export const RequestGroupPane: FC = () => {
               aria-label="Request scripts tabs"
             >
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+                className="flex h-(--line-height-xxs) w-40 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
                 id="pre-request"
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-to-bracket" />
-                  <span>Pre-request</span>
+                  <span className="whitespace-nowrap">Pre-request</span>
                 </div>
                 {Boolean(activeRequestGroup.preRequestScript) && (
                   <span className="rounded-lg p-2">
@@ -157,12 +181,12 @@ export const RequestGroupPane: FC = () => {
                 )}
               </Tab>
               <Tab
-                className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
+                className="flex h-(--line-height-xxs) w-46 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
                 id="after-response"
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-from-bracket" />
-                  <span>After-response</span>
+                  <span className="whitespace-nowrap">After-response</span>
                 </div>
                 {Boolean(activeRequestGroup.afterResponseScript) && (
                   <span className="rounded-lg p-2">
@@ -174,7 +198,7 @@ export const RequestGroupPane: FC = () => {
             <TabPanel className="w-full flex-1" id="pre-request">
               <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
-                  uniquenessKey={`${activeRequestGroup._id}:pre-request-script`}
+                  historyKey={`${activeRequestGroup._id}:pre-request-script`}
                   defaultValue={activeRequestGroup.preRequestScript || ''}
                   onChange={preRequestScript => patchRequestGroup(activeRequestGroup._id, { preRequestScript })}
                 />
@@ -183,7 +207,7 @@ export const RequestGroupPane: FC = () => {
             <TabPanel className="w-full flex-1" id="after-response">
               <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
-                  uniquenessKey={`${activeRequestGroup._id}:after-response-script`}
+                  historyKey={`${activeRequestGroup._id}:after-response-script`}
                   defaultValue={activeRequestGroup.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequestGroup(activeRequestGroup._id, { afterResponseScript })}
                 />
@@ -217,6 +241,7 @@ export const RequestGroupPane: FC = () => {
                   }
                 }}
                 isSelected={activeRequestGroup?.environmentType !== EnvironmentType.KVPAIR}
+                isDisabled={!allowSwitchEnvironment}
                 className="ml-2 flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs py-1 pl-2 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
               >
                 {({ isSelected }) => (
@@ -243,6 +268,7 @@ export const RequestGroupPane: FC = () => {
                 <EnvironmentEditor
                   ref={environmentEditorRef}
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
+                  historyKey={`environment-editor::${activeRequestGroup ? activeRequestGroup._id : 'n/a'}`}
                   environmentInfo={{
                     object: activeRequestGroup ? activeRequestGroup.environment : {},
                     propertyOrder: (activeRequestGroup && activeRequestGroup.environmentPropertyOrder) ?? null,
@@ -256,6 +282,7 @@ export const RequestGroupPane: FC = () => {
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
             key={uniqueKey}
+            historyKey={`request-group-description::${activeRequestGroup._id}`}
             className="margin-top"
             placeholder="Write a description"
             defaultValue={activeRequestGroup.description}

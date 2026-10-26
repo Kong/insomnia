@@ -17,7 +17,7 @@ const getCollectionItem = async (id: string) => {
 };
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
-  const { id, targetId, dropPosition, metaSortKey } = await request.json();
+  const { id, targetId, dropPosition, metaSortKey, parentId: requestedParentId } = await request.json();
   invariant(typeof id === 'string', 'ID is required');
   invariant(typeof targetId === 'string', 'Target ID is required');
 
@@ -53,7 +53,15 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const item = await getCollectionItem(id);
   const targetItem = await getCollectionItem(targetId);
 
-  const parentId = dropPosition === 'after' && isRequestGroup(targetItem) ? targetItem._id : targetItem.parentId;
+  // The sidebar resolves its own destination and sends it outright, from the
+  // same value its drop indicator renders. Other callers (debug.tsx onReorder)
+  // omit it and get the old "after a folder means into it" inference.
+  const parentId =
+    typeof requestedParentId === 'string'
+      ? requestedParentId
+      : dropPosition === 'after' && isRequestGroup(targetItem)
+        ? targetItem._id
+        : targetItem.parentId;
 
   await (isRequestGroup(item)
     ? services.requestGroup.update(item, { parentId, metaSortKey })
@@ -79,6 +87,8 @@ export const useDebugReorderActionFetcher = createFetcherSubmitHook(
             targetId: string;
             dropPosition: string;
             metaSortKey: number;
+            // Destination parent, when the caller resolved it itself.
+            parentId?: string;
           }
         | {
             type: 'move-workspace';

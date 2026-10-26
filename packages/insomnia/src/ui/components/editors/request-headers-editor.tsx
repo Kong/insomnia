@@ -113,6 +113,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       <div className="tall">
         <CodeEditor
           id="request-headers-editor"
+          historyKey={`request-headers-editor::${id}`}
           onChange={handleBulkUpdate}
           defaultValue={headersString}
           enableNunjucks

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 
 vi.mock('~/ui/components/modals', () => ({
   showModal: vi.fn(),

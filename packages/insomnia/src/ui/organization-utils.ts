@@ -1,17 +1,20 @@
 import {
   createTeamProject,
-  fetchTeamProjects,
-  getCurrentPlan,
-  getUserProfile,
+  getUserEntitlements,
   isApiError,
+  KONNECT_CONTROL_PLANES_FEATURE,
+  KONNECT_CONTROL_PLANES_FEATURE_KEY,
   type Organization,
 } from 'insomnia-api';
 import type { Project } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { useMemo, useSyncExternalStore } from 'react';
 
-import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
+import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 
+// TODO: move vcs into services so we can remove this file.
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -21,47 +24,157 @@ import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
-export { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 
-export async function syncCurrentPlan(sessionId: string, accountId: string) {
-  const [currentPlanResult] = await Promise.allSettled([getCurrentPlan({ sessionId })]);
-  if (currentPlanResult.status === 'fulfilled' && currentPlanResult.value) {
-    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlanResult.value));
-  } else {
-    console.log('[current-plan] Failed to load current-plan', currentPlanResult.status);
-  }
+interface KonnectAccess {
+  /** The account holds the Konnect control-planes entitlement, so syncing is allowed. */
+  hasEntitlement: boolean;
+  /** The Konnect organization should appear in the organization list. */
+  isOrganizationVisible: boolean;
 }
 
-export async function syncOrganizations(sessionId: string, accountId: string) {
-  try {
-    const [organizations, user, currentPlan] = await Promise.all([
-      services.organization.list(),
-      getUserProfile({ sessionId }),
-      getCurrentPlan({ sessionId }),
-    ]);
+const konnectEntitlementStorageKey = (accountId: string) => `${accountId}:konnectSyncEnabled`;
 
-    invariant(organizations, 'Failed to load organizations');
-    invariant(user && user.id, 'Failed to load user');
-    invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
+let konnectAccess: KonnectAccess = { hasEntitlement: false, isOrganizationVisible: false };
+let konnectAccessResolvedFor: string | null = null;
+const konnectAccessListeners = new Set<() => void>();
 
-    invariant(accountId, 'Account ID is not defined');
+const subscribeToKonnectAccess = (listener: () => void) => {
+  konnectAccessListeners.add(listener);
+  return () => {
+    konnectAccessListeners.delete(listener);
+  };
+};
 
-    localStorage.setItem(`${accountId}:spaces`, JSON.stringify(organizations));
-    localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
-    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
-  } catch (error) {
-    console.log('[organization] Failed to load Organizations', error);
+function setKonnectAccess(next: KonnectAccess) {
+  if (
+    next.hasEntitlement === konnectAccess.hasEntitlement &&
+    next.isOrganizationVisible === konnectAccess.isOrganizationVisible
+  ) {
+    return;
   }
+  konnectAccess = next;
+  konnectAccessListeners.forEach(listener => listener());
+}
+
+/**
+ * Combines `hasEntitlement` with a freshly-queried local Konnect project count into
+ * `isOrganizationVisible`, and writes both into the shared access store. Shared by
+ * `refreshKonnectAccess` (after a real entitlement fetch) and `getKonnectOrganizationEscapeRoute`
+ * (reusing the last-resolved entitlement, since only the local count can have changed).
+ */
+async function reconcileKonnectAccess(hasEntitlement: boolean, konnectOrganizationId: string): Promise<KonnectAccess> {
+  const localKonnectProjectCount = await services.project.count({
+    konnectControlPlaneId: { $exists: true, $ne: null },
+    parentId: konnectOrganizationId,
+  });
+  setKonnectAccess({ hasEntitlement, isOrganizationVisible: hasEntitlement || localKonnectProjectCount > 0 });
+  return konnectAccess;
+}
+
+/**
+ * Resolves Konnect access for the account. Awaited before hydration and again after signing in so
+ * that render-time readers can stay synchronous; the two mutations that can flip it mid-session
+ * (disconnecting the PAT, resolving the migration conflict) pass `force`.
+ *
+ * Visibility is the entitlement OR local Konnect data from a previous version, which stays
+ * reachable with syncing disabled. Callers must run the startup migration first, otherwise the
+ * project lookup still sees the pre-migration parents.
+ *
+ * Deduped by `sessionId`, not `accountId`: signing in does not reload the renderer, so this
+ * module-level guard otherwise survives a logout, and a fresh login into the *same* account keeps
+ * the same accountId — which would silently skip the re-resolution. A new login always mints a new
+ * session token even for the same account, so keying on `sessionId` still dedupes the normal case
+ * (the startup call and the post-login loader's call share one session on a cold start) while
+ * still re-resolving after a genuine logout/login cycle.
+ */
+export async function refreshKonnectAccess(
+  sessionId: string,
+  accountId: string,
+  { force = false }: { force?: boolean } = {},
+) {
+  if (!force && konnectAccessResolvedFor === sessionId) {
+    return;
+  }
+  konnectAccessResolvedFor = sessionId;
+
+  if (!sessionId || !accountId) {
+    setKonnectAccess({ hasEntitlement: false, isOrganizationVisible: false });
+    return;
+  }
+
+  let hasEntitlement = localStorage.getItem(konnectEntitlementStorageKey(accountId)) === 'true';
+  try {
+    const { entitlements } = await getUserEntitlements({
+      sessionId,
+      feature: KONNECT_CONTROL_PLANES_FEATURE,
+    });
+    hasEntitlement = (entitlements ?? []).some(
+      entitlement => entitlement.featureKey === KONNECT_CONTROL_PLANES_FEATURE_KEY && entitlement.hasAccess,
+    );
+    localStorage.setItem(konnectEntitlementStorageKey(accountId), String(hasEntitlement));
+  } catch {
+    // Offline: keep the last known answer rather than hiding an organization the user owns.
+  }
+
+  await reconcileKonnectAccess(hasEntitlement, models.organization.getKonnectOrganizationId(accountId));
+}
+
+/** Whether the account may sync from Konnect. */
+export function useKonnectSyncEnabled(): boolean {
+  return useSyncExternalStore(subscribeToKonnectAccess, () => konnectAccess.hasEntitlement);
+}
+
+/**
+ * Re-checks a Konnect organization's visibility using a fresh local project count — no network
+ * call, since entitlement is read from the last-resolved value (kept current by the explicit
+ * `force` points: login, disconnect, migration) and the local count is the only half that can
+ * change from a plain NeDB delete — and updates the shared access store to match, so
+ * `useOrganizations()` subscribers (the org dropdown) see the change immediately regardless of
+ * what the caller navigates to next.
+ *
+ * Returns the URL to redirect to when the organization just became invisible (its last Konnect
+ * project was just removed, one at a time or via Disconnect, with no entitlement to fall back on),
+ * or `null` when the caller should proceed into the organization normally. Every code path that can
+ * remove the last Konnect project calls this before deciding where to land, so the check — and the
+ * store update — live in one place instead of being duplicated per delete path.
+ */
+export async function getKonnectOrganizationEscapeRoute(organizationId: string): Promise<string | null> {
+  if (!models.organization.isKonnectOrganizationId(organizationId)) {
+    return null;
+  }
+
+  const { accountId } = await services.userSession.get();
+  const { isOrganizationVisible } = await reconcileKonnectAccess(konnectAccess.hasEntitlement, organizationId);
+  if (isOrganizationVisible) {
+    return null;
+  }
+
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
+  invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
+  return `/organization/${organizations[0].id}`;
+}
+
+/** The account's local-only Konnect organization, or null when it should not be shown. */
+export function useKonnectOrganization(accountId: string): Organization | null {
+  const isOrganizationVisible = useSyncExternalStore(
+    subscribeToKonnectAccess,
+    () => konnectAccess.isOrganizationVisible,
+  );
+
+  return useMemo(
+    () => (isOrganizationVisible && accountId ? models.organization.buildKonnectOrganization(accountId) : null),
+    [isOrganizationVisible, accountId],
+  );
 }
 
 export async function updateLocalProjectToRemote({
   project,
-  vcs,
+  getVcsForWorkspace,
   sessionId,
   organizationId,
 }: {
   project: Project;
-  vcs: SyncVCSLike;
+  getVcsForWorkspace: (workspaceId: string) => SyncVCSLike;
   sessionId: string;
   organizationId: string;
 }) {
@@ -85,6 +198,7 @@ export async function updateLocalProjectToRemote({
       // Initialize Sync on the workspace if it's not using Git sync
       try {
         if (!workspaceMeta.gitRepositoryId) {
+          const vcs = getVcsForWorkspace(workspace._id);
           invariant(vcs, 'VCS must be initialized');
 
           await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
@@ -148,104 +262,9 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
           project,
           organizationId: personalOrganizationId,
           sessionId,
-          vcs: window.main.sync,
+          getVcsForWorkspace: syncVCSLikeForWorkspace,
         });
       }
     }
   }
 }
-
-interface TeamProject {
-  id: string;
-  name: string;
-}
-
-async function getAllTeamProjects(organizationId: string) {
-  const { id: sessionId } = await services.userSession.get();
-  if (!sessionId) {
-    return [];
-  }
-
-  console.log('[project] Fetching', organizationId);
-  const response = await fetchTeamProjects({ sessionId, organizationId });
-
-  return response.data;
-}
-
-async function syncTeamProjects({
-  organizationId,
-  teamProjects,
-}: {
-  teamProjects: TeamProject[];
-  organizationId: string;
-}) {
-  // assumption: api teamProjects is the source of truth for migrated projects
-  // once migrated orgs become the source of truth for projects
-  // its important that migration be completed before this code is run
-  const existingRemoteProjects = await services.project.list({
-    remoteId: { $in: teamProjects.map(p => p.id) },
-  });
-
-  const existingRemoteProjectsRemoteIds = existingRemoteProjects.map(p => p.remoteId);
-  const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
-
-  // this will create a new project for any remote projects that don't exist in the current organization
-  await Promise.all(
-    remoteProjectsThatNeedToBeCreated.map(async prj => {
-      await services.project.create({
-        remoteId: prj.id,
-        name: prj.name,
-        parentId: organizationId,
-      });
-    }),
-  );
-
-  const remoteProjectsThatNeedToBeUpdated = await services.project.list({
-    // Remote ID is in the list of remote projects
-    remoteId: { $in: teamProjects.map(p => p.id) },
-  });
-
-  await Promise.all(
-    remoteProjectsThatNeedToBeUpdated.map(async prj => {
-      const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
-      if (remoteProject && remoteProject.name !== prj.name) {
-        await services.project.update(prj, {
-          name: remoteProject.name,
-        });
-      }
-    }),
-  );
-
-  // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
-  const removedRemoteProjects = await services.project.list({
-    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
-    parentId: organizationId,
-    // Remote ID is not in the list of remote projects.
-    // add `$ne: null` condition because if remoteId is already null, we dont need to remove it again.
-    // nedb use append-only format, all updates and deletes actually result in lines added
-    remoteId: {
-      $nin: teamProjects.map(p => p.id),
-      $ne: null,
-    },
-  });
-
-  await Promise.all(
-    removedRemoteProjects.map(async prj => {
-      await services.project.update(prj, {
-        remoteId: null,
-      });
-    }),
-  );
-}
-
-export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
-  const user = await services.userSession.get();
-  const teamProjects = await getAllTeamProjects(organizationId);
-  // ensure we don't sync projects in the wrong place
-  if (Array.isArray(teamProjects) && user.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
-    await syncTeamProjects({
-      organizationId,
-      teamProjects,
-    });
-  }
-});

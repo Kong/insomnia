@@ -1,7 +1,7 @@
 import type { GraphQLNamedType, GraphQLSchema, GraphQLType } from 'graphql';
+import { fuzzyMatch, fuzzyMatchAll } from 'insomnia-data/common';
 import React, { PureComponent } from 'react';
 
-import { fuzzyMatch, fuzzyMatchAll } from '../../../common/misc';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
 import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
 import type { GraphQLFieldWithOptionalArgs, GraphQLFieldWithParentName } from './graph-ql-types';

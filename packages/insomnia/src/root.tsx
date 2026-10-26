@@ -33,6 +33,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import { isLoggedIn } from '~/ui/account/session';
 import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
@@ -46,8 +47,11 @@ import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
+import { VariableSourceTooltipHost } from '~/ui/components/variable-source-tooltip-host';
 import { AppHooks } from '~/ui/containers/app-hooks';
+import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
+import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
@@ -178,7 +182,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
 export interface RootLoaderData {
   settings: Settings;
-  workspaceCount: number;
   userSession: UserSession;
 }
 
@@ -188,13 +191,11 @@ export const useRootLoaderData = () => {
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
-  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
-    workspaceCount,
     userSession,
     cloudCredentials,
   };
@@ -342,12 +343,51 @@ export const HydrateFallback = () => {
 };
 
 const Root = () => {
-  const { organizationId, projectId } = useParams() as {
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
+    workspaceId?: string;
   };
 
-  const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
+  // One record per import trigger: the source plus the context the trigger
+  // knows. Deep-link imports carry no workspace context; pasting a cURL
+  // inside a workspace carries its workspaceId.
+  const [importTrigger, setImportTrigger] = useState<{
+    source: ImportSource;
+    workspaceId?: string;
+  } | null>(null);
+
+  // INS-3544: pasting a cURL while no editable surface has focus starts the
+  // import flow. Inside a workspace the current collection is offered as the
+  // default import target, which needs the workspace name for the modal header.
+  const workspaceName = useWorkspaceLoaderData()?.activeWorkspace?.name;
+  const handleCurlPaste = async (curl: string) => {
+    // The Scratchpad project holds a single collection; keep the import flow
+    // out of it so a paste cannot create extra collections there.
+    if (
+      !organizationId ||
+      (projectId && models.project.isScratchpadProject({ _id: projectId }))
+    ) {
+      return;
+    }
+    const { isValid } = await validateCurl(curl);
+    if (!isValid) {
+      return;
+    }
+    setImportTrigger({
+      source: {
+        type: 'curl',
+        defaultValue: curl,
+        autoScan: true,
+        startedAt: Date.now(),
+      },
+      workspaceId,
+    });
+  };
+  // Only Root's own import modal state is tracked; Import modals opened from
+  // other entry points are not, so pasting then can stack one more modal.
+  useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
+
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
@@ -382,9 +422,35 @@ const Root = () => {
         revalidate();
       }
     });
+    // Lives here rather than in renderer-listeners so the clear can revalidate loaders
+    // afterwards - the response panes read their data from loaders, which a raw database
+    // write does not refresh.
+    const unsubClearResponseHistory = window.main.on('clear-all-response-history', () => {
+      showModal(AlertModal, {
+        title: 'Clear All Response History',
+        message:
+          'This will clear your local Response history across every project/collection. No functionality will be impacted, and this will not affect any other user. Do you wish to continue?',
+        addCancel: true,
+        okLabel: 'Continue',
+        onConfirm: async () => {
+          try {
+            await services.helpers.removeAllResponseHistory();
+            revalidate();
+            showToast({ icon: 'trash', title: 'Response history cleared', status: 'success' });
+          } catch (error) {
+            // AlertModal does not await onConfirm, so an unreported failure would look exactly
+            // like a successful clear. The clear can also stop part-way through, hence the
+            // revalidate on this path too.
+            revalidate();
+            showError({ title: 'Failed to clear response history', error });
+          }
+        },
+      });
+    });
     return () => {
       unsubLoggedIn();
       unsubGitDbSynced();
+      unsubClearResponseHistory();
     };
   }, [latestInSubmission, revalidate, navigate]);
 
@@ -444,7 +510,7 @@ const Root = () => {
           },
         });
       }
-      // Supports params: uri, curl, origin
+      // Supports params: uri, mcp, curl, clipboard, file, origin, endpoint, operationId
       if (urlWithoutParams === 'insomnia://app/import') {
         // Clean up the flag set during deep-link replay so it never leaks
         // into later modal evaluations within the same session.
@@ -472,12 +538,19 @@ const Root = () => {
         if (!resource) {
           return;
         }
-        // Only cURL gates auto-scan on async validation
-        const autoScan = resource.type === 'curl' ? (await validateCurl(resource.defaultValue)).isValid : true;
-        return setImportObject({
-          ...resource,
-          autoScan,
-          startedAt: Date.now(),
+        // Only value-bearing uri/mcp/cURL resources auto-scan; bare params
+        // (e.g. `?clipboard`) just open the modal with the tab selected.
+        const autoScan =
+          !!resource.defaultValue &&
+          (resource.type === 'curl'
+            ? (await validateCurl(resource.defaultValue)).isValid
+            : resource.type === 'uri' || resource.type === 'mcp');
+        return setImportTrigger({
+          source: {
+            ...resource,
+            autoScan,
+            startedAt: Date.now(),
+          },
         });
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
@@ -739,24 +812,27 @@ const Root = () => {
   }, []);
 
   return (
-    <>
+    <ServerDataCacheProvider>
       <div className="app">
         <Outlet />
         <Toaster />
       </div>
       <Modals />
+      <VariableSourceTooltipHost />
       <AppHooks />
-      {/* triggered by insomnia://app/import */}
-      {importObject.defaultValue && (
+      {/* triggered by insomnia://app/import and pasting a cURL with no focus */}
+      {importTrigger && (
         <ImportModal
-          key={importObject.startedAt}
-          onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
+          key={importTrigger.source.startedAt}
+          onHide={() => setImportTrigger(null)}
           defaultProjectId={projectId}
           organizationId={organizationId}
-          from={importObject}
+          workspaceName={workspaceName}
+          defaultWorkspaceId={importTrigger.workspaceId}
+          from={importTrigger.source}
         />
       )}
-    </>
+    </ServerDataCacheProvider>
   );
 };
 

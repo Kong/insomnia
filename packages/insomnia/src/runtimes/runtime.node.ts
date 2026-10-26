@@ -1,3 +1,4 @@
+import * as appAdapter from './app/app-adapter.node';
 import * as cryptAdapter from './crypto/crypto-adapter.node';
 import * as importAdapter from './import/import-adapter.node';
 import * as networkAdapter from './network/network-adapter.node';
@@ -11,4 +12,5 @@ export const nodeRuntime = {
   templating: renderAdapter,
   secretStorage: secretStorageAdapter,
   importer: importAdapter,
+  app: appAdapter,
 } satisfies RuntimeCapabilities;

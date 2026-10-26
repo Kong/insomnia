@@ -1,5 +1,6 @@
 import { useRootLoaderData } from '~/root';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { reload } from '~/ui/templating/renderer-safe';
 
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
@@ -11,7 +12,12 @@ export const useGlobalKeyboardShortcuts = () => {
   const patchSettings = useSettingsPatcher();
 
   useDocBodyKeyboardShortcuts({
-    plugin_reload: () => plugins.reloadPlugins(),
+    // Route through the same path as Settings → Plugins reload: rescan plugins AND invalidate the
+    // render worker's cached Liquid engine, so a plugin that failed once actually recovers (#10295).
+    plugin_reload: async () => {
+      await plugins.reloadPlugins();
+      reload();
+    },
     // TODO: move this to workspace route
     environment_showVariableSourceAndValue: () =>
       patchSettings({ showVariableSourceAndValue: !settings.showVariableSourceAndValue }),

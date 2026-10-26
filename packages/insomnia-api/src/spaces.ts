@@ -1,6 +1,7 @@
 import {
   Configuration,
   DefaultApi,
+  type FetchAPI,
   type ListCurrentUserSpaces200Response,
   ResponseError,
   type Space,
@@ -14,6 +15,10 @@ interface V3ClientConfig {
   getBaseURL: () => string;
   getClientString: () => string;
   generateRequestId: () => string;
+  // Proxy-aware `fetch` used for every SDK request. Without it the SDK falls back to the
+  // global `fetch`, which in the Electron main/CLI processes is Node's fetch and ignores the
+  // system proxy and OS certs.
+  fetchApi: FetchAPI;
 }
 
 let v3Config: V3ClientConfig | null = null;
@@ -32,6 +37,7 @@ function buildClient(sessionId: string): DefaultApi {
   const baseURL = v3Config.getBaseURL();
   const configuration = new Configuration({
     basePath: `${baseURL}/v3`,
+    fetchApi: v3Config.fetchApi,
     apiKey: name => (name === 'X-Session-ID' ? sessionId : ''),
     headers: {
       'X-Insomnia-Client': v3Config.getClientString(),

@@ -1,12 +1,13 @@
 import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { setDefaultProtocol, urlMatchesCertHost } from 'insomnia-data/common';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { createSensitiveValueCollector } from '~/common/network/sensitive-value-collector';
 import { RenderError } from '~/common/templating/render-error';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
@@ -21,7 +22,6 @@ import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import { getOrInheritHeaders } from '../../../network/network';
-import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 import {
@@ -86,7 +86,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
       const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
       setGrpcState({ ...grpcState, methods });
-    } else if (activeRequest.url && activeRequest.reflectionApi) {
+    } else if (activeRequest.url && activeRequest.reflectionApi && !activeRequest.reflectionApi.enabled) {
+      // Intentionally skipped when the buf reflection API is enabled: loading would send the API key on pane open.
+      // In that case methods are only loaded when the user clicks the reflection refresh button.
       const requestGroups = (
         await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
       ).filter(isRequestGroup);
@@ -139,7 +141,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   });
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
+  const uniqueKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {
@@ -251,7 +253,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
             <div className="flex-1" title={activeRequest.url}>
               <OneLineEditor
                 id="grpc-url"
-                key={uniquenessKey}
+                key={uniqueKey}
+                historyKey={`grpc-url::${requestId}`}
                 type="text"
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
@@ -402,23 +405,31 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                       <button
                         className="btn btn--compact btn--clicky-small margin-left-sm bg-default"
                         onClick={async () => {
+                          const settings = await services.settings.get();
+                          const collector = createSensitiveValueCollector(
+                            settings.hideSecretValuesInPreviewAndConsole ?? true,
+                          );
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
                             environment: environmentId,
                             purpose: 'send',
+                            sensitiveValueCollector: collector,
                           });
                           const preparedMessage = {
                             body: requestBody,
                             requestId,
                           };
+                          // Send the real (unredacted) body to the server; only the copy kept for
+                          // display in the Stream tab is redacted (T10 — this tab never writes to disk).
                           window.main.grpc.sendMessage(preparedMessage);
+                          const displayText = preparedMessage.body.text || '';
                           setGrpcState({
                             ...grpcState,
                             requestMessages: [
                               ...requestMessages,
                               {
                                 id: generateId(),
-                                text: preparedMessage.body.text || '',
+                                text: collector ? collector.redact(displayText) : displayText,
                                 created: Date.now(),
                               },
                             ],
@@ -436,7 +447,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     </div>
                   )}
                   <Tabs
-                    key={uniquenessKey}
+                    key={uniqueKey}
                     aria-label="Grpc tabbed messages tabs"
                     className="flex h-full w-full flex-1 flex-col"
                   >
@@ -456,6 +467,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     <TabPanel id="body" className="h-full w-full overflow-y-auto">
                       <CodeEditor
                         id="grpc-request-editor"
+                        historyKey={`grpc-request-editor::${requestId}`}
                         ref={editorRef}
                         defaultValue={activeRequest.body.text}
                         onChange={text => patchRequest(requestId, { body: { text } })}
@@ -483,7 +495,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
               </TabPanel>
             )}
             <TabPanel className={'h-full w-full overflow-y-auto'} id="headers">
-              <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+              <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <KeyValueEditor
                   namePlaceholder="header"
                   valuePlaceholder="value"

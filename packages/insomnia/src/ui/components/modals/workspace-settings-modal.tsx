@@ -175,48 +175,44 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                     />
                   </TextField>
-                  {project &&
-                    models.project.isGitProject(project) &&
-                    gitRepoTreeFetcher.data && (
-                      <TextField
-                        name="fileName"
-                        isRequired
-                        value={safeToUseInsomniaFileName(fileNameValue || '')}
-                        onChange={setFileNameValue}
-                        validate={inputValue => {
-                          const candidateFileName = safeToUseInsomniaFileNameWithExt(inputValue);
-                          // Exclude the current file (normalized) so renaming to its own name isn't flagged as a collision.
-                          const currentFileName = safeToUseInsomniaFileNameWithExt(fileName);
-                          if (
-                            selectedFolderChildren
-                              .filter(name => name !== currentFileName)
-                              .includes(candidateFileName)
-                          ) {
-                            return 'A file with the same name already exists in the selected folder';
-                          }
+                  {project && models.project.isGitProject(project) && gitRepoTreeFetcher.data && (
+                    <TextField
+                      name="fileName"
+                      isRequired
+                      value={safeToUseInsomniaFileName(fileNameValue || '')}
+                      onChange={setFileNameValue}
+                      validate={inputValue => {
+                        const candidateFileName = safeToUseInsomniaFileNameWithExt(inputValue);
+                        // Exclude the current file (normalized) so renaming to its own name isn't flagged as a collision.
+                        const currentFileName = safeToUseInsomniaFileNameWithExt(fileName);
+                        if (
+                          selectedFolderChildren.filter(name => name !== currentFileName).includes(candidateFileName)
+                        ) {
+                          return 'A file with the same name already exists in the selected folder';
+                        }
 
-                          return null;
-                        }}
-                        className="group relative flex w-full max-w-full shrink-0 flex-col gap-2 overflow-hidden"
-                      >
-                        <Label className="group relative flex flex-col gap-2 overflow-hidden">
-                          <span className="text-sm text-(--hl)">File name</span>
+                        return null;
+                      }}
+                      className="group relative flex w-full max-w-full shrink-0 flex-col gap-2 overflow-hidden"
+                    >
+                      <Label className="group relative flex flex-col gap-2 overflow-hidden">
+                        <span className="text-sm text-(--hl)">File name</span>
 
-                          <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-2 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
-                            <Input
-                              placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
-                              className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
-                            />
-                            <span className="pointer-events-none truncate opacity-0 [grid-area:input]">
-                              {safeToUseInsomniaFileName(fileNameValue) ||
-                                (workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name')}
-                            </span>
-                            <span className="text-(--hl) [grid-area:extension]">.yaml</span>
-                          </div>
-                        </Label>
-                        <FieldError className="text-xs text-red-500" />
-                      </TextField>
-                    )}
+                        <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-2 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
+                          <Input
+                            placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
+                            className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
+                          />
+                          <span className="pointer-events-none truncate opacity-0 [grid-area:input]">
+                            {safeToUseInsomniaFileName(fileNameValue) ||
+                              (workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name')}
+                          </span>
+                          <span className="text-(--hl) [grid-area:extension]">.yaml</span>
+                        </div>
+                      </Label>
+                      <FieldError className="text-xs text-red-500" />
+                    </TextField>
+                  )}
                   {!models.workspace.isMockServer(workspace) && (
                     <>
                       <Label className="text-sm text-(--hl)" aria-label="Description">
@@ -224,6 +220,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       </Label>
                       <MarkdownEditor
                         key={workspace._id}
+                        historyKey={`workspace-description::${workspace._id}`}
                         placeholder="Write a description"
                         defaultValue={workspace.description}
                         onChange={setDescription}
@@ -232,19 +229,28 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       {!models.workspace.isEnvironment(workspace) && !models.workspace.isMcp(workspace) && (
                         <>
                           <Heading>Actions</Heading>
-                          <PromptButton
-                            onClick={async () => {
-                              const docs = await db.getWithDescendants(workspace, [models.request.type]);
-                              const requests = docs.filter(models.request.isRequest);
-                              for (const req of requests) {
-                                await services.helpers.removeResponsesForRequest(req._id);
-                              }
-                              onClose();
-                            }}
-                            className="width-auto btn btn--clicky space-left inline-block"
-                          >
-                            <i className="fa fa-trash-o" /> Clear All Responses
-                          </PromptButton>
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-medium text-(--color-font)">Clear Response History</span>
+                              <p className="text-xs text-(--hl)">
+                                Delete the saved responses of all request in this{' '}
+                                {getWorkspaceLabel(workspace).singular.toLowerCase()}
+                              </p>
+                            </div>
+                            <PromptButton
+                              onClick={async () => {
+                                const docs = await db.getWithDescendants(workspace, [models.request.type]);
+                                const requests = docs.filter(models.request.isRequest);
+                                for (const req of requests) {
+                                  await services.helpers.removeResponsesForRequest(req._id);
+                                }
+                                onClose();
+                              }}
+                              className="flex h-8 w-40 shrink-0 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-3 text-sm transition-colors hover:bg-(--hl-xs)"
+                            >
+                              <i className="fa fa-trash-o" /> Clear
+                            </PromptButton>
+                          </div>
                         </>
                       )}
                     </>

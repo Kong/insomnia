@@ -19,6 +19,7 @@ import {
 import { isValid } from 'date-fns';
 import electron from 'electron';
 import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { invariant } from '~/common/utils/invariant';
@@ -27,7 +28,7 @@ import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
 import { parseHeaderStrings } from '../../network/parse-header-strings';
-import { insecureReadFile, isPathAllowed } from '../secure-read-file';
+import { assertPathAllowed, insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 export interface CurlRequestOptions {
   requestId: string; // for cancellation
@@ -125,8 +126,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = await createConfiguredCurlInstance({
-        req,
-        finalUrl,
+        req: { ...req, url: finalUrl },
         settings,
         caCert,
         certificates,
@@ -147,7 +147,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         curl.setOpt(Curl.option.CUSTOMREQUEST, method);
       }
 
-      const requestBodyPath = await parseRequestBodyPath(body);
+      const requestBodyPath = await parseRequestBodyPath(body, settings);
       const requestBody = parseRequestBody({ body, method });
       const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       let requestFileDescriptor: number | undefined;
@@ -343,7 +343,6 @@ export function parseResolvedProxy(pacString: string | undefined): { proxyUrl: s
 
 export const createConfiguredCurlInstance = async ({
   req,
-  finalUrl,
   settings,
   caCert,
   certificates,
@@ -351,7 +350,6 @@ export const createConfiguredCurlInstance = async ({
   noDecompress = false,
 }: {
   req: RequestUsedHere;
-  finalUrl: string;
   settings: SettingsUsedHere;
   certificates: ClientCertificate[];
   caCert: string | null;
@@ -360,6 +358,7 @@ export const createConfiguredCurlInstance = async ({
 }) => {
   const debugTimeline: ResponseTimelineEntry[] = [];
   const curl = new Curl();
+  const finalUrl = req.url;
   curl.setOpt(Curl.option.URL, finalUrl);
   socketPath && curl.setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
 
@@ -436,7 +435,7 @@ export const createConfiguredCurlInstance = async ({
       curl.setOpt(Curl.option.PROXY, '');
     }
   } else {
-    const { protocol, hostname } = urlParse(req.url);
+    const { protocol, hostname } = urlParse(finalUrl);
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = !shouldBypassProxyForHost(hostname, noProxy) && proxyHost ? setDefaultProtocol(proxyHost) : '';
@@ -617,12 +616,21 @@ const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
 
   return;
 };
-const parseRequestBodyPath = async (body: any) => {
+// Exported for tests only.
+export const parseRequestBodyPath = async (body: any, settings: SettingsUsedHere) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (!isMultipartForm) {
     return body.fileName;
   }
-  const { filePath } = await buildMultipart(body.params || []);
+  const params = body.params || [];
+  // buildMultipart reads file parts off disk before the isPathAllowed check below (which only
+  // sees its temp file), so every part must pass the dataFolders policy here first.
+  for (const param of params) {
+    if (param?.type === 'file' && param.fileName) {
+      await assertPathAllowed(param.fileName, settings.dataFolders);
+    }
+  }
+  const { filePath } = await buildMultipart(params);
   return filePath;
 };
 
@@ -671,20 +679,3 @@ export function shouldBypassProxyForHost(hostname: string | null, noProxy: strin
       return normalizedHostname === entry;
     });
 }
-
-export const setDefaultProtocol = (url: string, defaultProto?: string) => {
-  const trimmedUrl = url.trim();
-  defaultProto = defaultProto || 'http:';
-
-  // If no url, don't bother returning anything
-  if (!trimmedUrl) {
-    return '';
-  }
-
-  // Default the proto if it doesn't exist
-  if (!trimmedUrl.includes('://')) {
-    return `${defaultProto}//${trimmedUrl}`;
-  }
-
-  return trimmedUrl;
-};

@@ -1,8 +1,4 @@
-import { Banner } from 'insomnia/src/basic-components/banner';
-import { Button } from 'insomnia/src/basic-components/button';
-import { Icon } from 'insomnia/src/basic-components/icon';
-import { LearnMoreLink } from 'insomnia/src/basic-components/link';
-import { Tab, Tabs } from 'insomnia/src/basic-components/tabs';
+import { Banner, Button, Icon, LearnMoreLink, Tab, Tabs } from 'insomnia/src/basic-components';
 import { Checkbox, CheckboxGroup } from 'insomnia/src/ui/components/base/checkbox';
 import { Input } from 'insomnia/src/ui/components/base/input';
 import { InputNumber } from 'insomnia/src/ui/components/base/input-number';

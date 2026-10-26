@@ -1,10 +1,18 @@
-import { startTrial } from 'insomnia-api';
+import { getCurrentPlan, startTrial } from 'insomnia-api';
 import { services } from 'insomnia-data';
 
-import { syncCurrentPlan } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/settings.update';
+
+async function syncCurrentPlan(sessionId: string, accountId: string) {
+  const [currentPlanResult] = await Promise.allSettled([getCurrentPlan({ sessionId })]);
+  if (currentPlanResult.status === 'fulfilled' && currentPlanResult.value) {
+    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlanResult.value));
+  } else {
+    console.log('[current-plan] Failed to load current-plan', currentPlanResult.status);
+  }
+}
 
 export async function clientAction(_args: Route.ClientActionArgs) {
   const { id: sessionId, accountId } = await services.userSession.get();

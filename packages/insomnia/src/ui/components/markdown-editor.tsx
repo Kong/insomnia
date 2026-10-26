@@ -13,10 +13,12 @@ interface Props {
   className?: string;
   mode?: string;
   tall?: boolean;
+  // Stable per-entity key so undo/redo history survives editor remounts.
+  historyKey?: string;
 }
 
 export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
-  ({ mode, placeholder, tall, defaultValue, onChange }, ref): ReactElement => {
+  ({ mode, placeholder, tall, defaultValue, onChange, historyKey }, ref): ReactElement => {
     // default value is added here to capture the original class component's behavior, but this way cuts the flow of prop change event after the initial rendering
     const [markdown, setMarkdown] = useState(defaultValue);
 
@@ -36,7 +38,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
       >
         <TabList
           className="flex h-(--line-height-sm) w-full shrink-0 items-center gap-2 overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg) px-2"
-          aria-label="Request scripts tabs"
+          aria-label="Markdown editor tabs"
         >
           <Tab
             className="flex h-(--line-height-xxs) w-42 shrink-0 cursor-pointer items-center justify-between rounded-md px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-(--color-font-surprise) aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-(--color-font-surprise)"
@@ -60,6 +62,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
             <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
               <CodeEditor
                 id="markdown-editor"
+                historyKey={historyKey}
                 ref={ref}
                 hideGutters
                 hideLineNumbers

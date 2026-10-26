@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -17,6 +18,7 @@ import {
   GridList,
   GridListItem,
   Heading,
+  Input,
   isTextDropItem,
   Label,
   Modal,
@@ -36,11 +38,13 @@ import { Button as BasicButton } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
+import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
 import { useGitProjectCommitsActionFetcher } from '~/routes/git.commits';
 import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
+import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
@@ -53,10 +57,13 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { GitChangeAnalysis } from '~/ui/components/git/git-change-analysis';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
+import { ConfirmUnknownFieldsCommitModal } from '~/ui/components/modals/confirm-unknown-fields-commit-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
+import { WarningBanner } from '~/ui/components/warning-banner';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
@@ -64,6 +71,8 @@ import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
 import { GitPullRequiredModal } from './git-pull-required-modal';
+import { createActionGate } from './visual-diff/action-gate';
+import { EntityDiffList } from './visual-diff/entity-diff-list';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
 
@@ -117,6 +126,141 @@ function getModificationClassName(type: GitFileType) {
   return '';
 }
 
+// `pushToGitRemoteAction` (used by the AI multi-commit flow and by "Retry
+// push") normalizes a push-time 401/403 into this constant instead of the
+// raw isomorphic-git "HTTP Error: 40x" text that `isGitRepoLoadAuthHttp40Error`
+// looks for. Recognize both forms so those flows can still offer
+// re-authentication instead of a dead-end "Retry push" button.
+function isPushAuthError(errors: string[]): boolean {
+  return isGitRepoLoadAuthHttp40Error(errors) || errors.includes(GitVCSOperationErrors.AuthenticationRequiredError);
+}
+
+// GitOauthAuthBanner only renders for errors matching isGitRepoLoadAuthHttp40Error
+// (it does its own internal gating) — translate the normalized constant into an
+// equivalent it recognizes, so the banner actually shows instead of silently
+// rendering nothing.
+function toOAuthBannerErrors(errors: string[]): string[] {
+  return isGitRepoLoadAuthHttp40Error(errors) ? errors : ['HTTP Error: 401 Unauthorized, Authentication required'];
+}
+
+// Shown when a commit succeeded locally but the push that followed it failed
+// (e.g. a protected branch rejected it). The work is safe in a local commit —
+// this offers a retry instead of implying the changes were lost.
+// Some errors (e.g. GitHub's protected-branch rejection) are pre-formatted
+// by the backend as "Error Pushing Repository, <raw remote message>" for use
+// in the plain-text error banner elsewhere. Here the banner title already
+// says "push failed", so that prefix is just noise — strip it if present.
+function stripRedundantPushErrorPrefix(error: string) {
+  return error.replace(/^Error Pushing Repository,\s*/, '');
+}
+
+// Recognize GitHub's protected-branch push rejection (GH006) so we can show a
+// concrete next step instead of just the raw remote log. Other providers/errors
+// fall back to the generic message — this only covers the one pattern we know.
+function getGitHubProtectedBranchTip(error: string): string | null {
+  if (/protected branch/i.test(error) || /\bGH006\b/.test(error)) {
+    return 'This branch is protected, your commit is safe locally. Push to a new branch and open a pull request, or ask an admin to allow it.';
+  }
+  return null;
+}
+
+const PushFailedAfterCommitBanner = (props: {
+  error: string;
+  isRetrying: boolean;
+  onRetry: () => void;
+  projectId: string;
+}) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const [isCreateBranchModalOpen, setIsCreateBranchModalOpen] = useState(false);
+  const detail = stripRedundantPushErrorPrefix(props.error);
+  const tip = getGitHubProtectedBranchTip(detail);
+
+  const createBranchFetcher = useGitProjectNewBranchActionFetcher();
+  const isCreatingBranch = createBranchFetcher.state !== 'idle';
+  const createBranchError =
+    createBranchFetcher.data?.errors && createBranchFetcher.data.errors.length > 0
+      ? createBranchFetcher.data.errors.join('\n')
+      : null;
+
+  const { onRetry } = props;
+  const prevCreateBranchStateRef = useRef(createBranchFetcher.state);
+  useEffect(() => {
+    const prevState = prevCreateBranchStateRef.current;
+    prevCreateBranchStateRef.current = createBranchFetcher.state;
+    if (!(prevState !== 'idle' && createBranchFetcher.state === 'idle' && createBranchFetcher.data)) {
+      return;
+    }
+    if (createBranchFetcher.data.errors && createBranchFetcher.data.errors.length > 0) {
+      // Most likely a name collision — let the user try a different name.
+      return;
+    }
+    // The branch was created from (and includes) the commit that failed to
+    // push, and is now checked out — push it right away.
+    setIsCreateBranchModalOpen(false);
+    onRetry();
+  }, [createBranchFetcher.state, createBranchFetcher.data, onRetry]);
+
+  return (
+    <Banner
+      type="warning"
+      title="Push failed"
+      message={
+        <div className="flex flex-col gap-2">
+          <p>
+            {tip ?? "Your commit is safe locally — it just hasn't been pushed yet."}{' '}
+            <Button
+              type="button"
+              onPress={() => setShowDetails(!showDetails)}
+              className="inline cursor-pointer border-0 bg-transparent p-0 underline"
+            >
+              {showDetails ? 'Show less' : 'Show more'}
+            </Button>
+          </p>
+          {showDetails && (
+            <p className="rounded-xs bg-(--hl-xs) p-2 font-mono text-xs whitespace-pre-wrap text-(--color-font-danger)">
+              {detail}
+            </p>
+          )}
+        </div>
+      }
+      footer={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            isDisabled={props.isRetrying}
+            onPress={props.onRetry}
+            className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+          >
+            <Icon
+              icon={props.isRetrying ? 'spinner' : 'cloud-arrow-up'}
+              className={props.isRetrying ? 'animate-spin' : ''}
+            />
+            Retry push
+          </Button>
+          {tip && (
+            <Button
+              type="button"
+              onPress={() => setIsCreateBranchModalOpen(true)}
+              className="flex h-7 items-center gap-2 rounded-xs bg-(--hl-xxs) px-3 text-sm ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+            >
+              <Icon icon="code-branch" />
+              Create branch &amp; push
+            </Button>
+          )}
+          {isCreateBranchModalOpen && (
+            <CreateBranchAndPushModal
+              isCreating={isCreatingBranch}
+              error={createBranchError}
+              onClose={() => setIsCreateBranchModalOpen(false)}
+              onSubmit={branch => createBranchFetcher.submit({ projectId: props.projectId, branch })}
+            />
+          )}
+        </div>
+      }
+    />
+  );
+};
+
 interface GeneratedCommitsFormProps {
   commits: { id: string; message: string; files: string[] }[];
   projectId: string;
@@ -136,6 +280,7 @@ interface FileItem {
   name: string;
   type: string;
   symbol: string;
+  originHasUnknownFields?: boolean;
 }
 
 interface CommitItem {
@@ -296,9 +441,14 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   isNonOriginBranch,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
+  const pushRetryFetcher = useGitProjectPushActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pendingUnknownFieldsPush, setPendingUnknownFieldsPush] = useState<boolean | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  // Set when the commits succeeded but the push that followed them failed —
+  // the commits are safe locally, so we offer a retry rather than a plain error.
+  const [pushFailedError, setPushFailedError] = useState<string | null>(null);
   const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
@@ -334,14 +484,54 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
       ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
       ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
     if (hasErrors && 'errors' in commitsFetcher.data) {
-      setOperationError((commitsFetcher.data.errors as string[]).join('\n'));
+      const errors = commitsFetcher.data.errors as string[];
+      const pushFailedAfterCommit =
+        'pushFailedAfterCommit' in commitsFetcher.data && commitsFetcher.data.pushFailedAfterCommit;
+      // An auth failure needs the re-auth banner (GitOauthAuthBanner), even if
+      // it happened after a successful commit — a plain "retry push" button
+      // would just fail again without letting the user re-authenticate.
+      if (pushFailedAfterCommit && !isPushAuthError(errors)) {
+        setOperationError(null);
+        setPushFailedError(errors.join('\n'));
+      } else {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
+      }
       return;
     }
     if (isSuccess && !hasErrors) {
       setOperationError(null);
+      setPushFailedError(null);
       onCommitSuccess({ push: action === 'commit-push' });
     }
   }, [commitsFetcher.data, onCommitSuccess, isCommitting]);
+
+  const isRetryingPush = pushRetryFetcher.state !== 'idle';
+  const prevPushRetryStateRef = useRef(pushRetryFetcher.state);
+  useEffect(() => {
+    const prevState = prevPushRetryStateRef.current;
+    prevPushRetryStateRef.current = pushRetryFetcher.state;
+    if (!(prevState !== 'idle' && pushRetryFetcher.state === 'idle' && pushRetryFetcher.data)) {
+      return;
+    }
+    const errors = pushRetryFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (isPushAuthError(errors)) {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
+        return;
+      }
+      setPushFailedError(errors.join('\n'));
+      showToast({ icon: 'exclamation-triangle', title: 'Push failed again', status: 'error' });
+      return;
+    }
+    setPushFailedError(null);
+    onCommitSuccess({ push: true });
+  }, [pushRetryFetcher.state, pushRetryFetcher.data, onCommitSuccess]);
+
+  const retryPush = () => {
+    pushRetryFetcher.submit({ projectId });
+  };
 
   const moveFileToDoNotCommit = (fileItem: FileItem) => {
     try {
@@ -365,6 +555,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           name: file,
           type: changes.staged.find(change => change.path === file)?.type || 'modified',
           symbol: changes.staged.find(change => change.path === file)?.symbol || 'M',
+          originHasUnknownFields: changes.staged.find(change => change.path === file)?.originHasUnknownFields,
         })),
       }))
       .concat({
@@ -376,6 +567,37 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
     getChildren: item => item.files || [],
   });
 
+  const getCommitsToSubmit = () =>
+    commitsSections.items
+      .map(commit => ({
+        id: commit.value.id,
+        message: commit.value.name,
+        files: commit.children?.map(file => file.value.name) || [],
+      }))
+      .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
+
+  const submitGeneratedCommits = (push: boolean) => {
+    committingActionRef.current = push ? 'commit-push' : 'commit';
+
+    const commits = getCommitsToSubmit();
+
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.recommendCommitsSaved,
+      properties: {
+        group_count: commits.length,
+        file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
+      },
+    });
+    commitsFetcher.submit({
+      projectId,
+      commits: commits.map(commit => ({
+        message: commit.message,
+        files: commit.files,
+      })),
+      push,
+    });
+  };
+
   return (
     <form
       onSubmit={e => {
@@ -385,32 +607,16 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
 
         const push = Boolean(formData.get('push') === 'true');
 
-        const action = push ? 'commit-push' : 'commit';
-        committingActionRef.current = action;
+        const filesToCommit = new Set(getCommitsToSubmit().flatMap(commit => commit.files));
+        const touchesUnknownFields = changes.staged.some(
+          change => change.originHasUnknownFields && filesToCommit.has(change.path),
+        );
+        if (touchesUnknownFields) {
+          setPendingUnknownFieldsPush(push);
+          return;
+        }
 
-        const commits = commitsSections.items
-          .map(commit => ({
-            id: commit.value.id,
-            message: commit.value.name,
-            files: commit.children?.map(file => file.value.name) || [],
-          }))
-          .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
-
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.recommendCommitsSaved,
-          properties: {
-            group_count: commits.length,
-            file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
-          },
-        });
-        commitsFetcher.submit({
-          projectId,
-          commits: commits.map(commit => ({
-            message: commit.message,
-            files: commit.files,
-          })),
-          push,
-        });
+        submitGeneratedCommits(push);
       }}
       className="flex flex-1 flex-col gap-6 overflow-hidden"
     >
@@ -542,11 +748,18 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           </Button>
         </div>
       )}
-      {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+      {pushFailedError ? (
+        <PushFailedAfterCommitBanner
+          error={pushFailedError}
+          isRetrying={isRetryingPush}
+          onRetry={retryPush}
+          projectId={projectId}
+        />
+      ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
         <GitOauthAuthBanner
           selectedCredential={selectedCredential}
           gitRepository={gitRepository}
-          repoLoadErrors={[operationError]}
+          repoLoadErrors={toOAuthBannerErrors([operationError])}
           provider={selectedProvider}
         />
       ) : operationError && selectedCredential?.provider === 'custom' ? (
@@ -572,6 +785,16 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           <Icon icon="exclamation-triangle" /> {operationError}
         </p>
       ) : null}
+      {pendingUnknownFieldsPush !== null && (
+        <ConfirmUnknownFieldsCommitModal
+          onConfirm={() => {
+            const push = pendingUnknownFieldsPush;
+            setPendingUnknownFieldsPush(null);
+            submitGeneratedCommits(push);
+          }}
+          onClose={() => setPendingUnknownFieldsPush(null)}
+        />
+      )}
     </form>
   );
 };
@@ -610,6 +833,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   isNonOriginBranch,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
+  const pushRetryFetcher = useGitProjectPushActionFetcher();
 
   const stagedCount = changes.staged.length;
   const unstagedCount = changes.unstaged.length;
@@ -618,8 +842,18 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   // Holds the pending commit details while we ask the user whether to stage all
   // changes (VSCode-like behaviour when nothing is staged).
   const [pendingCommit, setPendingCommit] = useState<{ message: string; push: boolean } | null>(null);
+  // Holds the pending commit while we ask the user to confirm committing files with unknown fields.
+  // `stageAll` is set when the commit still needs to stage every change first.
+  const [pendingUnknownFieldsCommit, setPendingUnknownFieldsCommit] = useState<{
+    message: string;
+    push: boolean;
+    stageAll: boolean;
+  } | null>(null);
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  // Set when a commit succeeded but the push that followed it failed — the
+  // commit is safe locally, so we offer a retry rather than a plain error.
+  const [pushFailedError, setPushFailedError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const repoPath = gitRepository?._id ? resolveGitRepoBaseDir(gitRepository) : '';
@@ -666,15 +900,58 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
     if (errors && errors.length > 0) {
       if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         onPullRequired();
+      } else if (commitFetcher.data.pushFailedAfterCommit && !isPushAuthError(errors)) {
+        // The commit itself succeeded — only clear the message/error state
+        // for that, and surface the push failure as a retryable banner.
+        setMessage('');
+        setOperationError(null);
+        setPushFailedError(errors.join('\n'));
       } else {
+        // An auth failure needs the re-auth banner (GitOauthAuthBanner), even
+        // if it happened after a successful commit — a plain "retry push"
+        // button would just fail again without letting the user re-authenticate.
+        setPushFailedError(null);
         setOperationError(errors.join('\n'));
       }
       return;
     }
     setMessage('');
     setOperationError(null);
+    setPushFailedError(null);
     onCommitSuccess({ push: action === 'commit-push' });
   }, [commitFetcher.data, onCommitSuccess, onPullRequired, isCommitting]);
+
+  const isRetryingPush = pushRetryFetcher.state !== 'idle';
+  const prevPushRetryStateRef = useRef(pushRetryFetcher.state);
+  useEffect(() => {
+    const prevState = prevPushRetryStateRef.current;
+    prevPushRetryStateRef.current = pushRetryFetcher.state;
+    if (!(prevState !== 'idle' && pushRetryFetcher.state === 'idle' && pushRetryFetcher.data)) {
+      return;
+    }
+    const errors = pushRetryFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+        setPushFailedError(null);
+        onPullRequired();
+        return;
+      }
+      if (isPushAuthError(errors)) {
+        setPushFailedError(null);
+        setOperationError(errors.join('\n'));
+        return;
+      }
+      setPushFailedError(errors.join('\n'));
+      showToast({ icon: 'exclamation-triangle', title: 'Push failed again', status: 'error' });
+      return;
+    }
+    setPushFailedError(null);
+    onCommitSuccess({ push: true });
+  }, [pushRetryFetcher.state, pushRetryFetcher.data, onCommitSuccess, onPullRequired]);
+
+  const retryPush = () => {
+    pushRetryFetcher.submit({ projectId });
+  };
 
   return (
     <>
@@ -690,6 +967,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           // message), ask whether to stage all changes and commit them directly.
           if (stagedCount === 0) {
             setPendingCommit({ message, push });
+            return;
+          }
+
+          if (changes.staged.some(change => change.originHasUnknownFields)) {
+            setPendingUnknownFieldsCommit({ message, push, stageAll: false });
             return;
           }
 
@@ -803,11 +1085,18 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             )}
           </div>
         )}
-        {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+        {pushFailedError ? (
+          <PushFailedAfterCommitBanner
+            error={pushFailedError}
+            isRetrying={isRetryingPush}
+            onRetry={retryPush}
+            projectId={projectId}
+          />
+        ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
             gitRepository={gitRepository}
-            repoLoadErrors={[operationError]}
+            repoLoadErrors={toOAuthBannerErrors([operationError])}
             provider={selectedProvider}
           />
         ) : operationError && selectedCredential?.provider === 'custom' ? (
@@ -1115,7 +1404,27 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </Button>
           <TooltipTrigger>
             <Button
-              onPress={() => window.shell.openPath(repoPath)}
+              onPress={async () => {
+                if (!gitRepository?._id) {
+                  return;
+                }
+                // Resolve (and confirm it still exists) before opening — unlike a
+                // plain `window.shell.openPath`, this never recreates a folder
+                // that was renamed, moved, or deleted outside Insomnia.
+                const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
+                if ('errors' in result && result.errors) {
+                  showToast({
+                    icon: 'exclamation-triangle',
+                    title: 'Folder not found',
+                    description: result.errors.join(', '),
+                    status: 'error',
+                  });
+                  return;
+                }
+                if (result.path) {
+                  window.shell.openPath(result.path);
+                }
+              }}
               className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
               aria-label="Open in file system"
             >
@@ -1136,11 +1445,30 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           onConfirm={async () => {
             const pending = pendingCommit;
             setPendingCommit(null);
+            // Confirm before staging so cancelling leaves the staging area untouched.
+            if (changes.unstaged.some(change => change.originHasUnknownFields)) {
+              setPendingUnknownFieldsCommit({ ...pending, stageAll: true });
+              return;
+            }
             // Stage every change, then commit (and push) directly.
             await stageChanges(changes.unstaged.map(entry => entry.path));
             submitCommit(pending.message, pending.push);
           }}
           onClose={() => setPendingCommit(null)}
+        />
+      )}
+
+      {pendingUnknownFieldsCommit && (
+        <ConfirmUnknownFieldsCommitModal
+          onConfirm={async () => {
+            const pending = pendingUnknownFieldsCommit;
+            setPendingUnknownFieldsCommit(null);
+            if (pending.stageAll) {
+              await stageChanges(changes.unstaged.map(entry => entry.path));
+            }
+            submitCommit(pending.message, pending.push);
+          }}
+          onClose={() => setPendingUnknownFieldsCommit(null)}
         />
       )}
     </>
@@ -1227,6 +1555,10 @@ const OriginalGitProjectStagingModal: FC<
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
   const [showConfirmDiscardAndPullModal, setShowConfirmDiscardAndPullModal] = React.useState(false);
   const [discardData, setDiscardData] = React.useState<DiscardData | null>(null);
+  const [diffViewMode, setDiffViewMode] = useState<'text' | 'visual'>('text');
+  const [isActionInFlight, setIsActionInFlight] = useState(false);
+  // One stage / unstage / discard at a time, across the file-level buttons and the Visual view's cards.
+  const actionGate = useMemo(() => createActionGate(setIsActionInFlight), []);
 
   const gitChangesFetcher = useGitProjectChangesFetcher();
   const gitCredentialsFetcher = useGitCredentialsLoaderFetcher();
@@ -1359,19 +1691,40 @@ const OriginalGitProjectStagingModal: FC<
     }
   }
 
+  // After staging/unstaging/discarding a single entity out of the currently-previewed
+  // file, refresh both the file list (staged/unstaged buckets) and the diff itself so
+  // the entity's card disappears/updates without switching away from this view.
+  function afterEntityChange() {
+    return Promise.all([
+      gitChangesFetcher.load({ projectId }),
+      fileToDiff &&
+        diffChangesFetcherLoad({
+          projectId,
+          filePath: fileToDiff.path,
+          staged: fileToDiff.staged,
+        }),
+    ]);
+  }
+
+  // File-level actions don't depend on the diff on screen, so they wait for an action in flight rather
+  // than being dropped.
   async function stageChanges(paths: string[]) {
-    await stageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
+    await actionGate.runAfter(() =>
+      stageChangesFetcher.submit({
+        projectId,
+        paths,
+      }),
+    );
     afterStageOrUnstage(paths, true);
   }
 
   async function unstageChanges(paths: string[]) {
-    await unstageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
+    await actionGate.runAfter(() =>
+      unstageChangesFetcher.submit({
+        projectId,
+        paths,
+      }),
+    );
     afterStageOrUnstage(paths, false);
   }
 
@@ -1385,6 +1738,12 @@ const OriginalGitProjectStagingModal: FC<
     }
     return false;
   })();
+
+  const undiscardableFilePath =
+    previewDiffItem?.undiscardable && !previewDiffItem.staged && isPreviewDiffItemInChangesList
+      ? previewDiffItem.filepath
+      : null;
+  const hasUnknownFields = previewDiffItem && previewDiffItem.unknownFieldRanges.length > 0;
 
   return (
     <>
@@ -1526,7 +1885,7 @@ const OriginalGitProjectStagingModal: FC<
                       <Heading className="flex items-center gap-2 font-bold">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                           <div
-                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-5 w-5 items-center justify-center rounded-s-sm px-2`}
                           >
                             <Icon icon={scopeToIconMap[previewDiffItem.scope]} />
                           </div>
@@ -1544,7 +1903,30 @@ const OriginalGitProjectStagingModal: FC<
                             {!previewDiffItem.staged ? 'Stage this file' : 'Unstage this file'}
                           </BasicButton>
                         )}
+                        <div className="ml-auto flex items-center gap-1 rounded-xs bg-(--hl-xs) p-0.5">
+                          <Button
+                            className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'text' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            onPress={() => setDiffViewMode('text')}
+                          >
+                            Text
+                          </Button>
+                          <Button
+                            className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'visual' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            onPress={() => setDiffViewMode('visual')}
+                          >
+                            Visual (Beta)
+                          </Button>
+                        </div>
                       </Heading>
+                      {hasUnknownFields && (
+                        <WarningBanner icon="triangle-exclamation" data-testid="unknown-fields-diff-warning">
+                          The remote version of this file has fields not recognized by this version of Insomnia.
+                          Committing changes to this file from this version of Insomnia may break or remove
+                          functionality for your collaborators. We recommend upgrading.
+                        </WarningBanner>
+                      )}
+                      {/* Show undiscardable change warning if the file is undiscardable and has no unknown field ranges */}
+                      {undiscardableFilePath && !hasUnknownFields && <UndiscardableChangeWarning />}
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
@@ -1553,14 +1935,31 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
-                      {previewDiffItem && (
+                      {previewDiffItem.diagnostics && <GitChangeAnalysis diagnostics={previewDiffItem.diagnostics} />}
+                      {diffViewMode === 'text' ? (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor
                             original={previewDiffItem.diff.before}
                             modified={previewDiffItem.diff.after}
                             highlightSystemChange
+                            originalHighlights={previewDiffItem.unknownFieldRanges}
                           />
                         </div>
+                      ) : (
+                        <EntityDiffList
+                          before={previewDiffItem.diff.before}
+                          after={previewDiffItem.diff.after}
+                          projectId={projectId}
+                          filepath={previewDiffItem.filepath}
+                          staged={previewDiffItem.staged}
+                          onEntityChanged={afterEntityChange}
+                          onShowTextView={() => setDiffViewMode('text')}
+                          actionGate={actionGate}
+                          isActionInFlight={isActionInFlight}
+                          // One warning above the diff at most: unrecognized fields, or a change that is only Insomnia
+                          // reformatting the file, already have their own, which say more than the format warning would.
+                          hideFormatWarning={Boolean(hasUnknownFields || undiscardableFilePath)}
+                        />
                       )}
                     </div>
                   ) : (
@@ -1585,10 +1984,12 @@ const OriginalGitProjectStagingModal: FC<
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
           onConfirm={async () => {
-            await undoUnstagedChangesFetcher.submit({
-              projectId,
-              paths: [...changes.unstaged.map(entry => entry.path), ...changes.staged.map(entry => entry.path)],
-            });
+            await actionGate.runAfter(() =>
+              undoUnstagedChangesFetcher.submit({
+                projectId,
+                paths: [...changes.unstaged.map(entry => entry.path), ...changes.staged.map(entry => entry.path)],
+              }),
+            );
 
             setShowConfirmDiscardAndPullModal(false);
             onPullAfterCommit();
@@ -1599,11 +2000,20 @@ const OriginalGitProjectStagingModal: FC<
       {discardData && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          showUndiscardableWarning={
+            // Only show the undiscardable warning if there are no unknown fields, there is an undiscardable file, and it is the only file being discarded.
+            !hasUnknownFields &&
+            undiscardableFilePath !== null &&
+            discardData.filesCount === 1 &&
+            discardData.paths.includes(undiscardableFilePath)
+          }
           onConfirm={async () => {
-            await undoUnstagedChangesFetcher.submit({
-              projectId,
-              paths: discardData.paths,
-            });
+            await actionGate.runAfter(() =>
+              undoUnstagedChangesFetcher.submit({
+                projectId,
+                paths: discardData.paths,
+              }),
+            );
 
             setDiscardData(null);
           }}
@@ -1626,14 +2036,22 @@ const OriginalGitProjectStagingModal: FC<
   );
 };
 
+const UndiscardableChangeWarning = () => (
+  <WarningBanner icon="exclamation-triangle">
+    This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
+    other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
+  </WarningBanner>
+);
+
 interface ConfirmModalProps {
   message: string;
+  showUndiscardableWarning?: boolean;
   onConfirm?: () => void;
   onClose?: () => void;
 }
 
 // TODO - refactor this to use the new modal system
-const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps) => {
+const ConfirmDiscardModal = ({ message, showUndiscardableWarning, onConfirm, onClose }: ConfirmModalProps) => {
   return (
     <ModalOverlay
       isOpen
@@ -1665,6 +2083,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 </Button>
               </div>
               <div className="">{message}</div>
+              {showUndiscardableWarning && <UndiscardableChangeWarning />}
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
@@ -1685,6 +2104,102 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 </Button>
               </div>
             </div>
+          )}
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
+  );
+};
+
+// Focused, single-purpose modal for the "push failed" banner's branch-creation
+// shortcut. Deliberately not the full Branches modal — that has checkout/delete/
+// merge actions for every branch, which would distract from this one specific
+// recovery step.
+const CreateBranchAndPushModal = ({
+  isCreating,
+  error,
+  onSubmit,
+  onClose,
+}: {
+  isCreating: boolean;
+  error: string | null;
+  onSubmit: (branchName: string) => void;
+  onClose: () => void;
+}) => {
+  const [branchName, setBranchName] = useState('');
+
+  return (
+    <ModalOverlay
+      isOpen
+      onOpenChange={isOpen => {
+        !isOpen && onClose();
+      }}
+      isDismissable
+      className="fixed top-[50%] left-0 z-10 flex h-(--visual-viewport-height) w-full translate-y-[-50%] items-center justify-center bg-black/30"
+    >
+      <Modal
+        onOpenChange={isOpen => {
+          !isOpen && onClose();
+        }}
+        className="flex w-full max-w-md flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
+      >
+        <Dialog className="outline-hidden">
+          {({ close }) => (
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                const name = branchName.trim();
+                if (!name) {
+                  return;
+                }
+                onSubmit(name);
+              }}
+              className="flex flex-col gap-4"
+            >
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <Heading slot="title" className="flex items-center gap-2 text-2xl">
+                  Create branch &amp; push
+                </Heading>
+                <Button
+                  type="button"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  onPress={close}
+                >
+                  <Icon icon="x" />
+                </Button>
+              </div>
+              <TextField autoFocus className="flex flex-col gap-2">
+                <Label className="font-bold">Branch name</Label>
+                <Input
+                  value={branchName}
+                  onChange={e => setBranchName(e.target.value)}
+                  placeholder="e.g. fix/protected-branch"
+                  className="h-8 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                />
+              </TextField>
+              {error && (
+                <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
+                  <Icon icon="exclamation-triangle" /> {error}
+                </p>
+              )}
+              <div className="flex h-10 shrink-0 items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
+                  onPress={close}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  isDisabled={isCreating || !branchName.trim()}
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:opacity-80"
+                >
+                  <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
+                  Create branch &amp; push
+                </Button>
+              </div>
+            </form>
           )}
         </Dialog>
       </Modal>
@@ -1726,7 +2241,8 @@ const ConfirmCommitAllModal = ({ onConfirm, onClose }: Omit<ConfirmModalProps, '
                 </Button>
               </div>
               <div className="">
-                There are no staged changes to commit. Would you like to stage all your changes and commit them directly?
+                There are no staged changes to commit. Would you like to stage all your changes and commit them
+                directly?
               </div>
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button

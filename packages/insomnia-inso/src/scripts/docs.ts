@@ -90,7 +90,8 @@ export function generateDocumentation(program: commander.Command): void {
 
   const allCommands: any[] = [];
 
-  program.commands.forEach(command => {
+  program.commands.forEach((command: commander.Command & { _hidden?: boolean }) => {
+    if (command._hidden) return; // Skip hidden commands
     const commandData = generateCommandMarkdown(command, program.options, '');
 
     allCommands.push({

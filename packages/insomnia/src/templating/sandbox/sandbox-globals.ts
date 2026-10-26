@@ -26,6 +26,66 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '  try { __appInfo = JSON.parse(globalThis.__sandboxAppInfoJSON || "{}"); } catch (e) { __appInfo = {}; }',
   '  delete globalThis.__sandboxAppInfoJSON;',
 
+  // Capture then drop the crypto natives so plugin code can\'t call them directly, bypassing the
+  // crypto/require("crypto") wrappers below — mirrors the __hostBridge capture-then-delete pattern
+  // in in-sandbox-bootstrap.ts. Each is optional (installHostCrypto is skipped when hostCrypto isn\'t
+  // supplied), so the captured locals may be undefined; every call site below already checks
+  // typeof === "function" before use.
+  '  var __cryptoHashFn = globalThis.__cryptoHash;',
+  '  var __cryptoHmacFn = globalThis.__cryptoHmac;',
+  '  var __cryptoRandomBytesFn = globalThis.__cryptoRandomBytes;',
+  '  var __cryptoRandomUUIDFn = globalThis.__cryptoRandomUUID;',
+  '  delete globalThis.__cryptoHash;',
+  '  delete globalThis.__cryptoHmac;',
+  '  delete globalThis.__cryptoRandomBytes;',
+  '  delete globalThis.__cryptoRandomUUID;',
+
+  // require("crypto") (module-registry.ts) needs the same natives, but its factory only runs lazily
+  // on a plugin\'s first require("crypto") call — arbitrarily later than this IIFE, i.e. after the
+  // raw natives above are already gone. So its exports are built eagerly here, in the same scope as
+  // the capture, as plain interpreted closures over the captured locals (never touching
+  // globalThis.__crypto* again) — module-registry.ts\'s factory just returns this pre-built object.
+  // Safe to leave reachable: like context.*\'s __bridge wrappers, these are interpreted JS with no
+  // raw native passthrough, not the bare host callbacks the capture above hides.
+  '  globalThis.__nodeCryptoExports = (function () {',
+  '    var mkDigester = function (compute) {',
+  '      var parts = [];',
+  '      var obj = {',
+  '        update: function (data) { parts.push(typeof data === "string" ? data : String(data)); return obj; },',
+  '        digest: function (enc) { return compute(parts.join(""), enc || "hex"); }',
+  '      };',
+  '      return obj;',
+  '    };',
+  '    return {',
+  '      createHash: function (algo) {',
+  '        if (typeof __cryptoHashFn !== "function") { throw new Error("crypto is not available in this sandbox"); }',
+  '        return mkDigester(function (data, enc) { return __cryptoHashFn(algo, data, "utf8", enc); });',
+  '      },',
+  '      createHmac: function (algo, key) {',
+  '        if (typeof __cryptoHmacFn !== "function") { throw new Error("crypto is not available in this sandbox"); }',
+  '        var k = typeof key === "string" ? key : String(key);',
+  '        return mkDigester(function (data, enc) { return __cryptoHmacFn(algo, k, data, enc); });',
+  '      },',
+  '      randomBytes: function (size) {',
+  '        if (typeof __cryptoRandomBytesFn !== "function") { throw new Error("crypto is not available in this sandbox"); }',
+  '        var b64 = __cryptoRandomBytesFn(size);',
+  '        var binary = atob(b64);',
+  '        return {',
+  '          length: binary.length,',
+  '          toString: function (enc) {',
+  '            if (enc === "base64") { return b64; }',
+  '            if (enc === "latin1" || enc === "binary") { return binary; }',
+  '            var hex = ""; for (var i = 0; i < binary.length; i++) { hex += ("0" + binary.charCodeAt(i).toString(16)).slice(-2); } return hex;',
+  '          }',
+  '        };',
+  '      },',
+  '      randomUUID: function () {',
+  '        if (typeof __cryptoRandomUUIDFn !== "function") { throw new Error("crypto is not available in this sandbox"); }',
+  '        return __cryptoRandomUUIDFn();',
+  '      }',
+  '    };',
+  '  })();',
+
   // --- Buffer (subset: from/alloc/isBuffer/concat + toString for utf8/base64/hex/latin1) ---
   // Modeled as a Uint8Array with a patched toString + _isBuffer marker — enough for the common
   // "Buffer.from(x).toString(enc)" plugin usage without dragging in Node's full Buffer.
@@ -102,17 +162,17 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '    globalThis.crypto = {',
   // host-backed; throw (not weak fallback) when the host binding is absent, like getRandomValues.
   '      randomUUID: function () {',
-  '        if (typeof globalThis.__cryptoRandomUUID !== "function") { throw new Error("crypto.randomUUID is not available in this sandbox"); }',
-  '        return globalThis.__cryptoRandomUUID();',
+  '        if (typeof __cryptoRandomUUIDFn !== "function") { throw new Error("crypto.randomUUID is not available in this sandbox"); }',
+  '        return __cryptoRandomUUIDFn();',
   '      },',
   '      getRandomValues: function (typedArray) {',
-  '        if (typeof globalThis.__cryptoRandomBytes !== "function") { throw new Error("crypto.getRandomValues is not available in this sandbox"); }',
+  '        if (typeof __cryptoRandomBytesFn !== "function") { throw new Error("crypto.getRandomValues is not available in this sandbox"); }',
   '        if (!typedArray || typeof typedArray.byteLength !== "number") { throw new TypeError("getRandomValues expects a TypedArray"); }',
   // Enforce the WebCrypto 65536-byte quota. This both matches the spec (which throws
   // QuotaExceededError past this limit) and stays within the host __cryptoRandomBytes clamp, so we
   // never silently zero-fill a tail — a request that would be short-changed fails loudly instead.
   '        if (typedArray.byteLength > 65536) { throw new Error("Failed to execute \'getRandomValues\': The ArrayBufferView\'s byte length (" + typedArray.byteLength + ") exceeds the number of bytes of entropy available via this API (65536)."); }',
-  '        var bin = atob(globalThis.__cryptoRandomBytes(typedArray.byteLength));',
+  '        var bin = atob(__cryptoRandomBytesFn(typedArray.byteLength));',
   '        var view = new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);',
   '        for (var i = 0; i < view.length; i++) { view[i] = bin.charCodeAt(i) & 255; }',
   '        return typedArray;',
@@ -120,12 +180,12 @@ export const SANDBOX_GLOBALS_SOURCE = [
   '      subtle: {',
   '        digest: function (algorithm, data) {',
   '          return Promise.resolve().then(function () {',
-  '            if (typeof globalThis.__cryptoHash !== "function") { throw new Error("crypto.subtle is not available in this sandbox"); }',
+  '            if (typeof __cryptoHashFn !== "function") { throw new Error("crypto.subtle is not available in this sandbox"); }',
   '            var name = typeof algorithm === "string" ? algorithm : (algorithm && algorithm.name);',
   '            var algo = __algoMap[name]; if (!algo) { throw new Error("Unsupported digest algorithm: " + name); }',
   '            var bytes = data instanceof Uint8Array ? data : new Uint8Array(data);',
   '            var latin1 = ""; for (var i = 0; i < bytes.length; i++) { latin1 += String.fromCharCode(bytes[i] & 255); }',
-  '            var hex = globalThis.__cryptoHash(algo, latin1, "latin1", "hex");',
+  '            var hex = __cryptoHashFn(algo, latin1, "latin1", "hex");',
   '            var out = new Uint8Array(hex.length / 2);',
   '            for (var j = 0; j < out.length; j++) { out[j] = parseInt(hex.substr(j * 2, 2), 16); }',
   '            return out.buffer;',

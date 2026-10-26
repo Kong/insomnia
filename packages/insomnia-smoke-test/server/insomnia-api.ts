@@ -121,14 +121,24 @@ const defaultOrganizationFeatures = {
   bulkImport: {
     enabled: true,
   },
-  konnectSync: {
-    enabled: true,
-  },
 };
 
 let organizationFeatures = {
   features: { ...defaultOrganizationFeatures },
 };
+
+interface Entitlement {
+  featureKey: string;
+  type: 'metered';
+  hasAccess: boolean;
+  allowance: number | null;
+}
+
+const defaultEntitlements: Entitlement[] = [
+  { featureKey: 'konnectControlPlanes_default', type: 'metered', hasAccess: true, allowance: null },
+];
+
+let entitlements: Entitlement[] = [...defaultEntitlements];
 
 const v3User = {
   id: 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
@@ -492,6 +502,19 @@ export default function setup(app: Application) {
     });
   });
 
+  // GET /v3/users/me/onboarding
+  app.get('/v3/users/me/onboarding', (_req, res) => {
+    res.status(200).send({ is_new_signup: false, first_request_treatment: null });
+  });
+
+  app.post('/v3/users/me/onboarding/request-threshold', (_req, res) => {
+    res.status(204).send();
+  });
+
+  app.post('/v3/users/me/actions', (_req, res) => {
+    res.status(204).send();
+  });
+
   app.get('/v1/organizations/:orgId/features', (_req, res) => {
     res.status(200).send(organizationFeatures);
   });
@@ -504,6 +527,20 @@ export default function setup(app: Application) {
     organizationFeatures = {
       features: { ...defaultOrganizationFeatures, ...req.body?.features },
     };
+    res.status(200).send();
+  });
+
+  // An account without the feature gets an empty list rather than `hasAccess: false`.
+  app.get('/v1/user/entitlements', (req, res) => {
+    const feature = typeof req.query.feature === 'string' ? req.query.feature : undefined;
+    res.status(200).send({
+      entitlements: feature ? entitlements.filter(e => e.featureKey.startsWith(`${feature}_`)) : entitlements,
+    });
+  });
+
+  // Test Utility Endpoint - Allows altering entitlements at runtime.
+  app.post('/v1/test-utils/user/entitlements', json(), (req, res) => {
+    entitlements = Array.isArray(req.body?.entitlements) ? req.body.entitlements : [...defaultEntitlements];
     res.status(200).send();
   });
 

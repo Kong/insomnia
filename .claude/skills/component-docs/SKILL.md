@@ -35,9 +35,9 @@ editable examples.
 3. **Register in ReactLiveScope** (`src/theme/ReactLiveScope/index.ts`): add the `import` and include the component in the `ReactLiveScope` object. Only needed once per component.
 4. **Verify the site builds** (catches broken live blocks and bad imports):
    ```bash
-   npm run build -w insomnia-component-docs
+   cd packages/insomnia-component-docs && npm run build
    ```
-   For interactive preview while writing: `cd insomnia-component-docs && npm run start`.
+   For interactive preview while writing: `cd packages/insomnia-component-docs && npm run start`.
 
 ## Conventions
 

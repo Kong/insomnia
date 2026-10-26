@@ -1,3 +1,4 @@
+import type { MergeConflict } from 'insomnia-vcs';
 import { type FC, useEffect, useState } from 'react';
 import {
   Button,
@@ -19,7 +20,6 @@ import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
 import { useGitProjectBranchesLoaderFetcher } from '~/routes/git.branches';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 
-import type { MergeConflict } from '../../../sync/types';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { AlertModal } from './alert-modal';
@@ -54,6 +54,21 @@ const LocalBranchItem = ({
       showModal(AlertModal, {
         title: 'Error while checking out branch.',
         message: error,
+      });
+    }
+  }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);
+
+  useEffect(() => {
+    if (
+      checkoutBranchFetcher.data &&
+      'warnings' in checkoutBranchFetcher.data &&
+      checkoutBranchFetcher.data.warnings &&
+      checkoutBranchFetcher.data.warnings.length > 0 &&
+      checkoutBranchFetcher.state === 'idle'
+    ) {
+      showModal(AlertModal, {
+        title: 'Heads up',
+        message: checkoutBranchFetcher.data.warnings.join('\n\n'),
       });
     }
   }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);
@@ -224,6 +239,21 @@ const RemoteBranchItem = ({
       showModal(AlertModal, {
         title: 'Error while pulling branch.',
         message: error,
+      });
+    }
+  }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);
+
+  useEffect(() => {
+    if (
+      checkoutBranchFetcher.data &&
+      'warnings' in checkoutBranchFetcher.data &&
+      checkoutBranchFetcher.data.warnings &&
+      checkoutBranchFetcher.data.warnings.length > 0 &&
+      checkoutBranchFetcher.state === 'idle'
+    ) {
+      showModal(AlertModal, {
+        title: 'Heads up',
+        message: checkoutBranchFetcher.data.warnings.join('\n\n'),
       });
     }
   }, [checkoutBranchFetcher.data, checkoutBranchFetcher.state]);

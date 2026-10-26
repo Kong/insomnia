@@ -4,20 +4,24 @@ import type { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
-import type { CookieJar, RequestAuthentication, RequestHeader, Response } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import type { Response } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { getConfidentialBasicAuthHeaderValue } from '~/common/network/sensitive-value-collector';
+import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
-import { filterClientCertificates } from '../../network/certificate';
+import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { getAuthHeader } from './get-auth-header';
 import { createConfiguredCurlInstance } from './libcurl-promise';
+import { createSensitiveValuesRegistry } from './sensitive-values-registry';
 
 export interface CurlConnection extends Curl {
   _id: string;
@@ -68,6 +72,26 @@ const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
+// Confidential values to redact from timeline/event-log writes before they reach disk.
+// Only grows for the lifetime of a connection (each open/send IPC call merges in more
+// values); cleaned up in deleteRequestMaps.
+const sensitiveValues = createSensitiveValuesRegistry();
+
+const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ ...entry, value: sensitiveValues.redactText(requestId, entry.value) }) + '\n');
+};
+
+const writeCurlEventLog = (requestId: string, event: CurlEvent, opts: { clearRequestIdMap?: boolean } = {}) => {
+  const redactedEvent = sensitiveValues.redactEvent(requestId, event);
+  writeEventLogAndNotify({
+    requestId,
+    data: JSON.stringify(redactedEvent) + '\n',
+    clearRequestIdMap: opts.clearRequestIdMap,
+  });
+};
+
 const getEventNotificationChannel = (responseId: string) =>
   `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 const writeEventLogAndNotify = ({
@@ -105,90 +129,104 @@ const parseHeadersAndBuildTimeline = (url: string, headersWithStatus: HeaderInfo
   return { timeline, responseHeaders, statusCode, statusMessage, httpVersion };
 };
 interface OpenCurlRequestOptions {
-  requestId: string;
   workspaceId: string;
-  url: string;
-  headers: RequestHeader[];
-  authHeader?: { name: string; value: string };
-  authentication: RequestAuthentication;
-  cookieJar: CookieJar;
+  renderedRequest: RenderedRequest;
   initialPayload?: string;
-  suppressUserAgent: boolean;
+  sensitiveValues?: string[];
 }
 const openCurlConnection = async (
   _event: Electron.IpcMainInvokeEvent,
   options: OpenCurlRequestOptions,
 ): Promise<void> => {
-  const existingConnection = CurlConnections.get(options.requestId);
+  const { workspaceId, renderedRequest: req } = options;
+  const requestId = req._id;
+  const existingConnection = CurlConnections.get(requestId);
 
   if (existingConnection) {
     console.warn('Connection still open to ' + existingConnection.getInfo(Curl.info.EFFECTIVE_URL));
     return;
   }
-  const request = await services.request.getById(options.requestId);
   const responseId = generateId('res');
-  if (!request) {
-    console.warn('Could not find request for ' + options.requestId);
-    return;
-  }
 
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
 
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
-  eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+  eventLogFileStreams.set(requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
-  timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
-  requestIdToResponseIdMap.set(options.requestId, responseId);
+  timelineFileStreams.set(requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(requestId, responseId);
+  sensitiveValues.reset(requestId, options.sensitiveValues);
 
-  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
   const environment = await services.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const caCert = await services.caCertificate.getByParentId(options.workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const caCertficatePath = caCert?.path || null;
   const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
   try {
-    invariant(options.url, 'URL must be defined');
-    invariant(!options.url.startsWith('file://'), 'Local file URIs are not supported');
+    invariant(req.url, 'URL must be defined');
+    invariant(!req.url.startsWith('file://'), 'Local file URIs are not supported');
 
-    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
+    const readyStateChannel = `${protocolName}.${requestId}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const settings = await services.settings.get();
     const start = performance.now();
-    const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
-    const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
+    const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+    const filteredClientCertificates = models.clientCertificate.filterClientCertificates(
+      clientCertificates,
+      req.url,
+      'https:',
+    );
 
+    const { header: authHeader, timeline: authTimeline } = await getAuthHeader(req, req.url);
+    // getAuthHeader builds the Basic header here, after the render that registered the
+    // credentials, so its base64 has to be registered before anything writes it out.
+    const auth = getAuthObjectOrNull(req.authentication);
+    if (authHeader?.value && auth?.type === 'basic' && isAuthEnabled(req.authentication)) {
+      const registeredValues = sensitiveValues.getValues(requestId);
+      const headerValue = getConfidentialBasicAuthHeaderValue(registeredValues, auth);
+      if (headerValue) {
+        sensitiveValues.register(requestId, [headerValue]);
+      }
+    }
+    authTimeline?.forEach(entry => writeTimelineEntry(requestId, entry));
+
+    // request-level `cookies` aren't resolved for realtime connections (unlike the plain HTTP
+    // send path), so cookie sending relies entirely on the cookie jar file below.
     const { curl, debugTimeline } = await createConfiguredCurlInstance({
-      req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
-      finalUrl: options.url,
+      req: { ...req, cookies: [] },
       settings,
       caCert: caCertificate,
       certificates: filteredClientCertificates,
     });
     // set method
-    curl.setOpt(Curl.option.CUSTOMREQUEST, request.method);
+    curl.setOpt(Curl.option.CUSTOMREQUEST, req.method);
     // TODO: support all post data content types
-    curl.setOpt(Curl.option.POSTFIELDS, request.body?.text || '');
-    debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
-    CurlConnections.set(options.requestId, curl);
-    CurlConnections.get(options.requestId)?.enable(CurlFeature.StreamResponse);
-    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url, authHeader: options.authHeader });
+    curl.setOpt(Curl.option.POSTFIELDS, req.body?.text || '');
+    debugTimeline.forEach(entry => writeTimelineEntry(requestId, entry));
+    CurlConnections.set(requestId, curl);
+    CurlConnections.get(requestId)?.enable(CurlFeature.StreamResponse);
+    const headerStrings = parseHeaderStrings({ req, finalUrl: req.url, authHeader });
 
-    CurlConnections.get(options.requestId)?.setOpt(Curl.option.HTTPHEADER, headerStrings);
-    CurlConnections.get(options.requestId)?.on('error', async (error, errorCode) => {
+    CurlConnections.get(requestId)?.setOpt(Curl.option.HTTPHEADER, headerStrings);
+    CurlConnections.get(requestId)?.on('error', async (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
         _id: uuidV4(),
-        requestId: options.requestId,
+        requestId,
         message: error.message,
         type: 'error',
         error,
         timestamp: Date.now(),
       };
       console.error('curl - error:', error, errorCode);
-      CurlConnections.get(options.requestId)?.close();
-      deleteRequestMaps(request._id, error.message, errorEvent);
+      CurlConnections.get(requestId)?.close();
+      // Captured before deleteRequestMaps drops this request's registered values. A curl
+      // error message readily echoes the rendered URL.
+      const redactedErrorMessage = sensitiveValues.redactText(requestId, error.message);
+      deleteRequestMaps(requestId, redactedErrorMessage, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
@@ -197,16 +235,16 @@ const openCurlConnection = async (
         if (!res) {
           createErrorResponse(
             responseId,
-            request._id,
+            requestId,
             responseEnvironmentId,
             timelinePath,
-            error.message || 'Something went wrong creating curl response',
+            redactedErrorMessage || 'Something went wrong creating curl response',
           );
         }
       }
     });
 
-    CurlConnections.get(options.requestId)?.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+    CurlConnections.get(requestId)?.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
       const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
       const isEmpty = buffer.length === 0;
       // Don't show cookie setting because this will display every domain in the jar
@@ -230,80 +268,82 @@ const openCurlConnection = async (
         name = 'Text';
       }
       const value = timelineMessage || buffer.toString('utf8');
-      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
+      writeTimelineEntry(requestId, { name, value, timestamp: Date.now() });
       return 0;
     });
 
-    CurlConnections.get(options.requestId)?.on(
+    CurlConnections.get(requestId)?.on(
       'stream',
       async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
         for (const window of BrowserWindow.getAllWindows()) {
           window.webContents.send(readyStateChannel, true);
         }
         const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(
-          options.url,
+          req.url,
           headersWithStatus,
         );
 
         const responsePatch: Partial<Response> = {
           _id: responseId,
-          parentId: request._id,
+          parentId: requestId,
           environmentId: responseEnvironmentId,
           headers: responseHeaders,
-          url: options.url,
+          // The Response document is persisted separately from the timeline, and this is the
+          // rendered URL, so a confidential value interpolated into it would land in NeDB.
+          url: sensitiveValues.redactText(requestId, req.url),
           statusCode,
           statusMessage,
           httpVersion,
           elapsedTime: performance.now() - start,
           timelinePath,
           bodyPath: responseBodyPath,
-          settingSendCookies: request.settingSendCookies,
-          settingStoreCookies: request.settingStoreCookies,
+          settingSendCookies: req.settingSendCookies,
+          settingStoreCookies: req.settingStoreCookies,
           bodyCompression: null,
         };
         const settings = await services.settings.get();
         const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
-        services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+        services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 
-        if (request.settingStoreCookies) {
+        if (req.settingStoreCookies) {
           const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
           const totalSetCookies = setCookieStrings.length;
           if (totalSetCookies) {
-            const currentUrl = request.url;
+            const currentUrl = req.url;
             const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({
               setCookieStrings,
               currentUrl,
-              cookieJar: options.cookieJar,
+              cookieJar: req.cookieJar,
             });
             rejectedCookies.forEach(errorMessage =>
               timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
             );
             const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
             if (hasCookiesToPersist) {
-              await services.cookieJar.update(options.cookieJar, { cookies });
+              await services.cookieJar.update(req.cookieJar, { cookies });
               timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
             }
           }
         }
-        timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+        timeline.forEach(t => writeTimelineEntry(requestId, t));
 
-        invariant(eventLogFileStreams.get(request._id), 'writableStream should be defined');
+        invariant(eventLogFileStreams.get(requestId), 'writableStream should be defined');
         for await (const chunk of stream) {
           const messageEvent: CurlMessageEvent = {
             _id: uuidV4(),
-            requestId: options.requestId,
+            requestId,
             data: new TextDecoder('utf-8').decode(chunk),
             type: 'message',
             timestamp: Date.now(),
             direction: 'INCOMING',
           };
-          writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
+          writeCurlEventLog(requestId, messageEvent);
         }
 
         // NOTE: when stream is closed by remote server
         const closeEvent: CurlCloseEvent = {
           _id: uuidV4(),
-          requestId: options.requestId,
+          requestId,
           type: 'close',
           timestamp: Date.now(),
           statusCode,
@@ -311,8 +351,8 @@ const openCurlConnection = async (
           code: 0,
           wasClean: true,
         };
-        CurlConnections.get(options.requestId)?.close();
-        deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
+        CurlConnections.get(requestId)?.close();
+        deleteRequestMaps(requestId, 'Closing connection', closeEvent);
         for (const window of BrowserWindow.getAllWindows()) {
           window.webContents.send(readyStateChannel, false);
         }
@@ -322,13 +362,16 @@ const openCurlConnection = async (
   } catch (e) {
     console.error('unhandled error:', e);
 
-    deleteRequestMaps(request._id, e.message || 'Something went wrong opening curl connection');
+    // Same ordering constraint as the 'error' handler above: redact before deleteRequestMaps
+    // drops this request's registered values.
+    const redactedMessage = sensitiveValues.redactText(requestId, e.message || '');
+    deleteRequestMaps(requestId, redactedMessage || 'Something went wrong opening curl connection');
     createErrorResponse(
       responseId,
-      request._id,
+      requestId,
       responseEnvironmentId,
       timelinePath,
-      e.message || 'Something went wrong creating curl connection',
+      redactedMessage || 'Something went wrong creating curl connection',
     );
   }
 };
@@ -347,6 +390,8 @@ const createErrorResponse = async (
     environmentId: environmentId,
     timelinePath,
     statusMessage: 'Error',
+    // Already redacted by the caller: deleteRequestMaps clears this request's registered
+    // values before we get here, so redacting at this point would be a no-op.
     error: message,
   };
   const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
@@ -355,20 +400,16 @@ const createErrorResponse = async (
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
   if (event) {
-    writeEventLogAndNotify({
-      requestId: requestId,
-      data: JSON.stringify(event) + '\n',
-      clearRequestIdMap: true,
-    });
+    writeCurlEventLog(requestId, event, { clearRequestIdMap: true });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
-  timelineFileStreams
-    .get(requestId)
-    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  // `message` is often a curl error, which can echo the rendered URL.
+  writeTimelineEntry(requestId, { value: message, name: 'Text', timestamp: Date.now() });
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   CurlConnections.delete(requestId);
+  sensitiveValues.clear(requestId);
 };
 
 const getCurlReadyState = async (options: { requestId: string }): Promise<CurlConnection['isOpen']> => {
@@ -400,21 +441,46 @@ const closeCurlConnection = (_event: Electron.IpcMainInvokeEvent, options: { req
 
 const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
 
+/**
+ * A streamed Event Stream response stores its NDJSON event log in `bodyPath`, but the same field holds
+ * the raw body of a plain HTTP response, so what an event is has to be decided by the content: a JSON
+ * object carrying the fields every curl event has. Anything else (a JSON response body, a pretty
+ * printed one, a half written line) is not an event.
+ */
+const isCurlEvent = (value: unknown): value is CurlEvent => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const { _id, requestId, type } = value as Partial<CurlEvent>;
+  return (
+    typeof _id === 'string' &&
+    typeof requestId === 'string' &&
+    (type === 'open' || type === 'message' || type === 'close' || type === 'error')
+  );
+};
+
 const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
   const response = await services.response.getById(options.responseId);
-  if (!response || !response.bodyPath) {
+  if (!response?.bodyPath) {
     return [];
   }
   const body = await insecureReadFile(response.bodyPath);
-  return (
-    body
-      .split('\n')
-      .filter(e => e?.trim())
-      // Parse the message
-      .map(e => JSON.parse(e))
-      // Reverse the list of messages so that we get the latest message first
-      .reverse() || []
-  );
+  const events: CurlEvent[] = [];
+  for (const line of body.split('\n')) {
+    if (!line.trim()) {
+      continue;
+    }
+    try {
+      const parsed: unknown = JSON.parse(line);
+      if (isCurlEvent(parsed)) {
+        events.push(parsed);
+      }
+    } catch {
+      // Not an event: the body of a request that was never streamed, or a line still being written.
+    }
+  }
+  // Reverse the list of messages so that we get the latest message first
+  return events.reverse();
 };
 
 export interface CurlBridgeAPI {

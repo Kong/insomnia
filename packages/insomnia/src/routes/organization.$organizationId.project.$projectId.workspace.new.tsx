@@ -12,6 +12,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { trackCioEvent } from '~/ui/hooks/use-cio';
 import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
+import { recordAction } from '~/ui/utils/record-action';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
@@ -87,17 +88,21 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       if (mockServerType === 'self-hosted') {
         const mockServerUrl = workspaceData.mockServerUrl;
-        invariant(typeof mockServerUrl === 'string' && mockServerUrl.trim() !== '', 'Mock Server URL is required');
+        invariant(
+          typeof mockServerUrl === 'string' && mockServerUrl.trim().replace(/\/+$/, '') !== '',
+          'Mock Server URL is required',
+        );
       }
     }
 
     const flushId = await database.bufferChanges();
 
-    const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
+    const workspaceName = name || (scope === 'collection' ? 'My API Collection' : 'my-spec.yaml');
 
     const workspace = await services.workspace.create({
       name: workspaceName,
-      scope,
+      // There will be no design scope workspaces in the future, so we are mapping design to collection with apiSpec for now
+      scope: scope === 'design' ? 'collection' : scope,
       parentId: projectId,
     });
 
@@ -191,6 +196,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       },
     });
 
+    if (event === AnalyticsEvent.documentCreate) {
+      recordAction('document_created');
+    }
+
     if (workspaceData.withRequest) {
       const activeRequestId = (
         await services.request.create({
@@ -208,6 +217,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       const requestCreatedProperties = {
         requestType: 'HTTP',
+        request_url_length: 0,
         ...(workspaceData.source && { source: workspaceData.source }),
       };
       window.main.trackAnalyticsEvent({
@@ -219,10 +229,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       // user's email-bearing profile (only fires when logged in). See INS-2678.
       trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
 
+      recordAction('request_created');
+
       if (!redirectAfterCreate) {
         return {
           workspaceId: workspace._id,
           requestId: activeRequestId,
+          workspace: workspace,
         };
       }
 
@@ -239,6 +252,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     if (!redirectAfterCreate) {
       return {
         workspaceId: workspace._id,
+        workspace: workspace,
       };
     }
 
@@ -304,7 +318,7 @@ async function createMockServer(
       mockServerPatch.useInsomniaCloud = true;
     } else {
       mockServerPatch.useInsomniaCloud = false;
-      mockServerPatch.url = workspaceData.mockServerUrl!;
+      mockServerPatch.url = workspaceData.mockServerUrl!.trim().replace(/\/+$/, '');
     }
 
     await services.environment.getOrCreateForParentId(workspace._id);

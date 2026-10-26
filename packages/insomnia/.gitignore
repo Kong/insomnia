@@ -1,5 +1,6 @@
 dist
 build
+.vite-port
 
 # Generated
 src/*.js

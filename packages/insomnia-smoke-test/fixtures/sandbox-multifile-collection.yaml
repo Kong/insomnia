@@ -1,0 +1,25 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Sandbox Multi-file Collection
+meta:
+  id: wrk_5a4dmf00000000000000000000000001
+  created: 1751800000000
+  modified: 1751800000000
+collection:
+  - url: http://127.0.0.1:4010/echo
+    name: Multi-file Probe
+    meta:
+      id: req_5a4dmf00000000000000000000000002
+      created: 1751800000001
+      modified: 1751800000001
+      isPrivate: false
+      sortKey: -1751800000001
+    method: GET
+    body:
+      mimeType: text/plain
+      text: |
+        {% multifileprobe %}
+        {% poisonprobe %}
+    headers:
+      - name: Content-Type
+        value: text/plain

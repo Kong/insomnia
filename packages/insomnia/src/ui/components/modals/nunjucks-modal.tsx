@@ -1,6 +1,8 @@
 import type { Workspace } from 'insomnia-data';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
+import type { VariableSourceMeta } from '~/common/templating/types';
+
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -17,12 +19,14 @@ interface State {
   template: string;
   onDone: (arg: string) => void;
   editorId?: string;
+  onOpenSource?: (source: VariableSourceMeta) => void;
 }
 
 interface NunjucksModalOptions {
   template: string;
   onDone: (arg: string) => void;
   editorId?: string;
+  onOpenSource?: (source: VariableSourceMeta) => void;
 }
 
 export interface NunjucksModalHandle {
@@ -37,6 +41,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
     onDone: () => {},
     editorId: '',
   });
+  const [isRendering, setIsRendering] = useState(false);
 
   useImperativeHandle(
     ref,
@@ -44,12 +49,13 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       hide: () => {
         modalRef.current?.hide();
       },
-      show: ({ onDone, template, editorId }) => {
+      show: ({ onDone, template, editorId, onOpenSource }) => {
         setState({
           isTag: template.indexOf('{%') === 0,
           template,
           onDone,
           editorId,
+          onOpenSource,
         });
         modalRef.current?.show();
       },
@@ -65,8 +71,15 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   };
 
   const { workspace } = props;
-  const { template, isTag } = state;
+  const { template, isTag, onOpenSource } = state;
   const title = isTag ? 'Tag' : 'Variable';
+  const openSource = (source: VariableSourceMeta) => {
+    if (!onOpenSource) {
+      return;
+    }
+    modalRef.current?.hide();
+    onOpenSource(source);
+  };
   let editor: JSX.Element | null = null;
   editor = isTag ? (
     <TagEditor
@@ -75,9 +88,10 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       workspace={workspace}
       editorId={state.editorId}
       close={() => modalRef.current?.hide()}
+      onRenderingChange={isRendering => setIsRendering(isRendering)}
     />
   ) : (
-    <VariableEditor onChange={handleTemplateChange} defaultValue={template} />
+    <VariableEditor onChange={handleTemplateChange} defaultValue={template} onOpenSource={openSource} />
   );
 
   return (
@@ -104,8 +118,9 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
         </form>
       </ModalBody>
       <ModalFooter>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
+        <button className="btn" disabled={isRendering} onClick={() => modalRef.current?.hide()}>
           Done
+          {isRendering && <i className="fa fa-spinner fa-spin ml-1.5" />}
         </button>
       </ModalFooter>
     </Modal>

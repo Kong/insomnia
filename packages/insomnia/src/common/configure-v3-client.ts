@@ -1,6 +1,7 @@
 import { configureV3Client } from 'insomnia-api';
 
 import { getApiBaseURL, getClientString } from './constants';
+import { proxyAwareFetch } from './insomnia-fetch';
 import { generateId } from './misc';
 
 /**
@@ -14,4 +15,7 @@ export const configureV3ClientDefaults = () =>
     getBaseURL: getApiBaseURL,
     getClientString,
     generateRequestId: () => generateId('desk'),
+    // Mirrors `configureFetch` above: route SDK requests through the same proxy-aware fetch
+    // (net.fetch in main) so system proxy settings work like they did before the v3 migration.
+    fetchApi: proxyAwareFetch,
   });

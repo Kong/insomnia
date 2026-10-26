@@ -1,6 +1,6 @@
 import { serializeRenderContext } from '~/common/templating/render-context-serialization';
 import { extractUndefinedVariableKey, RenderError } from '~/common/templating/render-error';
-import type { RenderInputType } from '~/common/templating/types';
+import type { RenderInputType, SensitiveValueCollector } from '~/common/templating/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
@@ -11,36 +11,66 @@ worker.addEventListener('error', event => {
   console.error('Error from worker:', event.message);
 });
 
-export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
+// The Worker has no window.main access, so this module fetches the auth token once and forwards
+// it in on every postMessage instead.
+let authTokenPromise: Promise<string> | null = null;
+function getTemplatingDbAuthToken(): Promise<string> {
+  if (!authTokenPromise) {
+    authTokenPromise = window.main.templatingDb.getAuthToken();
+  }
+  return authTokenPromise;
+}
+
+// Invalidate this persistent worker's cached Liquid engine so its next render re-fetches plugin
+// tags from main, instead of reusing whatever was baked in the first time it ever rendered. Also
+// forces the plugin registry that fetch reaches (main/templating-worker-database.ts) to rescan —
+// see `plugin.reloadPlugins`. That fetch needs an auth token; if Reload is clicked before this
+// worker has ever handled a render job, it has none yet, so fetch one here rather than reusing the
+// render path's lazily-populated one.
+export async function reloadTemplatingWorker(): Promise<void> {
+  const authToken = await getTemplatingDbAuthToken();
+  worker.postMessage(JSON.stringify({ type: 'reload', authToken }));
+}
+
+export async function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable, sensitiveValueCollector }: RenderInputType): Promise<string> {
   const newContext = serializeRenderContext(context);
+  const authToken = await getTemplatingDbAuthToken();
 
   // Id to avoid race conditions
   const id = window.crypto.randomUUID();
-  const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable });
+  // Carry the render ID via serializedFunctions (not a scope variable) so the worker can include it in sensitiveValue messages.
+  newContext.serializedFunctions.renderId = id;
+  const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable, authToken });
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {
     const messageHandler = (event: MessageEvent) => {
-      if (event.data.id === id) {
-        worker.removeEventListener('message', messageHandler);
-        const workerError = event.data.err;
-        if (workerError) {
-          const error = new RenderError(workerError.message);
-          if (error instanceof RenderError) {
-            error.path = workerError.path || '';
-            error.location = workerError.location;
-          }
-          error.type = 'render';
-          const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
-          if (undefinedEnvironmentVariables.length > 0) {
-            error.extraInfo = {
-              subType: 'environmentVariable',
-              undefinedEnvironmentVariables,
-            };
-          }
-          return reject(error);
-        }
-        return resolve(event.data.result);
+      if (event.data.id !== id) {
+        return;
       }
+      // Vault tag running during a send render — register the value into the collector.
+      if (event.data.type === 'sensitiveValue') {
+        (sensitiveValueCollector as SensitiveValueCollector | null | undefined)?.register(event.data.value);
+        return;
+      }
+      worker.removeEventListener('message', messageHandler);
+      const workerError = event.data.err;
+      if (workerError) {
+        const error = new RenderError(workerError.message);
+        if (error instanceof RenderError) {
+          error.path = workerError.path || '';
+          error.location = workerError.location;
+        }
+        error.type = 'render';
+        const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
+        if (undefinedEnvironmentVariables.length > 0) {
+          error.extraInfo = {
+            subType: 'environmentVariable',
+            undefinedEnvironmentVariables,
+          };
+        }
+        return reject(error);
+      }
+      return resolve(event.data.result);
     };
     worker.addEventListener('message', messageHandler);
   });

@@ -1,8 +1,7 @@
 import type { BaseModel } from 'insomnia-data';
 import { models } from 'insomnia-data';
+import { fuzzyMatchAll } from 'insomnia-data/common';
 import { useMemo } from 'react';
-
-import { fuzzyMatchAll } from '../../common/misc';
 
 interface SearchableFields {
   name: string;

@@ -44,7 +44,7 @@ export const Input = ({
               'flex h-[30px] w-full items-center overflow-hidden rounded-sm border border-solid bg-(--color-bg)',
               'border-(--hl-sm)',
               'has-focus:border-(--hl-lg)',
-              // 'has-focus-visible:ring-2 has-focus-visible:ring-(--hl-md) has-focus-visible:ring-offset-1',
+              'has-focus-visible:ring-2 has-focus-visible:ring-(--hl-md) has-focus-visible:ring-offset-1',
               isInvalid && 'border-(--color-danger)',
               isDisabled && 'cursor-not-allowed opacity-50',
             )}

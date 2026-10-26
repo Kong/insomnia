@@ -26,4 +26,38 @@ describe('test Header object', () => {
     headerList.upsert(upserted);
     expect(headerList.one('h1')).toEqual(upserted.value);
   });
+
+  it('toObject returns {} when there are no headers', () => {
+    expect(new HeaderList(undefined, []).toObject()).toEqual({});
+  });
+
+  it('toObject returns a key-value map when there are headers', () => {
+    const headerList = new HeaderList(undefined, [
+      new Header({ key: 'h1', value: 'v1' }),
+      new Header({ key: 'h2', value: 'v2' }),
+    ]);
+
+    expect(headerList.toObject()).toEqual({ h1: 'v1', h2: 'v2' });
+  });
+
+  it('toObject includes disabled headers by default but excludes them when excludeDisabled is true', () => {
+    const headerList = new HeaderList(undefined, [
+      new Header({ key: 'h1', value: 'v1' }),
+      new Header({ key: 'h2', value: 'v2', disabled: true }),
+    ]);
+
+    expect(headerList.toObject()).toEqual({ h1: 'v1', h2: 'v2' });
+    expect(headerList.toObject(true)).toEqual({ h1: 'v1' });
+  });
+
+  it('toObject collapses duplicate keys to the last value by default, but collects them into an array when multiValue is true', () => {
+    const headerList = new HeaderList(undefined, [
+      new Header({ key: 'h1', value: 'v1' }),
+      new Header({ key: 'h1', value: 'v1b' }),
+      new Header({ key: 'h2', value: 'v2' }),
+    ]);
+
+    expect(headerList.toObject()).toEqual({ h1: 'v1b', h2: 'v2' });
+    expect(headerList.toObject(false, false, true)).toEqual({ h1: ['v1', 'v1b'], h2: 'v2' });
+  });
 });

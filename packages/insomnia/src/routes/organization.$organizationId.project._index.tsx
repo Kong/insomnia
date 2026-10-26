@@ -1,32 +1,15 @@
-import type { GitRepository, Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { useEffect, useState } from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useParams } from 'react-router';
 
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { getProjectsWithGitRepositories } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
-import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { logout } from '~/ui/account/session';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
-import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
-import { EmptyProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 
-export interface ProjectIndexLoaderData {
-  projectsCount: number;
-  projects: (Project & { gitRepository?: GitRepository })[];
-}
-
-const shouldAutoCreateInitialProject = async ({
-  accountId,
-}: {
-  accountId: string | null | undefined;
-}) => {
+const shouldAutoCreateInitialProject = async ({ accountId }: { accountId: string | null | undefined }) => {
   if (!accountId) {
     return false;
   }
@@ -85,66 +68,27 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     }
   }
 
-  return {
-    projects,
-    projectsCount: organizationProjects.length,
-  };
+  // Reaching here means the organization has no projects and none was auto-created, so there is
+  // nothing to hand the component — it renders the same empty view either way.
+  return null;
 }
 
-// Default page when there are no projects in the organization.
+/**
+ * Default pane when no project is selected — typically an organization with no projects at all.
+ * The sidebar and surrounding panels come from the parent
+ * `organization.$organizationId.project` layout, which stays mounted when the first project
+ * appears and this route hands over to `project.$projectId`.
+ */
 const Component = () => {
   const { organizationId } = useParams() as {
     organizationId: string;
   };
 
-  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
-
-  useEffect(() => {
-    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
-      const load = storageRuleFetcher.load;
-      load({ organizationId });
-    }
-  }, [organizationId, storageRuleFetcher.load]);
-
-  const { storagePromise } = storageRuleFetcher.data || {};
-  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
-
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const storageRules = useOrganizationStorageRule(organizationId);
 
   return (
     <ErrorBoundary>
-      <>
-        <PanelGroup
-          autoSaveId="insomnia-sidebar"
-          id="wrapper"
-          className="new-sidebar h-full w-full text-(--color-font)"
-          direction="horizontal"
-        >
-          <Panel
-            id="sidebar"
-            className="sidebar theme--sidebar"
-            defaultSize={DEFAULT_SIDEBAR_SIZE}
-            maxSize={40}
-            minSize={10}
-            collapsible
-          >
-            <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <EmptyProjectNavigationSidebar onCreateProject={() => setIsNewProjectModalOpen(true)} />
-            </div>
-          </Panel>
-          <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-          <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
-            <NoProjectView storageRules={storageRules} />
-          </Panel>
-        </PanelGroup>
-        {isNewProjectModalOpen && (
-          <ProjectModal
-            isOpen={isNewProjectModalOpen}
-            onOpenChange={setIsNewProjectModalOpen}
-            storageRules={storageRules}
-          />
-        )}
-      </>
+      <NoProjectView storageRules={storageRules} />
     </ErrorBoundary>
   );
 };

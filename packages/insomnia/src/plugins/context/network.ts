@@ -1,10 +1,16 @@
 import { services } from 'insomnia-data';
+import { ProxyScopes, RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
+import {
+  createSensitiveValueCollector,
+  redactResponsePatch,
+  withRedaction,
+} from '~/common/network/sensitive-value-collector';
 import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
 
-import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {
+  defaultSendActionRuntime,
   fetchRequestData,
   responseTransform,
   sendCurlAndWriteTimeline,
@@ -29,11 +35,15 @@ export function init(): {
           responseId,
         } = await fetchRequestData(req._id, extraInfo?.environmentId);
 
+        // This request renders with purpose 'send', so confidential values are real here and
+        // need the same timeline/response redaction the main send path gets.
+        const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
         const renderResult = await tryToInterpolateRequest({
           request,
           environment: environment._id,
           purpose: 'send',
           extraInfo,
+          sensitiveValueCollector: collector,
         });
         const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
         const response = await sendCurlAndWriteTimeline(
@@ -43,6 +53,7 @@ export function init(): {
           settings,
           timelinePath,
           responseId,
+          withRedaction(defaultSendActionRuntime, collector),
         );
         const responsePatch = await responseTransform(
           response,
@@ -50,12 +61,16 @@ export function init(): {
           renderedRequest,
           renderResult.context,
         );
-        return services.response.create(responsePatch, settings.maxHistoryResponses);
+        return services.response.create(redactResponsePatch(responsePatch, collector), settings.maxHistoryResponses);
       },
       // using node-curl to send a request directly, without context render and database write for request and response
       async sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType> {
         const requestId = uuidv4();
         const settings = await services.settings.get();
+        if (settings.proxyScope !== ProxyScopes.all) {
+          // Disable proxying unless user chooses "All traffic sent by Insomnia" (all).
+          settings.proxyEnabled = false;
+        }
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
         const curlRequest = __IS_RENDERER__

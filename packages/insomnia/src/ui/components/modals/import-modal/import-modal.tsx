@@ -3,7 +3,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { models } from 'insomnia-data';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { Heading, Link } from 'react-aria-components';
+import { Form, Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
@@ -16,9 +16,11 @@ import { Checkbox } from '~/ui/components/base/checkbox';
 
 import {
   clearResourceCache,
-  findExistingImportedSpec,
+  findExistingImportedWorkspace,
   findRequestInExistingWorkspace,
   type ImportSourceType,
+  isApiSpecScanResult,
+  requiresNewWorkspace,
   type ScanResult,
 } from '../../../../common/import';
 import {
@@ -33,7 +35,7 @@ import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
-import { CurlIcon, isApiSpecScanResult, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
+import { CurlIcon, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 export const Radio: FC<{
   name: string;
@@ -236,11 +238,13 @@ export const ImportModal: FC<ImportModalProps> = ({
   }, [autoScan, from.type, from.defaultValue, scanResourcesFetcher, scanResourcesFetcherData]);
 
   const hasApiSpecScanResult = scanResourcesFetcherData?.some(isApiSpecScanResult);
+  const hasMcpScanResult = scanResourcesFetcherData?.some(r => (r.mcpRequests?.length ?? 0) > 0);
+  const mustCreateNewWorkspace = scanResourcesFetcherData?.some(requiresNewWorkspace);
   const [showForm, setShowForm] = useState(!autoScan);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const dupCheckRef = useRef(false);
   useEffect(() => {
-    if (!autoScan || !hasApiSpecScanResult || !organizationId) return;
+    if (!autoScan || (!hasApiSpecScanResult && !hasMcpScanResult) || !organizationId) return;
     if (!defaultProjectId) {
       setShowForm(true);
       return;
@@ -249,17 +253,24 @@ export const ImportModal: FC<ImportModalProps> = ({
     const valid = scanResourcesFetcherData?.some(({ errors }) => !errors.length);
     if (!valid) return;
     dupCheckRef.current = true;
-    findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
+
+    findExistingImportedWorkspace(defaultProjectId, organizationId).then(existing => {
       if (!existing) return setShowForm(true);
-      findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
-        const targetProjectId = existing.workspace.parentId || defaultProjectId;
-        const path = req
-          ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
-          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${models.workspace.scopeToActivity(existing.workspace.scope)}`;
+      const { workspace, model } = existing;
+      const targetProjectId = workspace.parentId || defaultProjectId;
+      const navigateTo = (requestId?: string) => {
+        const path = requestId
+          ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/debug/request/${requestId}`
+          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`;
         clearResourceCache();
         navigate(path);
         modalRef.current?.hide();
-      });
+      };
+      if (models.mcpRequest.isMcpRequest(model)) {
+        navigateTo(model._id);
+      } else {
+        findRequestInExistingWorkspace(workspace, from.endpoint, from.operationId).then(req => navigateTo(req?._id));
+      }
     });
   }, [
     autoScan,
@@ -267,6 +278,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     from.endpoint,
     from.operationId,
     hasApiSpecScanResult,
+    hasMcpScanResult,
     navigate,
     organizationId,
     scanResourcesFetcherData,
@@ -320,7 +332,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       ) || 0
     );
   }, [scanResourcesFetcherData]);
-  const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1 && !hasApiSpecScanResult;
+  const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1 && !mustCreateNewWorkspace;
   // Check if base environment is being imported to existing workspace
   const isImportingBaseEnvironmentToWorkspace =
     shouldImportToWorkspace &&
@@ -328,7 +340,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       data.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
     );
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
-  const header = shouldImportToWorkspace
+  const header = shouldImportToWorkspace && workspaceName
     ? `Import to "${workspaceName}" Workspace`
     : projectName
       ? `Import to "${projectName}" Project`
@@ -356,7 +368,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>{header}</ModalHeader>
-        {autoScan && hasApiSpecScanResult && hasAnyDataToImport && !showForm ? (
+        {autoScan && (hasApiSpecScanResult || hasMcpScanResult) && hasAnyDataToImport && !showForm ? (
           <div className="flex items-center justify-center p-8">
             <i className="fa fa-spinner fa-spin fa-2x" />
           </div>
@@ -366,6 +378,8 @@ export const ImportModal: FC<ImportModalProps> = ({
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
+            defaultProjectId={defaultProjectId}
+            defaultWorkspaceId={defaultWorkspaceId}
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
@@ -391,10 +405,7 @@ export const ImportModal: FC<ImportModalProps> = ({
               importFetcher.submit({
                 organizationId,
                 projectId: targetProjectId,
-                workspaceId:
-                  hasApiSpecScanResult || newProjectName
-                    ? undefined
-                    : selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
+                workspaceId: mustCreateNewWorkspace || newProjectName ? undefined : selectedWorkspaceId || undefined,
                 endpoint: from.endpoint,
                 operationId: from.operationId,
                 skipImportIfDuplicate: autoScan,
@@ -464,17 +475,22 @@ const ScanResourcesForm = ({
   const [selectedTab, setSelectedTab] = useState(from?.type || 'uri');
   const [message, setMessage] = useState('');
 
+  const fromType = from?.type;
+  const fromDefaultValue = from?.defaultValue;
   useEffect(() => {
+    // Only validate a pre-populated cURL; validating an empty value would show
+    // a spurious "Invalid cURL request" on a freshly opened, empty cURL tab.
+    if (fromType !== 'curl' || !fromDefaultValue) {
+      return;
+    }
     let isMounted = true;
-    const fn = async () => {
-      const { message: msg } = await validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
+    validateCurl(fromDefaultValue).then(({ message: msg }) => {
       isMounted && setMessage(msg);
-    };
-    fn();
+    });
     return () => {
       isMounted = false;
     };
-  }, [from]);
+  }, [fromType, fromDefaultValue]);
   const isValidCurl = (selectedTab === 'curl' && message && message.startsWith('Detected')) || selectedTab !== 'curl';
   return (
     <Fragment>
@@ -625,6 +641,8 @@ const ImportResourcesForm = ({
   errors,
   disabled,
   loading,
+  defaultProjectId,
+  defaultWorkspaceId,
   isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
@@ -637,18 +655,18 @@ const ImportResourcesForm = ({
   ) => void;
   disabled: boolean;
   loading: boolean;
+  defaultProjectId: string;
+  defaultWorkspaceId?: string;
   isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId } = useParams() as {
     organizationId: string;
-    projectId: string;
-    workspaceId: string;
   };
+  const formId = useId();
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
-  const isSingleRequest = scanResults.length === 1 && (scanResults[0].requests?.length || 0) === 1;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || '');
-  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId);
   const [newProjectName, setNewProjectName] = useState(() => {
     for (const result of scanResults) {
       if (isApiSpecScanResult(result)) {
@@ -668,7 +686,25 @@ const ImportResourcesForm = ({
         projectId: selectedProjectId,
       });
     }
-  }, [organizationId, projectId, selectedProjectId, workspacesFetcher]);
+  }, [organizationId, selectedProjectId, workspacesFetcher]);
+  // Preselect the API Collection the modal was opened from (e.g. pasting a
+  // cURL inside a workspace). Waits for the workspace list so the
+  // preselect only applies to collections the select actually offers, and
+  // applies exactly once so revalidation cannot override the user's choice.
+  const didPreselectRef = useRef(false);
+  useEffect(() => {
+    if (didPreselectRef.current || !defaultWorkspaceId || !workspacesFetcher.data) {
+      return;
+    }
+    const isOffered = workspacesFetcher.data.files.some(
+      file =>
+        file.workspace?._id === defaultWorkspaceId && (file.scope === 'collection' || file.scope === 'design'),
+    );
+    if (isOffered) {
+      didPreselectRef.current = true;
+      setSelectedWorkspaceId(defaultWorkspaceId);
+    }
+  }, [defaultWorkspaceId, workspacesFetcher.data]);
   // List collections for active project, sorted by last modified timestamp descending
   // Should we list design or mcp?
   const selectedNewProject = !selectedProjectId;
@@ -679,10 +715,28 @@ const ImportResourcesForm = ({
         .map(w => ({ ...w.workspace, lastModifiedTimestamp: w.lastModifiedTimestamp }))
         .filter(isNotNullOrUndefined)
         .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
-  const shouldShowWorkspaceSelect = isSingleRequest && workspacesForActiveProject.length > 0;
+  const shouldShowWorkspaceSelect = !scanResults.some(requiresNewWorkspace) && workspacesForActiveProject.length > 0;
+
+  const handleImport = () =>
+    onImport(
+      overrideBaseEnvironmentData,
+      selectedProjectId,
+      selectedWorkspaceId,
+      selectedNewProject ? newProjectName || 'New Project' : undefined,
+    );
+
   return (
     <Fragment>
-      <div className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto">
+      <Form
+        id={formId}
+        className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto"
+        onSubmit={e => {
+          e.preventDefault();
+          if (!disabled && !loading) {
+            handleImport();
+          }
+        }}
+      >
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
           <div className="form-row mt-2">
@@ -690,10 +744,14 @@ const ImportResourcesForm = ({
               <label>
                 Select Project:
                 <select
+                  autoFocus
                   aria-label="Select Project"
                   name="projectId"
                   value={selectedProjectId}
-                  onChange={e => setSelectedProjectId(e.target.value)}
+                  onChange={e => {
+                    setSelectedProjectId(e.target.value);
+                    setSelectedWorkspaceId('');
+                  }}
                 >
                   <option value="">-- New Project --</option>
                   {workspacesFetcher?.data?.projects.map(w => (
@@ -728,14 +786,14 @@ const ImportResourcesForm = ({
             <div className="form-row mt-2">
               <div className="form-control form-control--outlined">
                 <label>
-                  Select Collection:
+                  Select API Collection:
                   <select
-                    aria-label="Select Collection"
+                    aria-label="Select API Collection"
                     name="workspaceId"
                     value={selectedWorkspaceId}
                     onChange={e => setSelectedWorkspaceId(e.target.value)}
                   >
-                    <option value="">-- New Collection --</option>
+                    <option value="">-- New API Collection --</option>
                     {workspacesForActiveProject.map(w => (
                       <option key={w._id} value={w._id}>
                         {w.name} - {formatDistanceToNowStrict(w.lastModifiedTimestamp)}
@@ -771,21 +829,15 @@ const ImportResourcesForm = ({
             </div>
           )}
         </div>
-      </div>
+      </Form>
 
       <div className="flex w-full items-end justify-end gap-(--padding-sm)">
         <Button
+          type="submit"
+          form={formId}
           variant="contained"
           bg="surprise"
           disabled={disabled || loading}
-          onClick={() =>
-            onImport(
-              overrideBaseEnvironmentData,
-              selectedProjectId,
-              selectedWorkspaceId,
-              selectedNewProject ? newProjectName || 'New Project' : undefined,
-            )
-          }
           className="btn h-10 gap-(--padding-sm)"
         >
           {loading ? (

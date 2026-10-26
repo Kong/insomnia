@@ -98,6 +98,57 @@ exports[`Fixtures > Import curl > dollar-sign-input.sh 1`] = `
 }
 `;
 
+exports[`Fixtures > Import curl > dollar-sign-input.sh 2`] = `
+{
+  "__export_date": "",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "authentication": {},
+      "body": {
+        "mimeType": "",
+        "text": "{"key":"TEST","websiteId":2,"storeId":4,"remove":true,"coupon":{"code":"erwrwer"}}",
+      },
+      "headers": [
+        {
+          "name": "Origin",
+          "value": "https://test.dk",
+        },
+        {
+          "name": "Accept-Encoding",
+          "value": "gzip, deflate, br",
+        },
+        {
+          "name": "Accept-Language",
+          "value": "en-US,en;q=0.9,da-DK;q=0.8,da;q=0.7,mt;q=0.6",
+        },
+        {
+          "name": "Cookie",
+          "value": "CookieTestConsent={stamp:\\xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=='%2Cnecessary...",
+        },
+        {
+          "name": "Connection",
+          "value": "keep-alive",
+        },
+        {
+          "name": "Pragma",
+          "value": "no-cache",
+        },
+      ],
+      "method": "POST",
+      "name": "https://test.dk",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "https://test.dk",
+    },
+  ],
+}
+`;
+
 exports[`Fixtures > Import curl > form-input.sh 1`] = `
 {
   "__export_date": "",

@@ -2,6 +2,7 @@ import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
+import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -27,6 +28,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const workspace = await services.workspace.getById(workspaceId);
 
     invariant(workspace, 'Workspace not found');
+    uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
     const activity = models.workspace.scopeToActivity(workspace?.scope);
 
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${activity}`);

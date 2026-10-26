@@ -36,11 +36,10 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByText('200 OK').click();
 
   await page.locator('body').press(process.platform === 'darwin' ? 'Meta+p' : 'Control+p');
-  await page.getByPlaceholder('Search and switch between').press('ArrowUp');
-  await page.getByPlaceholder('Search and switch between').press('ArrowUp');
-  await page.getByPlaceholder('Search and switch between').press('ArrowUp');
-  await page.getByPlaceholder('Search and switch between').press('ArrowUp');
-  await page.getByPlaceholder('Search and switch between').press('Enter');
+  await page.getByPlaceholder('Search and switch between').fill('E2E testing');
+  // The new search runs asynchronously via IPC; wait for the result before navigating.
+  await page.getByRole('option', { name: /E2E testing/ }).waitFor();
+  await page.getByRole('option', { name: /E2E testing/ }).click();
   await expect
     .soft(page.getByTestId('workspace-breadcrumb-level-1').locator('span'))
     .toContainText('E2E testing specification - swagger 2 1.0.0');

@@ -60,6 +60,7 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
     if (!runnerStateRef?.current?.[organizationId]?.[runnerId]) {
       updateRunnerState(organizationId, runnerId, {
         reqList: requestRows,
+        selectedKeys: 'all',
       });
     }
   }, [organizationId, requestRows, runnerId, runnerStateRef, updateRunnerState]);

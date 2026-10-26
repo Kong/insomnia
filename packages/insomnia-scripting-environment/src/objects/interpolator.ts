@@ -1,4 +1,4 @@
-import { fakerFunctions } from 'insomnia/src/common/templating/faker-functions';
+import { fakerFunctions } from 'insomnia-data/common';
 import { Liquid } from 'liquidjs';
 
 /** @ignore */
@@ -17,9 +17,9 @@ class Interpolator {
     });
   }
 
-  render = async (template: string, context: object): Promise<string> => {
+  render = (template: string, context: object): string => {
     // TODO: support plugins
-    return this.engine.parseAndRender(this.renderWithFaker(template), context);
+    return this.engine.parseAndRenderSync(this.renderWithFaker(template), context);
   };
 
   renderWithFaker = (template: string) => {

@@ -1,3 +1,5 @@
+import { useLocation } from 'react-router';
+
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OAuthAuthorizationStatusModal } from '~/ui/components/modals/oauth-authorization-status-modal';
 import { UpgradePlanModal } from '~/ui/components/modals/upgrade-plan-modal';
@@ -25,6 +27,9 @@ import { WrapperModal } from './components/modals/wrapper-modal';
 const Modals = () => {
   const workspaceData = useWorkspaceLoaderData();
   const { activeWorkspace, activeEnvironment } = workspaceData || {};
+  const location = useLocation();
+  const isOnboarding = location.pathname.startsWith('/onboarding');
+
   return (
     <div key="modals" className="modals">
       <ErrorBoundary showAlert>
@@ -51,7 +56,7 @@ const Modals = () => {
 
         <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
 
-        <UpgradePlanModal />
+        {!isOnboarding && <UpgradePlanModal />}
 
         <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 

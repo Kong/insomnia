@@ -15,15 +15,16 @@ export class NavigationSidebar {
   }
 
   // ===========================================================================
-  // Tab controls
+  // Organization switching
   // ===========================================================================
 
-  async clickProjectsTab(): Promise<void> {
-    await this.root.getByTestId('sidebar-tab-projects').click();
+  async selectOrganization(name: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Organizations' }).click();
+    await this.page.getByRole('option', { name }).click();
   }
 
-  async clickKonnectTab(): Promise<void> {
-    await this.root.getByTestId('sidebar-tab-konnect').click();
+  async openControlPlanesOrganization(): Promise<void> {
+    await this.selectOrganization('Control Planes');
   }
 
   // ===========================================================================
@@ -94,9 +95,25 @@ export class NavigationSidebar {
     return this.navigationTree.getByRole('row', { name: workspaceName });
   }
 
+  // Focus mode swaps the collection's tree row for a header at the top of the sidebar carrying the
+  // back arrow and the collection's name — that header is the only title the sidebar shows for the
+  // active collection. Waiting for it also absorbs the window right after navigating in, where the
+  // tree is still rendered and the swap hasn't happened yet. Both assertions re-query on every
+  // retry, so the swap unmounting the tree row can't wedge them, as a single locator query would
+  // (it keeps waiting for its selector to match again, which never happens once focus mode is in).
   async expectWorkspaceActive(workspaceName: string): Promise<void> {
-    await expect.soft(this.workspaceRow(workspaceName)).toBeVisible();
-    await expect.soft(this.workspaceGridListItem(workspaceName)).toHaveAttribute('aria-selected', 'true');
+    await expect(this.root.getByLabel('Back to all projects')).toBeVisible();
+    await expect(this.root.getByTestId(`workspace-node-${workspaceName}`)).toContainText(workspaceName);
+  }
+
+  // Exits collection focus mode if currently focused; no-op otherwise. Needed before
+  // interacting with a different collection or project, since focus mode hides everything
+  // outside the focused collection.
+  async backToAllProjects(): Promise<void> {
+    const backButton = this.root.getByLabel('Back to all projects');
+    if (await backButton.isVisible().catch(() => false)) {
+      await backButton.click();
+    }
   }
 
   async selectWorkspace(workspaceName: string): Promise<void> {
@@ -128,7 +145,7 @@ export class NavigationSidebar {
     workspaceName: string;
   }): Promise<void> {
     await this.openWorkspaceActionsDropdown(workspaceName);
-    await this.page.getByRole('menuitemradio', { name: actionName }).click();
+    await this.page.getByRole('menuitemradio', { name: actionName, exact: true }).click();
   }
 
   async expandWorkspace(workspaceName: string): Promise<void> {
@@ -274,12 +291,41 @@ export class NavigationSidebar {
     return this.unsyncedWorkspaceRow(workspaceName).getByRole('button', { name: 'Fetch unsynced workspace' });
   }
 
-  async fetchUnsyncedWorkspace(name: string): Promise<void> {
+  async fetchUnsyncedWorkspace(name: string, verifyVisible?: Locator): Promise<void> {
     const unsyncedWorkspaceButton = this.unsyncedWorkspaceButton(name);
     await unsyncedWorkspaceButton.click();
+    await this.page.mouse.move(0, 0);
     await expect.soft(this.unsyncedWorkspaceRow(name)).toBeHidden({ timeout: 5000 });
     await expect.soft(this.workspaceRow(name)).toBeVisible();
-    await this.expectWorkspaceActive(name);
+    // The sidebar list is still settling right after the unsynced row disappears
+    // Retry the click itself rather than only polling the assertion afterward.
+    const gridListItem = this.workspaceGridListItem(name);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await this.workspaceRow(name).click();
+      try {
+        await expect(gridListItem).toHaveAttribute('aria-selected', 'true', { timeout: 1000 });
+        break;
+      } catch {
+        if (attempt === 2) {
+          console.warn(`Clicking workspace row "${name}" did not select it after 3 attempts`);
+          throw new Error(`Clicking workspace row "${name}" did not select it after 3 attempts`);
+        }
+      }
+    }
+    if (!verifyVisible) {
+      return;
+    }
+    for (let attempt = 0; attempt <= 10; attempt++) {
+      try {
+        await verifyVisible.waitFor({ state: 'visible', timeout: 1000 });
+        return;
+      } catch {
+        if (attempt === 10) {
+          throw new Error(`Workspace "${name}" was selected but its content did not render after 10 attempts`);
+        }
+        await this.workspaceRow(name).click();
+      }
+    }
   }
 
   // ===========================================================================

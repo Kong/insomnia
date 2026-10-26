@@ -1,0 +1,245 @@
+import type { AESMessage } from 'insomnia-data';
+import forge from 'node-forge';
+
+export type { AESMessage };
+
+/**
+ * Encrypt with RSA256 public key
+ *
+ * @param publicKeyJWK
+ * @param plaintext
+ * @return String
+ */
+export function encryptRSAWithJWK(publicKeyJWK: JsonWebKey, plaintext: string) {
+  if (publicKeyJWK.alg !== 'RSA-OAEP-256') {
+    throw new Error('Public key algorithm was not RSA-OAEP-256');
+  } else if (publicKeyJWK.kty !== 'RSA') {
+    throw new Error('Public key type was not RSA');
+  } else if (!publicKeyJWK.key_ops || !publicKeyJWK.key_ops.find(o => o === 'encrypt')) {
+    throw new Error('Public key does not have "encrypt" op');
+  } else if (!publicKeyJWK.n || !publicKeyJWK.e) {
+    throw new Error('Public key is missing parameters');
+  }
+
+  const encodedPlaintext = encodeURIComponent(plaintext);
+
+  const n = _b64UrlToBigInt(publicKeyJWK.n);
+
+  const e = _b64UrlToBigInt(publicKeyJWK.e);
+
+  // @ts-expect-error -- TSCONVERSION appears not to be exported for some reason
+  const publicKey = forge.rsa.setPublicKey(n, e);
+  const encrypted = publicKey.encrypt(encodedPlaintext, 'RSA-OAEP', {
+    md: forge.md.sha256.create(),
+  });
+  return forge.util.bytesToHex(encrypted);
+}
+
+export function decryptRSAWithJWK(privateJWK: JsonWebKey, encryptedBlob: string) {
+  if (
+    !privateJWK.n ||
+    !privateJWK.e ||
+    !privateJWK.d ||
+    !privateJWK.p ||
+    !privateJWK.q ||
+    !privateJWK.dp ||
+    !privateJWK.dq ||
+    !privateJWK.qi
+  ) {
+    throw new Error('Private key is missing parameters');
+  }
+
+  const n = _b64UrlToBigInt(privateJWK.n);
+  const e = _b64UrlToBigInt(privateJWK.e);
+  const d = _b64UrlToBigInt(privateJWK.d);
+  const p = _b64UrlToBigInt(privateJWK.p);
+  const q = _b64UrlToBigInt(privateJWK.q);
+  const dP = _b64UrlToBigInt(privateJWK.dp);
+  const dQ = _b64UrlToBigInt(privateJWK.dq);
+  const qInv = _b64UrlToBigInt(privateJWK.qi);
+
+  // @ts-expect-error -- TSCONVERSION appears not to be exported for some reason
+  const privateKey = forge.rsa.setPrivateKey(n, e, d, p, q, dP, dQ, qInv);
+  const bytes = forge.util.hexToBytes(encryptedBlob);
+  const decrypted = privateKey.decrypt(bytes, 'RSA-OAEP', {
+    md: forge.md.sha256.create(),
+  });
+  return decodeURIComponent(decrypted);
+}
+
+/**
+ * Encrypt data using symmetric key
+ *
+ * @param jwkOrKey JWK or string representing symmetric key
+ * @param buff data to encrypt
+ * @param additionalData any additional public data to attach
+ * @returns {{iv, t, d, ad}}
+ */
+export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, additionalData = ''): AESMessage {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
+  const key = forge.util.hexToBytes(rawKey);
+  const iv = forge.random.getBytesSync(12);
+  const cipher = forge.cipher.createCipher('AES-GCM', key);
+  cipher.start({
+    additionalData,
+    iv,
+    tagLength: 128,
+  });
+  cipher.update(forge.util.createBuffer(buff));
+  cipher.finish();
+  return {
+    iv: forge.util.bytesToHex(iv),
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    t: forge.util.bytesToHex(cipher.mode.tag),
+    ad: forge.util.bytesToHex(additionalData),
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    d: forge.util.bytesToHex(cipher.output),
+  };
+}
+
+/**
+ * Encrypt data using symmetric key
+ *
+ * @param jwkOrKey JWK or string representing symmetric key
+ * @param plaintext string of data to encrypt
+ * @param additionalData any additional public data to attach
+ * @returns {{iv, t, d, ad}}
+ */
+export function encryptAES(jwkOrKey: string | JsonWebKey, plaintext: string, additionalData = ''): AESMessage {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
+  const key = forge.util.hexToBytes(rawKey);
+  const iv = forge.random.getBytesSync(12);
+  const cipher = forge.cipher.createCipher('AES-GCM', key);
+  // Plaintext could contain weird unicode, so we have to encode that
+  const encodedPlaintext = encodeURIComponent(plaintext);
+  cipher.start({
+    additionalData,
+    iv,
+    tagLength: 128,
+  });
+  cipher.update(forge.util.createBuffer(encodedPlaintext));
+  cipher.finish();
+  return {
+    iv: forge.util.bytesToHex(iv),
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    t: forge.util.bytesToHex(cipher.mode.tag),
+    ad: forge.util.bytesToHex(additionalData),
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    d: forge.util.bytesToHex(cipher.output),
+  };
+}
+
+/**
+ * Decrypt AES using a key
+ *
+ * @param jwkOrKey JWK or string representing symmetric key
+ * @param encryptedResult encryption data
+ * @returns String
+ */
+export function decryptAES(jwkOrKey: string | JsonWebKey, encryptedResult: AESMessage) {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
+  const key = forge.util.hexToBytes(rawKey);
+  // ~~~~~~~~~~~~~~~~~~~~ //
+  // Decrypt with AES-GCM //
+  // ~~~~~~~~~~~~~~~~~~~~ //
+  const decipher = forge.cipher.createDecipher('AES-GCM', key);
+  decipher.start({
+    iv: forge.util.hexToBytes(encryptedResult.iv),
+    tagLength: encryptedResult.t.length * 4,
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    tag: forge.util.hexToBytes(encryptedResult.t),
+    additionalData: forge.util.hexToBytes(encryptedResult.ad),
+  });
+  decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedResult.d)));
+
+  if (decipher.finish()) {
+    return decodeURIComponent(decipher.output.toString());
+  }
+  throw new Error('Failed to decrypt data');
+}
+
+/**
+ * Decrypts AES using a key to buffer
+ * @param jwkOrKey
+ * @param encryptedResult
+ * @returns {string}
+ */
+export function decryptAESToBuffer(jwkOrKey: string | JsonWebKey, encryptedResult: AESMessage) {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
+  const key = forge.util.hexToBytes(rawKey);
+  // ~~~~~~~~~~~~~~~~~~~~ //
+  // Decrypt with AES-GCM //
+  // ~~~~~~~~~~~~~~~~~~~~ //
+  const decipher = forge.cipher.createDecipher('AES-GCM', key);
+  decipher.start({
+    iv: forge.util.hexToBytes(encryptedResult.iv),
+    tagLength: encryptedResult.t.length * 4,
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    tag: forge.util.hexToBytes(encryptedResult.t),
+    additionalData: forge.util.hexToBytes(encryptedResult.ad),
+  });
+  decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedResult.d)));
+
+  if (decipher.finish()) {
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    return Buffer.from(forge.util.bytesToHex(decipher.output), 'hex');
+  }
+  throw new Error('Failed to decrypt data');
+}
+
+/**
+ * Generate a random AES256 key for use with symmetric encryption
+ */
+export async function generateAES256Key() {
+  // globalThis.crypto resolves to WebCrypto in the renderer and Node global Web Crypto
+  // in the main process, keeping this module isomorphic.
+  const c = globalThis.crypto;
+  // @ts-expect-error -- TSCONVERSION: likely needs a module augmentation for webkit
+  const subtle = c ? c.subtle || c.webkitSubtle : null;
+
+  if (subtle) {
+    console.log('[crypt] Using Native AES Key Generation');
+    const key = await subtle.generateKey(
+      {
+        name: 'AES-GCM',
+        length: 256,
+      },
+      true,
+      ['encrypt', 'decrypt'],
+    );
+    return subtle.exportKey('jwk', key);
+  }
+  console.log('[crypt] Using Fallback Forge AES Key Generation');
+  const key = forge.util.bytesToHex(forge.random.getBytesSync(32));
+  return {
+    kty: 'oct',
+    alg: 'A256GCM',
+    ext: true,
+    key_ops: ['encrypt', 'decrypt'],
+    k: _hexToB64Url(key),
+  };
+}
+
+// ~~~~~~~~~~~~~~~~ //
+// Helper Functions //
+// ~~~~~~~~~~~~~~~~ //
+
+function _hexToB64Url(h: string) {
+  const bytes = forge.util.hexToBytes(h);
+  return btoa(bytes).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function _b64UrlToBigInt(s: string) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
+  // @ts-ignore -- unfortunately, we must ignore here instead of the usual expect-error because this mondule is being used by two different builds (`insomnia` and `insomnia-send-request`) and in one of them this line is an error (`insomnia-send-request`) and the other it is not ()`insomnia`).
+  return new forge.jsbn.BigInteger(_b64UrlToHex(s), 16);
+}
+
+function _b64UrlToHex(s: string) {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+  return forge.util.bytesToHex(atob(b64));
+}

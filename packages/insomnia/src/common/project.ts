@@ -1,5 +1,6 @@
 import {
   type ApiSpec,
+  type BaseModel,
   database,
   type GitRepository,
   type MockServer,
@@ -9,6 +10,7 @@ import {
   type Workspace,
   type WorkspaceScope,
 } from 'insomnia-data';
+import { generateId } from 'insomnia-data/common';
 
 import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
 import { scopeToLabelMap } from '~/common/get-workspace-label';
@@ -20,7 +22,7 @@ export interface InsomniaFile {
   name: string;
   remoteId?: string;
   scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client';
+  label: 'Document' | 'API Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client';
   created: number;
   lastModifiedTimestamp: number;
   branch?: string;
@@ -86,6 +88,45 @@ const lockGenerator = () => {
 // otherwise they may interfere with each other, which may cause duplicate projects or other inconsistencies.
 // TODO: move all project operations to this file to ensure they are properly wrapped with locks
 export const projectLock = lockGenerator();
+
+/**
+ * Re-key every document under the project's workspaces with freshly generated ids,
+ * preserving all other fields (content, parent chains, per-doc UI state).
+ *
+ * Used on every project storage-type conversion: docs may carry ids owned by the
+ * previous storage (git YAML ids from a pulled repo, or cloud backend ids from a
+ * pulled snapshot). External imports upsert by those original ids, so keeping them
+ * would let a future re-import of the same source collide with (and steal) this
+ * project's data.
+ */
+export async function regenerateProjectDocIds(project: Project): Promise<void> {
+  const flushId = await database.bufferChangesIndefinitely();
+  try {
+    const workspaces = await services.workspace.listByParentId(project._id);
+    for (const workspace of workspaces) {
+      const docs = await database.getWithDescendants(workspace);
+      const idMap = new Map<string, string>();
+      for (const doc of docs) {
+        idMap.set(doc._id, generateId(models.mustGetModel(doc.type).prefix));
+      }
+
+      // Insert re-keyed copies before removing originals so a mid-flight failure can
+      // only produce duplicates, never data loss.
+      for (const doc of docs) {
+        await database.insert({
+          ...models.rewriteReferences(doc, idMap),
+          _id: idMap.get(doc._id)!,
+          parentId: (doc.parentId && idMap.get(doc.parentId)) || doc.parentId,
+        } as BaseModel);
+      }
+      for (const doc of docs) {
+        await database.unsafeRemove(doc);
+      }
+    }
+  } finally {
+    await database.flushChanges(flushId);
+  }
+}
 
 export const checkSingleProjectSyncStatus = async (projectId: string) => {
   const projectWorkspaces = await services.workspace.listByParentId(projectId);
@@ -209,8 +250,21 @@ export async function getAllLocalFiles({ projectId }: { projectId: string }) {
   return files;
 }
 
-export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) =>
-  remoteFiles.filter(remoteFile => !workspaces.find(w => w._id === remoteFile.id));
+export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) => {
+  const seenIds = new Set<string>();
+  const uniqueRemoteFiles = remoteFiles.filter(file => {
+    if (seenIds.has(file.id)) {
+      console.warn(
+        `[Duplicate Remote File] Duplicate remote file found with id: ${file.id} and remote id: ${file.remoteId}`,
+      );
+      return false;
+    }
+    seenIds.add(file.id);
+    return true;
+  });
+
+  return uniqueRemoteFiles.filter(remoteFile => !workspaces.some(w => w._id === remoteFile.id));
+};
 
 /**
  * Get all projects for an organization with their associated git repositories
@@ -242,3 +296,7 @@ export async function getProjectsWithGitRepositories({
     };
   });
 }
+
+export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
+  await services.project.syncProjects(organizationId);
+});

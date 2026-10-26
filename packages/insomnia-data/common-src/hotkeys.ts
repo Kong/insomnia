@@ -8,7 +8,7 @@ import { strings } from './strings';
  * @IMPORTANT Not using dot, because NeDB prohibits field names to contain dots.
  */
 export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
-  workspace_showSettings: `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
+  workspace_showSettings: `Show ${strings.collection.singular} Settings`,
   request_showSettings: 'Show Request Settings',
   preferences_showKeyboardShortcuts: 'Show Keyboard Shortcuts',
   preferences_showGeneral: 'Show App Preferences',
@@ -18,7 +18,8 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_send: 'Send Request',
   request_showOptions: 'Send Request (Options)',
   environment_showEditor: 'Show Environment Editor',
-  environment_showSwitchMenu: 'Switch Environments',
+  environment_showSwitchMenu: 'Switch Collection Environments',
+  environment_showSwitchProjectMenu: 'Switch Project Environments',
   request_toggleHttpMethodMenu: 'Change HTTP Method',
   request_toggleHistory: 'Show Request History',
   request_focusUrl: 'Focus URL',
@@ -26,6 +27,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   sidebar_focusFilter: 'Filter Sidebar',
   sidebar_showCreateDropdown: 'Open Create Dropdown',
   sidebar_toggle: 'Toggle Sidebar',
+  sidebar_rename: 'Rename Item',
   response_focus: 'Focus Response',
   showCookiesEditor: 'Edit Cookies',
   request_createHTTP: 'Create HTTP Request',
@@ -33,7 +35,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_showCreateFolder: 'Create Folder',
   request_showDuplicate: 'Duplicate Request',
   request_togglePin: 'Pin/Unpin Request',
-  environment_showVariableSourceAndValue: 'Show variable source and value',
+  environment_showVariableSourceAndValue: 'Template tags show variable source and value',
   beautifyRequestBody: 'Beautify Active Code Editors',
   graphql_explorer_focus_filter: 'Focus GraphQL Explorer Filter',
   close_tab: 'Close Tab',
@@ -99,6 +101,10 @@ const defaultRegistry: HotKeyRegistry = {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.e.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.e.keyCode }],
   },
+  environment_showSwitchProjectMenu: {
+    macKeys: [{ alt: true, meta: true, keyCode: keyboardKeys.e.keyCode }],
+    winLinuxKeys: [{ ctrl: true, alt: true, keyCode: keyboardKeys.e.keyCode }],
+  },
   request_toggleHttpMethodMenu: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.l.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.l.keyCode }],
@@ -126,6 +132,10 @@ const defaultRegistry: HotKeyRegistry = {
   sidebar_toggle: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.backslash.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.backslash.keyCode }],
+  },
+  sidebar_rename: {
+    macKeys: [{ keyCode: keyboardKeys.f2.keyCode }],
+    winLinuxKeys: [{ keyCode: keyboardKeys.f2.keyCode }],
   },
   response_focus: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.singlequote.keyCode }],

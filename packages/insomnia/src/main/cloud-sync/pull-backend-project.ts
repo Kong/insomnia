@@ -1,9 +1,8 @@
 import type { RemoteProject } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
+import type { BackendProjectWithTeam, VCS } from 'insomnia-vcs';
 
-import type { VCS } from '~/main/cloud-sync/core/vcs';
 import { interceptAccessError } from '~/sync/access-error';
-import type { BackendProjectWithTeam } from '~/sync/types';
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 

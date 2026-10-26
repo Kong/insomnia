@@ -1,5 +1,5 @@
 import { services } from 'insomnia-data';
-import { href, redirect } from 'react-router';
+import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -8,7 +8,7 @@ import { createFetcherSubmitHook } from '~/ui/utils/router';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
-  const { organizationId, projectId, workspaceId } = params;
+  const { workspaceId } = params;
 
   const formData = await request.formData();
   const id = formData.get('id') as string;
@@ -25,16 +25,6 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 
   if (workspaceMeta.activeRequestId === id) {
     await services.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: null });
-
-    if (request.url.includes(id)) {
-      return redirect(
-        href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
-          organizationId,
-          projectId,
-          workspaceId,
-        }),
-      );
-    }
   }
   return null;
 }

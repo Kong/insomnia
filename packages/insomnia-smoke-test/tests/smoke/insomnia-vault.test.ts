@@ -96,8 +96,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
     await page.getByPlaceholder('Enter a name for your Environment').fill('New Global Vault Environment');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByTestId('CreateEnvironmentDropdown').click();
-    await page.getByText('Private environment').click();
+    await page.getByTestId('AddPrivateSubEnvironment').click();
     // activate created private environment
     await page.getByRole('grid', { name: 'Environments' }).getByText('New Environment').click();
 
@@ -153,12 +152,25 @@ test.describe('Check vault used in environment', () => {
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     // activate existing global private vault environment from import
-    await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a project environment').click();
-    await page.getByRole('option', { name: 'New Global Vault Environment' }).click();
+    await page.getByLabel('Select a Project Environment').click();
     await page.getByRole('option', { name: 'New Environment' }).click();
+    await page.keyboard.press('Escape');
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('Base Environment1').click();
     await page.locator('body').click();
+
+    // secret values are masked in the console by default; turn it off so the test can verify the decrypted values
+    await insomnia.statusbar.openPreferences();
+    const hideSecretsCheckbox = page.getByRole('checkbox', { name: 'Hide Confidential values in Preview/Console' }).first();
+    await hideSecretsCheckbox.click();
+    await expect.soft(hideSecretsCheckbox).not.toBeChecked();
+    // Turning the setting off raises a notice that confidential values now persist locally;
+    // dismiss it so its close button does not clash with the preferences dialog's own.
+    const visibilityNotice = page.getByText('Confidential Variables Are Now Visible', { exact: true });
+    await visibilityNotice.waitFor();
+    await page.getByRole('button', { name: 'Ok', exact: true }).click();
+    await visibilityNotice.waitFor({ state: 'hidden' });
+    await insomnia.preferencesPage.closePreferences();
 
     // activate request and validate newly created vault env has been applied
     await insomnia.navigationSidebar.clickRequestOrFolder('normal');
@@ -176,12 +188,12 @@ test.describe('Check vault used in environment', () => {
     await page.locator('.app').press('Escape');
 
     // activate global private vault environment from import
-    await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a project environment').click();
-    await page.getByRole('option', { name: 'Global env workspace with secret vault' }).click();
+    await page.getByLabel('Select a Project Environment').click();
     await page.getByText('global vault env with secret').click();
+    await page.keyboard.press('Escape');
 
     // activate legacy array vault environment
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('legacy vault value array').click();
     await page.locator('body').click();
     // activate request
@@ -201,7 +213,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('vault_array_b').click();
 
     // activate legacy object vault environment
-    await page.getByLabel('Manage Environments').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('legacy vault value object').click();
     await page.locator('body').click();
     // activate request
@@ -219,7 +231,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('world').click();
 
     // activate invalid vault environment
-    await page.getByLabel('Manage Environments').click();
+    await page.getByLabel('Select an API Collection Environment').click();
     await page.getByText('base with vault').click();
     await page.locator('body').click();
     // activate request

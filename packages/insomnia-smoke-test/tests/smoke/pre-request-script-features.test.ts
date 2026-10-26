@@ -402,18 +402,21 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
   });
 
-  test('update clientCertificate if request url contains tag', async ({ page, insomnia }) => {
+  test('update clientCertificate if request url contains tag', async ({ app, page, insomnia }) => {
     const responsePane = page.getByTestId('response-pane');
     const fixturePath = getFixturePath('certificates');
+    // the pre-request script references its cert/key by a path relative to the app's cwd,
+    // so allow-list that directory rather than the file's own (non-existent) name
+    const appCwd = await app.evaluate(() => process.cwd());
 
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').fill(getFixturePath('fake.pfx'));
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText('fake.pfx')).toBeVisible();
 
-    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders').fill(appCwd);
     await page.getByTestId('dataFolders-btn').click();
-    await expect.soft(page.getByText('invalid')).toBeVisible();
+    await expect.soft(page.getByText(appCwd)).toBeVisible();
 
     await page.locator('.app').press('Escape');
 
@@ -439,14 +442,17 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
-  test('insomnia.request / update clientCertificate', async ({ page, insomnia }) => {
+  test('insomnia.request / update clientCertificate', async ({ app, page, insomnia }) => {
     const responsePane = page.getByTestId('response-pane');
     await insomnia.navigationSidebar.clickRequestOrFolder('test certificate manipulation');
 
+    // the pre-request script references its cert/key by a path relative to the app's cwd,
+    // so allow-list that directory rather than the file's own (non-existent) name
+    const appCwd = await app.evaluate(() => process.cwd());
     await page.getByTestId('settings-button').click();
-    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders').fill(appCwd);
     await page.getByTestId('dataFolders-btn').click();
-    await expect.soft(page.getByText('invalid')).toBeVisible();
+    await expect.soft(page.getByText(appCwd)).toBeVisible();
     await page.locator('.app').press('Escape');
 
     // send
@@ -486,8 +492,9 @@ test.describe('pre-request features tests', () => {
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify persisted environment
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+
     const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
     const rows = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows.join(' '));
@@ -528,10 +535,8 @@ test.describe('pre-request features tests', () => {
     });
 
     // activate global environment
-    await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a project environment').click();
-    await page.getByRole('option', { name: 'Script Environment' }).click();
-    await page.getByRole('option', { name: 'Base Script Env' }).click();
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).click();
     await page.locator('body').click();
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -540,8 +545,9 @@ test.describe('pre-request features tests', () => {
     await page.getByText('log: globals base').click();
     await page.getByText('log: baseGlobals base').click();
     // view base environment has been updated
-    await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage project environment').click();
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).hover();
+    await page.getByLabel('Edit Script Environment').click();
     await page.getByLabel('Environment name').getByText('Base Script Env').click();
     const globalBaseEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     const globalBaseRows = await globalBaseEditor.allInnerTexts();
@@ -556,7 +562,7 @@ test.describe('pre-request features tests', () => {
     // switch back to request collection tab
     await page.getByLabel('Insomnia Tabs').getByLabel('persist global environment').first().click();
     // activate global sub environment
-    await page.getByLabel('Manage Environments').click();
+    await page.getByLabel('Select a Project Environment').click();
     await page.getByRole('option', { name: 'Sub Script Env' }).click();
     await page.locator('body').click();
     // send
@@ -566,8 +572,9 @@ test.describe('pre-request features tests', () => {
     await page.getByText('log: globals sub').click();
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
-    await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage project environment').click();
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).hover();
+    await page.getByLabel('Edit Script Environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
     const globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     const globalSubRows = await globalSubEditor.allInnerTexts();
@@ -583,8 +590,8 @@ test.describe('pre-request features tests', () => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await insomnia.navigationSidebar.clickRequestOrFolder('update kv pair environment');
     // switch to table view environment
-    await page.getByLabel('Manage Environments').click();
-    const manageBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    await page.getByLabel('Select an API Collection Environment').click();
+    const manageBtn = page.getByRole('button', { name: 'Manage API collection environments' });
     await expect.soft(manageBtn).toBeEnabled();
     await manageBtn.click();
     const tableEditBtn = page.getByLabel('Table Edit');
@@ -604,10 +611,10 @@ test.describe('pre-request features tests', () => {
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
-    const verifyManageBtn = page.getByRole('button', { name: 'Manage Environments' });
+    const verifyManageBtn = page.getByLabel('Select an API Collection Environment');
     await expect.soft(verifyManageBtn).toBeEnabled();
     await verifyManageBtn.click();
-    const verifyCollectionBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    const verifyCollectionBtn = page.getByRole('button', { name: 'Manage API collection environments' });
     await expect.soft(verifyCollectionBtn).toBeEnabled();
     await verifyCollectionBtn.click();
     await page.getByText('__environment_type').click();
@@ -632,6 +639,25 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('key=fromUrlValue');
     await expect.soft(responsePane).toContainText('key=fromEditorValue');
     await expect.soft(responsePane).toContainText('key=%2F');
+  });
+
+  test('get sendRequest error through callback and rejected await', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('get sendRequest error through callback and rejected await');
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify the request itself succeeds (the sendRequest failures are handled inside the script)
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+
+    // the pre-request script logs both error paths to the console timeline;
+    // asserting them there avoids writing to the shared collection environment.
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
+
+    // callback receives an error (not undefined) for a connection failure
+    await expect.soft(page.getByText('errFromCallback:', { exact: false })).toContainText('Error');
+    // awaiting sendRequest with no callback rejects with an error
+    await expect.soft(page.getByText('errFromAwait:', { exact: false })).toContainText('Error');
   });
 });
 
@@ -685,6 +711,22 @@ test.describe('unhappy paths', () => {
     await expect
       .soft(page.getByTestId('response-pane'))
       .toContainText(`Cannot read properties of undefined (reading 'set')`);
+  });
+
+  test('undefined variable surfaces a missing-variable error naming the key', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('request with undefined variable');
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify: modal names the missing variable
+    const modal = page.getByRole('dialog').filter({ hasText: 'environment variable is missing' });
+    await expect.soft(modal).toBeVisible();
+    await expect.soft(modal).toContainText('missingVariable');
+
+    // execute anyway (ignore undefined variable) — request proceeds and returns a response
+    await modal.getByRole('button', { name: 'Execute anyway' }).click();
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
   });
 });
 

@@ -1,4 +1,6 @@
-import type { BaseModel } from './base-types';
+import { z } from 'zod/v4';
+
+import { type BaseModel, createModelSchema } from './base-types';
 
 export const name = 'Unit Test Suite';
 
@@ -10,12 +12,14 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
-export interface BaseUnitTestSuite {
-  name: string;
-  metaSortKey: number;
-}
+export const baseUnitTestSuiteSchema = z.object({
+  name: z.string().optional().default(''),
+  metaSortKey: z.number(),
+});
+export type BaseUnitTestSuite = z.infer<typeof baseUnitTestSuiteSchema>;
 
-export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
+export const schema = createModelSchema(type, prefix).extend(baseUnitTestSuiteSchema.shape);
+export type UnitTestSuite = z.infer<typeof schema>;
 
 export const isUnitTestSuite = (model: Pick<BaseModel, 'type'>): model is UnitTestSuite => model.type === type;
 

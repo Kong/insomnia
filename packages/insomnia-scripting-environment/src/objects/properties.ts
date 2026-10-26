@@ -147,7 +147,7 @@ export class Property extends PropertyBase {
 
   static _index = 'id';
 
-  static async replaceSubstitutions(content: string, ...variables: object[]): Promise<string> {
+  static replaceSubstitutions(content: string, ...variables: object[]): string {
     if (!Array.isArray(variables) || typeof content !== 'string') {
       throw new TypeError(
         "replaceSubstitutions: the first param's type is not string or other parameters are not an array",
@@ -161,7 +161,7 @@ export class Property extends PropertyBase {
     return getInterpolator().render(content, context);
   }
 
-  static async replaceSubstitutionsIn(obj: object, ...variables: object[]): Promise<object> {
+  static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
     if (!Array.isArray(variables) || typeof obj !== 'object') {
       throw new TypeError(
         "replaceSubstitutions: the first param's type is not object or other parameters are not an array",
@@ -177,7 +177,7 @@ export class Property extends PropertyBase {
         context = { ...context, ...variable };
       });
 
-      const rendered = await getInterpolator().render(content, context);
+      const rendered = getInterpolator().render(content, context);
       return JSON.parse(rendered);
     } catch (e: any) {
       throw new Error(`replaceSubstitutionsIn: ${e.toString()}`);
@@ -392,11 +392,17 @@ export class PropertyList<T extends Property> {
     this.populate(items);
   }
 
-  // TODO: unsupported yet
-
-  toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
-    // it just dump all properties of each element without arguments
-    // then user is able to handle them by themself
+  // Fallback for lists whose items have no natural key (e.g. UrlMatchPatternList, or a
+  // PropertyList used directly rather than through a subclass) - just dumps each element's
+  // JSON and ignores all arguments. Subclasses backed by keyed items (CookieList, HeaderList,
+  // VariableList, ProxyConfigList) override this with a real key/value map that supports
+  // excludeDisabled and multiValue; caseSensitive and sanitizeKeys remain unsupported there too.
+  toObject(
+    _excludeDisabled?: boolean,
+    _caseSensitive?: boolean,
+    _multiValue?: boolean,
+    _sanitizeKeys?: boolean,
+  ): Record<string, any> | Record<string, any>[] {
     return this.list.map(elem => elem.toJSON());
   }
 
@@ -412,7 +418,7 @@ export class PropertyList<T extends Property> {
 
     const itemIdx = this.indexOf(item);
     if (itemIdx !== -1) {
-      this.list = [...this.list.splice(0, itemIdx), item, ...this.list.splice(itemIdx + 1)];
+      this.list = [...this.list.slice(0, itemIdx), item, ...this.list.slice(itemIdx + 1)];
       return false;
     }
 

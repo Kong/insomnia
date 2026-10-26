@@ -11,6 +11,11 @@ export function getById(id: string) {
   return db.findOne<Response>(type, { _id: id });
 }
 
+// Finds whichever response already owns a given on-disk body file, to verify ownership before overwrite.
+export function getByBodyPath(bodyPath: string) {
+  return db.findOne<Response>(type, { bodyPath });
+}
+
 export function findByParentId(parentId: string) {
   return db.find<Response>(type, { parentId: parentId });
 }

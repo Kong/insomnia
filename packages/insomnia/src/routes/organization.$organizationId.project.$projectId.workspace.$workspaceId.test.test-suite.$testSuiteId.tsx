@@ -267,6 +267,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
       {isOpen && (
         <CodeEditor
           id="unit-test-editor"
+          historyKey={`unit-test-editor::${unitTest._id}`}
           ref={editorRef}
           dynamicHeight
           showPrettifyButton

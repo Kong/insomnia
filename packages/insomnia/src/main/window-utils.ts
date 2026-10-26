@@ -10,22 +10,26 @@ import {
   dialog,
   ipcMain,
   Menu,
+  type MenuItem,
   type MenuItemConstructorOptions,
   MessageChannelMain,
   screen,
   shell,
 } from 'electron';
+import { models, services } from 'insomnia-data';
 import { isLinux, isMac } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
+import { type ChangeBufferEvent, database as db } from '../common/database';
 import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
+import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
@@ -37,6 +41,39 @@ export function getMainWindow(): ElectronBrowserWindow | null {
   return browserWindows.get('Insomnia') ?? null;
 }
 let hiddenWindowIsBusy = false;
+
+// Every open window has its own copy of the menu, so keep them all in sync with the Debug Mode setting.
+const debugModeMenuItems = new Set<MenuItem>();
+let isWatchingDebugMode = false;
+
+const getDebugModeLabel = (debugMode: boolean) => `${debugMode ? 'Disable' : 'Enable'} Debug Mode`;
+
+function trackDebugModeMenuItem(menuItem: MenuItem | null, window: ElectronBrowserWindow) {
+  if (!menuItem) {
+    return;
+  }
+  debugModeMenuItems.add(menuItem);
+  window.on('closed', () => debugModeMenuItems.delete(menuItem));
+
+  services.settings.get().then(({ debugMode }) => {
+    menuItem.label = getDebugModeLabel(debugMode);
+  });
+
+  if (isWatchingDebugMode) {
+    return;
+  }
+  isWatchingDebugMode = true;
+  db.onChange(async (changes: ChangeBufferEvent[]) => {
+    for (const [event, doc] of changes) {
+      if (event === 'update' && models.settings.isSettings(doc)) {
+        debugModeMenuItems.forEach(item => {
+          item.label = getDebugModeLabel(doc.debugMode);
+        });
+      }
+    }
+  });
+}
+
 interface Bounds {
   height?: number;
   width?: number;
@@ -227,10 +264,10 @@ export function createWindow(): ElectronBrowserWindow {
     showUnresponsiveModal();
   });
 
-  // Open generic links (<a .../>) in default browser
-  mainBrowserWindow.webContents.on('will-navigate', (event, url) => {
+  // Open generic links (<a .../>) in default browser; also covers redirects.
+  const guardNavigation = (event: Electron.Event, url: string) => {
     // Prevents local dev full-reload events from opening browser window, see https://github.com/Kong/insomnia/pull/4925
-    if (url.startsWith(appUrl)) {
+    if (isTrustedAppOrigin(url, appUrl)) {
       return;
     }
 
@@ -240,14 +277,27 @@ export function createWindow(): ElectronBrowserWindow {
     if (protocol === 'http:' || protocol === 'https:') {
       shell.openExternal(url);
     }
-  });
+  };
+  mainBrowserWindow.webContents.on('will-navigate', guardNavigation);
+  mainBrowserWindow.webContents.on('will-redirect', guardNavigation);
 
   mainBrowserWindow.webContents.setWindowOpenHandler(() => {
     return { action: 'deny' };
   });
 
   // Load the html of the app.
-  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
+  let appUrl: string;
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const port = fs.readFileSync(path.resolve(__dirname, '..', '.vite-port'), 'utf8').trim();
+      appUrl = `http://localhost:${port}`;
+    } catch {
+      console.warn('[main] .vite-port not found, falling back to default port 3334');
+      appUrl = 'http://localhost:3334';
+    }
+  } else {
+    appUrl = 'https://insomnia-app.local';
+  }
 
   console.log(`[main] Loading ${appUrl}`);
 
@@ -499,6 +549,14 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
+        id: 'toggle-debug-mode',
+        label: getDebugModeLabel(false),
+        click: async () => {
+          const { debugMode } = await services.settings.get();
+          await services.settings.patch({ debugMode: !debugMode });
+        },
+      },
+      {
         type: 'separator',
       },
       {
@@ -693,6 +751,18 @@ export function createWindow(): ElectronBrowserWindow {
           w.webContents.send('reload-plugins');
         },
       },
+      {
+        label: `${MNEMONIC_SYM}Clear All Response History`,
+        click: () => {
+          const w = BrowserWindow.getFocusedWindow();
+
+          if (!w || !w.webContents) {
+            return;
+          }
+
+          w.webContents.send('clear-all-response-history');
+        },
+      },
     ],
   };
   const template: MenuItemConstructorOptions[] = [];
@@ -720,12 +790,14 @@ export function createWindow(): ElectronBrowserWindow {
     template.push(developerMenu);
   }
 
+  const menu = Menu.buildFromTemplate(template);
   if (isMac) {
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    Menu.setApplicationMenu(menu);
   } else {
     // setMenu only works for Windows and Linux
-    mainBrowserWindow.setMenu(Menu.buildFromTemplate(template));
+    mainBrowserWindow.setMenu(menu);
   }
+  trackDebugModeMenuItem(menu.getMenuItemById('toggle-debug-mode'), mainBrowserWindow);
 
   return mainBrowserWindow;
 }

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getEncryptionKeys, getOnboardingState, getUserProfile } from '../user';
+import { getEncryptionKeys, getOnboardingState, getUserProfile, recordUserAction } from '../user';
 
 const { mockFetch } = vi.hoisted(() => ({
   mockFetch: vi.fn(),
@@ -110,6 +110,23 @@ describe('getEncryptionKeys', () => {
       method: 'GET',
       path: '/v3/users/me/encryption-keys',
       sessionId: 'sess_xyz',
+    });
+  });
+});
+
+describe('recordUserAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls fetch with the correct method, path, sessionId, and body', async () => {
+    await recordUserAction({ sessionId: 'sess_xyz', eventId: 'evt_123', actionType: 'request_created' });
+
+    expect(mockFetch).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v3/users/me/actions',
+      sessionId: 'sess_xyz',
+      data: { event_id: 'evt_123', action_type: 'request_created' },
     });
   });
 });

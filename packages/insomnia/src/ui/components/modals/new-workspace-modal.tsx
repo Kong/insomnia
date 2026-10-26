@@ -1,5 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
-import type { ApiSpec, Project, WorkspaceScope } from 'insomnia-data';
+import type { ApiSpec, Project, Workspace, WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -34,18 +34,18 @@ import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
-  [models.workspace.WorkspaceScopeKeys.collection]: 'Request Collection',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'API Collection',
   [models.workspace.WorkspaceScopeKeys.environment]: 'Environment',
   [models.workspace.WorkspaceScopeKeys.mockServer]: 'Mock Server',
-  [models.workspace.WorkspaceScopeKeys.design]: 'Design Document',
+  [models.workspace.WorkspaceScopeKeys.design]: 'API Collection',
   [models.workspace.WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
-  [models.workspace.WorkspaceScopeKeys.collection]: 'My Collection',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'My API Collection',
   [models.workspace.WorkspaceScopeKeys.environment]: 'My Environment',
   [models.workspace.WorkspaceScopeKeys.mockServer]: 'My Mock Server',
-  [models.workspace.WorkspaceScopeKeys.design]: 'My Design Document',
+  [models.workspace.WorkspaceScopeKeys.design]: 'My API Collection',
   [models.workspace.WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
@@ -64,7 +64,7 @@ export const NewWorkspaceModal = ({
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
   storageRules: StorageRules;
-  onCreateWorkspace?: (workspaceId: string) => void;
+  onCreateWorkspace?: (workspaceId: string, workspace: Workspace) => void;
   redirectAfterCreate?: boolean;
   scope: WorkspaceScope;
   sourceApiSpec?: ApiSpec;
@@ -141,10 +141,11 @@ export const NewWorkspaceModal = ({
 
     if (
       createNewWorkspaceFetcher.data &&
-      'workspaceId' in createNewWorkspaceFetcher.data &&
-      createNewWorkspaceFetcher.data.workspaceId
+      'workspace' in createNewWorkspaceFetcher.data &&
+      createNewWorkspaceFetcher.data.workspace
     ) {
-      onCreateWorkspace?.(createNewWorkspaceFetcher.data.workspaceId);
+      const newWorkspace = createNewWorkspaceFetcher.data.workspace;
+      onCreateWorkspace?.(newWorkspace._id, newWorkspace);
     }
 
     onOpenChange(false);
@@ -192,7 +193,7 @@ export const NewWorkspaceModal = ({
 
   const changedFieldCount = [
     workspaceData.name !== defaultNameByScope[scope],
-    workspaceData.fileName !== defaultFileName,
+    hasEditedFileName && workspaceData.fileName !== defaultFileName,
     Boolean(workspaceData.folderPath),
     workspaceData.mockServerType !== defaultMockServerType,
     Boolean(workspaceData.mockServerUrl),
@@ -264,12 +265,14 @@ export const NewWorkspaceModal = ({
                     name="name"
                     value={workspaceData.name}
                     isRequired
-                    onChange={name => setWorkspaceData({
-                      ...workspaceData,
-                      name,
-                      // Keep the file name in sync with the name until the user edits it themselves.
-                      ...(hasEditedFileName ? {} : { fileName: name }),
-                    })}
+                    onChange={name =>
+                      setWorkspaceData({
+                        ...workspaceData,
+                        name,
+                        // Keep the file name in sync with the name until the user edits it themselves.
+                        ...(hasEditedFileName ? {} : { fileName: name }),
+                      })
+                    }
                     className="group relative flex flex-col gap-2"
                   >
                     <Label className="text-sm text-(--hl)">Name</Label>

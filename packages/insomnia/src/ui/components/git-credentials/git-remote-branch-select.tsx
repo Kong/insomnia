@@ -1,9 +1,9 @@
+import { fuzzyMatch } from 'insomnia-data/common';
 import React, { useDeferredValue } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
-import { fuzzyMatch } from '~/common/misc';
 import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
 
 import { Icon } from '../icon';

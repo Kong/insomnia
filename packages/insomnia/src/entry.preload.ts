@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils as webUtilities } from 'electron';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
 import type {
   ApplyRequestHooksArgs,
@@ -10,12 +10,12 @@ import type {
   RunTemplateTagActionArgs,
 } from '~/common/plugins/bridge-types';
 import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
-import type { RenderedRequest } from '~/common/templating/types';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { PluginInvokeMethod } from '~/plugins/invoke-method';
-import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
@@ -150,9 +150,9 @@ const electronStorage: electronStorageBridgeAPI = {
   setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
 };
 
-const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
+const invokeSyncMethod = async <T>(workspaceId: string, methodName: string, ...args: unknown[]) => {
   try {
-    return (await invokeWithNormalizedError('sync.invoke', methodName, ...args)) as T;
+    return (await invokeWithNormalizedError('sync.invoke', workspaceId, methodName, ...args)) as T;
   } catch (error) {
     if (isUserAbortResolveMergeConflictError(error)) {
       throw new UserAbortResolveMergeConflictError(
@@ -164,39 +164,45 @@ const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
   }
 };
 
+const invokeGlobalSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
+  return (await invokeWithNormalizedError('sync.invokeGlobal', methodName, ...args)) as T;
+};
+
 const sync: SyncBridgeAPI = {
-  archiveProject: () => invokeSyncMethod('archiveProject'),
-  checkout: (...args) => invokeSyncMethod('checkout', ...args),
-  compareRemoteBranch: () => invokeSyncMethod('compareRemoteBranch'),
-  fork: (...args) => invokeSyncMethod('fork', ...args),
-  getActiveBackendProject: () => invokeSyncMethod('getActiveBackendProject'),
-  getBranchNames: () => invokeSyncMethod('getBranchNames'),
-  getCurrentBranchName: () => invokeSyncMethod('getCurrentBranchName'),
-  getHistory: (...args) => invokeSyncMethod('getHistory', ...args),
-  getHistoryCount: () => invokeSyncMethod('getHistoryCount'),
-  getRemoteBranchNames: () => invokeSyncMethod('getRemoteBranchNames'),
-  getVersion: () => invokeSyncMethod('getVersion'),
-  hasBackendProject: () => invokeSyncMethod('hasBackendProject'),
-  localBackendProjects: () => invokeSyncMethod('localBackendProjects'),
-  merge: (...args) => invokeSyncMethod('merge', ...args),
-  pull: (...args) => invokeSyncMethod('pull', ...args),
+  archiveProject: workspaceId => invokeSyncMethod(workspaceId, 'archiveProject'),
+  checkout: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'checkout', ...args),
+  compareRemoteBranch: workspaceId => invokeSyncMethod(workspaceId, 'compareRemoteBranch'),
+  fork: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'fork', ...args),
+  getActiveBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'getActiveBackendProject'),
+  getBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getBranchNames'),
+  getCurrentBranchName: workspaceId => invokeSyncMethod(workspaceId, 'getCurrentBranchName'),
+  getHistory: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'getHistory', ...args),
+  getHistoryCount: workspaceId => invokeSyncMethod(workspaceId, 'getHistoryCount'),
+  getRemoteBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getRemoteBranchNames'),
+  getVersion: workspaceId => invokeSyncMethod(workspaceId, 'getVersion'),
+  hasBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'hasBackendProject'),
+  localBackendProjects: () => invokeGlobalSyncMethod('localBackendProjects'),
+  merge: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'merge', ...args),
+  pull: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'pull', ...args),
   pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
-  push: (...args) => invokeSyncMethod('push', ...args),
-  remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
-  remoteBackendProjectsOfTeam: (...args) => invokeSyncMethod('remoteBackendProjectsOfTeam', ...args),
-  removeBackendProjectsForRoot: (...args) => invokeSyncMethod('removeBackendProjectsForRoot', ...args),
-  removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
-  removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),
-  rollback: (...args) => invokeSyncMethod('rollback', ...args),
-  rollbackToLatest: (...args) => invokeSyncMethod('rollbackToLatest', ...args),
+  push: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'push', ...args),
+  remoteBackendProjects: (...args) => invokeGlobalSyncMethod('remoteBackendProjects', ...args),
+  remoteBackendProjectsOfTeam: (...args) => invokeGlobalSyncMethod('remoteBackendProjectsOfTeam', ...args),
+  hasBackendProjectForRootDocument: (...args) => invokeGlobalSyncMethod('hasBackendProjectForRootDocument', ...args),
+  removeBackendProjectsForRoot: (...args) => invokeGlobalSyncMethod('removeBackendProjectsForRoot', ...args),
+  archiveBackendProject: (...args) => invokeGlobalSyncMethod('archiveBackendProject', ...args),
+  removeBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeBranch', ...args),
+  removeRemoteBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeRemoteBranch', ...args),
+  rollback: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollback', ...args),
+  rollbackToLatest: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollbackToLatest', ...args),
   resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
   cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
-  stage: (...args) => invokeSyncMethod('stage', ...args),
-  status: (...args) => invokeSyncMethod('status', ...args),
-  switchAndCreateBackendProjectIfNotExist: (...args) =>
-    invokeSyncMethod('switchAndCreateBackendProjectIfNotExist', ...args),
-  takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
-  unstage: (...args) => invokeSyncMethod('unstage', ...args),
+  stage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'stage', ...args),
+  status: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'status', ...args),
+  switchAndCreateBackendProjectIfNotExist: (workspaceId, ...args) =>
+    invokeSyncMethod(workspaceId, 'switchAndCreateBackendProjectIfNotExist', ...args),
+  takeSnapshot: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'takeSnapshot', ...args),
+  unstage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'unstage', ...args),
 };
 
 const git: GitServiceAPI = {
@@ -215,6 +221,7 @@ const git: GitServiceAPI = {
   cloneGitRepo: options => invokeWithNormalizedError('git.cloneGitRepo', options),
   openGitRepo: options => invokeWithNormalizedError('git.openGitRepo', options),
   checkGitRepoDirectory: options => invokeWithNormalizedError('git.checkGitRepoDirectory', options),
+  resolveGitRepoFolderPath: options => invokeWithNormalizedError('git.resolveGitRepoFolderPath', options),
   cleanupGitRepoStorage: options => invokeWithNormalizedError('git.cleanupGitRepoStorage', options),
   relocateGitRepo: options => invokeWithNormalizedError('git.relocateGitRepo', options),
   initGitRepoClone: options => invokeWithNormalizedError('git.initGitRepoClone', options),
@@ -236,7 +243,10 @@ const git: GitServiceAPI = {
   multipleCommitToGitRepo: options => invokeWithNormalizedError('git.multipleCommitToGitRepo', options),
   stageChanges: options => invokeWithNormalizedError('git.stageChanges', options),
   unstageChanges: options => invokeWithNormalizedError('git.unstageChanges', options),
+  stagePartialContent: options => invokeWithNormalizedError('git.stagePartialContent', options),
+  discardPartialContent: options => invokeWithNormalizedError('git.discardPartialContent', options),
   diffFileLoader: options => invokeWithNormalizedError('git.diffFileLoader', options),
+  fileFormatIssueLoader: options => invokeWithNormalizedError('git.fileFormatIssueLoader', options),
   getRepositoryDirectoryTree: options => invokeWithNormalizedError('git.getRepositoryDirectoryTree', options),
   migrateLegacyInsomniaFolderToFile: options =>
     invokeWithNormalizedError('git.migrateLegacyInsomniaFolderToFile', options),
@@ -299,7 +309,10 @@ const main: Window['main'] = {
   deleteCompiledRuleset: options => invokeWithNormalizedError('deleteCompiledRuleset', options),
   refreshCompiledRuleset: options => invokeWithNormalizedError('refreshCompiledRuleset', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
-  getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
+  getAuthHeader: (
+    renderedRequest: RenderedRequest,
+    url: string,
+  ): Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }> =>
     invokeWithNormalizedError('getAuthHeader', renderedRequest, url),
   getOAuth2Token: (
     requestId: string,
@@ -415,9 +428,9 @@ const main: Window['main'] = {
   generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
     invokeWithNormalizedError('generateCodeSnippet', options),
   getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
-  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean }) =>
+  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean; purpose?: RenderPurpose }) =>
     invokeWithNormalizedError('exportHarWithRequest', options),
-  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) =>
+  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean; purpose?: RenderPurpose }) =>
     invokeWithNormalizedError('exportHarRequest', options),
   exportHarCurrentRequest: (options: { requestId: string; responseId: string }) =>
     invokeWithNormalizedError('exportHarCurrentRequest', options),
@@ -451,6 +464,9 @@ const main: Window['main'] = {
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
   notifyPromptResult: (id: string, value: string | null) => ipcRenderer.send('ui.promptResult', { id, value }),
+  templatingDb: {
+    getAuthToken: () => invokeWithNormalizedError('templatingDb.getAuthToken'),
+  },
   timeline: {
     getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
     appendToFile: (options: { timelinePath: string; data: string }) =>

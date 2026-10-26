@@ -12,6 +12,12 @@ export function setFetchImplementation(impl: FetchImplementation) {
   fetchImpl = impl;
 }
 
+// Stable, proxy-aware fetch handle for callers that need a raw `fetch` (e.g. the v3 SDK's
+// Configuration.fetchApi). It delegates to the current `fetchImpl` on every call rather than
+// capturing it, so it works regardless of whether setFetchImplementation() has run yet.
+export const proxyAwareFetch: typeof globalThis.fetch = (input, init) =>
+  fetchImpl(input as string, init as RequestInit | undefined);
+
 // Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({
   method,

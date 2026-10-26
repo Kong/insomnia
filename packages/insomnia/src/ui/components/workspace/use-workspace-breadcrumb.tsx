@@ -2,19 +2,23 @@ import { models } from 'insomnia-data';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
+import { Icon } from '~/basic-components/icon';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import type { PaneBreadcrumb } from '~/ui/components/pane-header';
 import { ResourceIcon } from '~/ui/components/workspace/resource-icon';
-import { buildResourceUrl } from '~/ui/hooks/use-insomnia-navigation';
+import { buildResourceUrl, useInsomniaNavigation } from '~/ui/hooks/use-insomnia-navigation';
 
 export function useWorkspaceBreadcrumbs() {
   const { activeWorkspace, activeProject, collection } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
   const { organizationId } = useParams();
+  const { routeInfo } = useInsomniaNavigation();
   const isMcp = activeWorkspace && models.workspace.isMcp(activeWorkspace);
+  const isRunner = routeInfo?.routeId === 'runner';
+  const runnerFolderId = isRunner ? routeInfo.searchParams.get('folder') : null;
 
   const resourcesById = useMemo(() => {
     const map = new Map<string, (typeof collection)[number]['doc']>();
@@ -24,7 +28,9 @@ export function useWorkspaceBreadcrumbs() {
     return map;
   }, [collection]);
 
-  const reqOrGrpId = activeRequest?._id || activeRequestGroup?._id;
+  const runnerFolder = runnerFolderId ? collection.find(col => col.doc._id === runnerFolderId) : undefined;
+  const folder = activeRequestGroup || runnerFolder?.doc;
+  const reqOrGrpId = activeRequest?._id || folder?._id;
   const reqOrGrp = collection.find(col => col.doc._id === reqOrGrpId);
 
   // workspace is not in collection, so we need to filter it out.
@@ -83,16 +89,41 @@ export function useWorkspaceBreadcrumbs() {
         label: activeRequest.name || 'Untitled request',
         icon: <ResourceIcon resource={activeRequest} />,
       });
-    } else if (activeRequestGroup) {
+    } else if (folder) {
       crumbs.push({
-        id: activeRequestGroup._id,
-        label: activeRequestGroup.name || 'Untitled group',
-        icon: <ResourceIcon resource={activeRequestGroup} />,
+        id: folder._id,
+        label: folder.name || 'Untitled folder',
+        to: isRunner
+          ? buildResourceUrl({
+              organizationId: organizationId!,
+              projectId: activeProject._id,
+              workspaceId: activeWorkspace!._id,
+              resource: folder,
+            })
+          : undefined,
+        icon: <ResourceIcon resource={folder} />,
+      });
+    }
+
+    if (isRunner) {
+      crumbs.push({
+        id: 'runner',
+        label: 'Runner',
+        icon: <Icon icon="play" className="w-2.5 shrink-0" />,
       });
     }
 
     return crumbs;
-  }, [activeProject, activeWorkspace, ancestors, activeRequest, activeRequestGroup, organizationId, isMcp]);
+  }, [
+    activeProject,
+    activeWorkspace,
+    ancestors,
+    activeRequest,
+    folder,
+    organizationId,
+    isMcp,
+    isRunner,
+  ]);
 
   return breadcrumbs;
 }

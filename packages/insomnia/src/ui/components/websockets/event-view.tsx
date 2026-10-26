@@ -74,13 +74,13 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
           }}
         />
       </div>
-      <div className="grow p-4">
+      <div className="grow p-4 pb-0">
         <CodeEditor
           id="websocket-body-preview"
           hideLineNumbers
           mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
           defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
-          uniquenessKey={event._id}
+          historyKey={event._id}
           ref={editorRef}
           readOnly
         />

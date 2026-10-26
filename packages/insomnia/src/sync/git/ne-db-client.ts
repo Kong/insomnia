@@ -21,7 +21,6 @@ import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
 import { database as db } from '../../common/database';
-import { resetKeys } from '../ignore-keys';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import Stat from './stat';
@@ -85,7 +84,7 @@ export class NeDBClient {
     }
 
     // When git is reading from NeDb, reset keys we wish to ignore to their original values
-    resetKeys(doc);
+    models.resetKeys(doc);
 
     // It would be nice to be able to add this check here but we can't since
     // isomorphic-git may have just deleted the workspace from the FS. This
@@ -142,6 +141,14 @@ export class NeDBClient {
     // Validate that the document type matches the file path
     if (type !== doc.type) {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+    }
+
+    // Only types explicitly marked as syncable may be written from a Git checkout.
+    // A folder named after a non-syncable/global-singleton type (e.g. Settings)
+    // is ignored, even though its path and id/type fields are well-formed.
+    if (!models.canSync(doc)) {
+      console.log(`[git] Ignoring non-syncable document type ${doc.type} at ${filePath}`);
+      return;
     }
 
     // Special handling for workspaces: ensure they stay in the correct project

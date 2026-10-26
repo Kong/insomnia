@@ -1,4 +1,5 @@
 import type {
+  ChangeBufferEvent,
   ResponseTimelineEntry,
   RunnerResultPerRequest,
   RunnerTestResult,
@@ -33,7 +34,6 @@ import { buildRunnerItemKey, type RunnerItemStatus, type RunnerLiveItem } from '
 import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -41,6 +41,7 @@ import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdo
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 import { Icon } from '~/ui/components/icon';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CLIPreviewModal } from '~/ui/components/modals/cli-preview-modal';
@@ -54,6 +55,7 @@ import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
 import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import {
@@ -154,7 +156,7 @@ export const Runner: FC = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
-  const organizationData = useOrganizationLoaderData();
+  const currentPlan = useCurrentPlan();
   const targetFolderId = searchParams.get('folder') || '';
 
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -164,6 +166,7 @@ export const Runner: FC = () => {
     direction: 'vertical' | 'horizontal';
   };
   const [isRunning, setIsRunning] = useState(false);
+  const [canceledRun, setCanceledRun] = useState(false);
 
   // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
@@ -182,7 +185,7 @@ export const Runner: FC = () => {
   const {
     iterationCount = 1,
     delay = 0,
-    selectedKeys = new Set<Key>(),
+    selectedKeys = 'all',
     advancedConfig = defaultAdvancedConfig,
     uploadData = [],
     file,
@@ -283,11 +286,12 @@ export const Runner: FC = () => {
     if (isRunning) {
       return;
     }
+    setCanceledRun(false);
     setIsRunning(true);
 
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.collectionRunExecute,
-      properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
+      properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
 
     updateTabById?.(buildRunnerTabId(workspaceId, targetFolderId), { temporary: false });
@@ -351,6 +355,21 @@ export const Runner: FC = () => {
       setTestHistory(results.reverse());
     };
     readResults();
+    // Results can also disappear from under us - "Clear All Response History" in the Tools
+    // menu removes them database-wide - so re-read whenever one is removed, and drop the
+    // result currently on screen if it was one of them.
+    return window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
+      const removedIds = changes
+        .filter(([event, doc]) => event === 'remove' && models.runnerTestResult.isRunnerTestResult(doc))
+        .map(([, doc]) => doc._id);
+
+      if (removedIds.length === 0) {
+        return;
+      }
+
+      readResults();
+      setExecutionResult(current => (current && removedIds.includes(current._id) ? null : current));
+    });
   }, [runnerId]);
 
   const [totalTime, setTotalTime] = useState({
@@ -482,14 +501,21 @@ export const Runner: FC = () => {
   }, [executionResult, isRunning]);
 
   const [selectedTab, setSelectedTab] = React.useState<Key>('results');
-  const [canceledRun, setCanceledRun] = useState(false);
   const activeTab = isRunning ? 'results' : selectedTab;
 
   const allKeys = reqList.map(item => item.id);
   const disabledKeys = useMemo(() => {
     return isRunning ? allKeys : [];
   }, [isRunning, allKeys]);
-  const isDisabled = isRunning || Array.from(selectedKeys).length === 0;
+  const isDisabled = isRunning || (selectedKeys !== 'all' && Array.from(selectedKeys).length === 0);
+
+  useDocBodyKeyboardShortcuts({
+    request_send: () => {
+      if (!isDisabled) {
+        onRun();
+      }
+    },
+  });
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
@@ -671,7 +697,7 @@ export const Runner: FC = () => {
                     onSelectionChange={keys => {
                       updateRunnerState(organizationId, runnerId, { selectedKeys: keys });
                     }}
-                    aria-label="Request Collection"
+                    aria-label="Request API Collection"
                     dragAndDropHooks={requestsDnD}
                     className="h-full w-full overflow-auto text-base leading-8"
                     disabledKeys={disabledKeys}
@@ -820,17 +846,15 @@ export const Runner: FC = () => {
         className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
       />
       <Panel id="pane-two" className="pane-two theme--pane">
-        <PaneHeader className="row-spaced">
-          <Heading className="flex h-(--line-height-sm) w-full items-center border-b border-solid border-b-(--hl-md) pl-3">
-            {executionResult?.duration ? (
+        {executionResult?.duration ? (
+          <PaneHeader className="row-spaced">
+            <Heading className="flex h-(--line-height-sm) w-full items-center border-b border-solid border-b-(--hl-md) pl-3">
               <div className="bg-info tag">
                 <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
               </div>
-            ) : (
-              <span className="font-bold">Collection Runner</span>
-            )}
-          </Heading>
-        </PaneHeader>
+            </Heading>
+          </PaneHeader>
+        ) : null}
         <Tabs
           selectedKey={activeTab}
           onSelectionChange={setSelectedTab}
@@ -859,7 +883,7 @@ export const Runner: FC = () => {
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="history"
             >
-              Test History
+              History
             </Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
@@ -991,6 +1015,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const noLogRuntime = {
     appendTimeline: async (_timelinePath: string, _logs: string[]) => {}, // no op
+    appendTimelineOnError: async (_timelinePath: string, _data: string) => {}, // no op
   };
 
   try {

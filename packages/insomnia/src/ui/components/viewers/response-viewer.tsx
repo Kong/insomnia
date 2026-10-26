@@ -56,7 +56,7 @@ export interface ResponseViewerProps {
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
-  download: (...args: any[]) => any;
+  download: (prettify: boolean) => void;
   editorFontSize: number;
   filter: string;
   filterHistory: string[];
@@ -192,7 +192,7 @@ export const ResponseViewer = ({
         {hugeResponse ? (
           <Fragment>
             <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
-            <button onClick={download} className="btn btn--clicky inline-block">
+            <button onClick={() => download(false)} className="btn btn--clicky inline-block">
               Save Response To File
             </button>
           </Fragment>
@@ -200,7 +200,7 @@ export const ResponseViewer = ({
           <Fragment>
             <p className="pad faint">Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons</p>
             <div>
-              <button onClick={download} className="btn btn--clicky margin-xs inline-block">
+              <button onClick={() => download(false)} className="btn btn--clicky margin-xs inline-block">
                 Save To File
               </button>
               <button
@@ -260,7 +260,8 @@ export const ResponseViewer = ({
         }
         placeholder="..."
         readOnly
-        uniquenessKey={responseId}
+        historyKey={responseId}
+        truncateLongLines
         updateFilter={filter => {
           updateFilter?.(filter);
 
@@ -364,7 +365,7 @@ export const ResponseViewer = ({
         noMatchBrackets
         placeholder="..."
         readOnly
-        uniquenessKey={responseId}
+        historyKey={responseId}
       />
     );
   }
@@ -387,7 +388,8 @@ export const ResponseViewer = ({
       }
       placeholder="..."
       readOnly
-      uniquenessKey={responseId}
+      historyKey={responseId}
+      truncateLongLines
       updateFilter={filter => {
         updateFilter?.(filter);
 

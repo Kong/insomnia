@@ -48,8 +48,10 @@ interface Props {
   setIsOpen: (isOpen: boolean) => void;
 }
 
+const PREVIEW_NUNJUCKS_OPTIONS = { renderContext: { purpose: 'preview' as const } };
+
 export const CookiesModal = ({ setIsOpen }: Props) => {
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucks(PREVIEW_NUNJUCKS_OPTIONS);
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -83,6 +85,12 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     const renderedCookies: Cookie[] = [];
 
     for (const cookie of activeCookieJar?.cookies || []) {
+      // Only manually-authored cookies are passed through the template renderer; a server-set
+      // cookie's value is always used as-is.
+      if (cookie.source !== 'manual') {
+        renderedCookies.push(cookie);
+        continue;
+      }
       try {
         renderedCookies.push(await handleRender(cookie));
       } catch {
@@ -128,6 +136,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
         path: '/',
         secure: false,
         httpOnly: false,
+        source: 'manual',
       },
       ...activeCookieJar.cookies,
     ];
@@ -137,6 +146,9 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
   const handleCookieUpdate = (cookie: Cookie) => {
     const newCookie = clone(cookie);
+    // A save from this modal is always a deliberate local edit, even if editing a cookie a
+    // server previously set, so it's trusted going forward like any other manual cookie.
+    newCookie.source = 'manual';
 
     // transform to Date object or fallback to null
     let dateFormat = null;
@@ -166,7 +178,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       onOpenChange={setIsOpen}
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-black/30 py-[100px]"
     >
-      <Modal className="max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
+      <Modal className="h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
         <Dialog className="relative outline-hidden" aria-label="Cookies Modal">
           {({ close }) => (
             <>
@@ -301,11 +313,13 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               className="flex min-h-[40px] justify-between gap-2 rounded-xs px-2 py-1 leading-[36px] outline-hidden odd:bg-(--hl-xs)"
             >
               <span className="flex min-w-[20%] items-center leading-relaxed break-all" data-testid="cookie-domain">
-                <RenderedText>{cookie.domain || ''}</RenderedText>
+                {/* Only manually-authored cookies are passed through the template renderer;
+                    a server-set cookie's fields are always shown as-is. */}
+                {cookie.source === 'manual' ? <RenderedText>{cookie.domain || ''}</RenderedText> : cookie.domain || ''}
               </span>
               <div className="flex w-[70%] items-center leading-relaxed">
                 <div className="line-clamp-3 w-full break-all">
-                  <RenderedText>{cookieString || ''}</RenderedText>
+                  {cookie.source === 'manual' ? <RenderedText>{cookieString || ''}</RenderedText> : cookieString || ''}
                 </div>
               </div>
               <div className="flex min-w-[10%] items-center justify-end gap-1">
@@ -471,6 +485,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Key
                               <OneLineEditor
                                 id="cookie-key"
+                                historyKey={`cookie-key::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.key) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, key: value.trim() })}
                               />
@@ -481,6 +496,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Value
                               <OneLineEditor
                                 id="cookie-value"
+                                historyKey={`cookie-value::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.value) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, value: value.trim() })}
                               />
@@ -493,6 +509,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Domain
                               <OneLineEditor
                                 id="cookie-domain"
+                                historyKey={`cookie-domain::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.domain) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, domain: value.trim() })}
                               />
@@ -503,6 +520,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               Path
                               <OneLineEditor
                                 id="cookie-path"
+                                historyKey={`cookie-path::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.path) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, path: value.trim() })}
                               />
@@ -516,7 +534,14 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               type="datetime-local"
                               defaultValue={localDateTime}
                               style={{ colorScheme: isLightTheme ? 'light' : 'dark' }}
-                              onChange={event => setEditCookie({ ...editCookie, expires: event.target.value })}
+                              onChange={event => {
+                                const value = event.target.value;
+                                const parsedValue = value ? new Date(value) : undefined;
+                                setEditCookie({
+                                  ...editCookie,
+                                  expires: parsedValue && isValid(parsedValue) ? parsedValue : null,
+                                });
+                              }}
                             />
                           </label>
                         </div>

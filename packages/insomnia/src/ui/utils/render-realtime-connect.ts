@@ -1,9 +1,9 @@
-import type { CookieJar, Request, RequestAuthentication, RequestGroup, RequestHeader, RequestParameter, SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import type { CookieJar, Request, RequestAuthentication, RequestBody, RequestGroup, RequestHeader, RequestParameter, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from './try-interpolate';
+import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../../network/network';
+import { tryToInterpolateRequestAndCollectSensitiveValues } from './try-interpolate';
 
 const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup, type: requestGroupType } = models.requestGroup;
@@ -13,9 +13,12 @@ export interface RenderedRealtimeConnectPayload {
   url: string;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
+  body?: RequestBody;
   parameters: RequestParameter[];
   workspaceCookieJar: CookieJar;
   suppressUserAgent: boolean;
+  /** confidential values registered while rendering this connect payload, for main-process timeline/event-log redaction (T10) */
+  sensitiveValues: string[];
 }
 
 export async function renderRealtimeConnectPayload({
@@ -34,30 +37,34 @@ export async function renderRealtimeConnectPayload({
   const requestGroups = ancestors.filter(isRequestGroup);
   const headers = getOrInheritHeaders({ request, requestGroups });
   const authentication = getOrInheritAuthentication({ request, requestGroups });
+  const body = 'body' in request ? request.body : undefined;
 
-  const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+  // Only manually-authored cookies may contain live template syntax. Server-set cookie values
+  // are excluded from rendering here too, mirroring getRenderedRequestAndContext in render.ts,
+  // so that a template placed in a cookie by a response is never re-evaluated when connecting.
+  const manualCookies = workspaceCookieJar.cookies.filter(cookie => cookie.source === 'manual');
+  const nonManualCookies = workspaceCookieJar.cookies.filter(cookie => cookie.source !== 'manual');
+
+  const result = await tryToInterpolateRequestAndCollectSensitiveValues({
     request,
     environmentId,
     payload: {
       url: request.url,
       headers,
       authentication,
+      body,
       parameters: request.parameters.filter(p => !p.disabled),
       pathParameters: request.pathParameters,
-      workspaceCookieJar,
+      workspaceCookieJar: { ...workspaceCookieJar, cookies: manualCookies },
     },
   });
 
-  if (!rendered) {
+  if (!result) {
     return undefined;
   }
+  const { rendered, sensitiveValues } = result;
 
-  // getOrInheritHeaders drops disabled headers, so disabled User-Agent headers are only visible on the raw request/folder headers
-  const userAgentHeaders = [...requestGroups, request]
-    .flatMap(doc => doc.headers || [])
-    .filter(h => h.name?.toLowerCase() === 'user-agent');
-  const suppressUserAgent =
-    Boolean(request.disableUserAgentHeader) || (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled));
+  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
 
   const url = applyPathParametersToUrl(rendered.url, rendered.pathParameters);
 
@@ -65,8 +72,13 @@ export async function renderRealtimeConnectPayload({
     url,
     headers: rendered.headers,
     authentication: rendered.authentication,
+    body: rendered.body,
     parameters: rendered.parameters,
-    workspaceCookieJar: rendered.workspaceCookieJar,
+    workspaceCookieJar: {
+      ...rendered.workspaceCookieJar,
+      cookies: [...rendered.workspaceCookieJar.cookies, ...nonManualCookies],
+    },
     suppressUserAgent,
+    sensitiveValues,
   };
 }

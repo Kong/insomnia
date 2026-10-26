@@ -8,16 +8,16 @@ interface Props {
   onChange: (value: string) => void;
   content: string;
   contentType: string;
-  uniquenessKey: string;
+  historyKey: string;
   className?: string;
 }
 
-export const RawEditor: FC<Props> = ({ className, content, contentType, onChange, uniquenessKey }) => (
+export const RawEditor: FC<Props> = ({ className, content, contentType, onChange, historyKey }) => (
   <Fragment>
     <CodeEditor
       id="raw-editor"
       showPrettifyButton
-      uniquenessKey={uniquenessKey}
+      historyKey={historyKey}
       defaultValue={content}
       className={className}
       enableNunjucks

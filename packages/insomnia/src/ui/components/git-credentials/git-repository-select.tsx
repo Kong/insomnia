@@ -1,7 +1,7 @@
+import { fuzzyMatch } from 'insomnia-data/common';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
-import { fuzzyMatch } from '~/common/misc';
 import { useGitProviderRepositoriesLoaderFetcher } from '~/routes/git-provider.repositories';
 import type { GitRemoteProviderType } from '~/sync/git/providers/types';
 
@@ -69,7 +69,7 @@ export const GitRepositorySelect = ({
           id: repo.cloneUrl,
           name: repo.fullName,
         }))}
-        menuTrigger="focus"
+        menuTrigger="input" // focus causes the dropdown to open when no option is selected and scan for files is clicked, which is not the desired behaviour.
         defaultFilter={(repoName: string, inputValue: string) =>
           Boolean(fuzzyMatch(inputValue, repoName, { splitSpace: true, loose: false })?.indexes)
         }

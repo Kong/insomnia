@@ -2,8 +2,9 @@ import type { Organization } from 'insomnia-api';
 import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
+import { syncProjects } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
-import { findMigrationTargetSpaceId, migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
+import { findMigrationTargetSpaceId, migrateProjectsUnderOrganization } from '~/ui/organization-utils';
 import { AsyncTask, createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.sync-organizations-and-projects';
@@ -25,12 +26,6 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     const { id: sessionId, accountId } = await services.userSession.get();
 
     const taskPromiseList = [];
-    if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {
-      invariant(sessionId, 'sessionId is required');
-      invariant(accountId, 'accountId is required');
-      taskPromiseList.push(syncOrganizations(sessionId, accountId));
-    }
-
     if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
       const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
       invariant(organizations.length, 'Failed to fetch organizations.');

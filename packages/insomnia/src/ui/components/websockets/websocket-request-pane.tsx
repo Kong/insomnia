@@ -18,7 +18,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
+import { tryToInterpolateRequestAndCollectSensitiveValues } from '~/ui/utils/try-interpolate';
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -87,7 +87,11 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
   // NOTE: Liquid template interpolation can throw errors
   const interpolateOpenAndSend = async (payload: string) => {
     try {
-      const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });
+      const messageResult = await tryToInterpolateRequestAndCollectSensitiveValues({ request, environmentId, payload });
+      if (!messageResult) {
+        return;
+      }
+      const { rendered: renderedMessage, sensitiveValues: messageSensitiveValues } = messageResult;
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
         const rendered = await renderRealtimeConnectPayload({
@@ -107,10 +111,15 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
           cookieJar: rendered.workspaceCookieJar,
           initialPayload: renderedMessage,
           suppressUserAgent: rendered.suppressUserAgent,
+          sensitiveValues: [...new Set([...rendered.sensitiveValues, ...messageSensitiveValues])],
         });
         return;
       }
-      window.main.webSocket.event.send({ requestId: request._id, payload: renderedMessage });
+      window.main.webSocket.event.send({
+        requestId: request._id,
+        payload: renderedMessage,
+        sensitiveValues: messageSensitiveValues,
+      });
     } catch (err) {
       if (err instanceof RenderError) {
         showModal(RequestRenderErrorModal, {
@@ -156,7 +165,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
       <CodeEditor
         id="websocket-message-editor"
         showPrettifyButton
-        uniquenessKey={request._id}
+        historyKey={request._id}
         mode={previewMode}
         ref={editorRef}
         onChange={upsertPayloadWithValue}
@@ -401,6 +410,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                               readOnly={disabled}
                               key={activeRequest._id}
                               id={'key-value-editor__name' + pathParameter.name}
+                              historyKey={`path-param::${activeRequest._id}::${pathParameter.name}`}
                               placeholder="Parameter value"
                               defaultValue={pathParameter.value || ''}
                               onChange={name => {
@@ -482,6 +492,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
             key={uniqueKey}
+            historyKey={`websocket-description::${requestId}`}
             placeholder="Write a description"
             defaultValue={activeRequest.description}
             onChange={(description: string) => patchRequest(requestId, { description })}

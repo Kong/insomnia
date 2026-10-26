@@ -18,7 +18,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry, Services, TestResults } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
@@ -32,7 +32,8 @@ import type {
   MockRouteData,
   ModelConfig,
 } from '~/common/plugins/types';
-import type { RenderedRequest } from '~/common/templating/types';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
+import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
@@ -90,7 +91,9 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
+import { resolveUserDataFolder } from './path-guard';
 import type { secretStorageBridgeAPI } from './secret-storage';
+import { registerTemplatingDbAuthIpcHandler } from './templating-db-auth';
 
 let lintProcess: Electron.UtilityProcess | null = null;
 
@@ -241,7 +244,7 @@ export interface RendererToMainBridgeAPI {
     destinationPath: string;
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
-  getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
+  getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<{ header?: RequestHeader; timeline?: ResponseTimelineEntry[] }>;
   getOAuth2Token: (
     requestId: string,
     authentication: AuthTypeOAuth2,
@@ -318,11 +321,13 @@ export interface RendererToMainBridgeAPI {
     requestId: string;
     environmentId?: string;
     addContentLength?: boolean;
+    purpose?: RenderPurpose;
   }) => Promise<any>;
   exportHarRequest: (options: {
     requestId: string;
     environmentOrWorkspaceId: string;
     addContentLength?: boolean;
+    purpose?: RenderPurpose;
   }) => Promise<any>;
   exportHarCurrentRequest: (options: { requestId: string; responseId: string }) => Promise<any>;
   exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) => Promise<string>;
@@ -341,6 +346,9 @@ export interface RendererToMainBridgeAPI {
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
+  templatingDb: {
+    getAuthToken: () => Promise<string>;
+  };
   notifyPromptResult: (id: string, value: string | null) => void;
   vault: {
     encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
@@ -470,8 +478,9 @@ export function registerMainHandlers() {
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
   });
-  ipcMainHandle('getOAuth2Token', (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
-    return getOAuth2TokenInMain(requestId, authentication, forceRefresh);
+  ipcMainHandle('getOAuth2Token', async (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
+    const { token } = await getOAuth2TokenInMain(requestId, authentication, forceRefresh);
+    return token;
   });
   ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
     try {
@@ -541,6 +550,8 @@ export function registerMainHandlers() {
           console.error('[lint-process] error:', err);
           clearTimeout(timeoutHandle);
           reject({ error: err.toString() });
+          process?.kill();
+          process = null;
         });
 
         process.postMessage({ documentContent, rulesetPath });
@@ -549,8 +560,10 @@ export function registerMainHandlers() {
   );
 
   ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
-    const snippet = new HTTPSnippet(options.har as any);
-    return snippet.convert(options.target, options.client) || '';
+    return convertHarRequestKeepingMask(
+      options.har as any,
+      har => new HTTPSnippet(har).convert(options.target, options.client) || '',
+    );
   });
 
   ipcMainHandle('getCodeSnippetTargets', async () => {
@@ -559,19 +572,19 @@ export function registerMainHandlers() {
 
   ipcMainHandle(
     'exportHarWithRequest',
-    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean }) => {
+    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean; purpose?: RenderPurpose }) => {
       const request = await services.request.getById(options.requestId);
       if (!request) {
         throw new Error(`Request ${options.requestId} not found`);
       }
-      return exportHarWithRequest(request, options.environmentId, options.addContentLength);
+      return exportHarWithRequest(request, options.environmentId, options.addContentLength, options.purpose);
     },
   );
 
   ipcMainHandle(
     'exportHarRequest',
-    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) => {
-      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength);
+    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean; purpose?: RenderPurpose }) => {
+      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength, options.purpose);
     },
   );
 
@@ -626,7 +639,7 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const folderPath = path.join(app.getPath('userData'), options.folder);
+    const folderPath = resolveUserDataFolder(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
     try {
       return await readDir(_, { path: folderPath });
@@ -946,4 +959,5 @@ export function registerMainHandlers() {
   });
 
   registerPluginIpcHandlers();
+  registerTemplatingDbAuthIpcHandler();
 }

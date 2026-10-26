@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useId, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -23,6 +23,7 @@ export interface SelectModalHandle {
 
 export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
+  const formId = useId();
   const [state, setState] = useState<SelectModalOptions>({
     message: null,
     options: [],
@@ -45,13 +46,26 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
   );
   const { message, title, options, value, onDone } = state;
 
+  const handleDone = () => {
+    modalRef.current?.hide();
+    onDone?.(value);
+  };
+
   return (
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad" data-testid="global-select-modal">
         <p>{message}</p>
-        <div className="form-control form-control--outlined">
+        <form
+          id={formId}
+          className="form-control form-control--outlined"
+          onSubmit={e => {
+            e.preventDefault();
+            handleDone();
+          }}
+        >
           <select
+            autoFocus
             onChange={event => setState(state => ({ ...state, value: event.target.value }))}
             value={value ?? undefined}
           >
@@ -61,16 +75,10 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
               </option>
             ))}
           </select>
-        </div>
+        </form>
       </ModalBody>
       <ModalFooter>
-        <button
-          className="btn"
-          onClick={() => {
-            modalRef.current?.hide();
-            onDone?.(value);
-          }}
-        >
+        <button type="submit" form={formId} className="btn">
           Done
         </button>
       </ModalFooter>

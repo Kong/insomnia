@@ -115,7 +115,7 @@ async function addAccessTokenGitCredential(insomnia: InsomniaApp) {
 
 async function createGitDesignDocument(insomnia: InsomniaApp, page: Page, projectName: string) {
   await insomnia.navigationSidebar.selectProjectDropdownOption({
-    actionName: 'Document',
+    actionName: 'API Collection',
     projectName,
   });
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Lint Test Spec');
@@ -131,23 +131,51 @@ async function createGitDesignDocument(insomnia: InsomniaApp, page: Page, projec
   await expect.soft(page.locator('.pane-one').getByTestId('CodeEditor')).toContainText('openapi: 3.0');
 }
 
+// Mirrors models.gitRepository.getGitRepoFolderName()'s safety check on
+// `folderSlug` before baking it into a filesystem path.
+const SAFE_FOLDER_SLUG_PATTERN = /^[a-z0-9-]+$/;
+
 /**
  * Find the RepoFileWatcher mirror directory for the first GitRepository in
  * `dataPath`.  Polls for up to 6 seconds because NeDB flushes to disk
  * asynchronously after the project is created.
+ *
+ * Mirrors the app's own path resolution (see `getRepoBaseDir` /
+ * `models.gitRepository.getGitRepoFolderName`): a user-chosen `directory`
+ * wins when set; otherwise the managed folder is named `git_<slug>_<hex>`
+ * once a `folderSlug` has been recorded (set at clone time, or by the
+ * one-time startup backfill for older repos), falling back to the bare id
+ * only when neither applies.
  */
 async function gitRepoMirrorPath(dataPath: string): Promise<string> {
   const dbPath = path.join(dataPath, 'insomnia.GitRepository.db');
   for (let attempt = 0; attempt < 30; attempt++) {
     try {
       const content = await fs.promises.readFile(dbPath, 'utf8');
-      const repos = content
-        .split('\n')
-        .filter(Boolean)
-        .map((l: string) => JSON.parse(l))
-        .filter((r: any) => !r.$$deleted);
+      // NeDB's on-disk format is an append-only log: an update appends a new
+      // line for the same `_id` rather than rewriting it in place (e.g. the
+      // folderSlug update that follows creation). Replay all lines in order,
+      // keyed by `_id`, so the last write for a given repo wins.
+      const byId = new Map<string, any>();
+      for (const line of content.split('\n')) {
+        if (!line) {
+          continue;
+        }
+        const doc = JSON.parse(line);
+        byId.set(doc._id, doc);
+      }
+      const repos = [...byId.values()].filter((r: any) => !r.$$deleted);
       if (repos.length > 0) {
-        return path.join(dataPath, 'version-control', 'git', repos[0]._id);
+        const repo = repos[0];
+        if (repo.directory) {
+          return repo.directory;
+        }
+        const slug = repo.folderSlug;
+        const folderName =
+          typeof slug === 'string' && SAFE_FOLDER_SLUG_PATTERN.test(slug)
+            ? `git_${slug}_${(repo._id as string).replace(/^git_/, '')}`
+            : repo._id;
+        return path.join(dataPath, 'version-control', 'git', folderName);
       }
     } catch {
       // file not yet written
@@ -187,8 +215,8 @@ test.describe('Custom Spectral Lint Rules', () => {
     await insomnia.relaunch();
 
     // Re-navigate to the same design document after relaunch. The workspace is
-    // created with the default name 'My Design Document'.
-    await insomnia.page.getByLabel('My Design Document').first().click();
+    // created with the default name 'My API Collection'.
+    await insomnia.page.getByLabel('My API Collection').first().click();
 
     await expect
       .soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' }))
@@ -215,7 +243,7 @@ test.describe('Custom Spectral Lint Rules', () => {
     await expect.soft(insomnia.page.getByText('No lint problems')).toBeVisible({ timeout: 15_000 });
 
     await insomnia.relaunch();
-    await insomnia.page.getByLabel('My Design Document').first().click();
+    await insomnia.page.getByLabel('My API Collection').first().click();
 
     await expect.soft(insomnia.page.getByText('Default OAS Ruleset')).toBeVisible({ timeout: 15_000 });
     await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeHidden();
@@ -236,7 +264,7 @@ test.describe('Custom Spectral Lint Rules', () => {
     await expect.soft(insomnia.page.getByText('Invalid Spectral Ruleset', { exact: true })).toBeVisible({
       timeout: 10_000,
     });
-    await insomnia.page.getByRole('button', { name: 'Ok' }).click();
+    await insomnia.page.getByRole('dialog', { name: 'Modal' }).getByRole('button', { name: 'Ok' }).click();
 
     // Default ruleset should still be active; no custom upload button state change.
     await expect.soft(insomnia.page.getByText('Default OAS Ruleset')).toBeVisible();
@@ -270,7 +298,7 @@ test.describe('Custom Spectral Lint Rules', () => {
 
     test('upload custom ruleset in a synced design project', async ({ page, insomnia }) => {
       await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
 
       await uploadRuleset(insomnia, page);
 
@@ -302,14 +330,14 @@ test.describe('Custom Spectral Lint Rules', () => {
 
       // Machine A: upload and push.
       await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
       await uploadRuleset(insomnia, page);
       await commitAndPush(page, 'Add custom lint ruleset');
 
       // Machine B: fresh data path (simulates a different machine), pull, and verify.
       const machineB = await insomnia.launchClone(randomDataPath());
       await machineB.page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await machineB.page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await machineB.page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
       await expect
         .soft(machineB.page.getByRole('button', { name: 'View selected ruleset content' }))
         .toBeVisible({ timeout: 15_000 });
@@ -338,7 +366,7 @@ test.describe('Custom Spectral Lint Rules', () => {
 
       // User A: upload and push.
       await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
       await uploadRuleset(insomnia, page);
       await commitAndPush(page, 'User A: add custom lint ruleset');
 
@@ -348,7 +376,7 @@ test.describe('Custom Spectral Lint Rules', () => {
       });
 
       await userB.page.getByTestId('workspace-grid').getByLabel('Design Project').click();
-      await userB.page.waitForURL(/\/workspace\/.+\/spec/, { timeout: 30_000 });
+      await userB.page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
 
       await expect
         .soft(userB.page.getByRole('button', { name: 'View selected ruleset content' }))

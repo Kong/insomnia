@@ -88,6 +88,80 @@ describe('RepoFileWatcher orphan reconciliation', () => {
   });
 });
 
+describe('RepoFileWatcher deleted-folder resurrection', () => {
+  let repoDir: string;
+  let registry: RepoFileWatcherRegistry;
+
+  beforeEach(async () => {
+    await db.init({ inMemoryOnly: true }, true);
+    repoDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-repo-watcher-resurrect-'));
+    registry = makeRegistry();
+  });
+
+  afterEach(async () => {
+    registry.stopAll();
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    vi.clearAllMocks();
+  });
+
+  const folderExists = (dir: string) =>
+    fs.promises
+      .access(dir)
+      .then(() => true)
+      .catch(() => false);
+
+  // Regression: a repo folder renamed/moved/deleted outside Insomnia must stay
+  // gone. Previously, flushWorkspacesToDisk() — which every git-status poll
+  // triggers via flushNow(), and every DB edit triggers via its debounced
+  // listener — unconditionally `mkdir -p`d the repo's base directory before
+  // writing, silently resurrecting it as an empty folder with no relocate/
+  // reclone action from the user at all.
+  it('does not resurrect the repo folder via flushNow() after it is deleted externally', async () => {
+    const workspace = await createWorkspaceWithMeta('insomnia.wrk_local.yaml', Date.now());
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    expect(await folderExists(repoDir)).toBe(true);
+
+    // Simulate the user deleting/renaming the folder outside Insomnia.
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    expect(await folderExists(repoDir)).toBe(false);
+
+    // Mirrors gitStatusAction's status-poll flush — the passive trigger that
+    // used to resurrect the folder with no user action at all.
+    await registry.flushNow(REPO_ID);
+
+    expect(await folderExists(repoDir)).toBe(false);
+    // The workspace itself must survive too — it wasn't actually deleted, its
+    // folder was just temporarily unavailable.
+    expect(await services.workspace.getById(workspace._id)).not.toBeNull();
+  });
+
+  // Regression: the content-hash dedup cache only reflects "has the DB
+  // changed since our last write", not "does the write still exist on disk".
+  // Once the folder comes back (e.g. via relocate/adopt), a flush must still
+  // restore its content even though the DB itself never changed — previously
+  // it stayed missing indefinitely because the unchanged hash short-circuited
+  // the write.
+  it('restores workspace content once the folder reappears, even though the DB never changed', async () => {
+    // `null` = never-synced-yet (local-only) — preserved and written to disk,
+    // rather than treated as "was synced, now missing on disk → orphaned".
+    await createWorkspaceWithMeta('insomnia.wrk_local.yaml', null);
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    const filePath = path.join(repoDir, 'insomnia.wrk_local.yaml');
+    expect(await folderExists(filePath)).toBe(true);
+
+    await fs.promises.rm(repoDir, { recursive: true, force: true });
+    await registry.flushNow(REPO_ID);
+    expect(await folderExists(repoDir)).toBe(false);
+
+    // The folder comes back (e.g. the app relocated/adopted it back into
+    // place) — empty, since nothing recreated its contents yet.
+    await fs.promises.mkdir(repoDir, { recursive: true });
+    await registry.flushNow(REPO_ID);
+
+    expect(await folderExists(filePath)).toBe(true);
+  });
+});
+
 describe('RepoFileWatcher ruleset import problems', () => {
   let repoDir: string;
   let registry: RepoFileWatcherRegistry;

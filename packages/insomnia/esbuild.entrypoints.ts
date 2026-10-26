@@ -1,4 +1,5 @@
 import { type ChildProcess, spawn } from 'node:child_process';
+import fs from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 
@@ -14,7 +15,6 @@ const rendererToNodePlugin: Plugin = {
   },
 };
 
-import pkg from './package.json';
 interface Options {
   mode?: 'development' | 'production';
   autoRestart?: boolean;
@@ -24,15 +24,16 @@ const inspectPort = process.env.INSPECT_PORT || '5858';
 export default async function build(options: Options) {
   const mode = options.mode || 'production';
   const __DEV__ = mode !== 'production';
-  const PORT = pkg.dev['dev-server-port'];
   const autoRestart = options.autoRestart || false;
+
+  if (__DEV__) {
+    try { fs.unlinkSync(path.join(__dirname, '.vite-port')); } catch {}
+  }
 
   const outdir = __DEV__ ? path.join(__dirname, 'src') : path.join(__dirname, 'build');
 
   const env: Record<string, string> = __DEV__
     ? {
-        'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}`),
-        'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(`http://localhost:${PORT}/hidden-window.html`),
         'process.env.NODE_ENV': JSON.stringify('development'),
         'process.env.INSOMNIA_ENV': JSON.stringify('development'),
         'process.env.BUILD_DATE': JSON.stringify(new Date()),

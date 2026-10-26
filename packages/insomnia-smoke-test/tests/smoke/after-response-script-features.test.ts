@@ -6,7 +6,11 @@ import { test } from '../../playwright/test';
 test.describe('after-response script features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('all', async ({ page, app, insomnia }) => {
+  test('after-response scripts: transient vars, assertions, and environment/global persistence', async ({
+    page,
+    app,
+    insomnia,
+  }) => {
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
@@ -81,8 +85,8 @@ test.describe('after-response script features tests', () => {
     await expect.soft(statusTag1).toContainText('200 OK');
 
     // verify persisted environment
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     const responseBody = page.getByRole('dialog').getByTestId('CodeEditor').locator('.CodeMirror-line');
     const rows1 = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows1.join(' '));
@@ -100,9 +104,7 @@ test.describe('after-response script features tests', () => {
     await page.locator('body').click();
     await insomnia.navigationSidebar.clickRequestOrFolder('persist global environment');
     // activate global sub environment
-    await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a project environment').click();
-    await page.getByRole('option', { name: 'Script Environment' }).click();
+    await page.getByLabel('Select a Project Environment').click();
     await page.getByRole('option', { name: 'Sub Script Env' }).click();
     await page.locator('body').click();
     // send
@@ -119,8 +121,9 @@ test.describe('after-response script features tests', () => {
     await page.getByText('log: globals sub').click();
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
-    await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage project environment').click();
+    await page.getByLabel('Select a Project Environment').click();
+    await page.getByRole('option', { name: 'Script Environment', exact: true }).hover();
+    await page.getByLabel('Edit Script Environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
     let globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     let globalSubRows = await globalSubEditor.allInnerTexts();
@@ -139,5 +142,45 @@ test.describe('after-response script features tests', () => {
       __env_source: 'base',
       __fromBaseGlobals: 'selectedBaseGlobal',
     });
+  });
+
+  test('insomnia.expect covers each matcher (equal/property/lengthOf/include/within/keys) and test.skip is reported', async ({
+    page,
+    app,
+    insomnia,
+  }) => {
+    const text = await loadFixture('after-response-collection.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+    const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+    await insomnia.navigationSidebar.clickRequestOrFolder('assertion matchers with skip');
+
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify response
+    await expect.soft(statusTag).toContainText('200 OK');
+
+    // verify
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Tests' }).click();
+    const responsePane = page.getByTestId('response-pane');
+
+    await expect.soft(responsePane).toContainText('PASSequal matcher passes');
+    await expect.soft(responsePane).toContainText('PASSproperty matcher passes');
+    await expect.soft(responsePane).toContainText('PASSlengthOf matcher passes');
+    await expect.soft(responsePane).toContainText('PASSinclude matcher passes');
+    await expect.soft(responsePane).toContainText('PASSwithin matcher passes');
+    await expect.soft(responsePane).toContainText('PASSkeys matcher passes');
+    await expect
+      .soft(responsePane)
+      .toContainText(
+        'FAILequal matcher fails | error: AssertionError: expected 200 to equal 199 | ACTUAL: 200 | EXPECTED: 199',
+      );
+    await expect.soft(responsePane).toContainText('SKIPskipped test');
   });
 });

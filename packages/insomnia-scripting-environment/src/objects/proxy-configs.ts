@@ -313,6 +313,23 @@ export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
     }
     return null;
   }
+
+  override toObject(excludeDisabled?: boolean, _caseSensitive?: boolean, multiValue?: boolean, _sanitizeKeys?: boolean) {
+    const obj: Record<string, any> = Object.create(null);
+    this.list.forEach(proxyConfig => {
+      if (excludeDisabled && proxyConfig.disabled) {
+        return;
+      }
+      const value = proxyConfig.toJSON();
+      if (multiValue && proxyConfig.match in obj) {
+        const existing = obj[proxyConfig.match];
+        obj[proxyConfig.match] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+      } else {
+        obj[proxyConfig.match] = value;
+      }
+    });
+    return obj;
+  }
 }
 
 /** @ignore */

@@ -1,4 +1,5 @@
 import * as apiSpecService from './api-spec';
+import * as appDataService from './app-data';
 import * as caCertificateService from './ca-certificate';
 import * as clientCertificateService from './client-certificate';
 import * as cloudCredentialService from './cloud-credential';
@@ -81,6 +82,7 @@ export const servicesNodeImpl = {
   grpcRequestMeta: grpcRequestMetaService,
   workspace: workspaceService,
   workspaceMeta: workspaceMetaService,
+  appData: appDataService,
   mockRoute: mockRouteService,
   mockServer: mockServerService,
   unitTest: unitTestService,

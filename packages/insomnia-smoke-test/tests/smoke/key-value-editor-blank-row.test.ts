@@ -9,7 +9,9 @@ import { test } from '../../playwright/test';
 // empty). Typing commits it as a real pair and a fresh blank row takes its place.
 
 test.describe('Key-value editor blank row', () => {
-  test('request headers: blank row is always shown, is not persisted while empty, and commits on typing', async ({ page }) => {
+  test('request headers: blank row is always shown, is not persisted while empty, and commits on typing', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
     await page.getByRole('tab', { name: 'Headers' }).click();
 
@@ -66,8 +68,8 @@ test.describe('Key-value editor blank row', () => {
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
     // Open the table editor for the ExampleA sub-environment.
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
 
@@ -84,5 +86,56 @@ test.describe('Key-value editor blank row', () => {
     // The blank row commits and a fresh blank row takes its place.
     await expect.soft(kvTable.getByRole('option')).toHaveCount(optionsBefore + 1);
     await expect.soft(kvTable).toContainText('blankRowKey');
+  });
+
+  test('environment table editor: deleting a committed row does not leave stale text on the blank row', async ({
+    page,
+    app,
+  }) => {
+    const text = await loadFixture('environments.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('button', { name: 'Manage API collection environments' }).click();
+    await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
+    await page.getByRole('button', { name: 'Table Edit' }).click();
+
+    const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
+    await expect.soft(kvTable).toContainText('exampleString');
+    const optionsBefore = await kvTable.getByRole('option').count();
+
+    // Commit two new pairs, one after another, via the trailing blank row. Each commit is
+    // awaited (a fresh blank row appears) before typing into the next one, so the second
+    // keystroke does not land in the still-committing first row.
+    await kvTable.getByRole('option').last().getByTestId('OneLineEditor').first().locator('.CodeMirror').click();
+    await page.keyboard.type('firstNewKey');
+    await expect.soft(kvTable.getByRole('option')).toHaveCount(optionsBefore + 1);
+
+    await kvTable.getByRole('option').last().getByTestId('OneLineEditor').first().locator('.CodeMirror').click();
+    await page.keyboard.type('secondNewKey');
+    await expect.soft(kvTable.getByRole('option')).toHaveCount(optionsBefore + 2);
+
+    // Delete the first of the two new rows (a PromptButton: first click arms it, second confirms).
+    const firstRow = kvTable.getByRole('option').filter({ hasText: 'firstNewKey' });
+    const deleteButton = firstRow.getByRole('button', { name: 'Delete Row' });
+    await deleteButton.click();
+    await deleteButton.click();
+
+    // The deleted row is gone, the other committed row remains, and the trailing blank row
+    // is still present and empty (it must not resurrect the deleted row's text).
+    await expect.soft(kvTable).not.toContainText('firstNewKey');
+    await expect.soft(kvTable).toContainText('secondNewKey');
+
+    // Typing into the blank row must produce only the new text, confirming its id/editor
+    // instance was not silently reused from the deleted row.
+    await kvTable.getByRole('option').last().getByTestId('OneLineEditor').first().locator('.CodeMirror').click();
+    await page.keyboard.type('thirdNewKey');
+    await expect.soft(kvTable).not.toContainText('firstNewKey');
+    await expect.soft(kvTable).toContainText('thirdNewKey');
   });
 });

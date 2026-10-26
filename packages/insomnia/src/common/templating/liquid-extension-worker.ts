@@ -5,9 +5,11 @@ import { Tag } from 'liquidjs';
 import type { Plugin } from '~/common/plugins/types';
 
 import packageJson from '../../../package.json';
+import { CONFIDENTIAL_MASK_VALUE, isExternalVaultTag, shouldMaskExternalVaultTag } from './confidential-value-policy';
 import { resolveArg } from './resolve-arg';
 import { tokenizeArgs } from './tokenize-args';
 import type {
+  AppPromptOptions,
   BaseRenderContext,
   NodeCurlRequestOptions,
   PluginTemplateTag,
@@ -36,9 +38,18 @@ export function decodeEncodingWorker<T>(value: T) {
   return value;
 }
 
+// Set by each JS realm that calls fetchFromTemplateWorkerDatabase, since none of them share
+// module state with each other.
+let templatingDbAuthToken: string | null = null;
+
+export const setTemplatingDbAuthToken = (token: string | null) => {
+  templatingDbAuthToken = token;
+};
+
 export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths, body: any) => {
   const resp = await fetch('insomnia-templating-worker-database://' + path, {
     method: 'post',
+    headers: templatingDbAuthToken ? { 'x-insomnia-templating-auth': templatingDbAuthToken } : undefined,
     body: JSON.stringify(body),
   });
   let result;
@@ -81,10 +92,8 @@ export function createLiquidTagWorker(
           alert: async (title: string, message?: string) =>
             fetchFromTemplateWorkerDatabase('app.alert', { title, message }),
           dialog: async (title: string) => fetchFromTemplateWorkerDatabase('app.dialog', { title }),
-          prompt: async (
-            title: string,
-            options?: { label?: string; defaultValue?: string; submitName?: string; inputType?: string },
-          ) => fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
+          prompt: async (title: string, options?: AppPromptOptions) =>
+            fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
           getPath: async (name: string) => fetchFromTemplateWorkerDatabase('app.getPath', { name }),
           getInfo: () => ({ version: packageJson.version, platform }),
           showSaveDialog: async (options?: { defaultPath?: string }) =>
@@ -174,8 +183,26 @@ export function createLiquidTagWorker(
         },
       };
 
+      // Short-circuit external vault before any provider fetch when the policy says mask.
+      const renderSettings = renderContext.getSettings?.();
+      if (shouldMaskExternalVaultTag({ pluginName: plugin.name, tagName: ext.name, renderPurpose, settings: renderSettings })) {
+        emitter.write(CONFIDENTIAL_MASK_VALUE);
+        return;
+      }
+
       const result = await Promise.resolve(ext.run(helperContext, ...args));
-      emitter.write(result == null ? '' : String(result));
+      const resultStr = result == null ? '' : String(result);
+      // Register external vault tag results for timeline redaction when purpose='send'.
+      // The collector cannot cross the structured-clone Worker boundary, so we postMessage
+      // the value back to the renderer which holds the real collector.
+      // renderContext.getRenderId() is set by renderInWorker to correlate the message.
+      if (isExternalVaultTag(plugin.name, ext.name) && resultStr.length > 0) {
+        const renderId = (renderContext as any).getRenderId?.();
+        if (renderId) {
+          (globalThis as any).postMessage({ type: 'sensitiveValue', id: renderId, value: resultStr });
+        }
+      }
+      emitter.write(resultStr);
     }
   }
 

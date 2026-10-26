@@ -194,6 +194,201 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Prompt Tag Masked
+    meta:
+      id: req_05ce27906a824071ad138cb6d99248e1
+      created: 1748335221312
+      modified: 1748336216272
+      isPrivate: false
+      sortKey: -1748335221313
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% prompt 'masked prompt test', 'Enter secret', '', 'masked-prompt-key', true, false %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: File Tag Error
+    meta:
+      id: req_05ce27906a824071ad138cb6d99248f2
+      created: 1748335221312
+      modified: 1748336216272
+      isPrivate: false
+      sortKey: -1748335221314
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% file '/path/does/not/exist/nope.txt' %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Cookie Tag Error
+    meta:
+      id: req_05ce27906a824071ad138cb6d99248g3
+      created: 1748335221312
+      modified: 1748336216272
+      isPrivate: false
+      sortKey: -1748335221315
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% cookie 'http://127.0.0.1:4010/echo', 'does-not-exist' %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/pets/1
+    name: Response Trigger Base
+    meta:
+      id: req_60295920e8a9459fb32cacb739a261f6
+      created: 1748331328603
+      modified: 1748331472232
+      isPrivate: false
+      sortKey: -1748331328604
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Response Trigger Never
+    meta:
+      id: req_60295920e8a9459fb32cacb739a261f7
+      created: 1748331328603
+      modified: 1748331472232
+      isPrivate: false
+      sortKey: -1748331328605
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% response 'body', 'req_60295920e8a9459fb32cacb739a261f6', 'b64::JC5pZA==::46b', 'never', 60 %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Response Trigger No History
+    meta:
+      id: req_60295920e8a9459fb32cacb739a261f8
+      created: 1748331328603
+      modified: 1748331472232
+      isPrivate: false
+      sortKey: -1748331328606
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% response 'body', 'req_60295920e8a9459fb32cacb739a261f6', 'b64::JC5pZA==::46b', 'no-history', 60 %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Response Trigger When Expired
+    meta:
+      id: req_60295920e8a9459fb32cacb739a261f9
+      created: 1748331328603
+      modified: 1748331472232
+      isPrivate: false
+      sortKey: -1748331328607
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% response 'body', 'req_60295920e8a9459fb32cacb739a261f6', 'b64::JC5pZA==::46b', 'when-expired', 0 %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Response Trigger Always
+    meta:
+      id: req_60295920e8a9459fb32cacb739a261fa
+      created: 1748331328603
+      modified: 1748331472232
+      isPrivate: false
+      sortKey: -1748331328608
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% response 'body', 'req_60295920e8a9459fb32cacb739a261f6', 'b64::JC5pZA==::46b', 'always', 60 %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:

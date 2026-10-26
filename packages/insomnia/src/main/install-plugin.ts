@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 
 import { app } from 'electron';
 import { services } from 'insomnia-data';
+import { ProxyScopes } from 'insomnia-data/common';
 
 import { validatePluginName } from '~/common/utils/plugin-name';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
@@ -212,34 +213,48 @@ export async function getPluginInfo(lookupName: string, allowScopedPackageNames 
 
   console.log('[plugins] Fetching module info from npm');
 
-  const registryUrl = await getRegistryUrl();
-  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl]);
-
-  let yarnOutput;
+  // Run yarn in a directory we control: inheriting the Electron process
+  // working directory lets yarn read an unrelated package.json there, and a
+  // missing license field turns into a fatal "No license field" warning.
+  const infoDir = await mkdtemp(path.resolve(tmpdir(), `insomnia-plugin-info-${Date.now()}`));
   try {
-    yarnOutput = JSON.parse(stdout);
-  } catch (err) {
-    throw new Error(`Invalid JSON received from yarn: ${(err as Error).message}`);
-  }
+    await writeFile(
+      path.resolve(infoDir, 'package.json'),
+      JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
+      'utf8',
+    );
 
-  const data = yarnOutput.data;
-  if (!data || typeof data !== 'object') {
-    throw new Error(`Unexpected yarn output structure`);
-  }
+    const registryUrl = await getRegistryUrl();
+    const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl], infoDir);
 
-  if (!data.insomnia) {
-    throw new Error(`Package "${lookupName}" is not an Insomnia plugin (missing "insomnia" attribute)`);
-  }
+    let yarnOutput;
+    try {
+      yarnOutput = JSON.parse(stdout);
+    } catch (err) {
+      throw new Error(`Invalid JSON received from yarn: ${(err as Error).message}`);
+    }
 
-  return {
-    insomnia: data.insomnia,
-    name: data.name,
-    version: data.version,
-    dist: {
-      shasum: data.dist.shasum,
-      tarball: data.dist.tarball,
-    },
-  };
+    const data = yarnOutput.data;
+    if (!data || typeof data !== 'object') {
+      throw new Error(`Unexpected yarn output structure`);
+    }
+
+    if (!data.insomnia) {
+      throw new Error(`Package "${lookupName}" is not an Insomnia plugin (missing "insomnia" attribute)`);
+    }
+
+    return {
+      insomnia: data.insomnia,
+      name: data.name,
+      version: data.version,
+      dist: {
+        shasum: data.dist.shasum,
+        tarball: data.dist.tarball,
+      },
+    };
+  } finally {
+    await rm(infoDir, { recursive: true, force: true });
+  }
 }
 
 /**
@@ -430,9 +445,16 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
     yarnEnv.NODE_EXTRA_CA_CERTS = extraCerts;
   }
 
-  // Add proxy settings if enabled
+  // Add proxy settings if enabled. Yarn runs as a separate child process — it never touches
+  // Electron's session, so it needs its own HTTP_PROXY/HTTPS_PROXY env vars (main/proxy.ts's
+  // session-level bypass rules don't apply here). The default public npm registry is treated
+  // like Insomnia's other first-party integrations: bypassed unless `proxyScope` is 'all'. A
+  // custom registry is a user-configured target, so it always respects the proxy setting.
   if (settings.proxyEnabled === true) {
-    Object.assign(yarnEnv, buildProxyEnv(settings));
+    const usingDefaultRegistry = (await getRegistryUrl()) === DEFAULT_NPM_REGISTRY;
+    if (settings.proxyScope === ProxyScopes.all || !usingDefaultRegistry) {
+      Object.assign(yarnEnv, buildProxyEnv(settings));
+    }
   }
 
   if (isDevelopment()) {

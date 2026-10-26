@@ -16,6 +16,7 @@ import { focusUrlBarOnNextRequest } from '~/ui/components/request-url-bar-focus'
 import { trackCioEvent } from '~/ui/hooks/use-cio';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
+import { recordAction } from '~/ui/utils/record-action';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 // Request types that are edited in the RequestPane / RequestUrlBar and should focus the URL on create.
@@ -134,6 +135,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     project_id: projectId,
     collection_id: workspaceId,
     request_key_id: activeRequestId,
+    request_url_length: req?.url?.length || 0,
     has_prescript: !!req?.preRequestScript,
     has_postscript: !!req?.afterResponseScript,
     request_header_names: req?.headers?.map(h => h.name) || [],
@@ -162,6 +164,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   // Send to Customer.io directly so the event is tied to the identified user's
   // email-bearing profile (only fires when logged in). See INS-2678.
   trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
+
+  recordAction('request_created');
 
   return redirect(
     href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {

@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { Overlay, useOverlay } from 'react-aria';
 import { Button, Dialog, Heading, Modal as RAModal, ModalOverlay } from 'react-aria-components';
 
-import { Icon } from '~/basic-components/icon';
+import { Icon } from './icon';
 
 interface Props {
   isOpen: boolean;

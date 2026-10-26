@@ -6,23 +6,18 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-workspace-dropdown';
 
 import { Icon } from '../../icon';
-import {
-  ACTIVE_BORDER_CLASS,
-  GUIDE_LINE_CSS,
-  ICON_CLASS,
-  ROW_CLASS,
-  TOGGLE_BTN_CLASS,
-} from './project-navigation-sidebar-utils';
+import { ACTIVE_BORDER_CLASS, GUIDE_LINE_CSS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 import { type WorkspaceFlatItem } from './types';
 
 interface WorkspaceNodeProps {
   item: WorkspaceFlatItem;
   onToggle: (workspaceId: string) => void;
-
   sortOrder: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
   highlighted?: boolean;
   nodeRef?: Ref<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
+  onRename: () => void;
+  onDelete: () => void;
 }
 
 export const WorkspaceNode = ({
@@ -32,11 +27,13 @@ export const WorkspaceNode = ({
   onSortOrderChange,
   highlighted,
   nodeRef,
+  onRename,
+  onDelete,
 }: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId, hasUncommittedChanges, hasUnpushedChanges } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-  const isCollection = workspaceScope === 'collection';
+  const isCollection = workspaceScope === 'collection' || workspaceScope === 'design';
 
   return (
     <div
@@ -83,6 +80,8 @@ export const WorkspaceNode = ({
           onSortOrderChange={onSortOrderChange}
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
+          onRename={onRename}
+          onDelete={onDelete}
         />
       </div>
     </div>

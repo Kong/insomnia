@@ -1,10 +1,13 @@
-import type { User, UserEncryptionKeys, UserOnboarding } from '@getinsomnia/insomnia-v3-fetch';
-import { UserOnboardingFirstRequestTreatmentEnum } from '@getinsomnia/insomnia-v3-fetch';
+import type { CurrentUserActionCreate, User, UserEncryptionKeys, UserOnboarding } from '@getinsomnia/insomnia-v3-fetch';
+import {
+  CurrentUserActionCreateActionTypeEnum,
+  UserOnboardingFirstRequestTreatmentEnum,
+} from '@getinsomnia/insomnia-v3-fetch';
 
 import { fetch } from './fetch';
 
-export type { User, UserEncryptionKeys, UserOnboarding };
-export { UserOnboardingFirstRequestTreatmentEnum };
+export type { CurrentUserActionCreate, User, UserEncryptionKeys, UserOnboarding };
+export { CurrentUserActionCreateActionTypeEnum, UserOnboardingFirstRequestTreatmentEnum };
 
 // POST /auth/logout
 export const logout = ({ sessionId }: { sessionId: string }) => {
@@ -40,6 +43,25 @@ export const latchRequestThresholdReached = async ({ sessionId }: { sessionId: s
     method: 'POST',
     path: '/v3/users/me/onboarding/request-threshold',
     sessionId,
+  });
+};
+
+// POST /v3/users/me/actions
+export const recordUserAction = async ({
+  sessionId,
+  eventId,
+  actionType,
+}: {
+  sessionId: string;
+  eventId: string;
+  actionType: CurrentUserActionCreateActionTypeEnum;
+}): Promise<void> => {
+  const data: CurrentUserActionCreate = { event_id: eventId, action_type: actionType };
+  return fetch<void>({
+    method: 'POST',
+    path: '/v3/users/me/actions',
+    sessionId,
+    data,
   });
 };
 
@@ -79,6 +101,29 @@ export const getUserFiles = async ({ sessionId }: { sessionId: string }) => {
   return fetch<RemoteFile[]>({
     method: 'GET',
     path: '/v1/user/files',
+    sessionId,
+  });
+};
+
+// GET /v1/user/entitlements
+export interface Entitlement {
+  /** `${featureName}_${entitlementKey}`, e.g. `konnectControlPlanes_default`. */
+  featureKey: string;
+  type: 'metered';
+  hasAccess: boolean;
+  /** `null` means unlimited. */
+  allowance: number | null;
+}
+
+export const KONNECT_CONTROL_PLANES_FEATURE = 'konnectControlPlanes';
+export const KONNECT_CONTROL_PLANES_FEATURE_KEY = `${KONNECT_CONTROL_PLANES_FEATURE}_default`;
+
+/** An account without the feature gets `{ entitlements: [] }` rather than an entry with `hasAccess: false`. */
+export const getUserEntitlements = async ({ sessionId, feature }: { sessionId: string; feature?: string }) => {
+  const query = feature ? `?feature=${encodeURIComponent(feature)}` : '';
+  return fetch<{ entitlements: Entitlement[] }>({
+    method: 'GET',
+    path: `/v1/user/entitlements${query}`,
     sessionId,
   });
 };

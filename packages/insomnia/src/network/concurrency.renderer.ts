@@ -11,6 +11,7 @@ import type {
 } from 'insomnia-data';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
+import { QUICKJS_SANDBOX_ENABLED, runScriptInQuickJs } from '../scripting/run-script-quickjs';
 import { cancellableExecution } from './cancellation.renderer';
 
 export interface ExecuteScriptContext {
@@ -59,10 +60,14 @@ async function asyncWorker(arg: Task): Promise<any> {
   const timeoutPromise = new Promise<{ error: string }>(resolve =>
     setTimeout(resolve, timeoutValue, { error: `Executing script timeout: ${timeoutValue}` }),
   );
-  const executionPromise = Promise.race([
-    window.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context }),
-    timeoutPromise,
-  ]);
+  // Proof of concept: opt-in path that runs the script in a QuickJS-WASM sandbox instead of the
+  // hidden Electron BrowserWindow. Defaults to off (see settings.useQuickJsScriptSandbox), and
+  // gated behind QUICKJS_SANDBOX_ENABLED while sandbox support is paused.
+  const useQuickJsSandbox = QUICKJS_SANDBOX_ENABLED && arg.context.settings.useQuickJsScriptSandbox;
+  const runScript = useQuickJsSandbox
+    ? runScriptInQuickJs({ script: arg.script, context: arg.context })
+    : window.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context });
+  const executionPromise = Promise.race([runScript, timeoutPromise]);
   const result = await cancellableExecution({ id: arg.context.request._id, fn: executionPromise });
   return result;
 }

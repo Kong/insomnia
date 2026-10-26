@@ -122,6 +122,7 @@ export const canSync = false;
 
 export const isCloudCredential = (model: Pick<BaseModel, 'type'>): model is CloudProviderCredential =>
   model.type === type;
+export const isCloudCredentialId = (id: string): boolean => id.startsWith(`${prefix}_`);
 
 export function init(): Partial<CloudProviderCredential> {
   return {

@@ -1,28 +1,33 @@
 import { services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
-import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
+import { Button, Dialog, Form, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { database } from '~/common/database';
 import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
+import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 
 export const KonnectSettingsModal = ({
   onClose,
-  syncKonnectProjectsAndNotifyRef,
   onDisconnect,
+  konnectSyncEnabled = true,
 }: {
   onClose: () => void;
-  syncKonnectProjectsAndNotifyRef: React.MutableRefObject<(konnectOrganizationId?: string | null) => Promise<void>>;
   onDisconnect?: () => void;
+  /** Whether the account holds the Konnect control-planes entitlement. Disables "Connect & Sync"
+   * when false, mirroring the sidebar's Sync button — connecting a PAT here would validate and
+   * store it but syncing still could not run. */
+  konnectSyncEnabled?: boolean;
 }) => {
   const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
 
   const [pat, setPat] = useState('');
+  const [connectedPat, setConnectedPat] = useState(''); // The last PAT known to be connected, so we can tell if pat state above was actually edited.
   const [isPatVisible, setIsPatVisible] = useState(false);
   // 'idle' | 'validating' | 'valid' | 'invalid'
   const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
@@ -54,6 +59,7 @@ export const KonnectSettingsModal = ({
       window.main.secretStorage.getSecret('konnectPat').then(secret => {
         if (secret) {
           setPat(secret);
+          setConnectedPat(secret);
         }
       });
     }
@@ -73,8 +79,9 @@ export const KonnectSettingsModal = ({
       return;
     }
     await window.main.secretStorage.setSecret('konnectPat', trimmed);
+    setConnectedPat(trimmed);
     patchSettings({ hasKonnectPat: true, konnectOrganizationId: orgId ?? null });
-    syncKonnectProjectsAndNotifyRef.current(orgId ?? null);
+    uiEventBus.emit(KONNECT_SYNC_TRIGGER, orgId ?? null);
     onClose();
   };
 
@@ -102,6 +109,7 @@ export const KonnectSettingsModal = ({
   };
 
   const hasStoredPat = settings.hasKonnectPat && status !== 'invalid';
+  const isPatUnchanged = hasStoredPat && pat.trim() === connectedPat.trim();
 
   return (
     <ModalOverlay
@@ -154,7 +162,13 @@ export const KonnectSettingsModal = ({
                   </div>
                 </>
               ) : (
-                <>
+                <Form
+                  className="contents"
+                  onSubmit={e => {
+                    e.preventDefault();
+                    handleConnect();
+                  }}
+                >
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1">
                       <label className="text-sm font-semibold" htmlFor="konnect-modal-pat">
@@ -164,6 +178,7 @@ export const KonnectSettingsModal = ({
                         Enter a Personal Access Token (PAT) to sync your Konnect control planes into Insomnia projects.
                       </p>
                       <button
+                        type="button"
                         className="w-fit text-sm text-(--hl) underline hover:opacity-80"
                         onClick={() => window.main.openInBrowser('https://cloud.konghq.com/global/account/tokens')}
                       >
@@ -172,6 +187,7 @@ export const KonnectSettingsModal = ({
                     </div>
                     <div className="relative">
                       <input
+                        autoFocus
                         id="konnect-modal-pat"
                         type={isPatVisible ? 'text' : 'password'}
                         className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1.5 pr-8 text-(--color-font) focus:border-(--hl-lg) focus:outline-hidden"
@@ -204,13 +220,18 @@ export const KonnectSettingsModal = ({
                         {validationError ?? 'Invalid PAT. Check your input and try again.'}
                       </p>
                     )}
+                    {!konnectSyncEnabled && (
+                      <p className="text-sm text-(--color-warning)">
+                        Your account does not have access to Konnect control planes.
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Button
+                      type="submit"
                       className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs) disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                      isDisabled={!pat.trim() || status === 'validating'}
-                      onPress={handleConnect}
+                      isDisabled={!pat.trim() || status === 'validating' || isPatUnchanged || !konnectSyncEnabled}
                     >
                       {status === 'validating' ? <Icon icon="spinner" className="animate-spin" /> : 'Connect & Sync'}
                     </Button>
@@ -224,7 +245,7 @@ export const KonnectSettingsModal = ({
                       </Button>
                     )}
                   </div>
-                </>
+                </Form>
               )}
             </div>
           )}

@@ -14,6 +14,7 @@ import {
 } from 'react-aria-components';
 
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
+import { purgeCachedEditorStates } from '~/ui/components/.client/codemirror/editor-state-cache';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { describeByteSize, generateId } from '../../../common/misc';
@@ -109,12 +110,17 @@ export const KeyValueEditor: FC<Props> = ({
   // held in state) so it only changes when the data actually changes. This keeps it in
   // sync with the async data updates - if it flipped eagerly the row the user just typed
   // into would briefly belong to no list and flicker.
+  // A fresh id is minted only once the previous one is committed (found in persistedItems) -
+  // never reused, even after that row is later deleted. Reclaiming a freed numeric slot would
+  // let a deleted row's id land back on the blank row, and since the row's key (and its
+  // OneLineEditor's key) is derived from that id, React would reuse the deleted row's DOM/editor
+  // instance instead of remounting it - leaving stale, uncommitted text on screen.
+  const blankIdRef = useRef(generateId('pair-blank'));
   const blankId = useMemo(() => {
-    let n = 0;
-    while (persistedItems.some(item => item.id === `pair-blank-${n}`)) {
-      n++;
+    if (persistedItems.some(item => item.id === blankIdRef.current)) {
+      blankIdRef.current = generateId('pair-blank');
     }
-    return `pair-blank-${n}`;
+    return blankIdRef.current;
   }, [persistedItems]);
   const blankPair = useMemo<Pair>(
     () => ({ id: blankId, name: '', value: '', description: '', disabled: false }),
@@ -174,6 +180,7 @@ export const KeyValueEditor: FC<Props> = ({
         <div className="relative flex h-full w-full flex-1 px-2">
           <OneLineEditor
             id={'key-value-editor__value' + pair.id}
+            historyKey={'key-value-editor__value' + pair.id}
             placeholder={valuePlaceholder || 'Value'}
             defaultValue={pair.value}
             readOnly
@@ -224,6 +231,7 @@ export const KeyValueEditor: FC<Props> = ({
           <div className="relative flex h-full w-full flex-1 px-2">
             <OneLineEditor
               id={'key-value-editor__name' + pair.id}
+              historyKey={'key-value-editor__name' + pair.id}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
               readOnly
@@ -235,6 +243,7 @@ export const KeyValueEditor: FC<Props> = ({
             <div className="relative flex h-full w-full flex-1 px-2">
               <OneLineEditor
                 id={'key-value-editor__description' + pair.id}
+                historyKey={'key-value-editor__description' + pair.id}
                 placeholder={descriptionPlaceholder || 'Description'}
                 defaultValue={pair.description || ''}
                 readOnly
@@ -255,25 +264,6 @@ export const KeyValueEditor: FC<Props> = ({
       );
     },
   });
-
-  /* When the user presses a letter key and then immediately presses the space bar.
-  The keydown event for the space key was stopped from propagating during the capture phase by the ListBox component
-  That is why the inner editor fails to respond to the immediate space press behavior. 
-  Here we add a wrapper to the outer ListBox and add a wrapper to the inner editor and listen to the keydown event in both wrapper
-  When the user presses the space key, we change the event.key property with non-breakable space in the outer wrapper
-  and change it back in the inner wrapper.
-  */
-  const onKeyDownOuter = useCallback<React.KeyboardEventHandler>(event => {
-    if (event.key === ' ') {
-      event.key = '\u00A0';
-    }
-  }, []);
-
-  const onKeyDownInner = useCallback<React.KeyboardEventHandler>(event => {
-    if (event.key === '\u00A0') {
-      event.key = ' ';
-    }
-  }, []);
 
   return (
     <Fragment>
@@ -321,6 +311,7 @@ export const KeyValueEditor: FC<Props> = ({
         <ListBox
           aria-label="Key-value pairs readonly"
           selectionMode="none"
+          disallowTypeAhead
           dependencies={[showDescription]}
           className="relative flex w-full flex-1 flex-col overflow-y-auto pt-1"
           items={initialReadOnlyItems}
@@ -335,6 +326,7 @@ export const KeyValueEditor: FC<Props> = ({
             let valueEditor = (
               <OneLineEditor
                 id={'key-value-editor__value' + pair.id}
+                historyKey={'key-value-editor__value' + pair.id}
                 placeholder={valuePlaceholder || 'Value'}
                 defaultValue={pair.value}
                 readOnly
@@ -383,6 +375,7 @@ export const KeyValueEditor: FC<Props> = ({
                 <div>
                   <OneLineEditor
                     id={'key-value-editor__name' + pair.id}
+                    historyKey={'key-value-editor__name' + pair.id}
                     placeholder={namePlaceholder || 'Name'}
                     defaultValue={pair.name}
                     readOnly
@@ -394,6 +387,7 @@ export const KeyValueEditor: FC<Props> = ({
                   <div>
                     <OneLineEditor
                       id={'key-value-editor__description' + pair.id}
+                      historyKey={'key-value-editor__description' + pair.id}
                       placeholder={descriptionPlaceholder || 'Description'}
                       defaultValue={pair.description || ''}
                       readOnly
@@ -421,7 +415,6 @@ export const KeyValueEditor: FC<Props> = ({
         </ListBox>
       )}
       <div
-        onKeyDownCapture={onKeyDownOuter}
         // Clicking anywhere on the blank row drops the cursor into its name editor so the
         // user can immediately start typing, unless they clicked directly on an editor or
         // control.
@@ -439,6 +432,7 @@ export const KeyValueEditor: FC<Props> = ({
         <ListBox
           aria-label="Key-value pairs"
           selectionMode="none"
+          disallowTypeAhead
           className="relative flex w-full flex-1 flex-col overflow-y-auto pt-1"
           dragAndDropHooks={dragAndDropHooks}
           dependencies={[upsertPair, showDescription, blankId]}
@@ -454,6 +448,7 @@ export const KeyValueEditor: FC<Props> = ({
             let valueEditor = (
               <OneLineEditor
                 id={'key-value-editor__value' + pair.id}
+                historyKey={'key-value-editor__value' + pair.id}
                 key={'key-value-editor__value' + pair.id + pair.disabled}
                 placeholder={valuePlaceholder || 'Value'}
                 defaultValue={pair.value}
@@ -537,10 +532,11 @@ export const KeyValueEditor: FC<Props> = ({
                 >
                   <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
                 </div>
-                <div onKeyDownCapture={onKeyDownInner}>
+                <div>
                   <OneLineEditor
                     ref={isBlank ? blankNameEditorRef : undefined}
                     id={'key-value-editor__name' + pair.id}
+                    historyKey={'key-value-editor__name' + pair.id}
                     key={'key-value-editor__name' + pair.id + pair.disabled}
                     placeholder={namePlaceholder || 'Name'}
                     defaultValue={pair.name}
@@ -557,11 +553,12 @@ export const KeyValueEditor: FC<Props> = ({
                     }}
                   />
                 </div>
-                <div onKeyDownCapture={onKeyDownInner}>{valueEditor}</div>
+                <div>{valueEditor}</div>
                 {showDescription && (
-                  <div onKeyDownCapture={onKeyDownInner}>
+                  <div>
                     <OneLineEditor
                       id={'key-value-editor__description' + pair.id}
+                      historyKey={'key-value-editor__description' + pair.id}
                       key={'key-value-editor__description' + pair.id + pair.disabled}
                       placeholder={descriptionPlaceholder || 'Description'}
                       defaultValue={pair.description || ''}
@@ -643,6 +640,12 @@ export const KeyValueEditor: FC<Props> = ({
                     confirmMessage=""
                     doneMessage=""
                     onClick={() => {
+                      // Drop the deleted row's cached undo history (keyed on pair.id)
+                      // so its ephemeral entries don't linger in the shared cache.
+                      const pairId = pair.id;
+                      if (pairId) {
+                        purgeCachedEditorStates(key => key.includes(pairId));
+                      }
                       onChange(persistedItems.filter(item => item.id !== pair.id));
                     }}
                   >

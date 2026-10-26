@@ -1431,6 +1431,73 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: get sendRequest error through callback and rejected await
+    meta:
+      id: req_ed3bbf137eb9410188c17da2a8403402
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
+      sortKey: -1636141014553
+    method: GET
+    body:
+      mimeType: application/json
+      text: "{}"
+    headers:
+      - name: Content-Type
+        value: application/json
+    scripts:
+      preRequest: |-
+        let errFromCallback;
+        await insomnia.sendRequest(
+                'http://127.0.0.1:1/unreachable',
+                (err, resp) => {
+                    errFromCallback = err;
+                }
+            );
+        console.log('errFromCallback: ' + String(errFromCallback));
+
+        let errFromAwait;
+        try {
+            await insomnia.sendRequest('http://127.0.0.1:1/unreachable');
+        } catch (e) {
+            errFromAwait = e;
+        }
+        console.log('errFromAwait: ' + String(errFromAwait));
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: request with undefined variable
+    meta:
+      id: req_3a9c1f7e6b2d4a8e9f0c1b2d3e4f5a6b
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
+      sortKey: -1636141014553
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "missingValue": "{{ _.missingVariable }}"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:

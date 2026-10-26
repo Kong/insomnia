@@ -1,4 +1,4 @@
-import type { RequestGroupMeta } from 'insomnia-data';
+import type { Query, RequestGroupMeta } from 'insomnia-data';
 import { database as db, models } from 'insomnia-data';
 
 const { type } = models.requestGroupMeta;
@@ -9,6 +9,10 @@ export function create(patch: Partial<RequestGroupMeta> = {}) {
   }
 
   return db.docCreate<RequestGroupMeta>(type, patch);
+}
+
+export function list(query?: Query<RequestGroupMeta>, sort?: Record<string, any>, limit?: number) {
+  return db.find<RequestGroupMeta>(type, query, sort, limit);
 }
 
 export function update(requestGroupMeta: RequestGroupMeta, patch: Partial<RequestGroupMeta>) {

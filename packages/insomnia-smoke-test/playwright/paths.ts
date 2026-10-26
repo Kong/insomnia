@@ -25,6 +25,26 @@ export const copyFixtureDatabase = async (fixturePath: string, dataPath: string)
   await fs.promises.cp(fixtureDir, dataPath, { recursive: true });
 };
 
+/**
+ * Pre-seeds a minimal Settings document into `dataPath` before Insomnia launches,
+ * so a test starts with specific settings instead of the app's defaults. Fields
+ * left out of `patch` aren't left blank — the app backfills any doc it loads with
+ * `models.settings.init()`'s defaults for fields the doc doesn't have — so this
+ * only needs to carry the overrides a test actually cares about.
+ */
+export const seedSettings = async (dataPath: string, patch: Record<string, unknown>) => {
+  await fs.promises.mkdir(dataPath, { recursive: true });
+  const doc = {
+    _id: `set_${uuidv4().replace(/-/g, '')}`,
+    type: 'Settings',
+    parentId: null,
+    modified: Date.now(),
+    created: Date.now(),
+    ...patch,
+  };
+  await fs.promises.writeFile(path.join(dataPath, 'insomnia.Settings.db'), `${JSON.stringify(doc)}\n`);
+};
+
 export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuidv4()}`);
 export const INSOMNIA_DATA_PATH = randomDataPath();
 

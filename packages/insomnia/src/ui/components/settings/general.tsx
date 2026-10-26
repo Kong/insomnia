@@ -15,12 +15,33 @@ import {
 import { docsKeyMaps } from '../../../common/documentation';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
 import { TextArraySetting } from './text-array-setting';
 import { TextSetting } from './text-setting';
 import { VaultKeyPanel } from './vault-key-panel';
+
+// Hiding Confidential values again does not undo what was already written to the local
+// timeline/response history while they were visible, so both directions get a heads-up.
+const onHideConfidentialValuesToggled = (isHiding: boolean) => {
+  if (isHiding) {
+    showModal(AlertModal, {
+      title: 'Hiding Confidential Variables',
+      message:
+        'You are now hiding Confidential variables in the Insomnia UI. Consider clearing your Response History to remove any potentially confidential information from your local logs/history. You can do this in a Collection’s Settings, or globally from the Tools menu.',
+    });
+    return;
+  }
+
+  showModal(AlertModal, {
+    title: 'Confidential Variables Are Now Visible',
+    message:
+      'Confidential variables are now visible. FYI, they will persist locally in your local logs/Response History.',
+  });
+};
 
 export const General: FC = () => {
   const { settings, userSession } = useRootLoaderData()!;
@@ -39,7 +60,7 @@ export const General: FC = () => {
             help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px."
           />
           <BooleanSetting
-            label="Show variable source and value"
+            label="Template tags show variable source and value"
             help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
             setting="showVariableSourceAndValue"
           />
@@ -48,6 +69,21 @@ export const General: FC = () => {
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
           {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
+          <BooleanSetting
+            label="Sidebar focus for collections"
+            setting="sidebarFocusForCollections"
+            help="If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible."
+          />
+          <BooleanSetting
+            label="Show legacy unit tests"
+            setting="enableLegacyUnitTests"
+            help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
+          />
+          <BooleanSetting
+            label="Hide Confidential values in Preview/Console"
+            setting="hideSecretValuesInPreviewAndConsole"
+            onAfterToggle={onHideConfidentialValuesToggled}
+          />
         </div>
       </div>
 
@@ -217,7 +253,7 @@ export const General: FC = () => {
           help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
-          className="pointer h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
+          className="pointer flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
           onClick={clearOAuthWindowSessionId}
         >
           Clear OAuth 2 session

@@ -30,7 +30,14 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { ErrorBoundary } from '../error-boundary';
-import { type ActiveView, deriveRepoName, getLastCloneParentDir, type ProjectData, setLastCloneParentDir } from './utils';
+import {
+  type ActiveView,
+  deriveRepoName,
+  getLastCloneParentDir,
+  type ProjectData,
+  resolveCloneFolderName,
+  setLastCloneParentDir,
+} from './utils';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
@@ -340,50 +347,65 @@ export const GitRepoForm: FC<Props> = ({
             />
           </div>
 
-          <div className={isCredentialInvalid ? 'hidden' : 'flex flex-col gap-2 px-0.5'}>
-            <Label className="text-sm text-(--color-font)">Clone location</Label>
-            <div className="flex items-center gap-2">
-              {projectData.cloneParentDir ? (
-                <MiddleTruncate
-                  value={window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))}
-                  className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
-                />
-              ) : (
-                <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
-                  Managed by Insomnia (default location)
-                </div>
-              )}
-              <Button
-                type="button"
-                onPress={async () => {
-                  const defaultPath =
-                    projectData.cloneParentDir ||
-                    getLastCloneParentDir() ||
-                    window.path.join(window.app.getPath('home'), 'Insomnia');
-                  const { canceled, filePath } = await selectFileOrFolder({
-                    itemTypes: ['directory'],
-                    defaultPath,
-                  });
-                  if (canceled || !filePath) {
-                    return;
-                  }
-                  setLastCloneParentDir(filePath);
-                  setProjectData(prev => ({ ...prev, cloneParentDir: filePath }));
-                }}
-                className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-              >
-                Choose folder…
-              </Button>
-              {projectData.cloneParentDir && (
+          <div className={isCredentialInvalid ? 'hidden' : 'flex flex-col gap-3 px-0.5'}>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-(--color-font)">Clone location</Label>
+              <div className="flex items-center gap-2">
+                {projectData.cloneParentDir ? (
+                  <MiddleTruncate
+                    value={window.path.join(
+                      projectData.cloneParentDir,
+                      resolveCloneFolderName(projectData.cloneFolderName, projectData.uri),
+                    )}
+                    className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
+                  />
+                ) : (
+                  <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
+                    Managed by Insomnia (default location)
+                  </div>
+                )}
                 <Button
                   type="button"
-                  onPress={() => setProjectData(prev => ({ ...prev, cloneParentDir: undefined }))}
+                  onPress={async () => {
+                    const defaultPath =
+                      projectData.cloneParentDir ||
+                      getLastCloneParentDir() ||
+                      window.path.join(window.app.getPath('home'), 'Insomnia');
+                    const { canceled, filePath } = await selectFileOrFolder({
+                      itemTypes: ['directory'],
+                      defaultPath,
+                    });
+                    if (canceled || !filePath) {
+                      return;
+                    }
+                    setLastCloneParentDir(filePath);
+                    setProjectData(prev => ({ ...prev, cloneParentDir: filePath }));
+                  }}
                   className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
                 >
-                  Use default
+                  Choose folder…
                 </Button>
-              )}
+                {projectData.cloneParentDir && (
+                  <Button
+                    type="button"
+                    onPress={() => setProjectData(prev => ({ ...prev, cloneParentDir: undefined, cloneFolderName: undefined }))}
+                    className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+                  >
+                    Use default
+                  </Button>
+                )}
+              </div>
             </div>
+            {projectData.cloneParentDir && (
+              <Input
+                label="Folder name"
+                description="The name of the folder created inside the clone location above."
+                value={projectData.cloneFolderName ?? deriveRepoName(projectData.uri)}
+                name="cloneFolderName"
+                placeholder={deriveRepoName(projectData.uri)}
+                onChange={v => setProjectData(prev => ({ ...prev, cloneFolderName: v.replace(/[/\\]/g, '') }))}
+              />
+            )}
           </div>
         </Form>
       )}
