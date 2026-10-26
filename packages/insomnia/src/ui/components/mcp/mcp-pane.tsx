@@ -296,9 +296,10 @@ export const McpPane = () => {
   };
 
   useEffect(() => {
-    const [, type, name] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)$/) || [];
-    const primitiveItem = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
-    setSelectedPrimitiveItem(primitiveItem ? (primitiveItem as PrimitiveSubItem) : null);
+    const [, type, name, index] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)_(\d+)$/) || [];
+    const candidateByName = visibleCollection.filter(i => i.itemLevel === 1 && i.type === type && i.name === name);
+    const dedupedItem = candidateByName.find(i => i === visibleCollection[Number(index)]);
+    setSelectedPrimitiveItem(((dedupedItem ?? candidateByName[0]) as PrimitiveSubItem) ?? null);
   }, [activeRequest._id, activeRequestMeta?.activeMcpPrimitive, visibleCollection]);
 
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
@@ -318,7 +319,7 @@ export const McpPane = () => {
     overscan: 20,
     getItemKey: index => {
       const item = visibleCollection[index];
-      return `${item.itemLevel}::${item.type}::${item.name}`;
+      return `${item.itemLevel}::${item.type}::${item.name}::${index}`;
     },
   });
 
@@ -484,8 +485,8 @@ export const McpPane = () => {
                       });
                     } else {
                       // Click a specified primitive
-                      const [, type, name] = id.match(/^([^_]+)_(.+)$/) || [];
-                      const item = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
+                      const index = (id.match(/^([^_]+)_(.+)_(\d+)$/) || [])[3];
+                      const item = visibleCollection[Number(index)];
                       requestMetaPatcher(requestId, { activeMcpPrimitive: id });
                       setSelectedPrimitiveItem(item as PrimitiveSubItem);
                       setRequestPaneActiveTab('params');
@@ -494,11 +495,11 @@ export const McpPane = () => {
                 >
                   {virtualItem => {
                     const item = visibleCollection[virtualItem.index];
-                    const isSelected =
-                      selectedPrimitiveItem?.type === item.type && selectedPrimitiveItem?.name === item.name;
+                    const isSelected = selectedPrimitiveItem === item;
                     return (
                       <CollectionGridListItem
                         activeRequest={activeRequest}
+                        index={virtualItem.index}
                         item={item}
                         collapsedPrimitives={collapsedPrimitives}
                         onRefreshPrimitive={updatePrimitiveData}
@@ -549,6 +550,7 @@ export const McpPane = () => {
 
 const CollectionGridListItem = (props: {
   activeRequest: McpRequest;
+  index: number;
   item: PrimitiveTypeItem | PrimitiveSubItem;
   style: React.CSSProperties;
   collapsedPrimitives: McpServerPrimitiveTypes[];
@@ -569,7 +571,7 @@ const CollectionGridListItem = (props: {
     ...restProps
   } = props;
   const label = 'title' in item ? item.title : item.name;
-  const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}`;
+  const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}_${props.index}`;
   const itemLevel = item.itemLevel;
   const isRootTypeItem = itemLevel === 0;
   const isResourceTypeItem = item.type === 'resources' && itemLevel === 1;
@@ -581,6 +583,7 @@ const CollectionGridListItem = (props: {
 
   return (
     <GridListItem
+      key={uniqueId}
       id={uniqueId}
       className={cn(
         `group absolute top-0 left-0 w-full outline-hidden select-none ${item.itemLevel === 0 ? 'data-drop-target:bg-(--hl-md)' : 'border-solid data-drop-target:border-b data-drop-target:border-(--color-surprise)'}`,
