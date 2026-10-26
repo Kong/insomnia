@@ -73,6 +73,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
           formData={formData as HashiCorpSecretConfig}
           onChange={handleFormChange}
           activeTagData={activeTagData}
+          vaultPluginData={vaultPluginData}
         />
       );
       break;
