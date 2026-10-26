@@ -506,6 +506,7 @@ export const McpPane = () => {
                     return (
                       <CollectionGridListItem
                         activeRequest={activeRequest}
+                        index={virtualItem.index}
                         item={item}
                         collapsedPrimitives={collapsedPrimitives}
                         onRefreshPrimitive={updatePrimitiveData}
@@ -556,6 +557,7 @@ export const McpPane = () => {
 
 const CollectionGridListItem = (props: {
   activeRequest: McpRequest;
+  index: number;
   item: PrimitiveTypeItem | PrimitiveSubItem;
   style: React.CSSProperties;
   collapsedPrimitives: McpServerPrimitiveTypes[];
@@ -576,7 +578,7 @@ const CollectionGridListItem = (props: {
     ...restProps
   } = props;
   const label = 'title' in item ? item.title : item.name;
-  const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}`;
+  const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}_${props.index}`;
   const itemLevel = item.itemLevel;
   const isRootTypeItem = itemLevel === 0;
   const isResourceTypeItem = item.type === 'resources' && itemLevel === 1;
