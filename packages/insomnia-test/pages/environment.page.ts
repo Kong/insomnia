@@ -37,6 +37,9 @@ export class EnvironmentPage extends BasePage {
     '#pane-one button[aria-label="Table Edit"]';
   private readonly RAW_EDITOR = ".environment-editor";
   private readonly SIDEBAR = '[aria-label="Environments"]';
+  private readonly collectionEnvironmentDialog = this.page.getByRole("dialog", {
+    name: "Manage Environments",
+  });
   private readonly PROJECT_ENVIRONMENT_TRIGGER =
     'button[aria-label="Select a Project Environment"]';
   // Renamed from "Select a Collection Environment" — INS-3528.
@@ -241,6 +244,65 @@ export class EnvironmentPage extends BasePage {
 
     await this.page.keyboard.press("Escape");
     await listbox.waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Opens the current workspace's own "Manage API collection environments"
+   * editor from the "Select an API Collection Environment" popover and
+   * waits for the "Manage Environments" dialog. Its Base Environment is
+   * selected by default; the dialog is not under the `#pane-one` the other
+   * variable methods read, so use `addCollectionEnvironmentVariable()` here.
+   */
+  async openCollectionEnvironmentEditor(): Promise<void> {
+    await this.page.locator(this.COLLECTION_ENVIRONMENT_TRIGGER).click();
+    await this.page
+      .getByRole("button", { name: "Manage API collection environments" })
+      .click();
+    await expect(this.collectionEnvironmentDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Fills the last (empty) row of the open "Manage Environments" dialog
+   * with `variable`, then closes the dialog and the picker popover behind it.
+   * Requires `openCollectionEnvironmentEditor()` to have been called first.
+   * @param variable - The variable's name and value to add
+   */
+  async addCollectionEnvironmentVariable(
+    variable: EnvironmentKvPairData,
+  ): Promise<void> {
+    const listbox = this.collectionEnvironmentDialog.getByRole("listbox", {
+      name: "Environment Key Value Pair",
+    });
+    const key = await listbox
+      .locator('[role="option"]')
+      .last()
+      .getAttribute("data-key");
+    const row = listbox.locator(`[role="option"][data-key="${key}"]`);
+    await this.setCodeMirrorValue(
+      row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+      variable.name,
+    );
+    await this.setCodeMirrorValue(
+      row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+      variable.value,
+    );
+    await this.collectionEnvironmentDialog
+      .getByRole("button", { name: "Close", exact: true })
+      .click();
+    await expect(this.collectionEnvironmentDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const picker = this.page.getByRole("listbox", {
+      name: "Select an API Collection Environment",
+    });
+    await expect(async () => {
+      if (await picker.isVisible()) {
+        await this.page.keyboard.press("Escape");
+      }
+      await expect(picker).toBeHidden({ timeout: 2000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

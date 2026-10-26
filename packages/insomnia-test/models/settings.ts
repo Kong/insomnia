@@ -79,6 +79,11 @@ export type SettingsInit = Partial<
    */
   aiUrlBackend?: AiUrlBackendSettings | null;
   /**
+   * AI Settings' "Smart Commits" switch. Only switchable while an AI
+   * backend is active, so it is applied after `aiUrlBackend` in the same call.
+   */
+  aiSmartCommits?: boolean;
+  /**
    * Cloud (vault) service credentials to add via Preferences ->
    * Credentials, in order. Not an `AppSettings` field itself — a cloud
    * credential is its own document, not a scalar app setting.
@@ -105,6 +110,7 @@ export class Settings implements SettingsInit {
   sidebarFocusForCollections?: boolean;
   showLegacyUnitTests?: boolean;
   aiUrlBackend?: AiUrlBackendSettings | null;
+  aiSmartCommits?: boolean;
   cloudCredentials?: CloudCredential[];
 
   constructor(init: SettingsInit = {}) {
@@ -120,6 +126,7 @@ export class Settings implements SettingsInit {
     this.sidebarFocusForCollections = init.sidebarFocusForCollections;
     this.showLegacyUnitTests = init.showLegacyUnitTests;
     this.aiUrlBackend = init.aiUrlBackend;
+    this.aiSmartCommits = init.aiSmartCommits;
     this.cloudCredentials = init.cloudCredentials;
   }
 }

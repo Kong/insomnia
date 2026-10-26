@@ -137,6 +137,10 @@ export class PreferencesFlow extends BaseFlow {
         aiUrlBackendResult = this.toAiUrlBackendSettings(fields, true);
       }
     }
+    if (settings.aiSmartCommits !== undefined) {
+      await preferencesPage.openAiSettingsTab();
+      await preferencesPage.setSmartCommitsEnabled(settings.aiSmartCommits);
+    }
     await preferencesPage.close();
     return new Settings({ aiUrlBackend: aiUrlBackendResult });
   }

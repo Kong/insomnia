@@ -211,6 +211,30 @@ export class CloudSyncPage extends BasePage {
   }
 
   /**
+   * Closes the open Commit modal with its close (x) button and waits for
+   * it to be hidden.
+   */
+  async closeCommitDialog(): Promise<void> {
+    await this.commitDialog.locator('[data-icon="x"]').click();
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Lists the visible names of every change row (staged and unstaged) in
+   * the open Commit modal. Requires `openCommitDialog()` to have been
+   * called first.
+   * @returns The rows' names in display order
+   */
+  async getChangeNames(): Promise<string[]> {
+    const rows = this.commitDialog
+      .getByRole("row")
+      .filter({ has: this.page.locator('[data-icon="plus"], [data-icon="minus"]') });
+    await rows.first().waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    const texts = await rows.allInnerTexts();
+    return texts.map((text) => text.split("\n")[0].trim());
+  }
+
+  /**
    * Clicks a row in the open Commit modal to open its diff, and waits for
    * the diff pane's heading to show it. Requires `openCommitDialog()` to
    * have been called first.

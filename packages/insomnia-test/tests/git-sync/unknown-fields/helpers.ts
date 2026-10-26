@@ -65,7 +65,13 @@ function renderYamlBody(indent: number, value: UnknownFieldValue): string[] {
 
 export function buildCollectionFileWithUnknownField(
   collectionName: string,
-  options: { requestName?: string; unknownField?: string; anchoredUnknownField?: boolean; extraUnknownFields?: ExtraUnknownField[] } = {},
+  options: {
+    requestName?: string;
+    unknownField?: string;
+    anchoredUnknownField?: boolean;
+    omitDefaultUnknownField?: boolean;
+    extraUnknownFields?: ExtraUnknownField[];
+  } = {},
 ) {
   const id = faker.string.alphanumeric({ length: 16, casing: "lower" });
   const requestName = options.requestName ?? faker.string.alpha(10);
@@ -107,9 +113,11 @@ export function buildCollectionFileWithUnknownField(
     ...extras("request.meta", 6),
     "    method: GET",
     ...extras("request", 4),
-    ...(options.anchoredUnknownField
-      ? [`    ${unknownField}: &${unknownField}Anchor`, `      nested: ${unknownValue}`, `    ${unknownField}Copy: *${unknownField}Anchor`]
-      : [`    ${unknownField}: ${unknownValue}`]),
+    ...(options.omitDefaultUnknownField
+      ? []
+      : options.anchoredUnknownField
+        ? [`    ${unknownField}: &${unknownField}Anchor`, `      nested: ${unknownValue}`, `    ${unknownField}Copy: *${unknownField}Anchor`]
+        : [`    ${unknownField}: ${unknownValue}`]),
     "    settings:",
     "      renderRequestBody: true",
     "      encodeUrl: true",

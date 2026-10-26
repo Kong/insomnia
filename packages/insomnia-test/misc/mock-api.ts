@@ -937,6 +937,28 @@ function readJsonBody<T = JsonBody>(req: http.IncomingMessage): Promise<T> {
   });
 }
 
+// Answers the AI plugin's "Smart commits" prompt: one commit per `.yaml` file named in the diff.
+async function handleMockLlmChatCompletions(req: http.IncomingMessage, res: http.ServerResponse) {
+  const body = await readJsonBody<{ messages?: { content?: unknown }[] }>(req);
+  const prompt = (body.messages ?? []).map((message) => JSON.stringify(message.content ?? "")).join("\n");
+  process.stdout.write(`[mock-llm] prompt: ${prompt.slice(0, 2000)}\n`);
+  const files = [...new Set(prompt.match(/[\w.-]+\.yaml/g))];
+  const commits = files.map((file) => ({ message: `Update ${file}`, files: [file] }));
+  sendJson(res, 200, {
+    id: "chatcmpl-mock",
+    object: "chat.completion",
+    created: 0,
+    model: "mock-llm-model-1",
+    choices: [
+      {
+        index: 0,
+        message: { role: "assistant", content: JSON.stringify({ commits }) },
+        finish_reason: "stop",
+      },
+    ],
+  });
+}
+
 function sendJson(res: http.ServerResponse, status: number, body: unknown) {
   res.writeHead(status, {
     "Content-Type": "application/json",
@@ -1714,6 +1736,14 @@ const server = http.createServer((req, res) => {
 
   if (isVaultRoute(req.method, url.pathname)) {
     handleVault(req, res, url).catch((err) => {
+      console.error("[mock-api]", err);
+      sendJson(res, 400, { error: "Bad request" });
+    });
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/mock-llm/chat/completions") {
+    handleMockLlmChatCompletions(req, res).catch((err) => {
       console.error("[mock-api]", err);
       sendJson(res, 400, { error: "Bad request" });
     });

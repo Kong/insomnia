@@ -39,7 +39,11 @@ export class MockServerPage extends BasePage {
    */
   async setSelfHostedUrl(url: string): Promise<void> {
     const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("radio", { name: /^Self Hosted Mock/ }).check();
+    const selfHosted = dialog.getByRole("radio", { name: /^Self Hosted Mock/ });
+    if (!(await selfHosted.isChecked())) {
+      await dialog.getByRole("heading", { name: "Self Hosted Mock" }).click();
+    }
+    await expect(selfHosted).toBeChecked();
     await dialog
       .getByRole("textbox", { name: "What is your self-hosted mock server URL?" })
       .fill(url);

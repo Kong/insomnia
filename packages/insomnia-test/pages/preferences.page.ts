@@ -664,6 +664,23 @@ export class PreferencesPage extends BasePage {
   }
 
   /**
+   * Turns the AI Settings tab's "Smart Commits" switch on or off, doing
+   * nothing when it already is. The switch is disabled until an LLM backend
+   * is active. Must be called with `openAiSettingsTab()` already open.
+   * @param enabled - The state to leave the switch in
+   */
+  async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
+    const smartCommitsSwitch = this.dialog
+      .locator("div.justify-between", { hasText: "Smart Commits" })
+      .last()
+      .getByRole("switch");
+    if ((await smartCommitsSwitch.isChecked()) !== enabled) {
+      await smartCommitsSwitch.click({ force: true });
+    }
+    await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });
+  }
+
+  /**
    * Reports whether a backend's nav button currently carries the "Active"
    * badge (i.e. it's the app's current LLM backend). Must be called with
    * `openAiSettingsTab()` already open.

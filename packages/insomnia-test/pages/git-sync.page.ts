@@ -726,11 +726,42 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Counts the diff editor's highlighted unknown-field lines in the open
-   * Commit modal. Requires `openChangeDiff()` to have been called.
-   * @returns The number of highlighted lines
+   * Commit modal. Only lines currently rendered in the editor's viewport are
+   * counted (the editor renders just the visible lines), so a field further
+   * down a long file is not seen — use
+   * `getUnknownFieldHighlightCountAcrossDiff()` for that. Requires
+   * `openChangeDiff()` to have been called.
+   * @returns The number of highlighted lines in view
    */
   async getUnknownFieldHighlightCount(): Promise<number> {
     return this.commitDialog.locator('.unknown-field-line-bg').count();
+  }
+
+  /**
+   * Counts the diff editor's highlighted unknown-field lines at both the top
+   * and the bottom of the file, so a field anywhere in a file that fits in
+   * two viewports is seen; lines visible from both positions are counted
+   * twice, so use it for "any highlight" checks rather than an exact line
+   * count. Moves the editor's cursor. Requires `openChangeDiff()` to have
+   * been called.
+   * @returns The highlighted lines seen at the top plus those seen at the bottom
+   */
+  async getUnknownFieldHighlightCountAcrossDiff(): Promise<number> {
+    await this.commitDialog.locator('.monaco-diff-editor .view-line').first().click();
+    let total = 0;
+    for (const key of ['ControlOrMeta+ArrowUp', 'ControlOrMeta+ArrowDown']) {
+      await this.page.keyboard.press(key);
+      let previous = -1;
+      let count = 0;
+      await expect(async () => {
+        count = await this.getUnknownFieldHighlightCount();
+        const isSettled = count === previous;
+        previous = count;
+        expect(isSettled).toBe(true);
+      }).toPass({ timeout: DEFAULT_TIMEOUT, intervals: [200] });
+      total += count;
+    }
+    return total;
   }
 
   /**
@@ -811,6 +842,44 @@ export class GitSyncPage extends BasePage {
   async commitStaged(message?: string): Promise<void> {
     await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message ?? '');
     await this.commitDialog.getByRole('button', { name: 'Commit', exact: true }).click();
+  }
+
+  /**
+   * Fills `message` and clicks "Commit and push" on whatever is currently
+   * staged, without staging anything first and without waiting for the
+   * modal to close, so a confirmation raised by the click (e.g. the
+   * "Unrecognized Fields" one) can be handled by the caller. Requires
+   * `openCommitDialog()` to have been called first.
+   * @param message - The commit message
+   */
+  async commitStagedAndPush(message: string): Promise<void> {
+    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message);
+    await this.commitDialog.getByRole('button', { name: 'Commit and push' }).click();
+  }
+
+  /**
+   * Clicks "Generate Commits" in the Commit modal's Smart commits card and
+   * waits for the generated commit groups to replace the manual form.
+   * Needs an active AI backend, the Smart Commits setting on, and nothing
+   * staged. Requires `openCommitDialog()` to have been called first.
+   */
+  async generateCommits(): Promise<void> {
+    await this.commitDialog.getByRole('button', { name: 'Generate Commits' }).click();
+    await expect(this.commitDialog.getByRole('button', { name: 'Back to manual commits' })).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Clicks "Commit" (or "Commit and push") on the generated commit groups
+   * without waiting for the modal to close, so a confirmation raised by the
+   * click can be handled by the caller. Requires `generateCommits()` first.
+   * @param push - Click "Commit and push" instead of "Commit"
+   */
+  async submitGeneratedCommits(push = false): Promise<void> {
+    await this.commitDialog
+      .getByRole('button', { name: push ? 'Commit and push' : 'Commit', exact: true })
+      .click();
   }
 
   /**
