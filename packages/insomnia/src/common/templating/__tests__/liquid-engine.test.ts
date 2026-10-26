@@ -97,3 +97,16 @@ describe.each([
     );
   });
 });
+
+describe('buildLiquidEngine limits', () => {
+  it('defaults to a 10 s render limit and a 10 MB memory limit', () => {
+    const { engine } = buildLiquidEngine({ tagFactory: () => Tag as any, tags: [] });
+    expect(engine.options.renderLimit).toBe(10_000);
+    expect(engine.options.memoryLimit).toBe(10_000_000);
+  });
+
+  it('lets callers override the render limit', () => {
+    const { engine } = buildLiquidEngine({ renderLimitMs: 123, tagFactory: () => Tag as any, tags: [] });
+    expect(engine.options.renderLimit).toBe(123);
+  });
+});
