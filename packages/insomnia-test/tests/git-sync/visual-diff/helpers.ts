@@ -5,6 +5,7 @@ import type { GitEntityTypeFiles, GitEntityTypeNames } from '../../../models/git
 import type { GitFileLevelSettings } from '../../../models/git-file-level-settings';
 import type { GitLongValues } from '../../../models/git-long-values';
 import type { GitMovedRequest } from '../../../models/git-moved-request';
+import { COLLECTION_TEMPLATE } from './entity-type-collection-template';
 
 const FILE_TIMES = { created: 1000, modified: 1000 };
 
@@ -35,61 +36,19 @@ export function planEntityTypeFiles(): GitEntityTypeFiles {
   };
   const workspaceNames = { collection: faker.string.alpha(10), mock: faker.string.alpha(10), mcp: faker.string.alpha(10) };
   const header = (changed: boolean) => (changed ? [{ name: 'X-Added', value: 'added' }] : undefined);
+  const collectionIds = [`wrk_${ids.workspace}`, ids.folder, ids.request, ids.webSocket, ids.socketIo, ids.grpc, ids.cookieJar, ids.environment];
+  const renderCollectionTemplate = (changed: boolean) => {
+    let content = COLLECTION_TEMPLATE(changed).replaceAll('__WS_NAME__', workspaceNames.collection);
+    for (const [key, value] of Object.entries(names)) {
+      content = content.replaceAll(`__NAME_${key}__`, value);
+    }
+    collectionIds.forEach((id, index) => {
+      content = content.replaceAll(`__ID_${index}__`, id);
+    });
+    return content;
+  };
   const build = (changed: boolean) => ({
-    collection: JSON.stringify(
-      {
-        type: 'collection.insomnia.rest/5.0',
-        schema_version: '5.1',
-        name: workspaceNames.collection,
-        meta: { id: `wrk_${ids.workspace}`, ...FILE_TIMES },
-        collection: [
-          {
-            name: names.folder,
-            meta: { id: ids.folder, ...FILE_TIMES },
-            headers: header(changed),
-            children: [
-              {
-                name: names.request,
-                url: 'https://example.com/a',
-                method: 'GET',
-                meta: { id: ids.request, ...FILE_TIMES },
-                headers: header(changed),
-              },
-            ],
-          },
-          {
-            name: names.webSocket,
-            url: 'ws://localhost:4040/',
-            meta: { id: ids.webSocket, ...FILE_TIMES },
-            headers: header(changed),
-          },
-          {
-            name: names.socketIo,
-            url: 'http://localhost:4050/',
-            meta: { id: ids.socketIo, ...FILE_TIMES },
-            headers: header(changed),
-          },
-          {
-            name: names.grpc,
-            url: 'localhost:50051',
-            meta: { id: ids.grpc, ...FILE_TIMES },
-            metadata: header(changed),
-          },
-        ],
-        cookieJar: {
-          name: 'Default Jar',
-          meta: { id: ids.cookieJar, ...FILE_TIMES },
-          cookies: changed ? [{ id: 'cookie_1', key: 'session', value: 'abc', domain: 'example.com', path: '/' }] : undefined,
-        },
-        environments: {
-          name: 'Base Environment',
-          meta: { id: ids.environment, ...FILE_TIMES },
-          data: changed ? { added: '1' } : {},
-        },
-      },
-      null,
-      2,
-    ),
+    collection: renderCollectionTemplate(changed),
     mock: JSON.stringify(
       {
         type: 'mock.insomnia.rest/5.0',
@@ -254,3 +213,40 @@ export function planLongValues(): GitLongValues {
   return { longRequest: names.longRequest, shortRequest: names.shortRequest, workspace: names.workspace, totalLines, build };
 }
 
+
+const SEED_REQUEST_SETTINGS = { renderRequestBody: true, encodeUrl: true, followRedirects: 'global', cookies: { send: true, store: true }, rebuildPath: true };
+
+export function buildSeedRequest(id: string, name: string, url: string, extra: Record<string, unknown> = {}) {
+  return { name, url, method: 'GET', meta: { id, created: 1000, modified: 1000, isPrivate: false }, settings: SEED_REQUEST_SETTINGS, ...extra };
+}
+
+export function buildSeedFolder(id: string, name: string, children?: unknown[]) {
+  return { name, meta: { id, created: 1000, modified: 1000 }, children };
+}
+
+export function buildSeedCollectionFile(workspace: { id: string; name: string; environmentId: string }, collection: unknown[]) {
+  return JSON.stringify(
+    {
+      type: 'collection.insomnia.rest/5.0',
+      schema_version: '5.1',
+      name: workspace.name,
+      meta: { id: workspace.id, created: 1000, modified: 1000 },
+      collection,
+      environments: { name: 'Base Environment', meta: { id: workspace.environmentId, created: 1000, modified: 1000, isPrivate: false } },
+    },
+    null,
+    2,
+  );
+}
+
+export function planSeedWorkspace() {
+  return {
+    id: `wrk_${faker.string.alphanumeric({ length: 16, casing: 'lower' })}`,
+    name: faker.string.alpha(10),
+    environmentId: `env_${faker.string.alphanumeric({ length: 16, casing: 'lower' })}`,
+  };
+}
+
+export function planSeedId(prefix: 'fld' | 'req') {
+  return `${prefix}_${faker.string.alphanumeric({ length: 16, casing: 'lower' })}`;
+}

@@ -43,7 +43,7 @@ export class GitSyncPage extends BasePage {
   };
 
   private readonly visualDiffNotice = this.commitDialog.getByText(
-    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed/,
+    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|doesn't match the Insomnia file format/,
   );
 
   private readonly changeRow = (list: GitChangeList, fileName: string) =>
@@ -493,6 +493,16 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
+   * Reads whether an entity card's Stage button is enabled.
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   * @returns True if the Stage button is enabled
+   */
+  async isEntityStageEnabled(entityName: string, typeLabel?: string): Promise<boolean> {
+    return this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Stage', exact: true }).isEnabled();
+  }
+
+  /**
    * Clicks Stage on several entities' cards within one browser task, i.e.
    * before the Visual view can re-render in between — the way a fast
    * double click would — then waits for the first entity's card to leave
@@ -608,6 +618,36 @@ export class GitSyncPage extends BasePage {
     const notice = this.visualDiffNotice.locator('xpath=..');
     await expect(notice).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await notice.innerText()).replaceAll('\n', ' ').trim();
+  }
+
+  /**
+   * Reads the warning the Visual view shows above its cards when a file
+   * isn't in the format Insomnia writes ("This file isn't in the format
+   * Insomnia writes…"). The check runs in the background after the cards
+   * render, so this waits for the warning to appear.
+   * @returns The warning text
+   */
+  async getVisualDiffFormatWarning(): Promise<string> {
+    const warning = this.commitDialog.getByTestId('visual-diff-format-warning');
+    await expect(warning).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await warning.innerText()).replaceAll('\n', ' ').trim();
+  }
+
+  /**
+   * Clicks the "Open the Text view" link in the Visual view's format warning.
+   */
+  async openTextViewFromWarning(): Promise<void> {
+    await this.commitDialog.getByTestId('visual-diff-format-warning').getByRole('button', { name: 'Open the Text view' }).click();
+  }
+
+  /**
+   * Reads whether the Visual view shows no format warning once its
+   * background format check has had time to finish. Requires the cards or
+   * a notice to be showing.
+   * @returns True if the format warning is not visible
+   */
+  async isVisualDiffFormatWarningAbsent(): Promise<boolean> {
+    return !(await this.commitDialog.getByTestId('visual-diff-format-warning').isVisible());
   }
 
   /**

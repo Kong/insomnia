@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -10,7 +11,7 @@ import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile,test } from '..
 import { Project } from '../../../models/project';
 import { planEntityTypeFiles } from './helpers';
 
-test('Verify every entity type renders its own card and supports stage, unstage and discard', async ({ user }) => {
+test('Verify every entity type renders its own card and supports stage, unstage and discard, and partially staging a new mock file keeps its Mock Server URL in the staged content', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
   const { gitSyncPage } = user.pageManager;
 
@@ -34,12 +35,16 @@ test('Verify every entity type renders its own card and supports stage, unstage 
   await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   const changed = build(true);
+  // A second plan has its own ids, so its mock file is a new file next to the three modified ones
+  const newMock = planEntityTypeFiles();
+  const newMockFile = `${faker.string.alpha(11).toLowerCase()}.yaml`;
   fs.writeFileSync(path.join(cloneDir, files.collection), changed.collection);
   fs.writeFileSync(path.join(cloneDir, files.mock), changed.mock);
   fs.writeFileSync(path.join(cloneDir, files.mcp), changed.mcp);
+  fs.writeFileSync(path.join(cloneDir, newMockFile), newMock.build(true).mock);
   await expect
     .poll(async () => (await gitSyncFlow.getChanges()).unstaged.length, { timeout: DEFAULT_TIMEOUT })
-    .toBe(3);
+    .toBe(4);
 
   const entitiesByFile = [
     { file: files.collection, entities: [names.folder, names.request, names.webSocket, names.socketIo, names.grpc, 'Base Environment', 'Default Jar'] },
@@ -60,6 +65,11 @@ test('Verify every entity type renders its own card and supports stage, unstage 
       await gitSyncFlow.discardEntity(file, entity);
     }
   }
+  await expect.poll(async () => gitSyncPage.getUnstagedChanges(), { timeout: DEFAULT_TIMEOUT }).toEqual([newMockFile]);
+  await gitSyncFlow.stageEntity(newMockFile, 'https://mock.example.com');
+  const stagedWithServerOnly = execSync(`git show :${newMockFile}`, { cwd: cloneDir, encoding: 'utf8' });
+  await gitSyncFlow.stageEntity(newMockFile, newMock.names.mockRoute);
+  const stagedWithServerAndRoute = execSync(`git show :${newMockFile}`, { cwd: cloneDir, encoding: 'utf8' });
   await gitSyncPage.closeCommitDialog();
 
   expect(tabsByEntity).toEqual({
@@ -73,5 +83,8 @@ test('Verify every entity type renders its own card and supports stage, unstage 
     [names.mockRoute]: ['Headers 1'],
     [names.mcp]: ['Headers 1'],
   });
-  await expect.poll(async () => gitSyncPage.hasUncommittedChanges(), { timeout: DEFAULT_TIMEOUT }).toBe(false);
+  expect(stagedWithServerOnly).toContain('https://mock.example.com');
+  expect(stagedWithServerOnly).not.toContain(newMock.names.mockRoute);
+  expect(stagedWithServerAndRoute).toContain('https://mock.example.com');
+  expect(stagedWithServerAndRoute).toContain(newMock.names.mockRoute);
 });
