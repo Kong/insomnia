@@ -296,10 +296,10 @@ export const McpPane = () => {
   };
 
   useEffect(() => {
-    const [, type, , index] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)_(\d+)$/) || [];
-    const candidate = visibleCollection[Number(index)];
-    const primitiveItem = candidate?.itemLevel === 1 && candidate.type === type ? candidate : undefined;
-    setSelectedPrimitiveItem(primitiveItem ? (primitiveItem as PrimitiveSubItem) : null);
+    const [, type, name, index] = activeRequestMeta?.activeMcpPrimitive?.match(/^([^_]+)_(.+)_(\d+)$/) || [];
+    const candidateByName = visibleCollection.filter(i => i.itemLevel === 1 && i.type === type && i.name === name);
+    const dedupedItem = candidateByName.find(i => i === visibleCollection[Number(index)]);
+    setSelectedPrimitiveItem(((dedupedItem ?? candidateByName[0]) as PrimitiveSubItem) ?? null);
   }, [activeRequest._id, activeRequestMeta?.activeMcpPrimitive, visibleCollection]);
 
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
