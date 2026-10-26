@@ -54,6 +54,7 @@ export const McpActionsDropdown = ({
         await window.main.mcp.primitive.listPrompts({ requestId, ...params });
       } else if (type === 'resources') {
         await window.main.mcp.primitive.listResources({ requestId, ...params });
+        await window.main.mcp.primitive.listResourceTemplates({ requestId });
       }
     } catch {
       // A schema-invalid response throws here, but the request/response is still logged as an

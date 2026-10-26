@@ -234,6 +234,7 @@ export const McpPane = () => {
   const METHOD_BY_REFRESHABLE_PRIMITIVE_TYPE: Partial<Record<McpServerPrimitiveTypes, string>> = {
     tools: METHOD_LIST_TOOLS,
     resources: METHOD_LIST_RESOURCES,
+    resourceTemplates: METHOD_LIST_RESOURCE_TEMPLATES,
     prompts: METHOD_LIST_PROMPTS,
   };
 
@@ -259,7 +260,7 @@ export const McpPane = () => {
     };
   };
 
-  const updatePrimitiveData = async (type: McpServerPrimitiveTypes) => {
+  const updateSinglePrimitiveData = async (type: McpServerPrimitiveTypes) => {
     const { data, error, nextCursor } = await getPrimitiveListResult(type);
     setMcpServerData(prev => ({
       serverCapabilities: prev['serverCapabilities'],
@@ -274,6 +275,12 @@ export const McpPane = () => {
       [type]: error,
     }));
     updatePrimitiveNextCursor(nextCursor, type);
+  };
+
+  // The "resources" root item lists both resources and resource templates, so refresh both together
+  const updatePrimitiveData = async (type: McpServerPrimitiveTypes) => {
+    const types: McpServerPrimitiveTypes[] = type === 'resources' ? ['resources', 'resourceTemplates'] : [type];
+    await Promise.all(types.map(updateSinglePrimitiveData));
   };
 
   const handleSubscribe = async (item: ResourceItem) => {
@@ -499,6 +506,7 @@ export const McpPane = () => {
                     return (
                       <CollectionGridListItem
                         activeRequest={activeRequest}
+                        index={virtualItem.index}
                         item={item}
                         collapsedPrimitives={collapsedPrimitives}
                         onRefreshPrimitive={updatePrimitiveData}
@@ -549,6 +557,7 @@ export const McpPane = () => {
 
 const CollectionGridListItem = (props: {
   activeRequest: McpRequest;
+  index: number;
   item: PrimitiveTypeItem | PrimitiveSubItem;
   style: React.CSSProperties;
   collapsedPrimitives: McpServerPrimitiveTypes[];
@@ -569,7 +578,7 @@ const CollectionGridListItem = (props: {
     ...restProps
   } = props;
   const label = 'title' in item ? item.title : item.name;
-  const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}`;
+  const uniqueId = item.itemLevel === 0 ? `root_${item.type}` : `${item.type}_${item.name}_${props.index}`;
   const itemLevel = item.itemLevel;
   const isRootTypeItem = itemLevel === 0;
   const isResourceTypeItem = item.type === 'resources' && itemLevel === 1;
