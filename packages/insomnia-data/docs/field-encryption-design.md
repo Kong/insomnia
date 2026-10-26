@@ -63,19 +63,27 @@ Reuses the existing Insomnia Vault Key — a standalone AES-256 key generated lo
 The user's existing account-level AES-256 symmetric key, which is part of Insomnia's E2EE key hierarchy. It is automatically obtained from the server during the login flow (decrypted from `encSymmetricKey` using the one-time auth box key). Currently used to decrypt the user's RSA private key for cloud sync operations.
 
 - **Pros:** Zero user interaction; key is server-stored (encrypted) so it can be recovered by re-logging in; compatible with CLI via explicit parameter; same key across all devices for the same account
-- **Cons:** Key changes when user resets passphrase or toggles E2EE on the website — previously encrypted local data becomes unreadable with the new key
+- **Cons:** Key changes when user resets passphrase or toggles E2EE on the website — previously encrypted local data becomes unreadable with the new key; **requires login — unavailable in Scratch Pad mode**
 
-| Approach                 | User Interaction                          | CLI Compatible                                 | Key Recovery                      | Key Stability                                | Verdict        |
-| ------------------------ | ----------------------------------------- | ---------------------------------------------- | --------------------------------- | -------------------------------------------- | -------------- |
-| **Account symmetricKey** | ✅ Zero — obtained automatically at login | ✅ Via `--encryption-key` + Preferences export | ✅ Re-login to obtain from server | ⚠️ Changes on passphrase reset / E2EE toggle | **✅ Adopted** |
-| Vault Key Generation     | ❌ Requires manual generation + backup    | ✅ Via `--vault-key` parameter                 | ❌ Lost key = permanent data loss | ✅ Stable unless user resets                 | ❌ Rejected    |
-| Electron safeStorage     | ✅ Zero — OS-managed                      | ❌ Not available in Node.js CLI                | ❌ Machine-bound; cannot transfer | ✅ Stable per machine                        | ❌ Rejected    |
+#### Locally Generated Key (auto-generated + safeStorage protected)
 
-**Decision:** Account symmetricKey — zero user friction, server-recoverable, CLI-compatible via export.
+A local AES-256 key auto-generated on first launch of the Insomnia App (regardless of login state), protected at rest by Electron's `safeStorage`. The key is device-specific, stable, and always available. Users can export it from Preferences for use with inso CLI.
+
+- **Pros:** Zero user interaction (auto-generated on first launch); always available — works in Scratch Pad mode without login; key never changes (stable across passphrase resets, E2EE toggles); no dependency on account lifecycle or server; protected by OS-level security (safeStorage)
+- **Cons:** Machine-bound — key cannot be recovered from server if lost (user must export it manually for cross-machine use); if safeStorage is corrupted (e.g., OS reinstall), key is lost
+
+| Approach                  | User Interaction                          | CLI Compatible                                 | Key Recovery                      | Key Stability                                | Works Without Login | Verdict        |
+| ------------------------- | ----------------------------------------- | ---------------------------------------------- | --------------------------------- | -------------------------------------------- | ------------------- | -------------- |
+| **Locally Generated Key** | ✅ Zero — auto-generated on first launch  | ✅ Via `--encryption-key` + Preferences export | ⚠️ Must export manually           | ✅ Stable — never changes                    | ✅ Yes              | **✅ Adopted** |
+| Account symmetricKey      | ✅ Zero — obtained automatically at login | ✅ Via `--encryption-key` + Preferences export | ✅ Re-login to obtain from server | ❌ Changes on passphrase reset / E2EE toggle | ❌ No               | ❌ Rejected    |
+| Vault Key Generation      | ❌ Requires manual generation + backup    | ✅ Via `--vault-key` parameter                 | ❌ Lost key = permanent data loss | ✅ Stable unless user resets                 | ✅ Yes              | ❌ Rejected    |
+| Electron safeStorage      | ✅ Zero — OS-managed                      | ❌ Not available in Node.js CLI                | ❌ Machine-bound; cannot transfer | ✅ Stable per machine                        | ✅ Yes              | ❌ Rejected    |
+
+**Decision:** Locally Generated Key — zero user friction, always available (including Scratch Pad mode), stable key that never changes, CLI-compatible via export.
 
 ### 3.3 Final Combination
 
-**NeDB Serialization Hooks** (layer) + **Account symmetricKey** (key) = Transparent field-level encryption at the storage I/O boundary, using the user's existing account key that is automatically available after login.
+**NeDB Serialization Hooks** (layer) + **Locally Generated Key** (key) = Transparent field-level encryption at the storage I/O boundary, using a device-local key that is auto-generated on first launch and always available regardless of login state.
 
 ## 4. Final Design
 
@@ -98,7 +106,7 @@ The user's existing account-level AES-256 symmetric key, which is part of Insomn
 ┌───────────────────────▼─────────────────────────────┐
 │       afterSerialization / beforeDeserialization    │
 │  ← Field-level encrypt/decrypt executed here        │
-│  ← Uses account symmetricKey (AES-256-GCM)          │
+│  ← Uses locally generated key (AES-256-GCM)         │
 └───────────────────────┬─────────────────────────────┘
                         │ File I/O
 ┌───────────────────────▼─────────────────────────────┐
@@ -111,10 +119,12 @@ The user's existing account-level AES-256 symmetric key, which is part of Insomn
 ### 4.2 Encryption Algorithm & Key
 
 - **Algorithm:** AES-256-GCM (random 12-byte IV, 128-bit authentication tag)
-- **Key:** Account `symmetricKey` — user's existing AES-256 JsonWebKey, obtained automatically during the login flow
-- **Key local protection:** Encrypted with Electron `safeStorage` before storing in `UserSession.db`
+- **Key:** Locally generated AES-256 key — auto-generated on first launch of the Insomnia App, regardless of login state
+- **Key generation:** On first launch, if no local encryption key exists, generate a new AES-256 key using `crypto.subtle.generateKey` (or equivalent)
+- **Key local protection:** Encrypted with Electron `safeStorage` before storing locally
+- **Key storage location:** Stored in a dedicated local file (e.g., `<dataPath>/.encryption-key`), protected by safeStorage
 - **Encrypted value format:** `enc:` + base64-encoded AESMessage JSON (containing `iv`, `t`, `ad`, `d` fields)
-- **Bootstrapping:** `UserSession.db` is loaded first (without encryption hooks) → symmetricKey decrypted from safeStorage → other collections initialized with hooks
+- **Bootstrapping:** Load and decrypt the local encryption key from safeStorage → initialize all NeDB collections with hooks
 
 ### 4.3 NeDB Serialization Hooks
 
@@ -122,16 +132,15 @@ The user's existing account-level AES-256 symmetric key, which is part of Insomn
 // In database-nedb.ts init()
 new NeDB({
   filename: dbPath,
-  afterSerialization: line => encryptDocLine(line, symmetricKey),
-  beforeDeserialization: line => decryptDocLine(line, symmetricKey),
+  afterSerialization: line => encryptDocLine(line, localEncryptionKey),
+  beforeDeserialization: line => decryptDocLine(line, localEncryptionKey),
   testSerializationHooks: false, // Disable self-test
 });
 ```
 
 - **afterSerialization(line):** Called before writing to disk. Parses the JSON line → looks up `encryptedFields` based on the `type` field → encrypts matching field paths → re-stringifies
 - **beforeDeserialization(line):** Called after reading from disk. Parses the JSON line → detects values with `enc:` prefix → decrypts → re-stringifies
-- **When no key is available (not logged in):** Hooks are identity functions (pass-through); data remains in plaintext
-- **UserSession.db:** Excluded from hooks (bootstrapping); sensitive fields in UserSession protected separately by safeStorage
+- **Key always available:** The local key is generated on first launch and always present — no pass-through/no-op mode needed
 
 ### 4.4 Encrypted Fields Definition
 
@@ -163,52 +172,30 @@ Array path syntax is supported: `cookies[].value` means encrypt the `value` fiel
 
 ## 5. User Interaction Impact
 
-> ✅ **This solution is fully transparent to desktop users during normal use.** No key generation, no backup prompts, no additional steps.
+> ✅ **This solution is fully transparent to all users at all times.** No key generation prompts, no login required, no backup prompts. Encryption works from the very first launch.
 
 ### 5.1 Normal User Flow (Zero Interaction)
 
 ```
-Login successful → symmetricKey automatically obtained from server
-                → Key encrypted with safeStorage, stored locally
-                → All subsequent DB reads/writes automatically encrypted/decrypted
-                → User is completely unaware of encryption
+First launch → Local encryption key auto-generated
+            → Key protected with safeStorage
+            → All DB reads/writes automatically encrypted/decrypted
+            → User is completely unaware of encryption
+            → Works in both logged-in mode and Scratch Pad mode
 ```
 
-### 5.2 Key Unavailability Scenarios
+### 5.2 Decryption Failure Handling
 
-There are two scenarios where locally encrypted data becomes unreadable:
-
-1. **Passphrase reset on the Insomnia website:** The user's symmetricKey is regenerated. After re-login, the new key cannot decrypt data encrypted with the old key.
-2. **E2EE toggle on the Insomnia website:** Same effect — symmetricKey is regenerated, old encrypted local data becomes unreadable.
-
-In both cases, the user will be logged out automatically. When they re-login with the new key, the app will detect decryption failures and show a dialog (see 5.3).
-
-**Impact assessment:** The affected data (passwords, OAuth tokens, API keys, certificates) is **not unique to Insomnia** — Insomnia is not a password manager. These values are either regenerable (e.g., OAuth tokens can be re-authorized) or copied from other platforms (e.g., API keys from cloud providers). Losing them is an inconvenience, not a catastrophe. The user simply needs to re-enter or re-authorize these values. Therefore, our responsibility is to **clearly warn users before they take these actions** (see 5.4) and **gracefully handle the failure** when it occurs (see 5.3).
-
-### 5.3 Decryption Failure Handling (Critical UX)
-
-When decryption fails for **any** reason, the application **must not silently fail**. Instead:
+Decryption failures are rare with this approach (only if safeStorage is corrupted, e.g., after OS reinstall). When it occurs, the application **must not silently fail**. Instead:
 
 1. **Show a dialog** explaining that some locally encrypted data could not be decrypted
-2. **Provide context:** "This may happen after a passphrase reset, E2EE toggle, or if you logged in with a different account"
+2. **Provide context:** "This may happen if the application data was moved from another machine or the OS credential store was reset"
 3. **Offer options:**
    - **"Reset affected fields"** — Clear the values of fields that failed decryption (user will need to re-enter passwords/tokens)
    - **"Continue without decryption"** — Leave `enc:` prefixed values as-is (fields will be non-functional but data is preserved for potential recovery)
 4. **Show details:** List which documents/fields are affected so the user knows what to re-enter
 
-### 5.4 Warnings on Insomnia Admin Website
-
-The following pages on the Insomnia Admin website should add a warning message to inform users of the consequences:
-
-**Passphrase Reset page:**
-
-> ⚠️ Warning: Resetting your passphrase will regenerate your encryption keys. Any locally encrypted data (saved passwords, tokens, API keys) in Insomnia App on your devices will become unreadable. You will need to re-enter these values after logging in again.
-
-**E2EE Toggle page:**
-
-> ⚠️ Warning: Toggling E2EE will regenerate your encryption keys. Any locally encrypted data (saved passwords, tokens, API keys) in Insomnia App on your devices will become unreadable. You will need to re-enter these values after logging in again.
-
-### 5.5 Encryption Key Export & inso CLI Usage
+### 5.3 Encryption Key Export & inso CLI Usage
 
 To support inso CLI and other tooling that needs to decrypt `.db` files, a new section is added to the **Preferences** modal (General tab) for exporting the encryption key:
 
@@ -217,11 +204,11 @@ To support inso CLI and other tooling that needs to decrypt `.db` files, a new s
 **UI Elements:**
 
 - **"Local Encryption Key"** section header with brief explanation: "This key is used to encrypt sensitive fields in your local database. You may need it for CLI usage."
-- **"Copy Key"** button — copies the raw symmetricKey (base64 JWK) to clipboard
+- **"Copy Key"** button — copies the local encryption key (base64 JWK) to clipboard
 - **"Export Key"** button — downloads the key as a `.json` file (e.g., `insomnia-encryption-key.json`)
 - **Security notice:** "Keep this key secure. Anyone with this key can decrypt your locally stored passwords and tokens."
 
-**Availability:** Only shown when the user is logged in and a symmetricKey is available.
+**Availability:** Always available (key exists from first launch).
 
 **inso CLI usage with the exported key:**
 
@@ -259,17 +246,15 @@ The migration process **must be fail-safe** — no exception should lead to data
 | ------- | ------------------------------------------------ | ------------------------------------------- |
 | Phase 1 | Field encryption utility (`field-encryption.ts`) | 1 new file + tests                          |
 | Phase 2 | Integrate hooks into `database-nedb.ts`          | 1 file modified                             |
-| Phase 3 | symmetricKey protection with safeStorage         | 2 files modified                            |
+| Phase 3 | Local key generation + safeStorage protection    | 1–2 new files                               |
 | Phase 4 | Decryption failure dialog UI                     | 1–2 new files                               |
 | Phase 5 | Add `encryptedFields` declarations to each model | 12+ files modified (pure data declarations) |
 | Phase 6 | inso CLI `--encryption-key` support              | 2–3 files modified                          |
 | Phase 7 | Encryption key export/copy in Preferences UI     | 1–2 files modified                          |
 | Phase 8 | Data migration logic + backup + progress UI      | 2–3 files created/modified                  |
-| Phase 9 | Warnings on Insomnia Admin website               | Admin website team                          |
 
 ## 8. Open Questions
 
 1. **Performance impact** — Every read/write requires JSON parsing + field traversal + AES encrypt/decrypt; benchmark testing is needed to verify impact
-2. **Encryption when logged out** — Should data written while logged out remain in plaintext until next login? (Current design: yes)
-3. **Encryption granularity** — Should users be able to customize which fields are encrypted, or should the system define this uniformly? (Current design: system-defined)
-4. **Old backup cleanup** — How long to retain pre-encryption backups? (Recommendation: until user manually deletes via settings)
+2. **Encryption granularity** — Should users be able to customize which fields are encrypted, or should the system define this uniformly? (Current design: system-defined)
+3. **Old backup cleanup** — How long to retain pre-encryption backups? (Recommendation: until user manually deletes via settings)
