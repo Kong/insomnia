@@ -39,7 +39,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   } = formData as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
-  const idFromTag = activeTagData.args[1].value as string;
+  const idFromTag = activeTagData.args[1]?.value?.toString() || '';
   const credentialId = models.cloudCredential.isCloudCredentialId(idFromTag)
     ? // legacy version to save cloud credential id in tag
       idFromTag
