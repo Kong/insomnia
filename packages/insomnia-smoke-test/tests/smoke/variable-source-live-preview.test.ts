@@ -243,10 +243,7 @@ test.describe('Variable source and live preview across environment levels', () =
 
       const variableChip = page.locator(`[data-template*="${scenario.varSnippet}"]`);
       await variableChip.waitFor({ state: 'visible' });
-      await variableChip.hover();
-
-      const tooltip = page.getByTestId('variable-source-tooltip');
-      await expect.soft(tooltip).toBeVisible();
+      const tooltip = await hoverVariableChip(page, variableChip);
       await expect.soft(tooltip).toContainText(scenario.value);
       await expect.soft(tooltip).toContainText(scenario.source);
       // The chip keeps showing the short variable name while hovered
