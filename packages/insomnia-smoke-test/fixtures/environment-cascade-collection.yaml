@@ -121,6 +121,7 @@ environments:
   data:
     cascadeVar: fromBase
     subOnlyVar: subOnly_base
+    baseOnlyVar: baseOnlyValue
   subEnvironments:
     - name: SubEnvA
       meta:
@@ -131,6 +132,8 @@ environments:
       data:
         cascadeVar: fromSubA
         subOnlyVar: subOnly_A
+        baseSourcedVar: '{{ _.baseOnlyVar }}'
+        folderSourcedVar: '{{ _.folderOverride }}'
     - name: SubEnvB
       meta:
         id: env_3b5d7f9c1e3a5c7e9b1d3f5a7c9e1f17
