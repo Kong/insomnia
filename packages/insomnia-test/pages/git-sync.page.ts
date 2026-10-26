@@ -690,6 +690,16 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
+   * Clicks "Discard all changes" on the Unstaged changes heading and waits
+   * for the confirmation dialog, without confirming. Requires
+   * `openCommitDialog()` to have been called.
+   */
+  async openDiscardAllConfirmation(): Promise<void> {
+    await this.commitDialog.locator('button[name="Discard all changes"]').click();
+    await expect(this.discardDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Reads the open Discard confirmation dialog's body text.
    * @returns The dialog's text content
    */
