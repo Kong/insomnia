@@ -719,7 +719,8 @@ export const Runner: FC = () => {
                       return (
                         <GridListItem
                           textValue={item.name}
-                          className={`runner-request-list-${item.name} border border-solid border-transparent text-(--color-font)`}
+                          data-request-name={item.name}
+                          className="border border-solid border-transparent text-(--color-font)"
                           style={{ outline: 'none' }}
                         >
                           <Button slot="drag" className="hover:cursor-grab">
