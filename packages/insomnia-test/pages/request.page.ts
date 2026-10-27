@@ -425,6 +425,13 @@ export abstract class RequestPage extends TabPanelPage {
         checkValue: false,
         reapply: setName,
       });
+      // The disk write lands before the UI swaps the row's provisional key
+      // for the persisted id, and that swap remounts the row's editors —
+      // typing the value any earlier lets the remount wipe it out.
+      await expect(row).not.toHaveAttribute("data-key", /^pair-blank/, {
+        timeout: DEFAULT_TIMEOUT,
+      });
+      await this.waitForStableAttribute(row, "data-key");
       await setValue();
       if (pair.disabled) {
         await row.locator('button[aria-pressed="true"]').click();
