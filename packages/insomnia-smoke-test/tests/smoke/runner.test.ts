@@ -53,7 +53,7 @@ test.describe('runner features tests', () => {
   const selectRunnerRequests = async (page: Page, ...names: string[]) => {
     await page.getByText('Unselect All').click();
     for (const name of names) {
-      const row = page.locator(`[data-request-name="${name}"]`);
+      const row = page.getByTestId(`runner-request-list-${name}`);
       await row.waitFor({ state: 'visible' });
       await row.locator('label[slot="selection"]').click();
     }

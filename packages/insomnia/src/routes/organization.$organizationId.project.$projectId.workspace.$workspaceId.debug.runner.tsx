@@ -719,7 +719,7 @@ export const Runner: FC = () => {
                       return (
                         <GridListItem
                           textValue={item.name}
-                          data-request-name={item.name}
+                          data-testid={`runner-request-list-${item.name}`}
                           className="border border-solid border-transparent text-(--color-font)"
                           style={{ outline: 'none' }}
                         >
