@@ -235,7 +235,7 @@ const Component = () => {
     });
   }, [userSession.accountId]);
 
-  const { untrackedProjects, untrackedWorkspaces } = useUntrackedProjects();
+  const { untrackedProjects, untrackedWorkspaces } = useUntrackedProjects(organizations, userSession.accountId);
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
   const isScratchPad = organizationId === models.organization.SCRATCHPAD_ORGANIZATION_ID;
   const isLocalOrganization = models.organization.isLocalOrganizationId(organizationId);
