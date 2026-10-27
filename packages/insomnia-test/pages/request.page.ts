@@ -405,11 +405,10 @@ export abstract class RequestPage extends TabPanelPage {
     }
     const options = panel.locator('[role="listbox"] [role="option"]');
     for (const pair of pairs) {
-      // Locate the row by position, not by its `data-key`: a new row
-      // renders with a provisional `pair-blank_*` key that is swapped for
-      // the persisted id once its name is saved, so a key-based locator
-      // goes stale right before the value is typed and never resolves.
-      const row = options.nth((await options.count()) - 1);
+      // Locate the row by its fixed position: once it is persisted a new
+      // trailing blank row is appended, so `.last()` would no longer be it.
+      const rowIndex = (await options.count()) - 1;
+      const row = options.nth(rowIndex);
       const setName = () =>
         this.setCodeMirrorValue(
           row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
@@ -425,13 +424,14 @@ export abstract class RequestPage extends TabPanelPage {
         checkValue: false,
         reapply: setName,
       });
-      // The disk write lands before the UI swaps the row's provisional key
-      // for the persisted id, and that swap remounts the row's editors —
-      // typing the value any earlier lets the remount wipe it out.
-      await expect(row).not.toHaveAttribute("data-key", /^pair-blank/, {
+      // The disk write lands before the editor's props catch up with it.
+      // A row keeps its `pair-blank_*` id once persisted, and the editor
+      // only mints a fresh trailing blank row after it has re-rendered
+      // from the persisted data. Typing the value earlier lets that late
+      // re-render reset the value editor back to its stale default.
+      await expect(options).toHaveCount(rowIndex + 2, {
         timeout: DEFAULT_TIMEOUT,
       });
-      await this.waitForStableAttribute(row, "data-key");
       await setValue();
       if (pair.disabled) {
         await row.locator('button[aria-pressed="true"]').click();
