@@ -108,20 +108,50 @@ jobs:
         run: npx electron-builder build --config ../insomnia-test/electron-builder.config.js --linux --dir --publish never
 
   # ---------------------------------------------------------------------------
-  # Single source of truth for the shard count. Generates the matrix indices
-  # (1..N) so scaling up only requires changing SHARD_TOTAL.
+  # Counts the test cases with `playwright test --list` and derives the shard
+  # count as ceil(total / TESTS_PER_SHARD), then generates the matrix indices
+  # (1..N). Needs `build` only for the cached node_modules.
   # ---------------------------------------------------------------------------
   shards:
     name: Shard Matrix
+    needs: build
     runs-on: ubuntu-latest
     env:
-      SHARD_TOTAL: 32
+      TESTS_PER_SHARD: 10
     outputs:
       indices: ${{ steps.matrix.outputs.indices }}
-      total: ${{ env.SHARD_TOTAL }}
+      total: ${{ steps.matrix.outputs.total }}
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
       - id: matrix
-        run: echo "indices=$(seq 1 $SHARD_TOTAL | jq -sc .)" >> "$GITHUB_OUTPUT"
+        working-directory: packages/insomnia-test
+        run: |
+          count=$(npx playwright test --list 2>&1 | grep -oE '^Total: [0-9]+' | grep -oE '[0-9]+')
+          if [ -z "$count" ] || [ "$count" -lt 1 ]; then
+            echo "ERROR: could not determine test count"; exit 1
+          fi
+          total=$(( (count + TESTS_PER_SHARD - 1) / TESTS_PER_SHARD ))
+          echo "$count tests -> $total shards ($TESTS_PER_SHARD tests per shard)"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "indices=$(seq 1 $total | jq -sc .)" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
   # Run the whole suite across N shards in parallel. Each shard restores the
