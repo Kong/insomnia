@@ -8,6 +8,7 @@ import { DEFAULT_TIMEOUT } from '../misc/constants';
 import { Collection, TestSuite, UnitTest } from '../models/collection';
 import { Environment, isEnvironmentItem } from '../models/environment';
 import type { EventStreamRequest } from '../models/event-stream-request';
+import type { Folder } from '../models/folder';
 import type { GitRepoConnection } from '../models/git-repo-connection';
 import type { GraphQLRequest } from '../models/graphql-request';
 import type { GrpcRequest } from '../models/grpc-request';
@@ -273,6 +274,30 @@ export class WorkspaceFlow extends BaseFlow {
     if (!node) return;
     await this.pageManager.workspacePage.rightClick(node);
     await this.pageManager.workspacePage.clickContextMenu(ContextMenuItem.Delete);
+    await this.pageManager.workspacePage.clickDelete();
+    await this.pageManager.workspacePage.waitForNodeRemoved(node);
+  }
+
+  /**
+   * Deletes the tree node matching `item` with the sidebar's Delete shortcut
+   * and confirms the dialog. Does nothing if no matching node is found.
+   * @param item - The workspace item, folder or request to delete
+   */
+  async deleteViaShortcut(
+    item:
+      | Collection
+      | McpClient
+      | Folder
+      | HttpRequest
+      | GraphQLRequest
+      | GrpcRequest
+      | EventStreamRequest
+      | SocketIORequest
+      | WebSocketRequest,
+  ): Promise<void> {
+    const node = await this.pageManager.workspacePage.findItemNode(item);
+    if (!node) return;
+    await this.pageManager.workspacePage.pressDeleteShortcut(node);
     await this.pageManager.workspacePage.clickDelete();
     await this.pageManager.workspacePage.waitForNodeRemoved(node);
   }

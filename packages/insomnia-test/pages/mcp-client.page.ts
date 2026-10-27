@@ -219,6 +219,36 @@ export class McpClientPage extends RequestPage {
   }
 
   /**
+   * Clicks one primitive row by its position among the rows of its kind, so
+   * same-name rows can be told apart.
+   * @param type - The primitive kind whose row to click
+   * @param index - Zero-based position among that kind's rows, in sidebar order
+   */
+  async clickPrimitiveAt(type: McpPrimitiveType, index: number): Promise<void> {
+    await this.page.locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`).nth(index).click();
+  }
+
+  /**
+   * Reads, per row of one primitive kind in sidebar order, whether the row carries the selected-row highlight (the app sets no aria-selected on these rows).
+   * @param type - The primitive kind whose rows to read
+   */
+  async getPrimitiveSelection(type: McpPrimitiveType): Promise<boolean[]> {
+    return this.page
+      .locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`)
+      .evaluateAll(rows => rows.map(row => row.classList.contains('bg-(--hl-sm)')));
+  }
+
+  /**
+   * Reads the argument field names of the currently selected tool from the "params" tab.
+   */
+  async getToolArgumentNames(): Promise<string[]> {
+    await this.switchTab('params');
+    return this.page
+      .locator(`${this.TABPANEL} [id^="root_"]`)
+      .evaluateAll(fields => fields.map(field => field.id.replace(/^root_/, '')));
+  }
+
+  /**
    * Whether a capability item shows an expand/collapse caret. Empty capability items
    * (e.g. a whole-response failure) have none.
    * @param type - Which capability item to check
