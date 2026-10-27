@@ -711,11 +711,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const { features } = useOrganizationPermissions();
   const { isEnterprisePlan } = usePlanData();
 
-  const { untrackedProjects, untrackedWorkspaces } = useUntrackedProjects();
-
   const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const { userSession } = useRootLoaderData()!;
+  const { untrackedProjects, untrackedWorkspaces } = useUntrackedProjects(organizations, userSession.accountId);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [workspaceCount, setWorkspaceCount] = useState(0);
 

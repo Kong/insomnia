@@ -1,19 +1,18 @@
+import type { Organization } from 'insomnia-api';
 import { models } from 'insomnia-data';
 import { useMemo } from 'react';
 
 import { type UntrackedProjectsData, untrackedProjectsQuery } from '~/common/app-data';
-import { useRootLoaderData } from '~/root';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useDBQuery } from '~/ui/hooks/use-query';
 
 const emptyData: UntrackedProjectsData = { untrackedProjects: [], untrackedWorkspaces: [] };
 
-/** Projects that belong to none of the account's organizations, and workspaces that belong to no project. */
-export function useUntrackedProjects(): UntrackedProjectsData {
-  const { userSession } = useRootLoaderData()!;
-  const organizations = useOrganizations();
-  const accountId = userSession.accountId;
-
+/**
+ * Projects that belong to none of the account's organizations, and workspaces that belong to no project.
+ * Takes the organizations and account id from the caller rather than reading them from `~/root` /
+ * `useOrganizations`, which would add import cycles through the settings modal.
+ */
+export function useUntrackedProjects(organizations: Organization[], accountId: string): UntrackedProjectsData {
   const trackedOrganizationIds = useMemo(
     () =>
       [
