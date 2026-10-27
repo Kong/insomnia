@@ -1,11 +1,12 @@
 import type { Project, Workspace } from 'insomnia-data';
-import { models } from 'insomnia-data';
-import { useEffect, useRef } from 'react';
+import { models, services } from 'insomnia-data';
+import { useCallback, useEffect, useRef } from 'react';
 import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 import { href } from 'react-router';
 
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 
+import type { ChangeBufferEvent } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { Icon } from '../icon';
 
@@ -22,6 +23,19 @@ export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClo
   const workspaceId = workspace._id;
   const workspaceName = workspace.name;
 
+  // The parent passes inline callbacks, so keep the latest ones in a ref to avoid resubscribing on every render
+  const callbacks = useRef({ onClose, onDeleted });
+  callbacks.current = { onClose, onDeleted };
+  const hasFinished = useRef(false);
+  const finish = useCallback(() => {
+    if (hasFinished.current) {
+      return;
+    }
+    hasFinished.current = true;
+    callbacks.current.onDeleted?.();
+    callbacks.current.onClose();
+  }, []);
+
   // Close once the deletion succeeds (the action redirects, so no error data is returned)
   const wasSubmitting = useRef(false);
   useEffect(() => {
@@ -30,11 +44,23 @@ export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClo
     } else if (wasSubmitting.current) {
       wasSubmitting.current = false;
       if (!deleteWorkspaceFetcher.data?.error) {
-        onDeleted?.();
-        onClose();
+        finish();
       }
     }
-  }, [deleteWorkspaceFetcher.state, deleteWorkspaceFetcher.data, onClose, onDeleted]);
+  }, [deleteWorkspaceFetcher.state, deleteWorkspaceFetcher.data, finish]);
+
+  // Fallback: the fetcher transition above can be missed when closing the workspace's tabs navigates away
+  // while the action's redirect is in flight, so also close once the workspace is gone from the database.
+  useEffect(
+    () =>
+      window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
+        const wasRemoved = changes.some(([type, doc]) => type === 'remove' && doc._id === workspaceId);
+        if (wasRemoved && !(await services.workspace.getById(workspaceId))) {
+          finish();
+        }
+      }),
+    [workspaceId, finish],
+  );
 
   return (
     <ModalOverlay
