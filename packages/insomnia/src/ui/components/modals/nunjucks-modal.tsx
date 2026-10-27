@@ -7,6 +7,7 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { ErrorBoundary } from '../error-boundary';
 import { TagEditor } from '../templating/tag-editor';
 import { VariableEditor } from '../templating/variable-editor';
 
@@ -57,6 +58,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
           editorId,
           onOpenSource,
         });
+        setIsRendering(false);
         modalRef.current?.show();
       },
     }),
@@ -114,7 +116,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
             modalRef.current?.hide();
           }}
         >
-          {editor}
+          <ErrorBoundary>{editor}</ErrorBoundary>
         </form>
       </ModalBody>
       <ModalFooter>
