@@ -43,11 +43,20 @@ import {
 } from '~/sync/git/providers';
 import type { FileIssue, FileIssueKind } from '~/sync/git/repo-file-watcher';
 
-import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
+import { getAppVersion, INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
+import { buildInsomniaChangeReport, type InsomniaChangeReport } from '../common/insomnia-v5-change-report';
+import { checkStrictSchemaMatch } from '../common/zod/check-schema-mismatch';
+import { findUnknownFieldRanges, type UnknownFieldRange } from '../common/zod/find-unknown-field-ranges';
+import {
+  canonicalizeInsomniaFileContent,
+  getInsomniaFileFormatIssue,
+  type InsomniaFileFormatIssue,
+  isUndiscardableChange,
+} from '../sync/git/canonical-file';
 import { type BlockedWrite, type BlockedWriteHandler, fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -1002,22 +1011,19 @@ export const gitLogLoader = async ({ projectId, workspaceId }: { projectId: stri
   }
 };
 
+export interface ChangeEntry {
+  name: string;
+  path: string;
+  status: Status;
+  type: GitFileStatus;
+  symbol: GitFileStatusSymbol;
+  originHasUnknownFields?: boolean;
+}
+
 export interface GitChangesLoaderData {
   changes: {
-    staged: {
-      name: string;
-      path: string;
-      status: Status;
-      type: GitFileStatus;
-      symbol: GitFileStatusSymbol;
-    }[];
-    unstaged: {
-      name: string;
-      path: string;
-      status: Status;
-      type: GitFileStatus;
-      symbol: GitFileStatusSymbol;
-    }[];
+    staged: ChangeEntry[];
+    unstaged: ChangeEntry[];
   };
   branch: string;
   gitRepository?: GitRepository | null;
@@ -1043,9 +1049,39 @@ export const gitChangesLoader = async ({
       hasUncommittedChanges,
     });
 
+    // Check HEAD version of YAML files containing unknown fields.
+    const addUnknownFieldsCheck = async (entries: ChangeEntry[]) =>
+      Promise.all(
+        entries.map(async entry => {
+          if (!entry.path.endsWith('.yaml') || entry.type === 'deleted') {
+            return entry;
+          }
+          const originContents = await GitVCS.readFileAtHead(entry.path);
+          let originHasUnknownFields = false;
+          if (originContents) {
+            try {
+              const document = parse(migrateToLatestYaml(originContents));
+              // Only Insomnia files carry unknown fields; unrelated YAML (e.g. OpenAPI specs) must not be flagged.
+              if (InsomniaFileSchema.safeParse(document).success) {
+                originHasUnknownFields = checkStrictSchemaMatch(InsomniaFileSchema, document).mismatch;
+              }
+            } catch {
+              originHasUnknownFields = false;
+            }
+          }
+          return {
+            ...entry,
+            originHasUnknownFields,
+          };
+        }),
+      );
+
     return {
       branch,
-      changes,
+      changes: {
+        staged: await addUnknownFieldsCheck(changes.staged),
+        unstaged: await addUnknownFieldsCheck(changes.unstaged),
+      },
       gitRepository,
     };
   } catch {
@@ -1149,7 +1185,13 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
  * @param projectId - The project ID to associate migrated workspaces with
  * @returns Object containing changes made during migration or errors
  */
-export async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
+export async function importLegacyInsomniaFolder({
+  fsClient,
+  projectId,
+}: {
+  fsClient: PromiseFsClient;
+  projectId: string;
+}) {
   const changes: { path: string; status: Status }[] = [];
   try {
     // Check if the legacy .insomnia directory exists
@@ -1322,6 +1364,7 @@ export const initGitRepoCloneAction = async ({
         scope: WorkspaceScope;
         name: string;
         path: string;
+        hasUnknownFields?: boolean;
       }[];
       legacyInsomniaFile?: {
         scope: WorkspaceScope;
@@ -1368,6 +1411,7 @@ export const initGitRepoCloneAction = async ({
     scope: WorkspaceScope;
     name: string;
     path: string;
+    hasUnknownFields?: boolean;
   }[] = [];
 
   for (const file of insomniaFiles) {
@@ -1383,6 +1427,7 @@ export const initGitRepoCloneAction = async ({
         scope: insomniaSchemaTypeToScope(insomniaFile.type),
         name: insomniaFile.name || 'Untitled',
         path: file,
+        hasUnknownFields: checkStrictSchemaMatch(InsomniaFileSchema, yamlDocument).mismatch,
       });
     }
   }
@@ -3397,6 +3442,65 @@ export const unstageChangesAction = async ({
   }
 };
 
+export const stagePartialContentAction = async ({
+  projectId,
+  workspaceId,
+  filepath,
+  content,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  // `null` removes the file from the index
+  content: string | null;
+}): Promise<{
+  errors?: string[];
+}> => {
+  try {
+    await getGitRepository({ workspaceId, projectId });
+    // `content` is spliced together by the visual diff; write it the way Git Sync would export it.
+    await GitVCS.stagePartialContent(
+      filepath,
+      content === null ? null : await canonicalizeInsomniaFileContent(content),
+    );
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error while staging changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+};
+
+export const discardPartialContentAction = async ({
+  projectId,
+  workspaceId,
+  filepath,
+  content,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  content: string;
+}): Promise<{
+  errors?: string[];
+}> => {
+  try {
+    const gitRepository = await getGitRepository({ workspaceId, projectId });
+    // `content` is spliced together by the visual diff; write it the way Git Sync would export it.
+    await GitVCS.discardPartialContent(filepath, await canonicalizeInsomniaFileContent(content));
+    // Sync the rewritten YAML back into the DB, otherwise the watcher's next
+    // DB -> disk flush would resurrect the discarded change.
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error while discarding changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+};
+
 function getPreviewItemNameAndScope(previewDiffItem: { before: string; after: string }) {
   let prevName = '';
   let nextName = '';
@@ -3435,6 +3539,24 @@ function getPreviewItemNameAndScope(previewDiffItem: { before: string; after: st
   };
 }
 
+export interface GitDiffDiagnostics {
+  appVersion: string;
+  filepath: string;
+  staged: boolean;
+  comparing: string;
+  beforeOid: string | null;
+  afterOid: string | null;
+  /**
+   * The diff editor renders HEAD/index after schema migration and property-order
+   * normalization against the working copy, which can hide reordering. True when
+   * that rewrite changed what is displayed.
+   */
+  displayNormalized: boolean;
+  /** Untouched committed blob, for support to export and share verbatim. */
+  committedYaml: string | null;
+  report: InsomniaChangeReport;
+}
+
 export type GitDiffResult =
   | {
       name: string;
@@ -3442,9 +3564,14 @@ export type GitDiffResult =
         before: string;
         after: string;
       };
+      diagnostics?: GitDiffDiagnostics;
+      // Lines of `diff.before` holding fields this version of Insomnia doesn't recognize.
+      unknownFieldRanges: UnknownFieldRange[];
       filepath: string;
       scope: WorkspaceScope;
       staged: boolean;
+      /** True when the unstaged change reappears after every discard and can only be resolved by committing it */
+      undiscardable?: boolean;
     }
   | {
       errors: string[];
@@ -3475,20 +3602,91 @@ export const diffFileLoader = async ({
           after: fileStatus.workdir,
         };
 
+    // The change analysis parses both files, so only pay for it when Debug Mode is on.
+    let diagnostics: GitDiffDiagnostics | undefined;
+    if ((await services.settings.get()).debugMode) {
+      // Analyse the untouched blobs so reordering isn't masked by the normalization
+      // applied for rendering.
+      const rawBefore = staged ? fileStatus.rawHead : fileStatus.rawStage || fileStatus.rawHead;
+      const rawAfter = staged ? fileStatus.rawStage : fileStatus.workdir;
+
+      diagnostics = {
+        appVersion: getAppVersion(),
+        filepath,
+        staged,
+        comparing: staged ? 'HEAD (last commit) → index (staged)' : 'index/HEAD (committed) → working copy (on disk)',
+        beforeOid: (staged ? fileStatus.oids.head : fileStatus.oids.stage || fileStatus.oids.head) ?? null,
+        afterOid: (staged ? fileStatus.oids.stage : fileStatus.oids.workdir) ?? null,
+        displayNormalized: (rawBefore ?? '') !== (diff.before ?? ''),
+        committedYaml: rawBefore ?? null,
+        report: buildInsomniaChangeReport(rawBefore, rawAfter),
+      };
+    }
+
     const { name, scope } = getPreviewItemNameAndScope(diff);
+
+    let undiscardable = false;
+    if (!staged) {
+      try {
+        // `diff.before` is migrated and reordered for display, but discard restores the raw index/HEAD content
+        undiscardable = await isUndiscardableChange({
+          filepath,
+          baselineContent: fileStatus.rawStage || fileStatus.rawHead,
+          workingCopyContent: fileStatus.workdir,
+        });
+      } catch (err) {
+        console.warn('[git] Failed to check whether the change can be discarded', filepath, err);
+      }
+    }
 
     return {
       name: name || filepath,
       diff,
+      diagnostics,
+      // Unknown fields live on the original side: saving from this version drops them from the modified side.
+      // When the whole file was removed there is nothing to be dropped, so skip the calculation.
+      unknownFieldRanges: diff.before && diff.after ? findUnknownFieldRanges(diff.before, InsomniaFileSchema) : [],
       filepath,
       scope,
       staged,
+      undiscardable,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';
     return {
       errors: [errorMessage],
     };
+  }
+};
+
+/**
+ * Whether either side of a file's diff isn't a file as Insomnia writes it (eg. edited by hand), which the
+ * Visual view can't reliably show or act on. Kept out of `diffFileLoader` so the import -> export replay it
+ * takes doesn't hold up showing the diff.
+ */
+export const fileFormatIssueLoader = async ({
+  projectId,
+  workspaceId,
+  filepath,
+  staged,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  filepath: string;
+  staged: boolean;
+}): Promise<InsomniaFileFormatIssue | null> => {
+  try {
+    await getGitRepository({ workspaceId, projectId });
+    const fileStatus = await GitVCS.fileStatus(filepath);
+    // The raw contents: the diff's `before` is migrated and reordered for display
+    const sides = staged
+      ? [fileStatus.rawHead, fileStatus.rawStage]
+      : [fileStatus.rawStage || fileStatus.rawHead, fileStatus.workdir];
+    const issues = await Promise.all(sides.map(getInsomniaFileFormatIssue));
+    return issues.includes('invalid') ? 'invalid' : issues.includes('non-canonical') ? 'non-canonical' : null;
+  } catch (err) {
+    console.warn('[git] Failed to check the format of the file', filepath, err);
+    return null;
   }
 };
 
@@ -4007,7 +4205,10 @@ export interface GitServiceAPI {
   diff: typeof diff;
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
+  stagePartialContent: typeof stagePartialContentAction;
+  discardPartialContent: typeof discardPartialContentAction;
   diffFileLoader: typeof diffFileLoader;
+  fileFormatIssueLoader: typeof fileFormatIssueLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
@@ -4117,7 +4318,16 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) =>
     unstageChangesAction(options),
   );
+  ipcMainHandle('git.stagePartialContent', (_, options: Parameters<typeof stagePartialContentAction>[0]) =>
+    stagePartialContentAction(options),
+  );
+  ipcMainHandle('git.discardPartialContent', (_, options: Parameters<typeof discardPartialContentAction>[0]) =>
+    discardPartialContentAction(options),
+  );
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
+  ipcMainHandle('git.fileFormatIssueLoader', (_, options: Parameters<typeof fileFormatIssueLoader>[0]) =>
+    fileFormatIssueLoader(options),
+  );
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
     getRepositoryDirectoryTree(options),
   );

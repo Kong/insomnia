@@ -2,7 +2,7 @@
   "private": true,
   "name": "insomnia-data",
   "license": "Apache-2.0",
-  "version": "13.3.0",
+  "version": "13.3.1",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia data functionalities",
   "repository": {
@@ -34,6 +34,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@seald-io/nedb": "^4.1.1",
     "clone": "^2.1.2",
     "deep-equal": "2.2.3",

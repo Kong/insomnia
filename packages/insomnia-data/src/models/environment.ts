@@ -1,7 +1,6 @@
 import { z } from 'zod/v4';
 
-import { createModelSchema } from './base-schemas';
-import type { BaseModel } from './base-types';
+import { type BaseModel, createModelSchema } from './base-types';
 
 export const name = 'Environment';
 export const type = 'Environment';
@@ -34,6 +33,7 @@ export const EnvironmentKvPairDataSchema = z.object({
   value: z.string().optional().default(''),
   type: z.enum([EnvironmentKvPairDataType.JSON, EnvironmentKvPairDataType.STRING, EnvironmentKvPairDataType.SECRET]),
   enabled: z.boolean().optional(),
+  isConfidential: z.boolean().optional(),
 });
 export type EnvironmentKvPairData = z.infer<typeof EnvironmentKvPairDataSchema>;
 

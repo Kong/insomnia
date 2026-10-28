@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -56,10 +57,13 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { GitChangeAnalysis } from '~/ui/components/git/git-change-analysis';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
+import { ConfirmUnknownFieldsCommitModal } from '~/ui/components/modals/confirm-unknown-fields-commit-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
+import { WarningBanner } from '~/ui/components/warning-banner';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
@@ -67,6 +71,8 @@ import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
 import { GitPullRequiredModal } from './git-pull-required-modal';
+import { createActionGate } from './visual-diff/action-gate';
+import { EntityDiffList } from './visual-diff/entity-diff-list';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
 
@@ -274,6 +280,7 @@ interface FileItem {
   name: string;
   type: string;
   symbol: string;
+  originHasUnknownFields?: boolean;
 }
 
 interface CommitItem {
@@ -437,6 +444,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   const pushRetryFetcher = useGitProjectPushActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pendingUnknownFieldsPush, setPendingUnknownFieldsPush] = useState<boolean | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
   // Set when the commits succeeded but the push that followed them failed —
   // the commits are safe locally, so we offer a retry rather than a plain error.
@@ -547,6 +555,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           name: file,
           type: changes.staged.find(change => change.path === file)?.type || 'modified',
           symbol: changes.staged.find(change => change.path === file)?.symbol || 'M',
+          originHasUnknownFields: changes.staged.find(change => change.path === file)?.originHasUnknownFields,
         })),
       }))
       .concat({
@@ -558,6 +567,37 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
     getChildren: item => item.files || [],
   });
 
+  const getCommitsToSubmit = () =>
+    commitsSections.items
+      .map(commit => ({
+        id: commit.value.id,
+        message: commit.value.name,
+        files: commit.children?.map(file => file.value.name) || [],
+      }))
+      .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
+
+  const submitGeneratedCommits = (push: boolean) => {
+    committingActionRef.current = push ? 'commit-push' : 'commit';
+
+    const commits = getCommitsToSubmit();
+
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.recommendCommitsSaved,
+      properties: {
+        group_count: commits.length,
+        file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
+      },
+    });
+    commitsFetcher.submit({
+      projectId,
+      commits: commits.map(commit => ({
+        message: commit.message,
+        files: commit.files,
+      })),
+      push,
+    });
+  };
+
   return (
     <form
       onSubmit={e => {
@@ -567,32 +607,16 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
 
         const push = Boolean(formData.get('push') === 'true');
 
-        const action = push ? 'commit-push' : 'commit';
-        committingActionRef.current = action;
+        const filesToCommit = new Set(getCommitsToSubmit().flatMap(commit => commit.files));
+        const touchesUnknownFields = changes.staged.some(
+          change => change.originHasUnknownFields && filesToCommit.has(change.path),
+        );
+        if (touchesUnknownFields) {
+          setPendingUnknownFieldsPush(push);
+          return;
+        }
 
-        const commits = commitsSections.items
-          .map(commit => ({
-            id: commit.value.id,
-            message: commit.value.name,
-            files: commit.children?.map(file => file.value.name) || [],
-          }))
-          .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
-
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.recommendCommitsSaved,
-          properties: {
-            group_count: commits.length,
-            file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
-          },
-        });
-        commitsFetcher.submit({
-          projectId,
-          commits: commits.map(commit => ({
-            message: commit.message,
-            files: commit.files,
-          })),
-          push,
-        });
+        submitGeneratedCommits(push);
       }}
       className="flex flex-1 flex-col gap-6 overflow-hidden"
     >
@@ -761,6 +785,16 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           <Icon icon="exclamation-triangle" /> {operationError}
         </p>
       ) : null}
+      {pendingUnknownFieldsPush !== null && (
+        <ConfirmUnknownFieldsCommitModal
+          onConfirm={() => {
+            const push = pendingUnknownFieldsPush;
+            setPendingUnknownFieldsPush(null);
+            submitGeneratedCommits(push);
+          }}
+          onClose={() => setPendingUnknownFieldsPush(null)}
+        />
+      )}
     </form>
   );
 };
@@ -808,6 +842,13 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   // Holds the pending commit details while we ask the user whether to stage all
   // changes (VSCode-like behaviour when nothing is staged).
   const [pendingCommit, setPendingCommit] = useState<{ message: string; push: boolean } | null>(null);
+  // Holds the pending commit while we ask the user to confirm committing files with unknown fields.
+  // `stageAll` is set when the commit still needs to stage every change first.
+  const [pendingUnknownFieldsCommit, setPendingUnknownFieldsCommit] = useState<{
+    message: string;
+    push: boolean;
+    stageAll: boolean;
+  } | null>(null);
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
   // Set when a commit succeeded but the push that followed it failed — the
@@ -929,6 +970,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             return;
           }
 
+          if (changes.staged.some(change => change.originHasUnknownFields)) {
+            setPendingUnknownFieldsCommit({ message, push, stageAll: false });
+            return;
+          }
+
           submitCommit(message, push);
         }}
         className="flex flex-col gap-2"
@@ -1041,11 +1087,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         )}
         {pushFailedError ? (
           <PushFailedAfterCommitBanner
-          error={pushFailedError}
-          isRetrying={isRetryingPush}
-          onRetry={retryPush}
-          projectId={projectId}
-        />
+            error={pushFailedError}
+            isRetrying={isRetryingPush}
+            onRetry={retryPush}
+            projectId={projectId}
+          />
         ) : operationError && selectedProvider && isPushAuthError([operationError]) ? (
           <GitOauthAuthBanner
             selectedCredential={selectedCredential}
@@ -1367,7 +1413,12 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 // that was renamed, moved, or deleted outside Insomnia.
                 const result = await window.main.git.resolveGitRepoFolderPath({ gitRepositoryId: gitRepository._id });
                 if ('errors' in result && result.errors) {
-                  showToast({ icon: 'exclamation-triangle', title: 'Folder not found', description: result.errors.join(', '), status: 'error' });
+                  showToast({
+                    icon: 'exclamation-triangle',
+                    title: 'Folder not found',
+                    description: result.errors.join(', '),
+                    status: 'error',
+                  });
                   return;
                 }
                 if (result.path) {
@@ -1394,11 +1445,30 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           onConfirm={async () => {
             const pending = pendingCommit;
             setPendingCommit(null);
+            // Confirm before staging so cancelling leaves the staging area untouched.
+            if (changes.unstaged.some(change => change.originHasUnknownFields)) {
+              setPendingUnknownFieldsCommit({ ...pending, stageAll: true });
+              return;
+            }
             // Stage every change, then commit (and push) directly.
             await stageChanges(changes.unstaged.map(entry => entry.path));
             submitCommit(pending.message, pending.push);
           }}
           onClose={() => setPendingCommit(null)}
+        />
+      )}
+
+      {pendingUnknownFieldsCommit && (
+        <ConfirmUnknownFieldsCommitModal
+          onConfirm={async () => {
+            const pending = pendingUnknownFieldsCommit;
+            setPendingUnknownFieldsCommit(null);
+            if (pending.stageAll) {
+              await stageChanges(changes.unstaged.map(entry => entry.path));
+            }
+            submitCommit(pending.message, pending.push);
+          }}
+          onClose={() => setPendingUnknownFieldsCommit(null)}
         />
       )}
     </>
@@ -1485,6 +1555,10 @@ const OriginalGitProjectStagingModal: FC<
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
   const [showConfirmDiscardAndPullModal, setShowConfirmDiscardAndPullModal] = React.useState(false);
   const [discardData, setDiscardData] = React.useState<DiscardData | null>(null);
+  const [diffViewMode, setDiffViewMode] = useState<'text' | 'visual'>('text');
+  const [isActionInFlight, setIsActionInFlight] = useState(false);
+  // One stage / unstage / discard at a time, across the file-level buttons and the Visual view's cards.
+  const actionGate = useMemo(() => createActionGate(setIsActionInFlight), []);
 
   const gitChangesFetcher = useGitProjectChangesFetcher();
   const gitCredentialsFetcher = useGitCredentialsLoaderFetcher();
@@ -1617,19 +1691,40 @@ const OriginalGitProjectStagingModal: FC<
     }
   }
 
+  // After staging/unstaging/discarding a single entity out of the currently-previewed
+  // file, refresh both the file list (staged/unstaged buckets) and the diff itself so
+  // the entity's card disappears/updates without switching away from this view.
+  function afterEntityChange() {
+    return Promise.all([
+      gitChangesFetcher.load({ projectId }),
+      fileToDiff &&
+        diffChangesFetcherLoad({
+          projectId,
+          filePath: fileToDiff.path,
+          staged: fileToDiff.staged,
+        }),
+    ]);
+  }
+
+  // File-level actions don't depend on the diff on screen, so they wait for an action in flight rather
+  // than being dropped.
   async function stageChanges(paths: string[]) {
-    await stageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
+    await actionGate.runAfter(() =>
+      stageChangesFetcher.submit({
+        projectId,
+        paths,
+      }),
+    );
     afterStageOrUnstage(paths, true);
   }
 
   async function unstageChanges(paths: string[]) {
-    await unstageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
+    await actionGate.runAfter(() =>
+      unstageChangesFetcher.submit({
+        projectId,
+        paths,
+      }),
+    );
     afterStageOrUnstage(paths, false);
   }
 
@@ -1643,6 +1738,12 @@ const OriginalGitProjectStagingModal: FC<
     }
     return false;
   })();
+
+  const undiscardableFilePath =
+    previewDiffItem?.undiscardable && !previewDiffItem.staged && isPreviewDiffItemInChangesList
+      ? previewDiffItem.filepath
+      : null;
+  const hasUnknownFields = previewDiffItem && previewDiffItem.unknownFieldRanges.length > 0;
 
   return (
     <>
@@ -1784,7 +1885,7 @@ const OriginalGitProjectStagingModal: FC<
                       <Heading className="flex items-center gap-2 font-bold">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                           <div
-                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-5 w-5 items-center justify-center rounded-s-sm px-2`}
                           >
                             <Icon icon={scopeToIconMap[previewDiffItem.scope]} />
                           </div>
@@ -1802,7 +1903,30 @@ const OriginalGitProjectStagingModal: FC<
                             {!previewDiffItem.staged ? 'Stage this file' : 'Unstage this file'}
                           </BasicButton>
                         )}
+                        <div className="ml-auto flex items-center gap-1 rounded-xs bg-(--hl-xs) p-0.5">
+                          <Button
+                            className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'text' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            onPress={() => setDiffViewMode('text')}
+                          >
+                            Text
+                          </Button>
+                          <Button
+                            className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'visual' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            onPress={() => setDiffViewMode('visual')}
+                          >
+                            Visual (Beta)
+                          </Button>
+                        </div>
                       </Heading>
+                      {hasUnknownFields && (
+                        <WarningBanner icon="triangle-exclamation" data-testid="unknown-fields-diff-warning">
+                          The remote version of this file has fields not recognized by this version of Insomnia.
+                          Committing changes to this file from this version of Insomnia may break or remove
+                          functionality for your collaborators. We recommend upgrading.
+                        </WarningBanner>
+                      )}
+                      {/* Show undiscardable change warning if the file is undiscardable and has no unknown field ranges */}
+                      {undiscardableFilePath && !hasUnknownFields && <UndiscardableChangeWarning />}
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
@@ -1811,14 +1935,31 @@ const OriginalGitProjectStagingModal: FC<
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.
                       </p>
-                      {previewDiffItem && (
+                      {previewDiffItem.diagnostics && <GitChangeAnalysis diagnostics={previewDiffItem.diagnostics} />}
+                      {diffViewMode === 'text' ? (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
                           <DiffEditor
                             original={previewDiffItem.diff.before}
                             modified={previewDiffItem.diff.after}
                             highlightSystemChange
+                            originalHighlights={previewDiffItem.unknownFieldRanges}
                           />
                         </div>
+                      ) : (
+                        <EntityDiffList
+                          before={previewDiffItem.diff.before}
+                          after={previewDiffItem.diff.after}
+                          projectId={projectId}
+                          filepath={previewDiffItem.filepath}
+                          staged={previewDiffItem.staged}
+                          onEntityChanged={afterEntityChange}
+                          onShowTextView={() => setDiffViewMode('text')}
+                          actionGate={actionGate}
+                          isActionInFlight={isActionInFlight}
+                          // One warning above the diff at most: unrecognized fields, or a change that is only Insomnia
+                          // reformatting the file, already have their own, which say more than the format warning would.
+                          hideFormatWarning={Boolean(hasUnknownFields || undiscardableFilePath)}
+                        />
                       )}
                     </div>
                   ) : (
@@ -1843,10 +1984,12 @@ const OriginalGitProjectStagingModal: FC<
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
           onConfirm={async () => {
-            await undoUnstagedChangesFetcher.submit({
-              projectId,
-              paths: [...changes.unstaged.map(entry => entry.path), ...changes.staged.map(entry => entry.path)],
-            });
+            await actionGate.runAfter(() =>
+              undoUnstagedChangesFetcher.submit({
+                projectId,
+                paths: [...changes.unstaged.map(entry => entry.path), ...changes.staged.map(entry => entry.path)],
+              }),
+            );
 
             setShowConfirmDiscardAndPullModal(false);
             onPullAfterCommit();
@@ -1857,11 +2000,20 @@ const OriginalGitProjectStagingModal: FC<
       {discardData && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          showUndiscardableWarning={
+            // Only show the undiscardable warning if there are no unknown fields, there is an undiscardable file, and it is the only file being discarded.
+            !hasUnknownFields &&
+            undiscardableFilePath !== null &&
+            discardData.filesCount === 1 &&
+            discardData.paths.includes(undiscardableFilePath)
+          }
           onConfirm={async () => {
-            await undoUnstagedChangesFetcher.submit({
-              projectId,
-              paths: discardData.paths,
-            });
+            await actionGate.runAfter(() =>
+              undoUnstagedChangesFetcher.submit({
+                projectId,
+                paths: discardData.paths,
+              }),
+            );
 
             setDiscardData(null);
           }}
@@ -1884,14 +2036,22 @@ const OriginalGitProjectStagingModal: FC<
   );
 };
 
+const UndiscardableChangeWarning = () => (
+  <WarningBanner icon="exclamation-triangle">
+    This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
+    other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
+  </WarningBanner>
+);
+
 interface ConfirmModalProps {
   message: string;
+  showUndiscardableWarning?: boolean;
   onConfirm?: () => void;
   onClose?: () => void;
 }
 
 // TODO - refactor this to use the new modal system
-const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps) => {
+const ConfirmDiscardModal = ({ message, showUndiscardableWarning, onConfirm, onClose }: ConfirmModalProps) => {
   return (
     <ModalOverlay
       isOpen
@@ -1923,6 +2083,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 </Button>
               </div>
               <div className="">{message}</div>
+              {showUndiscardableWarning && <UndiscardableChangeWarning />}
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
@@ -2032,7 +2193,7 @@ const CreateBranchAndPushModal = ({
                 <Button
                   type="submit"
                   isDisabled={isCreating || !branchName.trim()}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80 disabled:opacity-50"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:opacity-80"
                 >
                   <Icon icon={isCreating ? 'spinner' : 'code-branch'} className={isCreating ? 'animate-spin' : ''} />
                   Create branch &amp; push

@@ -17,9 +17,10 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { useLocation, useSearchParams } from 'react-router';
 
 import { debounce } from '~/common/misc';
-import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import {
   useWorkspaceLoaderData,
@@ -73,15 +74,37 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const allEnvironment = useMemo(() => {
+    return [baseEnvironment, ...subEnvironments];
+  }, [baseEnvironment, subEnvironments]);
+
+  // Deep-linkable environment selection, e.g. /environment?environmentId= (used by
+  // the variable live preview "Open" action). Validated against this workspace's
+  // environments; consumed after applying so forwarded search params cannot
+  // re-select it on later navigations (same pattern as the folder pane's ?tab=).
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedEnvironmentId = searchParams.get('environmentId');
+  const isValidRequestedEnvironment =
+    requestedEnvironmentId !== null && allEnvironment.some(env => env._id === requestedEnvironmentId);
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(
+    isValidRequestedEnvironment ? requestedEnvironmentId : activeEnvironment._id,
+  );
+  useEffect(() => {
+    if (isValidRequestedEnvironment && requestedEnvironmentId) {
+      setSelectedEnvironmentId(requestedEnvironmentId);
+      const next = new URLSearchParams(searchParams);
+      next.delete('environmentId');
+      setSearchParams(next, { replace: true });
+    }
+    // Open navigates to the same ?environmentId= URL on every click, so the search
+    // string does not change; the location key does. Without it an interrupted
+    // cleanup leaves the param in the URL and later clicks never apply again.
+  }, [location.key, isValidRequestedEnvironment, requestedEnvironmentId, searchParams, setSearchParams]);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
-
-  const allEnvironment = useMemo(() => {
-    return [baseEnvironment, ...subEnvironments];
-  }, [baseEnvironment, subEnvironments]);
 
   // Keep selectedEnvironmentId in sync when navigating between different environment workspaces/tabs.
   useEffect(() => {
@@ -90,10 +113,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
     }
   }, [selectedEnvironmentId, activeEnvironment._id, allEnvironment]);
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
-  // Do not allowed to switch to json environment if contains secret item
-  const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
-    d => d.type === EnvironmentKvPairDataType.SECRET,
-  );
+  const allowSwitchEnvironment = !hasProtectedKvPairs(selectedEnvironment?.kvPairData);
   // Check if there's any environment contains secret item
   const containsSecret = allEnvironment.some(
     env => env.isPrivate && env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET),

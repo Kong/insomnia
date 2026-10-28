@@ -5,6 +5,7 @@ import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ChangeBufferEvent } from '../..';
 import { database as db } from '../..';
+import { createNedbDatabase } from './database-nedb';
 import * as workspaceInitModel from './init-model/workspace';
 import { repairDatabase } from './repair-database';
 
@@ -17,6 +18,31 @@ describe('init()', () => {
       inMemoryOnly: true,
     });
     expect((await db.find(models.request.type)).length).toBe(0);
+  });
+});
+
+describe('createNedbDatabase()', () => {
+  it('keeps documents and change listeners separate between instances', async () => {
+    await db.init({ inMemoryOnly: true }, true);
+    const appChanges: ChangeBufferEvent<BaseModel>[][] = [];
+    db.onChange(changes => {
+      appChanges.push(changes);
+    });
+    await db.update({ _id: 'req_app', type: models.request.type, parentId: 'wrk_app' });
+    appChanges.length = 0;
+
+    const scratchDb = createNedbDatabase();
+    await scratchDb.init({ inMemoryOnly: true });
+    const scratchChanges: ChangeBufferEvent<BaseModel>[][] = [];
+    scratchDb.onChange(changes => {
+      scratchChanges.push(changes);
+    });
+    await scratchDb.update({ _id: 'req_scratch', type: models.request.type, parentId: 'wrk_scratch' });
+
+    expect((await db.find(models.request.type)).map(doc => doc._id)).toEqual(['req_app']);
+    expect((await scratchDb.find(models.request.type)).map(doc => doc._id)).toEqual(['req_scratch']);
+    expect(appChanges).toEqual([]);
+    expect(scratchChanges).toHaveLength(1);
   });
 });
 
@@ -525,9 +551,17 @@ describe('_repairDatabase()', async () => {
       _id: 'w3',
       name: 'Workspace 3',
     });
+    const w4 = await services.workspace.create({
+      _id: 'w4',
+      name: models.apiSpec.init().fileName,
+    });
     await services.apiSpec.updateOrCreateForParentId(w1._id, {
       fileName: '',
     });
+    await services.apiSpec.updateOrCreateForParentId(w4._id, {
+      fileName: models.apiSpec.init().fileName,
+    });
+    const modifiedBefore = (await services.apiSpec.getByParentId(w4._id))?.modified;
     await services.apiSpec.updateOrCreateForParentId(w2._id, {
       fileName: models.apiSpec.init().fileName,
     });
@@ -544,6 +578,8 @@ describe('_repairDatabase()', async () => {
     expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
     expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
     expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
+    expect((await services.apiSpec.getByParentId(w4._id))?.fileName).toBe(models.apiSpec.init().fileName); // backfill is a no-op, should skip
+    expect((await services.apiSpec.getByParentId(w4._id))?.modified).toBe(modifiedBefore); // should not restamp
   });
 
   it('fixes old git uris', async () => {

@@ -2,6 +2,7 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { getOnboardingState, type UserOnboarding } from 'insomnia-api';
 import type { Request } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
@@ -10,12 +11,10 @@ import { SelectPopover } from '~/basic-components/select-popover';
 import { getCurrentSessionId } from '~/common/account/session';
 import { METHOD_GET } from '~/common/constants';
 import { isCurlCommand } from '~/common/utils/curl';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { MethodSelector } from '~/ui/components/dropdowns/method-selector';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
-import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
@@ -158,7 +157,6 @@ export const FirstRequestCreation = ({
   const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const createWorkspaceFetcherRef = useRef(createWorkspaceFetcher);
   createWorkspaceFetcherRef.current = createWorkspaceFetcher;
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
   const [method, setMethod] = useState(METHOD_GET);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -167,7 +165,6 @@ export const FirstRequestCreation = ({
   const [createdRequests, setCreatedRequests] = useState<number | null>(null);
   const trimmedInput = requestInput.trim();
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
-  const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
 
   const treatment: FirstRequestTreatment | null = resolveFirstRequestTreatment({
     backendTreatment,
@@ -644,16 +641,6 @@ export const FirstRequestCreation = ({
           )}
         </div>
       </div>
-      {isImportModalOpen && (
-        <ImportModal
-          onHide={() => setIsImportModalOpen(false)}
-          from={{ type: 'file' }}
-          workspaceName={selectedCollection?.label}
-          organizationId={organizationId}
-          defaultProjectId={projectId}
-          defaultWorkspaceId={selectedCollectionId ?? undefined}
-        />
-      )}
     </>
   );
 };

@@ -3,7 +3,7 @@ import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
 import { getOrInheritAuthentication, getOrInheritHeaders, shouldSuppressUserAgent } from '../../network/network';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from './try-interpolate';
+import { tryToInterpolateRequestAndCollectSensitiveValues } from './try-interpolate';
 
 const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup, type: requestGroupType } = models.requestGroup;
@@ -17,6 +17,8 @@ export interface RenderedRealtimeConnectPayload {
   parameters: RequestParameter[];
   workspaceCookieJar: CookieJar;
   suppressUserAgent: boolean;
+  /** confidential values registered while rendering this connect payload, for main-process timeline/event-log redaction (T10) */
+  sensitiveValues: string[];
 }
 
 export async function renderRealtimeConnectPayload({
@@ -43,7 +45,7 @@ export async function renderRealtimeConnectPayload({
   const manualCookies = workspaceCookieJar.cookies.filter(cookie => cookie.source === 'manual');
   const nonManualCookies = workspaceCookieJar.cookies.filter(cookie => cookie.source !== 'manual');
 
-  const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+  const result = await tryToInterpolateRequestAndCollectSensitiveValues({
     request,
     environmentId,
     payload: {
@@ -57,9 +59,10 @@ export async function renderRealtimeConnectPayload({
     },
   });
 
-  if (!rendered) {
+  if (!result) {
     return undefined;
   }
+  const { rendered, sensitiveValues } = result;
 
   const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
 
@@ -76,5 +79,6 @@ export async function renderRealtimeConnectPayload({
       cookies: [...rendered.workspaceCookieJar.cookies, ...nonManualCookies],
     },
     suppressUserAgent,
+    sensitiveValues,
   };
 }

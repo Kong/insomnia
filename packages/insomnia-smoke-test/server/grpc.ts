@@ -5,7 +5,7 @@ import path from 'node:path';
 import * as grpc from '@grpc/grpc-js';
 import type { HandleCall } from '@grpc/grpc-js/build/src/server-call';
 import * as protoLoader from '@grpc/proto-loader';
-import { addReflection } from '@ravanallc/grpc-server-reflection';
+import { ReflectionService } from '@grpc/reflection';
 
 const PROTO_PATH = path.resolve('../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
@@ -181,9 +181,10 @@ const routeChat: HandleCall<any, any> = (call: any) => {
 export const startGRPCServer = (port: number) => {
   return new Promise<void>((resolve, reject) => {
     const server = new grpc.Server();
+    const reflectionService = new ReflectionService(packageDefinition);
 
     // Enable reflection
-    addReflection(server, '../../packages/insomnia-smoke-test/fixtures/route_guide.bin');
+    reflectionService.addToServer(server);
 
     // @ts-expect-error generated from proto file
     server.addService(routeguide.RouteGuide.service, {
@@ -211,7 +212,7 @@ export const startGRPCServer = (port: number) => {
     const serverWithTLS = new grpc.Server();
 
     // Enable reflection
-    addReflection(serverWithTLS, '../../packages/insomnia-smoke-test/fixtures/route_guide.bin');
+    reflectionService.addToServer(serverWithTLS);
 
     // @ts-expect-error generated from proto file
     serverWithTLS.addService(routeguide.RouteGuide.service, {
