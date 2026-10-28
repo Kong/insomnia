@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { ProjectType } from '@package/enums/project-types';
-import { getServerBranches, getServerCommits, GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
-import { Collection } from '@package/models/collection';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ProjectType } from '../../enums/project-types';
+import { getServerBranches, getServerCommits, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { Collection } from '../../models/collection';
+import { Project } from '../../models/project';
 
 test('Verify pushing committed changes to the remote succeeds', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;

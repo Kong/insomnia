@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 const CHARSET_ERROR =
   "Branch names must be at least 3 characters long and can only contain English letters, numbers, period (.), hyphen (-), underscore (_) and forward slash (/)";
@@ -27,25 +28,25 @@ test("Verify creating a branch with an invalid or already-used name is rejected 
   user,
 }) => {
   const { cloudSyncFlow } = user.flowManager;
-  const { cloudSyncPage, cloudSyncBranchesDialogPage } = user.pageManager;
+  const { cloudSyncPage } = user.pageManager;
 
   await cloudSyncFlow.fetch("My Collection R1");
   await cloudSyncPage.openBranchesDialog();
   for (const { name, error } of INVALID_NAMES) {
-    await cloudSyncBranchesDialogPage.createBranch(name);
-    await cloudSyncBranchesDialogPage.waitForBranchCreationError(error);
+    await cloudSyncPage.createBranch(name);
+    await cloudSyncPage.waitForBranchCreationError(error);
   }
 
   const existingBranch = faker.git.branch();
-  await cloudSyncBranchesDialogPage.createBranch(existingBranch);
+  await cloudSyncPage.createBranch(existingBranch);
   await expect
-    .poll(() => cloudSyncBranchesDialogPage.isLocalBranchListed(existingBranch))
+    .poll(() => cloudSyncPage.isLocalBranchListed(existingBranch))
     .toBe(true);
-  await cloudSyncBranchesDialogPage.createBranch(existingBranch);
-  await cloudSyncBranchesDialogPage.waitForBranchCreationError(
+  await cloudSyncPage.createBranch(existingBranch);
+  await cloudSyncPage.waitForBranchCreationError(
     `Branch already exists by name ${existingBranch}`,
   );
   for (const { name } of INVALID_NAMES) {
-    await cloudSyncBranchesDialogPage.waitForLocalBranchRemoved(name);
+    await cloudSyncPage.waitForLocalBranchRemoved(name);
   }
 });
