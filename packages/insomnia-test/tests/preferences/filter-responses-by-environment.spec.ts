@@ -1,23 +1,24 @@
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 test("Verify the 'Filter responses by environment' preference persists across closing and reopening Preferences", async ({
   user,
 }) => {
   const { preferencesFlow } = user.flowManager;
-  const { preferences } = user.pageManager;
+  const { preferencesPage } = user.pageManager;
 
-  await preferences.open();
+  await preferencesPage.open();
   const enabledBeforeToggle =
-    await preferences.isFilterResponsesByEnvironmentEnabled();
-  await preferences.close();
+    await preferencesPage.isFilterResponsesByEnvironmentEnabled();
+  await preferencesPage.close();
 
   await preferencesFlow.set({ filterResponsesByEnv: !enabledBeforeToggle });
 
-  await preferences.open();
+  await preferencesPage.open();
   const enabledAfterReopen =
-    await preferences.isFilterResponsesByEnvironmentEnabled();
-  await preferences.close();
+    await preferencesPage.isFilterResponsesByEnvironmentEnabled();
+  await preferencesPage.close();
 
   expect(enabledAfterReopen).toBe(!enabledBeforeToggle);
 });

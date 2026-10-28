@@ -1,5 +1,6 @@
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 test("Verify a new vault key can be generated and persists across reopening Preferences", async ({
   user,
@@ -8,10 +9,10 @@ test("Verify a new vault key can be generated and persists across reopening Pref
 
   const generatedKey = await preferencesFlow.generateVaultKey();
 
-  const { preferences, preferencesVault } = user.pageManager;
-  await preferences.open();
-  const redisplayedKey = await preferencesVault.getVaultKey();
-  await preferences.close();
+  const { preferencesPage } = user.pageManager;
+  await preferencesPage.open();
+  const redisplayedKey = await preferencesPage.getVaultKey();
+  await preferencesPage.close();
 
   expect(generatedKey.length).toBeGreaterThan(0);
   expect(redisplayedKey).toBe(generatedKey);
