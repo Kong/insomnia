@@ -1,12 +1,13 @@
 import { faker } from '@faker-js/faker';
-import { ContentType } from '@package/enums/content-type';
-import { HttpMethod } from '@package/enums/http-method';
-import { ProjectType } from '@package/enums/project-types';
-import { RequestState } from '@package/enums/request-state';
-import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from '@package/misc/fixtures';
-import { Collection } from '@package/models/collection';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ContentType } from '../../enums/content-type';
+import { HttpMethod } from '../../enums/http-method';
+import { ProjectType } from '../../enums/project-types';
+import { RequestState } from '../../enums/request-state';
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from '../../misc/fixtures';
+import { Collection } from '../../models/collection';
+import { Project } from '../../models/project';
 
 const query = '{ characters { results { name } } }';
 const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
@@ -49,6 +50,6 @@ test('Verify Cancelling an In-Flight GraphQL Request Shows a Cancellation Messag
   const laterResponse = await graphqlRequestFlow.send(laterRequest);
 
   expect(requestStateAfterCancel).toBe(RequestState.Idle);
-  expect(cancelledResponse.statusBar.code).toBeUndefined();
-  expect(laterResponse.statusBar.code).toBe(200);
+  expect(cancelledResponse.statusCode).toBeUndefined();
+  expect(laterResponse.statusCode).toBe(200);
 });
