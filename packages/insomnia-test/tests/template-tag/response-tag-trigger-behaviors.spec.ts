@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify the response Tag's Trigger Behavior Controls When its Dependency Request is Resent", async ({
   user,
@@ -53,10 +54,10 @@ test("Verify the response Tag's Trigger Behavior Controls When its Dependency Re
   const always = await httpRequestFlow.send(alwaysRequest);
 
   await expect(neverFailure).rejects.toThrow(/No responses for request/);
-  expect(noHistory.statusBar.code).toBe(200);
-  expect(noHistory.preview).toMatchObject({ data: marker });
-  expect(whenExpired.statusBar.code).toBe(200);
-  expect(whenExpired.preview).toMatchObject({ data: marker });
-  expect(always.statusBar.code).toBe(200);
-  expect(always.preview).toMatchObject({ data: marker });
+  expect(noHistory.statusCode).toBe(200);
+  expect(noHistory.body).toMatchObject({ data: marker });
+  expect(whenExpired.statusCode).toBe(200);
+  expect(whenExpired.body).toMatchObject({ data: marker });
+  expect(always.statusCode).toBe(200);
+  expect(always.body).toMatchObject({ data: marker });
 });

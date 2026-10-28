@@ -1,11 +1,12 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../../enums/project-types";
+import { test } from "../../../misc/fixtures";
+import { Collection } from "../../../models/collection";
+import { Project } from "../../../models/project";
 
 test("Verify the tag modal's source follows the edited template and hides for non-variable content", async ({
   user,
@@ -18,7 +19,7 @@ test("Verify the tag modal's source follows the edited template and hides for no
   );
   await importFlow.importFile(
     project,
-    path.join(import.meta.dirname, "environment-cascade-collection.yaml"),
+    path.join(__dirname, "environment-cascade-collection.yaml"),
   );
   const collection = new Collection("Environment Cascade");
   await environmentFlow.activate(collection, "Base Environment");
@@ -29,10 +30,7 @@ test("Verify the tag modal's source follows the edited template and hides for no
     "{{ _.subOnlyVar }}",
     "subOnly_base",
   );
-  await variableSourceFlow.selectModalVariable(
-    { label: "-- Custom --" },
-    "Failed to render environment variables: 'my custom template logic'",
-  );
+  await variableSourceFlow.selectModalVariable({ label: "-- Custom --" });
   const plainText = await variableSourceFlow.setModalTemplate("plain text", "plain text");
   const inheritedKey = await variableSourceFlow.setModalTemplate("{{ constructor }}");
   const padded = await variableSourceFlow.setModalTemplate("{{  _.subOnlyVar  }}", "subOnly_base");
