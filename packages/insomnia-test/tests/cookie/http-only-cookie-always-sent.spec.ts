@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, HTTP_SERVER_HTTPS, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, HTTP_SERVER_HTTPS, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify HttpOnly Cookie Flag Persists And Cookie Is Always Sent Over HTTP And HTTPS", async ({
   user,
@@ -45,15 +46,15 @@ test("Verify HttpOnly Cookie Flag Persists And Cookie Is Always Sent Over HTTP A
   const httpResponse = await httpRequestFlow.send(httpRequest);
   const httpsResponse = await httpRequestFlow.send(httpsRequest);
 
-  expect(httpResponse.statusBar.code).toBe(200);
-  const { cookies: httpCookies } = httpResponse.preview as {
+  expect(httpResponse.statusCode).toBe(200);
+  const { cookies: httpCookies } = httpResponse.body as {
     cookies: Record<string, string>;
   };
   expect(httpCookies).toMatchObject({
     [httpOnlyCookie.key]: httpOnlyCookie.value,
   });
-  expect(httpsResponse.statusBar.code).toBe(200);
-  const { cookies: httpsCookies } = httpsResponse.preview as {
+  expect(httpsResponse.statusCode).toBe(200);
+  const { cookies: httpsCookies } = httpsResponse.body as {
     cookies: Record<string, string>;
   };
   expect(httpsCookies).toMatchObject({
