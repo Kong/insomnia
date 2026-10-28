@@ -4,11 +4,12 @@ import * as net from "node:net";
 import type { Duplex } from "node:stream";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, test, WS_SERVER } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, test, WS_SERVER } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const startRecordingProxy = async () => {
   const targets: string[] = [];
@@ -103,7 +104,7 @@ test("Verify WebSocket Requests Are Routed Through the Preferences Proxy", async
     );
 
     await expect
-      .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+      .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
       .toContain("101 Switching Protocols");
     expect(proxy.targets).toContain(hostOf(WS_SERVER));
   } finally {
