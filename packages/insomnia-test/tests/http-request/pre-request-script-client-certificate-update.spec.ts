@@ -1,13 +1,14 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { certPath } from "@package/misc/certs";
-import { DEFAULT_TIMEOUT, HTTP_SERVER_MTLS, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { certPath } from "../../misc/certs";
+import { DEFAULT_TIMEOUT, HTTP_SERVER_MTLS, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER_MTLS}/post`;
 
@@ -19,7 +20,7 @@ test("Verify pre-request script reads and replaces the client certificate via in
 
   await preferencesFlow.set({
     validateSSL: false,
-    dataFolders: [path.join(import.meta.dirname, "../../misc/fixtures")],
+    dataFolders: [path.join(__dirname, "../../misc/fixtures")],
   });
 
   const project = await workspaceFlow.createProject(
@@ -53,14 +54,14 @@ test("Verify pre-request script reads and replaces the client certificate via in
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Adding SSL PEM certificate");
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Adding SSL KEY certificate");
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("original cert:");
 });
