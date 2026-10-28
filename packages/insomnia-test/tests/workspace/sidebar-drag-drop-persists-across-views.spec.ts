@@ -1,18 +1,19 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { TreeNodeType } from "@package/enums/tree-node-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Folder } from "@package/models/folder";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { TreeNodeType } from "../../enums/tree-node-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Folder } from "../../models/folder";
+import { Project } from "../../models/project";
 
 test("Verify sidebar reorder behaves unchanged and persists across views when switching between the spec and request views", async ({
   user,
 }) => {
   const { workspaceFlow, folderFlow, httpRequestFlow } = user.flowManager;
-  const { workspacePage, specPage } = user.pageManager;
+  const { workspacePage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -62,7 +63,7 @@ test("Verify sidebar reorder behaves unchanged and persists across views when sw
   );
 
   await workspacePage.clickNode(collectionNode);
-  await specPage.navigate();
+  await workspacePage.navigateSpec();
   await httpRequestFlow.get(folderChild.name);
   const treeAfterViewSwitch = await workspacePage.getTree();
   const collectionChildrenAfterViewSwitch = treeAfterViewSwitch

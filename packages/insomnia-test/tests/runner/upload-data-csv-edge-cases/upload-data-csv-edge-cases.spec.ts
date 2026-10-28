@@ -1,12 +1,13 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../../enums/http-method";
+import { ProjectType } from "../../../enums/project-types";
+import { HTTP_SERVER, test } from "../../../misc/fixtures";
+import { Collection } from "../../../models/collection";
+import { Project } from "../../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 
@@ -35,7 +36,7 @@ test("Verify a quoted CSV field containing a comma is uploaded as a single value
   });
 
   const result = await workspaceFlow.run(collection, {
-    dataFilePath: path.join(import.meta.dirname, "quoted-comma.csv"),
+    dataFilePath: path.join(__dirname, "quoted-comma.csv"),
   });
 
   expect(result.testResultCount).toEqual({ passed: 1, total: 1 });
@@ -64,7 +65,7 @@ test("Verify escaped double quotes inside a quoted CSV field are unescaped to a 
   });
 
   const result = await workspaceFlow.run(collection, {
-    dataFilePath: path.join(import.meta.dirname, "escaped-quotes.csv"),
+    dataFilePath: path.join(__dirname, "escaped-quotes.csv"),
   });
 
   expect(result.testResultCount).toEqual({ passed: 1, total: 1 });
@@ -100,7 +101,7 @@ test("Verify a CSV row with fewer cells than the header defaults the missing tra
   });
 
   const result = await workspaceFlow.run(collection, {
-    dataFilePath: path.join(import.meta.dirname, "missing-trailing-cell.csv"),
+    dataFilePath: path.join(__dirname, "missing-trailing-cell.csv"),
   });
 
   expect(result.testResultCount).toEqual({
@@ -133,7 +134,7 @@ test("Verify a newline inside a quoted CSV field is preserved as part of a singl
   });
 
   const result = await workspaceFlow.run(collection, {
-    dataFilePath: path.join(import.meta.dirname, "newline-in-quoted-field.csv"),
+    dataFilePath: path.join(__dirname, "newline-in-quoted-field.csv"),
   });
 
   expect(result.testResultCount).toEqual({ passed: 1, total: 1 });
@@ -163,7 +164,7 @@ test("Verify a trailing blank line in the CSV file does not produce an extra bog
   });
 
   const result = await workspaceFlow.run(collection, {
-    dataFilePath: path.join(import.meta.dirname, "trailing-blank-line.csv"),
+    dataFilePath: path.join(__dirname, "trailing-blank-line.csv"),
   });
 
   expect(result.testResultCount).toEqual({ passed: 1, total: 1 });
