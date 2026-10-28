@@ -1,12 +1,13 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { MockBodyType } from "@package/enums/mock-body-type";
-import { ProjectType } from "@package/enums/project-types";
-import { MOCK_BIN_SERVER, MOCK_BIN_SOURCE_RESPONSE, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { MockServer } from "@package/models/mock-server";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { MockBodyType } from "../../enums/mock-body-type";
+import { ProjectType } from "../../enums/project-types";
+import { MOCK_BIN_SERVER, MOCK_BIN_SOURCE_RESPONSE, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { MockServer } from "../../models/mock-server";
+import { Project } from "../../models/project";
 
 test("Verify Overwriting A Mock Route With A Request Response", async ({
   user,
@@ -40,6 +41,6 @@ test("Verify Overwriting A Mock Route With A Request Response", async ({
   await mockServerFlow.overwriteRouteFromResponse(server, route);
   const responseView = await mockServerFlow.test(route);
 
-  expect(responseView.statusBar.code).toBe(MOCK_BIN_SOURCE_RESPONSE.statusCode);
-  expect(responseView.preview).toEqual(MOCK_BIN_SOURCE_RESPONSE.body);
+  expect(responseView.statusCode).toBe(MOCK_BIN_SOURCE_RESPONSE.statusCode);
+  expect(responseView.body).toEqual(MOCK_BIN_SOURCE_RESPONSE.body);
 });

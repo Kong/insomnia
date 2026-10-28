@@ -2,13 +2,14 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
+import { ProjectType } from "../../../enums/project-types";
+import { test } from "../../../misc/fixtures";
+import { Project } from "../../../models/project";
+
 const UNIT_TEST_FIXTURE = fs.readFileSync(
-  path.join(import.meta.dirname, "unit-test.yaml"),
+  path.join(__dirname, "unit-test.yaml"),
   "utf8",
 );
 

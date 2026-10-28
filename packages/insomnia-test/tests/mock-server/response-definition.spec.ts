@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { MockBodyType } from "@package/enums/mock-body-type";
-import { ProjectType } from "@package/enums/project-types";
-import { MOCK_BIN_SERVER, test } from "@package/misc/fixtures";
-import { MockServer } from "@package/models/mock-server";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { MockBodyType } from "../../enums/mock-body-type";
+import { ProjectType } from "../../enums/project-types";
+import { MOCK_BIN_SERVER, test } from "../../misc/fixtures";
+import { MockServer } from "../../models/mock-server";
+import { Project } from "../../models/project";
 
 test("Verify Mock Route Response Definition Is Returned By Test", async ({
   user,
@@ -37,9 +38,9 @@ test("Verify Mock Route Response Definition Is Returned By Test", async ({
   });
   const responseView = await mockServerFlow.test(route);
 
-  expect(responseView.statusBar.code).toBe(201);
-  expect(responseView.statusBar.message).toBe(statusText);
-  expect(responseView.preview).toEqual(body);
+  expect(responseView.statusCode).toBe(201);
+  expect(responseView.statusMessage).toBe(statusText);
+  expect(responseView.body).toEqual(body);
   expect(responseView.headers).toEqual(
     expect.arrayContaining([expect.objectContaining(header)]),
   );
