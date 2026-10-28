@@ -1,10 +1,10 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { DeleteMode } from "@package/enums/delete-mode";
-import { readBackendProjectMetas } from "@package/misc/backend-projects";
-import { resetCloudSyncState, test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { DeleteMode } from "../../enums/delete-mode";
+import { resetCloudSyncState, test } from "../../misc/fixtures";
 
 test.afterAll(async () => {
   await resetCloudSyncState();
@@ -20,9 +20,20 @@ test("Verify deleting a synced Cloud Sync workspace archives its own backend pro
   const workspace = await workspaceFlow.get({ name: "My Environment" });
   const dataPath = await appFlow.getDataPath();
   const projectsDir = path.join(dataPath, "version-control", "projects");
-  const backendProjectId = (await readBackendProjectMetas(projectsDir)).find(
-    (m) => m.rootDocumentId === workspace!.id,
-  )?.id;
+  const projectDirs = await fs.promises.readdir(projectsDir);
+  let backendProjectId: string | undefined;
+  for (const dir of projectDirs) {
+    const meta = JSON.parse(
+      await fs.promises.readFile(
+        path.join(projectsDir, dir, "meta.json"),
+        "utf8",
+      ),
+    );
+    if (meta.rootDocumentId === workspace!.id) {
+      backendProjectId = meta.id;
+      break;
+    }
+  }
   await cloudSyncPage.backToAllProjects();
 
   const logLines = await appFlow.captureMainProcessLog(async () => {

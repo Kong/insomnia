@@ -1,7 +1,8 @@
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, setGitSyncFeatureFlag } from "@package/misc/fixtures";
-import { test } from "@package/misc/git-fixtures";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, setGitSyncFeatureFlag } from "../../misc/fixtures";
+import { test } from "../../misc/git-fixtures";
 
 test.beforeAll(async () => {
   await setGitSyncFeatureFlag(false);
@@ -14,10 +15,10 @@ test.afterAll(async () => {
 test(
   "Verify selecting the Git project type shows the disabled-feature banner, hides the setup form, and disables Scan for files when Git Sync is disabled by org feature flag",
   async ({ user }) => {
-    const { workspacePage, projectSettingsPage, projectPage } = user.pageManager;
+    const { workspacePage, projectSettingsPage } = user.pageManager;
 
-    await projectPage.clickNewProject();
-    await projectPage.clickProjectTypeTile(ProjectType.Git);
+    await workspacePage.clickNewProject();
+    await workspacePage.clickProjectTypeTile(ProjectType.Git);
 
     let bannerText: string | undefined;
     await expect
@@ -30,11 +31,17 @@ test(
       )
       .toBeTruthy();
     expect(bannerText).toContain("Git Sync limited to organizations");
-    await expect(projectSettingsPage.gitSetupForm).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
-    await expect(projectSettingsPage.scanForFilesButton).toBeDisabled({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await expect
+      .poll(() => projectSettingsPage.isHidden(projectSettingsPage.gitSetupForm), {
+        timeout: DEFAULT_TIMEOUT,
+      })
+      .toBe(true);
+    await expect
+      .poll(
+        () =>
+          projectSettingsPage.isDisabled(projectSettingsPage.scanForFilesButton),
+        { timeout: DEFAULT_TIMEOUT },
+      )
+      .toBe(true);
   },
 );

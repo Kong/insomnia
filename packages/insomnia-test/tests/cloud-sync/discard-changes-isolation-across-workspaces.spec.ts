@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 test("Verify discarding changes on one Cloud-synced workspace does not affect another workspace's uncommitted edits", async ({
   user,
@@ -13,7 +14,7 @@ test("Verify discarding changes on one Cloud-synced workspace does not affect an
   const collectionX = await workspaceFlow.getCollection({
     name: "My Collection R1",
   });
-  const requestXBefore = await httpRequestFlow.get("New Request");
+  const requestXBefore = await httpRequestFlow.get("New Request", collectionX);
   const editedUrlX = faker.internet.url();
   await httpRequestPage.setUrl(editedUrlX);
 
@@ -26,6 +27,7 @@ test("Verify discarding changes on one Cloud-synced workspace does not affect an
 
   const requestXAfterDiscard = await httpRequestFlow.get(
     "New Request",
+    collectionX,
   );
 
   expect(clientYAfterDiscard?.url).toBe(clientYBefore?.url);

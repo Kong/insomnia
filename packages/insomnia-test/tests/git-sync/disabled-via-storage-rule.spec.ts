@@ -1,7 +1,8 @@
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, setGitSyncStorageRule } from "@package/misc/fixtures";
-import { test } from "@package/misc/git-fixtures";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, setGitSyncStorageRule } from "../../misc/fixtures";
+import { test } from "../../misc/git-fixtures";
 
 test.beforeAll(async () => {
   await setGitSyncStorageRule(false);
@@ -14,9 +15,9 @@ test.afterAll(async () => {
 test(
   "Verify the create-project dialog shows a storage-restriction banner and disables the Git project type when Git Sync is disabled by org storage rule",
   async ({ user }) => {
-    const { workspacePage, projectSettingsPage, projectPage } = user.pageManager;
+    const { workspacePage, projectSettingsPage } = user.pageManager;
 
-    await projectPage.clickNewProject();
+    await workspacePage.clickNewProject();
 
     let bannerText: string | undefined;
     await expect
@@ -30,8 +31,14 @@ test(
       .toBeTruthy();
     expect(bannerText).toContain("Cloud Sync and Local Vault");
     expect(bannerText).not.toContain("Git Sync");
-    await expect(
-      projectSettingsPage.projectTypeTile(ProjectType.Git),
-    ).toBeDisabled({ timeout: DEFAULT_TIMEOUT });
+    await expect
+      .poll(
+        () =>
+          projectSettingsPage.isDisabled(
+            projectSettingsPage.projectTypeTile(ProjectType.Git),
+          ),
+        { timeout: DEFAULT_TIMEOUT },
+      )
+      .toBe(true);
   },
 );

@@ -2,12 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { readBackendProjectMetas } from "@package/misc/backend-projects";
-import { getCloudSyncProjectInfo, setCloudSyncArchiveFailure } from "@package/misc/cloud-sync-mock";
-import { HTTP_SERVER, resetCloudSyncState, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { getCloudSyncProjectInfo, HTTP_SERVER, resetCloudSyncState, setCloudSyncArchiveFailure, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
 
 test.afterAll(async () => {
   await resetCloudSyncState();
@@ -18,7 +17,7 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
 }) => {
   const { workspaceFlow, httpRequestFlow, cloudSyncFlow, appFlow } =
     user.flowManager;
-  const { cloudSyncPage, cloudSyncFileDeletePage } = user.pageManager;
+  const { cloudSyncPage } = user.pageManager;
 
   const project = await workspaceFlow.getProject({
     name: "Personal Workspace",
@@ -26,12 +25,12 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   await cloudSyncFlow.openProjectDashboard(project!);
 
   const mcpClientInfoBefore = await getCloudSyncProjectInfo("My MCP Client");
-  await cloudSyncFileDeletePage.openFileDeleteDialog("My MCP Client");
-  const deleteDialogText = await cloudSyncFileDeletePage.getFileDeleteDialogText();
+  await cloudSyncPage.openFileDeleteDialog("My MCP Client");
+  const deleteDialogText = await cloudSyncPage.getFileDeleteDialogText();
   const logLines = await appFlow.captureMainProcessLog(async () => {
-    await cloudSyncFileDeletePage.confirmFileDelete();
+    await cloudSyncPage.confirmFileDelete();
     await expect
-      .poll(() => cloudSyncFileDeletePage.isFileCardVisible("My MCP Client"))
+      .poll(() => cloudSyncPage.isFileCardVisible("My MCP Client"))
       .toBe(false);
   });
   const mcpClientInfoAfter = await getCloudSyncProjectInfo("My MCP Client");
@@ -39,15 +38,15 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   const ghostInfoBefore = await getCloudSyncProjectInfo("Ghost Collection");
   await cloudSyncFlow.deleteUnsyncedFile("Ghost Collection");
   await expect
-    .poll(() => cloudSyncFileDeletePage.isFileCardVisible("Ghost Collection"))
+    .poll(() => cloudSyncPage.isFileCardVisible("Ghost Collection"))
     .toBe(false);
   const ghostInfoAfter = await getCloudSyncProjectInfo("Ghost Collection");
 
   await setCloudSyncArchiveFailure(true);
   await cloudSyncFlow.deleteUnsyncedFile("My Environment");
-  await cloudSyncFileDeletePage.waitForFileDeleteFailureToast("My Environment");
+  await cloudSyncPage.waitForFileDeleteFailureToast("My Environment");
   const environmentStillVisible =
-    await cloudSyncFileDeletePage.isFileCardVisible("My Environment");
+    await cloudSyncPage.isFileCardVisible("My Environment");
   const environmentInfoAfterFailure =
     await getCloudSyncProjectInfo("My Environment");
   await setCloudSyncArchiveFailure(false);
@@ -68,10 +67,19 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   const dataPath = await appFlow.getDataPath();
   const projectsDir = path.join(dataPath, "version-control", "projects");
   const readProjectMeta = async (workspaceId: string) => {
-    const [match] = (await readBackendProjectMetas(projectsDir))
-      .filter((m) => m.rootDocumentId === workspaceId)
-      .map((m) => ({ rootDocumentId: m.rootDocumentId, dir: m.dir }));
-    return match;
+    const dirs = await fs.promises.readdir(projectsDir);
+    for (const dir of dirs) {
+      const meta = JSON.parse(
+        await fs.promises.readFile(
+          path.join(projectsDir, dir, "meta.json"),
+          "utf8",
+        ),
+      );
+      if (meta.rootDocumentId === workspaceId) {
+        return { rootDocumentId: meta.rootDocumentId as string, dir };
+      }
+    }
+    return;
   };
   const readLatestSnapshotState = async (dir: string) => {
     const snapshotsDir = path.join(projectsDir, dir, "snapshots");
