@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify Trailing Blank Row In Headers And Params Is Not Persisted Until Typed Into", async ({
   user,
@@ -38,7 +39,7 @@ test("Verify Trailing Blank Row In Headers And Params Is Not Persisted Until Typ
   const paramsAfter = await httpRequestPage.getParams();
 
   const isBlank = (pair: { name: string; value: string }) =>
-    [pair.name, pair.value].every((text) => text === "");
+    pair.name === "" && pair.value === "";
 
   expect(request).toBeDefined();
   expect(headersBefore.some(isBlank)).toBe(false);
