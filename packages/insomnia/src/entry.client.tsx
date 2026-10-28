@@ -172,19 +172,12 @@ try {
 
 const initialEntry = await getInitialEntry();
 
-// `getInitialEntry` returns either a bare pathname string or an object carrying router
-// `state` (e.g. `asyncTaskList`). Normalize both shapes, then set the URL and state before
-// hydration. We use `history.replaceState` rather than assigning `window.location.pathname`
-// (a full reload that would drop the `state`): in SPA mode `HydratedRouter` hydrates against
-// the current `window.location` and reads `location.state` from `window.history.state.usr`.
-if (initialEntry) {
-  const { pathname, state } =
-    typeof initialEntry === 'string' ? { pathname: initialEntry, state: undefined } : initialEntry;
-
-  if (pathname !== window.location.pathname || state) {
-    console.log('[entry.client] Initial entry:', pathname);
-    window.history.replaceState({ ...window.history.state, usr: state }, '', pathname);
-  }
+// Set the URL before hydration. We use `history.replaceState` rather than assigning
+// `window.location.pathname`, which would be a full reload: in SPA mode `HydratedRouter` hydrates
+// against the current `window.location`.
+if (initialEntry && initialEntry !== window.location.pathname) {
+  console.log('[entry.client] Initial entry:', initialEntry);
+  window.history.replaceState(window.history.state, '', initialEntry);
 }
 
 startTransition(() => {

@@ -20,11 +20,12 @@ import type {
   WorkspaceMeta,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import { href, Outlet, redirect, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { Modal } from '~/basic-components/modal';
+import { organizationDataQuery } from '~/common/app-data';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
@@ -33,6 +34,7 @@ import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project'
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { useDBQuery } from '~/ui/hooks/use-query';
 import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 import { createFetcherLoadHook } from '~/ui/utils/router';
 
@@ -340,9 +342,44 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   };
 }
 
+/**
+ * `activeProject` and `projects` come from the organization data query instead of the loader, so
+ * they follow `db.changes` (e.g. a project renamed or turned local by the startup sync) without
+ * re-running this loader. The loader values are only a fallback until the query has the project.
+ * The remaining fields still come from the loader.
+ */
 export function useWorkspaceLoaderData() {
-  return useRouteLoaderData<typeof clientLoader>(
+  const loaderData = useRouteLoaderData<typeof clientLoader>(
     'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  );
+  const { organizationId = '', projectId } = useParams();
+  const { data: organizationData } = useDBQuery({
+    ...organizationDataQuery(organizationId),
+    enabled: Boolean(loaderData && organizationId),
+  });
+
+  const projectWithGitRepository = loaderData
+    ? organizationData?.projects.find(p => p._id === projectId)
+    : undefined;
+  const activeProject = useMemo(() => {
+    if (!projectWithGitRepository) {
+      return;
+    }
+    // Strip the joined repository: consumers pass the project to `services.project.update`, which
+    // would otherwise persist it onto the project doc.
+    const { gitRepository, ...project } = projectWithGitRepository;
+    return project as Project;
+  }, [projectWithGitRepository]);
+  const projects = organizationData?.projects;
+
+  return useMemo(
+    () =>
+      loaderData && {
+        ...loaderData,
+        activeProject: activeProject ?? loaderData.activeProject,
+        projects: projects ?? loaderData.projects,
+      },
+    [loaderData, activeProject, projects],
   );
 }
 

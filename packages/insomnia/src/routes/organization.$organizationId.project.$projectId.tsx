@@ -1,9 +1,16 @@
+import type { GitRepository, Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData } from 'react-router';
+import { useEffect, useMemo } from 'react';
+import { href, Outlet, redirect, useOutletContext, useParams } from 'react-router';
 
+import { organizationDataQuery } from '~/common/app-data';
 import { invariant } from '~/common/utils/invariant';
+import { useRootLoaderData } from '~/root';
 import { logout } from '~/ui/account/session';
+import { MissingEntityRedirect } from '~/ui/components/missing-entity-redirect';
+import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { useDBQuery } from '~/ui/hooks/use-query';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -12,57 +19,55 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
 
-  const userSession = await services.userSession.get();
-  const { id: sessionId, accountId } = userSession;
+  const { id: sessionId } = await services.userSession.get();
 
   if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
     await logout();
     throw redirect(href('/auth/login'));
   }
 
-  const project = await services.project.getById(projectId);
-
-  if (!project) {
-    // The project was deleted; stay inside the current organization rather than bouncing the user out.
-    const allProjects = await services.project.listByOrganizationIds(organizationId);
-    const [fallbackProject] = models.project.sortProjects(allProjects);
-    if (fallbackProject) {
-      return redirect(
-        href('/organization/:organizationId/project/:projectId', {
-          organizationId,
-          projectId: fallbackProject._id,
-        }),
-      );
-    }
-    return redirect(href('/organization/:organizationId', { organizationId }));
-  }
-
-  try {
-    if (accountId) {
-      const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
-
-      if (!window.localStorage.getItem(firstAccountLandingKey)) {
-        window.localStorage.setItem(firstAccountLandingKey, 'true');
-      }
-    }
-  } catch (error) {
-    console.log('[organizations] Failed to set first account landing flag', error);
-  }
-
-  const activeProjectGitRepository =
-    project && models.project.isGitProject(project)
-      ? await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '')
-      : undefined;
-
-  return {
-    activeProject: project,
-    activeProjectGitRepository,
-  };
+  // Prefetch only. The component reads the project from the cache and handles a missing one.
+  await dbQueryClient.ensureQueryData(organizationDataQuery(organizationId));
+  return null;
 }
 
-export function useProjectLoaderData() {
-  return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
+/**
+ * The active project, derived from the organization data query (prefetched by the loader above), so
+ * it follows `db.changes` — e.g. a project renamed or turned local by the startup sync — without the
+ * loader having to re-run. Returns undefined outside a project route, like the loader data used to.
+ * Inside the project's content `activeProject` is always set: the route renders the content only
+ * while the project exists.
+ */
+export function useProjectLoaderData():
+  | { activeProject: Project | undefined; activeProjectGitRepository: GitRepository | undefined }
+  | undefined {
+  const { organizationId = '', projectId } = useParams();
+  const { data } = useDBQuery({ ...organizationDataQuery(organizationId), enabled: Boolean(organizationId && projectId) });
+  const projectWithGitRepository = projectId ? data?.projects.find(p => p._id === projectId) : undefined;
+
+  return useMemo(() => {
+    if (!projectId) {
+      return;
+    }
+    if (!projectWithGitRepository) {
+      return { activeProject: undefined, activeProjectGitRepository: undefined };
+    }
+    // Strip the joined repository: consumers pass the project to `services.project.update`, which
+    // would otherwise persist it onto the project doc.
+    const { gitRepository, ...activeProject } = projectWithGitRepository;
+    return { activeProject: activeProject as Project, activeProjectGitRepository: gitRepository };
+  }, [projectId, projectWithGitRepository]);
 }
+
+// Where to go when the project in the URL does not exist (anymore): stay inside the current
+// organization rather than bouncing the user out. `sortedProjects` comes from organization data,
+// which is already sorted.
+const getProjectFallbackRoute = (organizationId: string, sortedProjects: Project[]) => {
+  const [fallbackProject] = sortedProjects;
+  return fallbackProject
+    ? href('/organization/:organizationId/project/:projectId', { organizationId, projectId: fallbackProject._id })
+    : href('/organization/:organizationId', { organizationId });
+};
 
 export interface ProjectRouteContextValue {
   isKonnectOrganization: boolean;
@@ -78,13 +83,14 @@ export function useProjectRouteContext() {
  * not having a selected project. This route only contributes the parts that need the active
  * project itself.
  */
-const Component = ({ loaderData }: Route.ComponentProps) => {
+const Component = () => {
   const { organizationId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
 
-  const { activeProject } = loaderData;
+  const { activeProject } = useProjectLoaderData() ?? {};
+  const { userSession } = useRootLoaderData()!;
 
   const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
 
@@ -96,6 +102,35 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     projectId: activeProject?._id,
     gitRepositoryId,
   });
+
+  const hasActiveProject = Boolean(activeProject);
+  const { accountId } = userSession;
+  useEffect(() => {
+    if (!hasActiveProject || !accountId) {
+      return;
+    }
+    try {
+      const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
+      if (!window.localStorage.getItem(firstAccountLandingKey)) {
+        window.localStorage.setItem(firstAccountLandingKey, 'true');
+      }
+    } catch (error) {
+      console.log('[organizations] Failed to set first account landing flag', error);
+    }
+  }, [hasActiveProject, accountId]);
+
+  // Not in the organization data: the data is not loaded (the loader prefetches it, so only if the
+  // cache was cleared in between), the project was just created and is not cached yet, removed
+  // while open (e.g. by a Konnect sync or disconnect), or the URL points at a project that doesn't
+  // exist / belongs to another organization.
+  if (!activeProject) {
+    return (
+      <MissingEntityRedirect
+        queryOptions={organizationDataQuery(organizationId)}
+        getRedirectTo={({ projects }) => getProjectFallbackRoute(organizationId, projects)}
+      />
+    );
+  }
 
   return (
     <GitFileIssuesProvider value={gitFileIssues}>
