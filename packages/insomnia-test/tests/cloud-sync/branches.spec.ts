@@ -1,36 +1,37 @@
 import { faker } from "@faker-js/faker";
-import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
 
 test("Verify fetching a remote branch, checking out, deleting a local branch, and creating a new branch on a Cloud-synced workspace", async ({
   user,
 }) => {
   const { cloudSyncFlow } = user.flowManager;
-  const { cloudSyncPage, cloudSyncBranchesDialogPage } = user.pageManager;
+  const { cloudSyncPage } = user.pageManager;
 
   await cloudSyncFlow.fetch("My MCP Client");
   await cloudSyncPage.openBranchesDialog();
-  await cloudSyncBranchesDialogPage.fetchRemoteBranch("develop");
+  await cloudSyncPage.fetchRemoteBranch("develop");
 
   await expect
-    .poll(() => cloudSyncBranchesDialogPage.isLocalBranchListed("develop"), {
+    .poll(() => cloudSyncPage.isLocalBranchListed("develop"), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toBe(true);
 
-  await cloudSyncBranchesDialogPage.checkoutLocalBranch("master");
-  await cloudSyncBranchesDialogPage.deleteLocalBranch("develop");
+  await cloudSyncPage.checkoutLocalBranch("master");
+  await cloudSyncPage.deleteLocalBranch("develop");
 
-  await cloudSyncBranchesDialogPage.waitForLocalBranchRemoved("develop");
+  await cloudSyncPage.waitForLocalBranchRemoved("develop");
 
   const newBranch = faker.git.branch();
-  await cloudSyncBranchesDialogPage.createBranch(newBranch);
+  await cloudSyncPage.createBranch(newBranch);
 
   await expect
-    .poll(() => cloudSyncBranchesDialogPage.isLocalBranchListed(newBranch), {
+    .poll(() => cloudSyncPage.isLocalBranchListed(newBranch), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toBe(true);
-  expect(await cloudSyncBranchesDialogPage.isLocalBranchDeleteDisabled(newBranch)).toBe(true);
-  await cloudSyncBranchesDialogPage.closeBranchesDialog();
+  expect(await cloudSyncPage.isLocalBranchDeleteDisabled(newBranch)).toBe(true);
+  await cloudSyncPage.closeBranchesDialog();
 });
