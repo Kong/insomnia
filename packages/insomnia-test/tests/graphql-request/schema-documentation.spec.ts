@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/graphql`;
 const query = "{ characters { results { name } } }";
@@ -46,8 +47,8 @@ test("Verify GraphQL Schema Documentation Shows Field Descriptions", async ({
       }),
     ]),
   });
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     data: {
       characters: {
         results: expect.arrayContaining([
