@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER_HTTPS, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER_HTTPS, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const query = "{ characters { results { name } } }";
 const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
@@ -32,8 +33,8 @@ test("Verify GraphQL Request Over a TLS Connection", async ({ user }) => {
   });
   const responseView = await graphqlRequestFlow.send(request);
 
-  expect(responseView.statusBar.code).toBe(200);
-  const sent = JSON.parse((responseView.preview as { data: string }).data) as {
+  expect(responseView.statusCode).toBe(200);
+  const sent = JSON.parse((responseView.body as { data: string }).data) as {
     query: string;
   };
   expect(sent.query.replace(/\s+/g, " ").trim()).toBe(query);
