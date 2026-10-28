@@ -1,16 +1,17 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { SpecFormat } from "@package/enums/spec-format";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { SpecFormat } from "../../enums/spec-format";
+import { test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify Spec Editor Toolbar's Generate Menu, Format Switch, And Preview Toggle", async ({
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage, specPage } = user.pageManager;
+  const { workspacePage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -31,16 +32,15 @@ test("Verify Spec Editor Toolbar's Generate Menu, Format Switch, And Preview Tog
       }),
     ),
   );
-  const formatBefore = await specPage.getFormat();
-  const otherFormat = Object.values(SpecFormat).find(
-    (format) => format !== formatBefore,
-  )!;
-  await specPage.selectFormat(otherFormat);
-  const formatAfter = await specPage.getFormat();
+  const formatBefore = await workspacePage.getFormat();
+  const otherFormat =
+    formatBefore === SpecFormat.JSON ? SpecFormat.YAML : SpecFormat.JSON;
+  await workspacePage.selectFormat(otherFormat);
+  const formatAfter = await workspacePage.getFormat();
 
-  const previewBefore = await specPage.isPreviewOpen();
-  const previewAfterOpen = await specPage.togglePreview();
-  const previewAfterClose = await specPage.togglePreview();
+  const previewBefore = await workspacePage.isPreviewOpen();
+  const previewAfterOpen = await workspacePage.togglePreview();
+  const previewAfterClose = await workspacePage.togglePreview();
 
   expect(collection.version).toBe("OpenAPI 3.0.0");
   expect(formatAfter).toBe(otherFormat);
@@ -54,7 +54,7 @@ test("Verify Spec Editor Toolbar's Format Switch And Preview Toggle With A YAML 
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage, specPage } = user.pageManager;
+  const { workspacePage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -77,15 +77,15 @@ paths:
 `,
     ),
   );
-  const formatBefore = await specPage.getFormat();
-  await specPage.selectFormat(SpecFormat.JSON);
-  const formatJson = await specPage.getFormat();
-  await specPage.selectFormat(SpecFormat.YAML);
-  const formatYaml = await specPage.getFormat();
+  const formatBefore = await workspacePage.getFormat();
+  await workspacePage.selectFormat(SpecFormat.JSON);
+  const formatJson = await workspacePage.getFormat();
+  await workspacePage.selectFormat(SpecFormat.YAML);
+  const formatYaml = await workspacePage.getFormat();
 
-  const previewBefore = await specPage.isPreviewOpen();
-  const previewAfterOpen = await specPage.togglePreview();
-  const previewAfterClose = await specPage.togglePreview();
+  const previewBefore = await workspacePage.isPreviewOpen();
+  const previewAfterOpen = await workspacePage.togglePreview();
+  const previewAfterClose = await workspacePage.togglePreview();
 
   expect(collection.version).toBe("OpenAPI 3.0.0");
   expect(formatBefore).toBe(SpecFormat.YAML);
