@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { ProjectType } from '@package/enums/project-types';
-import { DEFAULT_TIMEOUT, MCP_SERVER, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from '@package/misc/fixtures';
-import { McpClient } from '@package/models/mcp-client';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ProjectType } from '../../enums/project-types';
+import { DEFAULT_TIMEOUT, MCP_SERVER, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from '../../misc/fixtures';
+import { McpClient } from '../../models/mcp-client';
+import { Project } from '../../models/project';
 
 test('Verify MCP Client Sends the OAuth 2.0 Header Only When Authentication Is Configured', async ({ user }) => {
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
