@@ -1,0 +1,62 @@
+import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
+
+const url = `${HTTP_SERVER}/cookies`;
+
+test("Verify Linked Cookie Is Sent With HTTP Request", async ({ user }) => {
+  const { cookieFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  const request = await httpRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Get,
+    url,
+  });
+
+  const cookieList = await cookieFlow.link(request, [
+    {
+      key: faker.string.alphanumeric(8),
+      value: faker.string.alphanumeric(8),
+      domain: "localhost",
+      path: "/",
+    },
+    {
+      key: faker.string.alphanumeric(8),
+      value: faker.string.alphanumeric(8),
+      domain: "localhost",
+      path: "/",
+    },
+    {
+      key: faker.string.alphanumeric(8),
+      value: faker.string.alphanumeric(8),
+      domain: "example.org",
+      path: "/",
+    },
+  ]);
+
+  const responseView = await httpRequestFlow.send(request);
+  expect(responseView.statusCode).toBe(200);
+
+  const { cookies } = responseView.body as { cookies: Record<string, string> };
+  expect(Object.keys(cookies)).toHaveLength(2);
+
+  const expectedCookies = Object.fromEntries(
+    cookieList
+      .filter((cookie) => cookie.domain === "localhost")
+      .map((cookie) => [cookie.key, cookie.value]),
+  );
+  expect(cookies).toMatchObject(expectedCookies);
+});
