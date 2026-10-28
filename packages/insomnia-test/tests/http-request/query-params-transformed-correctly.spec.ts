@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { EnvironmentKvPairDataType } from "@package/models/environment";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { EnvironmentKvPairDataType } from "../../models/environment";
+import { Project } from "../../models/project";
 
 test("Verify query params from the URL, template tags, and the Parameters tab are merged and special characters are escaped correctly", async ({
   user,
@@ -52,21 +53,20 @@ test("Verify query params from the URL, template tags, and the Parameters tab ar
     name: faker.string.alphanumeric(10),
     method: HttpMethod.Post,
     url: `${HTTP_SERVER}/post?key=fromUrl&key={{ fromUrlValue }}`,
+    params: [
+      { name: "key", value: "{{ fromEditorValue }}" },
+      { name: "key", value: "/" },
+      { name: "space", value: spaceValue },
+      { name: "ampersand", value: ampersandValue },
+      { name: "equals", value: equalsValue },
+      { name: "hash", value: hashValue },
+      { name: "chinese", value: chineseValue },
+    ],
   });
-  
-  await httpRequestFlow.setParamsBulk(request, [
-    { name: "key", value: "{{ fromEditorValue }}" },
-    { name: "key", value: "/" },
-    { name: "space", value: spaceValue },
-    { name: "ampersand", value: ampersandValue },
-    { name: "equals", value: equalsValue },
-    { name: "hash", value: hashValue },
-    { name: "chinese", value: chineseValue },
-  ]);
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     args: {
       key: ["fromUrl", fromUrlValue, fromEditorValue, "/"],
       space: spaceValue,

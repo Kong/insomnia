@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/cookies`;
 
@@ -47,9 +48,9 @@ test("Verify Linked Cookie Is Sent With HTTP Request", async ({ user }) => {
   ]);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.statusCode).toBe(200);
 
-  const { cookies } = responseView.preview as { cookies: Record<string, string> };
+  const { cookies } = responseView.body as { cookies: Record<string, string> };
   expect(Object.keys(cookies)).toHaveLength(2);
 
   const expectedCookies = Object.fromEntries(
