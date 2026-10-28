@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, test, WS_SERVER } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { EnvironmentKvPairDataType } from "@package/models/environment";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, test, WS_SERVER } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { EnvironmentKvPairDataType } from "../../models/environment";
+import { Project } from "../../models/project";
 
 test("Verify Environment Variable in WebSocket Request URL Is Resolved", async ({
   user,
@@ -43,7 +44,7 @@ test("Verify Environment Variable in WebSocket Request URL Is Resolved", async (
   const responseView = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`Preparing request to ${WS_SERVER}`);
   await expect
     .poll(
