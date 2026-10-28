@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 
@@ -31,7 +32,7 @@ test("Verify a thrown error in pre-request script surfaces in the response conso
   const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(errorMessage);
 });
 
@@ -57,6 +58,6 @@ test("Verify accessing an invalid field in pre-request script surfaces in the re
   const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Cannot read properties of undefined (reading 'set')");
 });
