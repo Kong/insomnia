@@ -408,6 +408,11 @@ export class AuthTabComponent extends TabPanelPage {
 
     if (fields.grantType) {
       await applySelect("grantType", "Grant-Type", fields.grantType);
+      // Changing the grant type re-renders the form's rows and refreshes
+      // loader data; let any stale debounced save land and the editors
+      // settle first, or the text fields written next get reverted by it.
+      await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
+      await this.waitForRendererIdle();
     }
 
     const needsAdvanced =
@@ -427,7 +432,7 @@ export class AuthTabComponent extends TabPanelPage {
         reapply: () => this.setCodeMirrorValue(editor, value),
       };
       await edit.reapply!();
-      await this.waitForAuthFieldsPersisted([edit]);
+      await this.waitForAuthFieldsPersisted([...edits, edit]);
       edits.push(edit);
     }
 
