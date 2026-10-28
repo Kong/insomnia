@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = "http://[::1]:4060/post";
 
@@ -31,7 +32,7 @@ test("Verify HTTP request succeeds against a local IPv6 address", async ({
   });
   const responseView = await httpRequestFlow.send(request!);
 
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.statusBar.message).toBe("OK");
-  expect(responseView.preview).toMatchObject({ data: bodyText });
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusMessage).toBe("OK");
+  expect(responseView.body).toMatchObject({ data: bodyText });
 });

@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 
@@ -32,7 +33,7 @@ test("Verify a Header With a Template Tag in Its Value", async ({ user }) => {
   });
   const responseView = await httpRequestFlow.send(request!);
 
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "x-header-name": "aGVhZGVyLXZhbHVl",
     }),

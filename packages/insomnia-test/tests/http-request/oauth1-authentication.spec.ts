@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import type { AuthTypeOAuth1 } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import type { AuthTypeOAuth1 } from "../../models/http-request";
+import { Project } from "../../models/project";
 
 test("Verify OAuth 1.0 auth fields persist and sign the sent request", async ({
   user,
@@ -39,10 +40,10 @@ test("Verify OAuth 1.0 auth fields persist and sign the sent request", async ({
   });
 
   const responseView = await httpRequestFlow.send(request);
-  const authHeader = (responseView.preview as { headers: Record<string, string> })
+  const authHeader = (responseView.body as { headers: Record<string, string> })
     .headers.authorization;
 
-  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(authHeader).toContain("OAuth ");
   expect(authHeader).toContain(
     `oauth_consumer_key="${authentication.consumerKey}"`,
