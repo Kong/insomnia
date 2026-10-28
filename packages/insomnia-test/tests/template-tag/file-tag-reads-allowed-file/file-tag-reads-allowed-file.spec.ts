@@ -1,14 +1,15 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
-const filePath = path.join(import.meta.dirname, "fixture.txt");
+import { HttpMethod } from "../../../enums/http-method";
+import { ProjectType } from "../../../enums/project-types";
+import { test } from "../../../misc/fixtures";
+import { Collection } from "../../../models/collection";
+import { Project } from "../../../models/project";
+
+const filePath = path.join(__dirname, "fixture.txt");
 
 test("Verify the file Tag Reads Contents from an Allowed Folder", async ({
   user,
@@ -16,7 +17,7 @@ test("Verify the file Tag Reads Contents from an Allowed Folder", async ({
   const { workspaceFlow, httpRequestFlow, preferencesFlow, templateTagFlow } =
     user.flowManager;
 
-  await preferencesFlow.set({ dataFolders: [import.meta.dirname] });
+  await preferencesFlow.set({ dataFolders: [__dirname] });
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
