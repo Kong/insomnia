@@ -91,4 +91,16 @@ export class FolderFlow extends BaseFlow {
     const folderPage = await this.open(folder);
     await folderPage.scripts.setScripts(scripts);
   }
+
+  /**
+   * Opens `folder` and sets its own Environment tab variables — they
+   * override the collection's base and sub-environment values for every
+   * descendant request.
+   * @param folder - The folder to set variables on, as returned by `create()`/`get()`
+   * @param variables - Variable names and values
+   */
+  async setEnvironmentVariables(folder: Folder, variables: Record<string, string>): Promise<void> {
+    const folderPage = await this.open(folder);
+    await folderPage.setEnvironmentVariables(variables);
+  }
 }

@@ -188,6 +188,50 @@ export class TemplateTagPage extends BasePage {
     });
   }
 
+  /**
+   * Clicks "Clear" in the open tag editor, wiping the value a `prompt`
+   * tag cached under its storage key, then waits for the Live Preview to
+   * settle.
+   */
+  async clearCachedValue(): Promise<void> {
+    await this.page
+      .locator(this.MODAL)
+      .getByRole("button", { name: "Clear" })
+      .click();
+    await this.waitForPreviewSettled();
+  }
+
+  /**
+   * Clicks the request pane's Send button without checking for a
+   * resulting dialog (unlike `RequestPage.send()`, which treats any
+   * dialog as an error), so a `prompt` tag's input dialog can be answered
+   * afterwards.
+   */
+  async clickSend(): Promise<void> {
+    await this.page
+      .getByTestId("request-pane")
+      .getByRole("button", { name: "Send" })
+      .click();
+  }
+
+  /**
+   * Waits for a `prompt` tag's input dialog (identified by its label
+   * text), reads its input's `type`, fills in `value` and submits.
+   * @param label - The prompt tag's title/label text shown in the dialog
+   * @param value - The value to submit
+   * @returns The input's `type` attribute (e.g. `"password"` for a masked prompt)
+   */
+  async answerPrompt(label: string, value: string): Promise<string> {
+    const dialog = this.page.getByRole("dialog").filter({ hasText: label });
+    await dialog.waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    const input = dialog.locator("#prompt-input");
+    const inputType = (await input.getAttribute("type")) ?? "";
+    await input.fill(value);
+    await dialog.getByRole("button", { name: "Submit" }).click();
+    await dialog.waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
+    return inputType;
+  }
+
   private getArgumentField(index: number): Locator {
     return this.page.locator(`${this.MODAL} label[data-arg-index="${index}"]`);
   }

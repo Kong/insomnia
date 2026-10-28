@@ -147,6 +147,71 @@ export class EnvironmentFlow extends BaseFlow {
     await this.pageManager.environmentPage.selectCollectionEnvironment(name);
   }
 
+  /**
+   * Opens one environment picker on `collection`'s toolbar and reports
+   * which picker popovers are open, then dismisses it.
+   * @param collection - The collection whose toolbar holds the pickers
+   * @param picker - Which picker to open
+   * @returns The pickers that were open while `picker` was open
+   */
+  async getOpenPickersAfterOpening(
+    collection: Collection,
+    picker: "project" | "collection",
+  ): Promise<("project" | "collection")[]> {
+    const workspace = this.pageManager.workspacePage;
+    const environmentPage = this.pageManager.environmentPage;
+    const node = await workspace.resolveNode(collection);
+    await workspace.clickNode(node);
+
+    await environmentPage.openEnvironmentPicker(picker);
+    const open = await environmentPage.getOpenEnvironmentPickers();
+    await environmentPage.closeEnvironmentPicker();
+    return open;
+  }
+
+  /**
+   * Creates a Project Environment from `collection`'s project picker and
+   * reads the picker back, without linking the new environment.
+   * @param collection - The collection whose toolbar's project picker is used
+   * @param name - The new Project Environment's name
+   * @returns The picker's selection label and its listed option names
+   */
+  async addProjectEnvironmentFromPicker(
+    collection: Collection,
+    name: string,
+  ): Promise<{ selected: string; options: string[] }> {
+    const workspace = this.pageManager.workspacePage;
+    const environmentPage = this.pageManager.environmentPage;
+    const node = await workspace.resolveNode(collection);
+    await workspace.clickNode(node);
+
+    await environmentPage.addProjectEnvironment(name, collection.name);
+    return environmentPage.getProjectEnvironmentPickerState();
+  }
+
+  /**
+   * Creates a shared or private sub-environment inside `collection`'s own
+   * "Manage Environments" modal and reports whether it is marked private.
+   * @param collection - The collection whose own environments are managed
+   * @param environment - The sub-environment to create (`isPrivate` selects the button)
+   * @returns Whether the created environment row carries the private lock icon
+   */
+  async createCollectionSubEnvironment(
+    collection: Collection,
+    environment: Environment,
+  ): Promise<{ isPrivate: boolean }> {
+    const workspace = this.pageManager.workspacePage;
+    const environmentPage = this.pageManager.environmentPage;
+    const node = await workspace.resolveNode(collection);
+    await workspace.clickNode(node);
+
+    await environmentPage.openCollectionEnvironmentManager();
+    await environmentPage.createSubEnvironment(environment.name, environment.isPrivate ?? false);
+    const isPrivate = await environmentPage.isEnvironmentPrivate(environment.name);
+    await environmentPage.closeCollectionEnvironmentManager();
+    return { isPrivate };
+  }
+
   private async applyVariables(environment: Environment): Promise<Environment> {
     const environmentPage = this.pageManager.environmentPage;
     if (environment.kvPairData?.length) {

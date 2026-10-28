@@ -1,9 +1,7 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TabsComponent } from "@package/components/tabs.component";
-import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export type VariableSourceScope = "page" | "modal";
@@ -14,8 +12,6 @@ export interface VariableSourceModal {
 }
 
 export class VariableSourcePage extends BasePage {
-  /** Whichever dialog is open (the tag editor); see `modal` for Manage Environments. */
-  private readonly tagEditorModal = new ModalComponent(this.page);
   private readonly CHIP_HOVER_ATTEMPTS = 5;
   private readonly ENVIRONMENTS_GRID = 'role=grid[name="Environments"]';
   private readonly ENVIRONMENTS_MODAL_NAME = "Manage Environments";
@@ -51,6 +47,7 @@ export class VariableSourcePage extends BasePage {
    * popover without asserting the trigger's label afterwards — an
    * imported project environment's trigger shows its base environment's
    * own name ("Base Environment"), not the container name picked here.
+   * @param optionName - The option's accessible name in the popover
    */
   async selectProjectEnvironment(optionName: string): Promise<void> {
     await this.page.getByLabel("Select a Project Environment").click();
@@ -64,6 +61,7 @@ export class VariableSourcePage extends BasePage {
 
   /**
    * Selects an environment row inside the open Manage Environments modal.
+   * @param name - The environment row's accessible name
    */
   async selectModalEnvironment(name: string): Promise<void> {
     await this.modal.getByRole("row", { name, exact: true }).click();
@@ -73,6 +71,7 @@ export class VariableSourcePage extends BasePage {
    * Clicks a rendered template tag matching `snippet` in the request body
    * to open its tag editor modal, then reads its Source row and Live
    * Preview. `source` is undefined when the modal shows no Source row.
+   * @param snippet - A substring of the tag's `data-template`
    */
   async openVariableModal(snippet: string): Promise<VariableSourceModal> {
     const chip = this.getChip(snippet, "page");
@@ -86,47 +85,23 @@ export class VariableSourcePage extends BasePage {
    * Preview.
    */
   async readVariableModal(): Promise<VariableSourceModal> {
-    const dialog = this.tagEditorModal.root;
-    const preview = dialog.getByLabel("Live Preview");
+    const dialog = this.page.getByRole("dialog");
+    const row = dialog.locator(this.SOURCE_ROW);
+    const preview = dialog.locator("textarea");
     await expect(preview).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    // The Source row is recomputed asynchronously after every template change,
-    // so read an atomic snapshot (no visible-then-innerText race) and wait
-    // until two consecutive snapshots agree.
-    const snapshot = () =>
-      dialog.evaluate((el, sel) => {
-        const row = el.querySelector<HTMLElement>(sel);
-        // VariableEditor wraps the textarea in a <label>; TagEditor aria-labels it.
-        const textarea =
-          el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Live Preview"]') ??
-          [...el.querySelectorAll("label")]
-            .find((label) => label.textContent?.trim().startsWith("Live Preview"))
-            ?.querySelector("textarea");
-        return {
-          source: row ? row.innerText.replace(/\s+/g, " ").trim() : undefined,
-          preview: textarea?.value ?? "",
-        };
-      }, this.SOURCE_ROW);
-    let previous = await snapshot();
-    await expect
-      .poll(
-        async () => {
-          const current = await snapshot();
-          const settled = JSON.stringify(current) === JSON.stringify(previous);
-          previous = current;
-          return settled;
-        },
-        { timeout: DEFAULT_TIMEOUT, intervals: [POLL_INTERVAL] },
-      )
-      .toBe(true);
-    return previous;
+    const source = (await row.isVisible())
+      ? ((await row.innerText()).replace(/\s+/g, " ").trim())
+      : undefined;
+    return { source, preview: await preview.inputValue() };
   }
 
   /**
    * Polls the open tag editor modal until its Live Preview equals
    * `expected`, then returns the settled modal state.
+   * @param expected - The preview text to wait for
    */
   async waitForModalPreview(expected: string): Promise<VariableSourceModal> {
-    await expect(this.tagEditorModal.root.getByLabel("Live Preview")).toHaveValue(
+    await expect(this.page.getByRole("dialog").locator("textarea")).toHaveValue(
       expected,
       { timeout: DEFAULT_TIMEOUT * 1.5 },
     );
@@ -136,19 +111,23 @@ export class VariableSourcePage extends BasePage {
   /**
    * Picks an option in the open tag editor modal's "Environment Variable"
    * select, by its option value or visible label.
+   * @param option - The option value (e.g. `{{ _.subOnlyVar }}`) or `{ label }`
    */
   async selectModalVariable(option: string | { label: string }): Promise<void> {
-    await this.tagEditorModal.root
+    await this.page
+      .getByRole("dialog")
       .getByLabel("Environment Variable")
       .selectOption(option);
   }
 
   /**
    * Replaces the open tag editor modal's custom template text.
+   * @param template - The raw template text to type
    */
   async setModalCustomTemplate(template: string): Promise<void> {
-    await this.tagEditorModal.root
-      .getByTestId("variable-custom-template")
+    await this.page
+      .getByRole("dialog")
+      .locator('input[type="text"]')
       .fill(template);
   }
 
@@ -156,13 +135,15 @@ export class VariableSourcePage extends BasePage {
    * Clicks the Source row's "Open" button in the open tag editor modal.
    */
   async clickModalSourceOpen(): Promise<void> {
-    await this.tagEditorModal.root.locator(this.SOURCE_OPEN).click();
+    await this.page.getByRole("dialog").locator(this.SOURCE_OPEN).click();
   }
 
   /**
    * Hovers the template tag matching `snippet` until the variable-source
    * tooltip appears (re-entering the tag if its mark was rebuilt under
    * the pointer), then reads the tooltip text and the chip's own text.
+   * @param snippet - A substring of the tag's `data-template`
+   * @param scope - Whether the tag lives in the request page or inside the Manage Environments modal
    */
   async hoverVariable(
     snippet: string,
@@ -209,6 +190,8 @@ export class VariableSourcePage extends BasePage {
    * Hovers `snippet`'s tag, waits for the tooltip, then reads the tooltip
    * text once it contains `expected` (used when the tooltip swaps content
    * as the pointer moves between tags).
+   * @param snippet - A substring of the tag's `data-template`
+   * @param expected - Text the tooltip must come to contain
    */
   async hoverVariableUntilTooltipContains(
     snippet: string,
@@ -247,6 +230,7 @@ export class VariableSourcePage extends BasePage {
   /**
    * Reports whether an environment row (in the page's Environments grid)
    * is selected, polling until it reaches the expected state.
+   * @param name - The row's accessible name
    */
   async isEnvironmentRowSelected(name: string): Promise<boolean> {
     const row = this.page
@@ -266,6 +250,7 @@ export class VariableSourcePage extends BasePage {
   /**
    * Waits (best effort) for the window URL to match `pattern`, then reads
    * it back — callers assert on the returned URL.
+   * @param pattern - The URL pattern the window is expected to reach
    */
   async waitForUrl(pattern: RegExp): Promise<string> {
     try {
@@ -281,9 +266,7 @@ export class VariableSourcePage extends BasePage {
    * is selected.
    */
   async isEnvironmentTabSelected(): Promise<boolean> {
-    const tab = new TabsComponent(this.page, this.page.locator("body")).tabByName(
-      "Environment",
-    );
+    const tab = this.page.getByRole("tab", { name: "Environment" });
     try {
       await expect(tab).toHaveAttribute("aria-selected", "true", {
         timeout: DEFAULT_TIMEOUT,
