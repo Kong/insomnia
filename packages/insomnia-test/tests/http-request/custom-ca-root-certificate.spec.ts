@@ -1,12 +1,13 @@
 
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { certPath } from "@package/misc/certs";
-import { DEFAULT_TIMEOUT, HTTP_SERVER_CUSTOM_CA_HTTPS, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { certPath } from "../../misc/certs";
+import { DEFAULT_TIMEOUT, HTTP_SERVER_CUSTOM_CA_HTTPS, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER_CUSTOM_CA_HTTPS}/post`;
 
@@ -29,9 +30,9 @@ test("Verify Custom CA Root Certificate Establishes Trust For HTTPS Request", as
     url,
   });
   const responseBeforeCa = await httpRequestFlow.send(requestBeforeCa);
-  expect(responseBeforeCa.statusBar.code).toBeUndefined();
+  expect(responseBeforeCa.statusCode).toBeUndefined();
   await expect
-    .poll(() => responseBeforeCa.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseBeforeCa.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toMatch(/unable to get local issuer certificate/i);
 
   await certificatesFlow.setCaCertificate(
@@ -45,8 +46,8 @@ test("Verify Custom CA Root Certificate Establishes Trust For HTTPS Request", as
     url,
   });
   const responseAfterCa = await httpRequestFlow.send(requestAfterCa);
-  expect(responseAfterCa.statusBar.code).toBe(200);
-  expect(responseAfterCa.preview).toMatchObject({
+  expect(responseAfterCa.statusCode).toBe(200);
+  expect(responseAfterCa.body).toMatchObject({
     headers: expect.objectContaining({ host: "localhost:4062" }),
   });
 });
