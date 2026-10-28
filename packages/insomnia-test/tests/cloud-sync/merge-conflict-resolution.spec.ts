@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
 
 for (const { version, chosenIndex } of [
   { version: "Current", chosenIndex: 0 },
@@ -11,13 +12,13 @@ for (const { version, chosenIndex } of [
     user,
   }) => {
     const { workspaceFlow, httpRequestFlow, cloudSyncFlow } = user.flowManager;
-    const { httpRequestPage, cloudSyncPage, cloudSyncBranchesDialogPage } = user.pageManager;
+    const { httpRequestPage, cloudSyncPage } = user.pageManager;
 
     await cloudSyncFlow.fetch("My Collection R1");
     const collection = await workspaceFlow.getCollection({
       name: "My Collection R1",
     });
-    await httpRequestFlow.get("New Request");
+    await httpRequestFlow.get("New Request", collection);
 
     const branch = faker.git.branch();
     const branchBody = faker.lorem.slug();
@@ -25,19 +26,19 @@ for (const { version, chosenIndex } of [
     await httpRequestPage.setBody({
       mimeType: ContentType.Plain,
       text: branchBody,
-    }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
+    });
     await cloudSyncFlow.commit("New Request", faker.lorem.sentence());
 
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncBranchesDialogPage.checkoutLocalBranch("master");
-    await cloudSyncBranchesDialogPage.closeBranchesDialog();
+    await cloudSyncPage.checkoutLocalBranch("master");
+    await cloudSyncPage.closeBranchesDialog();
     await user.page.reload();
-    await httpRequestFlow.get("New Request");
+    await httpRequestFlow.get("New Request", collection);
     const currentBody = faker.lorem.slug();
     await httpRequestPage.setBody({
       mimeType: ContentType.Plain,
       text: currentBody,
-    }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
+    });
     await cloudSyncFlow.commit("New Request", faker.lorem.sentence());
 
     const conflicts = await cloudSyncFlow.mergeBranchResolvingConflicts(
@@ -45,7 +46,7 @@ for (const { version, chosenIndex } of [
       version,
     );
     await user.page.reload();
-    await httpRequestFlow.get("New Request");
+    await httpRequestFlow.get("New Request", collection);
     const bodies = [currentBody, branchBody];
 
     expect(conflicts).toEqual(["New Request"]);
