@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { ProjectType } from '@package/enums/project-types';
-import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from '@package/misc/fixtures';
-import { Collection } from '@package/models/collection';
-import { EventStreamMethod } from '@package/models/event-stream-request';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ProjectType } from '../../enums/project-types';
+import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from '../../misc/fixtures';
+import { Collection } from '../../models/collection';
+import { EventStreamMethod } from '../../models/event-stream-request';
+import { Project } from '../../models/project';
 
 test('Verify Event Stream Request Sends the API Key Header Until Authentication Is Set to None', async ({ user }) => {
   const { eventStreamRequestFlow, workspaceFlow } = user.flowManager;
@@ -23,7 +24,7 @@ test('Verify Event Stream Request Sends the API Key Header Until Authentication 
   const authenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => authenticatedResponse.console(), {
+    .poll(() => authenticatedResponse.console?.(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`${apiKeyName}: ${apiKeyValue}`);
@@ -32,9 +33,9 @@ test('Verify Event Stream Request Sends the API Key Header Until Authentication 
   const unauthenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console(), {
+    .poll(() => unauthenticatedResponse.console?.(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain('GET /sse-events/1');
-  expect(await unauthenticatedResponse.console()).not.toContain(apiKeyName);
+  expect(await unauthenticatedResponse.console?.()).not.toContain(apiKeyName);
 });
