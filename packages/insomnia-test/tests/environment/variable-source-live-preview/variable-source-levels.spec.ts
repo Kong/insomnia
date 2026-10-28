@@ -4,11 +4,11 @@ import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
+import type { FlowManager } from "../../../flows/flow-manager";
+import type { VariableSourceLanding } from "../../../flows/variable-source.flow";
 import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
-import type { FlowManager } from "../../../flows/flow-manager";
-import type { VariableSourceLanding } from "../../../flows/variable-source.flow";
 
 const cascadeFixture = path.join(__dirname, "environment-cascade-collection.yaml");
 const globalCollectionFixture = path.join(__dirname, "collection-for-global-environments.yaml");
