@@ -1,13 +1,18 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import type { HttpRequest } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
-import type { AWSCredentialType, HashiCorpCredentialType, HashiCorpVaultAuthMethod } from "insomnia-data";
+import {
+  AWSCredentialType,
+  HashiCorpCredentialType,
+  HashiCorpVaultAuthMethod,
+} from "insomnia-data";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import type { HttpRequest } from "../../models/http-request";
+import { Project } from "../../models/project";
 
 test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template Tag", async ({
   user,
@@ -34,7 +39,7 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
         provider: "aws",
         name: awsCredentialName,
         credentials: {
-          type: "file" as AWSCredentialType.file,
+          type: AWSCredentialType.file,
           section: faker.string.alphanumeric(8),
           region: faker.string.alphanumeric(8),
         },
@@ -48,8 +53,8 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
         provider: "hashicorp",
         name: hashicorpCredentialName,
         credentials: {
-          type: "onPrem" as HashiCorpCredentialType.onPrem,
-          authMethod: "appRole" as HashiCorpVaultAuthMethod.appRole,
+          type: HashiCorpCredentialType.onPrem,
+          authMethod: HashiCorpVaultAuthMethod.appRole,
           serverAddress: "http://127.0.0.1",
           role_id: faker.string.alphanumeric(8),
           secret_id: faker.string.alphanumeric(8),
@@ -94,12 +99,12 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
   expect(awsResult.preview).toBe("aws-secret-value");
   expect(gcpResult.preview).toBe("gcp-secret-value");
   expect(hashicorpResult.preview).toBe("hashicorp-secret-value");
-  expect((responseView.preview as { data: string }).data).toContain("aws-secret-value");
-  expect((responseView.preview as { data: string }).data).toContain("gcp-secret-value");
-  expect((responseView.preview as { data: string }).data).toContain(
+  expect((responseView.body as { data: string }).data).toContain("aws-secret-value");
+  expect((responseView.body as { data: string }).data).toContain("gcp-secret-value");
+  expect((responseView.body as { data: string }).data).toContain(
     "hashicorp-secret-value",
   );
-  expect((secondResponse.preview as { data: string }).data).toContain(
+  expect((secondResponse.body as { data: string }).data).toContain(
     "aws-secret-value",
   );
 });

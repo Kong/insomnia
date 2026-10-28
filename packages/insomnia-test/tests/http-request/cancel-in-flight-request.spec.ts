@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { RequestState } from "@package/enums/request-state";
-import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { RequestState } from "../../enums/request-state";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify Cancelling an In-Flight HTTP Request Shows a Cancellation Message and a Later Request Still Succeeds", async ({
   user,
@@ -50,6 +51,6 @@ test("Verify Cancelling an In-Flight HTTP Request Shows a Cancellation Message a
   const laterResponse = await httpRequestFlow.send(laterRequest);
 
   expect(requestStateAfterCancel).toBe(RequestState.Idle);
-  expect(cancelledResponse.statusBar.code).toBeUndefined();
-  expect(laterResponse.statusBar.code).toBe(200);
+  expect(cancelledResponse.statusCode).toBeUndefined();
+  expect(laterResponse.statusCode).toBe(200);
 });

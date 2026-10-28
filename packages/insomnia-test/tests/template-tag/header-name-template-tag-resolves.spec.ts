@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify a Header With a Templated Name Resolves and Sends Correctly", async ({
   user,
@@ -32,8 +33,8 @@ test("Verify a Header With a Templated Name Resolves and Sends Correctly", async
   });
   const responseView = await httpRequestFlow.send(request!);
 
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "x-7cd8e9f98e9104085ea06e39b87faf36": "plain-value",
     }),
