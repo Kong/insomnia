@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const query = "{ characters { results { name } } }";
 const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
@@ -40,7 +41,7 @@ test("Verify Duplicated GraphQL Request Keeps Url, Body and Headers", async ({
   expect(duplicated).toBeTruthy();
   expect(duplicated!.url).toBe(request.url);
   expect(duplicated!.body!.text).toBe(request.body!.text);
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({ "x-custom": headerValue }),
   });
 });
